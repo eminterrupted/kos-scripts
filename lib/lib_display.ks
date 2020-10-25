@@ -29,8 +29,8 @@ global function disp_main {
 
 
 global function disp_vessel_data {
-    print "RUNMODE:       " + stateObj["runmode"] + "    "                  at (2,10).
-        print "PROGRAM:" at (30,10).        print stateObj["program"] + "  " at (45,10).
+    print "PROGRAM:" at (2,10).        print stateObj["program"] + "  " at (17,10).
+        print "RUNMODE:" at (30,10). print stateObj["runmode"] at (45,10).
     print "MASS:" at (02,11).           print round(ship:mass, 2) + "     " at (17,11).
         print "STAGE NUMBER:  " + stage:number + "    " at (30,11).
 }
@@ -41,8 +41,8 @@ global function disp_launch_telemetry {
 
     print "ALTITUDE:      " + round(ship:altitude) + "    "     at (2,13).
     print "MAX ALTITUDE:  " + round(pMaxAlt) + "    "           at (2,14).
-    print "DYNPRESS:      " + round(ship:q, 5) + "    "         at (30,14).
-    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "      " at (30,15).
+    print "DYNPRESS:      " + round(ship:q, 5) + "    "         at (30,13).
+    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "      " at (30,14).
 
     print "APOAPSIS:      " + round(ship:apoapsis) + "    "            at (2,16).
         print "TIME TO AP:    " + format_timestamp(eta:apoapsis) + "    " at (30,16).

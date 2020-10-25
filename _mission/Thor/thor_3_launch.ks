@@ -191,9 +191,10 @@ until runmode = 99 {
     set maxAlt to max(maxAlt, ship:altitude).
 
     disp_main().
-    disp_vessel_data(runmode, program).
+    disp_vessel_data().
     disp_launch_telemetry(maxAlt).
     
+    set stateObj["runmode"] to runmode.
     log_state().
 }
 

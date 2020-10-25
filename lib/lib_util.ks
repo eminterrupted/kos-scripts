@@ -26,3 +26,13 @@ global function warp_to_timestamp {
     else if tDelta > 60 and warp <> 1 set warp to 1.
     else if tDelta <= 15 kuniverse:timewarp:cancelwarp().
 }
+
+
+//shrouded decoupler
+//-- jettison
+global function jettison_decoupler_shroud {
+    parameter p.
+
+    local m is p:getModule("ModuleDecouplerShroud").
+    if m:hasEvent("jettison") m:doEvent("jettison").
+}

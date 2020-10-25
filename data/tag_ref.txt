@@ -691,15 +691,15 @@
         "KR-2042 b Scriptable Control System",
         "control.kos.cpu",
         "Mystery Goo™ Containment Unit ",
-        "",
+        "sci.gooPod",
         "Probodobodyne HECS",
-        "",
+        "command.probe.core",
         "Small Nose Cone",
-        "",
+        "aero.cone",
         "Modular Girder Segment",
-        "",
+        "structural.girder",
         "Procedural Nose Cone",
-        ""
+        "aero.cone"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
