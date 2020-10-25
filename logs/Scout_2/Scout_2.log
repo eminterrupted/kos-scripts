@@ -1,0 +1,75 @@
+[MET:0][INFO] KSCLog initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288473424, probeCoreSphere.v2,  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4284003536, USCylindricalShroud0625,  -> bay.doors.us]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288440150, Mite,  -> engine.solid]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288439318, RTShortAntenna1,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288438550, basicFin,  -> aero.fin]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288438066, basicFin,  -> aero.fin]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288438002, basicFin,  -> aero.fin]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288437938, basicFin,  -> aero.fin]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288435718, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4288438964, sensorThermometer,  -> sci.thermometer]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4284592932, batteryPack,  -> power.battery.radial]
+[MET:0][INFO] [set_bay_ids] Untagged UniversalStorage bay module found: [4284003536, USCylindricalShroud0625, bay.doors.us]
+[MET:0][INFO] [set_us_bay_core_id] Checking parent part for untagged US bay core: [4288473424, Probodobodyne Stayputnik, command.drone.core]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4288440150, FM1 "Mite" Solid Fuel Booster, engine.solid]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4288438964, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4284592932, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4288440150, FM1 "Mite" Solid Fuel Booster, engine.solid]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4288438964, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4284592932, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay core for attached light modules(s): [4288473424, Probodobodyne Stayputnik, command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288473424, probeCoreSphere.v2, command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4284003536, USCylindricalShroud0625, bay.doors.us.bayId.0]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288440150, Mite, engine.solid]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288439318, RTShortAntenna1, comm.omni]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438550, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438066, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438002, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288437938, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288435718, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438964, sensorThermometer, sci.thermometer]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4284592932, batteryPack, power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288473424, probeCoreSphere.v2, command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4284003536, USCylindricalShroud0625, bay.doors.us.bayId.0]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288440150, Mite, engine.solid]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288439318, RTShortAntenna1, comm.omni]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438550, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438066, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438002, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288437938, basicFin, aero.fin]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288435718, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4288438964, sensorThermometer, sci.thermometer]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4284592932, batteryPack, power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library

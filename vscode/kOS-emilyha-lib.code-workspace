@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"editor.fontFamily": "Cascadia Code",
+		"files.autoSave": "afterDelay",
+		"files.autoSaveDelay": 600000,
+		"files.trimFinalNewlines": true,
+		"files.maxMemoryForLargeFilesMB": 8192,
+		"files.participants.timeout": 10000
+	},
+	"editor.codeActionsOnSave": null,
+	"workbench.editorAssociations": []
+}

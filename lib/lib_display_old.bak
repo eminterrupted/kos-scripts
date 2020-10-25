@@ -1,0 +1,158 @@
+@lazyGlobal off.
+
+set terminal:width to 90.
+set terminal:height to 50.
+
+runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/lib/data/engine/lib_thrust.ks").
+runOncePath("0:/lib/data/engine/lib_isp.ks").
+runOncePath("0:/lib/data/engine/lib_twr.ks").
+
+init_disp_obj().
+
+local function init_disp_obj {
+    
+    global dispRef is lexicon(
+    "_title",       "Kerbal's First Launch Monitoring Program          v0.1b",
+    "_divDbl",      "=======================================================",
+    "_div",         "-------------------------------------------------------",
+    "_space",       "                                                       ",
+    "_vessel",       "VESSEL:        " + ship:name,
+    "met",          "MET:           ",
+    "time",         "TIME:          ",
+    "status",       "STATUS:        ",
+    "runmode",      "RUNMODE:       ",
+    "alt",          "ALTITUDE:      ",
+    "maxAlt",       "MAX ALTITUDE:  ",
+    "ap",           "APOAPSIS:      ",
+    "pe",           "PERIAPSIS:     ",
+    "dynpress",     "DYN PRESSURE:  ",
+    "vel",          "VELOCITY:      ",
+    "vSpeed",       "VERT SPEED:    ",
+    "gSpeed",       "GRND SPEED:    ",
+    "tval",         "TVAL:          ",
+    "twr",          "TWR:           ",
+    "isp",          "ISP:           ",
+    "availThrust",  "AVL THRUST:    ",
+    "vMass",        "VESSEL MASS:   ",
+    "hdg",          "HEADING:       ",
+    "rollVal",      "ROLL VAL:      ",
+    "countdown",    "COUNTDOWN:     ",
+    "obtvel",       "ORBITAL VEL:   ",
+    "stageNum",     "STAGE NUMBER:  "
+    ).
+
+    global dispObj is lexicon().
+    for key in dispRef:keys {
+        if not key:startsWith("_") {
+            set dispObj[key] to 0.
+        }
+    }
+}
+
+local function update_disp_obj {
+    set dispObj["met"] to get_met_str().
+    set dispObj["time"] to round(time:seconds).
+    set dispObj["status"] to status.
+    set dispObj["alt"] to round(ship:altitude).
+    set dispObj["ap"] to round(ship:apoapsis).
+    set dispObj["pe"] to round(ship:periapsis).
+    set dispObj["dynpress"] to round(ship:q, 5).
+    set dispObj["vel"] to round(ship:airspeed).
+    set dispObj["vSpeed"] to round(ship:verticalSpeed).
+    set dispObj["gSpeed"] to round(ship:groundspeed).
+    set dispObj["tval"] to round(throttle, 2).
+    set dispObj["availThrust"] to round(ship:availablethrust, 2).
+    set dispObj["vMass"] to round(ship:mass, 2).
+    set dispObj["hdg"] to round(ship:facing:forevector:x).
+    set dispObj["rollVal"] to round(ship:facing:forevector:z).
+    set dispObj["isp"] to round(get_isp_for_mode_stage_pres("cur", stage:number, body:atm:altitudePressure(ship:altitude)), 1).
+    set dispObj["twr"] to round(get_twr_for_modes_stage_alt("mass","cur", stage:number, ship:altitude), 2).
+    set dispObj["obtVel"] to ship:velocity:orbit:mag.
+    set dispObj["stageNum"] to stage:number.
+}
+
+global function update_countdown_display {
+
+    update_disp_obj().
+
+    print dispRef["_title"]                                  at (0,1).
+    print dispRef["_divDbl"]                                 at (0,2).
+    
+    print dispRef["_vessel"]                                at (2,5).
+    print dispRef["status"] + dispObj["status"] + "   "     at (30,5).
+    
+    print dispRef["met"] + dispObj["met"] + "   "           at (2,6).
+    print dispRef["time"] + dispObj["time"] + "   "           at (30,6).
+    
+    print dispRef["runmode"] + dispObj["runmode"] + "   "   at (2,8).
+
+    print dispRef["countdown"] + "T - " + dispObj["countdown"] + " " at (2,10).
+}
+
+global function update_launch_display {
+
+    parameter runmode is 0.
+    update_disp_obj().
+
+    print dispRef["_title"]                                          at (0,1).
+    print dispRef["_divDbl"]                                         at (0,2).
+    
+    print dispRef["_vessel"]                                        at (2,5).
+    print dispRef["met"] + dispObj["met"] + "    "                  at (2,6).
+    print dispRef["status"] + dispObj["status"] + "    "            at (2,7).
+
+    print dispRef["time"] + dispObj["time"] + "    "                at (2,9).
+    print dispRef["runmode"] + dispObj["runmode"] + "    "          at (2,10).
+    print dispRef["stageNum"] + dispObj["stageNum"] + "    "        at (30,10).
+
+    print dispRef["maxAlt"] + dispObj["maxAlt"] + "    "            at (2,12).
+    print dispRef["alt"] + dispObj["alt"] + "    "                  at (2,13).
+
+    print dispRef["ap"] + dispObj["ap"] + "    "                    at (30,12).
+    print dispRef["pe"] + dispObj["pe"] + "    "                    at (30,13).
+
+    print dispRef["vel"] + dispObj["vel"] + "    "                  at (2,16).
+    print dispRef["obtVel"] + round(dispObj["obtVel"], 1) + "    "  at (2,17).
+    print dispRef["dynpress"] + dispObj["dynpress"] + "  "          at (2,18).
+    print dispRef["vMass"] + dispObj["vMass"] + "    "              at (2,15).
+        
+    print dispRef["tVal"] + dispObj["tVal"] * 100 + "%   "          at (30,15).
+    print dispRef["availThrust"] + dispObj["availThrust"] + "    "  at (30,16).
+    print dispRef["isp"] + dispObj["isp"] + "    "                  at (30,17).
+    print dispRef["twr"] + dispObj["twr"] + "    "                  at (30,18).
+    
+    if runmode >= 12 and  runmode < 26 {
+        if dispObj:haskey("dV") print dispRef["dV"] + round(dispObj["dV"], 1) + " m/s   "             at (2,20).
+        if dispObj:haskey("burnDur") print dispRef["burnDur"] + round(dispObj["burnDur"]) + "s  "  at (2,21).
+        if dispObj:haskey("burnEta") print dispRef["burnEta"] + "T - " + round(dispObj["burnEta"] - time:seconds) + "s  "     at (2,22).
+        if dispObj:haskey("burnEnd") print dispRef["burnEnd"] + "T - " + round(dispObj["burnEnd"] - time:seconds) + "s  " at (2,23).
+    }
+
+    else if runmode >= 26 {
+        print "                                                      " at (2,20).
+        print "                                                      " at (2,21).
+        print "                                                      " at (2,22).
+        print "                                                      " at (2,23).
+    }
+}
+
+
+global function out_host {
+
+    parameter pObj.
+
+    for key in pObj:keys {
+        local pos to key:split(",").
+        print pObj[key] at(pos[0]:tonumber,pos[1]:tonumber). 
+    }
+}
+
+
+local function get_met_str {
+    local metHour is floor(missionTime / 3600).
+    local metMin is floor((missiontime / 60) - (metHour * 60)).
+    local metSec is round(missionTime - (metHour * 3600 + metMin * 60)).
+
+    return metHour + "h " + metMin + "m " + metSec + "s          ".
+}

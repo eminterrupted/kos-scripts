@@ -1,0 +1,15 @@
+{
+    "entries": [
+        "lastUplink",
+        {
+            "span": 1399700.3395736758,
+            "$type": "kOS.Suffixed.TimeSpan"
+        },
+        "nextUplink",
+        {
+            "span": 1399760.3395736758,
+            "$type": "kOS.Suffixed.TimeSpan"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

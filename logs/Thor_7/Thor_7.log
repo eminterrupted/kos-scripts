@@ -1,0 +1,420 @@
+[MET:0][INFO] KSCLog initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part missing reference tag: [(probeCoreHex.v2)]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291039354, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291033826, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290974658, USAdaptorShroud0625,  -> bay.doors.us]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290965444, batteryPack,  -> power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290965330, batteryPack,  -> power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291032380, HeatShield1,  -> thermal.heatShield]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290928250, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290923794, science.module,  -> sci.matBay]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922866, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922810, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922730, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920954, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920898, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290829540, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920818, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920738, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920658, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920258, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4290944460, GooExperiment, ]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4290942732, GooExperiment, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290931518, sensorBarometer,  -> sci.barometer]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290931076, sensorThermometer,  -> sci.thermometer]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291038486, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291029138, RC.cone,  -> chute.cone]
+[MET:0][INFO] [set_bay_ids] Untagged UniversalStorage bay module found: [4290974658, USAdaptorShroud0625, bay.doors.us]
+[MET:0][INFO] [set_us_bay_core_id] Checking parent part for untagged US bay core: [4291039354, Small Inline Reaction Wheel, control.rw]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290965444, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290965330, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4291032380, Heat Shield (1.25m), thermal.heatShield]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290944460, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290942732, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290931518, PresMat Barometer, sci.barometer]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290931076, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290965444, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290965330, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4291032380, Heat Shield (1.25m), thermal.heatShield]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290944460, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290942732, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290931518, PresMat Barometer, sci.barometer]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290931076, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291047682, probeCoreHex.v2 (Thor 7), ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291039354, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291033826, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290974658, USAdaptorShroud0625,  -> bay.doors.us]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290965444, batteryPack,  -> power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290965330, batteryPack,  -> power.battery.radial]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291032380, HeatShield1,  -> thermal.heatShield]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290928250, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290923794, science.module,  -> sci.matBay]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922866, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922810, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290922730, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920954, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920898, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290829540, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920818, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920738, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920658, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290920258, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4290944460, GooExperiment, ]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4290942732, GooExperiment, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290931518, sensorBarometer,  -> sci.barometer]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4290931076, sensorThermometer,  -> sci.thermometer]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291038486, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291029138, RC.cone,  -> chute.cone]
+[MET:0][INFO] [set_bay_ids] Untagged UniversalStorage bay module found: [4290974658, USAdaptorShroud0625, bay.doors.us]
+[MET:0][INFO] [set_us_bay_core_id] Checking parent part for untagged US bay core: [4291039354, Small Inline Reaction Wheel, control.rw]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290965444, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290965330, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4291032380, Heat Shield (1.25m), thermal.heatShield]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290944460, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290942732, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290931518, PresMat Barometer, sci.barometer]
+[MET:0][INFO] [set_us_bay_core_id] Checking child part for untagged US bay core: [4290931076, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290965444, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290965330, Z-100 Rechargeable Battery Pack, power.battery.radial]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4291032380, Heat Shield (1.25m), thermal.heatShield]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290944460, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290942732, Mystery Goo™ Containment Unit , ]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290931518, PresMat Barometer, sci.barometer]
+[MET:0][INFO] [set_bay_light_id] Checking bay child part for attached light module(s): [4290931076, 2HOT Thermometer, sci.thermometer]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2,  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part missing reference tag: [(trussPiece1x)]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part missing reference tag: [(proceduralNoseCone)]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2 (Thor 7),  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292025866, trussPiece1x, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291987432, proceduralNoseCone, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2 (Thor 7),  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292025866, trussPiece1x, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291987432, proceduralNoseCone, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2,  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292025866, trussPiece1x, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291987432, proceduralNoseCone, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2 (Thor 7),  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292025866, trussPiece1x, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291987432, proceduralNoseCone, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292096544, probeCoreOcto.v2 (Thor 7),  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292086364, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292085796, SurfAntenna,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084950, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084708, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084654, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292084600, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292079910, sasModule,  -> control.rw]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292081570, batteryBankMini,  -> power.battery]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292035166, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292025866, trussPiece1x, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291994494, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932414, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291932334, restock-engine-125-pug,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930832, ShroudedDecoupler,  -> decoupler]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930776, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930696, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930616, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930536, proceduralTankLiquid,  -> tank.procedural.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930456, liquidEngine2,  -> engine.lfo]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291930056, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292091800, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292038588, HighGainAntenna5,  -> comm.dish]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292075474, KR-2042,  -> control.kos.cpu]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4291966800, ShroudedDecoupler,  -> decoupler]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4291987432, proceduralNoseCone, ]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016378, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016148, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016094, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292016040, solarPanels5,  -> power.solar.fixed]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][WARN] [recover science] No science value from transmitting data

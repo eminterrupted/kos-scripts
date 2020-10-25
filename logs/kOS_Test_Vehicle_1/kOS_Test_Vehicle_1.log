@@ -1,0 +1,68 @@
+[MET:0][INFO] KSCLog initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292383244, probeCoreSphere.v2,  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4278296492, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4278283002, RTShortAntenna1,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][INFO] localLog initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1),  -> command.drone.core]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4278296492, AM.MLP.SmallLaunchStand,  -> launch.stand]
+[MET:0][INFO] [tag_parts_by_title] Part tag updated [4278283002, RTShortAntenna1,  -> comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
+[MET:0][INFO] KSCLog re-initialized
+[MET:0][WARN] [recover science] No science value from transmitting data
+[MET:0][INFO] localLog re-initialized
+[MET:0][INFO] [lib_tag.ks] Loading library
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4292383244, probeCoreSphere.v2 (kOS Test Vehicle 1), command.drone.core]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278296492, AM.MLP.SmallLaunchStand, launch.stand]
+[MET:0][WARN] [tag_parts_by_title] Part already tagged [4278283002, RTShortAntenna1, comm.omni]
+[MET:0][INFO] [tag_parts_by_title] Tagging completed, writing updates to tag_ref
