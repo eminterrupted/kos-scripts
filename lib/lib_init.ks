@@ -56,9 +56,13 @@ global function log_state {
 
 
 global function init_state_obj {
-    if defined stateObj unset stateObj.
-    global stateObj is lexicon().
-    init_runmode().
-    init_program().
-    log_state().
+    if exists(statePath) {
+        set stateObj to readJson(statePath).
+    }
+
+    else {
+        init_runmode().
+        init_program().
+        log_state().
+    }
 }

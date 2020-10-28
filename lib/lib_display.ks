@@ -1,9 +1,10 @@
 @lazyGlobal off.
 
-set terminal:width to 90.
+set terminal:width to 80.
 set terminal:height to 50.
 
 runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_pid.ks").
 runOncePath("0:/lib/lib_util.ks").
 runOncePath("0:/lib/data/vessel/lib_mass.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
@@ -15,60 +16,122 @@ runOncePath("0:/lib/data/engine/lib_twr.ks").
 //  Example: lex("2,6",list("EXAMPLE:     ", exampleVar, "    "))
 global dObj is lexicon().
 
+global vSync is 0.
+local col1 is 2.
+local col2 is col1 + 15.  
+local col3 is 40.
+local col4 is col3 + 15.
+
+local pos0 is lexicon("v",2,"h1",col1,"h2",col3).
+local posA is lexicon("v",12,"h1",col1,"h2",col2).
+local posB is lexicon("v",12,"h1",col3,"h2",col4).
+local posC is lexicon("v",24,"h1",col1,"h2",col2).
+local posD is lexicon("v",24,"h1",col3,"h2",col4).
+local posE is lexicon("v",36,"h1",col1,"h2",col2).
+
+
+// when vSync >= 80 then {
+//     init_vsync().
+//     preserve.
+// }
+
 global function disp_main {
-    print "Kerbal's First Launch Program                     v0.1b" at (0,2).
-    print "=======================================================" at (0,3).
-    print "UTC: " at (42,4).
-    print time:clock at (47,4).
-    print "VESSEL:        " + ship:name                             at (2,5).
-    print "MET:           " + format_timestamp(missionTime) + "    "            at (2,6).
-    print "kOS IPU CFG:   " + config:ipu at (30,6).
-    print "BODY:          " + body:name + "     "               at (2,7).
-    print "STATUS:        " + status + "              "             at (30,7).
+    
+    local pos is pos0.
+    
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "Kerbal's First Launch Program                                   v0.02b" at (0,vSync).
+    print "======================================================================" at (0,vNext).
+    print "UTC: " at (h1 + 55,vNext).
+    print time:clock at (h1 + 60,vSync).
+    vNext().
+    vNext().
+    print "MISSION:       " + ship:name                             at (h1,vNext).
+    print "BODY:          " + body:name + "     "               at (h2,vSync).
+    print "MET:           " + format_timestamp(missionTime) + "    "            at (h1,vNext).
+    print "STATUS:        " + status + "              "             at (h2,vSync).
+    print "PROGRAM:       " + stateObj["program"] + "  " at (h1,vNext).
+    print "RUNMODE:       " + stateObj["runmode"] + "  " at (h2,vSync).
 }
 
-
-global function disp_vessel_data {
-    print "PROGRAM:" at (2,10).        print stateObj["program"] + "  " at (17,10).
-        print "RUNMODE:" at (30,10). print stateObj["runmode"] at (45,10).
-    print "MASS:" at (02,11).           print round(ship:mass, 2) + "     " at (17,11).
-        print "STAGE NUMBER:  " + stage:number + "    " at (30,11).
+local function vNext {
+    set vSync to vSync + 1.
+    return vSync.
 }
 
+local function init_vsync {
+    set vSync to 0.
+}
+
+global function disp_orbital_data {
+    local pos is posA.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "ORBITAL DATA                 " at (h1,vSync).
+    print "------------                 " at (h1,vNext).
+    print "APOAPSIS:      " + round(ship:apoapsis) + "    "            at (h1,vNext).
+    print "PERIAPSIS:     " + round(ship:periapsis) + "    "           at (h1,vNext).
+        print "TIME TO AP:    " + format_timestamp(eta:apoapsis) + "    " at (h1,vNext).
+        print "TIME TO PE:    " + format_timestamp(eta:periapsis) + "    " at (h1,vNext).
+    print "ECCENTRICTY:   " + round(ship:orbit:eccentricity, 5) at (h1,vNext).
+        print "ORBITAL PER:   " + format_timestamp(ship:orbit:period) + "    " at (h1,vNext).
+    print "ORBITAL VEL:   " + round(ship:velocity:orbit:mag) + "    " at (h1,vNext).
+}
 
 global function disp_launch_telemetry {
     parameter pMaxAlt is 0.
 
-    print "ALTITUDE:      " + round(ship:altitude) + "    "     at (2,13).
-    print "MAX ALTITUDE:  " + round(pMaxAlt) + "    "           at (2,14).
-    print "DYNPRESS:      " + round(ship:q, 5) + "    "         at (30,13).
-    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "      " at (30,14).
+    local pos is posB.
 
-    print "APOAPSIS:      " + round(ship:apoapsis) + "    "            at (2,16).
-        print "TIME TO AP:    " + format_timestamp(eta:apoapsis) + "    " at (30,16).
-    print "PERIAPSIS:     " + round(ship:periapsis) + "    "           at (2,17).
-        print "TIME TO PE:    " + format_timestamp(eta:periapsis) + "    " at (30,17).
-    print "ECCENTRICTY:   " + round(ship:orbit:eccentricity, 5) at (2,18).
-        print "ORBITAL PER:   " + format_timestamp(ship:orbit:period) + "    " at (30,18).
-    print "ORBITAL VEL:   " + round(ship:velocity:orbit:mag) + "    " at (2,19).
-    print "VELOCITY:      " + round(ship:airspeed) + "    "     at (30,19).
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "LAUNCH TELEMETRY             " at (h1,vSync).
+    print "----------------             " at (h1,vNext).
+    print "ALTITUDE:      " + round(ship:altitude) + "    "     at (h1,vNext).
+    print "MAX ALTITUDE:  " + round(pMaxAlt) + "    "           at (h1,vNext).
+    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "      " at (h1,vNext).
+    print "DYNPRESS:      " + round(ship:q, 5) + "    "         at (h1,vNext).
+}
+
+
+global function disp_engine_perf_data {
     
-    print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (2,21).
-        print "THRUST:        " + round(get_thrust(), 2) + "     " at (30,21).
-    print "ISP:           " + round(get_avail_isp_for_alt(ship:altitude, stage:number), 2) + "  " at (2,22).
-        print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (30,22).
+    local pos is posC.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "ENGINE PERFORMANCE           " at (h1,vSync).
+    print "------------------           " at (h1,vNext).
+    print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (h1,vNext).
+    print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,vNext).
+    print "ISP:           " + round(get_avail_isp_for_alt(ship:altitude, stage:number), 2) + "  " at (h1,vNext).
+    print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,vNext).
+    print "MASS:" at (h1,vNext).           print round(ship:mass, 2) + "     " at (h2,vSync).
     //
     //print round(get_twr_for_modes_stage_alt("mass","avail", stage:number, ship:altitude), 2) + " " at (48,20).
 }
 
 
 global function clear_sec_data_fields {
-    print "                                                                      " at (0,24).
-    print "                                                                      " at (0,25).
-    print "                                                                      " at (0,26).
-    print "                                                                      " at (0,27).
-    print "                                                                      " at (0,28).
-    print "                                                                      " at (0,29).
+
+    set vSync to 34. 
+
+    print "                                                                      " at (0,vSync).
+    print "                                                                      " at (0,vNext).
+    print "                                                                      " at (0,vNext).
+    print "                                                                      " at (0,vNext).
+    print "                                                                      " at (0,vNext).
+    print "                                                                      " at (0,vNext).
 }
 
 
@@ -76,17 +139,39 @@ global function disp_burn_data {
 
     parameter pObj.
 
-    print "BURN DATA" at (2,24).
-    print "---------" at (2,25).
-    if pObj:haskey("dV")        print "DELTA-V:       " + round(pObj["dV"], 1) + " m/s  "   at (2,26).
-    if pObj:haskey("burnDur")   print "BURN DURATION: " + round(pObj["burnDur"]) + " s  "    at (2,27).
-    if pObj:haskey("burnEta")   print "BURN START:    " + format_timestamp(max(0, pObj["burnEta"] - time:seconds)) + "  "    at (30,26).
-    if pObj:haskey("burnEnd")   print "BURN END:      " + format_timestamp(max(0, pObj["burnEnd"] - time:seconds)) + "  "    at (30,27).
+    local pos is posE.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "BURN DATA" at (h1,vSync).
+    print "---------" at (h1,vNext).
+    if pObj:haskey("dV")        print "DELTA-V:       " + round(pObj["dV"], 1) + " m/s  "   at (h1,vNext).
+    if pObj:haskey("burnDur")   print "BURN DURATION: " + round(pObj["burnDur"]) + " s  "    at (h1,vNext).
+    if pObj:haskey("burnEta")   print "BURN START:    " + format_timestamp(max(0, pObj["burnEta"] - time:seconds)) + "  "    at (h1,vNext).
+    if pObj:haskey("burnEnd")   print "BURN END:      " + format_timestamp(max(0, pObj["burnEnd"] - time:seconds)) + "  "    at (h1,vNext).
+}
+
+
+global function disp_deploy {
+
+    parameter pDeploy.
+
+    local pos is posE.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "PAYLOAD DEPLOYMENT           " at (h1,vSync).
+    print "------------------           " at (h1,vNext).
+    print "ETA:" at (h1,vNext). print format_timestamp(pDeploy - time:seconds) + "                                    " at (h2,vSync). 
 }
 
 
 global function disp_countdown {
-    print "COUNTDOWN: T - " + dObj["countdown"] at (2,10).
+    print "COUNTDOWN: T - " + dObj["countdown"] at (2,11).
 }
 
 global function out_host {
@@ -108,4 +193,26 @@ global function disp_dobj {
     }
 
     dObj:clear().
+}
+
+
+global function disp_pid_data {
+
+    local pos is posD.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    if not (defined tPid) setup_tpid(0.15).
+    local pidOutput is tPid:output.
+
+    print "PID LOOP DATA" at (h1,vSync).
+    print "-------------" at (h1,vNext).
+    print "INPUT VAR:     " + round(ship:q, 5) + "          " at (h1,vNext).
+    print "SETPOINT:      " + round(tPid:setpoint, 5) + "          " at (h1, vNext). 
+    print "ERROR:         " + round(tPid:error, 5) + "          "    at (h1, vNext).
+    print "OUTPUT VALUE:  " + round(pidOutput, 5) + "          "    at (h1,vNext).
+    print "AGG TVAL:      " + round((1 + pidOutput) * 100, 1)+ "%       " at (h1,vNext).
+    
 }

@@ -9,6 +9,7 @@ runOncePath("0:/lib/lib_launch.ks").
 runOncePath("0:/lib/lib_core.ks").
 runOncePath("0:/lib/lib_sci.ks").
 runOncePath("0:/lib/lib_warp.ks").
+runOncePath("0:/lib/lib_pid.ks").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
@@ -25,11 +26,12 @@ if not (defined program) global program is 0.
 
 global sVal is heading(90, 90, 270).
 global tVal is 0.
+setup_tpid(.15).
 
 local gravTurnAlt is 60000.
 local maxAlt is 0.
 local refPitch to 3.
-local tApo is 500000.
+local tApo is 550000.
 
 lock steering to sVal.
 
@@ -75,6 +77,12 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set sVal to heading(90, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+        if ship:q >= tPid:setpoint {
+            set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
+        } 
+
+        else set tVal to 1.
+
         if ship:apoapsis >= tApo * 0.90 set runmode to 16.
     }
 
@@ -191,11 +199,14 @@ until runmode = 99 {
     set maxAlt to max(maxAlt, ship:altitude).
 
     disp_main().
-    disp_vessel_data().
     disp_launch_telemetry(maxAlt).
+    disp_orbital_data().
+    disp_engine_perf_data().
     
-    set stateObj["runmode"] to runmode.
-    log_state().
+    if stateObj["runmode"] <> runmode {
+        set stateObj["runmode"] to runmode.
+        log_state().
+    }
 }
 
 //** End Main

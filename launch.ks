@@ -1,17 +1,14 @@
-parameter missionScript.
-
 runOncePath("0:/lib/lib_init.ks").
 
 init_state_obj().
 
 local program is stateObj["program"].
 local runmode is stateObj["runmode"].
+local missionScript is "thor/thor_3_launch".
 
 until program = 256 {
     
     if  program = 0 {
-        disp_main().
-        disp_vessel_data().
         set_program(3).
     }
 
