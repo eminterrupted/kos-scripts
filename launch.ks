@@ -37,7 +37,8 @@ until program = 256 {
     }
 
     else if program = 11 and ship:status = "ORBITING" {
-        set_program(256).
+        lock steering to ship:prograde.
+        runPath("0:/_mission/payload/Thor_Dish.ks").
     }
 }
 

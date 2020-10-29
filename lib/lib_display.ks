@@ -29,6 +29,7 @@ local posC is lexicon("v",24,"h1",col1,"h2",col2).
 local posD is lexicon("v",24,"h1",col3,"h2",col4).
 local posE is lexicon("v",36,"h1",col1,"h2",col2).
 
+local clr is "                                                                      ".
 
 // when vSync >= 80 then {
 //     init_vsync().
@@ -114,7 +115,7 @@ global function disp_engine_perf_data {
     print "------------------           " at (h1,vNext).
     print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (h1,vNext).
     print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,vNext).
-    print "ISP:           " + round(get_avail_isp_for_alt(ship:altitude, stage:number), 2) + "  " at (h1,vNext).
+    print "ISP:           " + round(get_avail_isp_for_alt(ship:altitude, stage:number), 2) + "      " at (h1,vNext).
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,vNext).
     print "MASS:" at (h1,vNext).           print round(ship:mass, 2) + "     " at (h2,vSync).
     //
@@ -124,14 +125,34 @@ global function disp_engine_perf_data {
 
 global function clear_sec_data_fields {
 
-    set vSync to 34. 
+    set vSync to 24. 
 
-    print "                                                                      " at (0,vSync).
-    print "                                                                      " at (0,vNext).
-    print "                                                                      " at (0,vNext).
-    print "                                                                      " at (0,vNext).
-    print "                                                                      " at (0,vNext).
-    print "                                                                      " at (0,vNext).
+    print clr at (0,vSync).
+    print clr at (0,vNext).
+    print clr at (0,vNext).
+    print clr at (0,vNext).
+    print clr at (0,vNext).
+    print clr at (0,vNext).
+}
+
+
+global function clear_disp_block {
+    
+    parameter pos.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print clr at (h1,vSync).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
+    print clr at (h1,vNext).
 }
 
 
@@ -139,7 +160,7 @@ global function disp_burn_data {
 
     parameter pObj.
 
-    local pos is posE.
+    local pos is posD.
 
     set vSync to pos["v"].
     local h1 is pos["h1"].

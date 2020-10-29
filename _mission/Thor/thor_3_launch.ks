@@ -10,6 +10,7 @@ runOncePath("0:/lib/lib_core.ks").
 runOncePath("0:/lib/lib_sci.ks").
 runOncePath("0:/lib/lib_warp.ks").
 runOncePath("0:/lib/lib_pid.ks").
+runOncePath("0:/lib/lib_misc_parts.ks").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
@@ -176,10 +177,44 @@ until runmode = 99 {
                 log_sci_list(sciList).
                 transmit_sci_list(sciList).
             }
-            set runmode to 99. 
+            set runmode to 32. 
         }
 
-        else set runmode to 99. 
+        else set runmode to 32. 
+    }
+
+    else if runmode = 32 {
+        global tStamp is time:seconds + 600.
+        clear_sec_data_fields().
+        set runmode to 34.
+    }
+
+    else if runmode = 34 {
+        if warp = 0 {
+            warpTo(tStamp - 15).
+            set runmode to 36.
+        }
+    }
+
+    else if runmode = 36 {
+        if time:seconds >= tStamp set runmode to 38.
+        else disp_deploy(tStamp).
+    }
+
+    else if runmode = 38 {
+        unset tStamp.
+        for p in ship:partsTaggedPattern("decoupler") {
+            if p:parent:tag:contains("girder") jettison_decoupler_shroud(p).
+            wait 5.
+        }
+        deploy_payload().
+        set runmode to 50.
+    }
+
+    else if runmode = 50 {
+        lock steering to ship:prograde.
+        wait 10.
+        set runmode to 99.
     }
 
     if runmode < 99 {
