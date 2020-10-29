@@ -20,13 +20,13 @@ runOncePath("0:/lib/data/vessel/lib_mass.ks").
 //** Main
 
 //Vars
-global sVal is heading(90, 90, 270).
+global sVal is heading(90, 90, -90).
 global tVal is 0.
 
 local gravTurnAlt is 60000.
 local maxAlt is 0.
 local refPitch to 3.
-local tApo is 325000.
+local tApo is 750000.
 
 setup_tpid(.15).
 lock steering to sVal.
@@ -44,7 +44,6 @@ until runmode = 99 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
         set runmode to 2.
-        log_state().
     }
 
     //countdown
@@ -52,7 +51,6 @@ until runmode = 99 {
         set tVal to 1.
         launch_vessel().
         set runmode to 10.
-        log_state().
     }
 
     //launch
@@ -61,14 +59,12 @@ until runmode = 99 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
         set runmode to 12.
-        log_state().
     }
 
     //vertical ascent
     else if runmode = 12 {
         if ship:altitude >= 1250 or ship:verticalSpeed >= 120 {
             set runmode to 14.
-            log_state().
         }
     }
 
@@ -81,7 +77,6 @@ until runmode = 99 {
         
         if ship:apoapsis >= tApo * 0.90 {
             set runmode to 16.
-            log_state().
         }
     }
 
@@ -93,7 +88,6 @@ until runmode = 99 {
 
         else if ship:apoapsis >= tApo {
             set runmode to 18. 
-            log_state().
         }
     }
 
@@ -114,7 +108,6 @@ until runmode = 99 {
             log_sci_list(sciList).
             transmit_sci_list(sciList).
             set runmode to 20.
-            log_state().
         }
     }
 
@@ -123,7 +116,6 @@ until runmode = 99 {
         global burnObj is get_burn_data(tApo).
         disp_burn_data(burnObj).
         set runmode to 22.
-        log_state().
     }
 
     //circularization burn
@@ -143,7 +135,6 @@ until runmode = 99 {
 
         if time:seconds >= burnObj["burnEta"] and ship:periapsis <= tApo and kuniverse:timewarp:issettled {
             set runmode to 24.
-            log_state().
         }
     }
 
@@ -161,7 +152,6 @@ until runmode = 99 {
             set tVal to 0. 
             clear_sec_data_fields().
             set runmode to 26.
-            log_state().
         }
     }
 
@@ -170,11 +160,8 @@ until runmode = 99 {
         set sVal to ship:prograde.
         //safe_stage().
         set runmode to 30.
-        log_state().
     }
 
-
-    //Stage the remaining rocket away to leave just the sat. 
     //If we can go into high orbit, do science there. Advance when ship begins falling
     else if runmode = 30 {
         set sVal to ship:prograde.
@@ -183,37 +170,10 @@ until runmode = 99 {
                 log_sci_list(sciList).
                 transmit_sci_list(sciList).
             }
-            set runmode to 32. 
-            log_state().
+            set runmode to 99. 
         }
 
-        else set runmode to 32. 
-        log_state().
-    }
-
-    else if runmode = 32 {
-        global tStamp is time:seconds + 30.
-        clear_sec_data_fields().
-        set runmode to 34.
-        log_state().
-    }
-
-    else if runmode = 34 {
-        if time:seconds >= tStamp {
-            set runmode to 36.
-            log_state().
-        }
-
-        else disp_deploy(tStamp).
-    }
-
-    else if runmode = 36 {
-        unset tStamp.
-        deploy_payload().
-
-        set runmode to 99.
-        log_state().
-        
+        else set runmode to 99. 
     }
 
     if runmode < 99 {
@@ -222,11 +182,11 @@ until runmode = 99 {
     }
 
     else {
-        unlock steering. 
+        lock steering to ship:prograde. 
         lock throttle to 0.
     }
 
-    if stage:number > 0 and ship:availableThrust <= 0.1 and tVal <> 0 {
+    if stage:number > 0 and ship:availableThrust <= 0.1 and throttle <> 0 and stage:resourceslex:liquidfuel:amount <= 0.01 {
         safe_stage().
     }
 
@@ -236,9 +196,11 @@ until runmode = 99 {
     disp_launch_telemetry(maxAlt).
     disp_orbital_data().
     disp_engine_perf_data().
-    if runmode < 20 disp_pid_data().
 
-    set stateObj["runmode"] to runmode.
+    if stateObj["runmode"] <> runmode {
+        set stateObj["runmode"] to runmode.
+        log_state().
+    }
 }
 
 //** End Main

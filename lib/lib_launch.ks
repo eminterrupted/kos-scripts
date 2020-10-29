@@ -5,7 +5,8 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Payload
 global function deploy_payload {
-    until stage:number = 0 safe_stage().
+    wait 1. 
+    until stage:number <= 0 safe_stage().
 }
 
 

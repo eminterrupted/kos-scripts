@@ -4,10 +4,33 @@ init_state_obj().
 
 local program is stateObj["program"].
 local runmode is stateObj["runmode"].
-local missionScript is "thor/thor_3_launch".
+local launchScript is "thor/thor_2d_launch.ks".
+local payloadScript is "payload/relsat_deploy.ks".
+
+local function set_program {
+    parameter n is 0.
+
+    set program to n.
+    set stateObj["program"] to n.
+}
 
 until program = 256 {
     
+    local kPath is "0:/_mission/".
+    local kscLaunch is kPath + launchScript.
+    local kscPayload is kPath + payloadScript.
+    
+    local sPath is "1:/_mission/".
+    local localLaunch is sPath + launchScript.
+    local localPayload is sPath + payloadScript.
+
+    if exists(kscLaunch) copyPath(kscLaunch,localLaunch).
+    else print "KscPath not found: " + kscLaunch.
+
+    if exists(kscPayload) copyPath(kscPayload,localPayload).
+    else print "KscPath not found: " + kscPayload.
+
+
     if  program = 0 {
         set_program(3).
     }
@@ -17,11 +40,9 @@ until program = 256 {
         tag_parts_by_title(ship:parts).
         uplink_telemetry().
 
-        local kscPath is "0:/_mission/" + missionScript + ".ks".
-        local shipPath is "1:/_mission/" + missionScript + ".ks".
+        local kscPath is kPath + launchScript.
+        local shipPath is sPath + launchScript.
 
-        if exists(kscPath) copyPath(kscPath,shipPath).
-        else print "KscPath not found: " + kscPath.
 
         if exists(shipPath) {
             runPath(shipPath).
@@ -38,14 +59,12 @@ until program = 256 {
 
     else if program = 11 and ship:status = "ORBITING" {
         lock steering to ship:prograde.
-        runPath("0:/_mission/payload/Thor_Dish.ks").
+        runPath(localPayload).
+
+        set_program(0).
     }
-}
 
-
-local function set_program {
-    parameter n is 0.
-
-    set program to n.
-    set stateObj["program"] to n.
+    else if program = 0 and ship:status = "ORBITING" {
+        print "SCRIPT COMPLETE" at (0, 55).
+    }
 }

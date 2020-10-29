@@ -167,8 +167,6 @@ until runmode = 99 {
         set runmode to 30.
     }
 
-
-    //Stage the remaining rocket away to leave just the sat. 
     //If we can go into high orbit, do science there. Advance when ship begins falling
     else if runmode = 30 {
         set sVal to ship:prograde.
@@ -204,8 +202,10 @@ until runmode = 99 {
     else if runmode = 38 {
         unset tStamp.
         for p in ship:partsTaggedPattern("decoupler") {
-            if p:parent:tag:contains("girder") jettison_decoupler_shroud(p).
-            wait 5.
+            if p:parent:tag:contains("girder") {
+                jettison_decoupler_shroud(p).
+                wait 5.
+            }
         }
         deploy_payload().
         set runmode to 50.
