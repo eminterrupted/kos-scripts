@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-set config:ipu to 250.
+set config:ipu to 150.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -33,6 +33,8 @@ if runmode = 99 set runmode to 0.
 wait 1.
 
 until runmode = 99 {
+    
+    set sVal to ship:prograde. 
 
     if runmode = 0 {
         global tStamp is time:seconds + 600.    

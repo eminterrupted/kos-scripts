@@ -26,7 +26,7 @@ global tVal is 0.
 local gravTurnAlt is 60000.
 local maxAlt is 0.
 local refPitch to 3.
-local tApo is 750000.
+local tApo is 225000.
 
 setup_tpid(.15).
 lock steering to sVal.
@@ -120,6 +120,7 @@ until runmode = 99 {
 
     //circularization burn
     else if runmode = 22 {
+        set burnObj to get_burn_data(tApo).
         disp_burn_data(burnObj).
         
         set tVal to 0. 
@@ -139,6 +140,7 @@ until runmode = 99 {
     }
 
     else if runmode = 24 {
+        set burnObj to get_burn_data(tApo).
         disp_burn_data(burnObj).
 
         set tVal to 1.
@@ -151,6 +153,7 @@ until runmode = 99 {
         if ship:periapsis >= tApo {
             set tVal to 0. 
             clear_sec_data_fields().
+            unset burnObj.
             set runmode to 26.
         }
     }
@@ -165,6 +168,7 @@ until runmode = 99 {
     //If we can go into high orbit, do science there. Advance when ship begins falling
     else if runmode = 30 {
         set sVal to ship:prograde.
+       
         if ship:apoapsis > 250000 {
             if ship:altitude >= 250000 {
                 log_sci_list(sciList).

@@ -28,6 +28,14 @@ global function warp_to_timestamp {
 }
 
 
+global function test_part {
+    parameter p.
+
+    local mod is "ModuleTestSubject".
+
+    return true.
+}
+
 //shrouded decoupler
 //-- jettison
 global function jettison_decoupler_shroud {

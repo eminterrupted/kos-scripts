@@ -58,7 +58,6 @@ until program = 256 {
     }
 
     else if program = 11 and ship:status = "ORBITING" {
-        lock steering to ship:prograde.
         runPath(localPayload).
 
         set_program(0).
