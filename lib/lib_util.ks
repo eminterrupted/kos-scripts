@@ -33,7 +33,11 @@ global function test_part {
 
     local mod is "ModuleTestSubject".
 
-    return true.
+    if p:hasModule(mod) {
+        local m is p:getModule(mod).
+        if m:hasEvent("run test") m:doEvent("run test").
+        else safe_stage().
+    }
 }
 
 //shrouded decoupler

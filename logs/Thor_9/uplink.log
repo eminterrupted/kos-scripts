@@ -2,12 +2,12 @@
     "entries": [
         "lastUplink",
         {
-            "span": 2617184.5809132885,
+            "span": 2679975.8427164219,
             "$type": "kOS.Suffixed.TimeSpan"
         },
         "nextUplink",
         {
-            "span": 2617244.5809132885,
+            "span": 2680035.8427164219,
             "$type": "kOS.Suffixed.TimeSpan"
         }
     ],

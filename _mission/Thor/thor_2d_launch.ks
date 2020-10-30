@@ -26,7 +26,7 @@ global tVal is 0.
 local gravTurnAlt is 60000.
 local maxAlt is 0.
 local refPitch to 3.
-local tApo is 225000.
+local tApo is 500000.
 
 setup_tpid(.15).
 lock steering to sVal.

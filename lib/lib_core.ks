@@ -36,3 +36,21 @@ global function arm_chutes {
         }
     }
 }
+
+
+global function get_solar_exp {
+    local solList is ship:partsDubbedPattern("solar").
+    local exp is 0.
+    local mod is "ModuleDeployableSolarPanel".
+
+    for p in solList {
+        local m is p:getModule(mod).
+        set exp to exp + m:getField("sun exposure").        
+    }
+
+    if not (exp = 0) {
+        return exp / solList:length.
+    } else {
+        return 0.
+    }
+}

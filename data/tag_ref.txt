@@ -699,7 +699,15 @@
         "Modular Girder Segment",
         "structural.girder",
         "Procedural Nose Cone",
-        "aero.cone"
+        "aero.cone",
+        "Kerbodyne S3-14400 Tank",
+        "tank.stack",
+        "Kerbodyne KR-2L+ \"Rhino\" Liquid Fuel Engine",
+        "engine.lfo",
+        "Rockomax Jumbo-64 Fuel Tank",
+        "tank.stack",
+        "CR-0120 'Erebus' Cryogenic Rocket Engine",
+        "engine.lh2"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

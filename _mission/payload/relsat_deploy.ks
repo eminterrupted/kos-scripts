@@ -37,15 +37,18 @@ until runmode = 99 {
     set sVal to ship:prograde. 
 
     if runmode = 0 {
-        global tStamp is time:seconds + 600.    
         clear_sec_data_fields().
+        local sunExp is get_solar_exp().
+        if sunExp <= 0.01 global tStamp is time:seconds + 600.
+        else global tStamp is time:seconds + 30.
+
         set runmode to 10.
     }
 
     else if runmode = 10 {
         if warp = 0 {
-            warpTo(tStamp - 10).
-            set runmode to 20.
+            set runmode to 20. 
+            warpTo(tStamp).
         }
     }
 
