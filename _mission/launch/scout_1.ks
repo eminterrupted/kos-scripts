@@ -1,5 +1,11 @@
 @lazyGlobal off. 
 
+parameter tApo is 125000,
+          tPe is 125000,
+          tInc is 0,
+          gravTurnAlt is 60000,
+          refPitch to 3.
+
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_display.ks").

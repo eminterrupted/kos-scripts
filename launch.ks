@@ -1,11 +1,19 @@
+@lazyGlobal off.
+
+parameter launchScript,
+          obtScript,
+          tApo,
+          tPe,
+          tInc,
+          gravTurnAlt,
+          refPitch.
+
 runOncePath("0:/lib/lib_init.ks").
 
 init_state_obj().
 
 local program is stateObj["program"].
 local runmode is stateObj["runmode"].
-local launchScript is "thor/thor_2d_launch.ks".
-local payloadScript is "payload/relsat_deploy.ks".
 
 local function set_program {
     parameter n is 0.
@@ -17,18 +25,18 @@ local function set_program {
 until program = 256 {
     
     local kPath is "0:/_mission/".
-    local kscLaunch is kPath + launchScript.
-    local kscPayload is kPath + payloadScript.
+    local kscLaunchPath is kPath + "launch/" + launchScript.
+    local kscPayloadPath is kPath + "orbit/" + obtScript.
     
-    local sPath is "1:/_mission/".
-    local localLaunch is sPath + launchScript.
-    local localPayload is sPath + payloadScript.
+    local lPath is "1:/".
+    local localLaunchPath is lPath + launchScript.
+    local localPayloadPath is lPath + obtScript.
 
-    if exists(kscLaunch) copyPath(kscLaunch,localLaunch).
-    else print "KscPath not found: " + kscLaunch.
+    if exists(kscLaunchPath) copyPath(kscLaunchPath,localLaunchPath).
+    else print "KscPath not found: " + kscLaunchPath.
 
-    if exists(kscPayload) copyPath(kscPayload,localPayload).
-    else print "KscPath not found: " + kscPayload.
+    if exists(kscPayloadPath) copyPath(kscPayloadPath,localPayloadPath).
+    else print "KscPath not found: " + kscPayloadPath.
 
 
     if  program = 0 {
@@ -40,25 +48,21 @@ until program = 256 {
         tag_parts_by_title(ship:parts).
         uplink_telemetry().
 
-        local kscPath is kPath + launchScript.
-        local shipPath is sPath + launchScript.
-
-
-        if exists(shipPath) {
-            runPath(shipPath).
+        if exists(localLaunchPath) {
+            runPath(localLaunchPath, tApo, tPe, tInc, gravTurnAlt, refPitch).
         }
 
         else {
-            print "ShipPath not found: " + shipPath.
+            print "ShipPath not found: " + localLaunchPath.
             print "Running from KSC".
-            runPath(kscPath).
+            runPath(kscLaunchPath, tApo, tPe, tInc, gravTurnAlt, refPitch ).
         }
 
         set_program(11).
     }
 
     else if program = 11 and ship:status = "ORBITING" {
-        runPath(localPayload).
+        runPath(localPayloadPath).
 
         set_program(0).
     }

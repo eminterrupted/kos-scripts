@@ -1,5 +1,11 @@
 @lazyGlobal off. 
 
+parameter tApo is 125000,
+          tPe is 125000,
+          tInc is 0,
+          gravTurnAlt is 60000,
+          refPitch to 3.
+
 set config:ipu to 250.
 
 clearScreen.
@@ -9,6 +15,8 @@ runOncePath("0:/lib/lib_launch.ks").
 runOncePath("0:/lib/lib_core.ks").
 runOncePath("0:/lib/lib_sci.ks").
 runOncePath("0:/lib/lib_warp.ks").
+runOncePath("0:/lib/lib_pid.ks").
+runOncePath("0:/lib/lib_misc_parts.ks").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
@@ -25,12 +33,9 @@ if not (defined program) global program is 0.
 
 global sVal is heading(90, 90, 270).
 global tVal is 0.
-
-local gravTurnAlt is 60000.
 local maxAlt is 0.
-local refPitch to 3.
-local tApo is 500000.
 
+setup_tpid(.15).
 lock steering to sVal.
 
 until runmode = 99 {
@@ -42,7 +47,7 @@ until runmode = 99 {
     local sciList is get_sci_modules_for_vessel().
 
     //pad science
-    if runmode = 0 {   
+    if runmode = 0 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
         set runmode to 2.
@@ -75,6 +80,12 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set sVal to heading(90, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+        if ship:q >= tPid:setpoint {
+            set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
+        } 
+
+        else set tVal to 1.
+
         if ship:apoapsis >= tApo * 0.90 set runmode to 16.
     }
 
@@ -158,8 +169,6 @@ until runmode = 99 {
         set runmode to 30.
     }
 
-
-    //Stage the remaining rocket away to leave just the sat. 
     //If we can go into high orbit, do science there. Advance when ship begins falling
     else if runmode = 30 {
         set sVal to ship:prograde.
@@ -168,10 +177,46 @@ until runmode = 99 {
                 log_sci_list(sciList).
                 transmit_sci_list(sciList).
             }
-            set runmode to 99. 
+            set runmode to 32. 
         }
 
-        else set runmode to 99. 
+        else set runmode to 32. 
+    }
+
+    else if runmode = 32 {
+        global tStamp is time:seconds + 600.
+        clear_sec_data_fields().
+        set runmode to 34.
+    }
+
+    else if runmode = 34 {
+        if warp = 0 {
+            warpTo(tStamp - 15).
+            set runmode to 36.
+        }
+    }
+
+    else if runmode = 36 {
+        if time:seconds >= tStamp set runmode to 38.
+        else disp_deploy(tStamp).
+    }
+
+    else if runmode = 38 {
+        unset tStamp.
+        for p in ship:partsTaggedPattern("decoupler") {
+            if p:parent:tag:contains("girder") {
+                jettison_decoupler_shroud(p).
+                wait 5.
+            }
+        }
+        deploy_payload().
+        set runmode to 50.
+    }
+
+    else if runmode = 50 {
+        lock steering to ship:prograde.
+        wait 10.
+        set runmode to 99.
     }
 
     if runmode < 99 {
@@ -191,10 +236,14 @@ until runmode = 99 {
     set maxAlt to max(maxAlt, ship:altitude).
 
     disp_main().
-    disp_vessel_data(runmode, program).
     disp_launch_telemetry(maxAlt).
+    disp_orbital_data().
+    disp_engine_perf_data().
     
-    log_state().
+    if stateObj["runmode"] <> runmode {
+        set stateObj["runmode"] to runmode.
+        log_state().
+    }
 }
 
 //** End Main

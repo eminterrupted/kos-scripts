@@ -1,5 +1,11 @@
 @lazyGlobal off. 
 
+parameter tApo,
+          tPe,
+          tInc,
+          gravTurnAlt,
+          refPitch.
+
 set config:ipu to 250.
 
 clearScreen.
@@ -23,10 +29,7 @@ runOncePath("0:/lib/data/vessel/lib_mass.ks").
 global sVal is heading(90, 90, -90).
 global tVal is 0.
 
-local gravTurnAlt is 60000.
 local maxAlt is 0.
-local refPitch to 3.
-local tApo is 500000.
 
 setup_tpid(.15).
 lock steering to sVal.

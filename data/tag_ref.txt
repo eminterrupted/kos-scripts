@@ -707,7 +707,13 @@
         "Rockomax Jumbo-64 Fuel Tank",
         "tank.stack",
         "CR-0120 'Erebus' Cryogenic Rocket Engine",
-        "engine.lh2"
+        "engine.lh2",
+        "FL-T100 Fuel Tank",
+        "",
+        "FL-T400 Fuel Tank",
+        "",
+        "FL-T800 Fuel Tank",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

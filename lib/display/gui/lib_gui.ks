@@ -7,6 +7,36 @@ global tabWidget_allTabs is list().
 global tabWidget_allPanels is list().
 
 
+global function add_popup_menu {
+
+    parameter pTabPanel,
+              pOptions.
+
+    local popup is pTabPanel:addPopupMenu().
+    set popup:options to pOptions.
+
+    return popup.
+}
+
+global function add_scrollbox {
+
+    parameter pTabWidget. // tab title
+
+    // Get back the two widgets we created in add_tab_widget
+    local hBoxes is pTabWidget:widgets.
+    local gTabs is hBoxes[0].    // hlayout
+    local gPanels is hBoxes[1].  // stack
+
+    // Add a scrollbox
+    local panel is gPanels:addscrollbox().
+    set panel:style to panel:gui:skin:get("TabWidgetPanel").
+    set panel:style:width to 400.
+    set panel:style:height to 400.
+
+    return panel.
+}
+
+
 global function add_tab {
 
     parameter pTabWidget,   // (the vbox)
@@ -103,30 +133,27 @@ global function choose_tab {
 }
 
 
-global function hello_world_gui {
-    // "Hello World" program for kOS GUI.
-    //
-    // Create a GUI window
-    LOCAL gui IS GUI(200).
-    // Add widgets to the GUI
-    LOCAL label IS gui:ADDLABEL("Hello world!").
-    SET label:STYLE:ALIGN TO "CENTER".
-    SET label:STYLE:HSTRETCH TO True. // Fill horizontally
-    LOCAL ok TO gui:ADDBUTTON("OK").
-    // Show the GUI.
-    gui:SHOW().
-    // Handle GUI widget interactions.
-    //
-    // This is the technique known as "polling" - In a loop you
-    // continually check to see if something has happened:
-    LOCAL isDone IS FALSE.
-    UNTIL isDone
-    {
-    if (ok:TAKEPRESS)
-        SET isDone TO TRUE.
-    WAIT 0.1. // No need to waste CPU time checking too often.
-    }
-    print "OK pressed.  Now closing demo.".
-    // Hide when done (will also hide if power lost).
-    gui:HIDE().
+global function get_launch_scripts {
+        local fList is list().
+        local scrList is list().
+
+        switch to 0.
+        cd("_mission/launch").
+        list files in fList.
+        for f in fList scrList:add(f).
+
+        return scrList.
+}
+
+
+global function get_orbital_scripts {
+        local fList is list().
+        local scrList is list().
+
+        switch to 0.
+        cd("_mission/orbit").
+        list files in fList.
+        for f in fList scrList:add(f).
+
+        return scrList.
 }
