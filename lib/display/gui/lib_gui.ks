@@ -37,6 +37,16 @@ global function add_scrollbox {
 }
 
 
+global function add_h_slider {
+
+    parameter pTabPanel,
+              pMin,
+              pMax,
+              pInit.
+
+    return true.
+}
+
 global function add_tab {
 
     parameter pTabWidget,   // (the vbox)

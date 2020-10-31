@@ -12,6 +12,12 @@ runOncePath("0:/lib/lib_init.ks").
 
 init_state_obj().
 
+if tApo:istype("String") set tApo to tApo:toNumber.
+if tPe:istype("String") set tPe to tPe:toNumber.
+if tInc:istype("String") set tInc to tInc:toNumber.
+if gravTurnAlt:istype("String") set gravTurnAlt to gravTurnAlt:toNumber.
+if refPitch:istype("String") set refPitch to refPitch:toNumber.
+
 local program is stateObj["program"].
 local runmode is stateObj["runmode"].
 
@@ -22,7 +28,7 @@ local function set_program {
     set stateObj["program"] to n.
 }
 
-until program = 256 {
+until program = 255 {
     
     local kPath is "0:/_mission/".
     local kscLaunchPath is kPath + "launch/" + launchScript.
@@ -64,10 +70,10 @@ until program = 256 {
     else if program = 11 and ship:status = "ORBITING" {
         runPath(localPayloadPath).
 
-        set_program(0).
+        set_program(255).
     }
 
-    else if program = 0 and ship:status = "ORBITING" {
+    else if program = 255 and ship:status = "ORBITING" {
         print "SCRIPT COMPLETE" at (0, 55).
     }
 }
