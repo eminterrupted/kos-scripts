@@ -23,7 +23,7 @@ runOncePath("0:/lib/data/vessel/lib_mass.ks").
 
 
 //
-//** Main
+//Main
 
 //Vars
 if not (defined runmode) global runmode is 0.
