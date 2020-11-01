@@ -709,11 +709,13 @@
         "CR-0120 'Erebus' Cryogenic Rocket Engine",
         "engine.lh2",
         "FL-T100 Fuel Tank",
-        "",
+        "tank.stack",
         "FL-T400 Fuel Tank",
-        "",
+        "tank.stack",
         "FL-T800 Fuel Tank",
-        ""
+        "tank.stack",
+        "Mk-1H 'Torch' Liquid Fuel Engine",
+        "engine.lfo"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

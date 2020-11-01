@@ -30,9 +30,9 @@ local function set_program {
 
 until program = 255 {
     
-    local kPath is "0:/_mission/".
+    local kPath is "0:/_main/".
     local kscLaunchPath is kPath + "launch/" + launchScript.
-    local kscPayloadPath is kPath + "orbit/" + obtScript.
+    local kscPayloadPath is kPath + "mission/" + obtScript.
     
     local lPath is "1:/".
     local localLaunchPath is lPath + launchScript.

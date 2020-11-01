@@ -40,6 +40,20 @@ global function test_part {
     }
 }
 
+
+global function get_module_fields {
+    parameter m.
+
+    local retObj is lexicon().
+    
+    for f in m:allFieldNames {
+        set retObj[f] to m:getField(f).
+    }
+
+    return retObj.
+}
+
+
 //shrouded decoupler
 //-- jettison
 global function jettison_decoupler_shroud {

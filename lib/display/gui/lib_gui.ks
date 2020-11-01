@@ -156,7 +156,7 @@ global function get_launch_scripts {
 }
 
 
-global function get_orbital_scripts {
+global function get_mission_scripts {
         local fList is list().
         local scrList is list().
 

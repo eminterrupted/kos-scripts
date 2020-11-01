@@ -8,7 +8,7 @@ runOncePath("0:/lib/display/gui/lib_gui.ks").
 tag_parts_by_title(ship:parts).
 
 local launchScript is "scout_1.ks".
-local obtScript is "deploy_relsat.ks".
+local missionScript is "deploy_sat.ks".
 local tApo is "250000".
 local tPe is "250000".
 local tInc is "0".
@@ -16,7 +16,7 @@ local gravTurnAlt is "60000".
 local refPitch is "3".
 
 local lScriptList is get_launch_scripts().
-local oScriptList is get_orbital_scripts().
+local mScriptList is get_mission_scripts().
 
 local gui is gui(500).
 local tabWidget is add_tab_widget(gui).
@@ -33,26 +33,32 @@ local tfPe is page:addTextField(tPe).
 set tfPe:onConfirm to { parameter pe. set tPe to pe.}.
 
 page:addLabel("Target Inclination").
-local inc is page:addTextField(tInc).
-set inc:onConfirm to { parameter i. set tInc to i.}.
+local inc is 0.
+local incLabel is page:addLabel(round(inc):tostring).
+local inc is page:addHSlider(inc, -180, 180).
+set inc:onChange to { parameter i. set tInc to round(i). set incLabel:text to tInc:tostring. }.
 
 page:addLabel("Gravity Turn End Altitude").
-local gta is page:addTextField(gravTurnAlt).
-set gta:onConfirm to { parameter gt. set gravTurnAlt to gt.}.
+local gta is 60000.
+local gtaLabel is page:addLabel(round(gta):toString).
+local gta is page:addHSlider(gta, 45000, 70000).
+set gta:onChange to { parameter a. set gravTurnAlt to round(a). set gtaLabel:text to gravTurnAlt:toString.}.
 
 page:addLabel("refPitch").
-local rPitch is page:addTextField("3").
-set rPitch:onConfirm to { parameter rp. set refPitch to rp.}.
+local rp is 3.
+local rpLabel is page:addLabel(round(rp,1):tostring).
+local rp is page:addHSlider(rp, 0, 10).
+set rp:onChange to { parameter p. set refPitch to round(p, 1). set rpLabel:text to refPitch:tostring.}.
 
 local page is add_tab(tabWidget, "Launch Script").
 page:addLabel("Select launch script").
 local lScript is add_popup_menu(page,lScriptList).
 set lScript:onchange to { parameter lChoice. set launchScript to lChoice:toString.}.
 
-local page is add_tab(tabWidget, "Orbital Script").
-page:addLabel("Select mission script for orbit").
-local oScript is add_popup_menu(page,oScriptList).
-set oScript:onchange to { parameter oChoice. set obtScript to oChoice:toString.}.
+local page is add_tab(tabWidget, "Mission Script").
+page:addLabel("Select mission script for post-launch").
+local mScript is add_popup_menu(page,mScriptList).
+set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString.}.
 
 local close is gui:addButton("Close").
 
@@ -87,7 +93,7 @@ until close:pressed {
         print " Panel 3: " + tabWidget_allPanels[2]:visible + " " at (2,15).
         
         print "Launch script selected:  " + launchScript + "         " at (2,18).
-        print "Orbital script selected: " + obtScript + "         " at (2,19).
+        print "Mission script selected: " + missionScript + "         " at (2,19).
 
         print "Target Apoapsis:         " + tApo + "      " at (2,21).
         print "Target Periapsis:        " + tPe + "      " at (2,22).
@@ -98,4 +104,4 @@ until close:pressed {
 
 gui:hide().
 
-runPath("0:/launch.ks", launchScript, obtScript, tApo, tPe, tInc, gravTurnAlt, refPitch).
+runPath("0:/launch.ks", launchScript, missionScript, tApo, tPe, tInc, gravTurnAlt, refPitch).
