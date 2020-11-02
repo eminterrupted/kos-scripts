@@ -237,3 +237,23 @@ global function disp_pid_data {
     print "AGG TVAL:      " + round((1 + pidOutput) * 100, 1)+ "%       " at (h1,vNext).
     
 }
+
+
+global function disp_launch_params {
+    local pos is posE
+    .
+
+    parameter tApo, tPe, tInc, gravTurnAlt, refPitch.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "LAUNCH PARAMETERS" at (h1,vSync).
+    print "-----------------" at (h1,vNext).
+    print "TAPO:            " + tApo at (h1,vNext).
+    print "TPE:             " + tPe at (h1,vNext).
+    print "TINC:            " + tInc at (h1,vNext).
+    print "GRAVTURNALT:     " + gravTurnAlt at (h1,vNext).
+    print "REFPITCH:        " + refPitch at (h1,vNext).
+}

@@ -27,6 +27,12 @@ global function get_burn_data {
 
     //get deltaV for the burn
     local dV is get_deltav_at_ap(newAlt).
+
+    print "startMass:   " + startMass at (2,45).
+    print "apIsp:       " + apIsp at (2,46).
+    print "dv:          " + dV at (2, 47).
+    print "exhVel:      " + exhVel at (2,48).
+
     
     //Calculate time parameters for the burn
     local stageThrust is get_avail_thrust_for_alt(stage:number, ship:apoapsis).

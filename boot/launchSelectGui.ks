@@ -7,13 +7,28 @@ runOncePath("0:/lib/display/gui/lib_gui.ks").
 
 tag_parts_by_title(ship:parts).
 
+local cache is "0:/data/launchSelectCache.txt".
+local cacheObj is lexicon().
+
 local launchScript is "scout_1.ks".
 local missionScript is "deploy_sat.ks".
 local tApo is "250000".
 local tPe is "250000".
-local tInc is "0".
-local gravTurnAlt is "60000".
-local refPitch is "3".
+local tInc is 0.
+local gravTurnAlt is 60000.
+local refPitch is 3.
+
+if exists(cache) {
+        local cacheObj is readJson(cache).
+
+        if cacheObj:hasKey("launchScript") set launchScript to cacheObj["launchScript"]:toString.
+        if cacheObj:hasKey("missionScript") set missionScript to cacheObj["missionScript"]:toString.
+        if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
+        if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
+        if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
+        if cacheObj:hasKey("gravTurnAlt") set gravTurnAlt to cacheObj["gravTurnAlt"].
+        if cacheObj:hasKey("refPitch") set refPitch to cacheObj["refPitch"].
+}
 
 local lScriptList is get_launch_scripts().
 local mScriptList is get_mission_scripts().
@@ -25,40 +40,40 @@ local page is add_tab(tabWidget, "Launch Script Params").
 page:addLabel("Select launch parameters").
 
 page:addLabel("Target Apoapsis").
-local tfAp is page:addTextField(tApo).
-set tfAp:onConfirm to { parameter ap. set tApo to ap.}.
+local tfAp is page:addTextField(tApo:toString).
+set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tApo"] to tApo. }.
 
 page:addLabel("Target Periapsis").
-local tfPe is page:addTextField(tPe).
-set tfPe:onConfirm to { parameter pe. set tPe to pe.}.
+local tfPe is page:addTextField(tPe:toString).
+set tfPe:onConfirm to { parameter pe. set tPe to round(pe:toNumber). set cacheObj["tPe"]to tPe. }.
 
 page:addLabel("Target Inclination").
-local inc is 0.
+local inc is tInc.
 local incLabel is page:addLabel(round(inc):tostring).
 local inc is page:addHSlider(inc, -180, 180).
-set inc:onChange to { parameter i. set tInc to round(i). set incLabel:text to tInc:tostring. }.
+set inc:onChange to { parameter i. set tInc to round(i). set cacheObj["tInc"] to tInc. set incLabel:text to tInc:tostring. }.
 
 page:addLabel("Gravity Turn End Altitude").
-local gta is 60000.
+local gta is gravTurnAlt.
 local gtaLabel is page:addLabel(round(gta):toString).
 local gta is page:addHSlider(gta, 45000, 70000).
-set gta:onChange to { parameter a. set gravTurnAlt to round(a). set gtaLabel:text to gravTurnAlt:toString.}.
+set gta:onChange to { parameter a. set gravTurnAlt to round(a). set cacheObj["gravTurnAlt"] to gravTurnAlt. set gtaLabel:text to gravTurnAlt:toString.}.
 
 page:addLabel("refPitch").
-local rp is 3.
+local rp is refPitch.
 local rpLabel is page:addLabel(round(rp,1):tostring).
 local rp is page:addHSlider(rp, 0, 10).
-set rp:onChange to { parameter p. set refPitch to round(p, 1). set rpLabel:text to refPitch:tostring.}.
+set rp:onChange to { parameter p. set refPitch to round(p, 1). set cacheObj["refPitch"] to refPitch. set rpLabel:text to refPitch:tostring.}.
 
 local page is add_tab(tabWidget, "Launch Script").
 page:addLabel("Select launch script").
 local lScript is add_popup_menu(page,lScriptList).
-set lScript:onchange to { parameter lChoice. set launchScript to lChoice:toString.}.
+set lScript:onchange to { parameter lChoice. set launchScript to lChoice:toString. set cacheObj["launchScript"] to launchScript.}.
 
 local page is add_tab(tabWidget, "Mission Script").
 page:addLabel("Select mission script for post-launch").
 local mScript is add_popup_menu(page,mScriptList).
-set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString.}.
+set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString. set cacheObj["missionScript"] to missionScript.}.
 
 local close is gui:addButton("Close").
 
@@ -103,5 +118,15 @@ until close:pressed {
 }
 
 gui:hide().
+
+set cacheObj["launchScript"] to launchScript.
+set cacheObj["missionScript"] to missionScript.
+set cacheObj["tApo"] to tApo.
+set cacheObj["tPe"] to tPe.
+set cacheObj["tInc"] to tInc.
+set cacheObj["gravTurnAlt"] to gravTurnAlt.
+set cacheObj["refPitch"] to refPitch.
+
+writeJson(cacheObj,cache).
 
 runPath("0:/launch.ks", launchScript, missionScript, tApo, tPe, tInc, gravTurnAlt, refPitch).

@@ -715,7 +715,13 @@
         "FL-T800 Fuel Tank",
         "tank.stack",
         "Mk-1H 'Torch' Liquid Fuel Engine",
-        "engine.lfo"
+        "engine.lfo",
+        "Procedural Fairing Base",
+        "",
+        "MS-1 Multispectral Scanner",
+        "",
+        "General Round Launch Stand",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

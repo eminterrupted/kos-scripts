@@ -148,7 +148,7 @@ global function get_launch_scripts {
         local scrList is list().
 
         switch to 0.
-        cd("_mission/launch").
+        cd("_main/launch").
         list files in fList.
         for f in fList scrList:add(f).
 
@@ -161,7 +161,7 @@ global function get_mission_scripts {
         local scrList is list().
 
         switch to 0.
-        cd("_mission/orbit").
+        cd("_main/mission").
         list files in fList.
         for f in fList scrList:add(f).
 

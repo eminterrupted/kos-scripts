@@ -1,0 +1,19 @@
+{
+    "entries": [
+        "launchScript",
+        "thor_3_launch.ks",
+        "missionScript",
+        "deploy_sat.ks",
+        "tApo",
+        150000,
+        "tPe",
+        150000,
+        "tInc",
+        0,
+        "gravTurnAlt",
+        55000,
+        "refPitch",
+        3
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

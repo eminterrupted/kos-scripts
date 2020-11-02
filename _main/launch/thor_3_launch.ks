@@ -46,10 +46,16 @@ until runmode = 99 {
     //Setup
     local sciList is get_sci_modules_for_vessel().
 
-    //pad science
+    //prelaunch activities
     if runmode = 0 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
+        when ship:altitude > 70000 and ship:altitude < 71000 then {
+            for fairing in ship:modulesNamed("ProceduralFairingDecoupler") {
+                jettison_fairing(fairing).
+            }
+        }
+
         set runmode to 2.
     }
 
@@ -86,13 +92,17 @@ until runmode = 99 {
 
         else set tVal to 1.
 
-        if ship:apoapsis >= tApo * 0.90 set runmode to 16.
+        if ship:apoapsis >= tApo * 0.90 {
+            global cPid is pidLoop(0.05, 0.02, 0.01, 0, 1).
+            set cPid:setpoint to tApo.
+            set runmode to 16.
+        }
     }
 
     //slow burn to tApo
     else if runmode = 16 {
         if ship:apoapsis < tApo {
-            set tVal to max(0.1, 1 - (ship:apoapsis / tApo)).
+            set tVal to max(0.05, 1 + cPid:update(time:seconds, ship:altitude)).
         }
 
         else if ship:apoapsis >= tApo set runmode to 18. 
@@ -117,7 +127,6 @@ until runmode = 99 {
             set runmode to 20.
         }
     }
-
 
     else if runmode = 20 {
         global burnObj is get_burn_data(tApo).
@@ -239,6 +248,7 @@ until runmode = 99 {
     disp_launch_telemetry(maxAlt).
     disp_orbital_data().
     disp_engine_perf_data().
+    disp_launch_params(tApo, tPe, tInc, gravTurnAlt, refPitch).
     
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.

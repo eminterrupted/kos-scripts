@@ -7,18 +7,27 @@
     global function check_scansat_alt {
         parameter p.
 
+        local scanAlt is get_scansat_alt(p).
+        
+        if ship:altitude > scanAlt["max"] return 3.         // too high
+        else if ship:altitude > scanAlt["ideal"] return 2.  // ideal
+        else if ship:altitude > scanAlt["min"] return 1.    // ok
+        else return 0.                                      // too low
+    }
+
+
+    global function get_scansat_alt {
+        parameter p.
+
         local m is p:getModule("SCANsat").
         local altStr is m:getField("scan altitude").
-
+        
         local altRange is altStr:split(":")[0]:trim.
         local idealAlt is (altStr:split(":")[1]:replace(">",""):replace("km",""):replace("ideal",""):trim:tonumber) * 10000.
         local minAlt is (altRange:split("-")[0]:replace("km"):trim:tonumber) * 10000.
         local maxAlt is (altRange:split("-")[1]:replace("km"):trim:tonumber) * 10000.
-        
-        if ship:altitude > maxAlt return 3.         // too high
-        else if ship:altitude > idealAlt return 2.  // ideal
-        else if ship:altitude > minAlt return 1.    // ok
-        else return 0.                              // too low
+
+        return lexicon("ideal", idealAlt, "min", minAlt, "max", maxAlt).
     }
 
 
@@ -41,9 +50,9 @@
 //Procedural fairings
     //-- jettison fairing
     global function jettison_fairing {
-        parameter p. 
-
-        local m is p:getModule("ProceduralFairingDecoupler").
+        parameter m. 
+        
+        if m:isType("Part") set m to m:getModule("ProceduralFairingDecoupler").
         if m:hasEvent("jettison fairing") m:doEvent("jettison fairing").
     }
 

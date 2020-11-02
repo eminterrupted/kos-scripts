@@ -11,6 +11,7 @@ runOncePath("0:/lib/lib_log.ks").
 runOncePath("0:/lib/lib_tag.ks").
 runOncePath("0:/lib/lib_display.ks").
 runOncePath("0:/lib/lib_core.ks").
+runOncePath("0:/lib/lib_util.ks").
 runOncePath("0:/lib/data/vessel/lib_mass.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/maneuver/lib_nav.ks").
