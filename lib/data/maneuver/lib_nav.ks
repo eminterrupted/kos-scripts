@@ -33,7 +33,6 @@ global function get_burn_data {
     print "dv:          " + dV at (2, 47).
     print "exhVel:      " + exhVel at (2,48).
 
-    
     //Calculate time parameters for the burn
     local stageThrust is get_avail_thrust_for_alt(stage:number, ship:apoapsis).
     local fuelBurned is startMass - ( startMass / (constant:e ^ (dV / exhVel))).

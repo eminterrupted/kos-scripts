@@ -39,11 +39,10 @@ until program = 255 {
     local localPayloadPath is lPath + obtScript.
 
     if exists(kscLaunchPath) copyPath(kscLaunchPath,localLaunchPath).
-    else print "KscPath not found: " + kscLaunchPath.
+    else logStr("KscPath not found: " + kscLaunchPath).
 
     if exists(kscPayloadPath) copyPath(kscPayloadPath,localPayloadPath).
-    else print "KscPath not found: " + kscPayloadPath.
-
+    else logStr("KscPath not found: " + kscPayloadPath).
 
     if  program = 0 {
         set_program(3).
@@ -59,8 +58,8 @@ until program = 255 {
         }
 
         else {
-            print "ShipPath not found: " + localLaunchPath.
-            print "Running from KSC".
+            logStr("ShipPath not found: " + localLaunchPath).
+            logStr("Running from KSC").
             runPath(kscLaunchPath, tApo, tPe, tInc, gravTurnAlt, refPitch ).
         }
 

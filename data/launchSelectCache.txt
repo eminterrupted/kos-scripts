@@ -1,13 +1,13 @@
 {
     "entries": [
+        "tApo",
+        175000,
+        "tPe",
+        125000,
         "launchScript",
         "thor_3_launch.ks",
         "missionScript",
         "deploy_sat.ks",
-        "tApo",
-        150000,
-        "tPe",
-        150000,
         "tInc",
         0,
         "gravTurnAlt",

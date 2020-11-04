@@ -50,11 +50,7 @@ until runmode = 99 {
     if runmode = 0 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
-        when ship:altitude > 70000 and ship:altitude < 71000 then {
-            for fairing in ship:modulesNamed("ProceduralFairingDecoupler") {
-                jettison_fairing(fairing).
-            }
-        }
+        arm_fairings_on_launch().
 
         set runmode to 2.
     }
@@ -129,7 +125,7 @@ until runmode = 99 {
     }
 
     else if runmode = 20 {
-        global burnObj is get_burn_data(tApo).
+        global burnObj is get_burn_data(tPe).
         disp_burn_data(burnObj).
         set runmode to 22.
     }
@@ -139,7 +135,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
         
         set tVal to 0. 
-        set sVal to heading(90, get_pitch_for_altitude(0, tApo), 0).
+        set sVal to heading(90, get_pitch_for_altitude(0, tPe), 0).
         
         local burnEta is burnObj["burnEta"] - time:seconds.
 
@@ -149,7 +145,7 @@ until runmode = 99 {
             }
         }
 
-        if time:seconds >= burnObj["burnEta"] and ship:periapsis <= tApo and kuniverse:timewarp:issettled {
+        if time:seconds >= burnObj["burnEta"] and ship:periapsis <= tPe and kuniverse:timewarp:issettled {
             set runmode to 24.
         }
     }
@@ -158,13 +154,13 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         set tVal to 1.
-        set sVal to heading(90, get_pitch_for_altitude(0, tApo), 0).
+        set sVal to heading(90, get_pitch_for_altitude(0, tPe), 0).
 
-        if ship:periapsis >= tApo * 0.90 and ship:periapsis < tApo {
-            set tVal to max(0.1, 1 - (ship:apoapsis / tApo)).
+        if ship:periapsis >= tPe * 0.90 and ship:periapsis < tPe {
+            set tVal to max(0.1, 1 - (ship:apoapsis / tPe)).
         }
 
-        if ship:periapsis >= tApo {
+        if ship:periapsis >= tPe {
             set tVal to 0. 
             clear_sec_data_fields().
             set runmode to 26.

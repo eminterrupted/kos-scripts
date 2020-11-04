@@ -129,4 +129,4 @@ set cacheObj["refPitch"] to refPitch.
 
 writeJson(cacheObj,cache).
 
-runPath("0:/launch.ks", launchScript, missionScript, tApo, tPe, tInc, gravTurnAlt, refPitch).
+runPath("0:/_main/mission_controller.ks", launchScript, missionScript, tApo, tPe, tInc, gravTurnAlt, refPitch).

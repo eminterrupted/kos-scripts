@@ -16,6 +16,7 @@
     }
 
 
+    //Formats the altitude string to return an object containing min, max, and ideal values.
     global function get_scansat_alt {
         parameter p.
 
@@ -27,7 +28,7 @@
         local minAlt is (altRange:split("-")[0]:replace("km"):trim:tonumber) * 10000.
         local maxAlt is (altRange:split("-")[1]:replace("km"):trim:tonumber) * 10000.
 
-        return lexicon("ideal", idealAlt, "min", minAlt, "max", maxAlt).
+        return lexicon("min", minAlt, "max", maxAlt, "ideal", idealAlt).
     }
 
 
@@ -42,7 +43,33 @@
             set retObj[f] to m:getField(f).
         }
 
+    //surface in daylight field contains html color codes - strip it out
+        if retObj:hasKey("surface in daylight") set retObj["surface in daylight"] to m:getField("surface in daylight"):substring(15,1).
+
         return retObj.
+    }
+
+
+    //Sets up a trigger to turn off the scanner if surface is in darkness
+    global function schedule_scan_by_daylight {
+        parameter p,
+                  pScanType.
+
+        local m is p:getModule("SCANsat").
+        local srfLight is "". 
+
+        if m:hasField("surface in daylight") {
+            lock srfLight to m:getField("surface in daylight"):substring(15,1).
+            on srfLight {
+                if srfLight = "V" {
+                    if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
+                } else {
+                    if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
+                }
+
+                return true.
+            }
+        }
     }
 
 
