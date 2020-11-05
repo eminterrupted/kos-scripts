@@ -22,6 +22,7 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 
 //
@@ -31,6 +32,8 @@ runOncePath("0:/lib/data/vessel/lib_mass.ks").
 if not (defined runmode) global runmode is 0.
 if not (defined program) global program is 0.
 
+local azObj is l_az_calc_init(tApo, tInc).
+local az to l_az_calc(azObj).
 global sVal is heading(90, 90, 270).
 global tVal is 0.
 local maxAlt is 0.
@@ -64,7 +67,8 @@ until runmode = 99 {
 
     //launch
     else if runmode = 10 and alt:radar >= 100 {
-        set sVal to heading (90, 90, 0).
+        set az to l_az_calc(azObj).
+        set sVal to heading (az, 90, 0).
         
         log_sci_list(sciList).
         transmit_sci_list(sciList).
@@ -74,6 +78,9 @@ until runmode = 99 {
 
     //vertical ascent
     else if runmode = 12 {
+        set az to l_az_calc(azObj).
+        set sVal to heading (az, 90, 0).
+
         if ship:altitude >= 1250 or ship:verticalSpeed >= 120 {
             set runmode to 14.
         }
@@ -81,7 +88,9 @@ until runmode = 99 {
 
     //gravity turn
     else if runmode = 14 {
-        set sVal to heading(90, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+        set az to l_az_calc(azObj).
+        set sVal to heading(az, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+        
         if ship:q >= tPid:setpoint {
             set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
         } 
@@ -97,6 +106,9 @@ until runmode = 99 {
 
     //slow burn to tApo
     else if runmode = 16 {
+        set az to l_az_calc(azObj).
+        set sVal to heading(az, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+
         if ship:apoapsis < tApo {
             set tVal to max(0.05, 1 + cPid:update(time:seconds, ship:altitude)).
         }
@@ -106,8 +118,8 @@ until runmode = 99 {
 
     //coast / correction burns
     else if runmode = 18 {
-        
-        lock steering to heading(get_nav_heading(), get_pitch_for_altitude(0, gravTurnAlt) , 0).
+        set az to l_az_calc(azObj).
+        lock steering to heading(az, get_pitch_for_altitude(0, gravTurnAlt) , 0).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -135,7 +147,9 @@ until runmode = 99 {
         disp_burn_data(burnObj).
         
         set tVal to 0. 
-        set sVal to heading(90, get_pitch_for_altitude(0, tPe), 0).
+
+        set az to l_az_calc(azObj).
+        set sVal to heading(az, get_pitch_for_altitude(0, tPe), 0).
         
         local burnEta is burnObj["burnEta"] - time:seconds.
 
@@ -154,7 +168,9 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         set tVal to 1.
-        set sVal to heading(90, get_pitch_for_altitude(0, tPe), 0).
+        
+        set az to l_az_calc(azObj).
+        set sVal to heading(az, get_pitch_for_altitude(0, tPe), 0).
 
         if ship:periapsis >= tPe * 0.90 and ship:periapsis < tPe {
             set tVal to max(0.1, 1 - (ship:apoapsis / tPe)).
@@ -189,32 +205,7 @@ until runmode = 99 {
     }
 
     else if runmode = 32 {
-        global tStamp is time:seconds + 600.
         clear_sec_data_fields().
-        set runmode to 34.
-    }
-
-    else if runmode = 34 {
-        if warp = 0 {
-            warpTo(tStamp - 15).
-            set runmode to 36.
-        }
-    }
-
-    else if runmode = 36 {
-        if time:seconds >= tStamp set runmode to 38.
-        else disp_deploy(tStamp).
-    }
-
-    else if runmode = 38 {
-        unset tStamp.
-        for p in ship:partsTaggedPattern("decoupler") {
-            if p:parent:tag:contains("girder") {
-                jettison_decoupler_shroud(p).
-                wait 5.
-            }
-        }
-        deploy_payload().
         set runmode to 50.
     }
 
@@ -224,15 +215,8 @@ until runmode = 99 {
         set runmode to 99.
     }
 
-    if runmode < 99 {
-        lock steering to sVal.
-        lock throttle to tVal.
-    }
-
-    else {
-        unlock steering. 
-        lock throttle to 0.
-    }
+    lock steering to sVal.
+    lock throttle to tVal.
 
     if stage:number > 0 and ship:availableThrust <= 0.1 and tVal <> 0 {
         safe_stage().
@@ -251,6 +235,17 @@ until runmode = 99 {
         log_state().
     }
 }
+
+unlock steering. 
+lock throttle to 0.
+
+clear_disp_block("c").
+clear_disp_block("d").
+
+
+set runmode to 0.
+set stateObj["runmode"] to runmode.
+log_state().
 
 //** End Main
 //

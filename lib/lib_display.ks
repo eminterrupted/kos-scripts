@@ -140,6 +140,12 @@ global function clear_disp_block {
     
     parameter pos.
 
+    if pos = "a" set pos to posA.
+    else if pos = "b" set pos to posB.
+    else if pos = "c" set pos to posC.
+    else if pos = "d" set pos to posD.
+    else if pos = "e" set pos to posE. 
+    
     set vSync to pos["v"].
     local h1 is pos["h1"].
     local h2 is pos["h2"].
@@ -239,9 +245,29 @@ global function disp_pid_data {
 }
 
 
+
+global function disp_scan_status {
+    
+    parameter pData.
+
+    local pos is posC.
+
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h3"].
+
+    print "SCANSAT STATUS           " at (h1,vSync).
+    print "--------------           " at (h1,vNext).
+    for field in pData:keys {
+        print field + ":" at (h1, vNext). 
+        print pData[field] at (h2, vSync).
+    }
+}
+
+
+
 global function disp_launch_params {
-    local pos is posE
-    .
+    local pos is posE.
 
     parameter tApo, tPe, tInc, gravTurnAlt, refPitch.
 

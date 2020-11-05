@@ -3,6 +3,21 @@
 
 //SCANsat 
 
+    //Basic functions
+    global function start_scansat_multi {
+        parameter p.
+
+        local m is p:getModule("SCANsat").
+        if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
+    }
+
+    global function stop_scansat_multi {
+        parameter p.
+
+        local m is p:getModule("SCANsat").
+        if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
+    }
+
     //-- return if scanner is at ideal altitude for scanner type
     global function check_scansat_alt {
         parameter p.
@@ -45,7 +60,7 @@
 
     //surface in daylight field contains html color codes - strip it out
         if retObj:hasKey("surface in daylight") set retObj["surface in daylight"] to m:getField("surface in daylight"):substring(15,1).
-
+        
         return retObj.
     }
 

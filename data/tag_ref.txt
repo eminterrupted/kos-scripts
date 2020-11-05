@@ -717,11 +717,11 @@
         "Mk-1H 'Torch' Liquid Fuel Engine",
         "engine.lfo",
         "Procedural Fairing Base",
-        "",
+        "payload.adapter",
         "MS-1 Multispectral Scanner",
-        "",
+        "sci.scan.multi",
         "General Round Launch Stand",
-        ""
+        "launch.clamp"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -1,5 +1,9 @@
 {
     "entries": [
+        "tInc",
+        75,
+        "gravTurnAlt",
+        59957,
         "tApo",
         175000,
         "tPe",
@@ -7,11 +11,7 @@
         "launchScript",
         "thor_3_launch.ks",
         "missionScript",
-        "deploy_sat.ks",
-        "tInc",
-        0,
-        "gravTurnAlt",
-        55000,
+        "deploy_multiScan.ks",
         "refPitch",
         3
     ],
