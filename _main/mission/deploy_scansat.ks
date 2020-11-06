@@ -22,6 +22,7 @@ runOncePath("0:/lib/lib_misc_parts.ks").
 
 //Vars
 local maxAlt is 0.
+local scanSatList is ship:partsTaggedPattern("sci.scan").
 
 global sVal is ship:prograde.
 lock steering to sVal.
@@ -60,7 +61,8 @@ until runmode = 99 {
     else if runmode = 30 {
         set tStamp to time:seconds + 30.
         deploy_payload().
-
+        clear_disp_block("e").
+        clear_disp_block("f").
         set runmode to 40.
     }
 
@@ -69,16 +71,22 @@ until runmode = 99 {
     }
 
     else if runmode = 50 {
-        local scanSat is ship:partsTagged("sci.scan.multi")[0].
-        start_scansat_multi(scanSat).
-
+        for sat in scanSatList {
+            start_scansat(sat).
+        }
+        
         set runmode to 60.
     }
 
     else if runmode = 60 {
-        if defined scanData unset scanData.
-        local scanData is get_scansat_data(scanSat).
-        disp_scan_status(scanData).
+        local dispIdx is 5.
+        for sat in scanSatList {
+            if defined scanData unset scanData.
+            local scanData is get_scansat_data(sat).
+            local pos is choose "posE" if dispIdx = 5 else "posF".
+            disp_scan_status(scanData, pos).
+            set dispIdx to dispIdx + 1.
+        }
     }
 
     if runmode < 99 {
@@ -91,10 +99,8 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
     
-    disp_main().
-    disp_launch_telemetry(maxAlt).
+    disp_launch_main().
     disp_orbital_data().
-    disp_engine_perf_data().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.

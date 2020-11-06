@@ -77,7 +77,7 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
     
-    disp_main().
+    disp_launch_main().
     disp_launch_telemetry(maxAlt).
     disp_orbital_data().
     disp_engine_perf_data().

@@ -53,7 +53,7 @@ until runmode = 99 {
     if runmode = 0 {
         log_sci_list(sciList).
         transmit_sci_list(sciList).
-        arm_fairings_on_launch().
+        arm_fairings_on_launch(80000).
 
         set runmode to 2.
     }
@@ -190,7 +190,7 @@ until runmode = 99 {
         set runmode to 30.
     }
 
-    //If we can go into high orbit, do science there. Advance when ship begins falling
+    //If we can go into high orbit, do science there. 
     else if runmode = 30 {
         set sVal to ship:prograde.
         if ship:apoapsis > 250000 {
@@ -224,7 +224,7 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
 
-    disp_main().
+    disp_launch_main().
     disp_launch_telemetry(maxAlt).
     disp_orbital_data().
     disp_engine_perf_data().
@@ -241,6 +241,7 @@ lock throttle to 0.
 
 clear_disp_block("c").
 clear_disp_block("d").
+clear_disp_block("e").
 
 
 set runmode to 0.

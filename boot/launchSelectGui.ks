@@ -91,9 +91,12 @@ when True then {
 }
 
 gui:show().
-until close:pressed {
+local tStamp is time:seconds + 30.
+local closeGui is false.
+until closeGui = true {
         wait(0).
 
+        print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
         print "tabWidget_allPanels:length: " + tabWidget_allPanels:length at (2,4).
         print "tabWidget_alltabs:length:   " + tabWidget_allTabs:length at (2,5).
 
@@ -115,6 +118,9 @@ until close:pressed {
         print "Target Inclination:      " + tInc + "      " at (2,23).
         print "Gravity Turn Altitude:   " + gravTurnAlt + "      " at (2,24).
         print "Gravity Turn End Pitch:  " + refPitch + "      " at (2,25).
+
+        if time:seconds > tStamp set closeGui to true.
+        if close:pressed set closeGui to true.
 }
 
 gui:hide().

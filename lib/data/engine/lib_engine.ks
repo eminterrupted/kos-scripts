@@ -4,7 +4,6 @@
 //Returns all engines in the vessel
 declare global function get_engines {
     local eList is list().
-
     list engines in eList.
 
     return eList. 
@@ -16,9 +15,8 @@ declare global function get_engines_for_stage {
     parameter pStage is stage:number.
 
     local eList is list().
-    local eSet is list().
+    local eSet is get_engines().
 
-    list engines in eSet.
     for eng in eSet {
         if eng:stage = pStage {
             eList:add(eng).
@@ -27,6 +25,19 @@ declare global function get_engines_for_stage {
     
     return eList.
 }.
+
+
+//Returns active engines
+declare global function get_active_engines {
+    local eList is list().
+    local eSet is get_engines().
+
+    for eng in eSet {
+        if eng:ignition eList:add(eng).
+    }
+    
+    return eList.
+}
 
 
 global function get_engine_perf_obj {

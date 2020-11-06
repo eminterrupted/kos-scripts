@@ -54,7 +54,7 @@ for p in pList {
     set n to n + 1.
     set runmode to 99.
 
-    disp_main().
+    disp_launch_main().
     disp_launch_telemetry(maxAlt).
     disp_orbital_data().
 

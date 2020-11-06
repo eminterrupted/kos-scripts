@@ -29,7 +29,7 @@ global function get_isp {
 
 
 global function get_avail_isp_for_parts {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
               pList is get_engines_for_stage(stage:number).
 
     local relThr is 0.
@@ -46,11 +46,9 @@ global function get_avail_isp_for_parts {
 
 
 global function get_avail_isp {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
-              pStage is stage:number.
-
-    local eList is get_engines_for_stage(pStage).
-    
+    parameter pPres is body:atm:altitudepressure(ship:altitude).
+   
+    local eList is get_active_engines().    
     return get_avail_isp_for_parts(pPres, eList).
 }
 
@@ -66,7 +64,7 @@ global function get_avail_isp_for_alt {
 
 
 global function get_max_isp {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
               pStage is stage:number.
 
     local eList is get_engines_for_stage(pStage).
@@ -76,7 +74,7 @@ global function get_max_isp {
 
 
 global function get_max_isp_for_parts {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
               pList is get_engines_for_stage(stage:number).
 
     local relThr is 0.
@@ -103,7 +101,7 @@ global function get_max_isp_by_alt {
 
 
 global function get_poss_isp {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
               pStage is stage:number.
 
     local eList is get_engines_for_stage(pStage).
@@ -113,7 +111,7 @@ global function get_poss_isp {
 
 
 global function get_poss_isp_for_parts {
-    parameter pPres is body:alt:altitudePressure(ship:altitude),
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
               plist is get_engines_for_stage(stage:mnumber).
 
     local relThr is 0.

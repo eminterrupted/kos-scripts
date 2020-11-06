@@ -193,7 +193,7 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
 
-    disp_main().
+    disp_launch_main().
     disp_vessel_data(runmode, program).
     disp_launch_telemetry(maxAlt).
     

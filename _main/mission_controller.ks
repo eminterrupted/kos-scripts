@@ -54,6 +54,7 @@ until program = 255 {
         uplink_telemetry().
 
         if exists(localLaunchPath) {
+            logStr("Executing launch script: " + localLaunchPath).
             runPath(localLaunchPath, tApo, tPe, tInc, gravTurnAlt, refPitch).
         }
 
@@ -67,7 +68,15 @@ until program = 255 {
     }
 
     else if program = 11 and ship:status = "ORBITING" {
-        runPath(localPayloadPath).
+        if exists(localPayloadPath) {
+            logStr("Executing mission script: " + localPayloadPath).
+            runPath(localPayloadPath).
+        } else {
+            logStr("ShipPath not found: " + localPayloadPath).
+            logStr("Running from KSC").
+            runPath(kscPayloadPath).
+        }
+        
 
         set_program(255).
     }

@@ -4,25 +4,27 @@
 //SCANsat 
 
     //Basic functions
-    global function start_scansat_multi {
+    global function start_scansat {
         parameter p.
 
         local m is p:getModule("SCANsat").
         if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
+        else if m:hasEvent("start scan: radar") m:doEvent("start scan: radar").
     }
 
-    global function stop_scansat_multi {
+    global function stop_scansat{
         parameter p.
 
         local m is p:getModule("SCANsat").
         if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
+        else if m:hasEvent("stop scan: radar") m:doEvent("stop scan: radar").
     }
 
     //-- return if scanner is at ideal altitude for scanner type
     global function check_scansat_alt {
         parameter p.
 
-        local scanAlt is get_scansat_alt(p).
+        local scanAlt is get_scansat_alt_range(p).
         
         if ship:altitude > scanAlt["max"] return 3.         // too high
         else if ship:altitude > scanAlt["ideal"] return 2.  // ideal
@@ -32,7 +34,7 @@
 
 
     //Formats the altitude string to return an object containing min, max, and ideal values.
-    global function get_scansat_alt {
+    global function get_scansat_alt_range {
         parameter p.
 
         local m is p:getModule("SCANsat").
@@ -59,32 +61,11 @@
         }
 
     //surface in daylight field contains html color codes - strip it out
-        if retObj:hasKey("surface in daylight") set retObj["surface in daylight"] to m:getField("surface in daylight"):substring(15,1).
-        
-        return retObj.
-    }
-
-
-    //Sets up a trigger to turn off the scanner if surface is in darkness
-    global function schedule_scan_by_daylight {
-        parameter p,
-                  pScanType.
-
-        local m is p:getModule("SCANsat").
-        local srfLight is "". 
-
-        if m:hasField("surface in daylight") {
-            lock srfLight to m:getField("surface in daylight"):substring(15,1).
-            on srfLight {
-                if srfLight = "V" {
-                    if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
-                } else {
-                    if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
-                }
-
-                return true.
-            }
+        if retObj:hasKey("surface in daylight") {
+            set retObj["surface in daylight"] to choose retObj["surface in daylight"]:substring(15,1) if retObj["surface in daylight"]:length > 0 else "".
         }
+
+        return retObj.
     }
 
 

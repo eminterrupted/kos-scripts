@@ -5,7 +5,9 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Fairings
 global function arm_fairings_on_launch {
-    when ship:altitude > 70000 and ship:altitude < 72500 then {
+    parameter pAlt.
+    
+    when ship:altitude > pAlt and ship:altitude < pAlt + 2500 then {
         for fairing in ship:modulesNamed("ProceduralFairingDecoupler") {
             jettison_fairing(fairing).
         }
@@ -40,7 +42,7 @@ global function launch_vessel {
 
     from { local launchTimer is 0.} until launchTimer = countdown step { set launchTimer to launchTimer + 1.} do {
         set dObj["countdown"] to (countdown - launchTimer).
-        disp_main().
+        disp_launch_main().
         disp_countdown().
 
         wait 1.

@@ -13,58 +13,58 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Available thrust - Max throttle for active engines with limiter respected
 global function get_avail_thrust {
-    parameter pStage is stage:number,
-                pPres is body:atm:altitudePressure(ship:altitude). 
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_pres("avail", pStage, pPres).
+    return get_thrust_for_mode_parts_pres("avail", pList, pPres).
 }
 
 global function get_avail_thrust_for_alt {
-    parameter pStage is stage:number,
-                pAlt is ship:altitude. 
+    parameter pAlt is ship:altitude,
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_alt("avail", pStage, pAlt).
+    return get_thrust_for_mode_parts_alt("avail", pList, pAlt).
 }
     
 
 //Current thrust - Max throttle for active engines with limiter respected
 global function get_thrust {
-    parameter pStage is stage:number,
-                pPres is body:atm:altitudePressure(ship:altitude). 
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_pres("cur", pStage, pPres).
+    return get_thrust_for_mode_parts_pres("cur", pList, pPres).
 }
 
 
 //Max thrust - Max throttle for active engines with limiter bypassed
 global function get_max_thrust {
-    parameter pStage is stage:number, 
-                pPres is body:atm:altitudePressure(ship:altitude).
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
+              pList is get_active_engines().  
 
-    return get_thrust_for_mode_stage_pres("max", pStage, pPres).
+    return get_thrust_for_mode_parts_pres("max", pList, pPres).
 }
 
 global function get_max_thrust_for_alt {
-    parameter pStage is stage:number, 
-                pAlt is ship:altitude.
+    parameter pAlt is ship:altitude,
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_alt("max", pStage, pAlt).
+    return get_thrust_for_mode_parts_alt("max", pList, pAlt).
 }
 
 
 //Possible thrust - Max throttle with all engines active (even if not now)
 global function get_poss_thrust {
-    parameter pStage is stage:number,
-                pPres is body:atm:altitudePressure(ship:altitude).
+    parameter pPres is body:atm:altitudePressure(ship:altitude),
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_pres("poss", pStage, pPres). 
+    return get_thrust_for_mode_parts_pres("poss", pList, pPres). 
 }
 
 global function get_poss_thrust_for_alt {
-    parameter pStage is stage:number, 
-                pAlt is ship:altitude.
+    parameter pAlt is ship:altitude,
+              pList is get_active_engines().
 
-    return get_thrust_for_mode_stage_alt("poss", pStage, pAlt).
+    return get_thrust_for_mode_parts_alt("poss", pList, pAlt).
 }
 
 

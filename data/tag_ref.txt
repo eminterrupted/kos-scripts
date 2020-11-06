@@ -721,7 +721,9 @@
         "MS-1 Multispectral Scanner",
         "sci.scan.multi",
         "General Round Launch Stand",
-        "launch.clamp"
+        "launch.clamp",
+        "FL-R10 RCS Fuel Tank",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

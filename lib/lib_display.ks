@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 set terminal:width to 80.
-set terminal:height to 50.
+set terminal:height to 65.
 
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_pid.ks").
@@ -25,9 +25,10 @@ local col4 is col3 + 15.
 local pos0 is lexicon("v",2,"h1",col1,"h2",col3).
 local posA is lexicon("v",12,"h1",col1,"h2",col2).
 local posB is lexicon("v",12,"h1",col3,"h2",col4).
-local posC is lexicon("v",24,"h1",col1,"h2",col2).
-local posD is lexicon("v",24,"h1",col3,"h2",col4).
-local posE is lexicon("v",36,"h1",col1,"h2",col2).
+local posC is lexicon("v",26,"h1",col1,"h2",col2).
+local posD is lexicon("v",26,"h1",col3,"h2",col4).
+local posE is lexicon("v",40,"h1",col1,"h2",col2,"h3",col3,"h4",col4).
+local posF is lexicon("v",40,"h1",col1,"h2",col2,"h3",col3,"h4",col4).
 
 local clr is "                                                                      ".
 
@@ -36,7 +37,7 @@ local clr is "                                                                  
 //     preserve.
 // }
 
-global function disp_main {
+global function disp_launch_main {
     
     local pos is pos0.
     
@@ -44,7 +45,7 @@ global function disp_main {
     local h1 is pos["h1"].
     local h2 is pos["h2"].
 
-    print "Kerbal's First Launch Program                                   v0.02b" at (0,vSync).
+    print "KUSP Mission Controller                                     KMC v0.03c" at (0,vSync).
     print "======================================================================" at (0,vNext).
     print "UTC: " at (h1 + 55,vNext).
     print time:clock at (h1 + 60,vSync).
@@ -58,6 +59,29 @@ global function disp_main {
     print "RUNMODE:       " + stateObj["runmode"] + "  " at (h2,vSync).
 }
 
+
+global function disp_test_main {
+    
+    parameter p. 
+
+    local pos is pos0.
+    
+    set vSync to pos["v"].
+    local h1 is pos["h1"].
+    local h2 is pos["h2"].
+
+    print "KUSP Test Stand Controller                                       v0.01" at (0,vSync).
+    print "======================================================================" at (0,vNext).
+    print "UTC: " at (h1 + 55,vNext).
+    print time:clock at (h1 + 60,vSync).
+    vNext().
+    vNext().
+    print "MISSION:       " + ship:name                             at (h1,vNext).
+    print "MET:           " + format_timestamp(missionTime) + "    "            at (h2,vSync).
+    vNext().
+    print "TEST PART:     " + p:title + "                          " at (h1,vNext).
+}
+
 local function vNext {
     set vSync to vSync + 1.
     return vSync.
@@ -68,7 +92,7 @@ local function init_vsync {
 }
 
 global function disp_orbital_data {
-    local pos is posA.
+    parameter pos is posA.
 
     set vSync to pos["v"].
     local h1 is pos["h1"].
@@ -78,17 +102,17 @@ global function disp_orbital_data {
     print "------------                 " at (h1,vNext).
     print "APOAPSIS:      " + round(ship:apoapsis) + "    "            at (h1,vNext).
     print "PERIAPSIS:     " + round(ship:periapsis) + "    "           at (h1,vNext).
-        print "TIME TO AP:    " + format_timestamp(eta:apoapsis) + "    " at (h1,vNext).
-        print "TIME TO PE:    " + format_timestamp(eta:periapsis) + "    " at (h1,vNext).
     print "ECCENTRICTY:   " + round(ship:orbit:eccentricity, 5) at (h1,vNext).
-        print "ORBITAL PER:   " + format_timestamp(ship:orbit:period) + "    " at (h1,vNext).
+    print "INCLINATION:   " + round(ship:orbit:inclination, 5) at (h1, vNext).
+    print "ORBITAL PER:   " + format_timestamp(ship:orbit:period) + "    " at (h1,vNext).
+    print "TIME TO AP:    " + format_timestamp(eta:apoapsis) + "    " at (h1,vNext).
+    print "TIME TO PE:    " + format_timestamp(eta:periapsis) + "    " at (h1,vNext).
     print "ORBITAL VEL:   " + round(ship:velocity:orbit:mag) + "    " at (h1,vNext).
 }
 
 global function disp_launch_telemetry {
-    parameter pMaxAlt is 0.
-
-    local pos is posB.
+    parameter pMaxAlt is 0,
+              pos is posB.
 
     set vSync to pos["v"].
     local h1 is pos["h1"].
@@ -105,7 +129,7 @@ global function disp_launch_telemetry {
 
 global function disp_engine_perf_data {
     
-    local pos is posC.
+    parameter pos is posC.
 
     set vSync to pos["v"].
     local h1 is pos["h1"].
@@ -115,7 +139,7 @@ global function disp_engine_perf_data {
     print "------------------           " at (h1,vNext).
     print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (h1,vNext).
     print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,vNext).
-    print "ISP:           " + round(get_avail_isp_for_alt(ship:altitude, stage:number), 2) + "      " at (h1,vNext).
+    print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,vNext).
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,vNext).
     print "MASS:" at (h1,vNext).           print round(ship:mass, 2) + "     " at (h2,vSync).
     //
@@ -144,7 +168,8 @@ global function clear_disp_block {
     else if pos = "b" set pos to posB.
     else if pos = "c" set pos to posC.
     else if pos = "d" set pos to posD.
-    else if pos = "e" set pos to posE. 
+    else if pos = "e" set pos to posE.
+    else if pos = "f" set pos to posF.
     
     set vSync to pos["v"].
     local h1 is pos["h1"].
@@ -250,7 +275,7 @@ global function disp_scan_status {
     
     parameter pData.
 
-    local pos is posC.
+    local pos is posE.
 
     set vSync to pos["v"].
     local h1 is pos["h1"].
@@ -259,7 +284,7 @@ global function disp_scan_status {
     print "SCANSAT STATUS           " at (h1,vSync).
     print "--------------           " at (h1,vNext).
     for field in pData:keys {
-        print field + ":" at (h1, vNext). 
+        print field:tostring:toupper + ":" at (h1, vNext). 
         print pData[field] at (h2, vSync).
     }
 }
