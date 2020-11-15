@@ -1,12 +1,12 @@
 @lazyGlobal off. 
 
-parameter tApo to 125000,
-          tPe to 125000,
-          tInc to 0,
-          gtAlt to 60000,
-          gtPitch to 3.
+parameter tApo is 125000,
+          tPe is 125000,
+          tInc is 0,
+          tGTurnAlt is 60000,
+          tGEndPitch to 3.
 
-set config:ipu to 250.
+//set config:ipu to 350.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -22,7 +22,7 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/nav/lib_nav.ks").
+runOncePath("0:/lib/part/lib_fairing.ks").
 runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 
@@ -31,28 +31,29 @@ runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 //Vars
 local stateObj to init_state_obj().
-local runmode is stateObj["runmode"].
+local runmode to stateObj["runmode"].
 
-global sVal to heading(90, 90, 270).
-global tVal to 0.
+local sVal is heading(90, 90, -90).
+local tVal is 0.
 
-local azObj to l_az_calc_init(tApo, tInc).
+local azObj is l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
-local tPid to setup_pid(.15).
+
+local dispState is lex().
+
+local lPid is setup_pid(.135).
+local apoPid is setup_pid(tApo).
+local pePid is setup_pid(tPe).
+
+
 
 until runmode = 99 {
 
     set runmode to stateObj["runmode"].
 
-    //Setup
-    local sciList to get_sci_mod().
-
     //prelaunch activities
     if runmode = 0 {
-        log_sci_list(sciList).
-        transmit_sci_list(sciList).
-        arm_fairings_on_launch(80000).
-
+        arm_pl_fairings().
         set runmode to 2.
     }
 
@@ -66,11 +67,7 @@ until runmode = 99 {
     //launch
     else if runmode = 10 and alt:radar >= 100 {
         set az to l_az_calc(azObj).
-        set sVal to heading (az, 90, 0).
-        
-        log_sci_list(sciList).
-        transmit_sci_list(sciList).
-        
+        set sVal to heading (az, 90, 0).        
         set runmode to 12.
     }
 
@@ -87,17 +84,15 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), 0).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
         
-        if ship:q >= tPid:setpoint {
-            set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
+        if ship:q >= lPid:setpoint {
+            set tVal to max(0, min(1, 1 + lPid:update(time:seconds, ship:q))). 
         } 
 
         else set tVal to 1.
 
         if ship:apoapsis >= tApo * 0.90 {
-            global cPid to pidLoop(0.05, 0.02, 0.01, 0, 1).
-            set cPid:setpoint to tApo.
             set runmode to 16.
         }
     }
@@ -105,10 +100,10 @@ until runmode = 99 {
     //slow burn to tApo
     else if runmode = 16 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), 0).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
 
         if ship:apoapsis < tApo {
-            set tVal to max(0.05, 1 + cPid:update(time:seconds, ship:altitude)).
+            set tVal to max(0.05, min(1 + apoPid:update(time:seconds, ship:altitude), 0.5)).
         }
 
         else if ship:apoapsis >= tApo set runmode to 18. 
@@ -117,7 +112,7 @@ until runmode = 99 {
     //coast / correction burns
     else if runmode = 18 {
         set az to l_az_calc(azObj).
-        lock steering to heading(az, get_la_for_alt(0, gtAlt) , 0).
+        lock steering to heading(az, get_la_for_alt(0, tGTurnAlt) , 0).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -128,28 +123,23 @@ until runmode = 99 {
         }
 
         if ship:altitude >= 70000 {
-            log_sci_list(sciList).
-            transmit_sci_list(sciList).
-            set runmode to 20.
+            set runmode to 22.
         }
     }
 
-    else if runmode = 20 {
-        global burnObj to get_burn_data(tPe).
-        disp_burn_data(burnObj).
-        set runmode to 22.
-    }
 
-    //circularization burn
+    //circularization burn setup
     else if runmode = 22 {
-        disp_burn_data(burnObj).
+        local burnObj is get_burn_data(tPe).
+        if dispState:hasKey("burn_data") disp_burn_data(burnObj).
+        else set dispState["burn_data"] to disp_burn_data(burnObj).
         
         set tVal to 0. 
 
         set az to l_az_calc(azObj).
         set sVal to heading(az, get_la_for_alt(0, tPe), 0).
         
-        local burnEta to burnObj["burnEta"] - time:seconds.
+        local burnEta is burnObj["burnEta"] - time:seconds.
 
         if warp = 0 and burnEta > 30 {
             if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 {
@@ -162,55 +152,45 @@ until runmode = 99 {
         }
     }
 
+    //execute circ burn
     else if runmode = 24 {
+        local burnObj is get_burn_data(tPe).
         disp_burn_data(burnObj).
-
+        
         set tVal to 1.
         
         set az to l_az_calc(azObj).
         set sVal to heading(az, get_la_for_alt(0, tPe), 0).
 
-        if ship:periapsis >= tPe * 0.90 and ship:periapsis < tPe {
-            set tVal to max(0.1, 1 - (ship:apoapsis / tPe)).
-        }
-
-        if ship:periapsis >= tPe {
-            set tVal to 0. 
-            disp_clear_block("burn_data").
+        if ship:periapsis >= tPe * 0.9 {
             set runmode to 26.
         }
     }
 
-    else if runmode = 26 {
-        set tVal to 0.
-        set sVal to ship:prograde.
-        //safe_stage().
-        set runmode to 30.
-    }
+    //fine adjust burn to tPe
+    else if runmode = 26{
+        local burnObj is get_burn_data(tPe).
+        disp_burn_data(burnObj).
+        
+        set az to l_az_calc(azObj).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
 
-    //If we can go into high orbit, do science there. 
-    else if runmode = 30 {
-        set sVal to ship:prograde.
-        if ship:apoapsis > 250000 {
-            if ship:altitude >= 250000 {
-                log_sci_list(sciList).
-                transmit_sci_list(sciList).
-            }
-            set runmode to 32. 
+        if ship:apoapsis < tApo {
+            set tVal to max(0.05, min(1 + pePid:update(time:seconds, ship:altitude, 1))).
         }
 
-        else set runmode to 32. 
+        if ship:periapsis >= tPe {
+            set tVal to 0. 
+            set runmode to 28.
+        }
     }
 
-    else if runmode = 32 {
-        set runmode to 50.
-    }
-
-    else if runmode = 50 {
-        lock steering to ship:prograde.
-        wait 10.
+    else if runmode = 28 {
+        set tVal to 0.
+        set sVal to ship:prograde.
         set runmode to 99.
     }
+
 
     lock steering to sVal.
     lock throttle to tVal.
@@ -220,10 +200,10 @@ until runmode = 99 {
     }
 
     disp_launch_main().
-    disp_launch_tel().
     disp_obt_data().
+    disp_launch_tel().
     disp_eng_perf_data().
-    disp_launch_params(tApo, tPe, tInc, gtAlt, gtPitch).
+    //disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tGEndPitch).
     
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
@@ -234,14 +214,10 @@ until runmode = 99 {
 unlock steering. 
 lock throttle to 0.
 
-disp_clear_block("c").
-disp_clear_block("d").
-disp_clear_block("e").
-
-
 set runmode to 0.
 set stateObj["runmode"] to runmode.
 log_state().
 
+clearScreen.
 //** End Main
 //

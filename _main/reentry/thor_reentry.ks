@@ -13,14 +13,15 @@ runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/lib/data/ship/lib_mass.ks").
 
 
 //
 //** Main
 
 //Vars
-init_runmode().
+local stateObj to init_state_obj().
+local runmode is stateObj["runmode"].
 global sVal is ship:retrograde.
 global tVal is 0.
 
@@ -101,8 +102,7 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
     disp_launch_main().
-    disp_vessel_data(runmode, program).
-    disp_launch_telemetry(runmode, maxAlt).
+    disp_launch_tel().
 }
 
 //** End Main

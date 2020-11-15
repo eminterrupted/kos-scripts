@@ -3,8 +3,8 @@
 parameter tApo is 125000,
           tPe is 125000,
           tInc is 0,
-          gravTurnAlt is 60000,
-          refPitch to 3.
+          gtAlt is 60000,
+          gtPitch to 3.
 
 set config:ipu to 250.
 
@@ -19,15 +19,15 @@ runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/lib/data/ship/lib_mass.ks").
 
 
 //
 //Main
 
 //Vars
-if not (defined runmode) global runmode is 0.
-if not (defined program) global program is 0.
+local stateObj to init_state_obj().
+local runmode to stateObj["runmode"].
 
 global sVal is heading(90, 90, 270).
 global tVal is 0.
@@ -39,10 +39,9 @@ lock steering to sVal.
 until runmode = 99 {
 
     set runmode to stateObj["runmode"].
-    set program to stateObj["program"].
 
     //Setup
-    local sciList is get_sci_modules_for_vessel().
+    local sciList is get_sci_mod().
 
     //pad science
     if runmode = 0 {   
@@ -77,7 +76,7 @@ until runmode = 99 {
 
     //gravity turn
     else if runmode = 14 {
-        set sVal to heading(90, get_pitch_for_altitude(refPitch, gravTurnAlt), 0).
+        set sVal to heading(90, get_la_for_alt(gtPitch, gtAlt), 0).
         if ship:apoapsis >= tApo * 0.90 set runmode to 16.
     }
 
@@ -93,7 +92,7 @@ until runmode = 99 {
     //coast / correction burns
     else if runmode = 18 {
         
-        lock steering to heading(get_nav_heading(), get_pitch_for_altitude(0, gravTurnAlt) , 0).
+        lock steering to heading(get_nav_heading(), get_la_for_alt(0, gtAlt) , 0).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -122,7 +121,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
         
         set tVal to 0. 
-        set sVal to heading(90, get_pitch_for_altitude(0, tApo), 0).
+        set sVal to heading(90, get_la_for_alt(0, tApo), 0).
         
         local burnEta is burnObj["burnEta"] - time:seconds.
 
@@ -141,7 +140,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         set tVal to 1.
-        set sVal to heading(90, get_pitch_for_altitude(0, tApo), 0).
+        set sVal to heading(90, get_la_for_alt(0, tApo), 0).
 
         if ship:periapsis >= tApo * 0.90 and ship:periapsis < tApo {
             set tVal to max(0.1, 1 - (ship:apoapsis / tApo)).
@@ -149,7 +148,6 @@ until runmode = 99 {
 
         if ship:periapsis >= tApo {
             set tVal to 0. 
-            clear_sec_data_fields().
             set runmode to 26.
         }
     }
@@ -194,8 +192,8 @@ until runmode = 99 {
     set maxAlt to max(maxAlt, ship:altitude).
 
     disp_launch_main().
-    disp_vessel_data(runmode, program).
-    disp_launch_telemetry(maxAlt).
+    disp_eng_perf_data().
+    disp_launch_tel().
     
     log_state().
 }

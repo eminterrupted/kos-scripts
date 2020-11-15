@@ -13,9 +13,17 @@ global function setup_t_pid {
     local maxOutput is 1.
     local minOutput is 0.
 
-    global tPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
+    local pid is pidLoop(kP, kI, kD, minOutput, maxOutput).
+    set pid:setpoint to pSetpoint.
+    
+    return pid.
 }
 
 global function set_throttle_g {
     return true.
+}
+
+global function shutdown_eng {
+    parameter eng.
+    if eng:ignition and eng:allowshutdown eng:shutdown().
 }

@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-if terminal:width < 65 set terminal:width to 65.
-if terminal:height < 50 set terminal:height to 55.
+if terminal:width < 70 set terminal:width to 70.
+if terminal:height < 50 set terminal:height to 70.
 
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_pid.ks").
@@ -18,8 +18,8 @@ runOncePath("0:/lib/data/engine/lib_twr.ks").
 
 local dispObj is lex().
 
-local clrWide is "                                                                      ".
-local clr is "                                        ".
+//local clrWide is "                                                                      ".
+local clr is "                                           ".
 
 local col1 is 2.
 local col2 is col1 + 14.  
@@ -34,15 +34,15 @@ local h4 is 0.
 local posmain is lex("id", "posmain", "v", 0, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
-local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
-local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-// local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-// local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
-// local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
-// local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
+local pos_c is lex("id", "pos_c", "v", 25, "h1", col1, "h2", col2).
+local pos_d is lex("id", "pos_d", "v", 25, "h1", col3, "h2", col4).
+local pos_e is lex("id", "pos_e", "v", 40, "h1", col1, "h2", col2).
+local pos_f is lex("id","pos_f", "v", 40, "h1", col3, "h2", col4).
+local pos_g is lex("id", "pos_g", "v", 55, "h1", col1, "h2", col2).
+local pos_h is lex("id", "pos_h", "v", 55, "h1", col3, "h2", col4).
 
-local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-//local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_x is lex("id", "posw_e", "v", 70, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_y is lex("id", "posw_f", "v", 85, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
                 "posmain", posmain, 
@@ -50,13 +50,12 @@ local posObj is lex(
                 "pos_b", pos_b, 
                 "pos_c", pos_c, 
                 "pos_d", pos_d, 
-                // "pos_e", pos_e, 
-                // "pos_f", pos_f, 
-                // "pos_g", pos_g, 
-                // "pos_h", pos_h, 
-                "posw_x", posw_x
-                //"posw_y", posw_y
-                ).
+                "pos_e", pos_e, 
+                "pos_f", pos_f, 
+                "pos_g", pos_g, 
+                "pos_h", pos_h, 
+                "posw_x", posw_x, 
+                "posw_y", posw_y).
                 
 local posState is lex(
                 "posmain",false,
@@ -64,36 +63,29 @@ local posState is lex(
                 "pos_b", false, 
                 "pos_c", false, 
                 "pos_d", false, 
-                // "pos_e", false, 
-                // "pos_f", false, 
-                // "pos_g", false, 
-                // "pos_h", false, 
-                "posw_x", false
-                //"posw_y", false
-                ).
+                "pos_e", false, 
+                "pos_f", false, 
+                "pos_g", false, 
+                "pos_h", false, 
+                "posw_x", false, 
+                "posw_y", false).
 
 
 global ln is 0.
 
-//Common strings
-local divDbl to "=============================================================".
-
-
 //-- Main Headers
 global function disp_launch_main {
     local pos is posmain.
-    local stateObj is init_state_obj().
-
     set ln to pos["v"].
     set h1 to pos["h1"].
     set h2 to pos["h2"].
     set h3 to pos["h3"].
     set h4 to pos["h4"].
 
-    print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
-    print divDbl at (2,cr).
+    print "KUSP Mission Controller                            KMC v0.03c" at (2,ln).
+    print "=============================================================" at (2,cr).
+    print "UTC: " at (h4 - 2,cr).
+    print time:clock at (h4 + 3,ln).
     cr.
     print "MISSION:       " + ship:name + "    " at (h1,cr).
         print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
@@ -109,18 +101,16 @@ global function disp_launch_main {
 
 global function disp_obt_main {
     local pos is posmain.
-    local stateObj is init_state_obj().
-
     set ln to pos["v"].
     set h1 to pos["h1"].
     set h2 to pos["h2"].
     set h3 to pos["h3"].
     set h4 to pos["h4"].
 
-    print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
-    print divDbl at (2,cr).
+    print "KUSP Mission Controller                            KMC v0.03c" at (0,ln).
+    print "=============================================================" at (0,cr).
+    print "UTC:" at (h4 -2,cr).
+    print time:clock at (h4 + 3,ln).
     cr.
     print "MISSION:       " + ship:name                             at (h1,cr).
         print "MET:           " + format_timestamp(missionTime) + "    "            at (h1,ln).
@@ -131,9 +121,7 @@ global function disp_obt_main {
 }
 
 global function disp_test_main {
-    parameter p,
-              t is -1,
-              cd is 0.
+    parameter p.
 
     local pos is posmain.
     set ln to pos["v"].
@@ -142,23 +130,19 @@ global function disp_test_main {
     set h3 to pos["h3"].
     set h4 to pos["h4"].
 
-    print "KUSP Test Stand Controller v0.01" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
-    print divDbl at (2,cr).
+    print "KUSP Test Stand Controller                              v0.01" at (2,ln).
+    print "=============================================================" at (2,cr).
+    print "UTC:" at (h4 - 2,cr).
+    print time:clock at (h4 + 3,ln).
     cr.
+    print "MISSION:" + ship:name + "   " at (h1,cr).
+        print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
     cr.
-    print "TEST PART:  " + p:title:padright(55 - p:title:length) at (h1,cr).
-    print "PART NAME:  " + p:name:padRight(55 - p:name:length) at (h1,cr).
-    cr. 
-    if t = -1 print "TEST STARTING IN: " + cd + clr at (2,cr).
-    else if t = -2 print "TEST COMPLETE!" + clrWide at (2,cr).
-    else {
-        print "TEST TIMER: " + format_timestamp(t) + "  " at (h1,cr).
-        if mod(round(t), 2) = 0 print "** TEST IN PROGRESS **" at (h3,ln).
-        else if mod(round(t), 2) = 1 print clr at (h3,ln).
-    }
+    print "TEST PART:     " + p:title + "          " at (h1,cr).
 }
+
+
+
 
 
 //-- Panels
@@ -191,7 +175,8 @@ global function disp_obt_data {
 }
 
 global function disp_launch_tel {
-    
+    parameter maxAlt is 0.
+
     local pos is "assign".
     if dispObj:haskey("l_tel") set pos to disp_get_pos_obj(dispObj["l_tel"]).
     else {
@@ -205,13 +190,13 @@ global function disp_launch_tel {
 
     print "TELEMETRY             " at (h1,ln).
     print "---------             " at (h1,cr).
-    print "ALT:           " + round(ship:altitude) + "      " at (h1,cr).
-    print "OBTVEL:        " + round(ship:velocity:orbit:mag) + "     " at (h1,cr).
+    print "ALT:           " + round(ship:altitude) + "          " at (h1,cr).
+    print "OBTVEL:        " + round(ship:velocity:orbit:mag) + "     " at (h1,ln).
     print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
     cr.
     print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,ln).
     cr.
-    print "BIOME:         " + addons:scansat:currentbiome + "     " at (h1,cr).
+    print "BIOME:         " + addons:scansat:currentbiome + "          " at (h1,cr).
     print "LATITUDE:      " +  round(ship:geoposition:lat, 5) + "     " at (h1,cr).
     print "LONGITUDE:     " + round(ship:geoposition:lng, 5) + "     " at (h1,cr).
 }
@@ -220,7 +205,7 @@ global function disp_launch_tel {
 global function disp_eng_perf_data {
 
     local pos is "assign".
-    if dispObj:haskey("eng_perf") set pos to disp_get_pos_obj(dispObj["eng_perf"]).
+    if dispObj:haskey("eng_perf") set pos to disp_get_pos_obj( dispObj["eng_perf"]).
     else {
         set pos to disp_get_pos_obj(pos).
         set dispObj["eng_perf"] to pos["id"].
@@ -232,12 +217,14 @@ global function disp_eng_perf_data {
 
     print "ENGINE PERFORMANCE           " at (h1,ln).
     print "------------------           " at (h1,cr).
-    print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (h1,cr).
-    print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,cr).
-    print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
-    print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).
-
-    return pos.
+    print "THROTTLE:" at (h1, cr).   
+        print round(throttle * 100, 2) + "%   "    at (h2,ln).
+    print "THRUST:" at (h1, cr).
+        print round(get_thrust(), 2) + "     " at (h2,ln).
+    print "ISP:" at (h1, cr).
+        print round(get_avail_isp(), 2) + "      " at (h2,ln).
+    print "TWR:" at (h1, cr).
+        print round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h2,ln).
 }
 
 
@@ -270,12 +257,13 @@ global function disp_deploy {
     parameter pDeploy.
 
     local pos is "assign".
-    if dispObj:haskey("deploy") set pos to disp_get_pos_obj(dispObj["deploy"]).
+    if dispObj:haskey("deploy") set pos to disp_get_pos_obj( dispObj["deploy"]).
     else {
         set pos to disp_get_pos_obj(pos).
         set dispObj["deploy"] to pos["id"].
     }
-    
+
+    set pos to disp_get_pos_obj(pos).
     set ln to pos["v"].
     set h1 to pos["h1"].
     set h2 to pos["h2"].
@@ -285,61 +273,6 @@ global function disp_deploy {
     print "ETA:" at (h1,cr). 
         print format_timestamp(pDeploy - time:seconds) + "           " at (h2,ln). 
 }
-
-
-global function disp_eta {
-    parameter stamp.
-
-    local pos is "assign".
-    if dispObj:haskey("eta") set pos to disp_get_pos_obj(dispObj["eta"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["eta"] to pos["id"].
-    }
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-
-    print "ETA" at (h1, ln).
-    print "---" at (h1, cr).
-    print "TSTAMP ETA:    " + format_timestamp(stamp).
-}
-
-
-//Launch param data - useful for confirming well, launch parameters
-global function disp_launch_params {
-    parameter tApo, 
-              tPe, 
-              tInc, 
-              gtAlt, 
-              gtPitch.
-
-    local pos is "assign".
-    if dispObj:haskey("l_param") set pos to disp_get_pos_obj(dispObj["l_param"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["l_param"] to pos["id"].
-    }
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-
-    print "LAUNCH PARAMETERS" at (h1,ln).
-    print "-----------------" at (h1,cr).
-    print "TAPO:     " at (h1,cr).
-    print tApo + "               " at (h2, ln).
-    print "TPE:" at (h1,cr).
-    print tPe  + "               " at (h2, ln).
-    print "TINC:" at (h1,cr).
-    print tInc  + "               " at (h2, ln).
-    print "gtAlt:" at (h1,cr).
-    print gtAlt + "               " at (h2, ln).
-    print "gtPitch:" at (h1,cr).
-    print gtPitch  + "               " at (h2, ln).
-}
-
 
 //PID controller data
 global function disp_pid_data {
@@ -364,7 +297,6 @@ global function disp_pid_data {
     print "OUTPUT VALUE:  " + round(pPid:output, 5) + "          "    at (h1,cr).
 }
 
-
 //SCANsat data
 global function disp_scan_status {
     parameter pData.
@@ -388,29 +320,41 @@ global function disp_scan_status {
     }
 }
 
+//Launch param data - useful for confirming well, launch parameters
+global function disp_launch_params {
+    parameter tApo, 
+              tPe, 
+              tInc, 
+              gtAlt, 
+              gtPitch.
 
-global function disp_clear_block {
-    parameter pos.
-
-    if dispObj:haskey(pos) {
-        set pos to disp_get_pos_obj(dispObj[pos]).
-
-    } 
-
-    else return false.
+    local pos is "assign".
+    if dispObj:haskey("l_param") set pos to disp_get_pos_obj(dispObj["l_param"]).
+    else {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj["l_param"] to pos["id"].
+    }
 
     set ln to pos["v"].
-    from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do {
-        if pos:hasKey("h1") print clr at (pos["h1"], line).
-        if pos:hasKey("h2") print clr at (pos["h2"], line).
-        if pos:hasKey("h3") print clr at (pos["h3"], line).
-        if pos:hasKey("h4") print clr at (pos["h4"], line).
-    }
-    set posState[pos["id"]] to false.
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print "LAUNCH PARAMETERS" at (h1,ln).
+    print "-----------------" at (h1,cr).
+    print "TAPO:" at (h1,cr).
+    print tApo + "               " at (h2, ln).
+    print "TPE:" at (h1,cr).
+    print tPe  + "               " at (h2, ln).
+    print "TINC:" at (h1,cr).
+    print tInc  + "               " at (h2, ln).
+    print "gtAlt:" at (h1,cr).
+    print gtAlt + "               " at (h2, ln).
+    print "gtPitch:" at (h1,cr).
+    print gtPitch  + "               " at (h2, ln).
 }
 
 
-global function disp_clear_block_pos {
+global function disp_clear_block {
     parameter pos.
 
     if dispObj:haskey(pos) set pos to disp_get_pos_obj(pos).
@@ -426,14 +370,14 @@ global function disp_clear_block_pos {
 }
 
 
-// global function out_host {
-//     parameter pObj.
+global function out_host {
+    parameter pObj.
 
-//     for key in pObj:keys {
-//         local pos to key:split(",").
-//         print pObj[key] at(pos[0]:tonumber,pos[1]:tonumber). 
-//     }
-// }
+    for key in pObj:keys {
+        local pos to key:split(",").
+        print pObj[key] at(pos[0]:tonumber,pos[1]:tonumber). 
+    }
+}
 
 
 //Inserts a new line into display blocks

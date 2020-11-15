@@ -1,13 +1,17 @@
 //Library for science
 @lazyGlobal off.
 
+runOncePath("0:/lib/lib_init.ks").
+
 local sciMod is "ModuleScienceExperiment".
 
-//Delegates
-    global get_sci_list is get_sci_modules_for_vessel@.
+//Gets all science modules on the vessel
+global function get_sci_mod {
+    return ship:modulesNamed(sciMod).
+}
 
-
-global function get_sci_modules_from_list {
+//Takes a list of parts, and returns all science modules
+global function get_sci_modules_for_list {
     parameter pList.
 
     local retlist is list().
@@ -22,21 +26,23 @@ global function get_sci_modules_from_list {
 }
 
 
-global function get_sci_modules_for_vessel {
-    return ship:modulesNamed(sciMod).
-}
+global function log_sci {
+    parameter m. 
 
+    if not m:inoperable {
+        if not m:hasData {
+            m:deploy().
+            wait until m:hasData.
+            addons:career:closedialogs().
+        }
+    }
+}
 
 global function log_sci_list {
     parameter pList.
 
     for m in pList {
-        if not (m:inoperable) {
-            if not (m:hasData) {
-                m:deploy().
-                wait until m:hasData.
-            }   
-        }
+        log_sci(m).
     }
 }
 
@@ -52,54 +58,36 @@ global function transmit_sci_list {
     }
 }
 
-
+//Transmits if transmission is ideal recovery method, else will keep science. 
 global function transmit_sci {
     parameter m.
 
     for data in m:data {
+
+        //Science value over 
         if data:transmitValue > 0 and data:transmitValue = data:scienceValue {
             set errLvl to 0.
-            logStr("[recover science] Transmitting science").
+            logStr("[transmit science] Transmitting science").
             m:transmit().
         }
 
-        else if data:transmitValue < data:scienceValue {
+        //Transmit val < science val - keep science
+        else if data:transmitValue > 0 and data:transmitValue < data:scienceValue {
+            //stow_sci_data().
             set errLvl to 2.
-            logStr("[recover science] Ideal recovery method is recover, not transmit", errLvl).
+            logStr("[transmit science] Ideal recovery method is recover, not transmit", errLvl).
         }
 
+        //If no data available for transmit, silently fail
         else if data:transmitValue = 0 {
             set errLvl to 1.
-            logStr("[recover science] No science value from transmitting data", errLvl).
+            logStr("[transmit science] No science value from transmitting data", errLvl).
         }
     }
 }
 
-
-global function recover_sci {
-    parameter m.
-
-    for data in m:data {
-        if data:transmitValue > 0 {
-            set errLvl to 0.
-            logStr("[recover science] Transmitting science").
-            m:transmit().
-        }
-
-        else if data:transmitValue < data:scienceValue {
-            set errLvl to 2.
-            logStr("[recover science] Ideal recovery method is recover, not transmit", errLvl).
-        }
-
-        else if data:transmitValue = 0 {
-            set errLvl to 1.
-            logStr("[recover science] No science value from transmitting data", errLvl).
-        }
-    }
-}
 
 global function reset_sci {
     parameter m.
-
     if not (m:inoperable) m:reset().
 }

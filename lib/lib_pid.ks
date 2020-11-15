@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-global function setup_tpid {
+global function setup_pid {
     parameter pSetpoint,
               kP is 5.0,
               kI is 0.0,
@@ -8,12 +8,8 @@ global function setup_tpid {
               maxOutput is 1,
               minOutput is -1.
 
-    global tPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
-    set tPid:setpoint to pSetpoint.
-}
+    global newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
+    set newPid:setpoint to pSetpoint.
 
-global function update_tpid {
-    parameter pInput.
-
-    return tPid:update(pInput).
+    return newPid.
 }

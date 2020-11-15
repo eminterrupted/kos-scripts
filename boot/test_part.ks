@@ -1,0 +1,1 @@
+if ship:status = "PRELAUNCH" runPath("0:/_main/test_controller.ks").

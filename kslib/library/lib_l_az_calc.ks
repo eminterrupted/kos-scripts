@@ -27,7 +27,7 @@ global function l_az_calc_init {
     //Orbital altitude can't be less than sea level
     if desiredAlt <= 0 {
         print "Target altitude cannot be below sea level".
-        set launchAzimuth to 1/0.		//Throws error
+        set data to 1/0.		//Throws error
     }.
     
     //Determines whether we're trying to launch from the ascending or descending node
@@ -42,12 +42,12 @@ global function l_az_calc_init {
     //Orbital inclination can't be less than launch latitude or greater than 180 - launch latitude
     if abs(launchLatitude) > desiredInc {
         set desiredInc to abs(launchLatitude).
-        hudtext("Inclination impossible from current latitude, setting for lowest possible inclination.", 10, 2, 30, red, false).
+        hudtext("Inclination impossible from current latitude, setting for lowest possible inclination.", 10, 2, 16, red, false).
     }.
     
     if 180 - abs(launchLatitude) < desiredInc {
         set desiredInc to 180 - abs(launchLatitude).
-        hudtext("Inclination impossible from current latitude, setting for highest possible inclination.", 10, 2, 30, red, false).
+        hudtext("Inclination impossible from current latitude, setting for highest possible inclination.", 10, 2, 16, red, false).
     }.
     
     //Does all the one time calculations and stores them in a list to help reduce the overhead or continuously updating

@@ -1,33 +1,44 @@
 @lazyGlobal off.
 
-local mod is "ModuleRTAntenna".
+local mod to "ModuleRTAntenna".
 
 //Activate
-global function activate_antenna {
+global function activate_omni {
     parameter p.
 
-    p:getModule(mod):doAction("activate", true).
+    local m to p:getModule(mod).
+    if m:hasEvent("activate") m:doEvent("activate").
 }
 
-global function deactivate_antenna {
+
+global function activate_dish {
+    return true.
+}
+
+
+global function deactivate_dish {
+    return true.
+}
+
+
+global function deactivate_omni {
     parameter p.
 
-    p:getModule(mod):doAction("deactivate", true).
+    local m to p:getModule(mod).
+    if m:hasEvent("deactivate") m:doEvent("deactivate").
 }
+
 
 global function get_antenna_fields {
     parameter p.
 
-    local obj is lexicon().
-    local m is p:getModule(mod).
+    local obj to lexicon().
+    local m to p:getModule(mod).
 
-    set obj["status"] to m:getField("status").
-    set obj["energy"] to m:getField("energy").
-    set obj["autoThresh"] to m:getField("auto threshold").
-    set obj["activateAt"] to m:getField("activate at ec %").
-    set obj["deactivateAt"] to m:getField("deactivate at ec %").
-    if m:hasField("target") set obj["target"] to m:getField("target").
-    if m:hasField("dish range") set obj["dishRange"] to m:getField("dish range").
+    for f in m:allFields {
+        set f to f:replace("(settable) ", ""):split(",")[0].
+        set obj[f] to m:getField(f).
+    }
 
     return obj.
 }

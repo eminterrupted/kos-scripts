@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").

@@ -5,83 +5,86 @@ clearscreen.
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/display/gui/lib_gui.ks").
 
-tag_parts_by_title(ship:parts).
 
-local cache is "0:/data/launchSelectCache.txt".
-local cacheObj is lexicon().
 
-local launchScript is "scout_1.ks".
-local missionScript is "deploy_sat.ks".
-local tApo is "250000".
-local tPe is "250000".
-local tInc is 0.
-local gravTurnAlt is 60000.
-local refPitch is 3.
+local cache to "0:/data/launchSelectCache.json".
+local localCache to "local:/launchSelectCache.json".
+local cacheObj to lexicon().
+
+local launchScript to "scout_1.ks".
+local missionScript to "deploy_sat.ks".
+local tApo to "250000".
+local tPe to "250000".
+local tInc to 0.
+local gtAlt to 60000.
+local gtPitch to 3.
 
 if exists(cache) {
-        local cacheObj is readJson(cache).
+        set cacheObj to readJson(cache).
 
         if cacheObj:hasKey("launchScript") set launchScript to cacheObj["launchScript"]:toString.
         if cacheObj:hasKey("missionScript") set missionScript to cacheObj["missionScript"]:toString.
         if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
         if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
         if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
-        if cacheObj:hasKey("gravTurnAlt") set gravTurnAlt to cacheObj["gravTurnAlt"].
-        if cacheObj:hasKey("refPitch") set refPitch to cacheObj["refPitch"].
+        if cacheObj:hasKey("gtAlt") set gtAlt to cacheObj["gtAlt"].
+        if cacheObj:hasKey("gtPitch") set gtPitch to cacheObj["gtPitch"].
 }
 
-local lScriptList is get_launch_scripts().
-local mScriptList is get_mission_scripts().
+local lScriptList to get_launch_scripts().
+local mScriptList to get_mission_scripts().
 
-local gui is gui(500).
-local tabWidget is add_tab_widget(gui).
+local gui to gui(500).
+local tabWidget to add_tab_widget(gui).
 
-local page is add_tab(tabWidget, "Launch Script Params").
+local page to add_tab(tabWidget, "Launch Script Params").
 page:addLabel("Select launch parameters").
 
 page:addLabel("Target Apoapsis").
-local tfAp is page:addTextField(tApo:toString).
+local tfAp to page:addTextField(tApo:toString).
 set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tApo"] to tApo. }.
 
 page:addLabel("Target Periapsis").
-local tfPe is page:addTextField(tPe:toString).
+local tfPe to page:addTextField(tPe:toString).
 set tfPe:onConfirm to { parameter pe. set tPe to round(pe:toNumber). set cacheObj["tPe"]to tPe. }.
 
 page:addLabel("Target Inclination").
-local inc is tInc.
-local incLabel is page:addLabel(round(inc):tostring).
-local inc is page:addHSlider(inc, -180, 180).
+local inc to tInc.
+local incLabel to page:addLabel(round(inc):tostring).
+set inc to page:addHSlider(inc, -180, 180).
 set inc:onChange to { parameter i. set tInc to round(i). set cacheObj["tInc"] to tInc. set incLabel:text to tInc:tostring. }.
 
 page:addLabel("Gravity Turn End Altitude").
-local gta is gravTurnAlt.
-local gtaLabel is page:addLabel(round(gta):toString).
-local gta is page:addHSlider(gta, 45000, 70000).
-set gta:onChange to { parameter a. set gravTurnAlt to round(a). set cacheObj["gravTurnAlt"] to gravTurnAlt. set gtaLabel:text to gravTurnAlt:toString.}.
+local gta to gtAlt.
+local gtaLabel to page:addLabel(round(gta):toString).
+set gta to page:addHSlider(gta, 45000, 70000).
+set gta:onChange to { parameter a. set gtAlt to round(a). set cacheObj["gtAlt"] to gtAlt. set gtaLabel:text to gtAlt:toString.}.
 
-page:addLabel("refPitch").
-local rp is refPitch.
-local rpLabel is page:addLabel(round(rp,1):tostring).
-local rp is page:addHSlider(rp, 0, 10).
-set rp:onChange to { parameter p. set refPitch to round(p, 1). set cacheObj["refPitch"] to refPitch. set rpLabel:text to refPitch:tostring.}.
+page:addLabel("gtPitch").
+local rp to gtPitch.
+local rpLabel to page:addLabel(round(rp,1):tostring).
+set rp to page:addHSlider(rp, 0, 10).
+set rp:onChange to { parameter p. set gtPitch to round(p, 1). set cacheObj["gtPitch"] to gtPitch. set rpLabel:text to gtPitch:tostring.}.
 
-local page is add_tab(tabWidget, "Launch Script").
+set page to add_tab(tabWidget, "Launch Script").
 page:addLabel("Select launch script").
-local lScript is add_popup_menu(page,lScriptList).
+page:addLabel("Currently selected launch script: " + launchScript).
+local lScript to add_popup_menu(page,lScriptList).
 set lScript:onchange to { parameter lChoice. set launchScript to lChoice:toString. set cacheObj["launchScript"] to launchScript.}.
 
-local page is add_tab(tabWidget, "Mission Script").
+set page to add_tab(tabWidget, "Mission Script").
 page:addLabel("Select mission script for post-launch").
-local mScript is add_popup_menu(page,mScriptList).
+page:addLabel("Currently selected mission script: " + missionScript).
+local mScript to add_popup_menu(page,mScriptList).
 set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString. set cacheObj["missionScript"] to missionScript.}.
 
-local close is gui:addButton("Close").
+local close to gui:addButton("Close").
 
 when True then {
-        from { local x is 0.} until x >= tabWidget_alltabs:length step { set x to x+1.} do
+        from { local x to 0.} until x >= tabWidget_alltabs:length step { set x to x+1.} do
         {
                 // Earlier, we were careful to hide the panels that were not the current
-                // one when they were added, so we can test if the panel is VISIBLE
+                // one when they were added, so we can test if the panel to VISIBLE
                 // to avoid the more expensive call to SHOWONLY every frame.
                 if tabWidget_allTabs[x]:pressed and not (tabWidget_allPanels[x]:VISIBLE) {
                         tabWidget_allPanels[x]:parent:showonly(tabWidget_allPanels[x]).
@@ -91,8 +94,8 @@ when True then {
 }
 
 gui:show().
-local tStamp is time:seconds + 30.
-local closeGui is false.
+local tStamp to time:seconds + 30.
+local closeGui to false.
 until closeGui = true {
         wait(0).
 
@@ -116,8 +119,8 @@ until closeGui = true {
         print "Target Apoapsis:         " + tApo + "      " at (2,21).
         print "Target Periapsis:        " + tPe + "      " at (2,22).
         print "Target Inclination:      " + tInc + "      " at (2,23).
-        print "Gravity Turn Altitude:   " + gravTurnAlt + "      " at (2,24).
-        print "Gravity Turn End Pitch:  " + refPitch + "      " at (2,25).
+        print "Gravity Turn Altitude:   " + gtAlt + "      " at (2,24).
+        print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,25).
 
         if time:seconds > tStamp set closeGui to true.
         if close:pressed set closeGui to true.
@@ -130,9 +133,16 @@ set cacheObj["missionScript"] to missionScript.
 set cacheObj["tApo"] to tApo.
 set cacheObj["tPe"] to tPe.
 set cacheObj["tInc"] to tInc.
-set cacheObj["gravTurnAlt"] to gravTurnAlt.
-set cacheObj["refPitch"] to refPitch.
+set cacheObj["gtAlt"] to gtAlt.
+set cacheObj["gtPitch"] to gtPitch.
 
-writeJson(cacheObj,cache).
+writeJson(cacheObj, cache).
+copyPath(cache, localCache).
 
-runPath("0:/_main/mission_controller.ks", launchScript, missionScript, tApo, tPe, tInc, gravTurnAlt, refPitch).
+local mc to "0:/_main/mission_controller.ks".
+local localMC to ship:rootpart.
+set localMC to localMC:getModule("kOSProcessor").
+set localMC to localMC:volume:name + ":/mission_controller.ks".
+copyPath(mc, localMC).
+
+runPath(localMC, launchScript, missionScript, tApo, tPe, tInc, gtAlt, gtPitch).

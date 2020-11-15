@@ -1,0 +1,25 @@
+{
+    "entries": [
+        "nflv-engine-rutherford-1",
+        "eng",
+        "AM.MLP.TestStandEngine",
+        "ts",
+        "longAntenna",
+        "comm.omni",
+        "trussPiece1x",
+        "struct.girder",
+        "adapterSmallMiniShort",
+        "tank",
+        "kOSMachine1m",
+        "ctrl.kos.cpu",
+        "Decoupler.1",
+        "dc.st",
+        "proceduralTankLiquid",
+        "tank",
+        "Cherry Light",
+        "lgt.cherry",
+        "nflv-engine-m1d-vac-1",
+        "eng"
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

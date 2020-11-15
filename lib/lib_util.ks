@@ -31,12 +31,28 @@ global function warp_to_timestamp {
 global function test_part {
     parameter p.
 
-    local mod is "ModuleTestSubject".
+    local tMod is "ModuleTestSubject".
 
-    if p:hasModule(mod) {
-        local m is p:getModule(mod).
-        if m:hasEvent("run test") m:doEvent("run test").
-        else safe_stage().
+    if p:hasModule(tMod) {
+        local m is p:getModule(tMod).
+
+        if m:hasEvent("run test") {
+            m:doEvent("run test").
+        }
+
+        else {
+            if p:stage = stage:number - 1 stage.
+            else if p:stage = stage:number - 2 {
+                stage. 
+                stage.
+            }
+
+            else if p:stage = stage:number - 3 {
+                stage.
+                stage.
+                stage.
+            }
+        }
     }
 }
 
@@ -51,14 +67,4 @@ global function get_module_fields {
     }
 
     return retObj.
-}
-
-
-//shrouded decoupler
-//-- jettison
-global function jettison_decoupler_shroud {
-    parameter p.
-
-    local m is p:getModule("ModuleDecouplerShroud").
-    if m:hasEvent("jettison") m:doEvent("jettison").
 }

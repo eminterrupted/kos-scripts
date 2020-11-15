@@ -1,0 +1,19 @@
+{
+    "entries": [
+        "tApo",
+        90000,
+        "tPe",
+        90000,
+        "tInc",
+        0,
+        "launchScript",
+        "aquarius_1m.ks",
+        "missionScript",
+        "deploy_sat.ks",
+        "gtAlt",
+        60000,
+        "gtPitch",
+        3
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

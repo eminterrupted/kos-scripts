@@ -3,24 +3,24 @@
 
 //Delegates    
     //Mass by stage
-    global get_dry_mass_at_stage is get_mass_at_mode_stage@:bind("dry").
-    global get_dry_mass_for_stage is get_mass_for_mode_stage@:bind("dry").
-    global get_mass_at_stage is get_mass_at_mode_stage@:bind("mass").
-    global get_mass_for_stage is get_mass_for_mode_stage@:bind("mass").
-    global get_wet_mass_at_stage is get_mass_at_mode_stage@:bind("wet").
-    global get_wet_mass_for_stage is get_mass_for_mode_stage@:bind("wet").
+    //global get_dry_mass_at_stage to get_mass_at_mode_stage@:bind("dry").
+    //global get_dry_mass_for_stage to get_mass_for_mode_stage@:bind("dry").
+    global get_mass_at_stage to get_mass_at_mode_stage@:bind("mass").
+    //global get_mass_for_stage to get_mass_for_mode_stage@:bind("mass").
+    //global get_wet_mass_at_stage to get_mass_at_mode_stage@:bind("wet").
+    //global get_wet_mass_for_stage to get_mass_for_mode_stage@:bind("wet").
 
 
     //Mass by parts list
-    global get_dry_mass is get_mass_for_mode_parts@:bind("dry").
-    global get_mass is get_mass_for_mode_parts@:bind("mass").
-    global get_wet_mass is get_mass_for_mode_parts@:bind("wet").
+    //global get_dry_mass to get_mass_for_mode_parts@:bind("dry").
+    //global get_mass to get_mass_for_mode_parts@:bind("mass").
+    //global get_wet_mass to get_mass_for_mode_parts@:bind("wet").
 
 //--
 global function get_mass_for_stage_next {
     parameter pStage.
 
-    local stgMass is 0. 
+    local stgMass to 0. 
 
     for p in ship:parts {
         if p:stage = pStage set stgMass to stgMass + p:mass. 
@@ -35,7 +35,7 @@ global function get_mass_for_mode_parts {
     parameter pMode,
               pList.
 
-    local stageMass is 0.
+    local stageMass to 0.
     
     if pMode = "mass" {
         for p in pList {
@@ -63,7 +63,7 @@ global function get_mass_at_mode_stage {
     parameter pMode,
               pStage.
 
-    local stageMass is 0.
+    local stageMass to 0.
     
     if pMode = "mass" {
         for p in ship:parts {
@@ -91,7 +91,7 @@ global function get_mass_for_mode_stage {
     parameter pMode,
               pStage.
 
-    local stageMass is 0.
+    local stageMass to 0.
 
     if pMode = "mass" {
         for p in ship:parts {

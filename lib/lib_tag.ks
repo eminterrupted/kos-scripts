@@ -1,127 +1,373 @@
 //Library to automatically tag parts by categories defined in json file.
 @lazyGlobal off.
 
-parameter mode is "".
+parameter mode to "".
 
 runOncePath("0:/lib/lib_init.ks").
 
-init_err().
+global tagRef to tag_init_ref().
 
-if mode = "" logStr("[lib_tag.ks] Loading library").
+if mode = "" {
+    logStr("[lib_tag.ks] Loading library").
+    tag_parts_by_title(ship:parts).
+}
 else if mode = "tag" tag_parts_by_title(ship:parts).
-else if mode = "clear" clear_tags(ship:parts).
-else if mode = "dump" dump_ship_tags().
+else if mode = "clr" tag_clear().
 
 uplink_telemetry().
 
 //-- main functions
+local function tag_init_ref {
+    local nRefFile to "0:/data/name_ref.json".
+    local n to choose readJson(nRefFile) if exists(nRefFile) else lex().
 
-global function clear_tags {
-    parameter inList.
+    local ntRefFile to "0:/data/name_tag_ref.json".
+    local nt to choose readJson(ntRefFile) if exists(ntRefFile) else lex().
 
-    local func is "[clear_tags] ".
+    local tRefFile to "0:/data/tag_ref.json".
+    local t to choose readJson(tRefFile) if exists(tRefFile) else lex().
 
-    logStr(func + "Clearing tags").
-    for p in inList {
-        set p:tag to "".
-        logStr(func + "Tag cleared for part: [" + p:cid + ", " + p:name + "]").
-    }
+    return lexicon( "n", n, "nt", nt, "t", t, "file", lex( "n", nRefFile, "nt", ntRefFile, "t", tRefFile)).
 }
 
+
+global function tag_clear {
+    parameter inList to ship:parts.
+
+    local func to "[tag_clear_tags] ".
+    logStr(func + "Clearing tags").
+
+    for p in inList {
+        set p:tag to "".
+    }
+}
 
 global function tag_parts_by_title {
     
     parameter inList.
+    local func to "[tag_parts_by_title] ".
 
-    local refFile is "0:/data/tag_ref.txt".
-    local refObj is lexicon().
-    local func is "[tag_parts_by_title] ".
 
-    init_err().
-    if exists(refFile) set refObj to readJson(refFile). 
+    global idxObj to lex().
 
     for p in inList {
-        if refObj:hasKey(p:title) {
+        if tagRef["t"]:hasKey(p:title) {
+            local preTag to p:tag:split(".").
+            local refTag to tagRef["t"][p:title].
+            local tagList to refTag:split(".").
             
-            local metaStr is "".
-            local postTag is "".
-            local preTag is p:tag. 
-            local pTitle is p:title.
-            local refTag is refObj[pTitle].
-
-            if not (preTag = "") set postTag to "." + p:tag.
-
-            if not (preTag:contains(refTag)) {
-                if refTag:startsWith("tank") set metaStr to get_tank_meta(p).
-
-                if metaStr <> "" set postTag to postTag + metaStr.
-                set p:tag to refTag + postTag.
-
-                logStr(func + "Part tag updated [" + p:cid + ", " + p:name + ", " + preTag + " -> " + p:tag + "]").
-            }
-
-            else {
-                set errLvl to 1.
-                logStr(func + "Part already tagged [" + p:cid + ", " + p:name + ", " + p:tag + "]", errLvl).
+            if preTag[0] <> tagList[0] {
+                set tagList to tag_meta_type(p, refTag).
+                
+                for t in preTag {
+                    if t <> "" tagList:add(t).
+                }
+        
+                set p:tag to tagList:join(".").
+                local pName to p:name:replace(" (" + ship:name + ")","").
+                if not tagRef["nt"]:hasKey(pName) set tagRef["nt"][pName] to tagRef["t"][p:title].
             }
         }
 
         else {
             set errLvl to 1.
-            logStr(func + "Part missing reference tag: [(" + p:name + ")]").
-            if not (refObj:hasKey(p:title)) set refObj[p:title] to "".
+            if not (tagRef["t"]:hasKey(p:title)) set tagRef["t"][p:title] to "".
             set errObj[p:title] to "NoRef".
         }
+
+        clearScreen.
+
+        if not (tagRef["n"]:hasKey(p:title)) set tagRef["n"][p:title] to p:name:replace(" (" + ship:name + ")", "").
     }
 
-    if ship:partsTaggedPattern("bay.doors"):length > 0 {
-        set_bay_ids(ship:partsTaggedPattern("bay.doors")).
-    }
+    tag_light_meta().
 
-    if ship:partsTaggedPattern("power.cap"):length > 0 {
-        set_cap_ids(ship:partsTaggedPattern("power.cap")).
-    }
-
-    logStr(func + "Tagging completed, writing updates to tag_ref").
-
-    writeJson(refObj,refFile).
-
+    logStr(func + "Tagging completed, writing updates to ref files").
+    writeJson(tagRef["t"], tagRef["file"]["t"]).
+    writeJson(tagRef["nt"], tagRef["file"]["nt"]).
+    writeJson(tagRef["n"], tagRef["file"]["n"]).
     return true.
 }
 
 
-//-- Local functions
-local function dump_ship_tags {
+// local functions
+local function tag_bay_core_id {
+    parameter p.
 
-    local func is "[dump_ship_tags] ".
-    local pList is ship:parts.
-    local refObj is lexicon().
-    local dumpPath is "0:/data/tag_dump_" + ship:name + ".txt".
+    local id to 0.
+    local par to p:parent.
 
-    logStr(func + "Dumping part tags for vessel to " + dumpPath).
-
-    for p in pList {
-        set refObj[p:title] to p:tag.
+    if par:tag:matchesPattern("bay.doors.*.bayid:\d") {
+        set id to par:tag:split(".")[1].
+    }
+    
+    else if true {
+        for c in p:children {
+            if c:tag:matchesPattern("bay.doors.*.bayid:\d") {
+                set id to c:tag:split(".")[1].
+            }
+        }
     }
 
-    print refObj.
-    writeJson(refObj, dumpPath).
+    else {
+        if not idxObj:hasKey("bayIdx") set idxObj["bayIdx"] to 0.
+        set id to idxObj["bayIdx"].
+    }
+
+    return "bayid:" + id.
 }
 
 
-local function get_tank_meta {
+local function tag_bay_door_id {
+    parameter p.
+
+    local chld to p:children.
+    local id to 0.
+    local par to p:parent.
+    local pTag to "".
+
+    if par:tag:matchespattern("bay.core.*.bayid:\d") {
+        set pTag to par:tag.
+        set id to pTag:substring(pTag:find("bayid") + 6, 1).
+    }
+
+    else if true {
+        for c in chld {
+            if c:tag:matchesPattern("bay.core.*.bayid:\d") {
+                local cTag to c:tag.
+                set id to cTag:substring(cTag:find("bayid") + 6, 1).
+            }
+        }
+    }
+
+    else {
+        if not idxObj:hasKey("bayIdx") set idxObj["bayIdx"] to 0.
+        set id to idxObj["bayIdx"].
+    }
+
+    return "bayid:" + id.
+}
+
+
+local function tag_bay_meta {
+    parameter p.
+
+    local meta to tag_stage_meta(p).
+    local refTag to tagRef["t"][p:title].
+
+    if refTag:matchespattern("bay.doors") set meta to meta + "." + tag_bay_door_id(p).
+    else if refTag:matchespattern("bay.core") set meta to meta + "." + tag_bay_core_id(p).
+
+    return meta. 
+}
+
+
+local function tag_cap_meta {
+    parameter p.
+
+    local meta to tag_stage_meta(p).
     
-    parameter part.
+    if not idxObj:hasKey("capIdx") set idxObj["capIdx"] to 0.
+    local id to idxObj["capIdx"].
 
-    local func is "[get_meta_for_part] ".
-    local meta is ".".
-    local res is list().
+    set meta to meta + ".capId:" + id.
+    set idxObj["capIdx"] to id + 1.
 
-    set res to part:resources.
+    return meta.
+}
+
+
+local function tag_cmd_ctrl_meta {
+    parameter p.
+
+    local meta to "".
+    set meta to choose "" if p:tag:matchesPattern(".stgId:-??\d") else tag_stage_meta(p). 
+    if p:hasModule("kOSProcessor") set meta to meta + tag_cpu_meta(p).
+
+    return meta.
+}
+
+
+local function tag_cpu_meta {
+    parameter p.
+
+    local m to p:getModule("kOSProcessor").
+    local meta to "".
+    local vName to m:volume:name.
+    if vName = "local" set meta to meta + ".cpuid:" + 1.
+    if vName = "log" set meta to meta + ".cpuid:" + 2.
+    else if vName:startsWith("data_") set meta to meta + ".cpuid:" + vName:replace("data_","").
+
+    return meta.
+}
+
+
+local function tag_dc_meta {
+    parameter p.
+    
+    return tag_stage_meta(p).
+}
+
+
+local function tag_eng_meta {
+    parameter p.
+
+    local meta to "".
+    local stg to p:decoupledIn.
+    local stgMeta to tag_stage_meta(p).
+
+    if not idxObj:hasKey(stg) set idxObj[stg] to lex("engIdx",0).
+    else if not idxObj[stg]:hasKey("engIdx") set idxObj[stg]:engIdx to 0.
+    local id to idxObj[stg]:engIdx.
+    
+    set meta to stgMeta + ".id:" + id.
+    set idxObj[stg]:engIdx to id + 1.
+    return meta.
+}
+
+
+local function tag_light_meta {
+    
+    local id to 0.
+    local meta to "".
+    
+    for p in ship:partsTaggedPattern("lgt") {
+        local stg to tag_stage_meta(p).
+        local tagList to tagRef["t"][p:title]:split(".").
+
+        if not idxObj:hasKey(stg) set idxObj[stg] to lex("lgtIdx",0).
+        else if not idxObj[stg]:hasKey("lgtIdx") set idxObj[stg]:lgtIdx to 0.
+        set id to idxObj[stg]:lgtIdx. 
+        
+        if p:parent:tag:matchesPattern("bay.*.bayid:\d") {
+            local bayId to p:parent:find("bayId").
+            set bayId to bayId:split(":")[1].
+            set meta to "lgt." +  stg +  ".bayid:" + bayId.
+        }
+
+        else set meta to stg + ".id:" + id.
+
+        for t in meta:split(".") {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+
+        set p:tag to tagList:join(".").
+        set idxObj[stg]:lgtIdx to id + 1.
+    }
+}
+
+
+local function tag_meta_type {
+    parameter p,
+              tag.
+
+    local meta to choose tag_stage_meta(p) if not tag:matchesPattern("s:-??\d") else "".
+    local tagList to tag:split(".").
+
+    if tagList[0] = "cmd" or (tag:contains("test") and p:hasModule("kOSProcessor")) {
+        set meta to tag_cmd_ctrl_meta(p):split(".").
+        for t in meta {
+            if t <> "" tagList:insert(tagList:length, t).
+        }
+    }
+
+    else if tagList[0] = "ctrl" {
+        set meta to tag_cmd_ctrl_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+    
+    else if tagList[0] = "eng" {
+        set meta to tag_eng_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+
+    else if tagList[0] = "tank" {
+        set meta to tag_tank_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+
+    else if tagList[0] = "bay" {
+        set meta to tag_bay_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+
+    else if tagList[0] = "cap" {
+        set meta to tag_cap_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+    
+    else if tagList[0] = "dc" {
+        set meta to tag_dc_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+
+    else {
+        set meta to tag_stage_meta(p):split(".").
+        for t in meta {
+            if t <> "" {
+                tagList:insert(tagList:length, t).
+            }
+        }
+    }
+    
+    return tagList.
+}
+
+
+local function tag_stage_meta {
+    parameter p.
+
+    if p:tag:matchesPattern(".stgId:-??\d") return "".
+
+    if p:isType("engine") {
+        if p:decoupler:isType("string") return ".stgId:" + p:decoupledin.
+        else return ".stgId:" + p:decoupler:stage.
+    }
+    else return ".stgId:" + p:stage.
+}
+
+
+local function tag_tank_meta {
+    
+    parameter p.
+
+    local func to "[tag_get_tank_meta] ".
+    local meta to "".
+    local res to p:resources.
+    local stg to p:decoupledIn.
+    local stgMeta to tag_stage_meta(p).
+
     if res:length > 0 {
         for r in res {
             if r:name = "LiquidFuel" set meta to meta + "lf".
-            else if r:name = "LiquidHydrogen" set meta to "lh2".
+            else if r:name = "LiquidHydrogen" set meta to "lh".
+            else if r:name = "LqdHydrogen" set meta to "lh".
             else if r:name = "Oxidizer" set meta to meta + "o".
             else if r:name = "MonoPropellant" set meta to meta + "mono".
             else if r:name = "XenonGas" set meta to meta + "xe".
@@ -134,136 +380,23 @@ local function get_tank_meta {
             else if r:name = "Soil" {
                 set errLvl to 1. 
                 logStr(func + "Ignoring resource type: " + r:name, errLvl).
+                print func + "Ignoring resource type: " + r:name.
             }
             else {
                 set errLvl to 1.
                 set meta to meta + "unk".
-                logStr(func + "Unknown part resource: " + r:name, errLvl).
+                logStr(func + "Unknown resource type: " + r:name, errLvl).
+                print func + "Unknown resource type: " + r:name.
             }
         }
     }
-    
-    else {
-        set errLvl to 1.
-        logStr(func + "Part was tagged as (" + part:tag + ") but no resources were found", errLvl).
 
-    }
-    
+    if not idxObj:hasKey(stg) set idxObj[stg] to lex("tankIdx",0).
+    else if not idxObj[stg]:hasKey("tankIdx") set idxObj[stg]:tankIdx to 0.
+    local id to idxObj[stg]:tankIdx.
+
+    set meta to meta + stgMeta + ".tankid:" + id.
+    set idxObj[stg]:tankIdx to id + 1.
+
     return meta.
-}
-
-
-local function set_bay_ids {
-    
-    parameter bayList is ship:partsTaggedPattern("bay.doors").
-
-    local func is "[set_bay_ids] ".
-    local bayCount is 0.
-
-    if bayList:length > 0 {
-    
-        for b in bayList {
-            if b:tag:contains(".us") and not (b:tag:contains(".bayId.")) {
-                logStr(func + "Untagged UniversalStorage bay module found: [" + b:cid + ", " + b:name + ", " + b:tag + "]").
-                set b:tag to b:tag + ".bayId." + bayCount.
-                set_us_bay_core_id(b, bayCount).
-                set_bay_light_id(b, bayCount).
-
-                set bayCount to bayCount + 1.
-            }
-
-            else if b:hasModule("ModuleAnimateGeneric") and not (b:tag:contains(".bayId.")) {
-                logStr(func + "Untagged stock bay module found: [" + b:cid + ", " + b:name + ", " + b:tag + "]").
-                set b:tag to b:tag + ".bayId." + bayCount.
-                set_bay_light_id(b, bayCount).
-
-                set bayCount to bayCount + 1.
-            }
-        }
-    }
-
-    else {
-        set errLvl to 1.
-        logStr(func + "No bay doors found in bayList param", errLvl). 
-    }
-}
-
-
-local function set_us_bay_core_id {
-    
-    parameter bay,
-              bayCount.
-
-    local func is "[set_us_bay_core_id] ".
-
-    logStr(func + "Checking parent part for untagged US bay core: [" + bay:parent:cid + ", " + bay:parent:title + ", " + bay:parent:tag + "]").
-
-    if bay:parent:tag:contains("bay.core") and not (bay:parent:tag:contains("bayId")) {
-        logStr(func + "Untagged bay.core found: [" + bay:parent:cid + ", " + bay:parent:title + ", " + bay:parent:tag + "]").
-        set bay:parent:tag to bay:parent:tag + ".bayId." + bayCount.
-    }
-
-    else {
-        for b in bay:children {
-            logStr(func + "Checking child part for untagged US bay core: [" + b:cid + ", " + b:title + ", " + b:tag + "]").
-            if b:tag:contains("bay.core") and not (b:tag:contains("bayId")) {
-                logStr(func + "Untagged bay.core found: [" + b:cid + ", " + b:title + ", " + b:tag + "]").
-                set b:tag to b:tag + ".bayId." + bayCount.
-            }
-        }
-    }
-}
-
-
-local function set_bay_light_id {
-
-    parameter   bay,
-                bayCount.
-
-    local func is "[set_bay_light_id] ".
-
-    local bChildren is bay:children.
-    local bParent is bay:parent.
-    local pChildren is bParent:children.
-
-    for c in bChildren {
-        logStr(func + "Checking bay child part for attached light module(s): [" + c:cid + ", " + c:title + ", " + c:tag + "]").
-        if c:tag:contains("light") {
-            logStr(func + "Light module(s) found: [" + c:cid + ", " + c:title + ", " + c:tag + "]").
-            set c:tag to c:tag + ".bayId." + bayCount.
-        }
-    }
-
-    if bParent:tag:contains("core") {
-        logStr(func + "Checking bay core for attached light modules(s): [" + bParent:cid + ", " + bParent:title + ", " + bParent:tag + "]").
-        for c in pChildren {
-            if c:tag:contains("light") {
-                logStr(func + "Light module(s) found: [" + c:cid + ", " + c:title + ", " + c:tag + "]").
-                set c:tag to c:tag + ".bayId." + bayCount.
-            }
-        }
-    }
-}
-
-
-local function set_cap_ids {
-    
-    parameter capList is ship:partsTaggedPattern("power.capacitor").
-
-    local func is "[set_cap_ids] ".
-    local capCount is 0.
-
-    if capList:length > 0 {
-    
-        for c in capList {
-            logStr(func + "Untagged capacitor found: [" + c:cid + ", " + c:name + ", " + c:tag + "]").
-            set c:tag to c:tag + ".capId." + capCount.
-            set capCount to capCount + 1.
-        }
-    }
-
-    else {
-        set errLvl to 1.
-        logStr(func + "No capacitors found in capList param", errLvl).
-    }
 }

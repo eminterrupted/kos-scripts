@@ -4,13 +4,12 @@
 //delegates
 
     //
-    global get_deltav_at_ap is get_deltav_for_body_alt_tgt@:bind(ship:body, ship:apoapsis).
-    global get_deltav_at_pe is get_deltav_for_body_alt_tgt@:bind(ship:body, ship:periapsis).
+    global get_deltav_at_ap to get_deltav_for_body_alt_tgt@:bind(ship:body, ship:apoapsis).
+    global get_deltav_at_pe to get_deltav_for_body_alt_tgt@:bind(ship:body, ship:periapsis).
 
 //For a given 
 global function get_deltav_for_body_alt_tgt {
     parameter pBody,
-              pBurnAlt,
               pTgt.
 
     return ((sqrt(pBody:mu / (pTgt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + pTgt + (2 * ( pBody:radius)))))).       

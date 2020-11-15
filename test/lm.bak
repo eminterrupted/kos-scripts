@@ -182,17 +182,17 @@ global function get_mass_at_stage {
 //Set pitch by deviation from a reference pitch to ensure more gradual gravity turns and course corrections
 global function get_pitch_for_altitude {
 
-    parameter refPitch.
+    parameter gtPitch.
     parameter tgtAlt.
     
     declare local tgtPitch is 0.
     
-    if refPitch < 0 {
-        set tgtPitch to min( -( 90 * ( 1 - ship:altitude / tgtAlt)),  refPitch).
+    if gtPitch < 0 {
+        set tgtPitch to min( -( 90 * ( 1 - ship:altitude / tgtAlt)),  gtPitch).
     }
 
-    else if refPitch >= 0 {
-        set tgtPitch to max( ( 90 * ( 1 - ship:altitude / tgtAlt)) , refPitch) .
+    else if gtPitch >= 0 {
+        set tgtPitch to max( ( 90 * ( 1 - ship:altitude / tgtAlt)) , gtPitch) .
     }
     
     return tgtPitch.

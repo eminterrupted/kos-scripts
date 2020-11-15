@@ -1,6 +1,8 @@
 //Initiates the log files
 @lazyGlobal off.
 
+runOncePath("0:/lib/lib_init.ks").
+
 //uplink trigger
 global lastUplink is time.
 global nextUplink is time + 60.
@@ -18,14 +20,18 @@ initialize_log().
 local function initialize_log {
     
     set errLvl to 0.
-
-    local logFile is shipName:replace(" ","_").
-    local logDisk is initialize_log_disk().
+    local diskObj to init_disk().
+    local localDisk is diskObj[1]:name.
     local localFile is "".
+    local logDisk to choose diskObj[2]:name if diskObj:length > 2 else localDisk:name.
+    local logFile is shipName:replace(" ","_").
+    local logFileLen is logFile:length.
+    local logFolderLast is logFile:findLast("_").
+    local logFolder is logFile:remove(logFolderLast, logFileLen - logFolderLast).
     local kscFile is "".
 
     global localLog is logDisk + ":/logs/" + logFile + ".log".
-    global kscLog is "Archive:/logs/" + logFile + "/" + logFile + ".log".
+    global kscLog is "Archive:/logs/" + logFolder + "/" + logFile + ".log".
     
     if not (exists(kscLog)) {
         create(kscLog).
@@ -54,42 +60,6 @@ local function initialize_log {
     when (path(localLog):volume):freeSpace < 500 then {
     uplink_telemetry().
     }
-}
-
-
-// Returns the log disk available on the vessel, either dedicated or just the local disk.
-local function initialize_log_disk {
-
-    local disks is list().
-    local idx is 0.
-    local logDisk is 1.
-
-    list volumes in disks.
-
-    for v in disks {
-        if v:name = "Log" { 
-            set logDisk to v:name. 
-        }
-        else if idx = 1 { 
-            set v:name to "Local". 
-        } 
-        else if idx = 2 {
-            if v:name = "" set v:name to "Log".
-            set logDisk to v:name.
-        }
-
-        else if idx > 2 {
-            if v:name = "" set v:name to "Data" + idx:tostring.
-        }
-
-        set idx to idx + 1.
-    }
-
-    if not logDisk {
-        set logDisk to "Local".
-    }
-
-    return logDisk.
 }
 
 

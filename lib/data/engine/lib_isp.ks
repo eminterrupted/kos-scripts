@@ -3,7 +3,7 @@
 @lazyGlobal off.
 
 //dependencies
-runOncePath("0:/lib/data/vessel/lib_mass.ks").
+runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 
 
@@ -36,7 +36,7 @@ global function get_avail_isp_for_parts {
     local stgThr is 0.
     
     for e in pList {
-        set stgThr to stgThr + e:availableThrustAt(pPres).
+        set stgThr to stgThr + e:possibleThrustAt(pPres).
         set relThr to relThr + (stgThr / e:ispAt(pPres)).
     }
 
@@ -46,9 +46,9 @@ global function get_avail_isp_for_parts {
 
 
 global function get_avail_isp {
-    parameter pPres is body:atm:altitudepressure(ship:altitude).
+    parameter pPres is body:atm:altitudepressure(ship:altitude),
+              eList is get_active_engines().
    
-    local eList is get_active_engines().    
     return get_avail_isp_for_parts(pPres, eList).
 }
 

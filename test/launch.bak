@@ -7,10 +7,10 @@ declare parameter countdown is 10, targetApoapsis is 100000, targetPeriapsis is 
 //clearscreen
 clearScreen.
 
-set cd to (random() * 3).
+set cdown to (random() * 3).
 set typeTime to 0.07.
 
-until round(cd) <= 0 {
+until round(cdown) <= 0 {
         
         print "L" at (1,1).
         wait typeTime.
@@ -45,7 +45,7 @@ until round(cd) <= 0 {
         print "          " at(1,1).
         wait 1.
         
-        set cd to ( cd - 1 ).
+        set cdown to ( cdown - 1 ).
 
         }
 

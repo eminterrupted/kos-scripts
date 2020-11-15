@@ -5,11 +5,14 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Fairings
 global function arm_fairings_on_launch {
-    parameter pAlt.
+    parameter pAlt,
+              base.
+
+    local cList is base:children:tagged("pyld.fairing").
     
     when ship:altitude > pAlt and ship:altitude < pAlt + 2500 then {
-        for fairing in ship:modulesNamed("ProceduralFairingDecoupler") {
-            jettison_fairing(fairing).
+        for f in cList {
+            jet_fairing(f).
         }
     }
 }
@@ -27,7 +30,7 @@ global function exec_correction_burn {
     parameter tApo.
 
     //If in atm and below target
-    lock steering to heading(get_nav_heading(), get_pitch_for_altitude(0, tApo) , 0).
+    lock steering to heading(get_nav_heading(), get_la_for_alt(0, tApo) , 0).
 
     lock throttle to 0.05.
 }
@@ -37,25 +40,24 @@ global function exec_correction_burn {
 global function launch_vessel {
     
     clearScreen.
-    local countdown is 3. 
+    global cd is 5. 
     lock steering to up - r(0,0,90).
 
-    from { local launchTimer is 0.} until launchTimer = countdown step { set launchTimer to launchTimer + 1.} do {
-        set dObj["countdown"] to (countdown - launchTimer).
+    until cd = 0 {
         disp_launch_main().
-        disp_countdown().
-
         wait 1.
+        set cd to cd - 1.
     }
-
+  
     lock throttle to 1.
     stage.    
+    unset cd.
     clearScreen.
 }
 
 
 //Set pitch by deviation from a reference pitch to ensure more gradual gravity turns and course corrections
-global function get_pitch_for_altitude {
+global function get_la_for_alt {
 
     parameter rPitch.
     parameter tAlt.
@@ -63,11 +65,11 @@ global function get_pitch_for_altitude {
     declare local tPitch is 0.
 
     if rPitch < 0 {
-        set tPitch to min( rPitch, -(90 * ( 1 - ship:altitude / tAlt))).
+        set tPitch to min( rPitch, -(90 * ( 1 - ship:altitude / (tAlt * 1.125)))).
     }
 
     else if rPitch >= 0 {
-        set tPitch to max( rPitch, 90 * ( 1 - ship:altitude / tAlt)).
+        set tPitch to max( rPitch, 90 * ( 1 - ship:altitude / (tAlt * 1.125))).
     }
     
     return tPitch.
