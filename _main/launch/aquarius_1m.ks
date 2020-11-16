@@ -30,6 +30,7 @@ runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 //Vars
 local stateObj to init_state_obj().
+set stateObj["program"] to scriptPath():name:replace(".ks","").
 local runmode to stateObj["runmode"].
 
 local sVal to heading(90, 90, -90).
@@ -39,12 +40,8 @@ local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
 local dispState to lex().
 local ascPid to setup_pid(.135).
-local apoPid to setup_pid(tApo).
-local pePid to setup_pid(tPe).
 
 until runmode = 99 {
-
-    set runmode to stateObj["runmode"].
 
     //prelaunch activities
     if runmode = 0 {
@@ -82,11 +79,11 @@ until runmode = 99 {
         
         if ship:q >= ascPid:setpoint {
             set tVal to max(0, min(1, 1 + ascPid:update(time:seconds, ship:q))). 
-        } 
+        }
 
         else set tVal to 1.
 
-        if ship:apoapsis >= tApo * 0.90 {
+        if ship:apoapsis >= tApo * 0.95 {
             set runmode to 16.
         }
     }
@@ -97,7 +94,7 @@ until runmode = 99 {
         set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 180).
 
         if ship:apoapsis < tApo {
-            set tVal to max(0.05, min(1 + apoPid:update(time:seconds, ship:altitude), 0.5)).
+            set tVal to 1 - max(0, min(1, ((tApo * 0.05)  / (ship:altitude - tApo * 0.95)))).
         }
 
         else if ship:apoapsis >= tApo set runmode to 18. 
@@ -105,14 +102,11 @@ until runmode = 99 {
 
     //coast / correction burns
     else if runmode = 18 {
-        set az to l_az_calc(azObj).
-        lock steering to heading(az, get_la_for_alt(0, tGTurnAlt) , 180).
+        set sVal to ship:prograde + r(0,0,180).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
-        }
-        
-        else {
+        } else {
             set tVal to 0.25.
         }
 
@@ -131,7 +125,7 @@ until runmode = 99 {
         set tVal to 0. 
 
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(0, tPe), 180).
+        set sVal to heading(az, 0, 180).
         
         local burnEta to burnObj["burnEta"] - time:seconds.
 
@@ -148,29 +142,33 @@ until runmode = 99 {
 
     //execute circ burn
     else if runmode = 24 {
-        local burnObj to get_burn_data(tPe).
-        disp_burn_data(burnObj).
+        if ship:availablethrust > 0 {
+            local burnObj to get_burn_data(tPe).
+            disp_burn_data(burnObj).
+        }
         
         set tVal to 1.
         
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(0, tPe), 180).
+        set sVal to heading(az, 0, 180).
 
-        if ship:periapsis >= tPe * 0.9 {
+        if ship:periapsis >= tPe * 0.90 {
             set runmode to 26.
         }
     }
 
     //fine adjust burn to tPe
-    else if runmode = 26{
-        local burnObj to get_burn_data(tPe).
-        disp_burn_data(burnObj).
+    else if runmode = 26 {
+        if ship:availablethrust > 0 {
+            local burnObj to get_burn_data(tPe).
+            disp_burn_data(burnObj).
+        }
         
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 180).
+        set sVal to heading(az, 0, 180).
 
         if ship:apoapsis < tApo {
-            set tVal to max(0.05, min(1 + pePid:update(time:seconds, ship:altitude, 1))).
+            set tVal to 1 - max(0, min(1, ((tPe * 0.05)  / (ship:altitude - tPe * 0.95)))).
         }
 
         if ship:periapsis >= tPe {
@@ -203,16 +201,12 @@ until runmode = 99 {
     
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
-        log_state().
+        log_state(stateObj).
     }
 }
 
 unlock steering. 
 lock throttle to 0.
-
-set runmode to 0.
-set stateObj["runmode"] to runmode.
-log_state().
 
 clearScreen.
 //** End Main

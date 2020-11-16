@@ -1,48 +1,35 @@
-parameter clist.
+parameter dv, 
+          stg to stage:number.
 
-for contract in clist {
-    if contract:title:startsWith("Test") {
-        set plist to parse_contract_param(contract).
-        if plist <> "" {
-            print "Contract: [" + contract:title + "]".
-            print "Part from contract found on vessel: [" + plist[0] + "]".
-            print " ".
-        }
+runOncePath("0:/lib/data/nav/lib_deltav.ks").
 
-        else {
-            print "Contract: [" + contract:title + "]".
-            print "Part from contract NOT found on vessel".
-            print " ".
-        }
+local dvObj to get_stages_for_dv(dv, stg).
+print dvObj.
+print " ".
+print " ".
+
+if dvObj:hasKey("deficit") print "Deficit detected, break".
+
+else {
+    for k in dvObj:keys {
+        print "Burn Dur: " + get_burn_dur_by_stg(k, dvObj[k]).
     }
 }
 
-global function parse_contract_param {
-    parameter c.
 
-    local nameObj to readjson("0:/data/name_ref.json").
-    local pname is "".
-    local pflag is false.
+global function get_burn_dur_by_stg {
+    parameter pStg,
+              pDv.
     
-    for param in c:parameters {
-        print param:title.
-        if param:title:startsWith("Test") {
-            set pname to param:title:replace("Test ", "").
-            if nameObj:hasKey(pname) {
-                set pname to nameObj[pname].
-                if ship:partsNamed(pname):length > 0 set pflag to true.
-                else set pflag to false.
-            }
+    local eList to get_engs_for_stg(pStg).
+    local engPerfObj to get_eng_perf_obj(eList).
+    local exhVel to get_engs_exh_vel(eList, ship:apoapsis).
+    local vMass to get_vmass_at_stg(pStg).
 
-            else set pflag to false.
-        }
-            
-        else if param:title = ship:body:name set bflag to true.        
-        else if param:title = "Landed" or param:title = "PRELAUNCH" set sflag to true.
+    local stageThrust to 0.
+    for e in engPerfObj:keys {
+        set stageThrust to stageThrust + engPerfObj[e]["thr"]["poss"].
     }
-
-    if pflag = true and bflag = true and sflag = true {
-        return ship:partsNamed(pname).
-    } 
-    else return "".
+    
+    return ((vMass * exhVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (pDv / exhVel)))).
 }

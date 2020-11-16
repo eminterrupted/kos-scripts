@@ -227,7 +227,7 @@ until runmode = 99 {
     
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
-        log_state().
+        log_state(stateObj).
     }
 }
 
@@ -241,7 +241,7 @@ disp_clear_block("e").
 
 set runmode to 0.
 set stateObj["runmode"] to runmode.
-log_state().
+log_state(stateObj).
 
 //** End Main
 //

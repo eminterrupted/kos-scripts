@@ -13,10 +13,6 @@ runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/nav/lib_nav.ks").
 
-
-local program to 0.
-local runmode to 0.
-local stateObj is lex().
 local statePath to "local:/state.json".
 init_state_obj().
 
@@ -64,17 +60,22 @@ global function init_errObj {
     return errObj.
 }
 
-global function get_state_obj {
-    set stateObj to readJson(statePath).
-    return stateObj.
-}
+// global function get_state_obj {
+//     set stateObj to readJson(statePath).
+//     return stateObj.
+// }
 
 global function log_state {
+    parameter stateObj.
     writeJson(stateObj, statePath).
 }
 
 
 global function init_state_obj {
+    local program to 0.
+    local runmode to 0.
+    local stateObj is lex().
+    
     if exists(statePath) {
         set stateObj to readJson(statePath).
         set runmode to choose stateObj["runmode"] if stateObj:hasKey("runmode") else 0.

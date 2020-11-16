@@ -211,9 +211,9 @@ global function disp_launch_tel {
     cr.
     print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,ln).
     cr.
-    print "BIOME:         " + addons:scansat:currentbiome + "     " at (h1,cr).
-    print "LATITUDE:      " +  round(ship:geoposition:lat, 5) + "     " at (h1,cr).
-    print "LONGITUDE:     " + round(ship:geoposition:lng, 5) + "     " at (h1,cr).
+    print "BIOME:         " + addons:scansat:currentbiome + "    " at (h1,cr).
+    print "LATITUDE:      " +  round(ship:geoposition:lat, 3) + "   " at (h1,cr).
+    print "LONGITUDE:     " + round(ship:geoposition:lng, 3) + "   " at (h1,cr).
 }
 
 

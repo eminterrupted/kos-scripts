@@ -1,19 +1,68 @@
 //lib for  deltaV calculations
 @lazyGlobal off.
 
+runOncePath("0:/lib/data/ship/lib_mass.ks").
+runOncePath("0:/lib/data/engine/lib_engine.ks").
+runOncePath("0:/lib/data/engine/lib_isp.ks").
+runOncePath("0:/lib/data/engine/lib_thrust.ks").
+
 //delegates
 
     //
-    global get_deltav_at_ap to get_deltav_for_body_alt_tgt@:bind(ship:body, ship:apoapsis).
-    global get_deltav_at_pe to get_deltav_for_body_alt_tgt@:bind(ship:body, ship:periapsis).
+    global get_req_dv_at_ap to get_req_dv_for_body_alt@:bind(ship:body, ship:apoapsis).
+    global get_req_dv_at_pe to get_req_dv_for_body_alt@:bind(ship:body, ship:periapsis).
+    global get_req_dv_at_alt to get_req_dv_for_body_alt@:bind(ship:body).
 
 //For a given 
-global function get_deltav_for_body_alt_tgt {
+global function get_req_dv_for_body_alt {
     parameter pBody,
-              pTgt.
+              pAlt.
 
-    return ((sqrt(pBody:mu / (pTgt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + pTgt + (2 * ( pBody:radius)))))).       
+    return ((sqrt(pBody:mu / (pAlt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + pAlt + (2 * ( pBody:radius)))))).       
 }
+
+
+global function get_avail_dv_for_stage {
+    parameter s is stage:number.
+
+    //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
+    local vMass to get_vmass_at_stg(s).
+    local eList is ship:partsTaggedPattern("eng.stgId:" + s).
+    if eList:length = 0 return 0.
+    else {
+        local exhVel is get_engs_exh_vel(eList, ship:altitude).
+        local stgMassObj to get_stage_mass_obj(s).
+        local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
+        local spentMass to vMass - fuelMass.
+        return exhVel * ln(vMass / spentMass).
+    }
+}
+
+
+global function get_stages_for_dv {
+    parameter dV,                   // amount of dv needed
+              stg is stage:number.  // the stage number to start with. 
+
+    local stgObj is lex().
+
+    until dv <= 0 or stg <=0 {
+        local dvStg is get_avail_dv_for_stage(stg).
+
+        if dv < dvStg {
+            set stgObj[stg] to round(dv, 2).
+            break.
+        } else {
+            if dvStg > 0 {
+                set stgObj[stg] to round(dvStg, 2).
+                set dv to dv - dvStg.
+            }
+            set stg to get_next_stage_with_eng(stg).
+        }
+    }
+
+    return stgObj.
+}
+
 
 
 // //Calculate a circulization burn

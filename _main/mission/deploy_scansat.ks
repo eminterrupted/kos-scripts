@@ -112,7 +112,7 @@ until runmode = 199 {
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
-        log_state().
+        log_state(stateObj).
     }
 }
 

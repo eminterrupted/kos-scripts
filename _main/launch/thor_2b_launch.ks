@@ -195,7 +195,7 @@ until runmode = 99 {
     disp_eng_perf_data().
     disp_launch_tel().
     
-    log_state().
+    log_state(stateObj).
 }
 
 //** End Main

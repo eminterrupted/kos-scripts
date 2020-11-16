@@ -1,58 +1,78 @@
 //Data Vessel Engine library
 @lazyGlobal off.
 
+runOncePath("0:/lib/data/engine/lib_isp.ks").
+
 // Delegates
-    local get_ship_engs is get_engines_obj_by_stage@.
+    local get_ship_engs is get_engs_obj_by_stg@.
 
 
 //Returns all engines in the vessel
-global function get_engines {
-    local pList is false.
+global function get_engs {
+    parameter pList is list().
 
-    local eList is list().
-
-    if pList {
+    if pList:length > 0 {
+        local eList is list().
         for p in pList {
             if p:isType("engine") eList:add(p).
         }
+        return eList.
     }
-    else list engines in eList.
+    else list engines in pList.
 
-    return eList. 
+    return pList. 
 }.
 
 
-global function get_engines_obj_by_stage {
+global function get_engs_obj_by_stg {
     local pList is list().
     local eLex is lex().
 
-    for p in pList set eLex[p:stage] to p.
+    for p in ship:partsTaggedPattern("eng.") {
+        set stgtag to p:tag:replace("eng.stgId:", "").
+        set eLex[stgTag] to p.
+    }
+
     return eLex.
 }
 
 
 //Returns engines by a given stage on the current vessel
-global function get_engines_for_stage {
+global function get_engs_for_stg {
     parameter pStage is stage:number.
 
-    local pList is get_engines().
-    local eList is list().
-
-    for p in pList {
-        if p:stage = pStage {
-            eList:add(p).
-        }
-    }
-    
-    return pList.
+    return ship:partsTaggedPattern("eng.stgId:" + pStage).
 }.
 
 
+global function get_engs_for_next_stg {
+    local eList is list().
+    from {local n is 1.} until eList:length > 0 step { set n to n + 1.} do {
+        set eList to get_engs_for_stg(stage:number - n).
+    }
+    
+    return eList.
+}
+
+
+global function get_next_stage_with_eng {
+    parameter stg is stage:number.
+    
+    local eList is list().
+    from { local n is stg - 1.} until eList:length > 0 or n <= -1 step { set n to n - 1.} do {
+        set stg to n.
+        set eList to get_engs_for_stg(stg).
+    }
+
+    return stg.
+}
+
+
 //Returns active engines
-global function get_active_engines {
+global function get_active_engs {
     parameter pList is ship:parts.
     
-    set pList to get_engines().
+    set pList to get_engs().
     local eList is list().
 
     for e in pList {
@@ -80,9 +100,33 @@ global function get_eng_perf_obj {
             "isp", lex(
                 "sl", e:slisp,
                 "vac", e:visp
+            ),
+            "exhvel", lex(
+                "sl", get_eng_exh_vel(e, 0),
+                "vac", get_eng_exh_vel(e, body:atm:height)
             )
         ).
     }
 
     return perfObj.
+}
+
+
+global function get_engs_exh_vel {
+    parameter engList to get_active_engs(),
+              pAlt to ship:apoapsis.
+
+    //local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
+    
+    local apIsp to get_avail_isp(body:atm:altitudePressure(pAlt), engList).
+    return constant:g0 * apIsp.
+}
+
+
+global function get_eng_exh_vel {
+    parameter eng,
+              pAlt to body:atm:height.
+
+    local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
+    return constant:g0 * apIsp.
 }

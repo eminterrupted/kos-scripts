@@ -34,10 +34,10 @@ if gtPitch:istype("String") set gtPitch to choose cache["gtPitch"] if gtPitch = 
 until program = 255 {
 
     local function set_program {
-        parameter n is 0.
+        parameter scr.
 
-        set program to n.
-        set stateObj["program"] to n.
+        set program to scr.
+        set stateObj["program"] to scr.
     }
     
     local kPath is "0:/_main/".
@@ -55,10 +55,10 @@ until program = 255 {
     else logStr("KscPath not found: " + kscPayloadPath).
 
     if  program = 0 {
-        set_program(3).
+        set_program(launchScript).
     }
 
-    else if program = 3 and (ship:status = "PRELAUNCH" or ship:status = "FLYING" or ship:status = "SUB_ORBITAL") {
+    else if program = launchScript and (ship:status = "PRELAUNCH" or ship:status = "FLYING" or ship:status = "SUB_ORBITAL") {
 
         ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
         
@@ -75,14 +75,14 @@ until program = 255 {
             runPath(kscLaunchPath, tApo, tPe, tInc, gtAlt, gtPitch ).
         }
 
-        set_program(11).
+        set_program(missionScript).
     }
 
-    else if program = 3 and runmode < 28 and ship:status = "ORBITING" {
-        set_program(11).
+    else if program = launchScript and runmode < 28 and ship:status = "ORBITING" {
+        set_program(missionScript).
     }
 
-    else if program = 11 and ship:status = "ORBITING" {
+    else if program = missionScript and ship:status = "ORBITING" {
         if exists(localPayloadPath) {
             logStr("Executing mission script: " + localPayloadPath).
             runPath(localPayloadPath).

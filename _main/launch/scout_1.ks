@@ -104,7 +104,7 @@ until runmode = 99 {
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
-        log_state().
+        log_state(stateObj).
     }
 
     wait 0.001.

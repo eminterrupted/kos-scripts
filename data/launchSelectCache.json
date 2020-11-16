@@ -9,9 +9,9 @@
         "launchScript",
         "aquarius_1m.ks",
         "missionScript",
-        "deploy_sat.ks",
+        "aquarius_orbit.ks",
         "gtAlt",
-        60000,
+        55042,
         "gtPitch",
         3
     ],

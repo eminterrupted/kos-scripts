@@ -55,7 +55,7 @@ for p in pList {
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
-        log_state().
+        log_state(stateObj).
     }
 }
 

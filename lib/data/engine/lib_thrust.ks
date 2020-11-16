@@ -3,25 +3,17 @@
 
 runOncePath("0:/lib/lib_init.ks").
 
-
-//Functions for delegates
-    // local function p_thrust { parameter p. return p:thrust.}
-    // local function p_avail_thrust { parameter p, pPres. return p:availableThrustAt(pPres).}
-    // local function p_max_thrust { parameter p, pPres. return p:maxThrustAt(pPres).}
-    // local function p_poss_thrust { parameter p, pPres. return p:possibleThrustAt(pPres).}
-
-
 //Available thrust - Max throttle for active engines with limiter respected
 global function get_avail_thrust {
     parameter pPres is body:atm:altitudePressure(ship:altitude),
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_pres("avail", pList, pPres).
 }
 
 global function get_avail_thrust_for_alt {
     parameter pAlt is ship:altitude,
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_alt("avail", pList, pAlt).
 }
@@ -30,7 +22,7 @@ global function get_avail_thrust_for_alt {
 //Current thrust - Max throttle for active engines with limiter respected
 global function get_thrust {
     parameter pPres is body:atm:altitudePressure(ship:altitude),
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_pres("cur", pList, pPres).
 }
@@ -39,14 +31,14 @@ global function get_thrust {
 //Max thrust - Max throttle for active engines with limiter bypassed
 global function get_max_thrust {
     parameter pPres is body:atm:altitudePressure(ship:altitude),
-              pList is get_active_engines().  
+              pList is get_active_engs().  
 
     return get_thrust_for_mode_parts_pres("max", pList, pPres).
 }
 
 global function get_max_thrust_for_alt {
     parameter pAlt is ship:altitude,
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_alt("max", pList, pAlt).
 }
@@ -55,14 +47,14 @@ global function get_max_thrust_for_alt {
 //Possible thrust - Max throttle with all engines active (even if not now)
 global function get_poss_thrust {
     parameter pPres is body:atm:altitudePressure(ship:altitude),
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_pres("poss", pList, pPres). 
 }
 
 global function get_poss_thrust_for_alt {
     parameter pAlt is ship:altitude,
-              pList is get_active_engines().
+              pList is get_active_engs().
 
     return get_thrust_for_mode_parts_alt("poss", pList, pAlt).
 }

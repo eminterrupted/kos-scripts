@@ -5,6 +5,7 @@ runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/data/nav/lib_deltav.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
+runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 
@@ -14,45 +15,17 @@ global function get_burn_data {
 
     //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
     //Calculate variables
-    local startMass to get_mass_at_stage(stage:number).
     local nodeAt to time:seconds + eta:apoapsis.
-    local eList to list().
-    list engines in eList.
 
     //get deltaV for the burn
-    local dV to get_deltav_at_ap(newAlt).
-
-    //Get engines and stages for checking to see if we need to stage mid burn
-    //Calc fuel burn
-    local fuelBurned to startMass - ( startMass / (constant:e ^ (dV / get_engs_exh_vel(elist, newAlt)))).
-    local endMass to startMass - fuelBurned.
+    local dV to get_req_dv_at_alt(newAlt).
 
     //local burnDur to exhVel * ln(startMass) - exhVel * ln(endMass).
-    local burnDur to get_burn_dur(startMass, dV). 
+    local burnDur to get_burn_dur(dV). 
     local burnEta to nodeAt - (burnDur / 2).
     local burnEnd to nodeAt + (burnDur / 2).
 
-    return lexicon("dV",dV,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt,"startMass",startMass,"endMass",endMass).
-}
-
-
-global function get_engs_exh_vel {
-    parameter engList to get_active_engines(),
-              pAlt to ship:apoapsis.
-
-    //local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
-    
-    local apIsp to get_avail_isp(body:atm:altitudePressure(pAlt), engList).
-    return constant:g0 * apIsp.
-}
-
-
-global function get_eng_exh_vel {
-    parameter eng,
-              pAlt to body:atm:height.
-
-    local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
-    return constant:g0 * apIsp.
+    return lexicon("dV",dV,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt).
 }
 
 
@@ -114,18 +87,42 @@ global function get_nav_pitch {
 }.
 
 
-global function get_burn_dur {
-    parameter pMass,
-              pDv.
+global function get_burn_dur_by_stg {
+    parameter pDv,
+              pStg is stage:number.
     
-    local eList to get_active_engines().
+    local eList to choose get_engs_for_stg(pStg) if get_engs_for_stg(pStg):length > 0 else get_engs_for_next_stg().
     local engPerfObj to get_eng_perf_obj(eList).
     local exhVel to get_engs_exh_vel(eList, ship:apoapsis).
+    local vMass to get_vmass_at_stg(pStg).
 
     local stageThrust to 0.
     for e in engPerfObj:keys {
         set stageThrust to stageThrust + engPerfObj[e]["thr"]["poss"].
     }
 
-    return ((pMass * exhVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (pDv / exhVel)))).
+    // print "stageThrust: " + stageThrust at (2, 54).
+    // print "exhVel:      " + exhVel at (2, 55).
+    // print "vMass:       " + vMass at (2, 56).
+    // print "elist:       " + eList at (2, 57).
+    // print "engPerfObj:  " + engPerfObj at (2, 62).
+
+
+    return ((vMass * exhVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (pDv / exhVel)))).
+}
+
+
+global function get_burn_dur {
+    parameter pDv.
+    
+    local alldur is 0.
+    local stgdur is 0.
+    local dvObj to get_stages_for_dv(pDv).
+
+    for k in dvObj:keys {
+        set stgdur to get_burn_dur_by_stg(dvObj[k], k).
+        set alldur to alldur + stgdur.
+    }
+
+    return alldur.
 }
