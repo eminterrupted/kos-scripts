@@ -119,7 +119,7 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
-        local burnObj to get_burn_data(tPe).
+        set burnObj to get_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
@@ -129,7 +129,7 @@ until runmode = 99 {
         set sVal to heading(az, 0, 180).
         
         local burnEta to burnObj["burnEta"] - time:seconds.
-
+        
         if warp = 0 and burnEta > 30 {
             if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 {
                 if kuniverse:timewarp:mode = "RAILS" warpTo(burnObj["burnEta"] - 15).
@@ -147,7 +147,6 @@ until runmode = 99 {
         set sVal to heading(az, 0, 180).
 
         set tVal to 1.
-
         disp_burn_data(burnObj).
 
         if ship:periapsis >= tPe * 0.95 {    

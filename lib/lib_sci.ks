@@ -4,6 +4,42 @@
 runOncePath("0:/lib/lib_init.ks").
 
 local sciMod is "ModuleScienceExperiment".
+local containMod is "ModuleScienceContainer".
+
+//Collect science into a container if one is present on board
+global function collect_sci_container {
+    if ship:modulesNamed(containMod):length > 0 {
+        local pm to ship:modulesNamed(containMod)[0].
+        if pm:hasAction("collect all") pm:doAction("collect all", true).
+        return true.
+    }
+
+    else return false.
+}
+
+//Deploy without running the experiment - useful for matbay, goo, etc
+global function deploy_sci_list {
+    parameter mList.
+
+    for m in mList {
+        deploy_sci_mod(m).
+    }
+}
+
+
+global function deploy_sci_mod {
+    parameter m.
+    
+    if m:part:hasModule(sciMod) {
+        local pm to m:part:getModule(sciMod).
+        if pm:hasAction("toggle cover") m:doAction("toggle cover", true).
+        else if pm:hasEvent("open doors") m:doEvent("open doors").
+        
+        if pm:hasField("status") wait until pm:getField("status") = "Locked".
+    }
+}
+
+
 
 //Gets all science modules on the vessel
 global function get_sci_mod {
@@ -47,19 +83,18 @@ global function log_sci_list {
 }
 
 //this will keep the data unless it has a good transmit yield (50%+)
-global function transmit_sci_list {
+global function recover_sci_list {
     parameter pList. 
 
     for m in pList {
         if m:hasData {
-            transmit_sci(m).
-            reset_sci(m).
+            recover_sci(m).
         }
     }
 }
 
 //Transmits if transmission is ideal recovery method, else will keep science. 
-global function transmit_sci {
+global function recover_sci {
     parameter m.
 
     for data in m:data {
@@ -71,16 +106,22 @@ global function transmit_sci {
             m:transmit().
         }
 
-        //Transmit val < science val - keep science
-        else if data:transmitValue > 0 and data:transmitValue < data:scienceValue {
+        //Transmit val < science val - keep science and try to collect into a container
+        else if data:transmitValue < data:scienceValue {
             //stow_sci_data().
-            set errLvl to 2.
+            set errLvl to 1.
             logStr("[transmit science] Ideal recovery method is recover, not transmit", errLvl).
+            if collect_sci_container() {
+                set errLvl to 0. 
+                logStr("[transmist science] Science Container found, collecting").
+            } else {
+                logStr("[transmit science] No container found aboard, must recover this part to recover data").
+            }
         }
 
-        //If no data available for transmit, silently fail
-        else if data:transmitValue = 0 {
-            set errLvl to 1.
+        //If no data available, silently fail
+        else if data:scienceValue = 0 {
+            set errLvl to 2.
             logStr("[transmit science] No science value from transmitting data", errLvl).
         }
     }

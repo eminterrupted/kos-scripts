@@ -8,7 +8,7 @@ parameter launchScript is ""
           ,gtAlt is ""
           ,gtPitch is "".
 
-set config:ipu to 500.
+set config:ipu to 750.
 
 clearScreen.
 
@@ -29,10 +29,8 @@ if tInc:isType("String") set tInc to choose cache["tInc"] if tInc = "" else tInc
 if gtAlt:istype("String") set gtAlt to choose cache["gtAlt"] if gtAlt = "" else gtAlt:toNumber.
 if gtPitch:istype("String") set gtPitch to choose cache["gtPitch"] if gtPitch = "" else gtPitch:tonumber.
 
-
-
 until program = 255 {
-
+    
     local function set_program {
         parameter scr.
 
@@ -59,7 +57,7 @@ until program = 255 {
     }
 
     else if program = launchScript and (ship:status = "PRELAUNCH" or ship:status = "FLYING" or ship:status = "SUB_ORBITAL") {
-
+        logStr("in launchscript loop").
         ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
         
         uplink_telemetry().
@@ -78,11 +76,12 @@ until program = 255 {
         set_program(missionScript).
     }
 
-    else if program = launchScript and runmode < 28 and ship:status = "ORBITING" {
+    else if program = launchScript and ship:status = "ORBITING" {
+        logStr("Switching to missionscript").
         set_program(missionScript).
     }
 
-    else if program = missionScript and ship:status = "ORBITING" {
+    else if program = missionScript {
         if exists(localPayloadPath) {
             logStr("Executing mission script: " + localPayloadPath).
             runPath(localPayloadPath).
@@ -97,6 +96,7 @@ until program = 255 {
     }
 
     else if program = 255 and ship:status = "ORBITING" {
+        logStr("Mission completed").
         print "SCRIPT COMPLETE" at (2, 55).
     }
 }

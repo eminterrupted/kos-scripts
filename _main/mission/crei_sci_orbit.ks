@@ -1,11 +1,12 @@
 @lazyGlobal off. 
 
-set config:ipu to 500.
+set config:ipu to 750.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_display.ks").
 runOncePath("0:/lib/lib_core.ks").
+runOncePath("0:/lib/lib_display.ks").
+runOncePath("0:/lib/lib_dmag_sci.ks").
 runOncePath("0:/lib/lib_launch.ks").
 runOncePath("0:/lib/lib_sci.ks").
 runOncePath("0:/lib/lib_warp.ks").
@@ -25,7 +26,7 @@ local stateObj to init_state_obj().
 set stateObj["program"] to scriptPath():name:replace(".ks","").
 local runmode to stateObj["runmode"].
 
-local sVal to ship:prograde + r(0, 0, 180).
+local sVal to ship:prograde.
 local tPe to 35000.
 local tStamp is 0.
 local tVal to 0.
@@ -38,37 +39,51 @@ clearscreen.
 until runmode = 99 {
 
     if runmode = 0 {
-        
+        wait 2.
+        bays on.
+        set runmode to 2.
+    }
+
+    else if runmode = 2 {
         local sciMod is get_sci_mod().
+        deploy_sci_list(sciMod).
+        wait 1.
         log_sci_list(sciMod).
+        wait 1.
         recover_sci_list(sciMod).
-        set tStamp to time:seconds + 3600.
+        set runmode to 4.
+    }
+
+    else if runmode = 4 {
+        local dmagMod is get_dmag_mod().
+        deploy_dmag_list(dmagMod).
+        wait 1.
+        log_dmag_list(dmagMod).
+        wait 1.
+        recover_sci_list(dmagMod).
         set runmode to 10.
     }
 
     else if runmode = 10 {
-        set sVal to ship:prograde + r(0, 0, 180).
+        set tStamp to time:seconds + 600.
+        set sVal to ship:prograde.
         if warp = 0 {
             if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 {
                 if kuniverse:timewarp:mode = "RAILS" warpTo(tStamp - 15).
             }
         }
 
-        if time:seconds >= tStamp set runmode to 20.
-    }
-
-    else if runmode = 12 {
-        if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 warpTo(tStamp - 15).
-        if time:seconds >= tStamp set runmode to 20.
+        if time:seconds >= tStamp {
+            kuniverse:timewarp:cancelwarp().
+            if kuniverse:timewarp:issettled set runmode to 20.
+        }
     }
 
     else if runmode = 20 {
-        set sval to ship:retrograde + r(0, 0, 180).
+        set sval to ship:retrograde.
         if ship:sensors:light > 0 {
-            set tStamp to time:seconds + 600.
-            warpTo(tStamp).
+            warpTo(time:seconds + 600).
         } else {
-            kuniverse:timewarp:cancelwarp().
             set runmode to 30.
         }
     }
@@ -80,7 +95,7 @@ until runmode = 99 {
     }
 
     else if runmode = 40 {
-        set sval to ship:retrograde + r(0, 0, 180).
+        set sval to ship:retrograde.
         if ship:periapsis > tPe {
             set tVal to 1.
         } else {
@@ -90,34 +105,40 @@ until runmode = 99 {
     }
 
     else if runmode = 50 {
-        set sval to ship:retrograde + r(0, 0, 180).
+        set sval to ship:retrograde.
         local chuteList to ship:partsTaggedPattern("chute"). 
         arm_chutes(chuteList).
         set runmode to 52.
     }
 
     else if runmode = 52 {
-        set sval to ship:retrograde + r(0, 0, 180).
-        wait 5. 
-        safe_stage().
+        set sval to ship:retrograde.
+        wait 5.
         set runmode to 60.
     }
 
     //warp to atmosphere interface
     else if runmode = 60 {
-        set sval to ship:retrograde + r(0, 0, 180).
+        set sval to ship:retrograde.
         local warpAlt is body:atm:height + 5000.
         warp_to_alt(warpAlt).
         if ship:altitude <= warpAlt {
             kuniverse:timewarp:cancelWarp().
-            set runmode to 70.
+            set runmode to 62.
         }
     }
         
+    else if runmode = 62 {
+        set sval to ship:retrograde.
+        wait 1.
+        stage.
+        set runmode to 70.
+    }
+
     else if runmode = 70 {
-        set sval to ship:retrograde + r(0, 0, 180). 
+        set sval to ship:prograde. 
         if ship:altitude <= 12500 {
-            set runmode to 72.
+            set runmode to 71.
         }
     }
 

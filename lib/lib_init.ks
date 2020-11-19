@@ -88,5 +88,6 @@ global function init_state_obj {
     }
 
     set stateObj to lex("runmode", runmode, "program", program).
+    log_state(stateObj).
     return stateObj.
 }

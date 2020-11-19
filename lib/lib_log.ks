@@ -23,7 +23,7 @@ local function initialize_log {
     local diskObj to init_disk().
     local localDisk is diskObj[1]:name.
     local localFile is "".
-    local logDisk to choose diskObj[2]:name if diskObj:length > 2 else localDisk:name.
+    local logDisk to choose diskObj[2]:name if diskObj:length > 2 else localDisk.
     local logFile is shipName:replace(" ","_").
     local logFileLen is logFile:length.
     local logFolderLast is logFile:findLast("_").
@@ -38,6 +38,13 @@ local function initialize_log {
         set kscFile to open(kscLog).
         kscFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] KSCLog initialized").
     } 
+
+    else if ship:status = "PRELAUNCH" {
+        deletePath(kscLog).
+        create(kscLog).
+        set kscFile to open(kscLog).
+        kscFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] KSCLog initialized").
+    }
 
     else {
         set errLvl to 1.

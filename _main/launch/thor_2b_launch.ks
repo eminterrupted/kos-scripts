@@ -46,7 +46,7 @@ until runmode = 99 {
     //pad science
     if runmode = 0 {   
         log_sci_list(sciList).
-        transmit_sci_list(sciList).
+        recover_sci_list(sciList).
         set runmode to 2.
     }
 
@@ -62,7 +62,7 @@ until runmode = 99 {
         set sVal to heading (90, 90, 0).
         
         log_sci_list(sciList).
-        transmit_sci_list(sciList).
+        recover_sci_list(sciList).
         
         set runmode to 12.
     }
@@ -104,7 +104,7 @@ until runmode = 99 {
 
         if ship:altitude >= 70000 {
             log_sci_list(sciList).
-            transmit_sci_list(sciList).
+            recover_sci_list(sciList).
             set runmode to 20.
         }
     }
@@ -167,7 +167,7 @@ until runmode = 99 {
         if ship:apoapsis > 250000 {
             if ship:altitude >= 250000 {
                 log_sci_list(sciList).
-                transmit_sci_list(sciList).
+                recover_sci_list(sciList).
             }
             set runmode to 99. 
         }

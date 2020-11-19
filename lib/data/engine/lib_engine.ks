@@ -25,9 +25,10 @@ global function get_engs {
 
 
 global function get_engs_obj_by_stg {
-    local pList is list().
+    
     local eLex is lex().
-
+    local stgTag to "".
+    
     for p in ship:partsTaggedPattern("eng.") {
         set stgtag to p:tag:replace("eng.stgId:", "").
         set eLex[stgTag] to p.

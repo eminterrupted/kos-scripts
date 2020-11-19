@@ -4,11 +4,32 @@
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_sci.ks").
 
-local sciMod is "DMModuleScienceAnimate".
+local dmagMod is "DMModuleScienceAnimate".
+
+//Deploy without running the experiment - useful for experiments that can't run until deployed
+global function deploy_dmag_list {
+    parameter mList.
+
+    for m in mList {
+        deploy_dmag_sci_mod(m).
+    }
+}
+
+
+global function deploy_dmag_sci_mod {
+    parameter m.
+    
+    if m:part:hasModule(dmagMod) {
+        for a in m:allActions {
+            if a:contains("deploy") m:doAction(a:replace("(callable) ",""):replace(", is KSPAction",""), true).
+        }
+    }
+}
+
 
 //Gets all science modules on the vessel
 global function get_dmag_mod {
-    return ship:modulesNamed(sciMod).
+    return ship:modulesNamed(dmagMod).
 }
 
 
@@ -18,8 +39,8 @@ global function get_dmag_mod_for_list {
 
     local retlist is list().
     for p in pList {
-        if p:hasModule(sciMod) {
-            retList:add(p:getModule(sciMod)).
+        if p:hasModule(dmagMod) {
+            retList:add(p:getModule(dmagMod)).
         }
     }
 
@@ -34,13 +55,23 @@ global function log_dmag_sci {
         if not m:deployed {
             m:toggle(). 
             wait until m:deployed.
-            m:deploy().
-            wait until m:hasdata.
         }
+
+        m:deploy().
+        wait until m:hasdata.
         addons:career:closedialogs().
-    }
+        }
 
     return m:data.
+}
+
+
+global function log_dmag_list {
+    parameter mlist.
+
+    for m in mlist {
+        log_dmag_sci(m).
+    }
 }
 
 

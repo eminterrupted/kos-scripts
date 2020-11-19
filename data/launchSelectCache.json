@@ -1,17 +1,17 @@
 {
     "entries": [
         "tApo",
-        90000,
+        125000,
         "tPe",
-        90000,
+        125000,
         "tInc",
         0,
         "launchScript",
-        "aquarius_1m.ks",
+        "multistage_launch.ks",
         "missionScript",
-        "aquarius_orbit.ks",
+        "crei_sci_orbit.ks",
         "gtAlt",
-        55042,
+        57500,
         "gtPitch",
         3
     ],

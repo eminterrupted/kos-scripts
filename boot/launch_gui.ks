@@ -96,31 +96,21 @@ when True then {
 gui:show().
 local tStamp to time:seconds + 30.
 local closeGui to false.
+ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
+
 until closeGui = true {
         wait(0).
 
         print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
-        print "tabWidget_allPanels:length: " + tabWidget_allPanels:length at (2,4).
-        print "tabWidget_alltabs:length:   " + tabWidget_allTabs:length at (2,5).
-
-        print "Current tab presses: " at (2,7).
-        print " Tab 1:   " + tabWidget_allTabs[0]:pressed + " " at (2,8).
-        print " Panel 1: " + tabWidget_allPanels[0]:visible + " "at (2,9).
-
-        print " Tab 2: " + tabWidget_allTabs[1]:pressed + " " at (2,11).
-        print " Panel 2: " + tabWidget_allPanels[1]:visible + " " at (2,12).
-
-        print " Tab 3: " + tabWidget_allTabs[2]:pressed + " " at (2,14).
-        print " Panel 3: " + tabWidget_allPanels[2]:visible + " " at (2,15).
         
-        print "Launch script selected:  " + launchScript + "         " at (2,18).
-        print "Mission script selected: " + missionScript + "         " at (2,19).
+        print "Launch script selected:  " + launchScript + "         " at (2,4).
+        print "Mission script selected: " + missionScript + "         " at (2,5).
 
-        print "Target Apoapsis:         " + tApo + "      " at (2,21).
-        print "Target Periapsis:        " + tPe + "      " at (2,22).
-        print "Target Inclination:      " + tInc + "      " at (2,23).
-        print "Gravity Turn Altitude:   " + gtAlt + "      " at (2,24).
-        print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,25).
+        print "Target Apoapsis:         " + tApo + "      " at (2,6).
+        print "Target Periapsis:        " + tPe + "      " at (2,7).
+        print "Target Inclination:      " + tInc + "      " at (2,8).
+        print "Gravity Turn Altitude:   " + gtAlt + "      " at (2,9).
+        print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,10).
 
         if time:seconds > tStamp set closeGui to true.
         if close:pressed set closeGui to true.
