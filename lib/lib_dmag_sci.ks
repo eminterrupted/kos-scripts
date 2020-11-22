@@ -50,25 +50,16 @@ global function get_dmag_mod_for_list {
 
 global function log_dmag_sci {
     parameter m.
-
-    if not m:inoperable {
-        if not m:deployed {
-            m:toggle(). 
-            wait until m:deployed.
-        }
-
-        m:deploy().
-        wait until m:hasdata.
-        addons:career:closedialogs().
-        }
-
-    return m:data.
+    
+    m:deploy().
+    local tstamp to time:seconds + 5. 
+    wait until m:hasdata or time:seconds > tstamp.
+    addons:career:closedialogs().
 }
 
 
 global function log_dmag_list {
     parameter mlist.
-
     for m in mlist {
         log_dmag_sci(m).
     }

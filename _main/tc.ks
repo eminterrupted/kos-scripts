@@ -43,6 +43,10 @@ for p in pStack {
         else if p:isType("decoupler") {
             for dc in ship:partsNamed(p:name) test_part(dc).
         }
+
+        else {
+            for tpart in ship:partsNamed(p:name) test_part(tpart).
+        }
     }
 }
 
@@ -61,6 +65,7 @@ local function check_contracts {
 
         for contract in clist {
             if contract:title:startsWith("Test") {
+                print contract:title.
                 set tplist to parse_contract_param(contract).
             }
 

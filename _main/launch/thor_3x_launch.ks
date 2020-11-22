@@ -4,7 +4,8 @@ parameter tApo to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
-          tGEndPitch to 3.
+          tGEndPitch to 3,
+          rVal to 0.
 
 //set config:ipu to 350.
 
@@ -201,7 +202,7 @@ until runmode = 99 {
 
     disp_launch_main().
     disp_obt_data().
-    disp_launch_tel().
+    disp_tel().
     disp_eng_perf_data().
     //disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tGEndPitch).
     

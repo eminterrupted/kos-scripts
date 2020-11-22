@@ -174,7 +174,7 @@ global function disp_obt_data {
     print "ORBITAL PER:   " + format_timestamp(ship:obt:period) + "    " at (h1,cr).
 }
 
-global function disp_launch_tel {
+global function disp_tel {
     parameter maxAlt is 0.
 
     local pos is "assign".

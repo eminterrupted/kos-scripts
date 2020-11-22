@@ -25,6 +25,9 @@ global function get_burn_data {
     local burnEta to nodeAt - (burnDur / 2).
     local burnEnd to nodeAt + (burnDur / 2).
 
+    logStr("get_burn_data").
+    logStr("[dV: " + dV + "][burnDur: " + burnDur + "][nodeAt: " + nodeAt + "][burnEta: " + burnEta + "]").
+
     return lexicon("dV",dV,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt).
 }
 
@@ -115,6 +118,7 @@ global function get_burn_dur_by_stg {
 global function get_burn_dur {
     parameter pDv.
     
+    logStr("get_burn_dur").
     local alldur is 0.
     local stgdur is 0.
     local dvObj to get_stages_for_dv(pDv).

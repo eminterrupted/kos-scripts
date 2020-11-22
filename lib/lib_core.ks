@@ -5,20 +5,17 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Waits until vessel is safe to stage, then stages
 global function safe_stage {
-    
-    if ship:decouplers:length > 0 {
-        wait 0.5.
+    wait 0.5.
 
-        until false {
-            until stage:ready {   
-                wait 0.01.
-            }
+    until false {
+        until stage:ready {   
+            wait 0.01.
+        }
 
-            if stage:ready {
-                stage.
-                wait 0.5.
-                break.
-            }
+        if stage:ready {
+            stage.
+            wait 0.5.
+            break.
         }
     }
 }
@@ -66,34 +63,47 @@ global function warp_to_alt {
     }
 
     if ship:altitude >= pAlt * 15 {
+        if kuniverse:timewarp:warp <> 5 {
+            set kuniverse:timewarp:warp to 5.
+            wait until kuniverse:timewarp:issettled.
+        }
+    }
+
+    else if ship:altitude >= pAlt * 5 {
         if kuniverse:timewarp:warp <> 4 {
             set kuniverse:timewarp:warp to 4.
             wait until kuniverse:timewarp:issettled.
         }
     }
 
-    else if ship:altitude >= pAlt * 5 {
+    else if ship:altitude >= pAlt * 2.5 {
         if kuniverse:timewarp:warp <> 3 {
             set kuniverse:timewarp:warp to 3.
             wait until kuniverse:timewarp:issettled.
         }
     }
 
-    else if ship:altitude >= pAlt * 2.5 {
+    else if ship:altitude >= pAlt * 1.25 {
         if kuniverse:timewarp:warp <> 2 {
             set kuniverse:timewarp:warp to 2.
             wait until kuniverse:timewarp:issettled.
         }
     }
 
-    else if ship:altitude >= pAlt * 1.25 {
+    else if ship:altitude >= pAlt * 1.075 {
         if kuniverse:timewarp:warp <> 1 {
             set kuniverse:timewarp:warp to 1.
             wait until kuniverse:timewarp:issettled.
         }
     }
 
-    else if ship:altitude > pAlt * 1.075 {
+    else if ship:altitude > pAlt {
         if kuniverse:timewarp:warp > 0 kuniverse:timewarp:cancelwarp().
     }
+}
+
+global function warp_to_longitude {
+    parameter lng.
+
+    return true.
 }

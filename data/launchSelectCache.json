@@ -1,19 +1,23 @@
 {
     "entries": [
         "tApo",
-        125000,
+        625000,
         "tPe",
-        125000,
+        625000,
         "tInc",
         0,
         "launchScript",
         "multistage_launch.ks",
         "missionScript",
-        "crei_sci_orbit.ks",
+        "deploy_dish.ks",
         "gtAlt",
         57500,
         "gtPitch",
-        3
+        1.5,
+        "rVal",
+        0,
+        "reentryScript",
+        "no_reentry.ks"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

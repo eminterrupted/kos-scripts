@@ -240,9 +240,9 @@ local function tag_light_meta {
         set id to idxObj[stg]:lgtIdx. 
         
         if p:parent:tag:matchesPattern("bay.*.bayid:\d") {
-            local bayId to p:parent:find("bayId").
+            local bayId to p:parent:tag:substring(p:parent:tag:find("bayId"), 7).
             set bayId to bayId:split(":")[1].
-            set meta to "lgt." +  stg +  ".bayid:" + bayId.
+            set meta to stg +  ".bayid:" + bayId.
         }
 
         else set meta to stg + ".id:" + id.

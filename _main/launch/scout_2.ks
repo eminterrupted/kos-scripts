@@ -4,7 +4,8 @@ parameter tApo is 125000,
           tPe is 125000,
           tInc is 0,
           gtAlt is 60000,
-          gtPitch to 3.
+          gtPitch to 3,
+          rVal to 0.
 
 set config:ipu to 200.
 
@@ -246,7 +247,7 @@ until runmode = 99 {
     }
 
     disp_launch_main().
-    disp_launch_tel(runmode, maxAlt).
+    disp_tel(runmode, maxAlt).
 }
 
 //** End Main

@@ -4,8 +4,8 @@
 runOncePath("0:/lib/lib_init.ks").
 
 //uplink trigger
-global lastUplink is time.
-global nextUplink is time + 60.
+global lastUplink is time:seconds.
+global nextUplink is time:seconds + 60.
 
 //tee - set to 1 to echo log lines to console
 local tee is 0.
@@ -16,57 +16,51 @@ initialize_log().
 
 //-- local functions --//
 
-//Create log files and global log variables
 local function initialize_log {
     
     set errLvl to 0.
-    local diskObj to init_disk().
-    local localDisk is diskObj[1]:name.
-    local localFile is "".
-    local logDisk to choose diskObj[2]:name if diskObj:length > 2 else localDisk.
+    local diskObj is init_disk().
+    local logDisk is choose diskObj["log"]:name if diskObj:hasKey("log") else diskObj["local"]:name.
+
     local logFile is shipName:replace(" ","_").
-    local logFileLen is logFile:length.
     local logFolderLast is logFile:findLast("_").
-    local logFolder is logFile:remove(logFolderLast, logFileLen - logFolderLast).
-    local kscFile is "".
+    local logFolder is logFile:remove(logFolderLast, logFile:length - logFolderLast).
 
     global localLog is logDisk + ":/logs/" + logFile + ".log".
     global kscLog is "Archive:/logs/" + logFolder + "/" + logFile + ".log".
     
     if not (exists(kscLog)) {
         create(kscLog).
-        set kscFile to open(kscLog).
+        local kscFile to open(kscLog).
         kscFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] KSCLog initialized").
     } 
 
     else if ship:status = "PRELAUNCH" {
         deletePath(kscLog).
         create(kscLog).
-        set kscFile to open(kscLog).
+        local kscFile to open(kscLog).
         kscFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] KSCLog initialized").
     }
 
     else {
         set errLvl to 1.
-        set kscFile to open(kscLog).
+        local kscFile to open(kscLog).
         kscFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] KSCLog re-initialized").
     }
 
     if not (exists(localLog)) {
         create(localLog).
-        set localFile to open(localLog).
+        local localFile to open(localLog).
         localFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] localLog initialized").
     }
     
     else {
         set errLvl to 1.
-        set localFile to open(localLog).
+        local localFile to open(localLog).
         localFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] localLog re-initialized").
     }
 
-    when (path(localLog):volume):freeSpace < 500 then {
-    uplink_telemetry().
-    }
+    when (path(localLog):volume):freeSpace < 1000 then uplink_telemetry().
 }
 
 
@@ -101,8 +95,8 @@ global function uplink_telemetry {
         return errLvl.
     }
 
-    set lastUplink to time.
-    set nextUplink to time + 60.
+    set lastUplink to time:seconds.
+    set nextUplink to time:seconds + 15.
 
     uplinkObj:add("lastUplink",lastUplink).
     uplinkObj:add("nextUplink",nextUplink).
@@ -148,7 +142,5 @@ global function logStr {
         }
     }
     
-    if (path(localLog):volume):freeSpace < 500 {
-        uplink_telemetry().
-    }
+    //if (path(localLog):volume):freeSpace < 1000 uplink_telemetry().
 }

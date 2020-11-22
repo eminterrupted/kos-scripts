@@ -91,8 +91,8 @@ global function disp_launch_main {
     set h4 to pos["h4"].
 
     print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
+    print "UTC:" at (h4 - 2,ln).
+    print time:clock at (h4 + 3,ln).
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name + "    " at (h1,cr).
@@ -118,8 +118,8 @@ global function disp_obt_main {
     set h4 to pos["h4"].
 
     print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
+    print "UTC:" at (h4 - 2,ln).
+    print time:clock at (h4 + 3,ln).
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name                             at (h1,cr).
@@ -143,8 +143,8 @@ global function disp_test_main {
     set h4 to pos["h4"].
 
     print "KUSP Test Stand Controller v0.01" at (2,ln).
-    print "UTC:" at (h4 - 4,ln).
-    print time:clock at (h4 + 1,ln).
+    print "UTC:" at (h4 - 2,ln).
+    print time:clock at (h4 + 3,ln).
     print divDbl at (2,cr).
     cr.
     cr.
@@ -190,7 +190,7 @@ global function disp_obt_data {
     print "ORBITAL PER:   " + format_timestamp(ship:obt:period) + "    " at (h1,cr).
 }
 
-global function disp_launch_tel {
+global function disp_tel {
     
     local pos is "assign".
     if dispObj:haskey("l_tel") set pos to disp_get_pos_obj(dispObj["l_tel"]).
@@ -263,27 +263,6 @@ global function disp_burn_data {
     if pObj:haskey("burnDur")   print "BURN DURATION: " + round(pObj["burnDur"]) + " s  "    at (h1,cr).
     if pObj:haskey("burnEta")   print "BURN START:    " + format_timestamp(max(0, pObj["burnEta"] - time:seconds)) + "  "    at (h1,cr).
     if pObj:haskey("burnEnd")   print "BURN END:      " + format_timestamp(max(0, pObj["burnEnd"] - time:seconds)) + "  "    at (h1,cr).
-}
-
-
-global function disp_deploy {
-    parameter pDeploy.
-
-    local pos is "assign".
-    if dispObj:haskey("deploy") set pos to disp_get_pos_obj(dispObj["deploy"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["deploy"] to pos["id"].
-    }
-    
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-
-    print "PAYLOAD DEPLOYMENT           " at (h1,ln).
-    print "------------------           " at (h1,cr).
-    print "ETA:" at (h1,cr). 
-        print format_timestamp(pDeploy - time:seconds) + "           " at (h2,ln). 
 }
 
 
@@ -389,12 +368,32 @@ global function disp_scan_status {
 }
 
 
+global function disp_timer {
+    parameter pTimer.
+
+    local pos is "assign".
+    if dispObj:haskey("timer") set pos to disp_get_pos_obj(dispObj["timer"]).
+    else {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj["timer"] to pos["id"].
+    }
+    
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print "TIMER" at (h1,ln).
+    print "-----" at (h1,cr).
+    print "MARK:" at (h1,cr). 
+        print format_timestamp(pTimer - time:seconds) + "           " at (h2,ln). 
+}
+
+
 global function disp_clear_block {
     parameter pos.
 
     if dispObj:haskey(pos) {
         set pos to disp_get_pos_obj(dispObj[pos]).
-
     } 
 
     else return false.

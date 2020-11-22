@@ -13,26 +13,31 @@ local cacheObj to lexicon().
 
 local launchScript to "scout_1.ks".
 local missionScript to "deploy_sat.ks".
+local reentryScript to "no_reentry.ks".
 local tApo to "250000".
 local tPe to "250000".
-local tInc to 0.
-local gtAlt to 60000.
+local tInc to "0".
+local gtAlt to "60000".
 local gtPitch to 3.
+local rVal to 0.
 
 if exists(cache) {
         set cacheObj to readJson(cache).
 
         if cacheObj:hasKey("launchScript") set launchScript to cacheObj["launchScript"]:toString.
         if cacheObj:hasKey("missionScript") set missionScript to cacheObj["missionScript"]:toString.
+        if cacheObj:hasKey("reentryScript") set reentryScript to cacheObj["reentryScript"]:toString.
         if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
         if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
         if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
         if cacheObj:hasKey("gtAlt") set gtAlt to cacheObj["gtAlt"].
         if cacheObj:hasKey("gtPitch") set gtPitch to cacheObj["gtPitch"].
+        if cacheObj:hasKey("rVal") set rVal to cacheObj["rVal"].
 }
 
 local lScriptList to get_launch_scripts().
 local mScriptList to get_mission_scripts().
+local rScriptList to get_reentry_scripts().
 
 local gui to gui(500).
 local tabWidget to add_tab_widget(gui).
@@ -49,22 +54,25 @@ local tfPe to page:addTextField(tPe:toString).
 set tfPe:onConfirm to { parameter pe. set tPe to round(pe:toNumber). set cacheObj["tPe"]to tPe. }.
 
 page:addLabel("Target Inclination").
-local inc to tInc.
-local incLabel to page:addLabel(round(inc):tostring).
-set inc to page:addHSlider(inc, -180, 180).
-set inc:onChange to { parameter i. set tInc to round(i). set cacheObj["tInc"] to tInc. set incLabel:text to tInc:tostring. }.
+local inc to page:addTextField(round(tInc):tostring).
+set inc:onConfirm to { parameter i. set tInc to round(i:toNumber). set cacheObj["tInc"] to tInc. }.
 
 page:addLabel("Gravity Turn End Altitude").
-local gta to gtAlt.
-local gtaLabel to page:addLabel(round(gta):toString).
-set gta to page:addHSlider(gta, 45000, 70000).
-set gta:onChange to { parameter a. set gtAlt to round(a). set cacheObj["gtAlt"] to gtAlt. set gtaLabel:text to gtAlt:toString.}.
+local gta to page:addTextField(round(gtAlt):toString).
+set gta:onConfirm to { parameter a. set gtAlt to round(a:toNumber). set cacheObj["gtAlt"] to gtAlt.}.
 
-page:addLabel("gtPitch").
+page:addLabel("Gravity Turn Reference Pitch").
 local rp to gtPitch.
 local rpLabel to page:addLabel(round(rp,1):tostring).
 set rp to page:addHSlider(rp, 0, 10).
 set rp:onChange to { parameter p. set gtPitch to round(p, 1). set cacheObj["gtPitch"] to gtPitch. set rpLabel:text to gtPitch:tostring.}.
+
+page:addLabel("Final Roll Angle").
+local rb0 to page:addRadioButton("0", true).
+local rb90 to page:addRadioButton("90", false).
+local rb180 to page:addRadioButton("180", false).
+local rb270 to page:addRadioButton("270", false).
+set page:onRadioChange to { parameter r. if r = "0" set rVal to r:text:toNumber. else set rVal to r:text:toNumber.}.
 
 set page to add_tab(tabWidget, "Launch Script").
 page:addLabel("Select launch script").
@@ -77,6 +85,12 @@ page:addLabel("Select mission script for post-launch").
 page:addLabel("Currently selected mission script: " + missionScript).
 local mScript to add_popup_menu(page,mScriptList).
 set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString. set cacheObj["missionScript"] to missionScript.}.
+
+set page to add_tab(tabWidget, "Reentry Script").
+page:addLabel("Select a script for reentry").
+page:addLabel("Currently selected reentry script: " + reentryScript).
+local rScript to add_popup_menu(page,rScriptList).
+set rScript:onchange to { parameter rChoice. set reentryScript to rChoice:toString. set cacheObj["reentryScript"] to reentryScript.}.
 
 local close to gui:addButton("Close").
 
@@ -94,7 +108,7 @@ when True then {
 }
 
 gui:show().
-local tStamp to time:seconds + 30.
+local tStamp to time:seconds + 60.
 local closeGui to false.
 ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
 
@@ -105,12 +119,14 @@ until closeGui = true {
         
         print "Launch script selected:  " + launchScript + "         " at (2,4).
         print "Mission script selected: " + missionScript + "         " at (2,5).
+        print "Reentry script selected: " + reentryScript + "         " at (2,6).
 
-        print "Target Apoapsis:         " + tApo + "      " at (2,6).
-        print "Target Periapsis:        " + tPe + "      " at (2,7).
-        print "Target Inclination:      " + tInc + "      " at (2,8).
-        print "Gravity Turn Altitude:   " + gtAlt + "      " at (2,9).
-        print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,10).
+        print "Target Apoapsis:         " + tApo + "      " at (2,7).
+        print "Target Periapsis:        " + tPe + "      " at (2,8).
+        print "Target Inclination:      " + tInc + "      " at (2,9).
+        print "Gravity Turn Altitude:   " + gtAlt + "      " at (2,10).
+        print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,11).
+        print "Roll Program Value:      " + rVal + "  " at (2,12).
 
         if time:seconds > tStamp set closeGui to true.
         if close:pressed set closeGui to true.
@@ -120,19 +136,21 @@ gui:hide().
 
 set cacheObj["launchScript"] to launchScript.
 set cacheObj["missionScript"] to missionScript.
+set cacheObj["reentryScript"] to reentryScript.
 set cacheObj["tApo"] to tApo.
 set cacheObj["tPe"] to tPe.
 set cacheObj["tInc"] to tInc.
 set cacheObj["gtAlt"] to gtAlt.
 set cacheObj["gtPitch"] to gtPitch.
+set cacheObj["rVal"] to rVal.
 
 writeJson(cacheObj, cache).
 copyPath(cache, localCache).
 
-local mc to "0:/_main/mission_controller.ks".
+local mc to "0:/_main/mc.ks".
 local localMC to ship:rootpart.
 set localMC to localMC:getModule("kOSProcessor").
-set localMC to localMC:volume:name + ":/mission_controller.ks".
+set localMC to localMC:volume:name + ":/mc.ks".
 copyPath(mc, localMC).
 
-runPath(localMC, launchScript, missionScript, tApo, tPe, tInc, gtAlt, gtPitch).
+runPath(localMC, launchScript, missionScript, reentryScript, tApo, tPe, tInc, gtAlt, gtPitch, rVal).

@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-set config:ipu to 300.
+parameter rVal is 0.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -60,7 +60,7 @@ until runmode = 199 {
 
     else if runmode = 120 {
         if time:seconds >= tStamp set runmode to 130.
-        else disp_deploy(tStamp).
+        else disp_timer(tStamp).
     }
 
     else if runmode = 130 {

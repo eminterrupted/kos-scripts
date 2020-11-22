@@ -17,29 +17,27 @@ local statePath to "local:/state.json".
 init_state_obj().
 
 global function init_disk {
-    
-    local disks to list().
+    set ship:rootPart:getModule("kosProcessor"):volume:name to "local".
+    local disks is list().
     list volumes in disks.
-    local idx to 0.
+    local di is disks:iterator.
+    local idx is 0.
 
-    for v in disks {
-        if idx = 1 {
-            set v:name to "Local".
+    until not di:next {
+        if di:value:name = "" and di:index <= 2 set di:value:name to "log".
+        else if di:value:name = "" {
+            set di:value:name to "data_" + idx.
+            set idx to idx + 1.
         }
-
-        else if idx = 2 {
-            set v:name to "log".
-        }
-
-        else if idx > 2 {
-            set v:name to choose "data_" + idx:tostring if v:name = "" else "data_" + v:name.
-        }
-
-        set idx to idx + 1.
     }
 
+    local dLex is lex().
     list volumes in disks.
-    return disks.
+    for d in disks {
+        dLex:add(d:name, d).
+    }
+    
+    return dLex.
 }
 
 

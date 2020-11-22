@@ -102,7 +102,7 @@ until runmode = 99 {
 
     set maxAlt to max(maxAlt, ship:altitude).
     disp_launch_main().
-    disp_launch_tel().
+    disp_tel().
 }
 
 //** End Main

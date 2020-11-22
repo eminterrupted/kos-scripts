@@ -4,7 +4,8 @@ parameter tApo to 125000,
           tPe to 125000,
           tInc to 0,
           gtAlt to 60000,
-          gtPitch to 3.
+          gtPitch to 3,
+          rVal to 0.
 
 set config:ipu to 250.
 
@@ -51,7 +52,7 @@ until runmode = 99 {
     if runmode = 0 {
         log_sci_list(sciList).
         recover_sci_list(sciList).
-        arm_fairings_on_launch(80000).
+        arm_proc_fairings(80000).
 
         set runmode to 2.
     }
@@ -220,7 +221,7 @@ until runmode = 99 {
     }
 
     disp_launch_main().
-    disp_launch_tel().
+    disp_tel().
     disp_obt_data().
     disp_eng_perf_data().
     disp_launch_params(tApo, tPe, tInc, gtAlt, gtPitch).

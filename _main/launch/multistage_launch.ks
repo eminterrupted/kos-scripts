@@ -4,7 +4,8 @@ parameter tApo to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
-          tGEndPitch to 3.
+          tGEndPitch to 3,
+          rVal to 0.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -30,14 +31,13 @@ runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 //Vars
 local stateObj to init_state_obj().
-set stateObj["program"] to scriptPath():name:replace(".ks","").
 local runmode to stateObj["runmode"].
 
 local sVal to heading(90, 90, -90).
 local tVal to 0.
+local gtStart is 1250.
 
 local azObj to l_az_calc_init(tApo, tInc).
-local az to l_az_calc(azObj).
 local burnObj is lex().
 local dispState to lex().
 local ascPid to setup_pid(.135).
@@ -47,36 +47,42 @@ until runmode = 99 {
     //prelaunch activities
     if runmode = 0 {
         set runmode to 2.
+        logStr("[R:" + runmode + "] Preparing for launch").
     }
 
     //countdown
     else if runmode = 2 {
         set tVal to 1.
+        if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
+            arm_stock_fairings(75000, ship:partsTaggedPattern("pl.st.fairing")[0]).
+        } 
+        else if ship:partsTaggedPattern("pl.pf.base"):length > 0 {
+            arm_proc_fairings(75000, ship:partsTaggedPattern("pl.pf.base")[0]).
+        }
+
         launch_vessel().
         set runmode to 10.
     }
 
     //launch
     else if runmode = 10 and alt:radar >= 100 {
-        set az to l_az_calc(azObj).
-        set sVal to heading (az, 90, 90).
+        set sVal to heading (l_az_calc(azObj), 90, 90).
         set runmode to 12.
     }
 
     //vertical ascent
     else if runmode = 12 {
-        set az to l_az_calc(azObj).
-        set sVal to heading (az, 90, 180).
+        set sVal to heading (l_az_calc(azObj), 90, rVal).
 
-        if ship:altitude >= 1250 or ship:verticalSpeed >= 120 {
+        if ship:altitude >= 850 or ship:verticalSpeed >= 100 {
+            set gtStart to ship:altitude.
             set runmode to 14.
         }
     }
 
     //gravity turn
     else if runmode = 14 {
-        set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 180).
+        set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
         
         if ship:q >= ascPid:setpoint {
             set tVal to max(0, min(1, 1 + ascPid:update(time:seconds, ship:q))). 
@@ -91,11 +97,10 @@ until runmode = 99 {
 
     //slow burn to tApo
     else if runmode = 16 {
-        set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 180).
+        set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
 
         if ship:apoapsis < tApo {
-            set tVal to 1 - max(0, min(1, ((tApo * 0.05)  / (ship:altitude - tApo * 0.95)))).
+            set tVal to 1 - max(0, min(1, ((tApo * 0.15)  / (ship:altitude - tApo * 0.85)))).
         }
 
         else if ship:apoapsis >= tApo set runmode to 18. 
@@ -103,7 +108,7 @@ until runmode = 99 {
 
     //coast / correction burns
     else if runmode = 18 {
-        set sVal to ship:prograde + r(0,0,180).
+        set sVal to ship:prograde + r(0, 0, rVal).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -119,51 +124,48 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
+        logStr("In runmode 22").
+        logStr("tPe: " + tPe).
         set burnObj to get_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
         set tVal to 0. 
-
-        set az to l_az_calc(azObj).
-        set sVal to heading(az, 0, 180).
+        set sVal to heading(l_az_calc(azObj), 0, rVal).
         
         local burnEta to burnObj["burnEta"] - time:seconds.
         
         if warp = 0 and burnEta > 30 {
-            if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 {
+            if steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 {
                 if kuniverse:timewarp:mode = "RAILS" warpTo(burnObj["burnEta"] - 15).
             }
         }
 
-        if time:seconds >= burnObj["burnEta"] - 5 and ship:periapsis <= tPe and kuniverse:timewarp:issettled {
+        if time:seconds >= burnObj["burnEta"] and ship:periapsis <= tPe and kuniverse:timewarp:issettled {
             set runmode to 24.
         }
     }
 
     //execute circ burn
     else if runmode = 24 {
-        set az to l_az_calc(azObj).
-        set sVal to heading(az, 0, 180).
+        set sVal to heading(l_az_calc(azObj), 0, rVal).
 
         set tVal to 1.
         disp_burn_data(burnObj).
 
-        if ship:periapsis >= tPe * 0.95 {    
+        if ship:periapsis >= tPe * 0.98 {    
             set runmode to 26. 
         }
     }
 
     //fine adjust burn to tPe
     else if runmode = 26 {
-        
-        set az to l_az_calc(azObj).
-        set sVal to heading(az, 0, 180).
+        set sVal to heading(l_az_calc(azObj), 0, rVal).
 
         disp_burn_data(burnObj).
 
         if ship:periapsis < tPe {
-            set tVal to 1 - max(0, min(1, ((tPe * 0.05)  / (ship:altitude - tPe * 0.95)))).
+            set tVal to 1 - max(0, min(1, ((tPe * 0.075)  / (ship:altitude - tPe * 0.925)))).
         } 
         
         else if ship:periapsis >= tPe {
@@ -172,17 +174,24 @@ until runmode = 99 {
         }
     }
 
+    //Clear disp block, get ship ready for orbit
     else if runmode = 28 {
+        disp_clear_block("burn_data").
         set tVal to 0.
         set sVal to ship:prograde.
-        set runmode to 99.
+        set runmode to 30.
     }
 
+    //deploy any solar panels
+    else if runmode = 30 {
+        panels on.
+        set runmode to 99.
+    }
 
     lock steering to sVal.
     lock throttle to tVal.
 
-    if stage:number > 0 and ship:availableThrust <= 0.1 and tVal <> 0 {
+    if ship:availableThrust < 0.1 and tVal > 0 {
         safe_stage().
     }
 
@@ -190,7 +199,7 @@ until runmode = 99 {
 
     disp_launch_main().
     disp_obt_data().
-    disp_launch_tel().
+    disp_tel().
     disp_eng_perf_data().
     //disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tGEndPitch).
     
@@ -201,7 +210,9 @@ until runmode = 99 {
 }
 
 unlock steering. 
-lock throttle to 0.
+unlock throttle.
+
+wait 10.
 
 clearScreen.
 //** End Main

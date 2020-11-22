@@ -20,10 +20,10 @@ global function warp_to_timestamp {
     if tDelta > 151200 and warp <> 7 set warp to 7.
     else if tDelta > 21600 and warp <> 6 set warp to 6.
     else if tDelta > 1800 and warp <> 5 set warp to 5. 
-    else if tDelta > 600 and warp <> 4 set warp to 4. 
-    else if tDelta > 300 and warp <> 3 set warp to 3.
-    else if tDelta > 150 and warp <> 2 set warp to 2. 
-    else if tDelta > 60 and warp <> 1 set warp to 1.
+    else if tDelta > 300 and warp <> 4 set warp to 4. 
+    else if tDelta > 120 and warp <> 3 set warp to 3.
+    else if tDelta > 30 and warp <> 2 set warp to 2. 
+    else if tDelta > 15 and warp <> 1 set warp to 1.
     else if tDelta <= 15 kuniverse:timewarp:cancelwarp().
 }
 

@@ -4,7 +4,8 @@ parameter tApo to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
-          tgtPitch to 3.
+          tgtPitch to 3,
+          rVal to 0.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -97,7 +98,7 @@ until runmode = 99 {
     lock steering to sVal.
 
     disp_launch_main().
-    disp_launch_tel().
+    disp_tel().
     disp_obt_data().
     disp_eng_perf_data().
     disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tgtPitch).

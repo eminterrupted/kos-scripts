@@ -164,3 +164,15 @@ global function get_mission_scripts {
 
         return scrList.
 }
+
+global function get_reentry_scripts {
+        local fList to list().
+        local scrList to list().
+
+        switch to 0.
+        cd("_main/reentry").
+        list files in fList.
+        for f in fList scrList:add(f).
+
+        return scrList.
+}

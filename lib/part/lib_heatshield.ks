@@ -1,11 +1,11 @@
 @lazyGlobal off.
 
 global function jettison_heatshield {
-    parameter p.
+    parameter hs.
 
     local m is "ModuleDecouple".
-    if p:hasModule(m) {
-        set m to p:getModule(m).
+    if hs:hasModule(m) {
+        set m to hs:getModule(m).
         m:doEvent("jettison heat shield").
         return true.
     }

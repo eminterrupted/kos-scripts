@@ -164,6 +164,9 @@ global function get_ship_mass_at_launch {
 global function get_vmass_at_stg {
     parameter stgId.
 
+    logStr("get_vmass_at_stg").
+    logStr("stgId: " + stgId).
+
     local vmass is 0.
     from { local n to stgId. } until n < -1 step { set n to n - 1. } do {
         for p in ship:parts { 
@@ -171,5 +174,6 @@ global function get_vmass_at_stg {
         }
     }
 
+    logStr("return vmass[" + vmass + "]").
     return vmass.
 }

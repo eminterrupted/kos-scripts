@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-set config:ipu to 150.
+parameter rVal is 0.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -34,15 +34,16 @@ clearscreen.
 
 until runmode = 99 {
     
-    set sVal to ship:prograde. 
-
     if runmode = 0 {
+        disp_clear_block("eng_perf").
+        set sVal to ship:prograde. 
         local sunExp is get_solar_exp().
         global tStamp is choose time:seconds + 600 if sunExp <= 0.01 else time:seconds + 30.
         set runmode to 10.
     }
 
     else if runmode = 10 {
+        set sVal to ship:prograde. 
         if warp = 0 {
             set runmode to 20. 
             warpTo(tStamp).
@@ -50,11 +51,13 @@ until runmode = 99 {
     }
 
     else if runmode = 20 {
+        set sVal to ship:prograde. 
         if time:seconds >= tStamp set runmode to 30.
-        else disp_deploy(tStamp).
+        else disp_timer(tStamp).
     }
 
     else if runmode = 30 {
+        set sVal to ship:prograde. 
         unset tStamp.
         deploy_payload().
 
@@ -73,9 +76,8 @@ until runmode = 99 {
     }
     
     disp_launch_main().
-    disp_launch_tel().
+    disp_tel().
     disp_obt_data().
-    disp_eng_perf_data().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.

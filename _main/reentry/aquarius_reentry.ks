@@ -16,7 +16,6 @@ runOncePath("0:/lib/data/engine/lib_twr.ks").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/part/lib_heatshield.ks").
 
-
 //
 //** Main
 
@@ -26,7 +25,6 @@ local runmode to stateObj["runmode"].
 
 local sVal to ship:prograde + r(0, 0, rVal).
 local tPe to 35000.
-local tStamp is 0.
 local tVal to 0.
 
 if runmode = 99 set runmode to 0. 
@@ -38,51 +36,14 @@ clearscreen.
 until runmode = 99 {
 
     if runmode = 0 {
-        
-        local sciMod is get_sci_mod().
-        log_sci_list(sciMod).
-        recover_sci_list(sciMod).
-        set tStamp to time:seconds + 180.
-        set runmode to 8.
-    }
-
-    else if runmode = 8 {
-        set sVal to ship:retrograde + r(0, 0, rVal).
-        disp_timer(tStamp).
-
-        if time:seconds >= tStamp {
-            set tStamp to time:seconds + (3600 * kuniverse:hoursperday).
-            set runmode to 10.
-        }
-    }
-
-    else if runmode = 10 {
-        set sVal to ship:retrograde + r(0, 0, rVal).
-        disp_timer(tStamp).
-
-        if warp = 0 {
-            if steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 {
-                lock steering to "kill".
-                wait 1. 
-                if kuniverse:timewarp:mode = "RAILS" warpTo(tStamp - 15).
-            }
-        }
-
-        if time:seconds >= tStamp {
-            disp_clear_block("timer").
-            set runmode to 20.
-        }
-    }
-
-    else if runmode = 20 {
         set sVal to ship:retrograde + r(0, 0, rVal).
         if ship:longitude >= 125 and ship:longitude <= 135 {
             kuniverse:timewarp:cancelwarp().
             wait until kuniverse:timewarp:issettled.
             set runmode to 40.
+        } else {
+            if steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 set warp to 3.
         }
-
-        else set warp to 3.
     }
 
     else if runmode = 40 {
@@ -108,7 +69,6 @@ until runmode = 99 {
     else if runmode = 52 {
         set sval to ship:retrograde + r(0, 0, rVal).
         wait 5. 
-        safe_stage().
         set runmode to 60.
     }
 
@@ -119,7 +79,10 @@ until runmode = 99 {
         warp_to_alt(warpAlt).
         if ship:altitude <= warpAlt {
             kuniverse:timewarp:cancelWarp().
-            set runmode to 70.
+            when kuniverse:timewarp:issettled then {
+                safe_stage().
+                set runmode to 70.
+            }
         }
     }
         
