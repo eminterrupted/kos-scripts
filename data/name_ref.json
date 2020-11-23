@@ -177,7 +177,15 @@
         "HG-20 High Gain Antenna",
         "restock-relay-radial-2",
         "48-7S \"Spark\" Liquid Fuel Engine",
-        "liquidEngineMini.v2"
+        "liquidEngineMini.v2",
+        "TT-14 Radial Decoupler",
+        "restock-decoupler-radial-tiny-1",
+        "Size 1.5 Decoupler",
+        "Size1p5.Strut.Decoupler",
+        "KS-1M 'Otter' Liquid Fuel Engine",
+        "nflv-engine-m1d-1",
+        "Probodobodyne QBE",
+        "probeCoreCube"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -11,9 +11,9 @@ local cache to "0:/data/launchSelectCache.json".
 local localCache to "local:/launchSelectCache.json".
 local cacheObj to lexicon().
 
-local launchScript to "scout_1.ks".
-local missionScript to "deploy_sat.ks".
-local reentryScript to "no_reentry.ks".
+local launchS1 to "scout_1.ks".
+local missionS1 to "deploy_sat.ks".
+//local missionS2 to "no_reentry.ks".
 local tApo to "250000".
 local tPe to "250000".
 local tInc to "0".
@@ -24,9 +24,9 @@ local rVal to 0.
 if exists(cache) {
         set cacheObj to readJson(cache).
 
-        if cacheObj:hasKey("launchScript") set launchScript to cacheObj["launchScript"]:toString.
-        if cacheObj:hasKey("missionScript") set missionScript to cacheObj["missionScript"]:toString.
-        if cacheObj:hasKey("reentryScript") set reentryScript to cacheObj["reentryScript"]:toString.
+        if cacheObj:hasKey("launchS1") set launchS1 to cacheObj["launchS1"]:toString.
+        if cacheObj:hasKey("missionS1") set missionS1 to cacheObj["missionS1"]:toString.
+        //if cacheObj:hasKey("missionS2") set missionS2 to cacheObj["missionS2"]:toString.
         if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
         if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
         if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
@@ -37,60 +37,122 @@ if exists(cache) {
 
 local lScriptList to get_launch_scripts().
 local mScriptList to get_mission_scripts().
-local rScriptList to get_reentry_scripts().
 
-local gui to gui(500).
+local gui to gui(750).
 local tabWidget to add_tab_widget(gui).
 
 local page to add_tab(tabWidget, "Launch Script Params").
-page:addLabel("Select launch parameters").
 
-page:addLabel("Target Apoapsis").
-local tfAp to page:addTextField(tApo:toString).
+page:addspacing(10).
+
+local lbox to page:addvbox().
+lbox:addLabel("Select launch parameters").
+
+lbox:addspacing(20).
+
+local obox to lbox:addhlayout().
+local leftbox to obox:addvlayout().
+leftbox:addLabel("Target Apoapsis").
+local tfAp to leftbox:addTextField(tApo:toString).
 set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tApo"] to tApo. }.
 
-page:addLabel("Target Periapsis").
-local tfPe to page:addTextField(tPe:toString).
+leftbox:addspacing(20).
+
+leftbox:addLabel("Target Periapsis").
+local tfPe to leftbox:addTextField(tPe:toString).
 set tfPe:onConfirm to { parameter pe. set tPe to round(pe:toNumber). set cacheObj["tPe"]to tPe. }.
 
-page:addLabel("Target Inclination").
-local inc to page:addTextField(round(tInc):tostring).
-set inc:onConfirm to { parameter i. set tInc to round(i:toNumber). set cacheObj["tInc"] to tInc. }.
+leftbox:addspacing(20).
 
-page:addLabel("Gravity Turn End Altitude").
-local gta to page:addTextField(round(gtAlt):toString).
+leftbox:addLabel("Gravity Turn End Altitude").
+local gta to leftbox:addTextField(round(gtAlt):toString).
 set gta:onConfirm to { parameter a. set gtAlt to round(a:toNumber). set cacheObj["gtAlt"] to gtAlt.}.
 
-page:addLabel("Gravity Turn Reference Pitch").
+local rightbox to obox:addvlayout().
+
+local inc to tInc.
+local incText to "Target Inclination: ".
+local incLabel to rightbox:addLabel(incText + round(inc):tostring).
+set inc to rightbox:addHSlider(inc, -90, 90).
+set inc:onChange to { parameter i. set tInc to round(i). set cacheObj["tInc"] to tInc. set incLabel:text to incText + tInc.}.
+
+rightbox:addspacing(20).
+
+rightbox:addLabel("Roll Angle").
+local rbox to rightbox:addhlayout().
+local rb0 to rbox:addRadioButton("0", true).
+rbox:addspacing(75).
+local rb90 to rbox:addRadioButton("90", false).
+rbox:addspacing(75).
+local rb180 to rbox:addRadioButton("180", false).
+rbox:addspacing(75).
+local rb270 to rbox:addRadioButton("270", false).
+set rbox:onRadioChange to { parameter r. if r = "0" set rVal to r:text:toNumber. else set rVal to r:text:toNumber.}.
+
+rightbox:addspacing(4).
+
+//rightbox:addLabel("Gravity Turn Final Pitch").
 local rp to gtPitch.
-local rpLabel to page:addLabel(round(rp,1):tostring).
-set rp to page:addHSlider(rp, 0, 10).
-set rp:onChange to { parameter p. set gtPitch to round(p, 1). set cacheObj["gtPitch"] to gtPitch. set rpLabel:text to gtPitch:tostring.}.
+local rpText to "Gravity Turn Final Pitch: ".
+local rpLabel to rightbox:addLabel(rpText + round(rp,1):tostring).
+set rp to rightbox:addHSlider(rp, 0, 5).
+set rp:onChange to { parameter p. set gtPitch to round(p, 1). set cacheObj["gtPitch"] to gtPitch. set rpLabel:text to rpText + gtPitch:tostring.}.
 
-page:addLabel("Final Roll Angle").
-local rb0 to page:addRadioButton("0", true).
-local rb90 to page:addRadioButton("90", false).
-local rb180 to page:addRadioButton("180", false).
-local rb270 to page:addRadioButton("270", false).
-set page:onRadioChange to { parameter r. if r = "0" set rVal to r:text:toNumber. else set rVal to r:text:toNumber.}.
+page:addspacing(10).
 
-set page to add_tab(tabWidget, "Launch Script").
-page:addLabel("Select launch script").
-page:addLabel("Currently selected launch script: " + launchScript).
-local lScript to add_popup_menu(page,lScriptList).
-set lScript:onchange to { parameter lChoice. set launchScript to lChoice:toString. set cacheObj["launchScript"] to launchScript.}.
 
-set page to add_tab(tabWidget, "Mission Script").
-page:addLabel("Select mission script for post-launch").
-page:addLabel("Currently selected mission script: " + missionScript).
-local mScript to add_popup_menu(page,mScriptList).
-set mScript:onchange to { parameter mChoice. set missionScript to mChoice:toString. set cacheObj["missionScript"] to missionScript.}.
+set page to add_tab(tabWidget, "Script Select").
+page:addspacing(10).
 
-set page to add_tab(tabWidget, "Reentry Script").
-page:addLabel("Select a script for reentry").
-page:addLabel("Currently selected reentry script: " + reentryScript).
-local rScript to add_popup_menu(page,rScriptList).
-set rScript:onchange to { parameter rChoice. set reentryScript to rChoice:toString. set cacheObj["reentryScript"] to reentryScript.}.
+local scrbox to page:addvlayout().
+scrbox:addlabel("Select launch and mission scripts").
+scrbox:addspacing(5).
+
+local hbox to scrbox:addhlayout().
+hbox:addspacing(5).
+
+local lsbox to hbox:addvbox().
+lsbox:addspacing(5).
+lsbox:addLabel("Launch / Ascent").
+lsbox:addspacing(10).
+local ls1 to add_popup_menu(lsbox, lScriptList).
+set ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString. set cacheObj["launchS1"] to launchS1.}.
+
+local s1box to hbox:addvbox().
+s1box:addspacing(5).
+s1box:addLabel("Mission Stage 1").
+s1box:addspacing(10).
+local s1 to add_popup_menu(s1box, mScriptList).
+set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString:replace(".ks",""). set cacheObj["missionS1"] to missionS1.}.
+
+// local s2box to hbox:addvbox().
+// s2box:addspacing(5).
+// s2box:addLabel("Mission Stage 1").
+// s2box:addspacing(10).
+// local s2 to add_popup_menu(s2box, mScriptList).
+// set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replace(".ks",""). set cacheObj["missionS1"] to missionS2.}.
+
+
+// set page to add_tab(tabWidget, "Launch Script").
+// page:addLabel("Select launch script").
+// page:addLabel("Currently selected launch script: " + launchS1).
+// page:addSpacing(25).
+// local _ls1 to add_popup_menu(page,lScriptList).
+// set _ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString. set cacheObj["launchS1"] to launchS1.}.
+
+// set page to add_tab(tabWidget, "Mission Stage 1 Script").
+// page:addLabel("Select script for mission stage 1").
+// page:addLabel("Currently selected mission stage 1 script: " + missionS1).
+// page:addSpacing(25).
+// local s1 to add_popup_menu(page,mScriptList).
+// set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString. set cacheObj["missionS1"] to missionS1.}.
+
+// set page to add_tab(tabWidget, "Mission Stage 2 Script").
+// page:addLabel("Select a script for mission stage 2").
+// page:addLabel("Currently selected reentry script: " + missionS2).
+// page:addSpacing(25).
+// local s2 to add_popup_menu(page,mScriptList).
+// set s2:onchange to { parameter rChoice. set missionS2 to rChoice:toString. set cacheObj["missionS2"] to missionS2.}.
 
 local close to gui:addButton("Close").
 
@@ -110,16 +172,16 @@ when True then {
 gui:show().
 local tStamp to time:seconds + 60.
 local closeGui to false.
-ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
+local rProc to ship:rootpart:getModule("kOSProcessor").
+rProc:doAction("open terminal",true).
 
 until closeGui = true {
         wait(0).
 
-        print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
-        
-        print "Launch script selected:  " + launchScript + "         " at (2,4).
-        print "Mission script selected: " + missionScript + "         " at (2,5).
-        print "Reentry script selected: " + reentryScript + "         " at (2,6).
+        //print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
+        print "Launch script selected:  " + launchS1 + "         " at (2,4).
+        print "Stage 1 script selected: " + missionS1 + "         " at (2,5).
+        //print "Stage 2 script selected: " + missionS2 + "         " at (2,6).
 
         print "Target Apoapsis:         " + tApo + "      " at (2,7).
         print "Target Periapsis:        " + tPe + "      " at (2,8).
@@ -128,15 +190,15 @@ until closeGui = true {
         print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,11).
         print "Roll Program Value:      " + rVal + "  " at (2,12).
 
-        if time:seconds > tStamp set closeGui to true.
+        //if time:seconds > tStamp set closeGui to true.
         if close:pressed set closeGui to true.
 }
 
 gui:hide().
 
-set cacheObj["launchScript"] to launchScript.
-set cacheObj["missionScript"] to missionScript.
-set cacheObj["reentryScript"] to reentryScript.
+set cacheObj["launchS1"] to launchS1.
+set cacheObj["missionS1"] to missionS1.
+//set cacheObj["missionS2"] to missionS2.
 set cacheObj["tApo"] to tApo.
 set cacheObj["tPe"] to tPe.
 set cacheObj["tInc"] to tInc.
@@ -147,10 +209,11 @@ set cacheObj["rVal"] to rVal.
 writeJson(cacheObj, cache).
 copyPath(cache, localCache).
 
-local mc to "0:/_main/mc.ks".
-local localMC to ship:rootpart.
-set localMC to localMC:getModule("kOSProcessor").
-set localMC to localMC:volume:name + ":/mc.ks".
-copyPath(mc, localMC).
+local mc to "0:/_main/mc_vnext".
+local localMC to rProc:volume:name + ":/boot/mc".
+//copyPath(mc, localMC).
+compile(mc) to localMC.
+set rProc:bootfilename to localMC:replace("local:","").
+//if exists("local:/boot/gui_stage") deletePath("local:/boot/gui_stage").
 
-runPath(localMC, launchScript, missionScript, reentryScript, tApo, tPe, tInc, gtAlt, gtPitch, rVal).
+runPath(localMC).

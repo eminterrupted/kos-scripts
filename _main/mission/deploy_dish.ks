@@ -5,7 +5,6 @@ parameter rVal is 0.
 clearScreen.
 
 runOncePath("0:/lib/part/lib_antenna.ks").
-runOncePath("0:/lib/part/lib_dish.ks").
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_display.ks").
 runOncePath("0:/lib/lib_launch.ks").
@@ -36,25 +35,29 @@ lock steering to ship:prograde.
 until runmode = 99 {
     
     if runmode = 0 {
-        safe_stage().
+        if ship:liquidFuel <= 1 safe_stage().
         set runmode to 10.
     }
 
     if runmode = 10 {
         for p in pList {
-            if n = 0 {
-                set_dish_target(p, "Mun").
-            }
-            
-            else if n = 1 {
-                set_dish_target(p, "Kerbin").
-            }
-            
             activate_dish(p).
-            set n to n + 1.
+            wait 1.
+            local range to get_antenna_range(p).
+
+            if range >= minmus:distance {
+                set_dish_target(p, minmus:name).
+            }
+            
+            else if range >= mun:distance and n = 0 {
+                set_dish_target(p, mun:name).
+                set n to n + 1.
+            }
+
+            else set_dish_target(p, kerbin:name).
         }
 
-        set runmode to 20.
+        set runmode to 99.
     }
 
     if stateObj["runmode"] <> runmode {

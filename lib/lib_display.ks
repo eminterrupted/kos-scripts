@@ -102,7 +102,7 @@ global function disp_launch_main {
     print "PROGRAM:       " + stateObj["program"] + "   " at (h1,cr).
         print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
     cr.
-    if defined cd print "COUNTDOWN:     " + cd at (h1, cr).
+    if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
 }
 

@@ -50,10 +50,7 @@ until program = 255 {
     local localPayloadPath is lPath + missionScript.
     local localReentryPath is lPath + reentryScript.
 
-    if not exists(localLaunchPath) if exists(kscLaunchPath) copyPath(kscLaunchPath,localLaunchPath).
-
     if not exists(localPayloadPath) if exists(kscPayloadPath) copyPath(kscPayloadPath,localPayloadPath).
-    
     if not exists(localReentryPath) if exists(kscReentryPath) copyPath(kscReentryPath,localReentryPath).
     
     if  program = 0 {
@@ -61,7 +58,7 @@ until program = 255 {
     }
 
     else if program = "LAUNCH" and (ship:status = "PRELAUNCH" or ship:status = "LANDED" or ship:status = "FLYING" or ship:status = "SUB_ORBITAL") {
-        logStr("in launchscript loop").
+        if not exists(localLaunchPath) if exists(kscLaunchPath) compile(kscLaunchPath) to localLaunchPath.
         ship:rootpart:getModule("kOSProcessor"):doAction("open terminal",true).
         
         //uplink_telemetry().

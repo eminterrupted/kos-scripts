@@ -6,18 +6,18 @@
         625000,
         "tInc",
         0,
-        "launchScript",
-        "multistage_launch.ks",
-        "missionScript",
-        "deploy_dish.ks",
         "gtAlt",
         57500,
         "gtPitch",
-        1.5,
+        1,
         "rVal",
         0,
-        "reentryScript",
-        "no_reentry.ks"
+        "launchS1",
+        "multistage_launch",
+        "missionS1",
+        "deploy_sat",
+        "missionS2",
+        "no_reentry"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -51,23 +51,40 @@ global function exec_correction_burn {
 
 // Launch a vessel with a countdown timer
 global function launch_vessel {
-    
+    parameter countdown is 10, 
+              engStart is 3.
+
     logStr("launch_vessel").
 
     clearScreen.
-    global cd is 5. 
-    lock steering to up - r(0,0,90).
+    global cd is countdown.
 
-    until cd = 0 {
+    when cd <= 3 then engine_start_sequence().
+    
+    until cd <= 0 {
         disp_launch_main().
-        wait 1.
-        set cd to cd - 1.
+        wait 0.1.
+        set cd to cd - 0.1.
     }
-  
+
+    lock steering to up - r(0,0,90).
     lock throttle to 1.
     stage.    
     unset cd.
     clearScreen.
+}
+
+local function engine_start_sequence {
+    
+    local tSpool to 0.
+
+    stage.
+    from { local t to 0.} until t >= 1 step { set t to t + 0.01.} do {
+        disp_launch_main().
+        lock throttle to tSpool.
+        set tSpool to t.
+        set cd to cd - 0.01.
+    }
 }
 
 
@@ -98,6 +115,12 @@ global function get_la_for_alt {
 
     return effPitch.
 }.
+
+
+global function get_circ_burn_pitch {
+    local obtPitch is 90 - vang(ship:up:vector, ship:prograde:vector).
+    return obtPitch * -1.
+}
 
 
 global function slow_throttle_for_time {

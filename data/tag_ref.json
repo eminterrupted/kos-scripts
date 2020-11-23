@@ -793,7 +793,13 @@
         "Mk-55 \"Thud\" Liquid Fuel Engine",
         "eng",
         "HG-20 High Gain Antenna",
-        "comm.dish"
+        "comm.dish",
+        "TT-14 Radial Decoupler",
+        "",
+        "Size 1.5 Decoupler",
+        "",
+        "KS-1M 'Otter' Liquid Fuel Engine",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -145,7 +145,19 @@
         "restock-relay-radial-2",
         "comm.dish",
         "liquidEngineMini.v2",
-        "eng"
+        "eng",
+        "restock-decoupler-radial-tiny-1",
+        "",
+        "Size1p5.Strut.Decoupler",
+        "",
+        "nflv-engine-m1d-1",
+        "",
+        "sepMotor1",
+        "eng.sep",
+        "orbital-engine-0625",
+        "eng",
+        "probeCoreCube",
+        "cmd.core"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

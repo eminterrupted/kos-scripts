@@ -65,16 +65,18 @@ until runmode = 99 {
     }
 
     //launch
-    else if runmode = 10 and alt:radar >= 100 {
-        set sVal to heading (l_az_calc(azObj), 90, 90).
+    else if runmode = 10 {
+        set tVal to 1.
+        set sVal to heading(l_az_calc(azObj), 90, 90).
         set runmode to 12.
     }
 
     //vertical ascent
     else if runmode = 12 {
-        set sVal to heading (l_az_calc(azObj), 90, rVal).
+        set tVal to 1.
+        set sVal to heading(l_az_calc(azObj), 90, rVal).
 
-        if ship:altitude >= 850 or ship:verticalSpeed >= 100 {
+        if ship:altitude >= 900 or ship:verticalSpeed >= 100 {
             set gtStart to ship:altitude.
             set runmode to 14.
         }
@@ -82,6 +84,7 @@ until runmode = 99 {
 
     //gravity turn
     else if runmode = 14 {
+        set tVal to 1.
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
         
         if ship:q >= ascPid:setpoint {
@@ -90,7 +93,7 @@ until runmode = 99 {
 
         else set tVal to 1.
 
-        if ship:apoapsis >= tApo * 0.95 {
+        if ship:apoapsis >= tApo * 0.875 {
             set runmode to 16.
         }
     }
@@ -100,10 +103,13 @@ until runmode = 99 {
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
 
         if ship:apoapsis < tApo {
-            set tVal to 1 - max(0, min(1, ((tApo * 0.15)  / (ship:altitude - tApo * 0.85)))).
+            set tVal to 1 - max(0, min(1, ((tApo * 0.125)  / (ship:altitude - tApo * 0.875)))).
         }
 
-        else if ship:apoapsis >= tApo set runmode to 18. 
+        else if ship:apoapsis >= tApo {
+            set tVal to 0.
+            set runmode to 18. 
+        }
     }
 
     //coast / correction burns
@@ -116,7 +122,7 @@ until runmode = 99 {
             set tVal to 0.25.
         }
 
-        if ship:altitude >= 70000 {
+        if ship:altitude >= body:atm:height {
             set runmode to 22.
         }
     }
@@ -131,7 +137,7 @@ until runmode = 99 {
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
         set tVal to 0. 
-        set sVal to heading(l_az_calc(azObj), 0, rVal).
+        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
         
         local burnEta to burnObj["burnEta"] - time:seconds.
         
@@ -148,7 +154,7 @@ until runmode = 99 {
 
     //execute circ burn
     else if runmode = 24 {
-        set sVal to heading(l_az_calc(azObj), 0, rVal).
+        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
 
         set tVal to 1.
         disp_burn_data(burnObj).
