@@ -44,17 +44,8 @@ until runmode = 99 {
             activate_dish(p).
             wait 1.
             local range to get_antenna_range(p).
-
-            if range >= minmus:distance {
-                set_dish_target(p, minmus:name).
-            }
             
-            else if range >= mun:distance and n = 0 {
-                set_dish_target(p, mun:name).
-                set n to n + 1.
-            }
-
-            else set_dish_target(p, kerbin:name).
+            set_dish_target(p, kerbin:name).
         }
 
         set runmode to 99.

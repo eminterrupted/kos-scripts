@@ -51,15 +51,17 @@ global function exec_correction_burn {
 
 // Launch a vessel with a countdown timer
 global function launch_vessel {
-    parameter countdown is 10, 
-              engStart is 3.
+    parameter countdown is 5, 
+              engStart is 1.5.
 
     logStr("launch_vessel").
 
     clearScreen.
     global cd is countdown.
 
-    when cd <= 3 then engine_start_sequence().
+    lock steering to up - r(0,0,90).
+    
+    when cd <= engStart then engine_start_sequence().
     
     until cd <= 0 {
         disp_launch_main().
@@ -67,9 +69,8 @@ global function launch_vessel {
         set cd to cd - 0.1.
     }
 
-    lock steering to up - r(0,0,90).
     lock throttle to 1.
-    stage.    
+    stage.
     unset cd.
     clearScreen.
 }
@@ -77,14 +78,22 @@ global function launch_vessel {
 local function engine_start_sequence {
     
     local tSpool to 0.
+    lock throttle to tSpool.
 
     stage.
-    from { local t to 0.} until t >= 1 step { set t to t + 0.01.} do {
+    from { local t to 0.} until t >= 0.15 step { set t to t + 0.01.} do {
+        disp_launch_main().
+        set tSpool to t.
+        set cd to cd - 0.015.
+    }
+
+    from { local t to 0.16.} until t >= 1 step { set t to t + 0.02.} do {
         disp_launch_main().
         lock throttle to tSpool.
-        set tSpool to t.
-        set cd to cd - 0.01.
+        set tSpool to min(1, t).
+        set cd to cd - 0.015.
     }
+    lock throttle to 1.
 }
 
 

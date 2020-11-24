@@ -178,7 +178,7 @@ rProc:doAction("open terminal",true).
 until closeGui = true {
         wait(0).
 
-        //print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
+        print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
         print "Launch script selected:  " + launchS1 + "         " at (2,4).
         print "Stage 1 script selected: " + missionS1 + "         " at (2,5).
         //print "Stage 2 script selected: " + missionS2 + "         " at (2,6).
@@ -190,7 +190,7 @@ until closeGui = true {
         print "Gravity Turn End Pitch:  " + gtPitch + "      " at (2,11).
         print "Roll Program Value:      " + rVal + "  " at (2,12).
 
-        //if time:seconds > tStamp set closeGui to true.
+        if time:seconds > tStamp set closeGui to true.
         if close:pressed set closeGui to true.
 }
 

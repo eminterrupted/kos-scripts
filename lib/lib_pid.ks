@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-global function setup_pid {
+global function setup_q_pid {
     parameter pSetpoint,
               kP is 5.0,
               kI is 0.0,
@@ -8,7 +8,21 @@ global function setup_pid {
               maxOutput is 1,
               minOutput is -1.
 
-    global newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
+    local newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
+    set newPid:setpoint to pSetpoint.
+
+    return newPid.
+}
+
+global function setup_acc_pid {
+    parameter pSetpoint,
+              kP is 0.02,
+              kI is 0.00,
+              kD is 0.00,
+              maxOutput is 0.25,
+              minOutput is -0.25.
+
+    local newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
     set newPid:setpoint to pSetpoint.
 
     return newPid.

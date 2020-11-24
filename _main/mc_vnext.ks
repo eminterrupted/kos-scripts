@@ -56,7 +56,7 @@ local function exec_launch {
     local locScrPath to locPath + script.
     if not exists(locScrPath) compile(kscScrPath) to locScrPath.
 
-    runPath(locScrPath).
+    runPath(locScrPath, tApo, tPe, tInc, gtAlt, gtPitch, rVal).
 
     return true.
 }
