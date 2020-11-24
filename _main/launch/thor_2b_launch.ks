@@ -112,7 +112,7 @@ until runmode = 99 {
 
 
     else if runmode = 20 {
-        global burnObj is get_burn_data(tApo).
+        global burnObj is get_circ_burn_data(tApo).
         disp_burn_data(burnObj).
         set runmode to 22.
     }

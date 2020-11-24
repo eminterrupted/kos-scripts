@@ -13,9 +13,9 @@
         "rVal",
         0,
         "launchS1",
-        "multistage.ks",
+        "multistage",
         "missionS1",
-        "no_reentry",
+        "rendezvous_test",
         "missionS2",
         "no_reentry"
     ],

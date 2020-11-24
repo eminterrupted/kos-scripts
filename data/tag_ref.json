@@ -795,11 +795,11 @@
         "HG-20 High Gain Antenna",
         "comm.dish",
         "TT-14 Radial Decoupler",
-        "",
+        "dc.rad",
         "Size 1.5 Decoupler",
-        "",
+        "dc.st",
         "KS-1M 'Otter' Liquid Fuel Engine",
-        ""
+        "eng"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

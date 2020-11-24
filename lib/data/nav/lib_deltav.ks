@@ -8,31 +8,45 @@ runOncePath("0:/lib/data/engine/lib_thrust.ks").
 
 //delegates
 
+global get_circ_burn_dv to get_req_dv_for_body_alt@.
 
-    //
-    global get_circ_burn_dv to get_req_dv_for_body_alt@.
+//functions
 
-//
+
+
+global function get_dv_for_maneuver {
+    return true.
+}
+
+
+
 global function get_req_dv_for_body_alt {
     parameter finalAlt,
               pBody is ship:body.
 
-    return ((sqrt(pBody:mu / (finalAlt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + finalAlt + (2 * ( pBody:radius)))))).       
+    //semi-major axis 
+    local tgtSMA is finalAlt + pBody:radius.
+    local stSMA is ship:periapsis + pBody:radius.
+
+    //Return dv
+    return ((sqrt(pBody:mu / tgtSMA)) * (1 - sqrt((2 * (stSMA)) / (tgtSMA + stSMA)))).
 }
+
 
 
 global function get_dv_for_mun_transfer {
-    parameter tgt is target.
+    parameter tgt.
+
+    set target to tgt.
 
     //semi-major axis
-    local tgtSMA to tgt:altitude + tgt:body:radius.
+    local tgtSMA to target:altitude + target:body:radius.
     local stSMA to ship:altitude + ship:body:radius.
     
-    //Calculate the dv
-    local dv to ((sqrt(ship:body:mu / (stSMA))) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
-
-    return dv.
+    //Return dv
+    return ((sqrt(ship:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
 }
+
 
 
 global function get_avail_dv_for_stage {
@@ -60,6 +74,7 @@ global function get_avail_dv_for_stage {
     logStr("return: " + exhVel * ln(vMass / spentMass)).
     return exhVel * ln(vMass / spentMass).
 }
+
 
 
 global function get_stages_for_dv {

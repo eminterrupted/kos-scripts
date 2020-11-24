@@ -115,7 +115,7 @@ until runmode = 99 {
             set tVal to 1.
         }
 
-        if ship:apoapsis >= tApo * 0.975 {
+        if ship:apoapsis >= tApo * 0.925 {
             set runmode to 16.
         }
     }
@@ -125,13 +125,12 @@ until runmode = 99 {
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
 
         if ship:apoapsis < tApo {
-            set tVal to 1 - max(0, min(1, (tApo * 0.025  / ship:apoapsis * 0.025))).
+            set tVal to 1 - max(0, min(1, (tApo * 0.075  / ship:apoapsis * 0.075))).
         }
 
         else if ship:apoapsis >= tApo {
             set tVal to 0.
             set runmode to 18. 
-            hudtext("MECO", 3, 1, 18, purple, false).
         }
     }
 
@@ -155,7 +154,7 @@ until runmode = 99 {
     else if runmode = 22 {
         logStr("In runmode 22").
         logStr("tPe: " + tPe).
-        set burnObj to get_burn_data(tPe).
+        set burnObj to get_circ_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
@@ -182,7 +181,7 @@ until runmode = 99 {
         set tVal to 1.
         disp_burn_data(burnObj).
 
-        if ship:periapsis >= tPe * 0.975 {    
+        if ship:periapsis >= tPe * 0.925 {    
             set runmode to 26. 
         }
     }
@@ -194,7 +193,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         if ship:periapsis < tPe {
-            set tVal to 1 - max(0, min(1, (tPe * 0.025 / ship:periapsis * 0.025))).
+            set tVal to 1 - max(0, min(1, (tPe * 0.075 / ship:periapsis * 0.075))).
         } 
         
         else if ship:periapsis >= tPe {
@@ -242,7 +241,11 @@ until runmode = 99 {
 unlock steering. 
 unlock throttle.
 
-wait 10.
+from { local n is 10.} until n <= 0 step { set n to n - 1.} do {
+    disp_timer(n).
+}
+
+disp_clear_block("timer").
 
 clearScreen.
 //** End Main

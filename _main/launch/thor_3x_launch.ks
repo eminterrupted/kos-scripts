@@ -131,7 +131,7 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
-        local burnObj to get_burn_data(tPe).
+        local burnObj to get_circ_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
@@ -155,7 +155,7 @@ until runmode = 99 {
 
     //execute circ burn
     else if runmode = 26 {
-        local burnObj to get_burn_data(tPe).
+        local burnObj to get_circ_burn_data(tPe).
         disp_burn_data(burnObj).
         
         set tVal to 1.
@@ -170,7 +170,7 @@ until runmode = 99 {
 
     //fine adjust burn to tPe
     else if runmode = 24{
-        local burnObj to get_burn_data(tPe).
+        local burnObj to get_circ_burn_data(tPe).
         disp_burn_data(burnObj).
         
         set az to l_az_calc(azObj).

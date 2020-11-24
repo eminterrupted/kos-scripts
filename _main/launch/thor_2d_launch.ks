@@ -119,14 +119,14 @@ until runmode = 99 {
 
 
     else if runmode = 20 {
-        global burnObj is get_burn_data(tApo).
+        global burnObj is get_circ_burn_data(tApo).
         disp_burn_data(burnObj).
         set runmode to 22.
     }
 
     //circularization burn
     else if runmode = 22 {
-        set burnObj to get_burn_data(tApo).
+        set burnObj to get_circ_burn_data(tApo).
         disp_burn_data(burnObj).
         
         set tVal to 0. 
@@ -146,7 +146,7 @@ until runmode = 99 {
     }
 
     else if runmode = 24 {
-        set burnObj to get_burn_data(tApo).
+        set burnObj to get_circ_burn_data(tApo).
         disp_burn_data(burnObj).
 
         set tVal to 1.

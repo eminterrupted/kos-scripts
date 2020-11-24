@@ -116,7 +116,7 @@ lsbox:addspacing(5).
 lsbox:addLabel("Launch / Ascent").
 lsbox:addspacing(10).
 local ls1 to add_popup_menu(lsbox, lScriptList).
-set ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString. set cacheObj["launchS1"] to launchS1.}.
+set ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString:replace(".ks", ""). set cacheObj["launchS1"] to launchS1.}.
 
 local s1box to hbox:addvbox().
 s1box:addspacing(5).
@@ -124,35 +124,6 @@ s1box:addLabel("Mission Stage 1").
 s1box:addspacing(10).
 local s1 to add_popup_menu(s1box, mScriptList).
 set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString:replace(".ks",""). set cacheObj["missionS1"] to missionS1.}.
-
-// local s2box to hbox:addvbox().
-// s2box:addspacing(5).
-// s2box:addLabel("Mission Stage 1").
-// s2box:addspacing(10).
-// local s2 to add_popup_menu(s2box, mScriptList).
-// set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replace(".ks",""). set cacheObj["missionS1"] to missionS2.}.
-
-
-// set page to add_tab(tabWidget, "Launch Script").
-// page:addLabel("Select launch script").
-// page:addLabel("Currently selected launch script: " + launchS1).
-// page:addSpacing(25).
-// local _ls1 to add_popup_menu(page,lScriptList).
-// set _ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString. set cacheObj["launchS1"] to launchS1.}.
-
-// set page to add_tab(tabWidget, "Mission Stage 1 Script").
-// page:addLabel("Select script for mission stage 1").
-// page:addLabel("Currently selected mission stage 1 script: " + missionS1).
-// page:addSpacing(25).
-// local s1 to add_popup_menu(page,mScriptList).
-// set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString. set cacheObj["missionS1"] to missionS1.}.
-
-// set page to add_tab(tabWidget, "Mission Stage 2 Script").
-// page:addLabel("Select a script for mission stage 2").
-// page:addLabel("Currently selected reentry script: " + missionS2).
-// page:addSpacing(25).
-// local s2 to add_popup_menu(page,mScriptList).
-// set s2:onchange to { parameter rChoice. set missionS2 to rChoice:toString. set cacheObj["missionS2"] to missionS2.}.
 
 local close to gui:addButton("Close").
 

@@ -36,12 +36,12 @@ local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
 local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
 local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-// local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-// local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
+local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
+local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
 // local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
 // local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
 
-local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_x is lex("id", "posw_x", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 //local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
@@ -50,8 +50,8 @@ local posObj is lex(
                 "pos_b", pos_b, 
                 "pos_c", pos_c, 
                 "pos_d", pos_d, 
-                // "pos_e", pos_e, 
-                // "pos_f", pos_f, 
+                "pos_e", pos_e, 
+                "pos_f", pos_f,
                 // "pos_g", pos_g, 
                 // "pos_h", pos_h, 
                 "posw_x", posw_x
@@ -59,13 +59,13 @@ local posObj is lex(
                 ).
                 
 local posState is lex(
-                "posmain",false,
+                "posmain", false,
                 "pos_a", false, 
                 "pos_b", false, 
                 "pos_c", false, 
                 "pos_d", false, 
-                // "pos_e", false, 
-                // "pos_f", false, 
+                "pos_e", false, 
+                "pos_f", false, 
                 // "pos_g", false, 
                 // "pos_h", false, 
                 "posw_x", false
@@ -123,11 +123,11 @@ global function disp_obt_main {
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name                             at (h1,cr).
-        print "MET:           " + format_timestamp(missionTime) + "    "            at (h1,ln).
+        print "MET:           " + format_timestamp(missionTime) + "    "            at (h3,ln).
     print "BODY:          " + body:name + "     "               at (h1,cr).
-        print "STATUS:        " + status + "              "             at (h2,ln).
+        print "STATUS:        " + status + "              "             at (h3,ln).
     print "PROGRAM:       " + stateObj["program"] + "               " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h2,ln).
+        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
 }
 
 global function disp_test_main {
@@ -343,6 +343,36 @@ global function disp_pid_data {
     print "OUTPUT VALUE:  " + round(pPid:output, 5) + "          "    at (h1,cr).
 }
 
+//Rendezvous
+global function disp_rendezvous_data {
+    parameter pData.
+
+    local pos is "assign".
+    if dispObj:haskey("rvous") set pos to disp_get_pos_obj( dispObj["rvous"]).
+    else {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj["rvous"] to pos["id"].
+    }
+
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print "RENDEZVOUS" at (h1,ln).
+    print "----------" at (h1,cr).
+    print "TARGET:        " + pData["tgt"]:name at (h1,cr).
+    print "TARGET DIST:   " + round(pData["tgt"]:distance) + "    " at (h1,cr).
+    print "TARGET SMA:    " + round(pData["tgt"]:altitude + pData["tgt"]:body:radius) at (h1,cr).
+    cr.
+    print "PHASE ANG:     " + round(pData["window"]["phaseAng"], 3) + "  " at (h1,cr).
+    print "XFR PHASE ANG: " + round(pData["window"]["xfrPhaseAng"], 3) + "  " at (h1,cr).
+    print "XFR PHASE ETA: " + format_timestamp(pData["window"]["nodeAt"] - time:seconds) + "  " at (h1,cr).
+    cr.
+    print "XFR DELTA-V:   " + round(pData["burn"]["dv"], 1) + " m/s    " at (h1,cr).
+    print "BURN DUR:      " + format_timestamp(pData["burn"]["burnDur"]) at (h1,cr).
+    print "BURN ETA:      " + format_timestamp(pData["burn"]["burnEta"] - time:seconds) at (h1,cr).
+}
+
 
 //SCANsat data
 global function disp_scan_status {
@@ -423,16 +453,6 @@ global function disp_clear_block_pos {
     }
     set posState[pos["id"]] to false.
 }
-
-
-// global function out_host {
-//     parameter pObj.
-
-//     for key in pObj:keys {
-//         local pos to key:split(",").
-//         print pObj[key] at(pos[0]:tonumber,pos[1]:tonumber). 
-//     }
-// }
 
 
 //Inserts a new line into display blocks

@@ -185,7 +185,9 @@
         "KS-1M 'Otter' Liquid Fuel Engine",
         "nflv-engine-m1d-1",
         "Probodobodyne QBE",
-        "probeCoreCube"
+        "probeCoreCube",
+        "Mk2-R Radial-Mount Parachute",
+        "parachuteRadial"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
