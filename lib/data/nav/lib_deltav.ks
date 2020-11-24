@@ -8,17 +8,30 @@ runOncePath("0:/lib/data/engine/lib_thrust.ks").
 
 //delegates
 
+
     //
-    global get_req_dv_at_ap to get_req_dv_for_body_alt@:bind(ship:body, ship:apoapsis).
-    global get_req_dv_at_pe to get_req_dv_for_body_alt@:bind(ship:body, ship:periapsis).
-    global get_req_dv_at_alt to get_req_dv_for_body_alt@:bind(ship:body).
+    global get_circ_burn_dv to get_req_dv_for_body_alt@.
 
-//For a given 
+//
 global function get_req_dv_for_body_alt {
-    parameter pBody,
-              pAlt.
+    parameter finalAlt,
+              pBody is ship:body.
 
-    return ((sqrt(pBody:mu / (pAlt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + pAlt + (2 * ( pBody:radius)))))).       
+    return ((sqrt(pBody:mu / (finalAlt + pBody:radius))) * (1 - sqrt((2 * (ship:periapsis + pBody:radius)) / (ship:periapsis + finalAlt + (2 * ( pBody:radius)))))).       
+}
+
+
+global function get_dv_for_mun_transfer {
+    parameter tgt is target.
+
+    //semi-major axis
+    local tgtSMA to tgt:altitude + tgt:body:radius.
+    local stSMA to ship:altitude + ship:body:radius.
+    
+    //Calculate the dv
+    local dv to ((sqrt(ship:body:mu / (stSMA))) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
+
+    return dv.
 }
 
 

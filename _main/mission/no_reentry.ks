@@ -32,7 +32,8 @@ lock steering to sVal.
 clearscreen.
 
 until false {
-
+    local sVal to ship:prograde + r(0, 0, rVal).
+    
     disp_launch_main().
     disp_tel().
     disp_obt_data().

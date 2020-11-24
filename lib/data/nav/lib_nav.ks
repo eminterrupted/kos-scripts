@@ -10,6 +10,14 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 
 
+global function get_burn_data_next {
+    parameter curAlt,
+              newalt,
+              nodeAt.
+
+    return true.
+}
+
 global function get_burn_data {
     parameter newAlt.
 
@@ -18,7 +26,7 @@ global function get_burn_data {
     local nodeAt to time:seconds + eta:apoapsis.
 
     //get deltaV for the burn
-    local dV to get_req_dv_at_alt(newAlt).
+    local dV to get_circ_burn_dv(newAlt, ship:body).
 
     //local burnDur to exhVel * ln(startMass) - exhVel * ln(endMass).
     local burnDur to get_burn_dur(dV). 
