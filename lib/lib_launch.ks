@@ -82,8 +82,8 @@ global function launch_vessel {
         logStr("Fallback tower partial retract").
     }
     when cd <= engStart then {
-        engine_start_sequence().
         logStr("Engine start sequence").
+        engine_start_sequence().
     }
     when cd <= 0.2 then {
         mlp_fallback_full().
@@ -147,8 +147,6 @@ global function get_la_for_alt {
     
     local pg is choose ship:srfPrograde:vector if ship:altitude < tAlt * 0.65 else ship:prograde:vector.
     local pgPitch is 90 - vang(ship:up:vector, pg).
-    local vesPitch is 90 - vang(ship:up:vector, ship:facing:forevector).
-    local devPitch is vang(ship:facing:forevector, pg).
     local effPitch is max(pgPitch - 5, min(tPitch, pgPitch + 5)).
     
     return effPitch.

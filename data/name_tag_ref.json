@@ -169,7 +169,9 @@
         "AM.MLP.GeneralHold3",
         "mlp.clamp",
         "solidBooster1-1",
-        "eng"
+        "eng",
+        "AM.MLP.GeneralHold1",
+        "mlp.clamp"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

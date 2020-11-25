@@ -52,9 +52,8 @@ global function get_dv_for_mun_transfer {
 global function get_avail_dv_for_stage {
     parameter s is stage:number.
 
-    logStr("get_avail_dv_for_stage").
-    logStr("s:   " + s).
-
+    logStr("get_avail_dv_for_stage [stg:" + s + "]").
+    
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
     local vMass to get_vmass_at_stg(s).
     local eList is ship:partsTaggedPattern("eng.stgId:" + s).
@@ -71,7 +70,7 @@ global function get_avail_dv_for_stage {
     local stgMassObj to get_stage_mass_obj(s).
     local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
     local spentMass to vMass - fuelMass.
-    logStr("return: " + exhVel * ln(vMass / spentMass)).
+    logStr("exhVel: return: " + exhVel * ln(vMass / spentMass)).
     return exhVel * ln(vMass / spentMass).
 }
 
@@ -83,10 +82,8 @@ global function get_stages_for_dv {
 
     local stgObj is lex().
 
-    logStr("get_stages_for_dv").
-    logStr("dV:  " + dV).
-    logStr("stg: " + stg).
-
+    logStr("get_stages_for_dv [dv:" + dV + "][stg:" + stg + "]").
+    
     until dv <= 0 or stg < -1 {
         local dvStg is get_avail_dv_for_stage(stg).
 

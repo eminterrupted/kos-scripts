@@ -40,6 +40,7 @@ local gtStart is 1250.
 local azObj to l_az_calc_init(tApo, tInc).
 local burnObj is lex().
 local dispState to lex().
+local maxAcc is ship:maxThrust / ship:mass.
 local qPid to setup_q_pid(.135).
 local accPid to setup_acc_pid(35).
 
@@ -48,7 +49,7 @@ until runmode = 99 {
     //prelaunch activities
     if runmode = 0 {
         set runmode to 2.
-        logStr("[R:" + runmode + "] Preparing for launch").
+        logStr("Preparing for launch").
     }
 
     //countdown
@@ -69,6 +70,7 @@ until runmode = 99 {
     else if runmode = 3 {
         set tVal to 1.
         if alt:radar >= 100 {
+            logStr("Tower cleared").
             set runmode to 4.
         }
     }
@@ -76,6 +78,7 @@ until runmode = 99 {
     else if runmode = 4 {
         set tVal to 1.
         if alt:radar >= 250 {
+            logStr("Roll program").
             set runmode to 10.
         }
     }
@@ -92,7 +95,10 @@ until runmode = 99 {
         set sVal to heading(l_az_calc(azObj), 90, rVal).
 
         if ship:altitude >= 900 or ship:verticalSpeed >= 100 {
+            logStr("Pitch program").
             set gtStart to ship:altitude.
+            when ship:q >= .125 then logStr("Approaching Max-Q").
+            when maxAcc >= 30 then logStr("Throttling back at maximum acceleration").
             set runmode to 14.
         }
     }
@@ -100,7 +106,7 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
-        local maxAcc is ship:maxThrust / ship:mass.
+        set maxAcc to ship:maxThrust / ship:mass.
 
         if ship:q >= .125 {
             set tVal to max(0, min(1, 1 + qPid:update(time:seconds, ship:q))). 
@@ -115,6 +121,7 @@ until runmode = 99 {
         }
 
         if ship:apoapsis >= tApo * 0.925 {
+            logStr("Throttling back near apoapsis. [CurAlt:" + ship:altitude + "][Apo:" + ship:apoapsis + "]").
             set runmode to 16.
         }
     }
@@ -129,6 +136,7 @@ until runmode = 99 {
 
         else if ship:apoapsis >= tApo {
             set tVal to 0.
+            logStr("MECO").
             set runmode to 18. 
         }
     }
@@ -144,6 +152,8 @@ until runmode = 99 {
         }
 
         if ship:altitude >= body:atm:height {
+            logStr("Reached space").
+            logStr("Setting up circularization burn object").
             set runmode to 22.
         }
     }
@@ -151,8 +161,6 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
-        logStr("In runmode 22").
-        logStr("tPe: " + tPe).
         set burnObj to get_circ_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
@@ -169,6 +177,7 @@ until runmode = 99 {
         }
 
         if time:seconds >= burnObj["burnEta"] - 5 and ship:periapsis <= tPe and kuniverse:timewarp:issettled {
+            logStr("Circularization burn initiated").
             set runmode to 24.
         }
     }
@@ -180,7 +189,8 @@ until runmode = 99 {
         set tVal to 1.
         disp_burn_data(burnObj).
 
-        if ship:periapsis >= tPe * 0.925 {    
+        if ship:periapsis >= tPe * 0.925 {
+            logStr("Throttling back at Pe target approach [CurAlt:" + ship:altitude + "][Pe:" + ship:periapsis + "]").
             set runmode to 26. 
         }
     }
@@ -197,6 +207,8 @@ until runmode = 99 {
         
         else if ship:periapsis >= tPe {
             set tVal to 0. 
+            logStr("SECO").
+            logStr("Circularized at [Apo: " + ship:apoapsis + "][Pe: " + ship:periapsis + "]").
             set runmode to 28.
         }
     }
@@ -212,6 +224,7 @@ until runmode = 99 {
     //deploy any solar panels
     else if runmode = 30 {
         panels on.
+        logStr("Panels on").
         set runmode to 99.
     }
 
@@ -219,7 +232,7 @@ until runmode = 99 {
     lock throttle to tVal.
 
     if ship:availableThrust < 0.1 and tVal > 0 {
-        hudtext("Staging", 3, 1, 18, purple, false).
+        logStr("Staging").
         safe_stage().
     }
 
@@ -245,7 +258,7 @@ from { local n is 10.} until n <= 0 step { set n to n - 1.} do {
 }
 
 disp_clear_block("timer").
-
+logStr("Ship ready for mission script").
 clearScreen.
 //** End Main
 //

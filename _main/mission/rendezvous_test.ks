@@ -10,47 +10,69 @@ runOncePath("0:/lib/data/nav/lib_deltav").
 runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/data/nav/lib_node").
+runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/lib_dmag_sci").
+runOncePath("0:/lib/lib_sci").
 
 local stateObj to init_state_obj().
-//local runmode to stateObj["runmode"].
-local runmode to 0.
+local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
 
-set target to body(tgt).
-local finalAlt is 25000.
-
 disp_obt_main().
-local xfrObj is mun_xfr_burn_obj().
+if not ship:body:name = tgt set target to body(tgt).
+
+wait 5.
+
+local finalAlt is 25000.
+local waitTime is 300 + time:seconds.
+local sciMod is get_sci_mod().
+local dmagMod is get_dmag_mod().
+
+if hastarget local xfrObj is mun_xfr_burn_obj().
 local xfrNode is 0.
+
 
 local sVal is ship:prograde + r(0, 0, rVal).
 lock steering to sVal.
 local tVal is 0.
 lock throttle to tVal.
 
+
 until runmode = 99 {
     
     if runmode = 0 {
-        set sVal to ship:prograde + r(0, 0, rVal).
-        set xfrObj["window"]["phaseAng"] to get_phase_angle().
-        update_disp().
+        local dish is ship:partsTaggedPattern("comm.dish").
+        for d in dish {
+            activate_dish(d).
+            logStr("Comm object Dish activated").
+            wait 1.
+            set_dish_target(d, kerbin:name).
+            logStr("Dish target: " + kerbin:name).
+        }
+
         set runmode to 1.
     }
 
     else if runmode = 1 {
-        if get_phase_angle() > xfrObj["window"]["xfrPhaseAng"] {//= 135 and get_phase_angle() <= 235 {
-            if warp > 0 kuniverse:timewarp:cancelwarp().
-            wait until kuniverse:timewarp:issettled .
-            set runmode to 10.
-        }
-        else {
-            if warp = 0 set warp to 3.
+        set sVal to ship:prograde + r(0, 0, rVal).
+        
+        if time:seconds < waitTime - 30 {
+            if warp = 0 warpTo(waitTime - 30).
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
-            if time:seconds > xfrObj["burn"]["burnEta"] + time:seconds {
-                set xfrObj to lex(). 
-                set xfrObj to mun_xfr_burn_obj().
-            }
             update_disp().
+        }
+        update_disp().
+        if time:seconds >= waitTime set runmode to 10.
+    }
+
+    else if runmode = 3 {
+        set sVal to ship:prograde + r(0, 0, rVal).
+
+        if get_phase_angle() < xfrObj["window"]["xfrPhaseAng"] + 180 {
+            set xfrObj["window"]["phaseAng"] to get_phase_angle().
+            update_disp().
+        } else {
+            set runmode to 10.
         }
     }
 
@@ -61,46 +83,84 @@ until runmode = 99 {
         set xfrNode to add_optimized_node(mnvList).
 
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
-        set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2) - 5.
+        set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
         update_disp().
         set runmode to 20.
     }
 
     else if runmode = 20 {
-        lock steering to ship:prograde + r(0, 0, rval).
-        if time:seconds >= xfrObj["burn"]["burnEta"] - 30 set runmode to 30.
+        set sVal to ship:prograde + r(0, 0, rVal).
+        if time:seconds >= xfrObj["burn"]["burnEta"] - 30 {
+            if warp > 0 kuniverse:timewarp:cancelwarp().
+            wait until kuniverse:timewarp:issettled.
+            set runmode to 30.
+        }
         else {
+            if warp = 0 warpTo(xfrObj["burn"]["burnEta"] - 30).
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
         }
     }
 
     else if runmode = 30 {
-        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
-        until xfrNode:burnvector:mag <= 2 {
-            //set tval to 1.
+        set sVal to xfrNode:burnVector:direction + r(0, 0, rval - 90).
+        if time:seconds >= xfrObj["burn"]["burnEta"] set runmode to 31.
+    }
+
+    else if runmode = 31 {
+        if xfrNode:burnvector:mag >= 5 {
+            set sVal to xfrNode:burnVector:direction + r(0, 0, rval - 90).
+            set tval to 1.
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
+        } else {
+            set runmode to 40.
         }
-        set runmode to 40.
     }
 
     else if runmode = 40 {
-        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
-        set tval to 1 - max(0, min(1, xfrNode:burnVector:mag * 0.25)).
+        set sVal to xfrNode:burnVector:direction + r(0, 0, rval - 90).
+        set tval to max(0, min(1, xfrNode:burnVector:mag / 5)).
 
         set xfrObj["window"]["phaseAng"] to get_phase_angle().
         update_disp().
 
-        if xfrNode:burnVector:mag <= 0.1 {
+        if xfrNode:burnVector:mag <= 0.02 {
             set tVal to 0.
-            set runmode to 50.
+            remove xfrNode.
+            set runmode to 42.
         }
     }
 
+    else if runmode = 42 {
+        when ship:body:name = "Mun" then {
+            logStr("Collecting science from space around the Mun").
+            deploy_sci_list(sciMod).
+            log_sci_list(sciMod).
+            log_dmag_list(dmagMod).
+            wait 10.
+            recover_sci_list(sciMod).
+            recover_sci_list(dmagMod).
+            wait 5.
+            reset_sci_list(sciMod).
+            reset_sci_list(dmagMod).
+            logStr("Science collected, now coasting").
+
+            set target to "Kerbin".
+        }
+
+        
+        set runmode to 50.
+    }
+
     else if runmode = 50 {
-        set xfrObj["window"]["phaseAng"] to get_phase_angle().
+        if hastarget set xfrObj["window"]["phaseAng"] to get_phase_angle().
         update_disp().
+    }
+
+    if ship:availableThrust < 0.1 and tVal > 0 {
+        logStr("Staging").
+        safe_stage().
     }
 
     if stateObj["runmode"] <> runmode {
@@ -113,8 +173,8 @@ until runmode = 99 {
 local function add_optimized_node {
     parameter mnvParam.
 
-    print "MSG: Finding optimized maneuver node for transfer" at (2, 7).
-   
+    print "MSG: Optimizing transfer maneuver" at (2, 7).
+
     until false {
         set mnvParam to improve_node(mnvParam).
         if get_node_score(mnvParam) >= 1 break.
@@ -123,9 +183,9 @@ local function add_optimized_node {
     local mnv to add_node(mnvParam).
     set xfrObj["window"]["nodeAt"] to mnv:eta + time:seconds.
     set xfrObj["burn"]["burnEta"] to (mnv:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
-    print "MSG: Optimized maneuver found                    " at (2, 7).
+    print "MSG: Optimized maneuver found                                " at (2, 7).
     wait 2.
-    print "                                                 " at (2, 7).
+    print "                                                             " at (2, 7).
     return mnv.
 }
 
@@ -147,7 +207,7 @@ local function improve_node {
         if candScore > curScore {
             set curScore to get_node_score(c).
             set data to c.
-            print "Current score: " + curScore at (2, 55).
+            print "(Current score: " + round(curScore, 5) + "     " at (35, 7).
         }
     }
 
@@ -187,5 +247,5 @@ local function update_disp {
     disp_obt_data().
     disp_tel().
     disp_eng_perf_data().
-    disp_rendezvous_data(xfrObj).
+    if hasTarget disp_rendezvous_data(xfrObj).
 }

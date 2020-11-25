@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-local clampMod is "launchClamp".
+//local clampMod is "launchClamp".
 local genMod is "ModuleGenerator".
 local aniMod is "ModuleAnimateGeneric".
 

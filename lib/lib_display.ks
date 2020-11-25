@@ -177,8 +177,8 @@ global function disp_obt_data {
 
     print "ORBITAL DATA                 " at (h1,ln).
     print "------------                 " at (h1,cr).
-    print "APOAPSIS:      " + round(ship:apoapsis) + "    "            at (h1,cr).
-    print "PERIAPSIS:     " + round(ship:periapsis) + "    "           at (h1,cr).
+    print "APOAPSIS:      " + round(ship:apoapsis) + "      "       at (h1,cr).
+    print "PERIAPSIS:     " + round(ship:periapsis) + "      "      at (h1,cr).
     print "ECCENTRICTY:   " + round(ship:obt:eccentricity, 5) at (h1,cr).
     cr.
     print "INCLINATION:   " + round(ship:obt:inclination, 5) at (h1, cr).
@@ -232,7 +232,7 @@ global function disp_eng_perf_data {
 
     print "ENGINE PERFORMANCE           " at (h1,ln).
     print "------------------           " at (h1,cr).
-    print "THROTTLE:      " + round(throttle * 100, 2) + "%   "    at (h1,cr).
+    print "THROTTLE:      " + round(throttle * 100, 2) + "%     "    at (h1,cr).
     print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,cr).
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).

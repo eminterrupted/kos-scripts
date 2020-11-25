@@ -136,9 +136,11 @@ global function recover_sci {
             logStr("[transmit science] Ideal recovery method is recover, not transmit", errLvl).
             if collect_sci_container() {
                 set errLvl to 0. 
-                logStr("[transmist science] Science Container found, collecting").
+                logStr("[transmit science] Science Container found, collecting").
             } else {
-                logStr("[transmit science] No container found aboard, must recover this part to recover data").
+                set errLvl to 1.
+                logStr("[transmit science] No container found aboard, transmitting available data", errLvl).
+                m:transmit().
             }
         }
 

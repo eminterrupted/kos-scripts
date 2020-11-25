@@ -805,6 +805,8 @@
         "General Fallback Tower - Small",
         "mlp.tower",
         "General Hold-Down Type 3: Vert Bolt Flat",
+        "mlp.clamp",
+        "General Hold-Down Type 1: Side-Arm",
         "mlp.clamp"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
