@@ -187,7 +187,13 @@
         "Probodobodyne QBE",
         "probeCoreCube",
         "Mk2-R Radial-Mount Parachute",
-        "parachuteRadial"
+        "parachuteRadial",
+        "Flat Launch Base 2 - Small Frame",
+        "AM.MLP.FlatLaunchBaseSmall",
+        "General Fallback Tower - Small",
+        "AM.MLP.GeneralStrongbackTowerSmall",
+        "General Hold-Down Type 3: Vert Bolt Flat",
+        "AM.MLP.GeneralHold3"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

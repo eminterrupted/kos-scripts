@@ -4,7 +4,8 @@ set config:ipu to 500.
 
 clearScreen.
 
-runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_init").
+if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 local stateObj is init_state_obj().
 local program is stateObj["program"].
@@ -51,6 +52,17 @@ if program = "MISSION_S2" {
 //Functions
 local function exec_launch {
     parameter script.
+
+    disp_launch_main().
+    wait 1.
+    //Activate generator on launch pad in case of hold
+    mlp_gen_on().
+    logStr("Vehicle on external power").
+    wait 1.
+    //Activate fueling in case we forgot to fuel
+    mlp_fuel_on().
+    logStr("Vehicle fuel loading commenced").
+    wait 1.
 
     local kscScrPath to kscPath + "/launch/" + script.
     local locScrPath to locPath + script.

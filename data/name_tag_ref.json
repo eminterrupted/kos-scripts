@@ -161,7 +161,15 @@
         "fuelTankSmall",
         "tank",
         "parachuteRadial",
-        "chute.radial"
+        "chute.radial",
+        "AM.MLP.FlatLaunchBaseSmall",
+        "mlp.base.clamp",
+        "AM.MLP.GeneralStrongbackTowerSmall",
+        "mlp.tower",
+        "AM.MLP.GeneralHold3",
+        "mlp.clamp",
+        "solidBooster1-1",
+        "eng"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

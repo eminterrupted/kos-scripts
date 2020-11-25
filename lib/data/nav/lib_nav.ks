@@ -114,7 +114,7 @@ global function get_mun_xfr_burn_data {
     //Burn details
     local dv to get_dv_for_mun_transfer(target).
     local burnDur to get_burn_dur(dV).
-    local burnEta to nodeAt - (burnDur / 2).
+    local burnEta to (nodeAt) - (burnDur / 2).
 
     logStr("get_mun_xfr_burn_data").
     logStr("[tgt:" + target:name + "][dV: " + round(dV, 2) + "][burnDur: " + round(burnDur, 2) + "][nodeAt: " + round(nodeAt, 2) + "][burnEta: " + round(burnEta, 2) + "]").
@@ -138,7 +138,7 @@ global function get_mun_xfr_window {
 
     //Transfer phase angle and mark
     local xfrPhaseAng to 180 - (1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360).
-    local nodeAt to get_time_to_xfr(xfrPhaseAng).
+    local nodeAt to get_time_to_xfr(xfrPhaseAng) - 60.
 
     return lex("xfrPhaseAng", xfrPhaseAng, "nodeAt", nodeAt).
 }
@@ -420,7 +420,7 @@ function get_phase_angle {
     ).
     local sign is vdot(binormal, signVector).
     if sign < 0 {
-        return -phase.
+        return -phase + 360.
     }
     else {
         return phase.

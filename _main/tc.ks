@@ -81,7 +81,14 @@ local function end_eng_test {
     parameter p,
               tEnd.
 
-    if p:flameout return true.
+    local solid is false.
+    for res in p:resources {
+        if res:name = "SolidFuel" set solid to true. 
+    }
+
+    if solid {
+        when p:flameout then return true.
+    }
     else if time:seconds >= tEnd return true.
 }
 

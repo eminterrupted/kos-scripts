@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_init").
+if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 
 //Fairings
@@ -16,6 +17,7 @@ global function arm_proc_fairings {
         for f in cList {
             if f:tag:contains("pl.pf.fairing") jet_fairing(f).
         }
+        logStr("Fairings jettison").
     }
 }
 
@@ -27,6 +29,7 @@ global function arm_stock_fairings {
 
     when ship:altitude > pAlt then {
         jet_fairing(base).
+        logStr("Fairings jettison").
     }
 }
 
@@ -46,6 +49,8 @@ global function exec_correction_burn {
     lock steering to heading(get_nav_heading(), get_la_for_alt(0, tApo) , 0).
 
     lock throttle to 0.05.
+
+    logStr("Current apoapsis below target, correction burn [" + ship:apoapsis + " / " + tApo +"]").
 }
 
 
@@ -60,9 +65,35 @@ global function launch_vessel {
     global cd is countdown.
 
     lock steering to up - r(0,0,90).
-    
-    when cd <= engStart then engine_start_sequence().
-    
+
+    //Setup the launch triggers.    
+    when cd <= 20 then {
+        mlp_fuel_off().
+        logStr("Fueling complete").
+    }
+    when cd <= 15 then {
+        mlp_gen_off(). 
+        logStr("Vehicle on internal power").
+        mlp_fallback_open_clamp().
+        logStr("Fallback clamp open").
+    }
+    when cd <= 12 then {
+        mlp_fallback_partial().
+        logStr("Fallback tower partial retract").
+    }
+    when cd <= engStart then {
+        engine_start_sequence().
+        logStr("Engine start sequence").
+    }
+    when cd <= 0.2 then {
+        mlp_fallback_full().
+        logStr("Fallback tower full retract").
+    }
+    when cd <= 0.1 then {
+        mlp_retract_holddown().
+        logStr("Holddown bolts retracted").
+    }
+
     until cd <= 0 {
         disp_launch_main().
         wait 0.1.
@@ -120,8 +151,6 @@ global function get_la_for_alt {
     local devPitch is vang(ship:facing:forevector, pg).
     local effPitch is max(pgPitch - 5, min(tPitch, pgPitch + 5)).
     
-    logStr("get_la_for_alt [tPitch: " + round(tPitch, 3) + "][effPitch: " + round(effPitch, 3) + "][vesPitch: " + round(vesPitch, 3) + "][deviation:" + round(devPitch, 3) + "]").
-
     return effPitch.
 }.
 

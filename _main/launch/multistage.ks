@@ -60,7 +60,7 @@ until runmode = 99 {
             arm_proc_fairings(75000, ship:partsTaggedPattern("pl.pf.base")[0]).
         }
 
-        launch_vessel().
+        launch_vessel(30).
         set tVal to 1.
         lock throttle to tVal.
         set runmode to 3.

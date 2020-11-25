@@ -5,7 +5,7 @@ runOncePath("0:/lib/lib_init.ks").
 
 //uplink trigger
 global lastUplink is time:seconds.
-global nextUplink is time:seconds + 60.
+global nextUplink is time:seconds + 15.
 
 //tee - set to 1 to echo log lines to console
 local tee is 0.
@@ -26,7 +26,7 @@ local function initialize_log {
     local logFolderLast is logFile:findLast("_").
     local logFolder is logFile:remove(logFolderLast, logFile:length - logFolderLast).
 
-    global localLog is logDisk + ":/logs/" + logFile + ".log".
+    global localLog is logDisk + ":/" + logFile + ".log".
     global kscLog is "Archive:/logs/" + logFolder + "/" + logFile + ".log".
     
     if not (exists(kscLog)) {
@@ -61,6 +61,7 @@ local function initialize_log {
     }
 
     when (path(localLog):volume):freeSpace < 1000 then uplink_telemetry().
+    when time:seconds >= nextUplink then uplink_telemetry().
 }
 
 
@@ -75,14 +76,10 @@ global function uplink_telemetry {
     local fromContent is "".
     local toOpen is open(toLog).
     local uplinkLog is path(kscLog):parent + "/uplink.log".
-    local uplinkObj is lexicon().
+    
+    if addons:rt:hasKscConnection(ship) set conFlag to true.
 
-    if addons:rt:available {
-        if addons:rt:hasKscConnection(ship) set conFlag to true.
-    }
-
-    if conFlag = true { 
-        //logStr(time + " Telemetry uplink").
+    if conFlag { 
         set fromContent to fromOpen:readAll:string.
         toOpen:write(fromContent).
         wait 0.05.
@@ -91,15 +88,12 @@ global function uplink_telemetry {
 
     else {
         set errLvl to 2.
-        //logStr("No connection to KSC, unable to uplink",errLvl).
         return errLvl.
     }
 
     set lastUplink to time:seconds.
     set nextUplink to time:seconds + 15.
-
-    uplinkObj:add("lastUplink",lastUplink).
-    uplinkObj:add("nextUplink",nextUplink).
+    local uplinkObj to lex("lastUplink", lastUplink, "nextUplink", nextUplink).
 
     writeJson(uplinkObj,uplinkLog).
 
@@ -125,8 +119,12 @@ global function logStr {
     if logLvl = 1 set lvlStr to "[WARN] ".
     if logLvl = 2 set lvlStr to "[*ERR] ".
 
+    local timestamp is 0.
+    if missionTime = 0 and defined cd set timestamp to 0 - cd.
+    else set timestamp to missionTime.
+
     if logLvl >= 0 {            
-        set str to "[MET:" + round(missionTime,3) + "]" + lvlStr + str.
+        set str to "[MET:" + round(timestamp,3) + "]" + lvlStr + str.
 
         if tee = 0 {
             logFile:writeLn(str).

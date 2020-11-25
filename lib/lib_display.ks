@@ -370,7 +370,7 @@ global function disp_rendezvous_data {
     cr.
     print "XFR DELTA-V:   " + round(pData["burn"]["dv"], 1) + " m/s    " at (h1,cr).
     print "BURN DUR:      " + format_timestamp(pData["burn"]["burnDur"]) at (h1,cr).
-    print "BURN ETA:      " + format_timestamp(pData["burn"]["burnEta"] - time:seconds) at (h1,cr).
+    print "BURN ETA:      " + format_timestamp(pData["burn"]["burnEta"] - time:seconds) + "  " at (h1,cr).
 }
 
 

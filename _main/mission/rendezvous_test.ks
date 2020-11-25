@@ -12,7 +12,8 @@ runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/data/nav/lib_node").
 
 local stateObj to init_state_obj().
-local runmode to stateObj["runmode"].
+//local runmode to stateObj["runmode"].
+local runmode to 0.
 if runmode = 99 set runmode to 0.
 
 set target to body(tgt).
@@ -31,11 +32,26 @@ until runmode = 99 {
     
     if runmode = 0 {
         set sVal to ship:prograde + r(0, 0, rVal).
-        local phase to get_phase_angle().
-        set xfrObj["window"]["phaseAng"] to phase.
+        set xfrObj["window"]["phaseAng"] to get_phase_angle().
+        update_disp().
+        set runmode to 1.
+    }
 
-        if phase < xfrObj["window"]["xfrPhaseAng"] and phase > 0 set runmode to 10.
-        else update_disp().
+    else if runmode = 1 {
+        if get_phase_angle() > xfrObj["window"]["xfrPhaseAng"] {//= 135 and get_phase_angle() <= 235 {
+            if warp > 0 kuniverse:timewarp:cancelwarp().
+            wait until kuniverse:timewarp:issettled .
+            set runmode to 10.
+        }
+        else {
+            if warp = 0 set warp to 3.
+            set xfrObj["window"]["phaseAng"] to get_phase_angle().
+            if time:seconds > xfrObj["burn"]["burnEta"] + time:seconds {
+                set xfrObj to lex(). 
+                set xfrObj to mun_xfr_burn_obj().
+            }
+            update_disp().
+        }
     }
 
     else if runmode = 10 {
@@ -43,14 +59,15 @@ until runmode = 99 {
 
         local mnvList to list(xfrObj["window"]["nodeAt"], 0, 0, xfrObj["burn"]["dv"]).
         set xfrNode to add_optimized_node(mnvList).
+
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
-        set xfrObj["burn"]["burnEta"] to xfrNode:eta - (xfrObj["burn"]["burnDur"] / 2) - 5.
+        set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2) - 5.
         update_disp().
         set runmode to 20.
     }
 
     else if runmode = 20 {
-        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
+        lock steering to ship:prograde + r(0, 0, rval).
         if time:seconds >= xfrObj["burn"]["burnEta"] - 30 set runmode to 30.
         else {
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
@@ -61,7 +78,7 @@ until runmode = 99 {
     else if runmode = 30 {
         lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
         until xfrNode:burnvector:mag <= 2 {
-            set tval to 1.
+            //set tval to 1.
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
         }
@@ -97,15 +114,15 @@ local function add_optimized_node {
     parameter mnvParam.
 
     print "MSG: Finding optimized maneuver node for transfer" at (2, 7).
-
+   
     until false {
-        local oldScore is get_node_score(mnvParam).
         set mnvParam to improve_node(mnvParam).
-        local newScore is get_node_score(mnvParam).
-        if oldScore >= newScore break.
+        if get_node_score(mnvParam) >= 1 break.
     }
 
     local mnv to add_node(mnvParam).
+    set xfrObj["window"]["nodeAt"] to mnv:eta + time:seconds.
+    set xfrObj["burn"]["burnEta"] to (mnv:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
     print "MSG: Optimized maneuver found                    " at (2, 7).
     wait 2.
     print "                                                 " at (2, 7).
@@ -118,35 +135,37 @@ local function improve_node {
 
     //hill climb to find the best time
     local curScore is get_node_score(data).
-    local bestMnv is data.
     local mnvCandidates is list(
-        list(data[0] + 0.1, data[1], data[2], data[3])
-        ,list(data[0] - 0.1, data[1], data[2], data[3])
+        list(data[0] + .05, data[1], data[2], data[3])
+        ,list(data[0] - .05, data[1], data[2], data[3])
+        ,list(data[0], data[1], data[2], data[3] + .01)
+        ,list(data[0], data[1], data[2], data[3] + -.01)
     ).
 
     for c in mnvCandidates {
         local candScore to get_node_score(c).
-        if candScore >= curScore {
+        if candScore > curScore {
             set curScore to get_node_score(c).
-            set bestMnv to c.
+            set data to c.
+            print "Current score: " + curScore at (2, 55).
         }
-        if curScore >= 1 break.
     }
 
-    return bestMnv.
+    return data.
 }
 
 
 local function get_node_score {
-    parameter dataToScore.
+    parameter data.
 
     local score to 0.
-    local mnvTest to add_node(dataToScore).
+    local mnvTest to node(data[0], data[1], data[2], data[3]).
+    add mnvTest.
     if mnvTest:obt:hasnextpatch {
         set score to (mnvTest:obt:nextpatch:periapsis) / finalalt.
     }
-    set xfrObj["window"]["nodeAt"] to time:seconds + mnvTest:eta.
-    remove_node(mnvTest).
+    wait 0.01.
+    remove mnvTest.
     return score.
 }
 
