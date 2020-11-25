@@ -26,7 +26,7 @@ local dispState to lex().
 local maxAlt to 0.
 local scanSatList to ship:partsTaggedPattern("sci.scan").
 
-local sVal to ship:prograde.
+local sVal to ship:prograde + r(0, 0, rVal).
 lock steering to sVal.
 
 //Picks up the runmode in the state object. This should be 0 if first run, but this allows resume mid-flight.

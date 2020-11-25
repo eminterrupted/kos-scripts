@@ -1,15 +1,17 @@
 global function add_node {
-    parameter t,
-              p is 0,
-              n is 0,
-              r is 0.
+    parameter mnv.
 
     //Maneuver node is time, radial, normal, prograde.
     if career():canmakenodes {
-        local mnode to node(t, r, n, p).
-        add mnode.
-        return mnode.
+        set mnv to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        add mnv.
+        return mnv.
     }
+}
 
-    else return false.
+
+global function remove_node {
+    parameter mnv.
+    
+    remove mnv.
 }

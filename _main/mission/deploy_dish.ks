@@ -25,12 +25,11 @@ if ship:partsTaggedPattern("rcs"):length > 0 runOncePath("0:/lib/part/lib_rcs.ks
 //Vars
 local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
-local n to 0.
 local pList to ship:partsTaggedPattern("dish").
 
 if runmode = 99 set runmode to 0.
 
-lock steering to ship:prograde.
+lock steering to ship:prograde + r(0, 0, rval).
 
 until runmode = 99 {
     
@@ -43,7 +42,7 @@ until runmode = 99 {
         for p in pList {
             activate_dish(p).
             wait 1.
-            local range to get_antenna_range(p).
+            //local range to get_antenna_range(p).
             
             set_dish_target(p, kerbin:name).
         }

@@ -22,10 +22,8 @@ local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 //Vars
-global sVal is ship:prograde.
+global sVal is ship:prograde + r(0, 0, rval).
 global tVal is 0.
-
-setup_pid(.15).
 lock steering to sVal.
 
 if runmode = 99 set runmode to 0. 

@@ -181,7 +181,7 @@ global function get_time_to_xfr {
               tgt is target.
 
     //Get the period of the phase angle (change per second)    
-    print "Sampling phase angle period".
+    print "MSG: Sampling phase angle period" at (2, 7).
     local p0 to get_phase_angle(tgt). 
     wait 1. 
     local p1 to get_phase_angle(tgt).
@@ -189,7 +189,7 @@ global function get_time_to_xfr {
     local phaseAng to get_phase_angle(tgt).
 
     local xfrWindow to choose (time:seconds + ((phaseAng - tgtPhaseAng) / phasePeriod)) if phaseAng > tgtPhaseAng else (time:seconds + (((phaseAng + 360) - tgtPhaseAng) / phasePeriod)).
-
+    print "                                " at (2, 7).
     return xfrWindow.
 }
 

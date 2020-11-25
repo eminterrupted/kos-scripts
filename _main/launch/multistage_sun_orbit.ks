@@ -38,9 +38,7 @@ local tVal to 0.
 local gtStart is 1250.
 
 local azObj to l_az_calc_init(tApo, tInc).
-local burnObj is lex().
-local dispState to lex().
-local ascPid to setup_pid(.135).
+local maxQPid to setup_q_pid(.135).
 local maxQ is false.
 
 until runmode = 99 {
@@ -105,10 +103,10 @@ until runmode = 99 {
         set tVal to 1.
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
         
-        if ship:q >= ascPid:setpoint {
+        if ship:q >= maxQPid:setpoint {
             if not maxQ hudtext("Throttle down for Max-Q", 3, 1, 18, purple, false).
             set maxQ to true.
-            set tVal to max(0, min(1, 1 + ascPid:update(time:seconds, ship:q))). 
+            set tVal to max(0, min(1, 1 + maxQPid:update(time:seconds, ship:q))). 
         }
 
         else {

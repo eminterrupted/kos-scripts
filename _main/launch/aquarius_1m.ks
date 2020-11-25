@@ -40,7 +40,7 @@ local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
 local burnObj is lex().
 local dispState to lex().
-local ascPid to setup_pid(.135).
+local maxQPid to setup_q_pid(.135).
 
 until runmode = 99 {
 
@@ -78,8 +78,8 @@ until runmode = 99 {
         set az to l_az_calc(azObj).
         set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), rval).
         
-        if ship:q >= ascPid:setpoint {
-            set tVal to max(0, min(1, 1 + ascPid:update(time:seconds, ship:q))). 
+        if ship:q >= maxQPid:setpoint {
+            set tVal to max(0, min(1, 1 + maxQPid:update(time:seconds, ship:q))). 
         }
 
         else set tVal to 1.
