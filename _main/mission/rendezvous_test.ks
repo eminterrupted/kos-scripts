@@ -20,9 +20,12 @@ local finalAlt is 25000.
 
 disp_obt_main().
 local xfrObj is mun_xfr_burn_obj().
+local xfrNode is 0.
 
 local sVal is ship:prograde + r(0, 0, rVal).
 lock steering to sVal.
+local tVal is 0.
+lock throttle to tVal.
 
 until runmode = 99 {
     
@@ -39,15 +42,47 @@ until runmode = 99 {
         set sVal to ship:prograde + r(0, 0, rVal).
 
         local mnvList to list(xfrObj["window"]["nodeAt"], 0, 0, xfrObj["burn"]["dv"]).
-        local xfrNode to add_optimized_node(mnvList).
+        set xfrNode to add_optimized_node(mnvList).
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
+        set xfrObj["burn"]["burnEta"] to xfrNode:eta - (xfrObj["burn"]["burnDur"] / 2) - 5.
         update_disp().
         set runmode to 20.
     }
 
     else if runmode = 20 {
-        lock steering to ship:prograde + r(0, 0, rval).
-        set xfrObj["window"]["phaseAng"] to 180 - get_phase_angle().
+        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
+        if time:seconds >= xfrObj["burn"]["burnEta"] - 30 set runmode to 30.
+        else {
+            set xfrObj["window"]["phaseAng"] to get_phase_angle().
+            update_disp().
+        }
+    }
+
+    else if runmode = 30 {
+        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
+        until xfrNode:burnvector:mag <= 2 {
+            set tval to 1.
+            set xfrObj["window"]["phaseAng"] to get_phase_angle().
+            update_disp().
+        }
+        set runmode to 40.
+    }
+
+    else if runmode = 40 {
+        lock steering to xfrNode:burnVector:direction + r(0, 0, rval).
+        set tval to 1 - max(0, min(1, xfrNode:burnVector:mag * 0.25)).
+
+        set xfrObj["window"]["phaseAng"] to get_phase_angle().
+        update_disp().
+
+        if xfrNode:burnVector:mag <= 0.1 {
+            set tVal to 0.
+            set runmode to 50.
+        }
+    }
+
+    else if runmode = 50 {
+        set xfrObj["window"]["phaseAng"] to get_phase_angle().
         update_disp().
     }
 
