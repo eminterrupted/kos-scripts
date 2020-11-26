@@ -22,6 +22,7 @@ runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
+runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
 runOncePath("0:/lib/part/lib_fairing.ks").
 runOncePath("0:/kslib/library/lib_l_az_calc.ks").
@@ -42,11 +43,7 @@ local az to l_az_calc(azObj).
 
 local dispState is lex().
 
-local lPid is setup_pid(.135).
-local apoPid is setup_pid(tApo).
-local pePid is setup_pid(tPe).
-
-
+local lPid is setup_q_pid(.135).
 
 until runmode = 99 {
 
@@ -75,7 +72,7 @@ until runmode = 99 {
     //vertical ascent
     else if runmode = 12 {
         set az to l_az_calc(azObj).
-        set sVal to heading (az, 90, 0).
+        set sVal to heading (az, 90, rVal).
 
         if ship:altitude >= 1250 or ship:verticalSpeed >= 120 {
             set runmode to 14.
@@ -85,7 +82,7 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), rVal).
         
         if ship:q >= lPid:setpoint {
             set tVal to max(0, min(1, 1 + lPid:update(time:seconds, ship:q))). 
@@ -101,10 +98,10 @@ until runmode = 99 {
     //slow burn to tApo
     else if runmode = 16 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), rVal).
 
         if ship:apoapsis < tApo {
-            set tVal to max(0.05, min(1 + apoPid:update(time:seconds, ship:altitude), 0.5)).
+            set tVal to 1 - max(0, min(1, tApo / ship:apoapsis)).
         }
 
         else if ship:apoapsis >= tApo set runmode to 18. 
@@ -113,7 +110,7 @@ until runmode = 99 {
     //coast / correction burns
     else if runmode = 18 {
         set az to l_az_calc(azObj).
-        lock steering to heading(az, get_la_for_alt(0, tGTurnAlt) , 0).
+        lock steering to heading(az, get_la_for_alt(0, tGTurnAlt) , rVal).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -138,7 +135,7 @@ until runmode = 99 {
         set tVal to 0. 
 
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(0, tPe), 0).
+        set sVal to heading(az, get_la_for_alt(0, tPe), rVal).
         
         local burnEta is burnObj["burnEta"] - time:seconds.
 
@@ -161,7 +158,7 @@ until runmode = 99 {
         set tVal to 1.
         
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(0, tPe), 0).
+        set sVal to heading(az, get_la_for_alt(0, tPe), rVal).
 
         if ship:periapsis >= tPe * 0.9 {
             set runmode to 26.
@@ -174,10 +171,10 @@ until runmode = 99 {
         disp_burn_data(burnObj).
         
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), 0).
+        set sVal to heading(az, get_la_for_alt(tGEndPitch, tGTurnAlt), rVal).
 
         if ship:apoapsis < tApo {
-            set tVal to max(0.05, min(1 + pePid:update(time:seconds, ship:altitude, 1))).
+            set tVal to 1 - max(0, min(1, tPe / ship:periapsis)).
         }
 
         if ship:periapsis >= tPe {

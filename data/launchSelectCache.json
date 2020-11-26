@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        250000,
+        325000,
         "tPe",
-        250000,
+        325000,
         "tInc",
         0,
         "gtAlt",
@@ -13,9 +13,9 @@
         "rVal",
         0,
         "launchS1",
-        "multistage",
+        "multistage_functions",
         "missionS1",
-        "rendezvous_test",
+        "mun_flyby",
         "missionS2",
         "no_reentry"
     ],

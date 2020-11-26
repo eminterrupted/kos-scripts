@@ -39,7 +39,7 @@ global tVal to 0.
 
 local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
-local tPid to setup_pid(.15).
+local tPid to setup_q_pid(.15).
 
 until runmode = 99 {
 
@@ -78,7 +78,7 @@ until runmode = 99 {
     //vertical ascent
     else if runmode = 12 {
         set az to l_az_calc(azObj).
-        set sVal to heading (az, 90, 0).
+        set sVal to heading (az, 90, rVal).
 
         if ship:altitude >= 1250 or ship:verticalSpeed >= 120 {
             set runmode to 14.
@@ -88,7 +88,7 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), 0).
+        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), rVal).
         
         if ship:q >= tPid:setpoint {
             set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
@@ -106,7 +106,7 @@ until runmode = 99 {
     //slow burn to tApo
     else if runmode = 16 {
         set az to l_az_calc(azObj).
-        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), 0).
+        set sVal to heading(az, get_la_for_alt(gtPitch, gtAlt), rVal).
 
         if ship:apoapsis < tApo {
             set tVal to max(0.05, 1 + cPid:update(time:seconds, ship:altitude)).
@@ -118,7 +118,7 @@ until runmode = 99 {
     //coast / correction burns
     else if runmode = 18 {
         set az to l_az_calc(azObj).
-        lock steering to heading(az, get_la_for_alt(0, gtAlt) , 0).
+        lock steering to heading(az, get_la_for_alt(0, gtAlt) , rVal).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.

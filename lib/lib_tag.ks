@@ -3,8 +3,8 @@
 
 parameter mode to "".
 
-runOncePath("0:/lib/lib_init.ks").
-
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_log").
 global tagRef to tag_init_ref().
 
 if mode = "" {
@@ -366,8 +366,8 @@ local function tag_tank_meta {
     if res:length > 0 {
         for r in res {
             if r:name = "LiquidFuel" set meta to meta + "lf".
-            else if r:name = "LiquidHydrogen" set meta to "lh".
-            else if r:name = "LqdHydrogen" set meta to "lh".
+            else if r:name = "LiquidHydrogen" set meta to "lh2".
+            else if r:name = "LqdHydrogen" set meta to "lh2".
             else if r:name = "Oxidizer" set meta to meta + "o".
             else if r:name = "MonoPropellant" set meta to meta + "mono".
             else if r:name = "XenonGas" set meta to meta + "xe".

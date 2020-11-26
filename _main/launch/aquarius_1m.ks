@@ -21,6 +21,7 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
+runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/part/lib_fairing.ks").
 runOncePath("0:/lib/part/lib_antenna.ks").
 runOncePath("0:/kslib/library/lib_l_az_calc.ks").

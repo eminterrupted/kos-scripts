@@ -57,7 +57,7 @@ global function exec_correction_burn {
 // Launch a vessel with a countdown timer
 global function launch_vessel {
     parameter countdown is 5, 
-              engStart is 1.5.
+              engStart is 2.2.
 
     logStr("launch_vessel").
 
@@ -65,6 +65,18 @@ global function launch_vessel {
     global cd is countdown.
 
     lock steering to up - r(0,0,90).
+
+    local fallback is false.
+    local holddown is false.
+    local swingarm is false.
+    local umbilical is false.
+
+    for p in ship:partsTaggedPattern("mlp") {
+        if p:tag:matchesPattern("fallback") set fallback to true.
+        else if p:tag:matchesPattern("holddown") set holddown to true.
+        else if p:tag:matchesPattern("swingarm") set swingarm to true.
+        else if p:tag:matchesPattern("umbilical") set umbilical to true.
+    }
 
     //Setup the launch triggers.    
     when cd <= 20 then {
@@ -74,26 +86,44 @@ global function launch_vessel {
     when cd <= 15 then {
         mlp_gen_off(). 
         logStr("Vehicle on internal power").
-        mlp_fallback_open_clamp().
-        logStr("Fallback clamp open").
+        if fallback {
+            mlp_fallback_open_clamp().
+            logStr("Fallback clamp open").
+        }
     }
     when cd <= 12 then {
-        mlp_fallback_partial().
-        logStr("Fallback tower partial retract").
+        if fallback {
+            mlp_fallback_partial().
+            logStr("Fallback tower partial retract").
+        }
     }
     when cd <= engStart then {
         logStr("Engine start sequence").
         engine_start_sequence().
     }
+    when cd <= 0.4 then {
+        if umbilical {
+            mlp_drop_umbilical().
+            logStr("Umbilicals detached").
+        }
+    }
     when cd <= 0.2 then {
-        mlp_fallback_full().
-        logStr("Fallback tower full retract").
+        if fallback {
+            mlp_fallback_full().
+            logStr("Fallback tower full retract").
+        }
     }
     when cd <= 0.1 then {
-        mlp_retract_holddown().
-        logStr("Holddown bolts retracted").
+        if holddown {
+            mlp_retract_holddown().
+            logStr("Holddown retracted").
+        }
+        if swingarm {
+            logStr("Swing arms detached").
+        }
     }
 
+    logStr("Beginning launch countdown").
     until cd <= 0 {
         disp_launch_main().
         wait 0.1.

@@ -4,17 +4,12 @@
 global errLvl to 0.
 global errObj to lexicon().
 
-runOncePath("0:/lib/lib_log.ks").
-runOncePath("0:/lib/lib_tag.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_core.ks").
-runOncePath("0:/lib/lib_util.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/nav/lib_nav.ks").
+runOncePath("0:/lib/lib_log").
+runOncePath("0:/lib/lib_display").
 
 local statePath to "local:/state.json".
 init_state_obj().
+init_log().
 
 global function init_disk {
     set ship:rootPart:getModule("kosProcessor"):volume:name to "local".
@@ -57,11 +52,6 @@ global function init_errObj {
     set errObj to lexicon().
     return errObj.
 }
-
-// global function get_state_obj {
-//     set stateObj to readJson(statePath).
-//     return stateObj.
-// }
 
 global function log_state {
     parameter stateObj.

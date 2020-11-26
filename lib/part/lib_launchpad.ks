@@ -53,6 +53,13 @@ global function mlp_retract_holddown {
 }
 
 
+//Umbilicals
+global function mlp_drop_umbilical {
+    local event is "drop umbilical".
+    do_pad_event@:call(aniMod, event).
+}
+
+
 //Delegate functions
 local function check_pad_event {
     parameter mod, event.

@@ -5,7 +5,7 @@ parameter tApo to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
           tgtPitch to 3,
-          rVal to 0.
+          rVal to -90.
 
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
@@ -30,7 +30,7 @@ local runmode to stateObj["runmode"].
 //Vars
 local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
-local sVal to heading(90, 90, -90).
+local sVal to heading(90, 90, rVal).
 
 //Get a list of science parts
 

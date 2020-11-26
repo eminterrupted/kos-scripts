@@ -195,7 +195,23 @@
         "General Hold-Down Type 3: Vert Bolt Flat",
         "AM.MLP.GeneralHold3",
         "General Hold-Down Type 1: Side-Arm",
-        "AM.MLP.GeneralHold1"
+        "AM.MLP.GeneralHold1",
+        "24-77 \"Twitch\" Liquid Fuel Engine",
+        "smallRadialEngine.v2",
+        "LV-601 Orbital Maneuvering Engine",
+        "orbital-engine-125",
+        "General Launch Base 1 - Small",
+        "AM.MLP.GeneralLaunchBaseSmall",
+        "General Hold-Down Type 6: Clamp Arm Small",
+        "AM.MLP.GeneralHold6",
+        "Medium Modular Service Tower Core",
+        "AM.MLP.GeneralServiceTowerMedium",
+        "Medium Modular Service Tower Section",
+        "AM.MLP.GeneralServiceTowerMediumSec1",
+        "Medium Modular Service Tower Top",
+        "AM.MLP.GeneralServiceTowerMediumTop",
+        "Droop-Style Umbilical Size 1 - Short",
+        "AM.MLP.GeneralUmbilicalDroopA"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

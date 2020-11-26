@@ -10,12 +10,13 @@ for p in pList {
 }
 
 clearScreen.
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_util.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_engine.ks").
-runOncePath("0:/lib/part/lib_light.ks").
-runOncePath("0:/lib/lib_contract.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_tag").
+runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_engine").
+runOncePath("0:/lib/part/lib_light").
+runOncePath("0:/lib/lib_contract").
 
 //- start main
 
@@ -70,7 +71,10 @@ local function check_contracts {
             }
 
             if tpList:length > 0 {
-                for p in tplist set p:tag to "test".
+                for p in tplist {
+                    set p:tag to "test".
+                    print p at (2, 144).
+                }
             }
         }
     }
@@ -87,8 +91,13 @@ local function end_eng_test {
     }
 
     if solid {
-        when p:flameout then return true.
+        until p:flameout {
+            return false.
+        } 
+
+        return true.
     }
+    
     else if time:seconds >= tEnd return true.
 }
 

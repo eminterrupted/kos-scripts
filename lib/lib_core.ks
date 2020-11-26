@@ -6,7 +6,8 @@ runOncePath("0:/lib/lib_init.ks").
 //Waits until vessel is safe to stage, then stages
 global function safe_stage {
     wait 0.5.
-
+    logStr("Staging").
+    
     until false {
         until stage:ready {   
             wait 0.01.
@@ -102,8 +103,8 @@ global function warp_to_alt {
     }
 }
 
-global function warp_to_longitude {
-    parameter lng.
+// global function warp_to_longitude {
+//     parameter lng.
 
-    return true.
-}
+//     return true.
+// }

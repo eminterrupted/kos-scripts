@@ -5,10 +5,18 @@ set config:ipu to 500.
 clearScreen.
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_log").
+runOncePath("0:/lib/lib_display").
+init_uplink().
+
+runOncePath("0:/lib/lib_tag").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
+//Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
 local stateObj is init_state_obj().
 local program is stateObj["program"].
+
+
 
 //Load from cache
 local cache is choose readJson("local:/launchSelectCache.json") if exists("local:/launchSelectCache.json") else readJson("0:/data/launchSelectCache.json").

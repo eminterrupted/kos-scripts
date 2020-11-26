@@ -1,22 +1,17 @@
 //Initiates the log files
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init.ks").
-
-//uplink trigger
-global lastUplink is time:seconds.
-global nextUplink is time:seconds + 15.
+runOncePath("0:/lib/lib_init").
+init_log().
+local uplinkObj to init_uplink().
 
 //tee - set to 1 to echo log lines to console
 local tee is 0.
 
-//Log initialization
-initialize_log().
-
 
 //-- local functions --//
 
-local function initialize_log {
+global function init_log {
     
     set errLvl to 0.
     local diskObj is init_disk().
@@ -59,59 +54,26 @@ local function initialize_log {
         local localFile to open(localLog).
         localFile:writeLn("[MET:" + round(missionTime,3) + "][INFO] localLog re-initialized").
     }
-
-    when (path(localLog):volume):freeSpace < 1000 then uplink_telemetry().
-    when time:seconds >= nextUplink then uplink_telemetry().
 }
 
 
-//Uploads the log file to KSC if connection is present.
-global function uplink_telemetry {
-
-    parameter fromLog is localLog.
-    parameter toLog is kscLog.
+//
+global function init_uplink {
+    local lastUplink is time:seconds.
+    local nextUplink is time:seconds + 15.
     
-    local conFlag is false. 
-    local fromOpen is open(fromLog).
-    local fromContent is "".
-    local toOpen is open(toLog).
-    local uplinkLog is path(kscLog):parent + "/uplink.log".
-    
-    if addons:rt:hasKscConnection(ship) set conFlag to true.
-
-    if conFlag { 
-        set fromContent to fromOpen:readAll:string.
-        toOpen:write(fromContent).
-        wait 0.05.
-        fromOpen:clear().
-    }
-
-    else {
-        set errLvl to 2.
-        return errLvl.
-    }
-
-    set lastUplink to time:seconds.
-    set nextUplink to time:seconds + 15.
-    local uplinkObj to lex("lastUplink", lastUplink, "nextUplink", nextUplink).
-
-    writeJson(uplinkObj,uplinkLog).
-
-    if path(fromLog):volume:freeSpace < 250 set errLvl to 2.
-    else set errLvl to 0.
-
-    return errLvl.
+    return lex("lastUplink", lastUplink, "nextUplink", nextUplink).
 }
-
 
 
 //-- Main function--// 
 global function logStr {
     
     parameter str,
-              logLvl is 0.
+              logLvl is 0,
+              uplink is false.
     
-    if not (defined localLog) initialize_log().
+    if not (defined localLog) init_log().
 
     local logFile is open(localLog).
     
@@ -140,5 +102,41 @@ global function logStr {
         }
     }
     
-    //if (path(localLog):volume):freeSpace < 1000 uplink_telemetry().
+    if (path(localLog):volume):freeSpace < 1000 uplink_telemetry().
+    else if time:seconds > uplinkObj["nextUplink"] uplink_telemetry().
+    else if uplink uplink_telemetry().
+}
+
+
+//Uploads the log file to KSC if connection is present.
+global function uplink_telemetry {
+
+    parameter fromLog is localLog.
+    parameter toLog is kscLog.
+
+    local conFlag is false. 
+    local fromOpen is open(fromLog).
+    local fromContent is "".
+    local toOpen is open(toLog).
+
+    if addons:rt:hasKscConnection(ship) set conFlag to true.
+
+    if conFlag { 
+        set fromContent to fromOpen:readAll:string.
+        toOpen:write(fromContent).
+        wait 0.05.
+        fromOpen:clear().
+    }
+
+    else {
+        set errLvl to 2.
+        return errLvl.
+    }
+
+    set uplinkObj to lex("lastUplink", time:seconds, "nextUplink", time:seconds + 15).
+
+    if path(fromLog):volume:freeSpace < 100 set errLvl to 2.
+    else set errLvl to 0.
+
+    return errLvl.
 }

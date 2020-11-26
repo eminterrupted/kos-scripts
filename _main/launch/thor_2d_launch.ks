@@ -17,10 +17,12 @@ runOncePath("0:/lib/lib_launch.ks").
 runOncePath("0:/lib/lib_sci.ks").
 runOncePath("0:/lib/lib_dmag_sci.ks").
 runOncePath("0:/lib/lib_warp.ks").
+runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
+runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
 
 
@@ -35,8 +37,10 @@ global sVal is heading(90, 90, -90).
 global tVal is 0.
 
 
-local tPid to setup_pid(.15).
+local tPid to setup_q_pid(.125).
 lock steering to sVal.
+print tInc at (2, 75).
+print "     " at (2, 75).
 
 
 until runmode = 99 {
@@ -76,7 +80,7 @@ until runmode = 99 {
 
     //gravity turn
     else if runmode = 14 {
-        set sVal to heading(90, get_la_for_alt(gtPitch, gtAlt), 0).
+        set sVal to heading(90, get_la_for_alt(gtPitch, gtAlt), rVal).
         if ship:q >= tPid:setpoint * 0.9 {
             set tVal to max(0, min(1, 1 + tPid:update(time:seconds, ship:q))). 
         }
@@ -100,7 +104,7 @@ until runmode = 99 {
     //coast / correction burns
     else if runmode = 18 {
         
-        lock steering to heading(get_nav_heading(), get_la_for_alt(0, gtAlt) , 0).
+        lock steering to heading(get_nav_heading(), get_la_for_alt(0, gtAlt) , rVal).
 
         if ship:apoapsis >= tApo {
             set tVal to 0.
@@ -130,7 +134,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
         
         set tVal to 0. 
-        set sVal to heading(90, get_la_for_alt(0, tApo), 0).
+        set sVal to heading(90, get_la_for_alt(0, tApo), rVal).
         
         local burnEta is burnObj["burnEta"] - time:seconds.
 
@@ -150,9 +154,9 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         set tVal to 1.
-        set sVal to heading(90, get_la_for_alt(0, tApo), 0).
+        set sVal to heading(90, get_la_for_alt(0, tApo), rVal).
 
-        if ship:periapsis >= tApo * 0.90 and ship:periapsis < tApo {
+        if ship:periapsis >= tPe * 0.90 and ship:periapsis < tPe {
             set tVal to max(0.1, 1 - (ship:apoapsis / tApo)).
         }
 

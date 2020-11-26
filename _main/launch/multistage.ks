@@ -9,6 +9,7 @@ parameter tApo to 125000,
 
 clearScreen.
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_core").
@@ -20,11 +21,11 @@ runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/kslib/library/lib_l_az_calc").
-
 
 //
 //** Main
@@ -40,9 +41,11 @@ local gtStart is 1250.
 local azObj to l_az_calc_init(tApo, tInc).
 local burnObj is lex().
 local dispState to lex().
-local maxAcc is ship:maxThrust / ship:mass.
-local qPid to setup_q_pid(.135).
-local accPid to setup_acc_pid(35).
+local acc is ship:maxThrust / ship:mass.
+local maxAcc is 35.
+local maxQ is 0.10.
+local qPid to setup_q_pid(maxQ).
+local accPid to setup_acc_pid(maxAcc).
 
 until runmode = 99 {
 
@@ -98,7 +101,7 @@ until runmode = 99 {
             logStr("Pitch program").
             set gtStart to ship:altitude.
             when ship:q >= .125 then logStr("Approaching Max-Q").
-            when maxAcc >= 30 then logStr("Throttling back at maximum acceleration").
+            when acc >= 30 then logStr("Throttling back at maximum acceleration").
             set runmode to 14.
         }
     }
@@ -106,14 +109,14 @@ until runmode = 99 {
     //gravity turn
     else if runmode = 14 {
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
-        set maxAcc to ship:maxThrust / ship:mass.
+        set acc to ship:maxThrust / ship:mass.
 
-        if ship:q >= .125 {
+        if ship:q >= maxQ {
             set tVal to max(0, min(1, 1 + qPid:update(time:seconds, ship:q))). 
         }
 
-        else if maxAcc >= 30 {
-            set tVal to max(0, min(1, 1 + accPid:update(time:seconds, maxAcc))).
+        else if acc >= maxAcc - 5 {
+            set tVal to max(0, min(1, 1 + accPid:update(time:seconds, acc))).
         }
 
         else {
@@ -121,7 +124,7 @@ until runmode = 99 {
         }
 
         if ship:apoapsis >= tApo * 0.925 {
-            logStr("Throttling back near apoapsis. [CurAlt:" + ship:altitude + "][Apo:" + ship:apoapsis + "]").
+            logStr("Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
             set runmode to 16.
         }
     }
@@ -161,15 +164,20 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
+        set tVal to 0. 
+        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
+
         set burnObj to get_circ_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
-        
-        set tVal to 0. 
-        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
-        
+
+        set runmode to 23.
+    }
+
+    else if runmode = 23 {
+        set sVal to ship:prograde + r(0, 0, rVal).
+
         local burnEta to burnObj["burnEta"] - time:seconds.
-        
         if warp = 0 and burnEta > 30 {
             if steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 {
                 if kuniverse:timewarp:mode = "RAILS" warpTo(burnObj["burnEta"] - 30).
@@ -190,7 +198,7 @@ until runmode = 99 {
         disp_burn_data(burnObj).
 
         if ship:periapsis >= tPe * 0.925 {
-            logStr("Throttling back at Pe target approach [CurAlt:" + ship:altitude + "][Pe:" + ship:periapsis + "]").
+            logStr("Throttling back at Pe target approach [CurAlt:" + round(ship:altitude) + "][Pe:" + round(ship:periapsis) + "]").
             set runmode to 26. 
         }
     }
@@ -208,7 +216,7 @@ until runmode = 99 {
         else if ship:periapsis >= tPe {
             set tVal to 0. 
             logStr("SECO").
-            logStr("Circularized at [Apo: " + ship:apoapsis + "][Pe: " + ship:periapsis + "]").
+            logStr("Circularized at [Apo: " + round(ship:apoapsis) + "][Pe: " + round(ship:periapsis) + "]").
             set runmode to 28.
         }
     }
@@ -232,7 +240,6 @@ until runmode = 99 {
     lock throttle to tVal.
 
     if ship:availableThrust < 0.1 and tVal > 0 {
-        logStr("Staging").
         safe_stage().
     }
 

@@ -171,7 +171,23 @@
         "solidBooster1-1",
         "eng",
         "AM.MLP.GeneralHold1",
-        "mlp.clamp"
+        "mlp.clamp",
+        "smallRadialEngine.v2",
+        "eng",
+        "orbital-engine-125",
+        "",
+        "AM.MLP.GeneralLaunchBaseSmall",
+        "mlp.base.clamp",
+        "AM.MLP.GeneralHold6",
+        "mlp.clamp",
+        "AM.MLP.GeneralServiceTowerMedium",
+        "mlp.tower",
+        "AM.MLP.GeneralServiceTowerMediumSec1",
+        "mlp.tower",
+        "AM.MLP.GeneralServiceTowerMediumTop",
+        "mlp.tower",
+        "AM.MLP.GeneralUmbilicalDroopA",
+        "mlp.umbilical"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -14,7 +14,8 @@ set config:ipu to 500.
 
 clearScreen.
 
-runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_log").
 
 local stateObj is init_state_obj().
 local program is stateObj["program"].

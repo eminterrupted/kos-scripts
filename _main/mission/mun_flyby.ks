@@ -6,6 +6,7 @@ parameter tgt is "Mun",
 clearscreen.
 
 runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/data/nav/lib_deltav").
 runOncePath("0:/lib/data/nav/lib_nav").
 runOncePath("0:/lib/lib_util").
@@ -19,7 +20,7 @@ local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
 
 disp_obt_main().
-if not ship:body:name = tgt set target to body(tgt).
+set target to body(tgt).
 
 wait 5.
 

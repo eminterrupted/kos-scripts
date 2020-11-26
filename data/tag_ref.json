@@ -803,11 +803,25 @@
         "Flat Launch Base 2 - Small Frame",
         "mlp.base.clamp",
         "General Fallback Tower - Small",
-        "mlp.tower",
+        "mlp.fallback.tower",
         "General Hold-Down Type 3: Vert Bolt Flat",
-        "mlp.clamp",
+        "mlp.holddown",
         "General Hold-Down Type 1: Side-Arm",
-        "mlp.clamp"
+        "mlp.holddown",
+        "LV-601 Orbital Maneuvering Engine",
+        "eng",
+        "General Launch Base 1 - Small",
+        "mlp.base.clamp",
+        "General Hold-Down Type 6: Clamp Arm Small",
+        "mlp.holddown",
+        "Medium Modular Service Tower Core",
+        "mlp.tower",
+        "Medium Modular Service Tower Section",
+        "mlp.tower",
+        "Medium Modular Service Tower Top",
+        "mlp.tower",
+        "Droop-Style Umbilical Size 1 - Short",
+        "mlp.umbilical"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
