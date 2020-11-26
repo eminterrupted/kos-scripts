@@ -223,8 +223,8 @@ local function vertical_ascent {
 local function gravity_turn {
     logStr("Pitch program").
     
-    when ship:q >= .125 then logStr("Approaching Max-Q").
-    when acc >= 30 then logStr("Throttling back at maximum acceleration").
+    when ship:q >= maxQ then logStr("Approaching Max-Q").
+    when acc >= maxAcc - 5 then logStr("Throttling back at maximum acceleration").
 
     //Gravity turn loop
     until ship:apoapsis >= tApo * 0.925 {

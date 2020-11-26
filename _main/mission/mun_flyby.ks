@@ -63,6 +63,7 @@ until runmode = 99 {
             update_disp().
         }
         update_disp().
+        disp_rendezvous_data(xfrObj).
         if time:seconds >= waitTime set runmode to 10.
     }
 
@@ -72,6 +73,7 @@ until runmode = 99 {
         if get_phase_angle() < xfrObj["window"]["xfrPhaseAng"] + 180 {
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
+            disp_rendezvous_data(xfrObj).
         } else {
             set runmode to 10.
         }
@@ -86,6 +88,7 @@ until runmode = 99 {
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
         set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
         update_disp().
+        disp_rendezvous_data(xfrObj).
         set runmode to 20.
     }
 
@@ -100,6 +103,7 @@ until runmode = 99 {
             if warp = 0 warpTo(xfrObj["burn"]["burnEta"] - 30).
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
+            disp_rendezvous_data(xfrObj).
         }
     }
 
@@ -114,6 +118,7 @@ until runmode = 99 {
             set tval to 1.
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
             update_disp().
+            disp_rendezvous_data(xfrObj).
         } else {
             set runmode to 40.
         }
@@ -125,12 +130,18 @@ until runmode = 99 {
 
         set xfrObj["window"]["phaseAng"] to get_phase_angle().
         update_disp().
+        disp_rendezvous_data(xfrObj).
 
         if xfrNode:burnVector:mag <= 0.02 {
             set tVal to 0.
             remove xfrNode.
-            set runmode to 42.
+            set runmode to 41.
         }
+    }
+
+    else if runmode = 41 {
+        disp_clear_block("rendezvous").
+        set runmode to 42.
     }
 
     else if runmode = 42 {
@@ -155,7 +166,6 @@ until runmode = 99 {
     }
 
     else if runmode = 50 {
-        if hastarget set xfrObj["window"]["phaseAng"] to get_phase_angle().
         update_disp().
     }
 
