@@ -364,13 +364,13 @@ global function disp_rendezvous_data {
     print "TARGET DIST:   " + round(pData["tgt"]:distance) + "    " at (h1,cr).
     print "TARGET SMA:    " + round(pData["tgt"]:altitude + pData["tgt"]:body:radius) at (h1,cr).
     cr.
-    print "PHASE ANG:     " + round(pData["window"]["phaseAng"], 3) + "  " at (h1,cr).
-    print "XFR PHASE ANG: " + round(pData["window"]["xfrPhaseAng"], 3) + "  " at (h1,cr).
-    print "XFR PHASE ETA: " + format_timestamp(pData["window"]["nodeAt"] - time:seconds) + "  " at (h1,cr).
+    print "PHASE ANG:     " + round(pData["curPhaseAng"], 3) + "  " at (h1,cr).
+    print "XFR PHASE ANG: " + round(pData["xfrPhaseAng"], 3) + "  " at (h1,cr).
+    print "XFR PHASE ETA: " + format_timestamp(pData["nodeAt"] - time:seconds) + "  " at (h1,cr).
     cr.
-    print "XFR DELTA-V:   " + round(pData["burn"]["dv"], 1) + " m/s    " at (h1,cr).
-    print "BURN DUR:      " + format_timestamp(pData["burn"]["burnDur"]) at (h1,cr).
-    print "BURN ETA:      " + format_timestamp(pData["burn"]["burnEta"] - time:seconds) + "  " at (h1,cr).
+    print "XFR DELTA-V:   " + round(pData["dv"], 1) + " m/s    " at (h1,cr).
+    print "BURN DUR:      " + format_timestamp(pData["burnDur"]) at (h1,cr).
+    print "BURN ETA:      " + format_timestamp(pData["burnEta"] - time:seconds) + "  " at (h1,cr).
 }
 
 

@@ -86,18 +86,20 @@ global function log_sci_list {
 
 //this will keep the data unless it has a good transmit yield (50%+)
 global function recover_sci_list {
-    parameter pList. 
+    parameter pList, 
+              transmitAlways is false.
 
     for m in pList {
         if m:hasData {
-            recover_sci(m).
+            recover_sci(m, transmitAlways).
         }
     }
 }
 
 //Transmits if transmission is ideal recovery method, else will keep science. 
 global function recover_sci {
-    parameter m.
+    parameter m,
+              transmitFlag.
 
     for data in m:data {
 

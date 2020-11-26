@@ -77,6 +77,7 @@ local function exec_launch {
     if not exists(locScrPath) compile(kscScrPath) to locScrPath.
 
     runPath(locScrPath, tApo, tPe, tInc, gtAlt, gtPitch, rVal).
+    deletePath(locScrPath).
 
     return true.
 }

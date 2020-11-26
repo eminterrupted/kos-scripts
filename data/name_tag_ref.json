@@ -187,7 +187,13 @@
         "AM.MLP.GeneralServiceTowerMediumTop",
         "mlp.tower",
         "AM.MLP.GeneralUmbilicalDroopA",
-        "mlp.umbilical"
+        "mlp.umbilical",
+        "Separator.2",
+        "dc.st.sep",
+        "restock-fairing-base-0625-1",
+        "",
+        "externalTankCapsule",
+        "tank"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

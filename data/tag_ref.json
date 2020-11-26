@@ -821,7 +821,9 @@
         "Medium Modular Service Tower Top",
         "mlp.tower",
         "Droop-Style Umbilical Size 1 - Short",
-        "mlp.umbilical"
+        "mlp.umbilical",
+        "AE-FF0 Airstream Protective Shell (0.625m)",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

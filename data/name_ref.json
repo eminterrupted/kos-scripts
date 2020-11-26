@@ -211,7 +211,11 @@
         "Medium Modular Service Tower Top",
         "AM.MLP.GeneralServiceTowerMediumTop",
         "Droop-Style Umbilical Size 1 - Short",
-        "AM.MLP.GeneralUmbilicalDroopA"
+        "AM.MLP.GeneralUmbilicalDroopA",
+        "AE-FF0 Airstream Protective Shell (0.625m)",
+        "restock-fairing-base-0625-1",
+        "TS-25 Stack Separator",
+        "Separator.2"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
