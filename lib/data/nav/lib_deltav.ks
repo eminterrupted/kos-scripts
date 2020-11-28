@@ -6,21 +6,8 @@ runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 
-//delegates
-
-global get_circ_burn_dv to get_req_dv_for_body_alt@.
-
 //functions
-
-
-
 global function get_dv_for_maneuver {
-    return true.
-}
-
-
-
-global function get_req_dv_for_body_alt {
     parameter finalAlt,
               pBody is ship:body.
 

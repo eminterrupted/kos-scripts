@@ -348,10 +348,10 @@ global function disp_rendezvous_data {
     parameter pData.
 
     local pos is "assign".
-    if dispObj:haskey("rvous") set pos to disp_get_pos_obj( dispObj["rvous"]).
+    if dispObj:haskey("rendezvous") set pos to disp_get_pos_obj( dispObj["rendezvous"]).
     else {
         set pos to disp_get_pos_obj(pos).
-        set dispObj["rvous"] to pos["id"].
+        set dispObj["rendezvous"] to pos["id"].
     }
 
     set ln to pos["v"].
@@ -367,10 +367,6 @@ global function disp_rendezvous_data {
     print "PHASE ANG:     " + round(pData["curPhaseAng"], 3) + "  " at (h1,cr).
     print "XFR PHASE ANG: " + round(pData["xfrPhaseAng"], 3) + "  " at (h1,cr).
     print "XFR PHASE ETA: " + format_timestamp(pData["nodeAt"] - time:seconds) + "  " at (h1,cr).
-    cr.
-    print "XFR DELTA-V:   " + round(pData["dv"], 1) + " m/s    " at (h1,cr).
-    print "BURN DUR:      " + format_timestamp(pData["burnDur"]) at (h1,cr).
-    print "BURN ETA:      " + format_timestamp(pData["burnEta"] - time:seconds) + "  " at (h1,cr).
 }
 
 

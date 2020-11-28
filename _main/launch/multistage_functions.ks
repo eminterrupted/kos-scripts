@@ -140,7 +140,7 @@ local function launch {
         arm_proc_fairings(75000, ship:partsTaggedPattern("pl.pf.base")[0]).
     }
 
-    launch_vessel(30).
+    launch_vessel(10).
     set tVal to 1.
 
     update_display().

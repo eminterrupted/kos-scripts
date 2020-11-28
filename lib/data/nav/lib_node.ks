@@ -17,6 +17,24 @@ global function remove_node {
 }
 
 
+global function add_circ_node {
+    parameter nodeAt is "ap".
+
+    local mnv is node(0, 0, 0, 0).
+
+    if nodeAt = "ap" {
+        set mnv to node(time:seconds + eta:apoapsis, 0, 0, get_dv_for_maneuver(ship:apoapsis, ship:body)).
+    } else {
+        set mnv to node(time:seconds + eta:periapsis, 0, 0, get_dv_for_maneuver(ship:periapsis, ship:body)).
+    }
+
+    add mnv.
+
+    return mnv.
+}
+
+
+
 global function add_optimized_node {
     parameter mnvParam,
               finalAlt.
