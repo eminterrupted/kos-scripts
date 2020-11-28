@@ -22,9 +22,11 @@ runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
 runOncePath("0:/lib/data/nav/lib_nav").
+runOncePath("0:/lib/data/nav/lib_node").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
+
 runOncePath("0:/kslib/library/lib_l_az_calc").
 
 //
@@ -36,6 +38,7 @@ local runmode to stateObj["runmode"].
 
 local azObj to l_az_calc_init(tApo, tInc).
 local burnObj is lex().
+local burnNode is node(0, 0, 0, 0).
 local dispState to lex().
 local acc is ship:maxThrust / ship:mass.
 local maxAcc is 35.
@@ -91,9 +94,6 @@ local function main {
 
     print "MSG: Executing exec_circularization_burn()   " at (2, 7).
     set runmode to exec_circularization_burn().
-
-    print "MSG: Executing slow_burn_to_pe()             " at (2, 7).
-    set runmode to slow_burn_to_pe().
 
     print "MSG: Executing prep_for_orbit()              " at (2, 7).
     set runmode to prep_for_orbit().
@@ -224,7 +224,7 @@ local function gravity_turn {
     logStr("Pitch program").
     
     when ship:q >= maxQ then logStr("Approaching Max-Q").
-    when acc >= maxAcc - 5 then logStr("Throttling back at maximum acceleration").
+    when acc >= maxAcc then logStr("Throttling back at maximum acceleration").
 
     //Gravity turn loop
     until ship:apoapsis >= tApo * 0.925 {
@@ -260,7 +260,7 @@ local function slow_burn_to_apo {
         set sVal to heading(l_az_calc(azObj), get_la_for_alt(tGEndPitch, tGTurnAlt, gtStart), rVal).
         lock steering to sVal.
 
-        set tval to 1 - max(0, min(1, (ship:apoapsis * 0.075 / tApo * 0.075 ))).
+        set tval to 0.25.
         lock throttle to tVal.
 
         update_display().
@@ -326,7 +326,10 @@ local function setup_circularization_burn {
     set tVal to 0. 
     lock throttle to tVal.
 
-    set burnObj to get_circ_burn_data(tPe).
+    //Add the circ node
+    set burnNode to add_simple_circ_node("ap").
+    set burnObj to get_burn_obj_from_node(burnNode).
+
     if dispState:hasKey("burn_data") disp_burn_data(burnObj).
     else set dispState["burn_data"] to disp_burn_data(burnObj).
 
@@ -342,20 +345,20 @@ local function setup_circularization_burn {
 local function warp_to_circ_burn {
     logStr("Warping to circularization burn").
 
-    set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
+    set sVal to burnNode.
     lock steering to sVal.
 
     set tVal to 0.
     lock throttle to tVal.
 
-    until steeringManager:angleerror >= -0.25 and steeringManager:angleError <= 0.25 {
+    until steeringManager:angleerror >= -0.1 and steeringManager:angleError <= 0.1 {
         update_display().
         disp_burn_data(burnObj).
     }
     
     if burnObj["burnEta"] - time:seconds > 30 warpTo(burnObj["burnEta"] - 30).
 
-    until time:seconds >= burnObj["burnEta"] - 5 {
+    until time:seconds >= burnObj["burnEta"] {
         set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
         lock steering to sVal.
 
@@ -374,53 +377,32 @@ local function warp_to_circ_burn {
 local function exec_circularization_burn {
     logStr("Executing circularization burn").
 
-    until ship:periapsis >= tPe * 0.925 {
-        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
+    until burnNode:burnvector:mag <= 5 {
+        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
         lock steering to sVal.
+
+        set tval to 1.
+        lock throttle to tVal.
         
-        set tVal to 1.
+        update_display().
+    }
+
+    until burnNode:burnvector:mag <= 0.1 {
+        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
+        lock steering to sVal.
+
+        set tval to max(0, min(1, burnNode:burnVector:mag / 5)).
         lock throttle to tVal.
 
         update_display().
-        disp_burn_data(burnObj).
     }
+
+    remove burnNode.
 
     set runmode to 24. 
     set stateObj["runmode"] to runmode.
     log_state(stateObj).
-    
-    return runmode.
-}
 
-
-local function slow_burn_to_pe {
-    logStr("Throttling back at Pe target approach [CurAlt:" + round(ship:altitude) + "][Pe:" + round(ship:periapsis) + "]").
-
-    until ship:periapsis >= tPe {
-        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
-        lock steering to sVal.
-
-        set tVal to 1 - max(0, min(1, (ship:periapsis * 0.075 / tPe * 0.075))).
-        lock throttle to tVal.
-
-        update_display().
-        disp_burn_data(burnObj).
-    }
-
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    logStr("SECO").
-    logStr("Circularized at [Apo: " + round(ship:apoapsis) + "][Pe: " + round(ship:periapsis) + "]").
-    disp_clear_block("burn_data").
-
-    set runmode to 26.
-    set stateObj["runmode"] to runmode.
-    log_state(stateObj).
-    
     return runmode.
 }
 

@@ -82,14 +82,16 @@ global function get_burn_dur {
 
 //Returns a circularization burn object
 global function get_circ_burn_data {
-    parameter newAlt.
+    parameter newAlt,
+              burnAt is "ap".
 
     //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
     //Calculate variables
-    local nodeAt to time:seconds + eta:apoapsis.
+    local nodeAt to choose time:seconds + eta:apoapsis if burnAt = "ap" else time:seconds + eta:periapsis.
+    local startAlt to choose ship:periapsis if burnAt = "ap" else ship:apoapsis.
 
     //get deltaV for the burn
-    local dV to get_circ_burn_dv(newAlt, ship:body).
+    local dV to get_dv_for_maneuver(newAlt, startAlt, ship:body).
 
     //local burnDur to exhVel * ln(startMass) - exhVel * ln(endMass).
     local burnDur to get_burn_dur(dV). 

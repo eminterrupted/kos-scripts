@@ -24,7 +24,7 @@ disp_obt_main().
 wait 5.
 
 local finalAlt is 30000.
-local waitTime is 300 + time:seconds.
+local waitTime is 0 + time:seconds.
 
 local sciMod is list().
 local dmagMod is list().
@@ -85,7 +85,7 @@ local function main {
 
         else if runmode = 35 {
             exec_burn(mnvNode).
-            disp_clear_block("rendevous").
+            disp_clear_block("rendezvous").
             set runmode to 40.
         }
 
@@ -95,11 +95,11 @@ local function main {
         }
 
         else if runmode = 45 {
-            set_target("kerbin").
             set runmode to 50.
         }
 
         else if runmode = 50 {
+            set_target("").
             warp_to_next_soi().
             set runmode to 55.
         }
@@ -110,12 +110,12 @@ local function main {
         }
 
         else if runmode = 60 {
-            get_circ_obj().
+            set mnvNode to add_simple_circ_node("pe").
             set runmode to 65.
         }
 
         else if runmode = 65 {
-            add_burn_node(mnvObj, finalAlt).
+            set mnvObj to get_burn_obj_from_node(mnvNode).
             set runmode to 70.
         }
 
@@ -155,7 +155,7 @@ local function set_target {
     set tVal to 0.
     lock throttle to tVal.
 
-    if not hasTarget set target to body(pTgt).
+    set target to pTgt.
 
     update_disp().
 }
@@ -231,7 +231,7 @@ local function warp_to_waittime {
     lock throttle to tVal.
 
     until time:seconds >= tstamp {
-        if warp = 0 set warp to 3. 
+        if warp = 0 and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 set warp to 3. 
         update_disp().
         disp_rendezvous_data(mnvObj).
     }
@@ -270,10 +270,8 @@ local function warp_to_burn_node {
     until time:seconds >= (mnvObj["burnEta"] - 30) {
         set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
         lock steering to sVal.
-        
-        if warp = 0 warpTo(mnvObj["burnEta"] - 30).
-        update_phase().
-        
+
+        if warp = 0 and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 warpTo(mnvObj["burnEta"] - 30).     
         update_disp().
     }
 
@@ -282,6 +280,7 @@ local function warp_to_burn_node {
     
     until time:seconds >= mnvObj["burnEta"] {
         update_disp().
+        disp_burn_data(mnvObj).
     }
 
     update_disp().
@@ -322,11 +321,9 @@ local function exec_burn {
 
 
 local function warp_to_next_soi {
-    if ship:obt:hasnextpatch warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+    if ship:obt:hasnextpatch and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 warpTo(ship:obt:nextpatcheta + time:seconds - 30).
     until ship:body:name = tgt {
         update_disp().
-        update_phase().
-        disp_rendezvous_data(mnvObj).
     }
 
     if warp > 0 kuniverse:timewarp:cancelwarp().
