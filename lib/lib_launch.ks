@@ -79,11 +79,11 @@ global function launch_vessel {
     }
 
     //Setup the launch triggers.    
-    when cd <= 20 then {
+    when cd <= countdown * 0.65 then {
         mlp_fuel_off().
         logStr("Fueling complete").
     }
-    when cd <= 15 then {
+    when cd <= countdown * 0.55 then {
         mlp_gen_off(). 
         logStr("Vehicle on internal power").
         if fallback {
@@ -91,7 +91,7 @@ global function launch_vessel {
             logStr("Fallback clamp open").
         }
     }
-    when cd <= 12 then {
+    when cd <= countdown * 0.45 then {
         if fallback {
             mlp_fallback_partial().
             logStr("Fallback tower partial retract").
@@ -102,15 +102,15 @@ global function launch_vessel {
         engine_start_sequence().
     }
     when cd <= 0.4 then {
-        if umbilical {
-            mlp_drop_umbilical().
-            logStr("Umbilicals detached").
-        }
-    }
-    when cd <= 0.2 then {
         if fallback {
             mlp_fallback_full().
             logStr("Fallback tower full retract").
+        }
+    }
+    when cd <= 0.2 then {
+        if umbilical {
+            mlp_drop_umbilical().
+            logStr("Umbilicals detached").
         }
     }
     when cd <= 0.1 then {
