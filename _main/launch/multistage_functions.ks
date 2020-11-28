@@ -134,10 +134,10 @@ local function launch {
     logStr("Begin launch procedure").
 
     if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
-        arm_stock_fairings(75000, ship:partsTaggedPattern("pl.st.fairing")[0]).
+        arm_stock_fairings(72500, ship:partsTaggedPattern("pl.st.fairing")[0]).
     } 
     else if ship:partsTaggedPattern("pl.pf.base"):length > 0 {
-        arm_proc_fairings(75000, ship:partsTaggedPattern("pl.pf.base")[0]).
+        arm_proc_fairings(72500, ship:partsTaggedPattern("pl.pf.base")[0]).
     }
 
     launch_vessel(10).

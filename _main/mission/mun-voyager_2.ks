@@ -85,7 +85,6 @@ local function main {
 
         else if runmode = 35 {
             exec_burn(mnvNode).
-            disp_clear_block("rendezvous").
             set runmode to 40.
         }
 
@@ -217,7 +216,6 @@ local function get_transfer_obj {
     }
     
     update_disp().
-    disp_rendezvous_data(mnvObj).
 }
 
 
@@ -233,14 +231,12 @@ local function warp_to_waittime {
     until time:seconds >= tstamp {
         if warp = 0 and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 set warp to 3. 
         update_disp().
-        disp_rendezvous_data(mnvObj).
     }
 
     kuniverse:timewarp:cancelwarp().
     wait until kuniverse:timewarp:issettled.
 
     update_disp().
-    disp_rendezvous_data(mnvObj).
 }
 
 
@@ -315,35 +311,27 @@ local function exec_burn {
 
     remove burnNode.
 
-    disp_clear_block("rendezvous").
     update_disp().
 }
 
 
 local function warp_to_next_soi {
-    if ship:obt:hasnextpatch and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+    set sVal to ship:prograde + r(0, 0, rval). 
+    lock steering to sval.
+
+    if ship:obt:hasnextpatch {
+        wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
+        warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+    }
+        
     until ship:body:name = tgt {
+        set sVal to ship:prograde + r(0, 0, rVal).
+        lock steering to sVal.
         update_disp().
     }
 
     if warp > 0 kuniverse:timewarp:cancelwarp().
     wait until kuniverse:timewarp:issettled.
-
-    update_disp().
-}
-
-
-local function get_circ_obj {
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0. 
-    lock throttle to tVal.
-
-    logStr("Setting up circularization burn object").
-    set finalAlt to ship:periapsis.
-    set mnvObj to get_circ_burn_data(finalAlt).
-    logStr("Burn object created").
 
     update_disp().
 }
