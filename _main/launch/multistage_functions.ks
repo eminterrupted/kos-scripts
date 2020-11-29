@@ -204,7 +204,7 @@ local function vertical_ascent {
     }
 
     //Ascent loop
-    until ship:verticalSpeed >= 100 or ship:altitude >= 1000 {
+    until ship:verticalSpeed >= 100 or ship:altitude >= 750 {
         set sVal to heading(l_az_calc(azObj), 90, rVal).
         lock steering to sVal.
 
@@ -320,14 +320,14 @@ local function coast_to_space {
 local function setup_circularization_burn {
     logStr("Setting up circularization burn object").
     
-    set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
+    set sVal to ship:prograde + r(0, 0, rVal).
     lock steering to sVal.
 
     set tVal to 0. 
     lock throttle to tVal.
 
     //Add the circ node
-    set burnNode to add_simple_circ_node("ap").
+    set burnNode to add_simple_circ_node("ap", tPe).
     set burnObj to get_burn_obj_from_node(burnNode).
 
     if dispState:hasKey("burn_data") disp_burn_data(burnObj).
@@ -345,7 +345,7 @@ local function setup_circularization_burn {
 local function warp_to_circ_burn {
     logStr("Warping to circularization burn").
 
-    set sVal to burnNode.
+    set sVal to burnNode:burnvector:direction + r(0, 0, rVal - 90).
     lock steering to sVal.
 
     set tVal to 0.
@@ -356,10 +356,10 @@ local function warp_to_circ_burn {
         disp_burn_data(burnObj).
     }
     
-    if burnObj["burnEta"] - time:seconds > 30 warpTo(burnObj["burnEta"] - 30).
+    if burnObj["burnEta"] - time:seconds > 30 warpTo(burnObj["burnEta"] - 15).
 
     until time:seconds >= burnObj["burnEta"] {
-        set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
+        set sVal to burnNode.
         lock steering to sVal.
 
         update_display().
@@ -377,8 +377,9 @@ local function warp_to_circ_burn {
 local function exec_circularization_burn {
     logStr("Executing circularization burn").
 
-    until burnNode:burnvector:mag <= 5 {
-        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
+    until burnNode:burnvector:mag <= 10 {
+        set sVal to lookDirUp(burnNode:burnVector, sun:position).
+        //set sVal to burnNode.
         lock steering to sVal.
 
         set tval to 1.
@@ -388,14 +389,17 @@ local function exec_circularization_burn {
     }
 
     until burnNode:burnvector:mag <= 0.1 {
-        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
+        set sVal to lookDirUp(burnNode:burnVector, sun:position). 
+        //set sVal to burnNode.
         lock steering to sVal.
 
-        set tval to max(0, min(1, burnNode:burnVector:mag / 5)).
+        set tval to max(0, min(0.125, burnNode:burnVector:mag / 10)).
         lock throttle to tVal.
 
         update_display().
     }
+    set tVal to 0.
+    lock throttle to tVal.
 
     remove burnNode.
 
@@ -448,7 +452,7 @@ local function end_main {
         disp_timer(n).
     }
 
-    disp_clear_block("timer").
+    disp_clear_block_all().
     logStr("Ship ready for mission script").
     
     set runmode to 99.

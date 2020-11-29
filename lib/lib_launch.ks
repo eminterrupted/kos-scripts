@@ -79,11 +79,11 @@ global function launch_vessel {
     }
 
     //Setup the launch triggers.    
-    when cd <= countdown * 0.65 then {
+    when cd <= countdown * 0.5 then {
         mlp_fuel_off().
         logStr("Fueling complete").
     }
-    when cd <= countdown * 0.55 then {
+    when cd <= countdown * 0.45 then {
         mlp_gen_off(). 
         logStr("Vehicle on internal power").
         if fallback {
@@ -91,7 +91,7 @@ global function launch_vessel {
             logStr("Fallback clamp open").
         }
     }
-    when cd <= countdown * 0.45 then {
+    when cd <= countdown * 0.4 then {
         if fallback {
             mlp_fallback_partial().
             logStr("Fallback tower partial retract").
@@ -101,7 +101,7 @@ global function launch_vessel {
         logStr("Engine start sequence").
         engine_start_sequence().
     }
-    when cd <= 0.4 then {
+    when cd <= 0.8 then {
         if fallback {
             mlp_fallback_full().
             logStr("Fallback tower full retract").
@@ -163,7 +163,7 @@ global function get_la_for_alt {
 
     parameter rPitch, 
               tAlt,
-              sAlt is 1000.
+              sAlt is 750.
     
     local tPitch is 0.
 

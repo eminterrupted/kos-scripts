@@ -215,7 +215,13 @@
         "AE-FF0 Airstream Protective Shell (0.625m)",
         "restock-fairing-base-0625-1",
         "TS-25 Stack Separator",
-        "Separator.2"
+        "Separator.2",
+        "RT-5 \"Flea\" Solid Fuel Booster",
+        "solidBooster.sm.v2",
+        "MS-1 Multispectral Scanner",
+        "scansat-multi-modis-1",
+        "OX-4W 3x2 Photovoltaic Panels",
+        "solarPanels3"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

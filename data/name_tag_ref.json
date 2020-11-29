@@ -193,7 +193,15 @@
         "restock-fairing-base-0625-1",
         "",
         "externalTankCapsule",
-        "tank"
+        "tank",
+        "solidBooster.sm.v2",
+        "eng",
+        "scansat-multi-modis-1",
+        "sci.scan.multi",
+        "scansat-radar-poseidon-3b-1",
+        "sci.scan.alt",
+        "solarPanels3",
+        "ec.solar.array"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

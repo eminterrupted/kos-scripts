@@ -83,7 +83,8 @@ until runmode = 99 {
         set sVal to ship:prograde + r(0, 0, rVal).
 
         local mnvList to list(xfrObj["window"]["nodeAt"], 0, 0, xfrObj["burn"]["dv"]).
-        set xfrNode to add_optimized_node(mnvList).
+        set xfrNode to add_optimized_node(mnvList, finalAlt).
+        add xfrNode.
 
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
         set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
@@ -132,7 +133,7 @@ until runmode = 99 {
         update_disp().
         disp_rendezvous_data(xfrObj).
 
-        if xfrNode:burnVector:mag <= 0.02 {
+        if xfrNode:burnVector:mag <= 0.05 {
             set tVal to 0.
             remove xfrNode.
             set runmode to 41.
@@ -181,64 +182,64 @@ until runmode = 99 {
 }
 
 
-local function add_optimized_node {
-    parameter mnvParam.
+// local function add_optimized_node {
+//     parameter mnvParam.
 
-    print "MSG: Optimizing transfer maneuver" at (2, 7).
+//     print "MSG: Optimizing transfer maneuver" at (2, 7).
 
-    until false {
-        set mnvParam to improve_node(mnvParam).
-        if get_node_score(mnvParam) >= 1 break.
-    }
+//     until false {
+//         set mnvParam to improve_node(mnvParam).
+//         if get_node_score(mnvParam) >= 1 break.
+//     }
 
-    local mnv to add_node(mnvParam).
-    set xfrObj["window"]["nodeAt"] to mnv:eta + time:seconds.
-    set xfrObj["burn"]["burnEta"] to (mnv:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
-    print "MSG: Optimized maneuver found                                " at (2, 7).
-    wait 2.
-    print "                                                             " at (2, 7).
-    return mnv.
-}
-
-
-local function improve_node {
-    parameter data.
-
-    //hill climb to find the best time
-    local curScore is get_node_score(data).
-    local mnvCandidates is list(
-        list(data[0] + .05, data[1], data[2], data[3])
-        ,list(data[0] - .05, data[1], data[2], data[3])
-        ,list(data[0], data[1], data[2], data[3] + .01)
-        ,list(data[0], data[1], data[2], data[3] + -.01)
-    ).
-
-    for c in mnvCandidates {
-        local candScore to get_node_score(c).
-        if candScore > curScore {
-            set curScore to get_node_score(c).
-            set data to c.
-            print "(Current score: " + round(curScore, 5) + "     " at (35, 7).
-        }
-    }
-
-    return data.
-}
+//     local mnv to add_node(mnvParam).
+//     set xfrObj["window"]["nodeAt"] to mnv:eta + time:seconds.
+//     set xfrObj["burn"]["burnEta"] to (mnv:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
+//     print "MSG: Optimized maneuver found                                " at (2, 7).
+//     wait 2.
+//     print "                                                             " at (2, 7).
+//     return mnv.
+// }
 
 
-local function get_node_score {
-    parameter data.
+// local function improve_node {
+//     parameter data.
 
-    local score to 0.
-    local mnvTest to node(data[0], data[1], data[2], data[3]).
-    add mnvTest.
-    if mnvTest:obt:hasnextpatch {
-        set score to (mnvTest:obt:nextpatch:periapsis) / finalalt.
-    }
-    wait 0.01.
-    remove mnvTest.
-    return score.
-}
+//     //hill climb to find the best time
+//     local curScore is get_node_score(data).
+//     local mnvCandidates is list(
+//         list(data[0] + .05, data[1], data[2], data[3])
+//         ,list(data[0] - .05, data[1], data[2], data[3])
+//         ,list(data[0], data[1], data[2], data[3] + .01)
+//         ,list(data[0], data[1], data[2], data[3] + -.01)
+//     ).
+
+//     for c in mnvCandidates {
+//         local candScore to get_node_score(c).
+//         if candScore > curScore {
+//             set curScore to get_node_score(c).
+//             set data to c.
+//             print "(Current score: " + round(curScore, 5) + "     " at (35, 7).
+//         }
+//     }
+
+//     return data.
+// }
+
+
+// local function get_node_score {
+//     parameter data.
+
+//     local score to 0.
+//     local mnvTest to node(data[0], data[1], data[2], data[3]).
+//     add mnvTest.
+//     if mnvTest:obt:hasnextpatch {
+//         set score to (mnvTest:obt:nextpatch:periapsis) / finalalt.
+//     }
+//     wait 0.01.
+//     remove mnvTest.
+//     return score.
+// }
 
 
 local function mun_xfr_burn_obj {

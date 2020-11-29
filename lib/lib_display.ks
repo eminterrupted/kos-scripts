@@ -36,40 +36,41 @@ local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
 local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
 local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
+//local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
+//local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
 // local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
 // local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
-
-local posw_x is lex("id", "posw_x", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-//local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_x is lex("id", "posw_x", "v", 26, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_y is lex("id", "posw_y", "v", 38, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_z is lex("id", "posw_z", "v", 50, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
-                "posmain", posmain, 
-                "pos_a", pos_a, 
-                "pos_b", pos_b, 
-                "pos_c", pos_c, 
-                "pos_d", pos_d, 
-                "pos_e", pos_e, 
-                "pos_f", pos_f,
-                // "pos_g", pos_g, 
-                // "pos_h", pos_h, 
-                "posw_x", posw_x
-                //"posw_y", posw_y
+                "posmain", posmain 
+                ,"pos_a", pos_a 
+                ,"pos_b", pos_b 
+                ,"pos_c", pos_c 
+                ,"pos_d", pos_d
+                // ,"pos_e", pos_e
+                // ,"pos_f", pos_f
+                // ,"pos_g", pos_g 
+                // ,"pos_h", pos_h 
+                ,"posw_x", posw_x
+                ,"posw_y", posw_y
+                ,"posw_z", posw_z
                 ).
                 
 local posState is lex(
-                "posmain", false,
-                "pos_a", false, 
-                "pos_b", false, 
-                "pos_c", false, 
-                "pos_d", false, 
-                "pos_e", false, 
-                "pos_f", false, 
-                // "pos_g", false, 
-                // "pos_h", false, 
-                "posw_x", false
-                //"posw_y", false
+                "posmain", false
+                ,"pos_a", false 
+                ,"pos_b", false
+                ,"pos_c", false 
+                ,"pos_d", false 
+                // ,"pos_e", false 
+                // ,"pos_f", false 
+                // ,"pos_g", false 
+                // ,"pos_h", false 
+                ,"posw_x", false
+                ,"posw_y", false
                 ).
 
 
@@ -372,13 +373,15 @@ global function disp_rendezvous_data {
 
 //SCANsat data
 global function disp_scan_status {
-    parameter pData.
+    parameter pData, nScan.
+
+    set nScan to "scan_" + nScan:tostring.
 
     local pos is "assign_wide".
-    if dispObj:haskey("scan") set pos to disp_get_pos_obj( dispObj["scan"]).
+    if dispObj:haskey(nScan) set pos to disp_get_pos_obj( dispObj[nScan]).
     else {
         set pos to disp_get_pos_obj(pos).
-        set dispObj["scan"] to pos["id"].
+        set dispObj[nScan] to pos["id"].
     }
 
     set ln to pos["v"].
@@ -432,6 +435,16 @@ global function disp_clear_block {
         if pos:hasKey("h4") print clr at (pos["h4"], line).
     }
     set posState[pos["id"]] to false.
+}
+
+
+global function disp_clear_block_all {
+    local dispList is list("obt", "l_tel", "eng_perf", "burn_data", "timer", "scan", "rendezvous", "pid", "l_param", "eta").
+    for d in dispList {
+        disp_clear_block(d).
+    }
+
+    clearScreen.
 }
 
 

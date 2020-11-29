@@ -1,7 +1,5 @@
 @lazyGlobal off. 
 
-parameter rVal is 0.
-
 clearScreen.
 runOncePath("0:/lib/lib_init.ks").
 runOncePath("0:/lib/lib_display.ks").
@@ -22,12 +20,8 @@ runOncePath("0:/lib/part/lib_scansat.ks").
 //** Main
 
 //Vars
-local dispState to lex().
-local maxAlt to 0.
+local ecIdx to 0.
 local scanSatList to ship:partsTaggedPattern("sci.scan").
-
-local sVal to ship:prograde + r(0, 0, rVal).
-lock steering to sVal.
 
 //Picks up the runmode in the state object. This should be 0 if first run, but this allows resume mid-flight.
 local stateObj to init_state_obj().
@@ -41,12 +35,7 @@ until runmode = 199 {
     local tStamp to 0.
 
     if runmode = 100 {
-        clearscreen.
-        set sVal to ship:prograde. 
         disp_obt_data().
-
-        local sunExp to get_solar_exp().
-        if sunExp <= 0.01 set tStamp to time:seconds + 600.
         
         set runmode to 110.
     }
@@ -76,39 +65,30 @@ until runmode = 199 {
     }
 
     else if runmode = 150 {
-        set sVal to ship:prograde + r(-90,0,0).
-        for sat in scanSatList {
-            start_scansat(sat).
+        for res in ship:resources {
+            if res:name = "ElectricCharge" break.
+            else set ecIdx to ecIdx + 1.
         }
-        
         set runmode to 160.
     }
 
     else if runmode = 160 {
-        local scanData to "".
-        set sVal to ship:prograde + r(90,0,0).
-        for sat in scanSatList {
-            set scanData to get_scansat_data(sat).
-            if dispState:haskey("scan_status") {
-                disp_scan_status(scanData).
-            } else {
-                set dispState["scan_status"] to disp_scan_status(scanData).
-            }
+
+        if ship:resources[ecIdx]:amount <= ship:resources[ecIdx]:capacity * 0.1 {
+            for s in scanSatList stop_scansat(s).
         }
+
+        else if ship:resources[ecIdx]:amount >= ship:resources[ecIdx]:capacity * 0.15 {
+            for s in scanSatList start_scansat(s).
+        }
+
+        update_scan_disp().
     }
 
-    if runmode < 199 {
-        lock steering to sVal.
-    }
-
-    else {
-        lock steering to ship:prograde.
-    }
-
-    set maxAlt to max(maxAlt, ship:altitude).
+    local sVal to lookDirUp(ship:prograde:vector, sun:position).
+    lock steering to sVal.
     
-    disp_launch_main().
-    disp_obt_data().
+    update_disp().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
@@ -118,3 +98,20 @@ until runmode = 199 {
 
 //** End Main
 //
+
+
+local function update_disp {
+    disp_obt_main().
+    disp_obt_data().
+    disp_tel().
+}
+
+local function update_scan_disp {
+    local scanData to "".
+    local nScan to 0.
+    for sat in scanSatList {
+        set scanData to get_scansat_data(sat).
+        disp_scan_status(scanData, nScan).
+        set nScan to nScan + 1.
+    }
+}

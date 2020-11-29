@@ -15,7 +15,7 @@ global function safe_stage {
 
         if stage:ready {
             stage.
-            wait 0.5.
+            wait 0.75.
             break.
         }
     }

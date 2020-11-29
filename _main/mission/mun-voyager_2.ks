@@ -267,7 +267,7 @@ local function warp_to_burn_node {
         set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
         lock steering to sVal.
 
-        if warp = 0 and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 warpTo(mnvObj["burnEta"] - 30).     
+        if warp = 0 and steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 warpTo(mnvObj["burnEta"] - 15).     
         update_disp().
     }
 
@@ -321,7 +321,7 @@ local function warp_to_next_soi {
 
     if ship:obt:hasnextpatch {
         wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
-        warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+        warpTo(ship:obt:nextpatcheta + time:seconds - 15).
     }
         
     until ship:body:name = tgt {
