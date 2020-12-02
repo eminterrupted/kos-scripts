@@ -201,7 +201,9 @@
         "scansat-radar-poseidon-3b-1",
         "sci.scan.alt",
         "solarPanels3",
-        "ec.solar.array"
+        "ec.solar.array",
+        "rpwsAnt",
+        "sci.dmag.rwps"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

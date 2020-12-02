@@ -2,6 +2,49 @@
 
 runOncePath("0:/lib/lib_init").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
+if not (defined stateObj) local stateObj to init_state_obj().
+
+//Main launch sequencer
+global function launch_sequence {
+
+    parameter lObj.
+                
+    local runmode is 0.
+    // local sVal to heading(90, 90, -90).
+    // local tVal to 0.
+
+    clearScreen.
+    print "MSG: Executing preLaunch()                   " at (2, 7).
+    preLaunch().
+
+    print "MSG: Executing launch()                      " at (2, 7).
+    launch().
+
+    print "MSG: Executing clear_tower()                 " at (2, 7).
+    clear_tower().
+
+    print "MSG: Executing roll_program()                " at (2, 7).
+    roll_program(lObj).
+
+    print "MSG: Executing vertical_ascent()             " at (2, 7).
+    set lObj["gtStart"] to vertical_ascent(lObj).
+
+    print "MSG: Executing gravity turn()                " at (2, 7).
+    gravity_turn(lObj).
+
+    print "MSG: Executing slow_burn_to_apo()            " at (2, 7).
+    slow_burn_to_apo(lObj).
+
+    print "MSG: Executing meco()                        " at (2, 7).
+    meco(lObj).
+
+    if ship:altitude < 70000 {
+        print "MSG: Executing coast_to_space()              " at (2, 7).
+        coast_to_space(lObj).
+    }
+
+    return runmode.
+}
 
 
 //Fairings
@@ -41,17 +84,17 @@ global function deploy_payload {
 
 
 //Correction burn execute
-global function exec_correction_burn {
-    
-    parameter tApo.
+// local function exec_correction_burn {
+//     parameter tApo.
 
-    //If in atm and below target
-    lock steering to heading(get_nav_heading(), get_la_for_alt(0, tApo) , 0).
+//     //If in atm and below target
+//     lock steering to heading(get_nav_heading(), get_la_for_alt(0, tApo) , 0).
 
-    lock throttle to 0.05.
+//     lock throttle to 0.05.
 
-    logStr("Current apoapsis below target, correction burn [" + ship:apoapsis + " / " + tApo +"]").
-}
+//     logStr("Current apoapsis below target, correction burn [" + ship:apoapsis + " / " + tApo +"]").
+// }
+
 
 
 // Launch a vessel with a countdown timer
@@ -125,7 +168,7 @@ global function launch_vessel {
 
     logStr("Beginning launch countdown").
     until cd <= 0 {
-        disp_launch_main().
+        disp_main().
         wait 0.1.
         set cd to cd - 0.1.
     }
@@ -143,17 +186,18 @@ local function engine_start_sequence {
 
     stage.
     from { local t to 0.} until t >= 0.15 step { set t to t + 0.01.} do {
-        disp_launch_main().
+        disp_main().
         set tSpool to t.
         set cd to cd - 0.015.
     }
 
     from { local t to 0.16.} until t >= 1 step { set t to t + 0.02.} do {
-        disp_launch_main().
+        disp_main().
         lock throttle to tSpool.
         set tSpool to min(1, t).
         set cd to cd - 0.015.
     }
+
     lock throttle to 1.
 }
 
@@ -175,7 +219,7 @@ global function get_la_for_alt {
         set tPitch to max( rPitch, 90 * ( 1 - (ship:altitude - sAlt) / (tAlt))). // * 1.125))).
     }
     
-    local pg is choose ship:srfPrograde:vector if ship:altitude < tAlt * 0.65 else ship:prograde:vector.
+    local pg is choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) > 0.0001 else ship:prograde:vector.
     local pgPitch is 90 - vang(ship:up:vector, pg).
     local effPitch is max(pgPitch - 5, min(tPitch, pgPitch + 5)).
     
@@ -188,6 +232,200 @@ global function get_circ_burn_pitch {
     return obtPitch * -1.
 }
 
+
+local function preLaunch {
+    local runmode is set_runmode(0).
+    logStr("[Runmode " + runmode + "]: Preparing for launch").
+    
+    disp_main().
+}
+
+
+local function launch {
+    local runmode to set_runmode(5).
+    logStr("[Runmode " + runmode + "]: Begin launch procedure").
+
+    if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
+        arm_stock_fairings(72500, ship:partsTaggedPattern("pl.st.fairing")[0]).
+    } 
+    else if ship:partsTaggedPattern("pl.pf.base"):length > 0 {
+        arm_proc_fairings(72500, ship:partsTaggedPattern("pl.pf.base")[0]).
+    }
+
+    launch_vessel(10).
+    
+    local tVal to 1.
+    lock throttle to tVal.
+
+    update_display().
+}    
+
+
+local function clear_tower {
+    local runmode to set_runmode(10).
+    logStr("[Runmode " + runmode + "]: Liftoff!").
+    
+    //Wait until tower is effectively cleared
+    until alt:radar >= 100 {
+        local sVal to heading(90, 90, -90).
+        lock steering to sVal.
+
+        local tVal to 1.
+        lock throttle to tVal.
+
+        update_display().
+    }
+    
+    logStr("Tower cleared").
+    update_display().
+}
+    
+
+local function roll_program {
+    parameter lObj.
+
+    local runmode to set_runmode(15).
+    logStr("[Runmode " + runmode + "]: Roll program").
+
+    local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
+    lock steering to sVal.
+
+    local tVal to 1.
+    lock throttle to tVal.
+    
+    update_display().
+}
+
+
+local function vertical_ascent {
+    parameter lObj.
+
+    local runmode to set_runmode(20).
+    logStr("[Runmode " + runmode + "]: Vertical ascent").
+    
+    local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
+    lock steering to sVal.
+    
+    local tVal to 1.
+    lock throttle to tVal.
+
+    //Setup staging trigger
+    when ship:availableThrust < 0.1 and tVal > 0 then {
+        safe_stage().
+        preserve.
+    }
+
+    //Ascent loop
+    until ship:verticalSpeed >= 100 or ship:altitude >= 750 {
+        update_display().
+    }
+    
+    return ship:altitude.
+}
+
+local function gravity_turn {
+    parameter lObj.
+           
+    local runmode to set_runmode(25).
+    logStr("[Runmode " + runmode + "]: Pitch program").
+    
+    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+    local tVal to 1.
+
+    local acc to 0.
+    local accPid to setup_acc_pid(lObj["maxAcc"]).
+    local qPid to setup_q_pid(lObj["maxQ"]).
+
+    when ship:q >= lObj["maxQ"] then logStr("Approaching Max-Q").
+    when acc >= lObj["maxAcc"] then logStr("Throttling back at maximum acceleration").
+
+    //Gravity turn loop
+    until ship:apoapsis >= lObj["tApo"] * 0.975 {
+        set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+        lock steering to sVal.
+
+        set acc to ship:maxThrust / ship:mass.
+
+        //Check for throttle conditions, otherwise keep it at 100%
+        if ship:q >= lObj["maxQ"] {
+            set tVal to max(0, min(1, 1 + qPid:update(time:seconds, ship:q))). 
+        } else if acc >= lObj["maxAcc"] - 5 {
+            set tVal to max(0, min(1, 1 + accPid:update(time:seconds, acc))).
+        } else {
+            set tVal to 1.
+        }
+        lock throttle to tVal.
+
+        update_display().
+    }
+    
+    set runmode to 30.
+    set stateObj["runmode"] to runmode.
+    log_state(stateObj).
+    
+    return runmode.   
+}
+
+local function slow_burn_to_apo {
+    parameter lObj. 
+
+    local runmode to set_runmode(30).
+    logStr("[Runmode " + runmode + "]: Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
+
+    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+    local tVal to 1.
+
+    until ship:apoapsis >= lObj["tApo"] {
+        set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+        lock steering to sVal.
+
+        set tval to 0.25.
+        lock throttle to tVal.
+
+        update_display().
+    }
+}
+
+local function meco {
+    parameter lObj.
+
+    local runmode to set_runmode(35).
+    logStr("[Runmode " + runmode + "]: MECO").
+
+    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+    lock steering to sVal.
+
+    local tVal to 0.
+    lock throttle to tVal.
+
+    update_display().
+}
+
+local function coast_to_space {
+    parameter lObj.
+    
+    local runmode to set_runmode(40).
+    logStr("[Runmode " + runmode + "]: Coast phase").
+
+    local sVal to ship:prograde + r(0, 0, lObj["rVal"]).
+    local tVal to 0.
+
+    until ship:altitude >= body:atm:height {
+        set sVal to ship:prograde + r(0, 0, lObj["rVal"]).
+        lock steering to sVal.
+
+        if ship:apoapsis >= lObj["tApo"] {
+            set tVal to 0.
+        } else {
+            set tVal to 0.25.
+        }
+        lock throttle to tVal.
+
+        update_display().
+    }
+
+    logStr("Reached space").
+}
 
 global function slow_throttle_for_time {
     parameter pEta.

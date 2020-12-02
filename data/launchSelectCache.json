@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        235000,
+        225000,
         "tPe",
-        235000,
+        225000,
         "tInc",
         0,
         "gtAlt",
@@ -13,9 +13,9 @@
         "rVal",
         0,
         "launchS1",
-        "multistage_functions",
+        "multistage_functions_next",
         "missionS1",
-        "deploy_scansat",
+        "mun-voyager_2",
         "missionS2",
         "no_reentry"
     ],

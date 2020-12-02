@@ -221,7 +221,9 @@
         "MS-1 Multispectral Scanner",
         "scansat-multi-modis-1",
         "OX-4W 3x2 Photovoltaic Panels",
-        "solarPanels3"
+        "solarPanels3",
+        "RPWS Antenna",
+        "rpwsAnt"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

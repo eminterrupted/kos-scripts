@@ -22,7 +22,7 @@ runOncePath("0:/lib/part/lib_heatshield.ks").
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 local sVal to ship:prograde.
@@ -168,7 +168,7 @@ until runmode = 99 {
         if alt:radar < 25 set runmode to 99.
     }
     
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
 

@@ -23,7 +23,7 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/nav/lib_nav.ks").
+runOncePath("0:/lib/nav/lib_nav.ks").
 runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 
@@ -31,11 +31,11 @@ runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode is stateObj["runmode"].
 
-global sVal to heading(90, 90, 270).
-global tVal to 0.
+local sVal to heading(90, 90, 270).
+local tVal to 0.
 
 local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
@@ -220,7 +220,7 @@ until runmode = 99 {
         safe_stage().
     }
 
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
     disp_eng_perf_data().

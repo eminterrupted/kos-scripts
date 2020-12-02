@@ -7,19 +7,19 @@ clearscreen.
 
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/data/nav/lib_deltav").
-runOncePath("0:/lib/data/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/lib_util").
-runOncePath("0:/lib/data/nav/lib_node").
+runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/lib/lib_dmag_sci").
 runOncePath("0:/lib/lib_sci").
 
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
 
-disp_obt_main().
+disp_main().
 set target to body(tgt).
 
 wait 5.
@@ -60,9 +60,9 @@ until runmode = 99 {
         if time:seconds < waitTime - 30 {
             if warp = 0 warpTo(waitTime - 30).
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
-            update_disp().
+            update_display().
         }
-        update_disp().
+        update_display().
         disp_rendezvous_data(xfrObj).
         if time:seconds >= waitTime set runmode to 10.
     }
@@ -72,7 +72,7 @@ until runmode = 99 {
 
         if get_phase_angle() < xfrObj["window"]["xfrPhaseAng"] + 180 {
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
-            update_disp().
+            update_display().
             disp_rendezvous_data(xfrObj).
         } else {
             set runmode to 10.
@@ -88,7 +88,7 @@ until runmode = 99 {
 
         set xfrObj["window"]["nodeAt"] to time:seconds + xfrNode:eta.
         set xfrObj["burn"]["burnEta"] to (xfrNode:eta + time:seconds) - (xfrObj["burn"]["burnDur"] / 2).
-        update_disp().
+        update_display().
         disp_rendezvous_data(xfrObj).
         set runmode to 20.
     }
@@ -103,7 +103,7 @@ until runmode = 99 {
         else {
             if warp = 0 warpTo(xfrObj["burn"]["burnEta"] - 30).
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
-            update_disp().
+            update_display().
             disp_rendezvous_data(xfrObj).
         }
     }
@@ -118,7 +118,7 @@ until runmode = 99 {
             set sVal to xfrNode:burnVector:direction + r(0, 0, rval - 90).
             set tval to 1.
             set xfrObj["window"]["phaseAng"] to get_phase_angle().
-            update_disp().
+            update_display().
             disp_rendezvous_data(xfrObj).
         } else {
             set runmode to 40.
@@ -130,7 +130,7 @@ until runmode = 99 {
         set tval to max(0, min(1, xfrNode:burnVector:mag / 5)).
 
         set xfrObj["window"]["phaseAng"] to get_phase_angle().
-        update_disp().
+        update_display().
         disp_rendezvous_data(xfrObj).
 
         if xfrNode:burnVector:mag <= 0.05 {
@@ -167,7 +167,7 @@ until runmode = 99 {
     }
 
     else if runmode = 50 {
-        update_disp().
+        update_display().
     }
 
     if ship:availableThrust < 0.1 and tVal > 0 {
@@ -243,7 +243,7 @@ until runmode = 99 {
 
 
 local function mun_xfr_burn_obj {
-    disp_obt_main().
+    disp_main().
 
     local retObj is lex().
     set retObj to lex("tgt", target, "window", get_mun_xfr_window()).
@@ -255,7 +255,7 @@ local function mun_xfr_burn_obj {
 
 
 local function update_disp {
-    disp_obt_main().
+    disp_main().
     disp_obt_data().
     disp_tel().
     disp_eng_perf_data().

@@ -7,8 +7,7 @@ global errObj to lexicon().
 runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 
-local statePath to "local:/state.json".
-init_state_obj().
+global stateObj to init_state_obj().
 init_log().
 
 global function init_disk {
@@ -55,6 +54,7 @@ global function init_errObj {
 
 global function log_state {
     parameter stateObj.
+    local statePath to "local:/state.json".
     writeJson(stateObj, statePath).
 }
 
@@ -63,6 +63,7 @@ global function init_state_obj {
     local program to 0.
     local runmode to 0.
     local stateObj is lex().
+    local statePath to "local:/state.json".
     
     if exists(statePath) {
         set stateObj to readJson(statePath).
@@ -77,5 +78,13 @@ global function init_state_obj {
 
     set stateObj to lex("runmode", runmode, "program", program).
     log_state(stateObj).
+
     return stateObj.
+}
+
+global function set_runmode {
+    parameter rm.
+    
+    set stateObj["runmode"] to rm.
+    log_state(stateObj).
 }

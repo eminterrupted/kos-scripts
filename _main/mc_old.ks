@@ -17,7 +17,7 @@ clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_log").
 
-local stateObj is init_state_obj().
+//local stateObj is init_state_obj().
 local program is stateObj["program"].
 
 local cache is choose readJson("local:/launchSelectCache.json") if exists("local:/launchSelectCache.json") else readJson("0:/data/launchSelectCache.json").

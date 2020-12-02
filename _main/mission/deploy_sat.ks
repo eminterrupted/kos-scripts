@@ -18,12 +18,12 @@ runOncePath("0:/lib/data/ship/lib_mass.ks").
 
 //
 //** Main
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 //Vars
-global sVal is ship:prograde + r(0, 0, rval).
-global tVal is 0.
+local sVal is ship:prograde + r(0, 0, rval).
+local tVal is 0.
 lock steering to sVal.
 
 if runmode = 99 set runmode to 0. 
@@ -73,7 +73,7 @@ until runmode = 99 {
         lock throttle to 0.
     }
     
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
 

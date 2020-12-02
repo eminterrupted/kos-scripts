@@ -1,6 +1,8 @@
 //Draws the XYZ axes of a given direction (rotation)
 //
 
+if not (defined draws) local draws to list().
+
 parameter dir is r(0, 0, 0), 
           baseColor is red, 
           scale is 5, 

@@ -53,56 +53,6 @@ global function get_solar_exp {
     }
 }
 
-
-global function warp_to_alt {
-    parameter pAlt.
-
-    //local altWarpMode to choose 1 if ship:altitude >= pAlt else 0.
-
-    if kuniverse:timewarp:warp = 0 and kuniverse:timewarp:issettled {
-        set kuniverse:timewarp:mode to choose "RAILS" if ship:altitude > body:atm:height else "PHYSICS".
-    }
-
-    if ship:altitude >= pAlt * 15 {
-        if kuniverse:timewarp:warp <> 5 {
-            set kuniverse:timewarp:warp to 5.
-            wait until kuniverse:timewarp:issettled.
-        }
-    }
-
-    else if ship:altitude >= pAlt * 5 {
-        if kuniverse:timewarp:warp <> 4 {
-            set kuniverse:timewarp:warp to 4.
-            wait until kuniverse:timewarp:issettled.
-        }
-    }
-
-    else if ship:altitude >= pAlt * 2.5 {
-        if kuniverse:timewarp:warp <> 3 {
-            set kuniverse:timewarp:warp to 3.
-            wait until kuniverse:timewarp:issettled.
-        }
-    }
-
-    else if ship:altitude >= pAlt * 1.25 {
-        if kuniverse:timewarp:warp <> 2 {
-            set kuniverse:timewarp:warp to 2.
-            wait until kuniverse:timewarp:issettled.
-        }
-    }
-
-    else if ship:altitude >= pAlt * 1.075 {
-        if kuniverse:timewarp:warp <> 1 {
-            set kuniverse:timewarp:warp to 1.
-            wait until kuniverse:timewarp:issettled.
-        }
-    }
-
-    else if ship:altitude > pAlt {
-        if kuniverse:timewarp:warp > 0 kuniverse:timewarp:cancelwarp().
-    }
-}
-
 // global function warp_to_longitude {
 //     parameter lng.
 

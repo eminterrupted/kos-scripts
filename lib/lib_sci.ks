@@ -41,11 +41,11 @@ global function deploy_sci_mod {
 }
 
 
-
 //Gets all science modules on the vessel
 global function get_sci_mod {
     return ship:modulesNamed(sciMod).
 }
+
 
 //Takes a list of parts, and returns all science modules
 global function get_sci_modules_for_list {

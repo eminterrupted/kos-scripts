@@ -23,7 +23,7 @@ if ship:partsTaggedPattern("rcs"):length > 0 runOncePath("0:/lib/part/lib_rcs.ks
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 local pList to ship:partsTaggedPattern("dish").
 
@@ -55,7 +55,7 @@ until runmode = 99 {
         log_state(stateObj).
     }
 
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
 }

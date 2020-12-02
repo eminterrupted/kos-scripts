@@ -22,19 +22,19 @@ runOncePath("0:/lib/data/engine/lib_engine.ks").
 runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/data/ship/lib_mass.ks").
 
 
 //
 //** Main
 //
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 //Vars
-global sVal is heading(90, 90, -90).
-global tVal is 0.
+local sVal is heading(90, 90, -90).
+local tVal is 0.
 
 
 local tPid to setup_q_pid(.125).
@@ -203,7 +203,7 @@ until runmode = 99 {
         safe_stage().
     }
 
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
     disp_eng_perf_data().

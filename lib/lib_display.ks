@@ -60,8 +60,8 @@ local posObj is lex(
                 ).
                 
 local posState is lex(
-                "posmain", false
-                ,"pos_a", false 
+                //"posmain", false
+                "pos_a", false 
                 ,"pos_b", false
                 ,"pos_c", false 
                 ,"pos_d", false 
@@ -81,9 +81,9 @@ local divDbl to "=============================================================".
 
 
 //-- Main Headers
-global function disp_launch_main {
+global function disp_main {
     local pos is posmain.
-    local stateObj is init_state_obj().
+    //local stateObj is init_state_obj().
 
     set ln to pos["v"].
     set h1 to pos["h1"].
@@ -105,30 +105,6 @@ global function disp_launch_main {
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
-}
-
-
-global function disp_obt_main {
-    local pos is posmain.
-    local stateObj is init_state_obj().
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-    set h3 to pos["h3"].
-    set h4 to pos["h4"].
-
-    print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 2,ln).
-    print time:clock at (h4 + 3,ln).
-    print divDbl at (2,cr).
-    cr.
-    print "MISSION:       " + ship:name                             at (h1,cr).
-        print "MET:           " + format_timestamp(missionTime) + "    "            at (h3,ln).
-    print "BODY:          " + body:name + "     "               at (h1,cr).
-        print "STATUS:        " + status + "              "             at (h3,ln).
-    print "PROGRAM:       " + stateObj["program"] + "               " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
 }
 
 global function disp_test_main {
@@ -208,9 +184,11 @@ global function disp_tel {
     print "---------             " at (h1,cr).
     print "ALT:           " + round(ship:altitude) + "      " at (h1,cr).
     print "OBTVEL:        " + round(ship:velocity:orbit:mag) + "     " at (h1,cr).
-    print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
+    print "SRFVEL:        " + round(ship:velocity:surface:mag) + "     " at (h1, cr).
     cr.
-    print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,ln).
+    print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
+    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "     " at (h1, cr).
+    cr.
     cr.
     print "BIOME:         " + addons:scansat:currentbiome + "    " at (h1,cr).
     print "LATITUDE:      " +  round(ship:geoposition:lat, 3) + "   " at (h1,cr).
@@ -236,7 +214,9 @@ global function disp_eng_perf_data {
     print "THROTTLE:      " + round(throttle * 100, 2) + "%     "    at (h1,cr).
     print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,cr).
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
+    cr.
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).
+    print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,cr).
 
     return pos.
 }
@@ -245,8 +225,6 @@ global function disp_eng_perf_data {
 //Burn data - dV, dur, start / end timestamps.
 global function disp_burn_data {
 
-    parameter pObj.
-    
     local pos is "assign".
     if dispObj:haskey("burn_data") set pos to disp_get_pos_obj( dispObj["burn_data"]).
     else {
@@ -260,10 +238,7 @@ global function disp_burn_data {
 
     print "BURN DATA" at (h1,ln).
     print "---------" at (h1,cr).
-    if pObj:haskey("dV")        print "DELTA-V:       " + round(pObj["dV"], 1) + " m/s  "   at (h1,cr).
-    if pObj:haskey("burnDur")   print "BURN DURATION: " + round(pObj["burnDur"]) + " s  "    at (h1,cr).
-    if pObj:haskey("burnEta")   print "BURN START:    " + format_timestamp(max(0, pObj["burnEta"] - time:seconds)) + "  "    at (h1,cr).
-    if pObj:haskey("burnEnd")   print "BURN END:      " + format_timestamp(max(0, pObj["burnEnd"] - time:seconds)) + "  "    at (h1,cr).
+    print "DELTA-V:       " + round(nextNode:deltaV:mag, 1) + " m/s  "   at (h1,cr).
 }
 
 
@@ -501,4 +476,12 @@ global function disp_get_pos_obj {
     if pos = "assign" set pos to disp_get_next_pos(0).
     else if pos = "assign_wide" set pos to disp_get_next_pos(1).
     return posObj[pos].
+}
+
+//Main launch display updater
+global function update_display {
+    disp_main().
+    disp_obt_data().
+    disp_tel().
+    disp_eng_perf_data().
 }

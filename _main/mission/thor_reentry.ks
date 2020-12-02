@@ -20,10 +20,10 @@ runOncePath("0:/lib/data/ship/lib_mass.ks").
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode is stateObj["runmode"].
-global sVal is ship:retrograde.
-global tVal is 0.
+local sVal is ship:retrograde.
+local tVal is 0.
 
 local maxAlt is 0.
 local rAlt is 40000.
@@ -101,7 +101,7 @@ until runmode = 99 {
     }
 
     set maxAlt to max(maxAlt, ship:altitude).
-    disp_launch_main().
+    disp_main().
     disp_tel().
 }
 

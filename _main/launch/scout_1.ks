@@ -24,7 +24,7 @@ runOncePath("0:/kslib/library/lib_l_az_calc.ks").
 
 //
 //** Main
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 //Vars
@@ -97,7 +97,7 @@ until runmode = 99 {
 
     lock steering to sVal.
 
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
     disp_eng_perf_data().

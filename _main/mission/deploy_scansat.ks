@@ -20,11 +20,10 @@ runOncePath("0:/lib/part/lib_scansat.ks").
 //** Main
 
 //Vars
-local ecIdx to 0.
 local scanSatList to ship:partsTaggedPattern("sci.scan").
 
 //Picks up the runmode in the state object. This should be 0 if first run, but this allows resume mid-flight.
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 if runmode = 99 or runmode = 0 set runmode to 100. 
 
@@ -65,21 +64,29 @@ until runmode = 199 {
     }
 
     else if runmode = 150 {
-        for res in ship:resources {
-            if res:name = "ElectricCharge" break.
-            else set ecIdx to ecIdx + 1.
-        }
         set runmode to 160.
     }
 
     else if runmode = 160 {
-
-        if ship:resources[ecIdx]:amount <= ship:resources[ecIdx]:capacity * 0.1 {
-            for s in scanSatList stop_scansat(s).
+        local ec to ship:resources[0].
+        if ec:amount >= ec:capacity * 0.15 {
+            for s in scanSatList {
+                start_scansat(s).
+            }
+            set runmode to 170.
         }
 
-        else if ship:resources[ecIdx]:amount >= ship:resources[ecIdx]:capacity * 0.15 {
-            for s in scanSatList start_scansat(s).
+        update_scan_disp().
+    }
+
+    else if runmode = 170 {
+        local ec to ship:resources[0].
+        if ec:amount < ec:capacity * 0.15 {
+            for s in scanSatList {
+                stop_scansat(s).
+            }
+            clear_scan_disp().
+            set runmode to 160.
         }
 
         update_scan_disp().
@@ -88,7 +95,7 @@ until runmode = 199 {
     local sVal to lookDirUp(ship:prograde:vector, sun:position).
     lock steering to sVal.
     
-    update_disp().
+    update_display().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
@@ -99,19 +106,20 @@ until runmode = 199 {
 //** End Main
 //
 
-
-local function update_disp {
-    disp_obt_main().
-    disp_obt_data().
-    disp_tel().
-}
-
 local function update_scan_disp {
     local scanData to "".
     local nScan to 0.
     for sat in scanSatList {
         set scanData to get_scansat_data(sat).
         disp_scan_status(scanData, nScan).
+        set nScan to nScan + 1.
+    }
+}
+
+local function clear_scan_disp {
+    local nScan to 0.
+    for sat in scanSatList {
+        disp_clear_block("scan_" + nScan).
         set nScan to nScan + 1.
     }
 }

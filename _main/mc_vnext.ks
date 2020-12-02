@@ -13,7 +13,7 @@ runOncePath("0:/lib/lib_tag").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 //Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
-local stateObj is init_state_obj().
+//local stateObj is init_state_obj().
 local program is stateObj["program"].
 
 
@@ -61,7 +61,7 @@ if program = "MISSION_S2" {
 local function exec_launch {
     parameter script.
 
-    disp_launch_main().
+    disp_main().
     wait 1.
     //Activate generator on launch pad in case of hold
     mlp_gen_on().

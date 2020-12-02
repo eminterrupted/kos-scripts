@@ -21,7 +21,7 @@ runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
-runOncePath("0:/lib/data/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
@@ -31,7 +31,7 @@ runOncePath("0:/kslib/library/lib_l_az_calc").
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 local sVal to heading(90, 90, -90).
@@ -245,7 +245,7 @@ until runmode = 99 {
 
     if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
 
-    disp_launch_main().
+    disp_main().
     disp_obt_data().
     disp_tel().
     disp_eng_perf_data().

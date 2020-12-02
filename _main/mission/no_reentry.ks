@@ -21,7 +21,7 @@ runOncePath("0:/lib/part/lib_heatshield.ks").
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 local sVal to ship:prograde + r(0, 0, rVal).
@@ -34,7 +34,7 @@ clearscreen.
 until false {
     set sVal to ship:prograde + r(0, 0, rVal).
     
-    disp_launch_main().
+    disp_main().
     disp_tel().
     disp_obt_data().
 

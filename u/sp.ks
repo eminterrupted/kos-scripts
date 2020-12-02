@@ -1,13 +1,9 @@
-runOncePath("0:/lib/part/lib_launchpad").
+runOncePath("0:/lib/lib_sci_next").
 
-mlp_gen_on().
-wait 5.
-mlp_fallback_open_clamp().
-wait 5.
-mlp_fuel_on().
-wait 5.
-mlp_fallback_partial().
-wait 5.
-mlp_fallback_full().
-wait 5.
-mlp_retract_holddown().
+clearScreen.
+
+wait 1.
+
+set sList to get_sci_mod_for_parts(ship:parts).
+
+print sList at (2, 20).
