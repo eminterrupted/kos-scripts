@@ -60,6 +60,10 @@ local function exec_circ_burn {
 
     logStr("Executing circularization burn").
 
+    until time:seconds >= cObj["burnObj"]:burnEta {
+        update_display().
+    }
+
     exec_node(cObj["burnNode"]).
 
     disp_clear_block("burn_data").
