@@ -10,6 +10,7 @@ runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_sci_next").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_warp").
+runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
@@ -24,8 +25,12 @@ disp_main().
 
 wait 5.
 
-local tgtAp is 306000.
-local tgtPe is 306000.
+local tgtAp0 is 306000.
+local tgtPe0 is 306000.
+
+local tgtAp1 is 15000.
+local tgtPe1 is 15000.
+
 
 local sciList to get_sci_mod_for_parts(ship:parts).
 
@@ -64,7 +69,7 @@ local function main {
 
         //Stages to remove the kick stage for better accuracy on the transfer burn
         else if runmode = 8 {
-            safe_stage().
+            //safe_stage().
             set runmode to 10.
         }
 
@@ -83,7 +88,7 @@ local function main {
 
         //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
-            set mnvObj to add_burn_node(mnvObj, tgtAp, "pe").
+            set mnvObj to add_burn_node(mnvObj, tgtAp0, "pe").
             set runmode to 30.
         }
 
@@ -120,6 +125,7 @@ local function main {
             set_target("").
             warp_to_next_soi().
             set runmode to 55.
+            update_display().
         }
 
         //Sets up triggers for science experiments
@@ -133,11 +139,12 @@ local function main {
                 recover_sci_list(sciList).
             }
             set runmode to 60.
+            update_display().
         }
 
-        //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe
+        //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 60 {
-            set mnvNode to add_simple_circ_node("pe", tgtPe).
+            set mnvNode to add_simple_circ_node("pe", tgtAp0).
             set runmode to 62.
         }
 
@@ -162,7 +169,14 @@ local function main {
         }
 
         else if runmode = 68 {
-            set mnvNode to add_simple_circ_node("ap", tgtAp).
+            log_sci_list(sciList).
+            recover_sci_list(sciList).
+            set runmode to 69.
+        }
+
+        //Adds a hohmann burn to lower Pe
+        else if runmode = 69 {
+            set mnvNode to add_simple_circ_node("ap", tgtPe1).
             set runmode to 70.
         }
 
@@ -182,11 +196,37 @@ local function main {
         //Executes the circ burn
         else if runmode = 74 {
             exec_burn(mnvNode).
+            set runmode to 76.
+        }
+
+        //Adds a circularization node to finish circ in lower orbit
+        else if runmode = 76 {
+            set mnvNode to add_simple_circ_node("pe", tgtAp1).
+            set runmode to 78.
+        }
+
+        //Gets burn data from the node
+        else if runmode = 78{
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+            set mnvObj["mnv"] to mnvNode. 
             set runmode to 80.
         }
 
-        //Preps the vessel for long-term orbit
+        //Warps to the burn node
         else if runmode = 80 {
+            warp_to_burn_node(mnvObj).
+            set runmode to 82.
+        }
+
+        //Executes the circ burn
+        else if runmode = 82 {
+            exec_burn(mnvNode).
+            wait 2.
+            set runmode to 84.
+        }
+
+        //Preps the vessel for long-term orbit
+        else if runmode = 84 {
             end_main().
             set runmode to 99.
         }

@@ -7,17 +7,17 @@ runOncePath("0:/lib/data/engine/lib_isp.ks").
 runOncePath("0:/lib/data/engine/lib_thrust.ks").
 
 //functions
-global function get_dv_for_maneuver {
-    parameter finalAlt,
-              startAlt,
-              pBody is ship:body.
+global function get_dv_for_mnv {
+    parameter tgtAlt,
+              stAlt,
+              mnvBody is ship:body.
 
     //semi-major axis 
-    local tgtSMA is finalAlt + pBody:radius.
-    local stSMA is startAlt + pBody:radius.
+    local tgtSMA is tgtAlt + mnvBody:radius.
+    local stSMA is stAlt + mnvBody:radius.
 
     //Return dv
-    local dv to ((sqrt(pBody:mu / tgtSMA)) * (1 - sqrt((2 * (stSMA)) / (tgtSMA + stSMA)))).
+    local dv to ((sqrt(mnvBody:mu / tgtSMA)) * (1 - sqrt((2 * (stSMA)) / (tgtSMA + stSMA)))).
     return dv.
 }
 

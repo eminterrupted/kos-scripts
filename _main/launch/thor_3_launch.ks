@@ -136,7 +136,7 @@ until runmode = 99 {
     }
 
     else if runmode = 20 {
-        global burnObj to get_circ_burn_data(tPe).
+        global burnObj to get_coplanar_burn_data(tPe).
         disp_burn_data(burnObj).
         set runmode to 22.
     }

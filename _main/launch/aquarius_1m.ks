@@ -119,7 +119,7 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
-        set burnObj to get_circ_burn_data(tPe).
+        set burnObj to get_coplanar_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         

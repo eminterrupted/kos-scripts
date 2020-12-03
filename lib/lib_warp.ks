@@ -32,8 +32,8 @@ global function warp_to_timestamp {
     until time:seconds >= ts - 30 {
 
         if warp = 0 {
-            if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 {
-                if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 warpTo(ts - 15).
+            if steeringmanager:angleerror >= -0.05 and steeringmanager:angleerror <= 0.05 {
+                if steeringmanager:rollerror >= -0.05 and steeringmanager:rollerror <= 0.05 warpTo(ts - 15).
             }
         }
 

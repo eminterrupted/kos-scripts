@@ -5,7 +5,7 @@
         "tPe",
         225000,
         "tInc",
-        45,
+        0,
         "gtAlt",
         50000,
         "gtPitch",
@@ -15,7 +15,7 @@
         "launchS1",
         "multistage_functions_next",
         "missionS1",
-        "no_reentry",
+        "mun-voyager_2",
         "missionS2",
         "no_reentry"
     ],

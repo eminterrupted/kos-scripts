@@ -26,7 +26,6 @@ runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
-
 runOncePath("0:/kslib/library/lib_l_az_calc").
 
 //

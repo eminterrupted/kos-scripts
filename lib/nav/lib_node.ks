@@ -6,7 +6,7 @@ runOncePath("0:/lib/nav/lib_nav").
 
 
 //
-global function add_node {
+global function add_node_to_plan {
     parameter mnv.
 
     //Maneuver node is time, radial, normal, prograde.
@@ -58,25 +58,6 @@ global function exec_node {
 }
 
 
-//Returns a circularization burn object
-global function get_burn_obj_from_node {
-    parameter mnvNode.
-
-    //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
-    //Calculate variables
-    local dV to mnvNode:burnvector:mag.
-    local nodeAt to time:seconds + mnvNode:eta.
-    local burnDur to get_burn_dur(dv). 
-    local burnEta to nodeAt - (burnDur / 2).
-    local burnEnd to nodeAt + (burnDur / 2).
-
-    logStr("get_burn_data_from_node").
-    logStr("[dV: " + round(dV, 2) + "][burnDur: " + round(burnDur, 2) + "][nodeAt: " + round(nodeAt, 2) + "][burnEta: " + round(burnEta, 2) + "]").
-
-    return lexicon("dV", dv,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt).
-}
-
-
 global function add_simple_circ_node {
     parameter nodeAt is "ap",
               tgtAlt is ship:apoapsis.
@@ -85,19 +66,18 @@ global function add_simple_circ_node {
     local mode is "".
 
     if nodeAt = "ap" {
-        set mnv to list(time:seconds + eta:apoapsis, 0, 0, get_dv_for_maneuver(tgtAlt, ship:periapsis, ship:body)).
+        set mnv to list(time:seconds + eta:apoapsis, 0, 0, get_dv_for_mnv(tgtAlt, ship:periapsis, ship:body)).
         set mode to "pe".
     } else {
-        set mnv to list(time:seconds + eta:periapsis, 0, 0, get_dv_for_maneuver(tgtAlt, ship:apoapsis, ship:body)).
+        set mnv to list(time:seconds + eta:periapsis, 0, 0, get_dv_for_mnv(tgtAlt, ship:apoapsis, ship:body)).
         set mode to "ap".
     }
 
     set mnv to optimize_node(mnv, tgtAlt, mode).
-    set mnv to add_node(mnv).
+    set mnv to add_node_to_plan(mnv).
     
     return mnv.
 }
-
 
 
 global function add_optimized_node {
@@ -106,7 +86,7 @@ global function add_optimized_node {
               mode.
 
     local mnv to optimize_node(mnvParam, tgtAlt, mode).
-    set mnv to add_node(mnv).
+    set mnv to add_node_to_plan(mnv).
 
     return mnv.
 }
@@ -114,14 +94,14 @@ global function add_optimized_node {
 
 global function optimize_node {
     parameter mnv,
-              finalAlt,
+              tgtAlt,
               mode.
 
     print "MSG: Optimizing maneuver                                     " at (2, 7).
 
     until false {
-        set mnv to improve_node(mnv, finalAlt, mode).
-        local nodeScore to get_node_score(mnv, finalAlt, mode)["score"].
+        set mnv to improve_node(mnv, tgtAlt, mode).
+        local nodeScore to get_node_score(mnv, tgtAlt, mode)["score"].
         if nodeScore >= 0.999 and nodeScore <= 1.001 break.
     }
 

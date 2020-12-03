@@ -167,7 +167,7 @@ until runmode = 99 {
         set tVal to 0. 
         set sVal to heading(l_az_calc(azObj), get_circ_burn_pitch(), rVal).
 
-        set burnObj to get_circ_burn_data(tPe).
+        set burnObj to get_coplanar_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
 
