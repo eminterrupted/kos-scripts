@@ -223,7 +223,13 @@
         "OX-4W 3x2 Photovoltaic Panels",
         "solarPanels3",
         "RPWS Antenna",
-        "rpwsAnt"
+        "rpwsAnt",
+        "Atmospheric Fluid Spectro-Variometer",
+        "sensorAtmosphere",
+        "Double-C Seismic Accelerometer",
+        "sensorAccelerometer",
+        "CE-10 'Hecate' Cryogenic Rocket Engine",
+        "cryoengine-hecate-1"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

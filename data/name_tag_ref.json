@@ -203,7 +203,13 @@
         "solarPanels3",
         "ec.solar.array",
         "rpwsAnt",
-        "sci.dmag.rwps"
+        "sci.dmag.rwps",
+        "sensorAccelerometer",
+        "sci.accelerometer",
+        "sensorAtmosphere",
+        "sci.atmosphericSci",
+        "cryoengine-hecate-1",
+        "eng"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

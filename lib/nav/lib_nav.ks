@@ -200,6 +200,27 @@ global function get_time_to_xfr {
 }
 
 
+global function obt_normal {
+    parameter obtIn.
+
+    return vcrs( obtIn:body:position - obtIn:position, obtIn:velocity:orbit):normalized.
+}
+
+
+global function obt_pos {
+    parameter obtIn.
+
+    return (obtIn:body:position - obtIn:position).
+}
+
+
+global function obt_tangent {
+    parameter obtIn.
+
+    return obtIn:velocity:orbit:normalized.
+}
+
+
 //
 // All functions below from kslib project (Distrubuted under MIT  license)
 //
@@ -232,26 +253,6 @@ function ves_normal {
     return vcrs(ves_binormal(ves), ves_tangent(ves)):normalized.
 }
 
-
-global function obt_normal {
-    parameter obtIn.
-
-    return vcrs( obtIn:body:position - obtIn:position, obtIn:velocity:orbit):normalized.
-}
-
-
-global function obt_pos {
-    parameter obtIn.
-
-    return (obtIn:body:position - obtIn:position).
-}
-
-
-global function obt_tangent {
-    parameter obtIn.
-
-    return obtIn:velocity:orbit:normalized.
-}
 
 // Vector pointing in the direction of longitude of ascending node
 function ves_lan {

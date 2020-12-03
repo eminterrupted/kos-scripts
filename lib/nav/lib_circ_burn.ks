@@ -48,7 +48,7 @@ local function warp_to_circ_burn {
     parameter burnEta.
     
     set_runmode(22).
-    lock steering to lookdirup(ship:prograde:vector, sun:position).
+    lock steering to choose lookdirup(nextnode:burnvector, sun:position) if hasNode else lookdirup(ship:prograde:vector, sun:position).
     warp_to_timestamp(burnEta).
 }
 

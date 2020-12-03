@@ -823,7 +823,11 @@
         "Droop-Style Umbilical Size 1 - Short",
         "mlp.umbilical",
         "AE-FF0 Airstream Protective Shell (0.625m)",
-        "pl.st.fairing"
+        "pl.st.fairing",
+        "Atmospheric Fluid Spectro-Variometer",
+        "sci.atmosphericSci",
+        "CE-10 'Hecate' Cryogenic Rocket Engine",
+        "eng"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
