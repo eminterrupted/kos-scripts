@@ -206,7 +206,7 @@ global function get_time_to_xfr {
 
 
 // Same as orbital prograde vector for ves
-global function orbit_tangent {
+global function ves_tangent {
     parameter ves is ship.
 
     return ves:velocity:orbit:normalized.
@@ -216,26 +216,45 @@ global function orbit_tangent {
 
 // In the direction of orbital angular momentum of ves
 // Typically same as Normal
-function orbit_binormal {
+function ves_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, orbit_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:body:position):normalized, ves_tangent(ves)):normalized.
 }
 
 
 
 // Perpendicular to both tangent and binormal
 // Typically same as Radial In
-function orbit_normal {
+function ves_normal {
     parameter ves is ship.
 
-    return vcrs(orbit_binormal(ves), orbit_tangent(ves)):normalized.
+    return vcrs(ves_binormal(ves), ves_tangent(ves)):normalized.
 }
 
 
+global function obt_normal {
+    parameter obtIn.
+
+    return vcrs( obtIn:body:position - obtIn:position, obtIn:velocity:orbit):normalized.
+}
+
+
+global function obt_pos {
+    parameter obtIn.
+
+    return (obtIn:body:position - obtIn:position).
+}
+
+
+global function obt_tangent {
+    parameter obtIn.
+
+    return obtIn:velocity:orbit:normalized.
+}
 
 // Vector pointing in the direction of longitude of ascending node
-function orbit_lan {
+function ves_lan {
     parameter ves is ship.
 
     return angleAxis(ves:orbit:LAN, ves:body:angularVel:normalized) * solarPrimeVector.
@@ -244,7 +263,7 @@ function orbit_lan {
 
 
 // Same as surface prograde vector for ves
-function surface_tangent {
+function ves_srf_tangent {
     parameter ves is ship.
 
     return ves:velocity:surface:normalized.
@@ -254,26 +273,26 @@ function surface_tangent {
 
 // In the direction of surface angular momentum of ves
 // Typically same as Normal
-function surface_binormal {
+function ves_srf_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, surface_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:body:position):normalized, ves_srf_tangent(ves)):normalized.
 }
 
 
 
 // Perpendicular to  both tangent and binormal
 // Typically same as Radial In
-function surface_normal {
+function ves_srf_normal {
     parameter ves is ship.
 
-    return vcrs(surface_binormal(ves), surface_tangent(ves)):normalized.
+    return vcrs(ves_srf_binormal(ves), ves_srf_tangent(ves)):normalized.
 }
 
 
 
 // Vector pointing in the direction of longitude of ascending node
-function surface_lan {
+function ves_srf_lan {
     parameter ves is ship.
 
     return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel:normalized) * solarPrimeVector.
@@ -282,7 +301,7 @@ function surface_lan {
 
 
 // Vector directly away from the body at ves' position
-function local_vertical {
+function ves_local_vertical {
     parameter ves is ship.
 
     return ves:up:vector.
@@ -294,14 +313,14 @@ function local_vertical {
 function ang_to_body_asc_node {
     parameter ves is ship.
 
-    local joinVector is orbit_lan(ves).
+    local joinVector is ves_lan(ves).
     local angle is vang((ves:position - ves:body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
     else {
         local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(orbit_binormal(ves), signVector).
+        local sign is vdot(ves_binormal(ves), signVector).
         if sign < 0 {
             set angle to angle * -1.
         }
@@ -315,14 +334,14 @@ function ang_to_body_asc_node {
 function ang_to_body_desc_node {
     parameter ves is ship.
 
-    local joinVector is -orbit_lan(ves).
+    local joinVector is -ves_lan(ves).
     local angle is vang((ves:position - ves:body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
     else {
         local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(orbit_binormal(ves), signVector).
+        local sign is vdot(ves_binormal(ves), signVector).
         if sign < 0 {
             set angle to angle * -1.
         }
@@ -431,6 +450,17 @@ function get_phase_angle {
     else {
         return phase.
     }
+}
+
+
+global function ta_from_orbits {
+    parameter obt0,
+              obt1 is ship:obt.
+
+    local obt0_velo to obt0:velocity.
+    local obt0_pos to obt0:position.
+
+    
 }
 
 

@@ -34,8 +34,6 @@ global function exec_node {
     until done {
         set maxAcc to ship:maxThrust / ship:mass.
 
-        local sVal to lookDirUp(nd:burnvector, sun:position).
-        lock steering to sVal.
         set tVal to min(nd:deltaV:mag / maxAcc, 1).
 
         if vdot(dv0, nd:deltaV) < 0 {
@@ -45,7 +43,7 @@ global function exec_node {
         }
 
         else if nd:deltaV:mag < 0.1 {
-            wait until vDot(dv0, nd:deltaV) < 0.5.
+            wait until vDot(dv0, nd:deltaV) < 0.1.
 
             lock throttle to 0.
             set done to true.

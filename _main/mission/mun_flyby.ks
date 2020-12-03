@@ -252,12 +252,3 @@ local function mun_xfr_burn_obj {
 
     return retObj.
 }
-
-
-local function update_disp {
-    disp_main().
-    disp_obt_data().
-    disp_tel().
-    disp_eng_perf_data().
-    if hasTarget disp_rendezvous_data(xfrObj).
-}

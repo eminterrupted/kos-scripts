@@ -24,8 +24,8 @@ disp_main().
 
 wait 5.
 
-local tgtFinalAlt is 300000.
-local tgtPe is 300000.
+local tgtAp is 306000.
+local tgtPe is 306000.
 
 local sciList to get_sci_mod_for_parts(ship:parts).
 
@@ -83,7 +83,7 @@ local function main {
 
         //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
-            set mnvObj to add_burn_node(mnvObj, tgtFinalAlt, "pe").
+            set mnvObj to add_burn_node(mnvObj, tgtAp, "pe").
             set runmode to 30.
         }
 
@@ -138,24 +138,49 @@ local function main {
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe
         else if runmode = 60 {
             set mnvNode to add_simple_circ_node("pe", tgtPe).
-            set runmode to 65.
+            set runmode to 62.
         }
 
         //Gets burn data from the node
-        else if runmode = 65 {
+        else if runmode = 62 {
             set mnvObj to get_burn_obj_from_node(mnvNode).
             set mnvObj["mnv"] to mnvNode. 
-            set runmode to 70.
+            set runmode to 64.
         }
 
         //Warps to the burn node
-        else if runmode = 70 {
+        else if runmode = 64 {
             warp_to_burn_node(mnvObj).
-            set runmode to 75.
+            set runmode to 66.
         }
 
         //Executes the circ burn
-        else if runmode = 75 {
+        else if runmode = 66 {
+            exec_burn(mnvNode).
+            wait 2.
+            set runmode to 68.
+        }
+
+        else if runmode = 68 {
+            set mnvNode to add_simple_circ_node("ap", tgtAp).
+            set runmode to 70.
+        }
+
+        //Gets burn data from the node
+        else if runmode = 70 {
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+            set mnvObj["mnv"] to mnvNode. 
+            set runmode to 72.
+        }
+
+        //Warps to the burn node
+        else if runmode = 72 {
+            warp_to_burn_node(mnvObj).
+            set runmode to 74.
+        }
+
+        //Executes the circ burn
+        else if runmode = 74 {
             exec_burn(mnvNode).
             set runmode to 80.
         }
