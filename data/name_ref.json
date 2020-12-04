@@ -229,7 +229,15 @@
         "Double-C Seismic Accelerometer",
         "sensorAccelerometer",
         "CE-10 'Hecate' Cryogenic Rocket Engine",
-        "cryoengine-hecate-1"
+        "cryoengine-hecate-1",
+        "Universal Storage: Liquid Fuel Tank",
+        "USAerozineWedge",
+        "Universal Storage: Monopropellant Tank",
+        "USHydrazineWedge",
+        "R-12 'Doughnut' External Tank",
+        "externalTankToroid",
+        "General Hold-Down Type 2: Drop-Arm",
+        "AM.MLP.GeneralHold2"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

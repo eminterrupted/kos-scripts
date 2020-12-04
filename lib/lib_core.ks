@@ -5,6 +5,7 @@ runOncePath("0:/lib/lib_init.ks").
 
 //Waits until vessel is safe to stage, then stages
 global function safe_stage {
+    
     wait 0.5.
     logStr("Staging").
     
@@ -15,12 +16,27 @@ global function safe_stage {
 
         if stage:ready {
             stage.
-            wait 0.75.
+            wait 1.5.
             break.
         }
     }
 }
 
+
+global function cryo_stage {
+
+    wait 1.
+    logStr("Staging").
+
+    until stage:ready {   
+        wait 0.01.
+    }
+
+    until get_engs_for_next_stg()[0]:ignition {
+        stage.
+        wait 0.5.
+    }
+}
 
 global function arm_chutes {
     parameter pList is ship:parts.

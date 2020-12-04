@@ -26,10 +26,10 @@ disp_main().
 wait 5.
 
 local tgtAp0 is 306000.
-local tgtPe0 is 306000.
+//local tgtPe0 is 306000.
 
-local tgtAp1 is 15000.
-local tgtPe1 is 15000.
+local tgtAp1 is 50000.
+local tgtPe1 is 50000.
 
 
 local sciList to get_sci_mod_for_parts(ship:parts).

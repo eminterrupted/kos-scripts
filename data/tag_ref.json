@@ -827,7 +827,9 @@
         "Atmospheric Fluid Spectro-Variometer",
         "sci.atmosphericSci",
         "CE-10 'Hecate' Cryogenic Rocket Engine",
-        "eng"
+        "eng",
+        "General Hold-Down Type 2: Drop-Arm",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

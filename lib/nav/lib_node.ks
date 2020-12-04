@@ -106,8 +106,6 @@ global function optimize_node {
     }
 
     print "MSG: Optimized maneuver found                                " at (2, 7).
-    wait 2.
-    print "                                                             " at (2, 7).
     return mnv.
 }
 
@@ -119,11 +117,14 @@ local function improve_node {
 
     //hill climb to find the best time
     local curScore is get_node_score(data, tgtAlt, mode).
+    local mnvFactor is choose 0.25 if curScore:score <= 0.9 else 0.05.
+    set mnvFactor to choose 0.25 if curScore:score >= 1.1 else 0.05.
+
     local mnvCandidates is list(
-        list(data[0] + .05, data[1], data[2], data[3])
-        ,list(data[0] - .05, data[1], data[2], data[3])
-        ,list(data[0], data[1], data[2], data[3] + .01)
-        ,list(data[0], data[1], data[2], data[3] + -.01)
+        list(data[0] + mnvFactor, data[1], data[2], data[3])
+        ,list(data[0] - mnvFactor, data[1], data[2], data[3])
+        ,list(data[0], data[1], data[2], data[3] + mnvFactor)
+        ,list(data[0], data[1], data[2], data[3] + - mnvFactor)
     ).
 
     for c in mnvCandidates {

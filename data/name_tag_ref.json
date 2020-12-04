@@ -209,7 +209,13 @@
         "sensorAtmosphere",
         "sci.atmosphericSci",
         "cryoengine-hecate-1",
-        "eng"
+        "eng",
+        "USAerozineWedge",
+        "tank",
+        "USHydrazineWedge",
+        "tank",
+        "externalTankToroid",
+        "tank"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

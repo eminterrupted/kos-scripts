@@ -78,3 +78,9 @@ global function rcs_thrust_limit {
 
     return p:getField(field).
 }
+
+global function rcs_translate_vec {
+    parameter tVec. // Format: v(starboard[-1, 1], top[-1, 1], fore[1, 1])
+
+    set ship:control:translation to tVec.
+}

@@ -1,6 +1,8 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/payload/lib_deploy_payload").
+
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 if not (defined stateObj) local stateObj to init_state_obj().
 
@@ -75,13 +77,6 @@ global function arm_stock_fairings {
         logStr("Fairings jettison").
     }
 }
-
-//Payload
-global function deploy_payload {
-    wait 1. 
-    until stage:number < 1 safe_stage().
-}
-
 
 //Correction burn execute
 // local function exec_correction_burn {

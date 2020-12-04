@@ -144,51 +144,34 @@ local sciList is list().
             set errLvl to 0.
             local minEc is get_sci_ec_req(data).
 
-            //Check first to see if we have a connection to transmit on
-            if addons:rt:haskscconnection(ship) {
-                logStr("[recover_sci] Vessel has connection to KSC").
+            //If transmit flag is set, immediately transmit regardless of science value. Else, check sci val and exec accordingly
+            if alwaysTransmit {
+                logStr("[recover_sci] alwaysTransmit: True").
+                transmit_on_connection(m, minEc).
+            }
 
-                //If transmit flag is set, immediately transmit regardless of science value. Else, check sci val and exec accordingly
-                if alwaysTransmit {
-                    logStr("[recover_sci] alwaysTransmit: True").
-                    transmit_data(m, minEc).
-                }
+            //If science can be recovered from the experiment via transmission, do that
+            else if data:transmitValue > 0 {
+                transmit_on_connection(m, minEc).
+            }
 
-                //If science can be recovered from the experiment via transmission, do that
-                else if data:transmitValue > 0 {
-                    transmit_data(m, minEc).
-                }
+            //If no science from transmit but available via recover, store
+            else if data:transmitValue = 0 and data:scienceValue > 0 {
+                logStr("[recover sci] No science from transmit, only recover [" + data:title + "]", errLvl).
+                if collect_sci_in_container() {
+                    logStr("[recover sci] Data collected in science container").
 
-                //If no science from transmit but available via recover, store
-                else if data:transmitValue = 0 and data:scienceValue > 0 {
-                    logStr("[recover sci] No science from transmit, only recover [" + data:title + "]", errLvl).
-                    if collect_sci_in_container() {
-                        logStr("[recover sci] Data collected in science container").
-
-                    } else {
-                        set errLvl to 1.
-                        logStr("[recover sci] No container found aboard, storing data in experiment part").
-                    }
-                }
-
-                //If no data available, silently fail
-                else if data:scienceValue = 0 {
+                } else {
                     set errLvl to 1.
-                    logStr("[recover sci] No science value from experiment, resetting [" + data:title  + "]", errLvl).
-                    reset_sci(m).
+                    logStr("[recover sci] No container found aboard, storing data in experiment part").
                 }
             }
 
-            else if collect_sci_in_container() {
-                set errLvl to 2.
-                logStr("[recover_sci] No connection to KSC to transmit data! Attempting container collection", errLvl).
-                set errLvl to 0.
-                logStr("[recover_sci] Data collected in science container", errLvl).
-            }
-
-            else {
+            //If no data available, silently fail
+            else if data:scienceValue = 0 {
                 set errLvl to 1.
-                logStr("[recover_sci] No container found aboard, storing data in experiment part").
+                logStr("[recover sci] No science value from experiment, resetting [" + data:title  + "]", errLvl).
+                reset_sci(m).
             }
         }
     }
@@ -201,6 +184,13 @@ local sciList is list().
         if m:deployed {
             if m:hassuffix("TOGGLE") m:toggle().
         }
+    }
+
+    local function transmit_on_connection {
+        parameter m, minEc.
+
+        logStr("[transmit_on_connection] Transmitting when connection to KSC established").
+        when addons:rt:hasKscConnection(ship) then transmit_data(m, minEc).
     }
 
     //Transmits science

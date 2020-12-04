@@ -84,6 +84,11 @@ local function main {
 
 local function prep_for_orbit {
     logStr("Preparing for orbit").
+
+    logStr("Opening bay doors").
+    bays on.
+
+    wait 2.
     
     logStr("Deploying solar panels").
     panels on.

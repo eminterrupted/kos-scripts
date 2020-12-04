@@ -483,5 +483,5 @@ global function update_display {
     disp_main().
     disp_obt_data().
     disp_tel().
-    disp_eng_perf_data().
+    if get_active_engs():length > 0 disp_eng_perf_data().
 }
