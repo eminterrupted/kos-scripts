@@ -16,6 +16,7 @@ local expMod is "SCANexperiment".
         local m is p:getModule(scanMod).
         if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
         else if m:hasEvent("start scan: radar") m:doEvent("start scan: radar").
+        else if m:hasEvent("start scan: sar") m:doEvent("start scan: sar").
     }
 
     global function stop_scansat{
@@ -24,6 +25,7 @@ local expMod is "SCANexperiment".
         local m is p:getModule(scanMod).
         if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
         else if m:hasEvent("stop scan: radar") m:doEvent("stop scan: radar").
+        else if m:hasEvent("stop scan: sar") m:doEvent("stop scan: sar").
     }
 
     global function scansat_analyze_data {
@@ -31,6 +33,7 @@ local expMod is "SCANexperiment".
 
         local m is p:getModule(expMod).
         if m:hasAction("analyze data: multispectral") m:doAction("analyze data: multispectral", true).
+        else if m:hasEvent("analyze data: sar") m:doEvent("analyze data: sar").
         recover_sci(m).
     }
 

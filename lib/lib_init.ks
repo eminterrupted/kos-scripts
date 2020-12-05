@@ -60,7 +60,8 @@ global function log_state {
 
 
 global function init_state_obj {
-    local program to 0.
+    parameter program is 0.
+    
     local runmode to 0.
     local stateObj is lex().
     local statePath to "local:/state.json".

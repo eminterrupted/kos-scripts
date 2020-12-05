@@ -146,3 +146,48 @@ global function get_mun_xfr_window {
 
     return lex("xfrPhaseAng", xfrPhaseAng, "nodeAt", nodeAt).
 }
+
+
+//Returns the approximate timestamp of next transfer phase angle
+global function get_time_to_xfr {
+    parameter tgtPhaseAng,
+              tgt is target.
+
+    //Get the period of the phase angle (change per second)    
+    print "MSG: Sampling phase angle period" at (2, 7).
+    local p0 to get_phase_angle(tgt). 
+    wait 1. 
+    local p1 to get_phase_angle(tgt).
+    local phasePeriod to abs(p1 - p0).
+    local phaseAng to get_phase_angle(tgt).
+
+    local xfrWindow to choose (time:seconds + ((phaseAng - tgtPhaseAng) / phasePeriod)) if phaseAng > tgtPhaseAng else (time:seconds + (((phaseAng + 360) - tgtPhaseAng) / phasePeriod)).
+    
+    //Check if we can do the burn in this orbit, else set the window for the next orbit.
+    set xfrWindow to choose xfrWindow if xfrWindow - time:seconds > 90 else xfrWindow + ship:orbit:period.
+
+    print "                                " at (2, 7).
+    return xfrWindow.
+}
+
+
+//Gets a transfer object for the current target
+global function get_transfer_obj {
+    if target = "" return false.
+    
+    logStr("[get_transfer_obj] Getting transfer object for target [" + target + "]").
+    
+    local window to get_mun_xfr_window().
+    local burn to get_mun_xfr_burn_data(window["nodeAt"]).
+    local xfrObj to lex("tgt", target).
+
+    for key in window:keys {
+        set xfrObj[key] to window[key].
+    }
+
+    for key in burn:keys {
+        set xfrObj[key] to burn[key].
+    }
+
+    return xfrObj.
+}

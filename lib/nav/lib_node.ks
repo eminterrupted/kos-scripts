@@ -18,6 +18,23 @@ global function add_node_to_plan {
 }
 
 
+//
+global function add_transfer_node {
+    parameter mnvObj,
+              tgtAlt.
+
+    local mnvList to list(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
+    local mnvNode to add_optimized_node(mnvList, tgtAlt, "pe").
+
+    set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
+    set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
+    set mnvObj["mnv"] to mnvNode.
+
+    return mnvObj.
+}
+
+
+
 global function exec_node {
     parameter nd.
 
@@ -102,7 +119,7 @@ global function optimize_node {
     until false {
         set mnv to improve_node(mnv, tgtAlt, mode).
         local nodeScore to get_node_score(mnv, tgtAlt, mode)["score"].
-        if nodeScore >= 0.999 and nodeScore <= 1.001 break.
+        if nodeScore >= 0.9985 and nodeScore <= 1.0015 break.
     }
 
     print "MSG: Optimized maneuver found                                " at (2, 7).
@@ -117,12 +134,16 @@ local function improve_node {
 
     //hill climb to find the best time
     local curScore is get_node_score(data, tgtAlt, mode).
-    local mnvFactor is choose 0.25 if curScore:score <= 0.9 else 0.05.
-    set mnvFactor to choose 0.25 if curScore:score >= 1.1 else 0.05.
+    local mnvFactor is choose 0.25 if curScore:score < 0.75 else 0.01.
+    set mnvFactor to choose 0.25 if curScore:score > 1.25 else 0.01.
 
     local mnvCandidates is list(
         list(data[0] + mnvFactor, data[1], data[2], data[3])
         ,list(data[0] - mnvFactor, data[1], data[2], data[3])
+        ,list(data[0], data[1] + mnvFactor, data[2], data[3])
+        ,list(data[0], data[1] - mnvFactor, data[2], data[3])
+        ,list(data[0], data[1], data[2] + mnvFactor, data[3])
+        ,list(data[0], data[1], data[2] - mnvFactor, data[3])
         ,list(data[0], data[1], data[2], data[3] + mnvFactor)
         ,list(data[0], data[1], data[2], data[3] + - mnvFactor)
     ).

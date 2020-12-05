@@ -202,16 +202,16 @@ global function get_la_for_alt {
 
     parameter rPitch, 
               tAlt,
-              sAlt is 750.
+              sAlt is 1000.
     
     local tPitch is 0.
 
     if rPitch < 0 {
-        set tPitch to min( rPitch, -(90 * ( 1 - (ship:altitude - sAlt) / (tAlt)))). //* 1.125)))).
+        set tPitch to min( rPitch, -(90 * ( 1 - (ship:altitude - sAlt) / (tAlt)))).
     }
 
     else if rPitch >= 0 {
-        set tPitch to max( rPitch, 90 * ( 1 - (ship:altitude - sAlt) / (tAlt))). // * 1.125))).
+        set tPitch to max( rPitch, 90 * ( 1 - (ship:altitude - sAlt) / (tAlt))).
     }
     
     local pg is choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) > 0.0001 else ship:prograde:vector.
@@ -260,14 +260,14 @@ local function clear_tower {
     local runmode to set_runmode(10).
     logStr("[Runmode " + runmode + "]: Liftoff!").
     
+    local sVal to heading(90, 90, -90).
+    local tVal to 1.
+
+    lock steering to sVal.
+    lock throttle to tVal.
+
     //Wait until tower is effectively cleared
-    until alt:radar >= 100 {
-        local sVal to heading(90, 90, -90).
-        lock steering to sVal.
-
-        local tVal to 1.
-        lock throttle to tVal.
-
+    until alt:radar >= 100 {   
         update_display().
     }
     
@@ -311,7 +311,7 @@ local function vertical_ascent {
     }
 
     //Ascent loop
-    until ship:verticalSpeed >= 100 or ship:altitude >= 750 {
+    until ship:verticalSpeed >= 100 or ship:altitude >= 1000 {
         update_display().
     }
     
@@ -327,6 +327,9 @@ local function gravity_turn {
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
     local tVal to 1.
 
+    lock steering to sVal.
+    lock throttle to tVal.
+
     local acc to 0.
     local accPid to setup_acc_pid(lObj["maxAcc"]).
     local qPid to setup_q_pid(lObj["maxQ"]).
@@ -337,8 +340,6 @@ local function gravity_turn {
     //Gravity turn loop
     until ship:apoapsis >= lObj["tApo"] * 0.975 {
         set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
-        lock steering to sVal.
-
         set acc to ship:maxThrust / ship:mass.
 
         //Check for throttle conditions, otherwise keep it at 100%
@@ -349,8 +350,6 @@ local function gravity_turn {
         } else {
             set tVal to 1.
         }
-        lock throttle to tVal.
-
         update_display().
     }
     
@@ -368,14 +367,14 @@ local function slow_burn_to_apo {
     logStr("[Runmode " + runmode + "]: Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
 
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+    lock steering to sVal.
+
     local tVal to 1.
+    lock throttle to tVal.
 
     until ship:apoapsis >= lObj["tApo"] {
-        set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
-        lock steering to sVal.
-
+        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
         set tval to 0.25.
-        lock throttle to tVal.
 
         update_display().
     }
@@ -387,7 +386,7 @@ local function meco {
     local runmode to set_runmode(35).
     logStr("[Runmode " + runmode + "]: MECO").
 
-    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
+    local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
     lock steering to sVal.
 
     local tVal to 0.
@@ -402,19 +401,20 @@ local function coast_to_space {
     local runmode to set_runmode(40).
     logStr("[Runmode " + runmode + "]: Coast phase").
 
-    local sVal to ship:prograde + r(0, 0, lObj["rVal"]).
+    local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
+    lock steering to sVal.
+
     local tVal to 0.
+    lock throttle to tVal.
 
     until ship:altitude >= body:atm:height {
-        set sVal to ship:prograde + r(0, 0, lObj["rVal"]).
-        lock steering to sVal.
+        local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
 
         if ship:apoapsis >= lObj["tApo"] {
             set tVal to 0.
         } else {
             set tVal to 0.25.
         }
-        lock throttle to tVal.
 
         update_display().
     }

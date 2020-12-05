@@ -76,7 +76,7 @@ global function get_antenna_range {
 
 global function set_dish_target {
     parameter p,
-            pTarget.
+              pTarget.
 
     local mod is "ModuleRTAntenna".
 

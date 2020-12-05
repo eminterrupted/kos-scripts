@@ -40,9 +40,9 @@ local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
 //local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
 // local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
 // local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
-local posw_x is lex("id", "posw_x", "v", 26, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-local posw_y is lex("id", "posw_y", "v", 38, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-local posw_z is lex("id", "posw_z", "v", 50, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_z is lex("id", "posw_z", "v", 74, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
                 "posmain", posmain 

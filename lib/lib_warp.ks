@@ -90,3 +90,60 @@ global function warp_to_alt {
         if kuniverse:timewarp:warp > 0 kuniverse:timewarp:cancelwarp().
     }
 }
+
+
+global function warp_to_next_soi {
+    local sVal to lookDirUp(ship:facing:forevector, sun:position).
+    lock steering to sval.
+
+    if ship:obt:hasnextpatch {
+        set target to "".
+        wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
+        warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+    }
+
+    until warp = 0 {
+        update_display().
+    }
+}
+
+
+global function warp_to_ksc_reentry_window {
+    parameter rVal is 0.
+
+    local sVal to lookDirUp( - ship:facing:forevector, sun:position) + r(0, 0, rVal).
+    lock steering to sVal.
+
+    if ship:body = "Kerbin" {
+        until ship:longitude >= 125 and ship:longitude <= 135 {
+            if warp = 0 set warp to 3. 
+            update_display().
+        }
+    }
+
+    kuniverse:timewarp:cancelwarp().
+    wait until kuniverse:timewarp:issettled.
+}
+
+
+global function warp_to_burn_node {
+    parameter mnvObj.
+    
+    local sVal to lookdirup(mnvObj["mnv"]:burnVector, sun:position).
+    lock steering to sVal.
+
+    until time:seconds >= (mnvObj["burnEta"] - 30) {
+        set sVal to lookdirup(mnvObj["mnv"]:burnVector, sun:position).
+        warp_to_timestamp(mnvObj["burnEta"]).
+        update_display().
+    }
+
+    if warp > 0 kuniverse:timewarp:cancelwarp().
+    wait until kuniverse:timewarp:issettled.
+    
+    until time:seconds >= mnvObj["burnEta"] {
+        update_display().
+        disp_burn_data().
+    }
+    update_display().
+}

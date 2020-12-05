@@ -27,6 +27,9 @@ local scanSatList to ship:partsTaggedPattern("sci.scan").
 local runmode to stateObj["runmode"].
 if runmode = 99 or runmode = 0 set runmode to 100. 
 
+local sVal is lookDirUp(ship:prograde:vector, sun:position).
+lock steering to sVal.
+
 wait 1.
 
 until runmode = 199 {
@@ -92,8 +95,7 @@ until runmode = 199 {
         update_scan_disp().
     }
 
-    local sVal to lookDirUp(ship:prograde:vector, sun:position).
-    lock steering to sVal.
+    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     
     update_display().
 

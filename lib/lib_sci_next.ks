@@ -69,10 +69,10 @@ local sciList is list().
 
     //this will keep the data unless it has a good transmit yield (50%+)
     global function recover_sci_list {
-        parameter pList, 
+        parameter mList, 
                 transmitAlways is false.
 
-        for m in pList {
+        for m in mList {
             if m:hasData {
                 recover_sci(m, transmitAlways).
             }
@@ -91,10 +91,11 @@ local sciList is list().
 //-- Local functions --//
 
     //Collect science into a container if one is present on board
-    local function collect_sci_in_container {
+    global function collect_sci_in_container {
         if ship:modulesNamed(containMod):length > 0 {
             local pm to ship:modulesNamed(containMod)[0].
             if pm:hasAction("collect all") pm:doAction("collect all", true).
+            logStr("[collect_sci_in_container] Data collected in science container").
             return true.
         }
 
@@ -151,26 +152,34 @@ local sciList is list().
             }
 
             //If science can be recovered from the experiment via transmission, do that
-            else if data:transmitValue > 0 {
+            else if data:transmitValue = data:scienceValue {
                 transmit_on_connection(m, minEc).
             }
 
-            //If no science from transmit but available via recover, store
-            else if data:transmitValue = 0 and data:scienceValue > 0 {
-                logStr("[recover sci] No science from transmit, only recover [" + data:title + "]", errLvl).
+            else if data:transmitValue > 0 and data:transmitValue < data:scienceValue {
                 if collect_sci_in_container() {
-                    logStr("[recover sci] Data collected in science container").
-
+                    logStr("[recover_sci] Science collected").
                 } else {
                     set errLvl to 1.
                     logStr("[recover sci] No container found aboard, storing data in experiment part").
                 }
             }
 
+            //If no science from transmit but available via recover, store
+            else if data:transmitValue = 0 and data:scienceValue > 0 {
+                logStr("[recover_sci] No science from transmit, only recover [" + data:title + "]", errLvl).
+                if collect_sci_in_container() {
+                    logStr("[recover_sci] Science collected").
+                } else {
+                    set errLvl to 1.
+                    logStr("[recover_sci] No container found aboard, storing data in experiment part").
+                }
+            }
+
             //If no data available, silently fail
             else if data:scienceValue = 0 {
                 set errLvl to 1.
-                logStr("[recover sci] No science value from experiment, resetting [" + data:title  + "]", errLvl).
+                logStr("[recover_sci] No science value from experiment, resetting [" + data:title  + "]", errLvl).
                 reset_sci(m).
             }
         }
