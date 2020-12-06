@@ -32,7 +32,7 @@ global function cryo_stage {
         wait 0.01.
     }
 
-    until get_engs_for_next_stg()[0]:ignition {
+    until get_engs_for_next_stage()[0]:ignition {
         stage.
         wait 0.5.
     }

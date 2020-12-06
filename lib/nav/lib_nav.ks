@@ -1,17 +1,6 @@
 //lib for getting and checking error rate of the vessel direction (heading, pitch, roll).
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/nav/lib_deltav").
-runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/data/ship/lib_mass").
-runOncePath("0:/lib/data/engine/lib_thrust").
-runOncePath("0:/lib/data/engine/lib_engine").
-runOncePath("0:/lib/data/engine/lib_isp").
-runOncePath("0:/lib/data/engine/lib_twr").
-
-
 //Checks the input heading and normalizes it for a 360 degree compass
 global function check_hdg {
 
@@ -72,6 +61,18 @@ global function get_nav_pitch {
 }
 
 
+
+//Orbital vectors
+// In the direction of orbital angular momentum of ves
+// Typically same as Normal
+global function obt_binormal {
+    parameter obtIn.
+
+    return vcrs((obtIn:position - obtIn:body:position):normalized, obt_tangent(obtIn)):normalized.
+}
+
+
+//Normal of the given orbit
 global function obt_normal {
     parameter obtIn.
 
@@ -79,13 +80,14 @@ global function obt_normal {
 }
 
 
+//Position of the given orbit
 global function obt_pos {
     parameter obtIn.
 
     return (obtIn:body:position - obtIn:position).
 }
 
-
+//Tangent (velocity) of the given orbit
 global function obt_tangent {
     parameter obtIn.
 
@@ -154,7 +156,7 @@ function ves_srf_binormal {
 
 
 
-// Perpendicular to  both tangent and binormal
+// Perpendicular to both tangent and binormal
 // Typically same as Radial In
 function ves_srf_normal {
     parameter ves is ship.
@@ -181,7 +183,6 @@ function ves_local_vertical {
 }
 
 
-
 // Angle to ascending node with respect to ves' body's equator
 function ang_to_body_asc_node {
     parameter ves is ship.
@@ -200,7 +201,6 @@ function ang_to_body_asc_node {
     }
     return angle.
 }
-
 
 
 // Angle to descending node with respect to ves' body's equator
@@ -223,7 +223,6 @@ function ang_to_body_desc_node {
 }
 
 
-
 // Vector directed from the relative descending node to the ascending node
 function rel_nodal_vec {
     parameter orbitBinormal.
@@ -231,7 +230,6 @@ function rel_nodal_vec {
 
     return vcrs(orbitBinormal, targetBinormal):normalized.
 }
-
 
 
 // Angle to relative ascending node determined from args
@@ -248,7 +246,6 @@ function ang_to_rel_asc_node {
     }
     return angle.
 }
-
 
 
 // Angle to relative descending node determined from args
@@ -326,16 +323,6 @@ function get_phase_angle {
 }
 
 
-global function ta_from_orbits {
-    parameter obt0,
-              obt1 is ship:obt.
-
-    local obt0_velo to obt0:velocity.
-    local obt0_pos to obt0:position.
-
-    
-}
-
 
 //From dunbaratu's kos tutorial (youtube.com/watch?v=NctfWrgreRI&list=PLdXwd2JlyAvowkTmfRXZrqVdRycxUIxpX)
 //ETA to a future true anomaly point in a given orbit
@@ -370,78 +357,89 @@ local function time_pe_to_ta {
 }
 
 
-//Example functions
-// function eta_true_anom {
-//     declare local parameter tgt_lng.
-//     // convert the positon from reference to deg from PE (which is the true anomaly)
-//     local ship_ref to mod(obt:lan+obt:argumentofperiapsis+obt:trueanomaly,360).
-//     // s_ref = lan + arg + referenc
+// Find the ascending node where orbit 0 crosses the plane of orbit 1
+// Answer is returned in the form of true anomaly of orbit 0 (angle from
+// orbit 0's Pe). Descending node inverse (+180)
+local function get_asc_node_ta {
+    parameter obt_0, // Orbits to predict - this should be the ship orbit
+              obt_1. // This should be the target orbit
 
-//     local node_true_anom to (mod (720+ tgt_lng - (obt:lan + obt:argumentofperiapsis),360)).
+    //Normals of the orbits
+    local nrm_0 to obt_normal(obt_0).
+    local nrm_1 to obt_normal(obt_1).
 
-//     print "Node anomaly   : " + round(node_true_anom,2).    
-//     local node_eta to 0.
-//     local ecc to OBT:ECCENTRICITY.
-//     if ecc < 0.001 {
-//         set node_eta to SHIP:OBT:PERIOD * ((mod(tgt_lng - ship_ref + 360,360))) / 360.
+    // Unit vector pointing from body's center towards the node
+    local vec_body_to_node is vcrs(nrm_0, nrm_1).
 
-//     } else {
-//         local eccentric_anomaly to  arccos((ecc + cos(node_true_anom)) / (1 + ecc * cos(node_true_anom))).
-//         local mean_anom to (eccentric_anomaly - ((180 / (constant():pi)) * (ecc * sin(eccentric_anomaly)))).
+    // Vector pointing from body center to obt_0 current position
+    local pos_0_body_rel is obt_0:position - obt_0:body:position.
 
-//         // time from periapsis to point
-//         local time_2_anom to  SHIP:OBT:PERIOD * mean_anom /360.
+    // How many true anomaly degrees ahead of my current true anomaly
+    local ta_ahead is vang(vec_body_to_node, pos_0_body_rel).
 
-//         local my_time_in_orbit to ((OBT:MEANANOMALYATEPOCH)*OBT:PERIOD /360).
-//         set node_eta to mod(OBT:PERIOD + time_2_anom - my_time_in_orbit,OBT:PERIOD) .
+    // I think this will give us pos / neg depending on how 
+    // far ahead it is
+    local sign_check_vec is vcrs(vec_body_to_node, pos_0_body_rel).
+    
+    // If the sign_check_vec is negative (meaning more than 180 degrees 
+    // in front of us), it will result in the normal being negative. In
+    // this case, we subtract ta_ahead from 360 to get degrees from 
+    // current position. 
+    if vdot(nrm_0, sign_check_vec) < 0 {
+        set ta_ahead to 360 - ta_ahead.
+    }
 
-//     }
+    // Add current true anomaly to our calculated ta_ahead to get the 
+    // absolute true anomaly
+    return mod( obt_0:trueanomaly + ta_ahead, 360).
+}
 
-//     return node_eta.
-// }
+
+// Return an object containing all parameters needed for a maneuver
+// to change inclination from orbit 0 to orbit 1. Returns a list:
+// - [0] (nodeAt) - center of burn node
+// - [1] (burnVector) - dV vector including direction and mag
+global function get_inc_match_burn {
+    parameter brnVes,  // Vessel that will perform the burn
+              tgtObt. // target orbit to match
+
+    local ves_nrm is obt_normal(brnVes:obt).
+    local tgt_nrm is obt_normal(tgtObt).
+
+    // True anomaly of ascending node
+    local node_ta is get_asc_node_ta(brnVes:obt, tgtObt).
+
+    // Pick whichever node of AN or DN is higher in altitude,
+    // and thus more efficient. node_ta is AN, so if it's 
+    // closest to Pe, then use DN 
+    if node_ta < 90 or node_ta > 270 {
+        set node_ta to mod(node_ta + 180, 360).
+    }
+
+    // Get the burn eta
+    local burn_eta is eta_to_ta(brnVes:obt, node_ta).
+    local burn_utc is time:seconds + burn_eta.
+
+    // Get the burn direction (burnvector direction)
+    local burn_unit is (ves_nrm + tgt_nrm):normalized.
+
+    // Get the deltaV of the burn (burnvector magnitude)
+    local vel_at_eta is velocityAt(brnVes, burn_utc):orbit.
+    local burn_mag is -2 * vel_at_eta:mag * cos(vang(vel_at_eta, burn_unit)).
+
+    return list(burn_utc, burn_mag * burn_unit).
+}
 
 
+//Get an orbit's altitude at a given true anomaly angle of it
+global function obt_alt_at_ta {
+    parameter obt_in,       // Orbit to check
+              true_anom.    // TA in degrees
 
-// function set_inc_lan {
-//     DECLARE PARAMETER incl_t.
-//     DECLARE PARAMETER lan_t.
-//     local incl_i to SHIP:OBT:INCLINATION.
-//     local lan_i to SHIP:OBT:LAN.
+    local sma is obt_in:semimajoraxis.
+    local ecc is obt_in:eccentricity.
+    local r is sma * (1 - ecc ^ 2) / (1 + ecc * cos(true_anom)).
 
-// // setup the vectors to highest latitude; Transform spherical to cubic coordinates.
-//     local Va to V(sin(incl_i)*cos(lan_i+90),sin(incl_i)*sin(lan_i+90),cos(incl_i)).
-//     local Vb to V(sin(incl_t)*cos(lan_t+90),sin(incl_t)*sin(lan_t+90),cos(incl_t)).
-// // important to use the reverse order
-//     local Vc to VCRS(Vb,Va).
-
-//     local dv_factor to 1.
-//     //compute burn_point and set to the range of [0,360]
-//     local node_lng to mod(arctan2(Vc:Y,Vc:X)+360,360).
-//     local ship_ref to mod(obt:lan+obt:argumentofperiapsis+obt:trueanomaly,360).
-
-//     local ship_2_node to mod((720 + node_lng - ship_ref),360).
-//     if ship_2_node > 180 {
-//         print "Switching to DN".
-//         set dv_factor to -1.
-//         set node_lng to mod(node_lng + 180,360).
-//     }       
-
-//     local node_true_anom to 360- mod(720 + (obt:lan + obt:argumentofperiapsis) - node_lng , 360 ).
-//     local ecc to OBT:ECCENTRICITY.
-//     local my_radius to OBT:SEMIMAJORAXIS * (( 1 - ecc^2)/ (1 + ecc*cos(node_true_anom)) ).
-//     local my_speed1 to sqrt(SHIP:BODY:MU * ((2/my_radius) - (1/OBT:SEMIMAJORAXIS)) ).   
-//     local node_eta to eta_true_anom(node_lng).
-//     local my_speed to VELOCITYAT(SHIP, time+node_eta):ORBIT:MAG.
-//     local d_inc to arccos (vdot(Vb,Va) ).
-//     local dvtgt to dv_factor* (2 * (my_speed) * SIN(d_inc/2)).
-
-//     // Create a blank node
-//     local inc_node to NODE(node_eta, 0, 0, 0).
-//  // we need to split our dV to normal and prograde
-//     set inc_node:NORMAL to dvtgt * cos(d_inc/2).
-//     // always burn retrograde
-//     set inc_node:PROGRADE to 0 - abs(dvtgt * sin(d_inc/2)).
-//     set inc_node:ETA to node_eta.
-
-//     ADD inc_node.
-// }
+    // Subtract the body radius from the resulting SMA to get alt
+    return r - obt_in:body:radius.
+}

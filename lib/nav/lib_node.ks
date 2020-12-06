@@ -119,7 +119,7 @@ global function optimize_node {
     until false {
         set mnv to improve_node(mnv, tgtAlt, mode).
         local nodeScore to get_node_score(mnv, tgtAlt, mode)["score"].
-        if nodeScore >= 0.9985 and nodeScore <= 1.0015 break.
+        if nodeScore >= 0.9975 and nodeScore <= 1.0025 break.
     }
 
     print "MSG: Optimized maneuver found                                " at (2, 7).

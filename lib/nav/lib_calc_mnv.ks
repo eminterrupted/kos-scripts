@@ -11,36 +11,35 @@ runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_twr").
 
 //Returns the burn duration of a single stage
-global function get_burn_dur_by_stg {
-    parameter pDv,
-              pStg is stage:number.
+global function get_burn_dur_by_stage {
+    parameter _deltaV,
+              _stageNum is stage:number.
     
-    local eList to choose get_engs_for_stg(pStg) if get_engs_for_stg(pStg):length > 0 else get_engs_for_next_stg().
-    local engPerfObj to get_eng_perf_obj(eList).
-    local exhVel to get_engs_exh_vel(eList, ship:apoapsis).
-    local vMass to get_vmass_at_stg(pStg).
+    local engineList to choose get_engs_for_stage(_stageNum) if get_engs_for_stage(_stageNum):length > 0 else get_engs_for_next_stage().
+    local enginePerf to get_eng_perf_obj(engineList).
+    local exhaustVel to get_engs_exh_vel(engineList, ship:apoapsis).
+    local vesselMass to get_vmass_at_stg(_stageNum).
 
     local stageThrust to 0.
-    for e in engPerfObj:keys {
-        set stageThrust to stageThrust + engPerfObj[e]["thr"]["poss"].
+    for e in enginePerf:keys {
+        set stageThrust to stageThrust + enginePerf[e]["thr"]["poss"].
     }
 
-    return ((vMass * exhVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (pDv / exhVel)))).
+    return ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
 }
 
 
 
 //Returns the total duration to burn the provided deltav, taking staging into account
 global function get_burn_dur {
-    parameter pDv.
+    parameter delta_v.
     
-    logStr("get_burn_dur").
     local alldur is 0.
     local stgdur is 0.
-    local dvObj to get_stages_for_dv(pDv).
+    local dvObj to get_stages_for_dv(delta_v).
 
     for k in dvObj:keys {
-        set stgdur to get_burn_dur_by_stg(dvObj[k], k).
+        set stgdur to get_burn_dur_by_stage(dvObj[k], k).
         set alldur to alldur + stgdur.
     }
 
