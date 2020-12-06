@@ -64,31 +64,49 @@ global function get_avail_dv_for_stage {
 }
 
 
-
+// Returns an object representing the number of stages involved 
+// in a specific deltaV amount, beginning with either the current
+// stage or a provided one.
 global function get_stages_for_dv {
-    parameter dV,                   // amount of dv needed
-              stg is stage:number.  // the stage number to start with. 
+    parameter _deltaV,                      // Amount of dv needed
+              _stageNum is stage:number.    // Stage to start with
 
-    local stgObj is lex().
+    // The object we'll store the result in
+    local stageObj is lex().
 
-    logStr("get_stages_for_dv [dv:" + dV + "][stg:" + stg + "]").
-    
-    until dv <= 0 or stg < -1 {
-        local dvStg is get_avail_dv_for_stage(stg).
+    // Loop until either the needed DeltaV is accounted for, or
+    // we run out of stages
+    until _deltaV <= 0 or _stageNum < -1 {
 
-        if dv < dvStg {
-            set stgObj[stg] to round(dv, 2).
+        // Get the deltaV possible for the stage we are on
+        local dvStg is get_avail_dv_for_stage(_stageNum).
+
+        // If the deltaV needed is less than what the stage can 
+        // deliver, then add the stage number we checked to the 
+        // object and break the loop
+        if _deltaV < dvStg {
+            set stageObj[_stageNum] to round(_deltaV, 2).
             break.
+
         } else {
+
+            // If there is deltaV available in the stage we are
+            // checking, add that stage to the stage object. Then,
+            // subtract that total from the needed deltaV. If that
+            // puts us below zero, loop will exit
             if dvStg > 0 {
-                set stgObj[stg] to round(dvStg, 2).
-                set dv to dv - dvStg.
+                set stageObj[_stageNum] to round(dvStg, 2).
+                set _deltaV to _deltaV - dvStg.
             }
-            set stg to get_next_stage_with_eng(stg).
+
+            // Get the next stage that has engines. This is if the 
+            // previous stage did not already cover what we needed
+            set _stageNum to get_next_stage_with_eng(_stageNum).
         }
     }
 
-    return stgObj.
+    // DeltaV for each stage needed to execute the burn
+    return stageObj.
 }
 
 
