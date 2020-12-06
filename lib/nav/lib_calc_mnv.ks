@@ -134,7 +134,7 @@ global function get_mnv_param_list {
 // Returns a coplanar mun transfer burn object. Must be called 
 // with a node timestamp derived from get_mun_transfer_window 
 // and have the desired mun set as target
-global function get_mun_xfr_burn_data {
+global function get_transfer_burn_data {
     parameter _nodeAt.
 
     // If no target is set, return false. This will fail
@@ -215,7 +215,7 @@ global function get_transfer_obj {
     local transferWindow to get_transfer_phase_angle().
 
     // Burn data based on the window
-    local burnData to get_mun_xfr_burn_data(transferWindow["nodeAt"]).
+    local burnData to get_transfer_burn_data(transferWindow["nodeAt"]).
     local transferObj to lex("tgt", target).
 
     for key in transferWindow:keys {
