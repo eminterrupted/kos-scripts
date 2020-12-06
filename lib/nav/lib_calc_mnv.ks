@@ -32,7 +32,7 @@ global function get_burn_dur_by_stage {
     local exhaustVel to get_engs_exh_vel(engineList, ship:apoapsis).
 
     // Mass of the vessel at this stage (including all later stage mass)
-    local vesselMass to get_vmass_at_stg(_stageNum).
+    local vesselMass to get_ves_mass_at_stage(_stageNum).
 
     // Add up the thrust for each engine in the stage, using the 
     // possible thrust method (which returns thrust even when engine is off)
@@ -89,7 +89,7 @@ global function get_burn_obj_from_node {
 }
 
 
-// Returns a coplanar burn object
+// Returns a simple coplanar burn object
 // Assumes burn is either at Ap or Pe
 global function get_coplanar_burn_data {
     parameter _newAlt,
@@ -114,7 +114,8 @@ global function get_coplanar_burn_data {
 
 
 // Returns a node-formatted list used to create a maneuver node.
-// Inputs are when to burn, and the change we want to make in altitude
+// Inputs are when to burn, and the change we want to make in altitude.
+// Calculates the needed deltaV
 global function get_mnv_param_list {    
     parameter _nodeAt                   // Timestamp of mnv
               ,_startAlt                // Starting altitude of mnv
@@ -152,7 +153,7 @@ global function get_mun_xfr_burn_data {
 
 // Returns an object describing the transfer window to a mun
 // TODO - Call from above to abstract from mainline scripts
-global function get_mun_xfr_window {
+global function get_transfer_phase_angle {
     parameter _startAlt is (ship:apoapsis + ship:periapsis) / 2, // Average altitude
               _startBody is ship:body.                           // Body we are starting from
 
@@ -211,7 +212,7 @@ global function get_transfer_obj {
     if target = "" return false.
        
     // Transfer window
-    local transferWindow to get_mun_xfr_window().
+    local transferWindow to get_transfer_phase_angle().
 
     // Burn data based on the window
     local burnData to get_mun_xfr_burn_data(transferWindow["nodeAt"]).

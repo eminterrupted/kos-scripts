@@ -44,7 +44,7 @@ global function get_avail_dv_for_stage {
     logStr("get_avail_dv_for_stage [stg:" + s + "]").
     
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
-    local vMass to get_vmass_at_stg(s).
+    local vMass to get_ves_mass_at_stage(s).
     local eList is ship:partsTaggedPattern("eng.stgId:" + s).
     if eList:length = 0 {
         set s to s - 1.

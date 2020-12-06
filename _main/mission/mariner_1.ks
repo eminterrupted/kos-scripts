@@ -296,7 +296,7 @@ local function get_transfer_obj {
     set tVal to 0.
     lock throttle to tVal.
     
-    local window to get_mun_xfr_window().
+    local window to get_transfer_phase_angle().
     local burn to get_mun_xfr_burn_data(window["nodeAt"]).
     local xfrObj to lex("tgt", target).
 

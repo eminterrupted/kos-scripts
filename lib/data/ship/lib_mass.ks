@@ -161,7 +161,7 @@ global function get_ship_mass_at_launch {
 }
 
 
-global function get_vmass_at_stg {
+global function get_ves_mass_at_stage {
     parameter stgId.
 
     logStr("get_vmass_at_stg [stgId:" + stgId + "]").
