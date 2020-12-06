@@ -32,35 +32,41 @@ global function get_burn_dur_by_stage {
 
 //Returns the total duration to burn the provided deltav, taking staging into account
 global function get_burn_dur {
-    parameter delta_v.
+    parameter _deltaV.
     
-    local alldur is 0.
-    local stgdur is 0.
-    local dvObj to get_stages_for_dv(delta_v).
+    local allDur   is 0.
+    local stageDur is 0.
+    local dvObj    is get_stages_for_dv(_deltaV).
 
-    for k in dvObj:keys {
-        set stgdur to get_burn_dur_by_stage(dvObj[k], k).
-        set alldur to alldur + stgdur.
+    for key in dvObj:keys {
+        set stageDur to get_burn_dur_by_stage(dvObj[key], key).
+        set allDur to allDur + stageDur.
     }
 
-    return alldur.
+    return allDur.
 }
 
 
-//Returns a burn object from a node, including duration and eta to burn
+//Returns a detailed burn object from a node:
+// "dV"         : deltaV (mag) of the burn in m/s
+// "burnDur"    : total duration of the burn in secs
+// "burnEta"    : time the burn should start in UT
+// "burnEnd"    : time the burn should end in UT
+// "nodeAt"     : time stamp of the node in UT
+// "mnv"        : the maneuver node itself for reference
 global function get_burn_obj_from_node {
     parameter mnvNode.
 
     //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
     //Calculate variables
-    local dV to mnvNode:burnvector:mag.
-    local nodeAt to time:seconds + mnvNode:eta.
-    local burnDur to get_burn_dur(dv). 
-    local burnEta to nodeAt - (burnDur / 2).
-    local burnEnd to nodeAt + (burnDur / 2).
+    local dV        to mnvNode:burnvector:mag.
+    local nodeAt    to time:seconds + mnvNode:eta.
+    local burnDur   to get_burn_dur(dv). 
+    local burnEta   to nodeAt - (burnDur / 2).
+    local burnEnd   to nodeAt + (burnDur / 2).
 
-    logStr("get_burn_data_from_node").
-    logStr("[dV: " + round(dV, 2) + "][burnDur: " + round(burnDur, 2) + "][nodeAt: " + round(nodeAt, 2) + "][burnEta: " + round(burnEta, 2) + "]").
+    //logStr("get_burn_data_from_node").
+    //logStr("[dV: " + round(dV, 2) + "][burnDur: " + round(burnDur, 2) + "][nodeAt: " + round(nodeAt, 2) + "][burnEta: " + round(burnEta, 2) + "]").
 
     return lexicon("dV", dv,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt, "mnv", mnvNode).
 }
