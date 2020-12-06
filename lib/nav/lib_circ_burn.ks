@@ -4,6 +4,7 @@ runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
+runOncePath("0:/lib/nav/lib_calc_mnv").
 
 global function do_circ_burn {
     parameter circObj.
