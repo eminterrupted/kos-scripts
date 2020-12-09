@@ -57,6 +57,12 @@ until runmode = 99 {
     }
 
     else if runmode = 3 {
+        until ship:body = "sun" {
+            update_display().
+        }
+    }
+
+    else if runmode = 3 {
         set sVal to lookDirUp(ship:facing:forevector, sun:position).
         log_sci_list(sciList).
         recover_sci_list(sciList).

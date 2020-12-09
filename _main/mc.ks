@@ -4,6 +4,7 @@ set config:ipu to 500.
 
 clearScreen.
 
+wait until ship:unpacked.
 wait until addons:rt:haskscconnection(ship).
 
 runOncePath("0:/lib/lib_init").
@@ -11,7 +12,7 @@ runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 init_uplink().
 
-runOncePath("0:/lib/lib_tag").
+if ship:rootPart:tag = "" runOncePath("0:/lib/lib_tag").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 //Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.

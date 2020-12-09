@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        250000,
+        175000,
         "tPe",
-        250000,
+        125000000,
         "tInc",
         0,
         "gtAlt",
@@ -15,9 +15,9 @@
         "launchS1",
         "multistage_base",
         "missionS1",
-        "mun_transfer",
+        "no_reentry",
         "missionS2",
-        "collect_sci_for_biomes"
+        "no_reentry"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

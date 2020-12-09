@@ -17,7 +17,7 @@ runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_engine").
 runOncePath("0:/lib/part/lib_light").
 runOncePath("0:/lib/lib_contract").
-runOncePath("0:/lib/lib_sci_next").
+runOncePath("0:/lib/lib_sci").
 
 //- start main
 

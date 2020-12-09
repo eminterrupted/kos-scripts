@@ -31,9 +31,11 @@ global function safe_stage {
 global function staging_triggers {
 
     //For solid fuel launch boosters
-    when ship:solidfuel < 0.1 and throttle > 0 then {
-        safe_stage().
-    }
+    // if ship:partsTaggedPattern("eng.solid"):length > 0 {
+    //     when ship:solidfuel < 0.1 and throttle > 0 then {
+    //         safe_stage().
+    //     }
+    // }
 
     // For liquid fueled engines. 
     when ship:availableThrust < 0.1 and throttle > 0 then {
@@ -42,21 +44,6 @@ global function staging_triggers {
     }
 }
 
-
-global function cryo_stage {
-
-    wait 1.
-    logStr("Staging").
-
-    until stage:ready {   
-        wait 0.01.
-    }
-
-    until get_engs_for_next_stage()[0]:ignition {
-        stage.
-        wait 0.5.
-    }
-}
 
 global function arm_chutes {
     parameter pList is ship:parts.
