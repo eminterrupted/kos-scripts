@@ -1,8 +1,8 @@
 //Library for science
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_sci.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_sci").
 
 local dmagMod is "DMModuleScienceAnimate".
 

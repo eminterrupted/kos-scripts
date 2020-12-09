@@ -2,8 +2,8 @@
 
 clearscreen. 
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/display/gui/lib_gui.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/display/gui/lib_gui").
 
 
 

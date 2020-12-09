@@ -4,17 +4,17 @@ parameter rVal is 0.
 
 clearScreen.
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_core.ks").
-runOncePath("0:/lib/lib_warp.ks").
-runOncePath("0:/lib/part/lib_antenna.ks").
-runOncePath("0:/lib/data/engine/lib_engine.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-if ship:partsTaggedPattern("rcs"):length > 0 runOncePath("0:/lib/part/lib_rcs.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_warp").
+runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/data/engine/lib_engine").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/data/ship/lib_mass").
+if ship:partsTaggedPattern("rcs"):length > 0 runOncePath("0:/lib/part/lib_rcs").
 
 //
 //** Main

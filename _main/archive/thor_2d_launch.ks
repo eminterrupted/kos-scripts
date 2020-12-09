@@ -10,21 +10,21 @@ parameter tApo,
 set config:ipu to 250.
 
 clearScreen.
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_core.ks").
-runOncePath("0:/lib/lib_launch.ks").
-runOncePath("0:/lib/lib_sci.ks").
-runOncePath("0:/lib/lib_dmag_sci.ks").
-runOncePath("0:/lib/lib_warp.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_dmag_sci").
+runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_pid").
-runOncePath("0:/lib/data/engine/lib_engine.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
+runOncePath("0:/lib/data/engine/lib_engine").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_twr").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
+runOncePath("0:/lib/data/ship/lib_mass").
 
 
 //

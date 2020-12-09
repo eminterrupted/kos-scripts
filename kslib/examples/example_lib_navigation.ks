@@ -3,7 +3,7 @@
 
 clearscreen.
 
-runPath("0:/kslib/library/lib_navigation.ks").
+runPath("0:/kslib/library/lib_navigation").
 
 local quit is false.
 on AG10 {

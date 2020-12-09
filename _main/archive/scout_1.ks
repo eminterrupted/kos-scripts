@@ -8,19 +8,19 @@ parameter tApo to 125000,
           rVal to -90.
 
 clearScreen.
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_launch.ks").
-runOncePath("0:/lib/lib_core.ks").
-runOncePath("0:/lib/lib_sci.ks").
-runOncePath("0:/lib/lib_dmag_sci.ks").
-runOncePath("0:/lib/lib_misc_parts.ks").
-runOncePath("0:/lib/data/engine/lib_engine.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/kslib/library/lib_l_az_calc.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_dmag_sci").
+runOncePath("0:/lib/lib_misc_parts").
+runOncePath("0:/lib/data/engine/lib_engine").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/data/ship/lib_mass").
+runOncePath("0:/kslib/library/lib_l_az_calc").
 
 //
 //** Main

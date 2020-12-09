@@ -1,7 +1,7 @@
 //Data Vessel Engine library
 @lazyGlobal off.
 
-runOncePath("0:/lib/data/engine/lib_isp.ks").
+runOncePath("0:/lib/data/engine/lib_isp").
 
 // Delegates
     local get_ship_engs is get_engs_obj_by_stg@.

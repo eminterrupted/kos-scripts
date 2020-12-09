@@ -1,1 +1,1 @@
-runPath("0:/boot/launch_gui.ks").
+runPath("0:/boot/launch_gui").

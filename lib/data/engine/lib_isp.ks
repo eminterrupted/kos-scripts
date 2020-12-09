@@ -3,8 +3,8 @@
 @lazyGlobal off.
 
 //dependencies
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/engine/lib_engine.ks").
+runOncePath("0:/lib/data/ship/lib_mass").
+runOncePath("0:/lib/data/engine/lib_engine").
 
 
 //////////////////////////

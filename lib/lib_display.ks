@@ -3,14 +3,14 @@
 if terminal:width < 65 set terminal:width to 65.
 if terminal:height < 50 set terminal:height to 55.
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_pid.ks").
-runOncePath("0:/lib/lib_util.ks").
-runOncePath("0:/lib/lib_launch.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_pid").
+runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/data/ship/lib_mass").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_twr").
 
 //For custom strings to be added by scripts. 
 //  Schema is lex(["x,y"]screen location key, list(["str"]string,[[var]value, etc...])). 

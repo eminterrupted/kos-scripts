@@ -1,7 +1,7 @@
 //Set vessel configurations
 @lazyGlobal off. 
 
-runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_init").
 
 //Waits until vessel is safe to stage, then stages
 global function safe_stage {
