@@ -288,34 +288,6 @@ local function set_target {
     update_display().
 }
 
-
-local function get_transfer_obj {
-    set sVal to lookdirup(ship:prograde:vector, sun:position).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-    
-    local window to get_transfer_phase_angle().
-    local burn to get_transfer_burn_data(window["nodeAt"]).
-    local xfrObj to lex("tgt", target).
-
-    for key in window:keys {
-        set xfrObj[key] to window[key].
-    }
-
-    update_phase().
-
-    for key in burn:keys {
-        set xfrObj[key] to burn[key].
-    }
-    
-    update_display().
-
-    return xfrObj.
-}
-
-
 local function add_burn_node {
     parameter burnObj,
               tgtAlt,
@@ -334,56 +306,12 @@ local function add_burn_node {
 }
 
 
-local function warp_to_burn_node {
-    parameter burnObj.
-    
-    until time:seconds >= (mnvObj["burnEta"] - 30) {
-        set sVal to lookdirup(burnObj["mnv"]:burnVector, sun:position).
-        lock steering to sVal.
-
-        warp_to_timestamp(mnvObj["burnEta"]).
-
-        update_display().
-    }
-
-    if warp > 0 kuniverse:timewarp:cancelwarp().
-    wait until kuniverse:timewarp:issettled.
-    
-    until time:seconds >= mnvObj["burnEta"] {
-        update_display().
-        disp_burn_data().
-    }
-
-    update_display().
-}
 
 
 local function exec_burn {
     parameter burnNode.
 
     exec_node(burnNode).
-
-    update_display().
-}
-
-
-local function warp_to_next_soi {
-    set sVal to ship:prograde + r(0, 0, rval). 
-    lock steering to sval.
-
-    if ship:obt:hasnextpatch {
-        wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
-        warpTo(ship:obt:nextpatcheta + time:seconds - 15).
-    }
-        
-    until ship:body:name = tgt {
-        set sVal to ship:prograde + r(0, 0, rVal).
-        lock steering to sVal.
-        update_display().
-    }
-
-    if warp > 0 kuniverse:timewarp:cancelwarp().
-    wait until kuniverse:timewarp:issettled.
 
     update_display().
 }
@@ -397,11 +325,6 @@ local function end_main {
     lock throttle to tVal.
 
     logStr("Mission completed").
-}
-
-
-local function update_phase {
-    set mnvObj["curPhaseAng"] to get_phase_angle().
 }
 
 

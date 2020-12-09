@@ -408,7 +408,7 @@ local function coast_to_space {
     lock throttle to tVal.
 
     until ship:altitude >= body:atm:height {
-        local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
+        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
 
         if ship:apoapsis >= lObj["tApo"] {
             set tVal to 0.

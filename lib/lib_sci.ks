@@ -104,7 +104,14 @@ global function recover_sci {
     for data in m:data {
 
         //Science value over 
-        if data:transmitValue > 0 and data:transmitValue = data:scienceValue {
+        if transmitFlag {
+            local minEc is get_sci_ec_req(data).
+            if ship:electricCharge >= minEc {
+                m:transmit().
+            }
+        }
+
+        else if data:transmitValue > 0 and data:transmitValue = data:scienceValue {
             set errLvl to 0.
             logStr("[transmit science] Transmitting science").
             local minEc is get_sci_ec_req(data).

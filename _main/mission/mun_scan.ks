@@ -1,7 +1,8 @@
 @lazyGlobal off.
 
 parameter tgt is "Mun",
-          rVal is 0.
+          rVal is 0,
+          tgtInc is 82.
 
 clearscreen.
 
@@ -24,12 +25,12 @@ if runmode = 99 set runmode to 0.
 update_display().
 wait 5.
 
-local tgtAltAp is 50000.
-local tgtAltPe is 50000.
+local tgtAltAp is 225000.
+local tgtAltPe is 225000.
 
-local mnvCache is "local:/mnvCache.json".
-local mnvObj is choose readJson(mnvCache) if exists(mnvCache) else lex().
+local mnvObj is lex().
 local mnvNode is 0.
+local tgtObt is 0.
 
 local sVal is lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
 lock steering to sVal.
@@ -71,7 +72,6 @@ until runmode = 99 {
     else if runmode = 6 {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
         set mnvObj to add_transfer_node(mnvObj, tgtAltAp).
-        cache_mnv_obj(mnvObj).
         set mnvNode to mnvObj["mnv"].
         set runmode to 8.
     }
@@ -86,8 +86,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        exec_node(nextNode).
-        deletePath(mnvCache).
+        exec_node(mnvNode).
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
         set runmode to 12.
     }
@@ -109,47 +108,70 @@ until runmode = 99 {
     else if runmode = 14 {
         set mnvNode to add_simple_circ_node("pe", tgtAltAp).
         set mnvObj to get_burn_obj_from_node(mnvNode).
-        cache_mnv_obj(mnvObj).
         set runmode to 16.
     }
 
     else if runmode = 16 {
-        set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
         warp_to_burn_node(mnvObj).
         set runmode to 18.
     }
 
     else if runmode = 18 {
-        set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
-        exec_node(nextNode).
-        deletePath(mnvCache).
+        exec_node(mnvNode).
         set runmode to 20.
     }
 
-
-    //Circularize, step 2 (Correction)
+    //Change inclination
     else if runmode = 20 {
-        set mnvNode to add_simple_circ_node("ap", tgtAltPe).
+
+        //Create a new orbit to compare 
+        set tgtObt to createOrbit(
+            tgtInc, 
+            ship:obt:eccentricity, 
+            ship:obt:lan, 
+            ship:obt:semimajoraxis, 
+            ship:obt:argumentofperiapsis, 
+            ship:obt:meanAnomalyAtEpoch, 
+            ship:obt:epoch, 
+            ship:obt:body
+            ).
+
+        set mnvNode to get_inc_match_burn(ship, tgtObt)[2].
+        add mnvNode.
         set mnvObj to get_burn_obj_from_node(mnvNode).
-        cache_mnv_obj(mnvObj).
-        set runmode to 22.
+
+        set runmode  to 22.
     }
 
     else if runmode = 22 {
-        set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
         warp_to_burn_node(mnvObj).
         set runmode to 24.
     }
 
     else if runmode = 24 {
-        exec_node(nextNode).
-        deletePath(mnvCache).
+        exec_node(mnvNode).
         set runmode to 26.
     }
 
+    //Circularize, step 2 (Correction)
+    else if runmode = 26 {
+        set mnvNode to add_simple_circ_node("ap", tgtAltPe).
+        set mnvObj to get_burn_obj_from_node(mnvNode).
+        set runmode to 28.
+    }
+
+    else if runmode = 28 {
+        warp_to_burn_node(mnvObj).
+        set runmode to 30.
+    }
+
+    else if runmode = 30 {
+        exec_node(mnvNode).
+        set runmode to 32.
+    }
 
     //Finish script
-    else if runmode = 26 {
+    else if runmode = 32 {
         logStr("Transfer maneuvers completed, ready for Mission_S2").
         unlock steering.
         unlock throttle.

@@ -221,3 +221,14 @@ global function get_transfer_obj {
 
     return transferObj.
 }
+
+
+global function cache_mnv_obj {
+    parameter mnvObj.
+
+    local objPath is "local:/mnvCache.json".
+
+    writeJson(mnvObj, objPath).
+
+    return objPath.
+}

@@ -22,6 +22,7 @@ runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
 runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").

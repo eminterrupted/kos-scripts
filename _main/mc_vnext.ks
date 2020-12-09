@@ -4,6 +4,8 @@ set config:ipu to 500.
 
 clearScreen.
 
+wait until addons:rt:haskscconnection(ship).
+
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").

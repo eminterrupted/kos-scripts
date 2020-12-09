@@ -245,7 +245,11 @@
         "mediumDishAntenna",
         "comm.dish",
         "B9.Utility.Light.A1.White",
-        "lgt.spot"
+        "lgt.spot",
+        "conformaldecals-flag",
+        "decal",
+        "batteryBank",
+        "ec.battery.stack"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

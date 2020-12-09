@@ -90,7 +90,7 @@ global function add_simple_circ_node {
         set mode to "ap".
     }
 
-    set mnv to optimize_node(mnv, tgtAlt, mode).
+    //set mnv to optimize_node(mnv, tgtAlt, mode).
     set mnv to add_node_to_plan(mnv).
     
     return mnv.

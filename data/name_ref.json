@@ -269,7 +269,9 @@
         "Mk1-TMA 'Proteus' Advanced Command Pod",
         "command-125-1",
         "A1 Spot Light",
-        "B9.Utility.Light.A1.White"
+        "B9.Utility.Light.A1.White",
+        "Z-1k Rechargeable Battery Bank",
+        "batteryBank"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -13,19 +13,24 @@ runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_misc_parts").
+
 runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
+
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
+runOncePath("0:/lib/nav/lib_calc_mnv").
+
 runOncePath("0:/lib/data/ship/lib_mass").
+
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
+
 runOncePath("0:/kslib/library/lib_l_az_calc").
 
 //
@@ -40,7 +45,7 @@ local burnObj is lex().
 local burnNode is node(0, 0, 0, 0).
 local dispState to lex().
 local acc is ship:maxThrust / ship:mass.
-local maxAcc is 30.
+local maxAcc is 32.5.
 local maxQ is 0.10.
 local qPid to setup_q_pid(maxQ).
 local accPid to setup_acc_pid(maxAcc).
@@ -51,7 +56,7 @@ lock steering to sVal.
 local tVal to 0.
 lock throttle to tVal.
 
-local gtStart is 750.
+local gtStart is 1250.
 
 main().
 
@@ -87,9 +92,6 @@ local function main {
 
     print "MSG: Executing setup_circularization_burn()  " at (2, 7).
     set runmode to setup_circularization_burn().
-
-    print "MSG: Executing deploy_dish()                 " at (2, 7).
-    set runmode to deploy_dish_panels().
 
     print "MSG: Executing warp_to_circ_burn()           " at (2, 7).
     set runmode to warp_to_circ_burn().
@@ -336,33 +338,10 @@ local function setup_circularization_burn {
     return runmode.
 }
 
-local function deploy_dish_panels {
-    logStr("Deploying dish antenna").
-
-    set sVal to lookdirup(burnNode:burnvector, sun:position).
-    lock steering to sVal.
-
-    local idx to 0.
-    for d in ship:partstaggedpattern("dish") {
-        if idx = 0 set_dish_target(d, "kerbin").
-        else set_dish_target(d, "mun").
-
-        activate_dish(d).
-    }
-
-    panels on.
-
-    set runmode to 21.
-    set stateObj["runmode"] to runmode.
-    log_state(stateObj).
-
-    return runmode.
-}
-
 local function warp_to_circ_burn {
     logStr("Warping to circularization burn").
 
-    set sVal to lookdirup(burnNode:burnvector, sun:position).
+    set sVal to burnNode:burnvector:direction + r(0, 0, rVal - 90).
     lock steering to sVal.
 
     set tVal to 0.
@@ -395,7 +374,7 @@ local function exec_circularization_burn {
     logStr("Executing circularization burn").
 
     until burnNode:burnvector:mag <= 10 {
-        set sVal to lookDirUp(burnNode:burnvector, sun:position).
+        set sVal to lookDirUp(burnNode:burnVector, sun:position).
         //set sVal to burnNode.
         lock steering to sVal.
 
@@ -405,7 +384,7 @@ local function exec_circularization_burn {
         update_display().
     }
 
-    until ship:apoapsis >= tPe {
+    until ship:periapsis >= tPe {
         set sVal to lookDirUp(burnNode:burnVector, sun:position). 
         //set sVal to burnNode.
         lock steering to sVal.
@@ -464,7 +443,10 @@ local function cleanup {
 local function end_main {
     logStr("Preparing for mission script handoff").
     
-    panels on.
+    from { local n is 10.} until n <= 0 step { set n to n - 1.} do {
+        update_display().
+        disp_timer(n).
+    }
 
     disp_clear_block_all().
     logStr("Ship ready for mission script").

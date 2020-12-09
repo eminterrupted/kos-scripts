@@ -53,9 +53,9 @@ global function init_errObj {
 }
 
 global function log_state {
-    parameter stateObj.
+    parameter sObj.
     local statePath to "local:/state.json".
-    writeJson(stateObj, statePath).
+    writeJson(sObj, statePath).
 }
 
 
@@ -63,13 +63,13 @@ global function init_state_obj {
     parameter program is 0.
     
     local runmode to 0.
-    local stateObj is lex().
+    local sObj is lex().
     local statePath to "local:/state.json".
     
     if exists(statePath) {
-        set stateObj to readJson(statePath).
-        set runmode to choose stateObj["runmode"] if stateObj:hasKey("runmode") else 0.
-        set program to choose stateObj["program"] if stateObj:hasKey("program") else 0.
+        set sObj to readJson(statePath).
+        set runmode to choose sObj["runmode"] if sObj:hasKey("runmode") else 0.
+        set program to choose sObj["program"] if sObj:hasKey("program") else 0.
     }
 
     else {
@@ -77,10 +77,10 @@ global function init_state_obj {
         set program to 0.
     }
 
-    set stateObj to lex("runmode", runmode, "program", program).
-    log_state(stateObj).
+    set sObj to lex("runmode", runmode, "program", program).
+    log_state(sObj).
 
-    return stateObj.
+    return sObj.
 }
 
 global function set_runmode {

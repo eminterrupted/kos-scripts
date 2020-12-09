@@ -129,11 +129,11 @@ global function warp_to_ksc_reentry_window {
 global function warp_to_burn_node {
     parameter mnvObj.
     
-    local sVal to lookdirup(mnvObj["mnv"]:burnVector, sun:position).
+    local sVal to lookdirup(nextnode:burnVector, sun:position).
     lock steering to sVal.
 
     until time:seconds >= (mnvObj["burnEta"] - 30) {
-        set sVal to lookdirup(mnvObj["mnv"]:burnVector, sun:position).
+        set sVal to lookdirup(nextNode:burnVector, sun:position).
         warp_to_timestamp(mnvObj["burnEta"]).
         update_display().
     }

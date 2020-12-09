@@ -1,11 +1,11 @@
 {
     "entries": [
         "tApo",
-        325000,
+        200000,
         "tPe",
-        325000,
+        200000,
         "tInc",
-        -15,
+        0,
         "gtAlt",
         55000,
         "gtPitch",
@@ -13,11 +13,11 @@
         "rVal",
         0,
         "launchS1",
-        "multistage_functions_next",
+        "multistage_base",
         "missionS1",
-        "no_reentry",
+        "mun_transfer",
         "missionS2",
-        "no_reentry"
+        "collect_sci"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

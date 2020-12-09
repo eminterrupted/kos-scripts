@@ -1,0 +1,31 @@
+{
+    "entries": [
+        "plan",
+        "KerbRelSat 200",
+        "lastLaunched",
+        "KerbRelSat 200 - D",
+        "totalLaunches",
+        4,
+        "totalCount",
+        4,
+        "orbitAltitude",
+        1067581,
+        "orbitPeriod",
+        7199.8677903118933,
+        "launchLog",
+        {
+            "entries": [
+                "launchStart",
+                8342803.1627788041,
+                "lngStart",
+                285.44239044189453,
+                "launchDur",
+                1656.3996223527938,
+                "launchDegrees",
+                61.127777099609375
+            ],
+            "$type": "kOS.Safe.Encapsulation.Lexicon"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

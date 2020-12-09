@@ -73,7 +73,7 @@ local function main {
 
         //Executes the burn node
         else if runmode = 20 {
-            exec_node(mnvObj["mnv"]).
+            exec_node(nextNode).
             set runmode to 25.
         }
 
@@ -98,7 +98,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 40 {
-            exec_node(mnvNode).
+            exec_node(nextNode).
             wait 2.
             set runmode to 45.
         }
