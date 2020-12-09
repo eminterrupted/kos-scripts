@@ -8,7 +8,7 @@ global function safe_stage {
     
     wait 0.5.
     logStr("Staging").
-    
+
     until false {
         until stage:ready {   
             wait 0.01.
@@ -16,9 +16,29 @@ global function safe_stage {
 
         if stage:ready {
             stage.
-            wait 1.5.
+            wait 1.
             break.
         }
+    }
+
+    for r in stage:resources {
+        if r:name = "lqdHydrogen" {
+            if r:amount > 0 wait 3.5.
+        }
+    }
+}
+
+global function staging_triggers {
+
+    //For solid fuel launch boosters
+    when ship:solidfuel < 0.1 and throttle > 0 then {
+        safe_stage().
+    }
+
+    // For liquid fueled engines. 
+    when ship:availableThrust < 0.1 and throttle > 0 then {
+        safe_stage().
+        preserve.
     }
 }
 

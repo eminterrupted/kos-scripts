@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/payload/lib_deploy_payload").
 
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
@@ -304,11 +305,8 @@ local function vertical_ascent {
     local tVal to 1.
     lock throttle to tVal.
 
-    //Setup staging trigger
-    when ship:availableThrust < 0.1 and tVal > 0 then {
-        safe_stage().
-        preserve.
-    }
+    //Setup staging triggers
+    staging_triggers().
 
     //Ascent loop
     until ship:verticalSpeed >= 100 or ship:altitude >= 1000 {

@@ -24,8 +24,8 @@ if runmode = 99 set runmode to 0.
 update_display().
 wait 5.
 
-local tgtAltAp is 50000.
-local tgtAltPe is 50000.
+local tgtAltAp is 35000.
+local tgtAltPe is 35000.
 
 local mnvCache is "local:/mnvCache.json".
 local mnvObj is choose readJson(mnvCache) if exists(mnvCache) else lex().
@@ -89,9 +89,23 @@ until runmode = 99 {
         exec_node(nextNode).
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
-        set runmode to 12.
+        set runmode to 11.
     }
 
+    // Time in high orbit to perform EVA
+    else if runmode = 11 {
+        until ship:altitude >= 250000 {
+            update_display().
+        }
+
+        local tstamp is time:seconds + 180.
+
+        until time:seconds >= tstamp {
+            update_display().
+        }
+
+        set runmode to 12.
+    }
 
     //Warp to the next sphere of influence
     else if runmode = 12 {

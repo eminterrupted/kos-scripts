@@ -49,9 +49,10 @@ until runmode = 199 {
         }
     }
 
+    //Inclination change
     else if runmode = 120 {
-        if time:seconds >= tStamp set runmode to 130.
-        else disp_timer(tStamp).
+        runPath("0:/_main/adhoc/simple_inclination_change", 82).
+        set runmode to 130.
     }
 
     else if runmode = 130 {

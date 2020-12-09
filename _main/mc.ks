@@ -18,8 +18,6 @@ if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launch
 //local stateObj is init_state_obj().
 local program is stateObj["program"].
 
-
-
 //Load from cache
 local cache is choose readJson("local:/launchSelectCache.json") if exists("local:/launchSelectCache.json") else readJson("0:/data/launchSelectCache.json").
 

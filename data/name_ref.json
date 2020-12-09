@@ -271,7 +271,15 @@
         "A1 Spot Light",
         "B9.Utility.Light.A1.White",
         "Z-1k Rechargeable Battery Bank",
-        "batteryBank"
+        "batteryBank",
+        "Z-100 Rechargeable Battery Pack",
+        "batteryPack",
+        "CE-60 'Pavonis' Cryogenic Rocket Engine",
+        "cryoengine-pavonis-1",
+        "Procedural SRB",
+        "proceduralTankSRB",
+        "Procedural Nose Cone",
+        "proceduralNoseCone"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

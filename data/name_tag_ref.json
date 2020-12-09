@@ -249,7 +249,19 @@
         "conformaldecals-flag",
         "decal",
         "batteryBank",
-        "ec.battery.stack"
+        "ec.battery.stack",
+        "batteryPack",
+        "ec.battery.radial",
+        "nflv-engine-rutherford-vac-1",
+        "eng",
+        "command-125-1",
+        "cmd.crew",
+        "radialDecoupler",
+        "dc.rad",
+        "proceduralTankSRB",
+        "eng",
+        "proceduralNoseCone",
+        "aero.cone"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

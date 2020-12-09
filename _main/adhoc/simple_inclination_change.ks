@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter _targetObt.
+parameter _tgtInclination.
 
 clearscreen.
 
@@ -15,15 +15,25 @@ runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_circ_burn").
 
-set stateObj to init_state_obj("ADHOC").
 local runmode to 0.
 
 disp_main().
 
 wait 2.
 
+// Creating the new orbit
+local targetObt is createOrbit(
+    _tgtInclination, 
+    ship:orbit:eccentricity, 
+    ship:orbit:semiMajorAxis, 
+    ship:orbit:lan,
+    ship:orbit:argumentOfPeriapsis,
+    ship:orbit:meanAnomalyAtEpoch,
+    ship:orbit:epoch,
+    ship:body).
+
 // Inclination match burn data
-local burn to get_inc_match_burn(ship, _targetObt).
+local burn to get_inc_match_burn(ship, targetObt).
 local utime to burn[0].
 local burnVector to burn[1].
 local dur to get_burn_dur(burnVector:mag).
@@ -95,6 +105,8 @@ local function main {
             
             // Wait until we get to the burn
             until time:seconds >= leadTime  - 90 {
+                if warp = 0 set warp to 3.
+
                 print "Burn starting in " + round(leadTime - time:seconds) + "s     " at (2, 44).
                 set sVal to burnVector.
 
@@ -130,10 +142,13 @@ local function main {
             set tVal to 0.
             print "Burn completed                                " at (2, 44).
             
+            remove mnvNode.
+            
             set runmode to 10.
         }
 
         else if runmode = 10 {
+            
             set burnDone to true.
             set burnVD to 0.
 

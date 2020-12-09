@@ -851,7 +851,9 @@
         "Mk1-TMA 'Proteus' Advanced Command Pod",
         "cmd.crew",
         "A1 Spot Light",
-        "lgt.spot"
+        "lgt.spot",
+        "CE-60 'Pavonis' Cryogenic Rocket Engine",
+        ""
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

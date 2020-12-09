@@ -93,8 +93,10 @@ local function prep_for_orbit {
     logStr("Deploying solar panels").
     panels on.
 
-    logStr("Verifying connection to KSC").
-    if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
+    logStr("Activating all omni antennae").
+    for a in ship:partsTaggedPattern("comm.omni") {
+        activate_omni(a).
+    }
     logStr("Orbtial configuration set").
 
     update_display().

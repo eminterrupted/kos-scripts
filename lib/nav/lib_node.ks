@@ -134,9 +134,11 @@ local function improve_node {
 
     //hill climb to find the best time
     local curScore is get_node_score(data, tgtAlt, mode).
-    local mnvFactor is choose 0.25 if curScore:score < 0.75 else 0.01.
-    set mnvFactor to choose 0.25 if curScore:score > 1.25 else 0.01.
-
+    local mnvFactor is 0.25.
+    if curScore:score > 0.85 and curScore:score < 1.15 {
+        set mnvFactor to 0.01.
+    }
+    
     local mnvCandidates is list(
         list(data[0] + mnvFactor, data[1], data[2], data[3])
         ,list(data[0] - mnvFactor, data[1], data[2], data[3])

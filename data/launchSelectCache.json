@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        200000,
+        250000,
         "tPe",
-        200000,
+        250000,
         "tInc",
         0,
         "gtAlt",
@@ -17,7 +17,7 @@
         "missionS1",
         "mun_transfer",
         "missionS2",
-        "collect_sci"
+        "collect_sci_for_biomes"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

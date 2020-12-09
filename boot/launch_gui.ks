@@ -187,7 +187,7 @@ set cacheObj["rVal"] to rVal.
 writeJson(cacheObj, cache).
 copyPath(cache, localCache).
 
-local mc to "0:/_main/mc_vnext".
+local mc to "0:/_main/mc".
 local localMC to rProc:volume:name + ":/boot/mc".
 compile(mc) to localMC.
 set rProc:bootfilename to localMC:replace("local:","").
