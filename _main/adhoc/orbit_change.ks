@@ -2,7 +2,8 @@
 
 parameter tgtAlt0,
           tgtAlt1,
-          rVal is 0.
+          rVal is 0,
+          runmodeReset is false.
 
 clearscreen.
 
@@ -20,6 +21,7 @@ runOncePath("0:/lib/nav/lib_circ_burn").
 set stateObj to init_state_obj("ADHOC").
 local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
+set runmode to choose runmode if not runmodeReset else 0.
 
 disp_main().
 
@@ -54,7 +56,7 @@ local function main {
         //Adds the intial hohmann burn node 
         //to the flight plan at the desired point
         else if runmode = 5 {
-            set mnvNode to add_simple_circ_node("ap", tgtAlt0).
+            set mnvNode to add_simple_circ_node("pe", tgtAlt0).
             set runmode to 10.
         }
 

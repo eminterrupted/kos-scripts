@@ -5,7 +5,6 @@ runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/payload/lib_deploy_payload").
 
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
-if not (defined stateObj) local stateObj to init_state_obj().
 
 //Main launch sequencer
 global function launch_sequence {

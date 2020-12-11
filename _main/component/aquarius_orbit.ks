@@ -1,6 +1,7 @@
 @lazyGlobal off. 
 
-parameter rVal is 180.
+parameter rVal is 180,
+          runmodeReset is false.
 
 clearScreen.
 runOncePath("0:/lib/lib_init").
@@ -23,14 +24,16 @@ runOncePath("0:/lib/part/lib_heatshield").
 //Vars
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
+if runmode = 99 set runmode to 0. 
+if runmodeReset set runmode to 0.
 
-local sVal to ship:prograde + r(0, 0, rVal).
+local sciMod is get_sci_mod_for_parts(ship:parts).
 local tPe to 35000.
 local tStamp is 0.
-local tVal to 0.
 
-if runmode = 99 set runmode to 0. 
+local sVal to ship:prograde + r(0, 0, rVal).
 lock steering to sVal.
+local tVal to 0.
 lock throttle to tVal.
 
 clearscreen.
@@ -38,8 +41,6 @@ clearscreen.
 until runmode = 99 {
 
     if runmode = 0 {
-        
-        local sciMod is get_sci_mod().
         log_sci_list(sciMod).
         recover_sci_list(sciMod).
         set tStamp to time:seconds + 180.

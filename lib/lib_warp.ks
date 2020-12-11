@@ -99,10 +99,11 @@ global function warp_to_next_soi {
     if ship:obt:hasnextpatch {
         set target to "".
         wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
-        warpTo(ship:obt:nextpatcheta + time:seconds - 30).
+        warpTo(ship:obt:nextpatcheta + time:seconds - 15).
     }
 
     until warp = 0 {
+        set sVal to lookDirUp(ship:facing:forevector, sun:position).
         update_display().
     }
 }

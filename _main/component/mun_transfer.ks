@@ -24,11 +24,12 @@ if runmode = 99 set runmode to 0.
 update_display().
 wait 5.
 
-local tgtAltAp is 35000.
-local tgtAltPe is 35000.
+local tgtAltAp is 375000.
+local tgtAltPe is 375000.
 
 local mnvCache is "local:/mnvCache.json".
-local mnvObj is choose readJson(mnvCache) if exists(mnvCache) else lex().
+local mnvObj is lex().
+if exists(mnvCache) set mnvObj to readJson(mnvCache).
 local mnvNode is 0.
 
 local sVal is lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
@@ -88,8 +89,8 @@ until runmode = 99 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
         exec_node(nextNode).
         deletePath(mnvCache).
-        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
-        set runmode to 11.
+        set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+        set runmode to choose 11 if ship:crewCapacity > 0 else 12.
     }
 
     // Time in high orbit to perform EVA
@@ -109,7 +110,7 @@ until runmode = 99 {
 
     //Warp to the next sphere of influence
     else if runmode = 12 {
-        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
+        set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         warp_to_next_soi().
         set target to "".
         until ship:body:name = tgt {

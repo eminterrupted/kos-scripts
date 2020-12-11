@@ -31,11 +31,11 @@ global function safe_stage {
 global function staging_triggers {
 
     //For solid fuel launch boosters
-    // if ship:partsTaggedPattern("eng.solid"):length > 0 {
-    //     when ship:solidfuel < 0.1 and throttle > 0 then {
-    //         safe_stage().
-    //     }
-    // }
+    if ship:partsTaggedPattern("eng.solid"):length > 0 {
+        when ship:solidfuel < 0.1 and throttle > 0 then {
+            safe_stage().
+        }
+    }
 
     // For liquid fueled engines. 
     when ship:availableThrust < 0.1 and throttle > 0 then {

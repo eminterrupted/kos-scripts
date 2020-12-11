@@ -30,6 +30,8 @@ local runmode to stateObj["runmode"].
 //Vars
 local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
+local sciList to get_sci_mod_for_parts(ship:parts).
+
 local sVal to heading(90, 90, rVal).
 
 //Get a list of science parts
@@ -39,9 +41,7 @@ until runmode = 99 {
     set runmode to stateObj["runmode"].
     
     //Setup
-    local sciList to get_sci_mod().
-    for m in get_dmag_mod() sciList:add(m).
-
+    
     //pad science
     if runmode = 0 {   
         log_sci_list(sciList).
@@ -97,10 +97,7 @@ until runmode = 99 {
 
     lock steering to sVal.
 
-    disp_main().
-    disp_tel().
-    disp_obt_data().
-    disp_eng_perf_data().
+    update_display().
     disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tgtPitch).
 
     if stateObj["runmode"] <> runmode {

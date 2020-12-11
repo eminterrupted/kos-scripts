@@ -23,18 +23,20 @@ runOncePath("0:/lib/part/lib_heatshield").
 
 //Vars
 //local stateObj to init_state_obj().
-local runmode to stateObj["runmode"].
 
-local sVal to ship:prograde.
+local sciMod is get_sci_mod_for_parts(ship:parts).
 local tPe to 35000.
 local tStamp is 0.
-local tVal to 0.
 
-if runmode = 99 set runmode to 0. 
+local sVal to ship:prograde.
 lock steering to sVal.
+local tVal to 0.
 lock throttle to tVal.
 
 clearscreen.
+
+local runmode to stateObj["runmode"].
+if runmode = 99 set runmode to 0. 
 
 until runmode = 99 {
 
@@ -47,21 +49,13 @@ until runmode = 99 {
 
     else if runmode = 2 {
         set sVal to ship:prograde + r(0, 0, rval). 
-        local sciMod is get_sci_mod().
-        deploy_sci_list(sciMod).
-        wait 1.
         log_sci_list(sciMod).
-        wait 1.
         recover_sci_list(sciMod).
         set runmode to 4.
     }
 
     else if runmode = 4 {
         set sVal to ship:prograde + r(0, 0, rval). 
-        local dmagMod is get_dmag_mod().
-        log_dmag_list(dmagMod).
-        wait 1.
-        recover_sci_list(dmagMod).
         set tStamp to time:seconds + 600.
         set runmode to 10.
     }

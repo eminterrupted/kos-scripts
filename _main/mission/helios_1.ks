@@ -21,11 +21,12 @@ runOncePath("0:/lib/data/ship/lib_mass").
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
-local sVal to lookDirUp(ship:facing:forevector, sun:position).
-lock steering to sVal.
+lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 
 local tVal to 0.
 lock throttle to tVal.
+
+local sciList is get_sci_mod_for_parts(ship:parts).
 
 set runmode to 0. 
 
@@ -33,40 +34,62 @@ clearscreen.
 
 until runmode = 99 {
 
-    local sciList is get_sci_mod_for_parts(ship:parts).
-    
     if runmode = 0 {
-        set sVal to lookDirUp(ship:facing:forevector, sun:position).
+        wait 5.
+
+        local tStamp is time:seconds + (ship:orbit:period / 2).
+        
+        if warp = 0 kuniverse:timewarp:warpto(tStamp - 15).
+        
+        until time:seconds >= tStamp {
+            update_display().
+        }
+
+        if warp > 0 kuniverse:timewarp:cancelwarp().
+
+        wait 5.
+
+        set runmode to 5.
+    }
+
+    else if runmode = 5 {
         set tVal to 1.
         until ship:availablethrust < 0.1 {
             update_display().
         }
-        set runmode to 1.
-    }
 
-    else if runmode = 1 {
+        wait 1.
+        set runmode to 10.
+    }
+        
+    else if runmode = 10 {
+        lock steering to ship:retrograde.
         local dish is ship:partsTaggedPattern("dish")[0].
         activate_dish(dish).
         set_dish_target(dish, "Kerbin").
-        set runmode to 2.
+        set runmode to 15.
     }
 
-    else if runmode = 2 {
+    else if runmode = 15 {
+        set runmode to 20.
+    }
+
+    else if runmode = 20 {
+
         warp_to_next_soi().
-        set runmode to 3.
-    }
 
-    else if runmode = 3 {
-        until ship:body = "sun" {
-            update_display().
+        wait 5.
+
+        when ship:body:name = "sun" then {
+            log_sci_list(sciList).
+            recover_sci_list(sciList).
         }
+
+        set runmode to 25.
     }
 
-    else if runmode = 3 {
-        set sVal to lookDirUp(ship:facing:forevector, sun:position).
-        log_sci_list(sciList).
-        recover_sci_list(sciList).
-        set runmode to 4.
+    else if runmode = 25 {
+        set runmode to 99.
     }
     
     update_display().

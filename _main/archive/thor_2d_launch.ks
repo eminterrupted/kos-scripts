@@ -34,22 +34,17 @@ runOncePath("0:/lib/data/ship/lib_mass").
 local runmode to stateObj["runmode"].
 
 //Vars
-local sVal is heading(90, 90, -90).
-local tVal is 0.
 
-
+local sciList to get_sci_mod_for_parts(ship:parts).
 local tPid to setup_q_pid(.125).
-lock steering to sVal.
-print tInc at (2, 75).
-print "     " at (2, 75).
 
+local sVal is heading(90, 90, -90).
+lock steering to sVal.
+local tVal is 0.
 
 until runmode = 99 {
 
     //Setup
-    local sciList is get_sci_mod().
-    for m in get_dmag_mod() sciList:add(m).
-
     //pad science
     if runmode = 0 {   
         log_sci_list(sciList).

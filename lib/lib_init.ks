@@ -1,8 +1,10 @@
 // Sets up global variables for use in all libraries
 @lazyGlobal off.
 
+//Global variables
 global errLvl to 0.
 global errObj to lexicon().
+
 
 runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").

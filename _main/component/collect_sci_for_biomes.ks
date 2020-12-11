@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-parameter rVal is 0.
+parameter rVal is 180.
 
 clearScreen.
 runOncePath("0:/lib/lib_init").
@@ -25,7 +25,7 @@ runOncePath("0:/lib/part/lib_heatshield").
 local runmode to stateObj["runmode"].
 
 local biome is "".
-local sVal to ship:prograde.
+local sVal to ship:prograde + r(0, 0, rVal).
 local tStamp is 0.
 local tVal to 0.
 
@@ -37,8 +37,7 @@ clearscreen.
 
 until runmode = 99 {
 
-    local sciMod is get_sci_mod().
-    local dmagMod is get_dmag_mod().
+    local sciMod is get_sci_mod_for_parts(ship:parts).
     
     if runmode = 0 {
         set sVal to ship:prograde + r(0, 0, rval). 
@@ -57,8 +56,6 @@ until runmode = 99 {
     else if runmode = 2 {
         set sVal to ship:prograde + r(0, 0, rval). 
         set biome to addons:scansat:currentBiome.
-        deploy_sci_list(sciMod).
-
         wait 1.
 
         set runmode to 3.
@@ -67,44 +64,39 @@ until runmode = 99 {
     else if runmode = 3 {
         set sVal to ship:prograde + r(0, 0, rval). 
         set biome to addons:scansat:currentBiome.
-
         log_sci_list(sciMod).
-        log_dmag_list(dmagMod).
         
         set runmode to 4.
     }
 
     else if runmode = 4 {
         set sVal to ship:prograde + r(0, 0, rval). 
-        
         recover_sci_list(sciMod).
-        recover_sci_list(dmagMod).
-
-        reset_sci_list(sciMod).
-        reset_sci_list(dmagMod).
         
         set runmode to 12.
     }
 
     if runmode = 12 {
         set sVal to ship:prograde + r(0, 0, rVal).
-        if biome <> addons:scansat:currentbiome set runmode to 3.
+        if biome <> addons:scansat:currentbiome {
+            kuniverse:timewarp:cancelwarp().
+            set runmode to 3.
+        }
+        
         if time:seconds > tStamp {
             kuniverse:timewarp:cancelwarp().
             if kuniverse:timewarp:issettled set runmode to 99.
         } else {
             if warp = 0 {
                 if steeringManager:angleerror < 0.1 and steeringManager:angleerror > -0.1 {
-                    set warp to 5.
+                    set warp to 1.
                 }
             }
             disp_timer(tStamp).
         }
     }
     
-    disp_main().
-    disp_tel().
-    disp_obt_data().
+    update_display().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.

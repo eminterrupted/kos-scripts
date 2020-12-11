@@ -21,10 +21,17 @@ global function add_node_to_plan {
 //
 global function add_transfer_node {
     parameter mnvObj,
-              tgtAlt.
+              tgtAlt,
+              impact is false.
 
+    local mnvNode to node(0, 0, 0, 0).
     local mnvList to list(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
-    local mnvNode to add_optimized_node(mnvList, tgtAlt, "pe").
+
+    if impact {
+        set mnvNode to add_node_to_plan(mnvList).
+    } else {
+        set mnvNode to add_optimized_node(mnvList, tgtAlt, "pe").    
+    }
 
     set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
     set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
@@ -197,7 +204,8 @@ local function get_node_score {
     return lex("score", score, "result", resultAlt).
 }
 
-//WIP
+
+//-- WIP --//
 global function get_node_for_inc_change {
     parameter tObt,
               sObt is ship:orbit.
@@ -213,6 +221,5 @@ global function get_node_for_inc_change {
     local n to 360 / sObt:period.
     local meanAnomaly to sObt:meananomalyatepoch + (n * (time:seconds - sObt:epoch)). 
     
-
     return true.
 }

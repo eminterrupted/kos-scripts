@@ -40,14 +40,12 @@ local tVal to 0.
 
 local azObj to l_az_calc_init(tApo, tInc).
 local az to l_az_calc(azObj).
+local sciList to get_sci_mod_for_parts(ship:parts).
 local tPid to setup_q_pid(.15).
 
 until runmode = 99 {
 
     set runmode to stateObj["runmode"].
-
-    //Setup
-    local sciList to get_sci_mod().
 
     //prelaunch activities
     if runmode = 0 {

@@ -261,7 +261,9 @@
         "proceduralTankSRB",
         "eng",
         "proceduralNoseCone",
-        "aero.cone"
+        "aero.cone",
+        "Impact Seismometer",
+        "sci.impact"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

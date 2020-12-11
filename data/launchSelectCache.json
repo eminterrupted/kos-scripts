@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        175000,
+        200000,
         "tPe",
-        125000000,
+        200000,
         "tInc",
         0,
         "gtAlt",
@@ -15,9 +15,9 @@
         "launchS1",
         "multistage_base",
         "missionS1",
-        "no_reentry",
+        "luna_2",
         "missionS2",
-        "no_reentry"
+        "simple_orbit"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

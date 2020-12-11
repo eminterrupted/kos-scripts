@@ -127,9 +127,11 @@ local function main {
         //Then warps to the SOI change
         else if runmode = 50 {
             set_target("").
-            warp_to_next_soi().
+            if ship:altitude > 350000 {
+                warp_to_next_soi().
+                set runmode to 55.
+            }
             update_display().
-            set runmode to 55.
         }
 
         //Sets up triggers for science experiments
@@ -218,12 +220,12 @@ local function main {
             set sciStamp to time:seconds + 60.
             log_sci_list(sciList).
             collect_sci_in_container().
-            reset_sci_list(sciList).
             
             set runmode to 77.
         }
             
         if runmode = 77 {
+            set tStamp to 60.
             until time:seconds >= tStamp {
                 if time:seconds >= sciStamp set runmode to 76.
                 update_display().

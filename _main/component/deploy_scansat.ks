@@ -1,5 +1,7 @@
 @lazyGlobal off. 
 
+parameter _tgtInc is 84.
+
 clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_display").
@@ -51,7 +53,7 @@ until runmode = 199 {
 
     //Inclination change
     else if runmode = 120 {
-        runPath("0:/_main/adhoc/simple_inclination_change", 82).
+        runPath("0:/_main/adhoc/simple_inclination_change", _tgtInc).
         set runmode to 130.
     }
 

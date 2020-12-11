@@ -12,7 +12,7 @@ runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 init_uplink().
 
-if ship:rootPart:tag = "" runOncePath("0:/lib/lib_tag").
+runOncePath("0:/lib/lib_tag").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 //Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.

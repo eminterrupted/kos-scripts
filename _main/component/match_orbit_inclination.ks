@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter _tgtInclination.
+parameter _tgtOrbit.
 
 clearscreen.
 
@@ -19,21 +19,11 @@ local runmode to 0.
 
 disp_main().
 
-wait 2.
+wait 1.
 
-// Creating the new orbit
-local targetObt is createOrbit(
-    _tgtInclination, 
-    ship:orbit:eccentricity, 
-    ship:orbit:semiMajorAxis, 
-    ship:orbit:lan,
-    ship:orbit:argumentOfPeriapsis,
-    ship:orbit:meanAnomalyAtEpoch,
-    ship:orbit:epoch,
-    ship:body).
 
 // Inclination match burn data
-local burn to get_inc_match_burn(ship, targetObt).
+local burn to get_inc_match_burn(ship, _tgtOrbit).
 local utime to burn[0].
 local burnVector to burn[1].
 local dur to get_burn_dur(burnVector:mag).
@@ -100,8 +90,8 @@ local function main {
             
             set sVal to burnVector.
             
-            print "Dunbaratu's Burn Script" at (2, 42).
-            print "-----------------------" at (2, 43).
+            print "Burn Data" at (2, 42).
+            print "---------" at (2, 43).
             
             // Wait until we get to the burn
             until time:seconds >= leadTime  - 30 {
@@ -141,7 +131,10 @@ local function main {
 
             set tVal to 0.
             print "Burn completed                                " at (2, 44).
-            
+            wait 1.
+            print "                            " at (2, 42).
+            print "                            " at (2, 43).
+            print "                            " at (2, 44).
             remove mnvNode.
             
             set runmode to 10.

@@ -34,7 +34,7 @@ local expMod is "SCANexperiment".
         local m is p:getModule(expMod).
         if m:hasAction("analyze data: multispectral") m:doAction("analyze data: multispectral", true).
         else if m:hasEvent("analyze data: sar") m:doEvent("analyze data: sar").
-        recover_sci(m).
+        recover_sci_list(list(m)).
     }
 
     //-- return if scanner is at ideal altitude for scanner type
