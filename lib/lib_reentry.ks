@@ -2,99 +2,133 @@
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_warp").
+runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/part/lib_heatshield").
 
-global function do_reentry {
-    parameter reentryAlt is 35000,
-              rVal is 180.
 
-    local sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
-    lock steering to sVal.
 
-    local runmode to 105.
+global function do_kerbin_reentry_burn {
+    parameter reentryAlt is 35000.
 
-    if runmode = 105 {
-        if ship:periapsis > 70000 {
-            warp_to_ksc_reentry_window().
-            set runmode to 115.
-        } else {
-            set runmode to 125.
-        }
-    }
-
-    else if runmode = 115 {
-        do_reentry_burn(reentryAlt, rVal).
-        set runmode to 125.
-    }
-
-    else if runmode = 125 {
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
+    lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
+    local subroutine to 0.
+    
+    until subroutine = "" {
+        if subroutine = 0 {
+            set subroutine to set_sr(2).
+            update_display().
+        } 
         
-        local chuteList to ship:partsTaggedPattern("chute"). 
-        arm_chutes(chuteList).
-        
-        set runmode to 135.
-    }
-
-    //warp to atmosphere interface
-    else if runmode = 135 {
-        set sval to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
-        
-        local warpAlt is body:atm:height + 10000.
-        warp_to_alt(warpAlt).
-
-        if ship:altitude <= warpAlt {
-            when kuniverse:timewarp:issettled then {
-                safe_stage().
-                set runmode to 145.
+        else if subroutine = 2 {
+            if ship:periapsis > 70000 {
+                warp_to_ksc_reentry_window().
             }
+
+            set subroutine to set_sr(4).
+            update_display().
         }
-    }
-        
-    else if runmode = 145 {
-        set sval to ship:retrograde + r(0, 0, rVal). 
-        if ship:altitude <= 12500 {
-            set runmode to 155.
+
+        else if subroutine = 4 {
+            reentry_burn(reentryAlt).
+            set subroutine to set_sr("").
+            update_display().
         }
-    }
 
-    else if runmode = 155 {
-        unlock steering.
-        set runmode to 165.
+        update_display().
     }
-
-    else if runmode = 165 {
-        if alt:radar <= 500 and ship:verticalSpeed <= 75 {
-            jettison_heatshield(ship:partsTaggedPattern("heatshield")[0]).
-            set runmode to 175.
-        }
-    }
-
-    else if runmode = 175 {
-        if alt:radar < 25 set runmode to 99.
-    }
-
-    update_display().
 }
 
 
-//local functions
-local function do_reentry_burn {
-    parameter reentryAlt,
-              rVal.
 
-    local sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
-    lock steering to sVal.
+global function do_kerbin_reentry {
 
-    local tVal to 0.
-    lock throttle to tVal.
+    local rVal to utils:getRVal().
+    lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
     
-    until steeringManager:angleerror < -0.1 and steeringManager:angleerror > -0.1 {
+    local subroutine to init_subroutine().
+
+    until false {
+    
+        if subroutine = 0 {
+            local chuteList to ship:partsTaggedPattern("chute"). 
+            arm_chutes(chuteList).    
+            set subroutine to set_sr(2).
+        }
+
+        else if subroutine = 2 {
+            local warpAlt is body:atm:height + 15000.
+            warp_to_alt(warpAlt).
+            set subroutine to set_sr(4).
+        }
+
+        else if subroutine = 4 {
+            if warp = 0 and kuniverse:timewarp:issettled {
+                lock steering to ship:retrograde + r(45, 0, 180).
+                wait 5. 
+                until stage:number = 1 {
+                    safe_stage().
+                }
+                lock steering to ship:retrograde + r(0, 0, 180).
+                wait 5.
+                set subroutine to set_sr(6).
+            }
+        }
+            
+        else if subroutine = 6 {
+            until ship:altitude <= 12500 {
+                update_display().    
+                wait 0.01.
+            }
+            unlock steering.
+            set subroutine to set_sr(8).
+        }
+
+        else if subroutine = 8 {
+            until alt:radar <= 500 and ship:verticalSpeed <= 75 {
+                update_display().
+                disp_timer(time:seconds + utils:timeToGround()).
+                wait 0.01.
+            }
+            jettison_heatshield(ship:partsTaggedPattern("heatshield")[0]).
+            set subroutine to set_sr(10).
+        }
+
+        else if subroutine = 10 {
+            until alt:radar < 25 {
+                update_display().
+                disp_timer(time:seconds + utils:timeToGround()).
+                wait 0.01.
+            }
+            
+            break.
+        }
+
         update_display().
     }
 
-    until ship:periapsis <= reentryAlt {
-        set tVal to 1.
+    set_sr("").
+}
+
+
+
+//local functions
+local function reentry_burn {
+    parameter reentryAlt.
+
+    lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
+    
+    until steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 {
+        update_display().
+        wait 0.01.
     }
-    set tVal to 0.
+
+    lock throttle to 1.
+
+    until ship:periapsis <= reentryAlt {
+        update_display().
+        wait 0.01.
+    }
+
+    lock throttle to 0.
+    update_display().
 }

@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
-parameter _tgtInclination.
+parameter _tgtInclination,
+          _tgtLongitudeAscendingNode is ship:orbit:lan.
 
 clearscreen.
 
@@ -26,7 +27,7 @@ local targetObt is createOrbit(
     _tgtInclination, 
     ship:orbit:eccentricity, 
     ship:orbit:semiMajorAxis, 
-    ship:orbit:lan,
+    _tgtLongitudeAscendingNode,
     ship:orbit:argumentOfPeriapsis,
     ship:orbit:meanAnomalyAtEpoch,
     ship:orbit:epoch,
@@ -99,20 +100,18 @@ local function main {
         else if runmode = 5 {
             
             set sVal to burnVector.
-            
-            print "Dunbaratu's Burn Script" at (2, 42).
-            print "-----------------------" at (2, 43).
-            
+
+            warpTo(leadTime - 30).
+
             // Wait until we get to the burn
             until time:seconds >= leadTime  - 30 {
-                if warp = 0 set warp to 3.
-
-                print "Burn starting in " + round(leadTime - time:seconds) + "s     " at (2, 44).
                 set sVal to burnVector.
-
                 update_display().
+                disp_timer(leadTime, "burn eta"). 
                 wait 0.01.
             }
+
+            disp_clear_block("timer").
 
             if warp > 0 kuniverse:timewarp:cancelwarp().
 
@@ -136,11 +135,13 @@ local function main {
                 print "Burn dV remaining: " + round(dvToGo, 2) + " m/s      " at (2, 44).
 
                 update_display().
+                disp_burn_data().
                 wait 0.01.
             }
 
             set tVal to 0.
-            print "Burn completed                                " at (2, 44).
+            
+            disp_clear_block("burn_data").
             
             remove mnvNode.
             
@@ -156,10 +157,6 @@ local function main {
         }
 
         update_display().
-
-        //Logs the runmode change and writes to disk in case we need to resume the script later
-        set stateObj["runmode"] to runmode.
-        log_state(stateObj).
     }
 }
 

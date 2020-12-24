@@ -2,8 +2,8 @@
 
 parameter tgtAlt0,
           tgtAlt1,
-          rVal is 0,
-          runmodeReset is false.
+          runmodeReset is false,
+          flipPhase is false.
 
 clearscreen.
 
@@ -21,16 +21,14 @@ runOncePath("0:/lib/nav/lib_circ_burn").
 set stateObj to init_state_obj("ADHOC").
 local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
-set runmode to choose runmode if not runmodeReset else 0.
+if runmodeReset set runmode to 0.
 
 disp_main().
-
-wait 5.
 
 local mnvNode is 0.
 local mnvObj is lex().
 
-local sVal is lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
+local sVal is lookDirUp(ship:facing:forevector, sun:position).
 lock steering to sVal.
 
 local tVal is 0.
@@ -56,7 +54,8 @@ local function main {
         //Adds the intial hohmann burn node 
         //to the flight plan at the desired point
         else if runmode = 5 {
-            set mnvNode to add_simple_circ_node("pe", tgtAlt0).
+            local nodeAt to choose "ap" if flipPhase else "pe".
+            set mnvNode to add_simple_circ_node(nodeAt, tgtAlt0).
             set runmode to 10.
         }
 
@@ -81,7 +80,8 @@ local function main {
 
         //Adds a circularization node to the flight plan
         else if runmode = 25 {
-            set mnvNode to add_simple_circ_node("pe", tgtAlt1).
+            local nodeAt to choose "pe" if flipPhase else "ap".
+            set mnvNode to add_simple_circ_node(nodeAt, tgtAlt1).
             set runmode to 30.
         }
 

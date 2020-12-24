@@ -116,7 +116,11 @@ global function launch_vessel {
         else if p:tag:matchesPattern("umbilical") set umbilical to true.
     }
 
-    //Setup the launch triggers.    
+    //Setup the launch triggers. 
+    when cd <= countdown * 0.95 then {
+        mlp_retract_crewarm().
+        logStr("Crew arm retract").
+    }   
     when cd <= countdown * 0.5 then {
         mlp_fuel_off().
         logStr("Fueling complete").
@@ -144,6 +148,11 @@ global function launch_vessel {
             mlp_fallback_full().
             logStr("Fallback tower full retract").
         }
+
+        if swingarm {
+            mlp_retract_swingarm().
+            logStr("Swing arms detached").
+        }
     }
     when cd <= 0.2 then {
         if umbilical {
@@ -155,9 +164,6 @@ global function launch_vessel {
         if holddown {
             mlp_retract_holddown().
             logStr("Holddown retracted").
-        }
-        if swingarm {
-            logStr("Swing arms detached").
         }
     }
 
@@ -229,7 +235,7 @@ global function get_circ_burn_pitch {
 
 
 local function preLaunch {
-    local runmode is set_runmode(0).
+    local runmode is set_rm(0).
     logStr("[Runmode " + runmode + "]: Preparing for launch").
     
     disp_main().
@@ -237,7 +243,7 @@ local function preLaunch {
 
 
 local function launch {
-    local runmode to set_runmode(5).
+    local runmode to set_rm(5).
     logStr("[Runmode " + runmode + "]: Begin launch procedure").
 
     if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
@@ -257,7 +263,7 @@ local function launch {
 
 
 local function clear_tower {
-    local runmode to set_runmode(10).
+    local runmode to set_rm(10).
     logStr("[Runmode " + runmode + "]: Liftoff!").
     
     local sVal to heading(90, 90, -90).
@@ -279,7 +285,7 @@ local function clear_tower {
 local function roll_program {
     parameter lObj.
 
-    local runmode to set_runmode(15).
+    local runmode to set_rm(15).
     logStr("[Runmode " + runmode + "]: Roll program").
 
     local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
@@ -295,7 +301,7 @@ local function roll_program {
 local function vertical_ascent {
     parameter lObj.
 
-    local runmode to set_runmode(20).
+    local runmode to set_rm(20).
     logStr("[Runmode " + runmode + "]: Vertical ascent").
     
     local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
@@ -318,7 +324,7 @@ local function vertical_ascent {
 local function gravity_turn {
     parameter lObj.
            
-    local runmode to set_runmode(25).
+    local runmode to set_rm(25).
     logStr("[Runmode " + runmode + "]: Pitch program").
     
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
@@ -335,7 +341,7 @@ local function gravity_turn {
     when acc >= lObj["maxAcc"] then logStr("Throttling back at maximum acceleration").
 
     //Gravity turn loop
-    until ship:apoapsis >= lObj["tApo"] * 0.975 {
+    until ship:apoapsis >= lObj["tApo"] * 0.990 {
         set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
         set acc to ship:maxThrust / ship:mass.
 
@@ -360,7 +366,7 @@ local function gravity_turn {
 local function slow_burn_to_apo {
     parameter lObj. 
 
-    local runmode to set_runmode(30).
+    local runmode to set_rm(30).
     logStr("[Runmode " + runmode + "]: Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
 
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
@@ -371,7 +377,7 @@ local function slow_burn_to_apo {
 
     until ship:apoapsis >= lObj["tApo"] {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-        set tval to 0.25.
+        set tval to 0.64.
 
         update_display().
     }
@@ -380,7 +386,7 @@ local function slow_burn_to_apo {
 local function meco {
     parameter lObj.
 
-    local runmode to set_runmode(35).
+    local runmode to set_rm(35).
     logStr("[Runmode " + runmode + "]: MECO").
 
     local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
@@ -395,7 +401,7 @@ local function meco {
 local function coast_to_space {
     parameter lObj.
     
-    local runmode to set_runmode(40).
+    local runmode to set_rm(40).
     logStr("[Runmode " + runmode + "]: Coast phase").
 
     local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
@@ -415,7 +421,7 @@ local function coast_to_space {
 
         update_display().
     }
-
+    
     logStr("Reached space").
 }
 

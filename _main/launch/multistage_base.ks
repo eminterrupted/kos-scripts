@@ -125,9 +125,10 @@ local function cleanup {
 local function end_main {
     logStr("Preparing for mission script handoff").
         
-    from { local n is 10.} until n <= 0 step { set n to n - 1.} do {
+    from { local n is 5.} until n <= 0 step { set n to n - 1.} do {
         update_display().
-        disp_timer(n).
+        disp_timer(n + time:seconds).
+        wait 1.
     }
 
     disp_clear_block_all().

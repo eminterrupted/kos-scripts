@@ -18,19 +18,50 @@ global function add_node_to_plan {
 }
 
 
+global function add_node_mun_return {
+    parameter tgtAlt.
+
+    local dv is 0.
+    local mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
+    add mnvNode.
+
+    until nextNode:obt:hasNextPatch {
+        remove mnvNode.
+        set dv to dv + 5.
+        set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dv).
+        add mnvNode.
+        wait 0.01.
+    }
+
+    set dv to get_dv_for_prograde(tgtAlt, mnvNode:obt:nextPatch:periapsis, mnvNode:obt:nextPatch:body).
+
+    set mnvNode to node(time:seconds + 2400 + mnvNode:obt:nextpatcheta, 0, 0, dv).
+    add mnvNode.
+
+    set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe").
+}
+
+
 //
 global function add_transfer_node {
     parameter mnvObj,
               tgtAlt,
               impact is false.
 
-    local mnvNode to node(0, 0, 0, 0).
     local mnvList to list(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
+    local mnvNode to node(mnvList[0],mnvList[1], mnvList[2], mnvList[3]).
+    
+    add mnvNode.
+    until nextNode:obt:hasnextpatch {
+        local dv to mnvNode:burnvector:mag.
+        remove mnvNode.
+        set mnvNode to node(mnvList[0],mnvList[1], mnvList[2], dv + 1).
+        add mnvNode.
+    }
 
-    if impact {
-        set mnvNode to add_node_to_plan(mnvList).
-    } else {
-        set mnvNode to add_optimized_node(mnvList, tgtAlt, "pe").    
+    if not impact {
+        local mnvAcc to 0.005.
+        set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe", target, mnvAcc).
     }
 
     set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
@@ -45,6 +76,7 @@ global function add_transfer_node {
 global function exec_node {
     parameter nd.
 
+    
     local sVal to lookDirUp(nd:burnvector, sun:position).
     lock steering to sVal.
 
@@ -83,91 +115,399 @@ global function exec_node {
 
 
 global function add_simple_circ_node {
-    parameter nodeAt is "ap",
-              tgtAlt is ship:apoapsis.
+    parameter _nodeAt,
+              _tgtAlt.
+
+    local dv to choose get_dv_for_retrograde(_tgtAlt, ship:apoapsis) if _nodeAt = "pe" else get_dv_for_prograde(_tgtAlt, ship:periapsis).
+    if dv > 9999 set dv to 50.
 
     local mnv is list().
     local mode is "".
 
-    if nodeAt = "ap" {
-        set mnv to list(time:seconds + eta:apoapsis, 0, 0, get_dv_for_mnv(tgtAlt, ship:periapsis, ship:body)).
+    if _nodeAt = "ap" {
+        set mnv to list(time:seconds + eta:apoapsis, 0, 0, dv).
         set mode to "pe".
     } else {
-        set mnv to list(time:seconds + eta:periapsis, 0, 0, get_dv_for_mnv(tgtAlt, ship:apoapsis, ship:body)).
+        set mnv to list(time:seconds + eta:periapsis, 0, 0, dv).
         set mode to "ap".
     }
 
-    //set mnv to optimize_node(mnv, tgtAlt, mode).
+    //local mnvAcc is list(0.995, 1.005).
+
+    //set mnv to optimize_node_list(mnv, tgtAlt, mode, ship:body, mnvAcc).
     set mnv to add_node_to_plan(mnv).
     
     return mnv.
 }
 
 
-global function add_optimized_node {
-    parameter mnvParam,
-              tgtAlt,
-              mode.
+global function add_capture_node {
+    parameter tgtAlt.
 
-    local mnv to optimize_node(mnvParam, tgtAlt, mode).
+    local dv to get_dv_for_prograde(tgtAlt, ship:periapsis).
+    local mnv to list(time:seconds + eta:periapsis, 0, 0, dv).
+
+    local mnvNode to node(mnv[0], mnv[1], mnv[3], mnv[3]).
+    add mnvNode.
+
+    until not mnvNode:orbit:hasNextPatch {
+        set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 5).
+        set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        if hasNode remove nextNode.
+        add mnvNode.
+        wait 0.01.
+    }
+
+    until mnvNode:orbit:apoapsis <= max(tgtAlt, ship:periapsis + 1000) {
+        if hasNode remove nextNode.
+        set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 0.25).
+        set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        add mnvNode.
+        wait 0.01.
+    }
+    
+    return mnvNode.
+}
+
+
+global function add_optimized_node {
+    parameter _mnvParam,
+              _tgtAlt,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
+
+    local mnv to optimize_node_list(_mnvParam, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
     set mnv to add_node_to_plan(mnv).
 
     return mnv.
 }
 
 
-global function optimize_node {
-    parameter mnv,
-              tgtAlt,
-              mode.
+global function optimize_existing_node {
+    parameter _mnvNode,
+              _tgtAlt,
+              _compMode,
+              _tgtBody is _mnvNode:obt:body,
+              _mnvAcc is 0.025.
 
-    print "MSG: Optimizing maneuver                                     " at (2, 7).
+    local mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
+    remove _mnvNode.
 
-    until false {
-        set mnv to improve_node(mnv, tgtAlt, mode).
-        local nodeScore to get_node_score(mnv, tgtAlt, mode)["score"].
-        if nodeScore >= 0.9975 and nodeScore <= 1.0025 break.
-    }
+    local optParam to optimize_node_list(mnvParam, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
+    
+    set _mnvNode to node(optParam[0], optParam[1], optParam[2], optParam[3]).
+    add _mnvNode.
 
-    print "MSG: Optimized maneuver found                                " at (2, 7).
-    return mnv.
+    return _mnvNode.
 }
 
 
+global function optimize_node_list {
+    parameter _data,
+              _tgtAlt,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
+
+    print "MSG: Optimizing maneuver                                     " at (2, 7).
+
+    local limLo to 1 - _mnvAcc.
+    local limHi to 1 + _mnvAcc. 
+
+    until false {
+        set _data to improve_node(_data, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
+        local nodeScore to get_node_score(_data, _tgtAlt, _compMode, _tgtBody)["score"].
+
+        wait 0.01.
+
+        if nodeScore >= limLo and nodeScore <= limHi {
+            break.
+        }
+    }
+
+    print "MSG: Optimized maneuver found                                " at (2, 7).
+    return _data.
+}
+
+
+
 local function improve_node {
+    parameter _data,
+              _tgtAlt,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
+
+    local limLo to 1 - _mnvAcc.
+    local limHi to 1 + _mnvAcc.
+
+    //hill climb to find the best time
+    local curScore is get_node_score(_data, _tgtAlt, _compMode, _tgtBody).
+
+    local mnvFactor is 0.25.
+    if curScore:score > (limLo * 0.985) and curScore:score < (limHi * 1.015) {
+        set mnvFactor to 0.015625 * mnvFactor.
+    } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
+        set mnvFactor to 0.03125 * mnvFactor. 
+    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+        set mnvFactor to 0.125 * mnvFactor.
+    } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
+        set mnvFactor to .5 * mnvFactor.
+    } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
+        set mnvFactor to 1.75 * mnvFactor.
+    } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
+        set mnvFactor to 3 * mnvFactor. 
+    } else {
+        set mnvFactor to 10 * mnvFactor.
+    }
+    
+    local mnvCandidates is list(
+        list(_data[0] + mnvFactor, _data[1], _data[2], _data[3]) //Time
+        ,list(_data[0] - mnvFactor, _data[1], _data[2], _data[3]) //Time
+        ,list(_data[0], _data[1], _data[2], _data[3] + mnvFactor)    //Prograde
+        ,list(_data[0], _data[1], _data[2], _data[3] + - mnvFactor) //Prograde
+        ,list(_data[0], _data[1] + mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1] - mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1], _data[2] + mnvFactor, _data[3]) //Normal
+        ,list(_data[0], _data[1], _data[2] - mnvFactor, _data[3]) //Normal
+
+        ).
+
+    // if not _lockTime {
+    //     mnvCandidates:add(list(_data[0] + mnvFactor, _data[1], _data[2], _data[3])).
+    //     mnvCandidates:add(list(_data[0] - mnvFactor, _data[1], _data[2], _data[3])).
+    // }
+
+    for c in mnvCandidates {
+        local candScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
+        if candScore:result > _tgtAlt {
+            if candScore:score < curScore:score {
+                set curScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
+                set _data to c.
+                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+            }
+        } else {
+            if candScore:score > curScore:score {
+                set curScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
+                set _data to c.
+                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+            }
+        }
+    }
+
+    return _data.
+}
+
+
+local function get_node_score {
+    parameter _data,
+              _tgtAlt,
+              _compMode,
+              _tgtBody.
+
+    local score to 0.
+    local resultAlt to 0.
+    local mnvTest to node(_data[0], _data[1], _data[2], _data[3]).
+
+    add mnvTest.
+    
+    if _compMode = "pe" {     
+        if mnvTest:obt:body = _tgtBody {
+            set resultAlt to mnvTest:obt:periapsis.
+
+        } else if mnvTest:obt:hasNextPatch {
+            if mnvTest:obt:nextpatch:body = _tgtBody {
+                set resultAlt to mnvTest:obt:nextpatch:periapsis.
+
+            } else if mnvTest:obt:nextpatch:hasnextpatch {
+                if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
+                    set resultAlt to mnvTest:obt:nextpatch:nextpatch:periapsis.
+
+                } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
+                    if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
+                        set resultAlt to mnvTest:obt:nextpatch:nextpatch:nextpatch:periapsis.
+                    }
+                }
+            }
+        }
+    }
+
+    if _compMode = "ap" {     
+        if mnvTest:obt:body = _tgtBody {
+            set resultAlt to mnvTest:obt:apoapsis.
+
+        } else if mnvTest:obt:hasNextPatch {
+            if mnvTest:obt:nextpatch:body = _tgtBody {
+                set resultAlt to mnvTest:obt:nextpatch:apoapsis.
+
+            } else if mnvTest:obt:nextpatch:hasnextpatch {
+                if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
+                    set resultAlt to mnvTest:obt:nextpatch:nextpatch:apoapsis.
+                    
+                } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
+                    if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
+                        set resultAlt to mnvTest:obt:nextpatch:nextpatch:nextpatch:apoapsis.
+                    }
+                }
+            }
+        }
+    }
+
+    set score to resultAlt / _tgtAlt.
+
+    remove mnvTest.
+
+    return lex("score", score, "result", resultAlt).
+}
+
+
+//-- WIP --//
+// global function get_node_for_inc_change {
+//     parameter tObt,
+//               sObt is ship:orbit.
+
+//     local sInc to sObt:inclination.
+//     local sVel to sObt:velocity:orbit:mag.
+    
+//     local tInc to tObt:inclination.
+//     local tVel to tObt:velocity:orbit:mag.
+
+//     local dv to sqrt( sVel ^ 2 + tVel ^ 2 - 2 * sVel * tVel * cos(tInc - sInc)).
+    
+//     local n to 360 / sObt:period.
+//     local meanAnomaly to sObt:meananomalyatepoch + (n * (time:seconds - sObt:epoch)). 
+    
+//     return true.
+// }
+
+
+global function optimize_node_list_next {
+    parameter mnvList,
+              tgtObt,
+              mode,
+              dir is "all".
+
+    print "MSG: Optimizing maneuver                                     " at (2, 7).
+
+    local cnt to 0. 
+    local prevScore to 0.
+
+    until cnt >= 5 {
+        set prevScore to get_node_score_next(mnvList, tgtObt, mode)["score"].
+        set mnvList to improve_node_next(mnvList, tgtObt, mode, dir).
+        local nodeScore to get_node_score_next(mnvList, tgtObt, mode)["score"].
+
+        if nodeScore >= 0.99 and nodeScore <= 1.01 {
+            break.
+        } else if nodeScore = prevScore {
+            set cnt to cnt + 1.
+        } else {
+            set cnt to 0.
+        }
+    }
+
+    print "MSG: Optimized maneuver found                                " at (2, 7).
+    return mnvList.
+}
+
+
+local function get_node_score_next {
+    parameter data,
+              tgtObt,
+              mode.
+
+    local score to 0.
+    local scoreAlt to 0.
+    local scoreArgPe to 0.
+    local scoreInc to 0.
+
+    local mnvTest to node(data[0], data[1], data[2], data[3]).
+
+    add mnvTest.
+    
+    set scoreAlt to choose get_node_prograde_score(data, tgtObt:periapsis, mode) if mode = "pe" else get_node_prograde_score(data, tgtObt:apoapsis, mode).
+    set scoreArgPe to get_node_radial_score(data, tgtObt:argumentOfPeriapsis).
+    set scoreInc to get_node_normal_score(data, tgtObt:inclination).
+
+    set score to (scoreAlt:score + scoreArgPe:score + scoreInc:score) / 3.
+
+    wait 0.01.
+    remove mnvTest.
+    return lex("score", score, "scoreAlt", scoreAlt, "scoreArgPe", scoreArgPe, "scoreInc", scoreInc).
+}
+
+
+
+local function improve_node_next {
+    parameter _data,
+              _tgtObt,
+              mode,
+              dir.
+
+
+    set mode to choose "pe" if _tgtObt:apoapsis > ship:apoapsis else "ap".
+    local tgtAlt to choose _tgtObt:apoapsis if mode = "pe" else _tgtObt:periapsis.
+
+    local best is _data.
+    if dir = "all" {
+        set best to improve_node_prograde(best, tgtAlt, mode).
+        set best to improve_node_radial(best, _tgtObt:argumentofperiapsis, mode).
+        set best to improve_node_normal(best, _tgtObt:inclination).
+    } else if dir = "prograde" {
+        set best to improve_node_prograde(_data, tgtAlt, mode).
+    } else if dir = "radial" {
+        set best to improve_node_radial(best, _tgtObt:argumentofperiapsis, mode).
+    } else if dir = "normal" {
+        set best to improve_node_normal(best, _tgtObt:inclination).
+    }
+
+    return best.
+}
+
+
+
+global function improve_node_prograde {
     parameter data,
               tgtAlt,
               mode.
 
     //hill climb to find the best time
-    local curScore is get_node_score(data, tgtAlt, mode).
-    local mnvFactor is 0.25.
-    if curScore:score > 0.85 and curScore:score < 1.15 {
-        set mnvFactor to 0.01.
+    local curScore is get_node_prograde_score(data, tgtAlt, mode).
+
+    local mnvFactor is 1.0.
+    if curScore:score > 0.975 and curScore:score < 1.025 {
+        set mnvFactor to 0.0025.
+    } else if curScore:score > 0.925 and curScore:score < 1.075 {
+        set mnvFactor to 0.005.
+    } else if curScore:score > 0.85 and curScore:score < 1.15 {
+        set mnvFactor to 0.25.
+    } else if curScore:score > 0.75 and curScore:score < 1.25 {
+        set mnvFactor to 0.50.
     }
     
     local mnvCandidates is list(
-        list(data[0] + mnvFactor, data[1], data[2], data[3])
-        ,list(data[0] - mnvFactor, data[1], data[2], data[3])
-        ,list(data[0], data[1] + mnvFactor, data[2], data[3])
-        ,list(data[0], data[1] - mnvFactor, data[2], data[3])
-        ,list(data[0], data[1], data[2] + mnvFactor, data[3])
-        ,list(data[0], data[1], data[2] - mnvFactor, data[3])
-        ,list(data[0], data[1], data[2], data[3] + mnvFactor)
-        ,list(data[0], data[1], data[2], data[3] + - mnvFactor)
+        list(data[0] + mnvFactor, data[1], data[2], data[3])    //Time
+        ,list(data[0] - mnvFactor, data[1], data[2], data[3])   //Time
+        ,list(data[0], data[1] + mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1] - mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1], data[2] + mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2] - mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2], data[3] + mnvFactor)   //Dv
+        ,list(data[0], data[1], data[2], data[3] + - mnvFactor) //Dv
     ).
 
     for c in mnvCandidates {
-        local candScore to get_node_score(c, tgtAlt, mode).
+        local candScore to get_node_prograde_score(c, tgtAlt, mode).
         if candScore["result"] > tgtAlt {
             if candScore["score"] < curScore["score"] {
-                set curScore to get_node_score(c, tgtAlt, mode).
+                set curScore to get_node_prograde_score(c, tgtAlt, mode).
                 set data to c.
                 print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
             }
         } else {
             if candScore["score"] > curScore["score"] {
-                set curScore to get_node_score(c, tgtAlt, mode).
+                set curScore to get_node_prograde_score(c, tgtAlt, mode).
                 set data to c.
                 print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
             }
@@ -178,7 +518,7 @@ local function improve_node {
 }
 
 
-local function get_node_score {
+local function get_node_prograde_score {
     parameter data,
               tgtAlt,
               mode is "pe".
@@ -205,21 +545,157 @@ local function get_node_score {
 }
 
 
-//-- WIP --//
-global function get_node_for_inc_change {
-    parameter tObt,
-              sObt is ship:orbit.
+global function improve_node_radial {
+    parameter data,
+              tgtArgPe,
+              mode.
 
-    local sInc to sObt:inclination.
-    local sVel to sObt:velocity:orbit:mag.
-    
-    local tInc to tObt:inclination.
-    local tVel to tObt:velocity:orbit:mag.
+    //hill climb to find the best time
+    local curScore is get_node_radial_score(data, tgtArgPe).
 
-    local dv to sqrt( sVel ^ 2 + tVel ^ 2 - 2 * sVel * tVel * cos(tInc - sInc)).
+    local mnvFactor is 1.
+    if curScore:score > 0.975 and curScore:score < 1.025 {
+        set mnvFactor to mnvFactor * 0.0025.
+    } else if curScore:score > 0.925 and curScore:score < 1.075 {
+        set mnvFactor to mnvFactor * 0.005.
+    } else if curScore:score > 0.85 and curScore:score < 1.15 {
+        set mnvFactor to mnvFactor * 0.25.
+    } else if curScore:score > 0.75 and curScore:score < 1.25 {
+        set mnvFactor to mnvFactor * 0.50.
+    }
     
-    local n to 360 / sObt:period.
-    local meanAnomaly to sObt:meananomalyatepoch + (n * (time:seconds - sObt:epoch)). 
+    local mnvCandidates is list(
+        list(data[0] + mnvFactor, data[1], data[2], data[3])    //Time
+        ,list(data[0] - mnvFactor, data[1], data[2], data[3])   //Time
+        ,list(data[0], data[1] + mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1] - mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1], data[2] + mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2] - mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2], data[3] + mnvFactor)   //Dv
+        ,list(data[0], data[1], data[2], data[3] + - mnvFactor) //Dv
+    ).
+
+    for c in mnvCandidates {
+        local candScore to get_node_prograde_score(c, tgtArgPe, mode).
+        if candScore["result"] > tgtArgPe {
+            if candScore["score"] < curScore["score"] {
+                set curScore to get_node_prograde_score(c, tgtArgPe, mode).
+                set data to c.
+                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+            }
+        } else {
+            if candScore["score"] > curScore["score"] {
+                set curScore to get_node_prograde_score(c, tgtArgPe, mode).
+                set data to c.
+                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+            }
+        }
+    }
+
+    return data.
+}
+
+
+local function get_node_radial_score {
+    parameter data,
+              tgtArgPe.
+
+    local score to 0.
+    local resultArgPe to 0.
+    local mnvTest to node(data[0], data[1], data[2], data[3]).
+
+    add mnvTest.
+    set resultArgPe to choose mnvTest:obt:argumentofperiapsis if not mnvTest:obt:hasNextPatch else mnvTest:obt:nextpatch:argumentofperiapsis.
+    set score to resultArgPe / tgtArgPe.
     
-    return true.
+    wait 0.01.
+    remove mnvTest.
+    return lex("score", score, "result", resultArgPe).
+}
+
+
+global function improve_node_normal {
+    parameter data,
+              tgtInc.
+
+    //hill climb to find the best time
+    local curScore is get_node_normal_score(data, tgtInc).
+
+    local mnvFactor is 0.1.
+    if curScore:score > 0.975 and curScore:score < 1.025 {
+        set mnvFactor to mnvFactor * 0.0025.
+    } else if curScore:score > 0.925 and curScore:score < 1.075 {
+        set mnvFactor to mnvFactor * 0.005.
+    } else if curScore:score > 0.85 and curScore:score < 1.15 {
+        set mnvFactor to mnvFactor * 0.25.
+    } else if curScore:score > 0.75 and curScore:score < 1.25 {
+        set mnvFactor to mnvFactor *  0.50.
+    }
+    
+    local mnvCandidates is list(
+        list(data[0] + mnvFactor, data[1], data[2], data[3])    //Time
+        ,list(data[0] - mnvFactor, data[1], data[2], data[3])   //Time
+        ,list(data[0], data[1] + mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1] - mnvFactor, data[2], data[3])   //Radial
+        ,list(data[0], data[1], data[2] + mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2] - mnvFactor, data[3])   //Normal
+        ,list(data[0], data[1], data[2], data[3] + mnvFactor)   //Dv
+        ,list(data[0], data[1], data[2], data[3] + - mnvFactor) //Dv
+    ).
+
+    for c in mnvCandidates {
+        local candScore to get_node_normal_score(c, tgtInc).
+        if candScore["result"] > tgtInc {
+            if candScore["score"] < curScore["score"] {
+                set curScore to get_node_normal_score(c, tgtInc).
+                set data to c.
+                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+            }
+        } else {
+            if candScore["score"] > curScore["score"] {
+                set curScore to get_node_normal_score(c, tgtInc).
+                set data to c.
+                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+            }
+        }
+    }
+
+    return data.
+}
+
+
+local function get_node_normal_score {
+    parameter data,
+              tgtInc.
+
+    local score to 0.
+    local resultInc to 0.
+    local mnvTest to node(data[0], data[1], data[2], data[3]).
+
+    add mnvTest.
+    set resultInc to choose mnvTest:obt:inclination if not mnvTest:obt:hasNextPatch else mnvTest:obt:nextpatch:inclination.
+    set score to resultInc / tgtInc.
+    
+    wait 0.01.
+    remove mnvTest.
+    return lex("score", score, "result", resultInc).
+}
+
+
+local function get_node_score_for_orbit {
+    parameter data,
+              tgtObt.
+
+    local score is 0.
+    local resultInc is 0.
+    local resultArgPe is 0.
+    local resultAp is 0.
+    local resultBody is ship:body.
+
+    local mnvTest is node(data[0], data[1], data[2], data[3]).
+    add mnvTest.
+
+    if mnvTest:orbit:hasNextPatch {
+        set resultBody to mnvTest:orbit:body.
+    }
 }

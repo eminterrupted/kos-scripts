@@ -1,0 +1,1 @@
+runpath("0:/_main/component/deploy_scansat").

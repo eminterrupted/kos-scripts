@@ -16,7 +16,7 @@ global function do_circ_burn {
     set circObj["burnObj"] to burnObj["burnObj"].
 
     print "MSG: Executing warp_to_circ_burn()           " at (2, 7).
-    warp_to_circ_burn(circObj["burnObj"]:burnEta).
+    warp_to_circ_burn(circObj).
     
     print "MSG: Executing exec_circ_burn()              " at (2, 7).
     exec_circ_burn(circObj).
@@ -26,10 +26,10 @@ global function do_circ_burn {
 local function setup_circ_burn {
     parameter cObj.
     
-    set_runmode(18).
+    set_rm(18).
     logStr("Setting up circularization burn object").
     
-    local sVal to ship:prograde + r(0, 0, cObj["rVal"]).
+    local sVal to lookdirup(ship:prograde:vector, sun:position).
     lock steering to sVal.
 
     local tVal to 0. 
@@ -46,9 +46,11 @@ local function setup_circ_burn {
 
 
 local function warp_to_circ_burn {
-    parameter burnEta.
+    parameter cObj.
     
-    set_runmode(22).
+    local burnEta is cObj["burnObj"]:burnEta.
+
+    set_rm(22).
     lock steering to choose lookdirup(nextnode:burnvector, sun:position) if hasNode else lookdirup(ship:prograde:vector, sun:position).
     warp_to_timestamp(burnEta).
 }
@@ -57,7 +59,7 @@ local function warp_to_circ_burn {
 local function exec_circ_burn {
     parameter cObj.
     
-    set_runmode(24).
+    set_rm(24).
 
     logStr("Executing circularization burn").
 

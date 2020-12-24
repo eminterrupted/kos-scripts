@@ -14,26 +14,33 @@ local expMod is "SCANexperiment".
         parameter p.
 
         local m is p:getModule(scanMod).
-        if m:hasEvent("start scan: multispectral") m:doEvent("start scan: multispectral").
-        else if m:hasEvent("start scan: radar") m:doEvent("start scan: radar").
-        else if m:hasEvent("start scan: sar") m:doEvent("start scan: sar").
+        if m:hasEvent("start scan: multispectral")  m:doEvent("start scan: multispectral").
+        else if m:hasEvent("start scan: radar")     m:doEvent("start scan: radar").
+        else if m:hasEvent("start scan: sar")       m:doEvent("start scan: sar").
+        else if m:hasEvent("start scan: visual")    m:doEvent("start scan: visual").
+        else if m:hasEvent("start scan: resource")  m:doEvent("start scan: resource").
     }
 
     global function stop_scansat{
         parameter p.
 
         local m is p:getModule(scanMod).
-        if m:hasEvent("stop scan: multispectral") m:doEvent("stop scan: multispectral").
-        else if m:hasEvent("stop scan: radar") m:doEvent("stop scan: radar").
-        else if m:hasEvent("stop scan: sar") m:doEvent("stop scan: sar").
+        if m:hasEvent("stop scan: multispectral")   m:doEvent("stop scan: multispectral").
+        else if m:hasEvent("stop scan: radar")      m:doEvent("stop scan: radar").
+        else if m:hasEvent("stop scan: sar")        m:doEvent("stop scan: sar").
+        else if m:hasEvent("stop scan: visual")     m:doEvent("stop scan: visual").
+        else if m:hasEvent("stop scan: resource")  m:doEvent("stop scan: resource").
     }
 
     global function scansat_analyze_data {
         parameter p.
 
         local m is p:getModule(expMod).
-        if m:hasAction("analyze data: multispectral") m:doAction("analyze data: multispectral", true).
-        else if m:hasEvent("analyze data: sar") m:doEvent("analyze data: sar").
+        if m:hasAction("analyze data: multispectral")   m:doAction("analyze data: multispectral", true).
+        else if m:hasEvent("analyze data: sar")         m:doEvent("analyze data: sar").
+        else if m:hasEvent("analyze data: visual")      m:doEvent("analyze data: visual").
+        else if m:hasEvent("analyze data: resource")      m:doEvent("analyze data: resource").
+
         recover_sci_list(list(m)).
     }
 

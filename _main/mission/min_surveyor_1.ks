@@ -1,7 +1,6 @@
 @lazyGlobal off.
 
-parameter _tgt is "Mun",
-          _rVal is 0.
+parameter _tgt is "Minmus".
 
 clearscreen.
 
@@ -23,20 +22,17 @@ if runmode = 99 set runmode to 0.
 
 disp_main().
 
-wait 5.
-
-local tgtAp0 is 25000.
-local tgtPe0 is 1500000.
+local tgtAp0 is 265000.
+local tgtPe0 is 265000.
+local tgtInc is 82.
 
 
 local sciList to get_sci_mod_for_parts(ship:parts).
 
-local mnvCache is "local:/mnvCache.json".
 local mnvNode is 0.
 local mnvObj is lex().
-if exists(mnvCache) set mnvObj to mnvCache.
 
-local sVal is lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+local sVal is lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 local tVal is 0.
 lock throttle to tVal.
@@ -55,7 +51,7 @@ local function main {
 
         //Deploy dish if not already
         if runmode = 0 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             local dish is ship:partsTaggedPattern("comm.dish").
             for d in dish {
@@ -66,12 +62,17 @@ local function main {
                 logStr("Dish target: " + kerbin:name).
             }
 
+            for o in ship:partstaggedpattern("comm.omni") {
+                activate_omni(o).
+                
+            }
+
             set runmode to 2.
         }
         
         //Test science experiments
         else if runmode = 2 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             log_sci_list(sciList).
             recover_sci_list(sciList).
@@ -82,10 +83,19 @@ local function main {
 
         //Sets the transfer target
         else if runmode = 4 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             set target to _tgt.
             update_display().
+
+            set runmode to 6.
+        }
+
+        //Match the inclination with the target
+        else if runmode = 6 {
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
+
+            runPath("0:/_main/component/match_orbit_inclination", target:orbit).
 
             set runmode to 15.
         }
@@ -93,7 +103,7 @@ local function main {
 
         //Returns needed parameters for the transfer burn
         else if runmode = 15 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             set mnvObj to get_transfer_obj().
 
@@ -102,7 +112,7 @@ local function main {
 
         //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             set mnvObj to add_transfer_node(mnvObj, tgtAp0).
 
@@ -111,7 +121,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 30 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             warp_to_burn_node(mnvObj).
 
@@ -120,7 +130,7 @@ local function main {
 
         //Executes the transfer burn
         else if runmode = 35 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             exec_node(nextNode).
 
@@ -130,7 +140,7 @@ local function main {
         //Clears the target data so we don't have weird behaviors when we reach its SOI
         //Then warps to the SOI change
         else if runmode = 45 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             set target to "".
             //warp_to_next_soi().
@@ -139,9 +149,15 @@ local function main {
             set runmode to 50.
         }
 
-        //Sets up triggers for science experiments
         else if runmode = 50 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+            //stage.
+
+            set runmode to 55.
+        }
+
+        //Sets up triggers for science experiments
+        else if runmode = 55 {
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             until ship:body:name = _tgt {
                 update_display().
@@ -159,24 +175,23 @@ local function main {
                 recover_sci_list(sciList).
             }
 
-            set runmode to 55.
+            set runmode to 60.
         }
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
-        else if runmode = 55 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+        else if runmode = 60 {
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
-            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set mnvNode to add_capture_node(tgtAp0).
 
             set runmode to 62.
         }
 
         //Gets burn data from the node
         else if runmode = 62 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             set mnvObj to get_burn_obj_from_node(mnvNode).
-            writeJson(mnvObj, mnvCache).
 
             set mnvObj["mnv"] to mnvNode. 
             set runmode to 64.
@@ -184,7 +199,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 64 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             warp_to_burn_node(mnvObj).
 
@@ -193,37 +208,50 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 66 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             exec_node(nextNode).
-            wait 2.
 
-            set runmode to 76.
+            set runmode to 68.
         }
 
-        //Adds a circularization node to finish orbit placement
-        else if runmode = 76 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+        else if  runmode = 68 {
 
-            set mnvNode to add_simple_circ_node("ap", tgtPe0).
+            // Evaluates the results of the burn using semimajoraxis
+            // If result * 0.990 < target > result * 1.010 then re-circularize 
+            local tgtSMA to tgtAp0 + tgtPe0 + (ship:body:radius).
+            local resultSMA to apoapsis + periapsis + (ship:body:radius).
+
+            if resultSMA / tgtSMA < 0.985 or resultSMA / tgtSMA > 1.015 {
+                set runmode to 76.
+            } else {
+                set runmode to 84.
+            }
+        }
+
+        //Adds a circularization node to finish circ in lower orbit 
+        else if runmode = 76 {
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
+
+            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            //set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "ap").
 
             set runmode to 78.
         }
 
         //Gets burn data from the node
         else if runmode = 78{
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             set mnvObj to get_burn_obj_from_node(mnvNode).
             set mnvObj["mnv"] to mnvNode. 
-            writeJson(mnvObj, mnvCache).
 
             set runmode to 80.
         }
 
         //Warps to the burn node
         else if runmode = 80 {
-            set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
             warp_to_burn_node(mnvObj).
 
@@ -237,26 +265,21 @@ local function main {
             set runmode to 84.
         }
 
-        //Make the inclination change
+        // Set our inclination for scanning
         else if runmode = 84 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
-
-            runPath("0:/_main/component/simple_inclination_change", 45).
-
+            runPath("0:/_main/component/simple_inclination_change", tgtInc).
             set runmode to 86.
         }
 
-        //Collect science from the required orbit
+        //Runs the Deploy_scansat routine
         else if runmode = 86 {
-            log_sci_list(sciList).
-            recover_sci_list(sciList).
-
-            set runmode to 88.
+            runPath("0:/_main/component/deploy_scansat").
+            set runmode to 90.
         }
 
-        //Runmode 88MPH - You're going to see some serious shit
-        else if runmode = 88 {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+        //Preps the vessel for long-term orbit
+        else if runmode = 90 {
+            set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
             end_main().
 
@@ -270,7 +293,7 @@ local function main {
 }
 
 local function end_main {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     lock steering to sVal.
 
     set tVal to 0.

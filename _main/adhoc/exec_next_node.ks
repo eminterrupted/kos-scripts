@@ -1,7 +1,6 @@
 @lazyGlobal off.
 
-parameter rVal is 180,
-          runmodeReset is false.
+parameter runmodeReset is false.
 
 clearscreen.
 
@@ -29,7 +28,7 @@ local mnvNode is 0.
 local tStamp is 0.
 
 
-local sVal is lookDirUp(nextnode:burnvector, sun:position) + r(0, 0, rVal).
+local sVal is lookDirUp(nextnode:burnvector, sun:position).
 lock steering to sVal.
 
 local tVal is 0.
@@ -40,7 +39,7 @@ until runmode = 99 {
     
     //Make sure dish is deployed
     if runmode = 0 {
-        set sVal to lookDirUp(nextnode:burnvector, sun:position) + r(0, 0, rVal).
+        set sVal to lookDirUp(nextnode:burnvector, sun:position).
         set mnvNode to nextNode.
         set mnvObj to get_burn_obj_from_node(mnvNode).
         cache_mnv_obj(mnvObj).
@@ -49,30 +48,30 @@ until runmode = 99 {
 
 
     else if runmode = 7 {
-        set tStamp to choose 30 if tStamp < mnvNode:eta else mnvNode:eta.
-        set tStamp to time:seconds + tStamp.
-        until time:seconds >= tStamp {
-            update_display().
-            disp_timer(tStamp).
-        }
+        // set tStamp to choose 30 if tStamp < mnvNode:eta else mnvNode:eta.
+        // set tStamp to time:seconds + tStamp.
+        // until time:seconds >= tStamp {
+        //     update_display().
+        //     disp_timer(tStamp).
+        // }
 
-        disp_clear_block("timer").
+        // disp_clear_block("timer").
 
         set runmode to 8.
     }
 
     //Execute Transfer
     else if runmode = 8 {
-        set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
+        set sVal to lookDirUp(mnvNode:burnvector, sun:position).
         warp_to_burn_node(mnvObj).
         set runmode to 10.
     }
 
     else if runmode = 10 {
-        set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
+        set sVal to lookDirUp(mnvNode:burnvector, sun:position).
         exec_node(nextNode).
         deletePath(mnvCache).
-        set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+        set sVal to lookDirUp(ship:prograde:vector, sun:position).
         set runmode to 99.
     }
 

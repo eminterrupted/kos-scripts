@@ -102,6 +102,7 @@ global function disp_main {
         print "STATUS:        " + status + "     "             at (h3,ln).
     print "PROGRAM:       " + stateObj["program"] + "   " at (h1,cr).
         print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
+            print "SR: " + stateObj["subroutine"] at (h3 + 19, ln).
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
@@ -373,7 +374,8 @@ global function disp_scan_status {
 
 
 global function disp_timer {
-    parameter pTimer.
+    parameter pTimer,
+              pTitle is "Generic".
 
     local pos is "assign".
     if dispObj:haskey("timer") set pos to disp_get_pos_obj(dispObj["timer"]).
@@ -388,8 +390,10 @@ global function disp_timer {
 
     print "TIMER" at (h1,ln).
     print "-----" at (h1,cr).
+    print "TYPE:" at (h1,cr).
+        print pTitle:toupper at (h2,ln).
     print "MARK:" at (h1,cr). 
-        print format_timestamp(pTimer - time:seconds) + "           " at (h2,ln). 
+        print format_timestamp(pTimer - time:seconds) + "   " at (h2,ln). 
 }
 
 

@@ -57,7 +57,7 @@ until runmode = 99 {
     else if runmode = 6 {
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         set mnvObj to add_transfer_node(mnvObj, tgtAlt).
-        set mnvObj["mnv"] to optimize_node(mnvObj["mnv"]).
+        set mnvObj["mnv"] to optimize_existing_node(mnvObj["mnv"]).
         cache_mnv_obj(mnvObj).
         set mnvNode to mnvObj["mnv"].
         set runmode to 7.
@@ -131,7 +131,7 @@ until runmode = 99 {
     //Finish script
     else if runmode = 26 {
         logStr("Transfer maneuvers completed, ready for Reentry").
-        runpath("0:/_main/mission/mariner_reentry").
+        runpath("0:/_main/component/mariner_reentry").
         
         set runmode to 99.
     }

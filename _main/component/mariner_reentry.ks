@@ -31,6 +31,8 @@ local tPe to 35000.
 
 if runmode = 99 set runmode to 0. 
 
-do_reentry(tPe, rVal).
+if ship:periapsis >= 70000 do_kerbin_reentry_burn(tPe, rVal).
+
+do_kerbin_reentry().
 
 clearscreen.

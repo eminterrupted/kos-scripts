@@ -19,8 +19,6 @@ local runmode to 0.
 
 disp_main().
 
-wait 1.
-
 
 // Inclination match burn data
 local burn to get_inc_match_burn(ship, _tgtOrbit).
@@ -75,14 +73,14 @@ local function main {
 
             // Keep the draw updating the start position until the burn is done.
             set burnVD:startUpdater to { return positionAt(ship, utime). }.
-            set runmode to 2.
+            set runmode to set_sr(2).
         }
 
         else if runmode = 2 {
 
             add mnvNode.
 
-            set runmode to 5.
+            set runmode to set_sr(5).
         }
 
         // Do burn
@@ -90,31 +88,33 @@ local function main {
             
             set sVal to burnVector.
             
-            print "Burn Data" at (2, 42).
-            print "---------" at (2, 43).
-            
             // Wait until we get to the burn
-            until time:seconds >= leadTime  - 30 {
-                if warp = 0 set warp to 3.
-
-                print "Burn starting in " + round(leadTime - time:seconds) + "s     " at (2, 44).
+            warpTo(leadTime  - 30). 
+            
+            until time:seconds >= leadTime - 30 {
                 set sVal to burnVector.
-
                 update_display().
+                disp_timer(leadTime).
                 wait 0.01.
             }
 
             if warp > 0 kuniverse:timewarp:cancelwarp().
 
             until time:seconds >= leadTime {
-                print "Burn starting in " + round(leadTime - time:seconds) + "s     " at (2, 44).
+                disp_timer(leadTime).
                 set sVal to burnVector.
 
                 update_display().
                 wait 0.01.
-
             }
 
+            disp_clear_block("timer").
+
+            set runmode to set_sr(6).
+        }
+
+        else if runmode = 6 {
+            
             //Start the burn.
             set tVal to 1.
             local startVel to ship:velocity:orbit.
@@ -122,22 +122,15 @@ local function main {
             until dvToGo <= 0.1 {
                 set sVal to burnVector.
                 set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
-                //if dvToGo < 10 { set tVal to max(0, min(1, dvToGo / 10)). } 
-                print "Burn dV remaining: " + round(dvToGo, 2) + " m/s      " at (2, 44).
-
                 update_display().
+                disp_burn_data().
                 wait 0.01.
             }
 
             set tVal to 0.
-            print "Burn completed                                " at (2, 44).
-            wait 1.
-            print "                            " at (2, 42).
-            print "                            " at (2, 43).
-            print "                            " at (2, 44).
             remove mnvNode.
             
-            set runmode to 10.
+            set runmode to set_sr(10).
         }
 
         else if runmode = 10 {
@@ -145,14 +138,10 @@ local function main {
             set burnDone to true.
             set burnVD to 0.
 
-            set runmode to 99.
+            set runmode to set_sr(99).
         }
 
         update_display().
-
-        //Logs the runmode change and writes to disk in case we need to resume the script later
-        set stateObj["runmode"] to runmode.
-        log_state(stateObj).
     }
 }
 

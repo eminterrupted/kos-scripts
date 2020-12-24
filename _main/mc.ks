@@ -8,11 +8,11 @@ wait until ship:unpacked.
 wait until addons:rt:haskscconnection(ship).
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 init_uplink().
 
-runOncePath("0:/lib/lib_tag").
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
 //Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
@@ -34,9 +34,8 @@ local gtPitch to choose cache["gtPitch"] if cache["gtPitch"]:istype("scalar") el
 local rVal to choose cache["rVal"] if cache["rVal"]:istype("scalar") else cache["rVal"]:toNumber.
 
 //Paths
-local rProc to ship:rootpart:getModule("kOSProcessor").
 local kscPath is "0:/_main/".
-local locPath is rProc:volume:name + ":/".
+local locPath is core:volume:name + ":/".
 
 
 //Main
@@ -88,10 +87,10 @@ local function exec_mission {
 
     local kscScrPath to kscPath + "/mission/" + script.
     local locScrPath to locPath + script.
-    if not exists(locScrPath) copypath(kscScrPath, locScrPath).
+    if not exists(locScrPath) copyPath(kscScrPath, locScrPath).
 
     runPath(locScrPath).
-
+    deletePath(locScrPath).
     return true.
 }
 

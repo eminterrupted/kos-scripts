@@ -440,7 +440,7 @@ global function get_inc_match_burn {
     // Create the node struct
     local mnv_node to node(burn_utc, 0, burn_nrm, burn_pro).
 
-    return list(burn_utc, burn_mag * burn_unit, mnv_node).
+    return list(burn_utc, burn_mag * burn_unit, mnv_node, burn_mag, burn_unit).
 }
 
 //Get an orbit's altitude at a given true anomaly angle of it

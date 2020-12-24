@@ -5,6 +5,14 @@ local actShow is "show actuation toggles".
 local actHide is "hide actuation toggles".
 local actTog is "toggle rcs".
 
+
+global function get_rcs_exh_vel {
+    parameter p.
+
+    return constant:g0 * p:getModule("ModuleRCSFX"):getField("rcs isp").
+}
+
+
 global function rcs_activate {
     parameter pList is ship:modulesNamed(rcsMod).
 
@@ -29,7 +37,9 @@ global function rcs_deactivate {
 
 global function rcs_tog_act {
     parameter p,            // rcs [part or module]
-              dir,          // which actuators to toggle. Accepts ";" delimited string, see below for enum
+              dir,          // which actuators to toggle. 
+                            // Accepts ";" delimited string, 
+                            // see below for enum
               tog is true.  // true = on, false = off
 
     if p:isType("Part") set p to p:getModule(rcsMod).

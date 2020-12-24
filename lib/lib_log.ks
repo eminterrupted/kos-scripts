@@ -1,7 +1,6 @@
 //Initiates the log files
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init").
 init_log().
 local uplinkObj to init_uplink().
 

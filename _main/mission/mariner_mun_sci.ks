@@ -17,24 +17,28 @@ runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_circ_burn").
 runOncePath("0:/lib/part/lib_antenna").
 
+//Paths to other scripts used here
+local sciScript to "local:/sciScript".
+copyPath("0:/_main/component/deploy_scansat", sciScript).
+
+local incChangeScript to "local:/incChange". 
+copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
+
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
 
 disp_main().
 
-wait 5.
-
-local tgtAp0 is 50000.
-local tgtPe0 is 50000.
-local retPe is 100000.
+local tgtInc is 82.
+local tgtAp0 is 375000.
+local tgtPe0 is 375000.
 
 local sciList to get_sci_mod_for_parts(ship:parts).
 
 local mnvNode is 0.
 local mnvObj is lex().
 
-local sciStamp to 0.
 local tStamp to 0.
 
 local sVal is ship:prograde + r(0, 0, rVal).
@@ -62,7 +66,7 @@ local function main {
         //Set up the triggers for science
         else if runmode = 5 {
             local p to ship:partsTaggedPattern("comm.dish").
-            activate_dish(p[0]).
+            if p:length > 0 activate_dish(p[0]).
 
             for o in ship:partsTaggedPattern("comm.omni") {
                 activate_omni(o).
@@ -92,7 +96,12 @@ local function main {
 
         //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
-            set mnvObj to add_burn_node(mnvObj, tgtPe0, "pe").
+            set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
+            add mnvNode. 
+
+            local accuracy is 0.005.
+            set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "pe", target, accuracy).
+            
             set runmode to 30.
         }
 
@@ -104,7 +113,7 @@ local function main {
 
         //Executes the transfer burn
         else if runmode = 35 {
-            exec_node(mnvObj["mnv"]).
+            exec_node(nextNode).
             set runmode to 40.
         }
 
@@ -126,12 +135,23 @@ local function main {
         //Clears the target data so we don't have weird behaviors when we reach its SOI
         //Then warps to the SOI change
         else if runmode = 50 {
-            set_target("").
-            if ship:altitude > 350000 {
-                warp_to_next_soi().
-                set runmode to 55.
+            
+            set tStamp to time:seconds + 15.
+            until time:seconds >= tStamp {
+                update_display().
+                disp_timer(tStamp, "soi warp").
             }
-            update_display().
+
+            disp_clear_block("timer").
+
+            warp_to_next_soi().
+            
+            if ship:body:name = tgt {
+                set runmode to 55.
+            } else {
+                update_display().
+                wait 1.
+            }
         }
 
         //Sets up triggers for science experiments
@@ -145,10 +165,14 @@ local function main {
         }
 
         else if runmode = 57 {
-            set tStamp to time:seconds + 600.
+            set tStamp to time:seconds + 60.
             until time:seconds >= tStamp {
                 update_display().
+                disp_timer(tStamp, "circ node").
             }
+
+            disp_clear_block("timer").
+
             if warp > 0 kuniverse:timewarp:cancelwarp().
             wait until kuniverse:timewarp:issettled.
             set runmode to 60.
@@ -156,7 +180,7 @@ local function main {
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 60 {
-            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set mnvNode to add_capture_node(tgtAp0).
             set runmode to 62.
         }
 
@@ -175,7 +199,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 66 {
-            exec_burn(mnvNode).
+            exec_burn(nextNode).
             wait 2.
             set runmode to 68.
         }
@@ -207,7 +231,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 74 {
-            exec_burn(mnvNode).
+            exec_node(nextNode).
             set runmode to 75.
         }
 
@@ -217,53 +241,38 @@ local function main {
         }
 
         else if runmode = 76 {
-            set sciStamp to time:seconds + 60.
-            log_sci_list(sciList).
-            collect_sci_in_container().
-            
-            set runmode to 77.
-        }
-            
-        if runmode = 77 {
-            set tStamp to 60.
-            until time:seconds >= tStamp {
-                if time:seconds >= sciStamp set runmode to 76.
-                update_display().
+            if ship:orbit:inclination < tgtInc * 0.85 or ship:orbit:inclination > tgtInc * 1.15 {
+                runPath(incChangeScript, tgtInc).
             }
-
-            set target to Body("Kerbin").
             set runmode to 78.
         }
 
+        // Runs the science experiment script
         else if runmode = 78 {
-            set mnvObj to get_transfer_obj().
-            set mnvObj to add_burn_node(mnvObj, retPe, "pe").
-            update_display().
+        
+            runPath(sciScript).
+           
             set runmode to 80.
         }
 
-        else if runmode = 80 {
-            warp_to_burn_node(mnvObj).
-            set runmode to 82.
-        }
-
-        else if runmode = 82 {
-            exec_node(mnvObj["mnv"]).
-            set runmode to 84.
-        }
-
-        else if runmode = 84 {
-            set target to "".
-            warp_to_next_soi().
-            set runmode to 86.
-        }
-
-        else if runmode = 86 {
+        else if runmode = 255 {
             update_display().
         }
 
+        //Just lets the mission run until the end of tStamp. 
+        else if runmode = 80 {
+            until time:seconds >= tStamp {
+                update_display().
+                disp_timer(tStamp, "SCRIPT END").
+            } 
+
+            disp_clear_block("timer").
+
+            set runmode to 82.
+        }
+
         //Preps the vessel for long-term orbit
-        else if runmode = 84 {
+        else if runmode = 82 {
             end_main().
             set runmode to 99.
         }
@@ -276,40 +285,6 @@ local function main {
 
 
 //Functions
-local function set_target {
-    parameter pTgt.
-
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    set target to pTgt.
-
-    update_display().
-}
-
-local function add_burn_node {
-    parameter burnObj,
-              tgtAlt,
-              mode.
-    
-    local mnvList to list(burnObj["nodeAt"], 0, 0, burnObj["dv"]).
-    set mnvNode to add_optimized_node(mnvList, tgtAlt, mode).
-
-    set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
-    set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
-    set mnvObj["mnv"] to mnvNode.
-    
-    update_display().
-
-    return mnvObj.
-}
-
-
-
-
 local function exec_burn {
     parameter burnNode.
 
@@ -320,11 +295,10 @@ local function exec_burn {
 
 
 local function end_main {
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
+    unlock steering.
+    unlock throttle.
 
-    set tVal to 0.
-    lock throttle to tVal.
+    disp_clear_block_all().
 
     logStr("Mission completed").
 }

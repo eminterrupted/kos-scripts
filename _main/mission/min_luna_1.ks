@@ -25,8 +25,9 @@ disp_main().
 
 wait 5.
 
-local tgtAp0 is 20000.
-local tgtPe0 is 20000.
+local tgtAp0 is 225000.
+local tgtPe0 is 225000.
+local tgtInc is 82.
 
 
 local sciList to get_sci_mod_for_parts(ship:parts).
@@ -248,8 +249,13 @@ local function main {
             set runmode to 84.
         }
 
-        //Preps the vessel for long-term orbit
         else if runmode = 84 {
+            runPath("0:/_main/component/simple_inclination_change", tgtInc).
+            set runmode to 86.
+        }
+
+        //Preps the vessel for long-term orbit
+        else if runmode = 86 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
 
             end_main().

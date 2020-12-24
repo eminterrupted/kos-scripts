@@ -124,9 +124,7 @@ global function get_engs_exh_vel {
     parameter engList to get_active_engs(),
               pAlt to ship:apoapsis,
               pBody is ship:body.
-
-    //local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
-    
+ 
     local apIsp to get_avail_isp(pBody:atm:altitudePressure(pAlt), engList).
     return constant:g0 * apIsp.
 }

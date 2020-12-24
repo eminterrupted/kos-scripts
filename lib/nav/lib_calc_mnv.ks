@@ -22,7 +22,7 @@ global function get_burn_dur_by_stage {
     local enginePerf to get_eng_perf_obj(engineList).
 
     // Effective exhaust velocity of the stage, based on the effective isp
-    local exhaustVel to get_engs_exh_vel(engineList, ship:apoapsis).
+    local exhaustVel to get_engs_exh_vel(engineList, max(0, ship:apoapsis)).
 
     // Mass of the vessel at this stage (including all later stage mass)
     local vesselMass to get_ves_mass_at_stage(_stageNum).
@@ -34,7 +34,7 @@ global function get_burn_dur_by_stage {
         set stageThrust to stageThrust + enginePerf[e]["thr"]["poss"].
     }
 
-    // Returns the duration that this stage will take to burn it's fuel
+    // Returns the duration that this stage will take to burn its fuel
     // This is basically the rocket equation
     return ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
 }
@@ -78,7 +78,17 @@ global function get_burn_obj_from_node {
     local burnEta   to nodeAt - halfDur.            // When to start the burn
     local burnEnd   to nodeAt + halfDur.            // When the burn should end
 
-    return lexicon("dV", dv,"burnDur",burnDur,"burnEta",burnEta,"burnEnd",burnEnd,"nodeAt",nodeAt, "mnv", _mnvNode).
+    local retObj to lexicon( 
+        "dV", dv,
+        "burnDur",burnDur,
+        "halfDur",halfDur,
+        "burnEta",burnEta,
+        "burnEnd",burnEnd,
+        "nodeAt",nodeAt,
+        "mnv", _mnvNode
+        ).
+
+    return retObj.
 }
 
 
@@ -96,7 +106,7 @@ global function get_coplanar_burn_data {
     local startAlt to choose ship:periapsis if _burnLocation = "ap" else ship:apoapsis.
 
     // Burn calculations
-    local dV to get_dv_for_mnv(_newAlt, startAlt, ship:body).   // DeltaV needed
+    local dV to get_dv_for_prograde(_newAlt, startAlt, ship:body).   // DeltaV needed
     local burnDur to get_burn_dur(dV).                          // Total duration of the burn
     local halfDur to get_burn_dur(dv / 2).                      // Duration of half of the burn
     local burnEta to nodeAt - halfDur.                          // When to start the burn
@@ -117,7 +127,7 @@ global function get_mnv_param_list {
 
     // Returns the deltaV needed to execute the change in altitude
     // around the provided body
-    local dv to get_dv_for_mnv(_finalAlt, _startAlt, _mnvBody).
+    local dv to get_dv_for_prograde(_finalAlt, _startAlt, _mnvBody).
     
     // Node formatted list struct
     return list(_nodeAt, 0, 0, dv).
@@ -134,7 +144,7 @@ global function get_transfer_burn_data {
     if not hasTarget return false.
 
     // Burn details
-    local dv to get_dv_for_mun_transfer(target).    // deltaV for transfer
+    local dv to get_dv_for_mun_transfer().    // deltaV for transfer
     local burnDur to get_burn_dur(dV).              // Duration of the burn
     local halfDur to get_burn_dur(dV / 2).          // Duration to burn half the dV
     local burnEta to (_nodeAt) - (halfDur).         // UT timestamp to start the burn

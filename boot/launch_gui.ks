@@ -150,7 +150,7 @@ when True then {
 gui:show().
 local tStamp to time:seconds + 60.
 local closeGui to false.
-local rProc to ship:rootpart:getModule("kOSProcessor").
+local rProc to core.
 rProc:doAction("open terminal",true).
 
 until closeGui = true {

@@ -1,0 +1,1 @@
+runPath("0:/boot/launch_gui").

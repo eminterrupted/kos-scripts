@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-parameter _tgtInc is 84.
+parameter _tgtInc is ship:orbit:inclination.
 
 clearScreen.
 runOncePath("0:/lib/lib_init").
@@ -26,8 +26,7 @@ local scanSatList to ship:partsTaggedPattern("sci.scan").
 
 //Picks up the runmode in the state object. This should be 0 if first run, but this allows resume mid-flight.
 //local stateObj to init_state_obj().
-local runmode to stateObj["runmode"].
-if runmode = 99 or runmode = 0 set runmode to 100. 
+local runmode to 100. 
 
 local sVal is lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
@@ -53,7 +52,9 @@ until runmode = 199 {
 
     //Inclination change
     else if runmode = 120 {
-        runPath("0:/_main/adhoc/simple_inclination_change", _tgtInc).
+        if ship:obt:inclination < _tgtInc -1 or ship:obt:inclination > _tgtInc + 1 {
+            runPath("0:/_main/adhoc/simple_inclination_change", _tgtInc).
+        }
         set runmode to 130.
     }
 

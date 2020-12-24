@@ -28,37 +28,37 @@ lock throttle to tVal.
 
 local sciList is get_sci_mod_for_parts(ship:parts).
 
-set runmode to 0. 
-
 clearscreen.
 
 until runmode = 99 {
 
     if runmode = 0 {
-        wait 5.
+        wait 1.
 
-        local tStamp is time:seconds + (ship:orbit:period / 2).
+        // local tStamp is time:seconds + (ship:orbit:period / 2).
         
-        if warp = 0 kuniverse:timewarp:warpto(tStamp - 15).
+        // if warp = 0 kuniverse:timewarp:warpto(tStamp - 15).
         
-        until time:seconds >= tStamp {
-            update_display().
-        }
+        // until time:seconds >= tStamp {
+        //     update_display().
+        // }
 
-        if warp > 0 kuniverse:timewarp:cancelwarp().
+        // if warp > 0 kuniverse:timewarp:cancelwarp().
 
-        wait 5.
+        // wait 5.
 
         set runmode to 5.
     }
 
     else if runmode = 5 {
         set tVal to 1.
-        until ship:availablethrust < 0.1 {
+
+        until ship:obt:hasNextPatch {
             update_display().
         }
+        
+        set tVal to 0.
 
-        wait 1.
         set runmode to 10.
     }
         
@@ -76,19 +76,20 @@ until runmode = 99 {
 
     else if runmode = 20 {
 
-        warp_to_next_soi().
-
-        wait 5.
-
         when ship:body:name = "sun" then {
             log_sci_list(sciList).
             recover_sci_list(sciList).
         }
 
+        warp_to_next_soi().
+
         set runmode to 25.
     }
 
     else if runmode = 25 {
+
+        wait 90.
+
         set runmode to 99.
     }
     

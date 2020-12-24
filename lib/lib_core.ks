@@ -3,7 +3,39 @@
 
 runOncePath("0:/lib/lib_init").
 
-//Waits until vessel is safe to stage, then stages
+//Global lexicon of various anonymous function delegates
+global utils is lex(
+        "checkAltHi"        ,{ parameter _alt. return ship:altitude >= _alt.}
+        ,"checkAltLo"       ,{ parameter _alt. return ship:altitude < _alt.}
+        ,"checkRadarHi"     ,{ parameter _alt. return alt:radar >= _alt.}
+        ,"checkRadarLo"     ,{ parameter _alt. return alt:radar < _alt.}
+        ,"getRVal"          ,{ return ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.}
+        ,"timeToAlt"        ,{ parameter _alt. return time_to_alt_next(_alt).}
+        ,"timeToGround"     ,{ return alt:radar / ship:verticalSpeed.}
+        ,"stgFromTag"       ,{ parameter _p. for t in p:tag:split(".") { if t:startsWith("stgId") { return t:split(":")[1].} return "".}}
+        ).
+
+global info is lex(
+    "altForSci", lex(
+        "Kerbin", 250000,
+        "Mun", 60000,
+        "Minmus", 30000
+        )
+    ).
+
+
+
+global function time_to_alt_next {
+    parameter _alt.
+
+    if ship:altitude < _alt {
+        return _alt - ship:altitude / ship:verticalSpeed.
+    } else {
+        return ship:altitude - _alt / ship:verticalSpeed.
+    }
+}
+
+
 global function safe_stage {
     
     wait 0.5.
@@ -30,9 +62,9 @@ global function safe_stage {
 
 global function staging_triggers {
 
-    //For solid fuel launch boosters
+    //One time trigger for solid fuel launch boosters
     if ship:partsTaggedPattern("eng.solid"):length > 0 {
-        when ship:solidfuel < 0.1 and throttle > 0 then {
+        when stage:solidfuel < 0.1 and throttle > 0 then {
             safe_stage().
         }
     }
@@ -75,9 +107,3 @@ global function get_solar_exp {
         return 0.
     }
 }
-
-// global function warp_to_longitude {
-//     parameter lng.
-
-//     return true.
-// }
