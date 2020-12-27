@@ -118,7 +118,7 @@ global function add_simple_circ_node {
     parameter _nodeAt,
               _tgtAlt.
 
-    local dv to choose get_dv_for_prograde(_tgtAlt, ship:apoapsis) if _nodeAt = "pe" else get_dv_for_prograde(_tgtAlt, ship:periapsis).
+    local dv to choose get_dv_for_retrograde(_tgtAlt, ship:apoapsis) if _nodeAt = "pe" else get_dv_for_prograde(_tgtAlt, ship:periapsis).
     if dv > 9999 set dv to 50.
 
     local mnv is list().

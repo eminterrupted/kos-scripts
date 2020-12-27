@@ -1,5 +1,5 @@
-parameter tgtPe1 is 350000,
-          tgtAp1 is 350000,
+parameter tgtPe1 is 150000,
+          tgtAp1 is 165000,
           tgtInc is 84,
           tgtLan is "current".
 

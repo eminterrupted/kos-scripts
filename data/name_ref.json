@@ -415,7 +415,9 @@
         "G-00 Hinge",
         "hinge.01.s",
         "Communotron HG-61",
-        "restock-antenna-stack-3"
+        "restock-antenna-stack-3",
+        "SCAN-R Resource Mapper",
+        "scansat-resources-crism-1"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

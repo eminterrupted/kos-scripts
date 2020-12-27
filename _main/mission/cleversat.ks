@@ -6,11 +6,11 @@ local tgtBody is kerbin.
 local tgtAp0 is 2500000.
 local tgtPe0 is 2500000.
 
-local obtAp is 18156890.
-local obtPe is 12300877.
-local obtInc is 39.3.
-local obtLAN is 40.1.
-local obtArgPe is 114.5.
+local obtAp is 8509523.
+local obtPe is 7303756.
+local obtInc is 1.
+local obtLAN is ship:orbit:longitudeofascendingnode.
+local obtArgPe is 50.6.
 // End user-managed variables
 
 parameter _rVal is 0.
@@ -30,15 +30,13 @@ runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_circ_burn").
 runOncePath("0:/lib/part/lib_antenna").
 
 local matchIncScript is "0:/_main/adhoc/simple_inclination_change".
 copyPath(matchIncScript, "local:/matchInc").
 set matchIncScript to "local:/matchInc".
 
-local runmode to stateObj["runmode"].
-if runmode = 99 set runmode to 0.
+local runmode to 0.
 
 local tgtObt to createOrbit(
     obtInc,

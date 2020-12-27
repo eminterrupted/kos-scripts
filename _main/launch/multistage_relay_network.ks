@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-parameter tApo to 1067581,
+parameter tAp to 1067581,
           tPe to 1067581,
           tInc to 0,
           tGTurnAlt to 60000,
@@ -16,7 +16,7 @@ runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_misc_parts").
-runOncePath("0:/lib/nav/lib_circ_burn").
+runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_node").
 
 runOncePath("0:/lib/data/engine/lib_engine").
@@ -51,14 +51,14 @@ local maxQ to 0.10.
 
 local launchObj to lex(
     "accPid", setup_acc_pid(maxAcc)
-    ,"azObj", l_az_calc_init(tApo, tInc)
+    ,"azObj", l_az_calc_init(tAp, tInc)
     ,"gtStart", 1000
     ,"maxAcc", maxAcc
     ,"maxQ", maxQ
     ,"qPid", setup_q_pid(maxQ)
     ,"runmode", runmode
     ,"rVal", rVal
-    ,"tApo", tApo
+    ,"tAp", tAp
     ,"tGTurnAlt", tGTurnAlt
     ,"tGEndPitch", tGEndPitch
     ,"tInc", tInc
@@ -95,7 +95,7 @@ local function main {
     launch_sequence(launchObj).
 
     print "MSG: Executing circularization_burn()        " at (2, 7).
-    exec_circ_burn(launchObj).
+    exec_circ_burn("ap", launchObj["tAp"]).
 
     print "MSG: Logging launch to launchLog             " at (2, 7).
     write_launch_log().
@@ -127,8 +127,8 @@ local function get_launch_planner {
             ,"lastLaunched", ""
             ,"totalLaunches", 0
             ,"totalCount", 4
-            ,"orbitAltitude", tApo
-            ,"orbitPeriod", 2 * constant:pi * sqrt(( tApo + ship:body:radius)^3 / (constant:g * ship:body:mass))
+            ,"orbitAltitude", tAp
+            ,"orbitPeriod", 2 * constant:pi * sqrt(( tAp + ship:body:radius)^3 / (constant:g * ship:body:mass))
             ,"launchLog", lex(
                 "launchStart", 0
                 ,"lngStart", 0

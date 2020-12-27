@@ -1,6 +1,6 @@
 @lazyGlobal off. 
 
-parameter tApo to 125000,
+parameter tAp to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
@@ -16,16 +16,15 @@ runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_misc_parts").
-runOncePath("0:/lib/nav/lib_circ_burn").
-runOncePath("0:/lib/nav/lib_node").
 
 runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/data/ship/lib_mass").
 
 runOncePath("0:/lib/part/lib_fairing").
 runOncePath("0:/lib/part/lib_antenna").
@@ -43,14 +42,14 @@ local maxQ to 0.10.
 
 local launchObj to lex(
     "accPid", setup_acc_pid(maxAcc)
-    ,"azObj", l_az_calc_init(tApo, tInc)
+    ,"azObj", l_az_calc_init(tAp, tInc)
     ,"gtStart", 750
     ,"maxAcc", maxAcc
     ,"maxQ", maxQ
     ,"qPid", setup_q_pid(maxQ)
     ,"runmode", runmode
     ,"rVal", rVal
-    ,"tApo", tApo
+    ,"tAp", tAp
     ,"tGTurnAlt", tGTurnAlt
     ,"tGEndPitch", tGEndPitch
     ,"tInc", tInc
@@ -67,7 +66,7 @@ local function main {
     launch_sequence(launchObj).
 
     print "MSG: Executing circularization_burn()        " at (2, 7).
-    exec_circ_burn(launchObj).
+    exec_circ_burn("ap", launchObj["tAp"]).
 
     print "MSG: Executing prep_for_orbit()              " at (2, 7).
     set runmode to prep_for_orbit().

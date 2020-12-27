@@ -12,8 +12,6 @@ global function launch_sequence {
     parameter lObj.
                 
     local runmode is 0.
-    // local sVal to heading(90, 90, -90).
-    // local tVal to 0.
 
     clearScreen.
     print "MSG: Executing preLaunch()                   " at (2, 7).
@@ -341,7 +339,7 @@ local function gravity_turn {
     when acc >= lObj["maxAcc"] then logStr("Throttling back at maximum acceleration").
 
     //Gravity turn loop
-    until ship:apoapsis >= lObj["tApo"] * 0.990 {
+    until ship:apoapsis >= lObj["tAp"] * 0.995 {
         set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
         set acc to ship:maxThrust / ship:mass.
 
@@ -375,9 +373,9 @@ local function slow_burn_to_apo {
     local tVal to 1.
     lock throttle to tVal.
 
-    until ship:apoapsis >= lObj["tApo"] {
+    until ship:apoapsis >= lObj["tAp"] {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-        set tval to 0.64.
+        set tval to 0.35.
 
         update_display().
     }
@@ -413,7 +411,7 @@ local function coast_to_space {
     until ship:altitude >= body:atm:height {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
 
-        if ship:apoapsis >= lObj["tApo"] {
+        if ship:apoapsis >= lObj["tAp"] {
             set tVal to 0.
         } else {
             set tVal to 0.25.

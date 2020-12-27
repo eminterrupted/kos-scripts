@@ -1,6 +1,6 @@
 {
     "entries": [
-        "tApo",
+        "tAp",
         175000,
         "tPe",
         175000,
@@ -15,9 +15,9 @@
         "launchS1",
         "multistage_base",
         "missionS1",
-        "mariner_mun_transfer",
+        "simple_orbit",
         "missionS2",
-        "log_sci_for_biome"
+        "simple_orbit"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

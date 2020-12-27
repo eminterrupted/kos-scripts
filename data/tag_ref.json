@@ -931,7 +931,9 @@
         "F-DA Direct Antenna Feed",
         "comm.dish",
         "RFL-1 Dish Reflector",
-        "comm.reflector"
+        "comm.reflector",
+        "SCAN-R Resource Mapper",
+        "sci.scan.resource"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

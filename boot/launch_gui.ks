@@ -27,7 +27,7 @@ if exists(cache) {
         if cacheObj:hasKey("launchS1") set launchS1 to cacheObj["launchS1"]:toString.
         if cacheObj:hasKey("missionS1") set missionS1 to cacheObj["missionS1"]:toString.
         if cacheObj:hasKey("missionS2") set missionS2 to cacheObj["missionS2"]:toString.
-        if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
+        if cacheObj:hasKey("tAp") set tApo to cacheObj["tAp"].
         if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
         if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
         if cacheObj:hasKey("gtAlt") set gtAlt to cacheObj["gtAlt"].
@@ -54,7 +54,7 @@ local obox to lbox:addhlayout().
 local leftbox to obox:addvlayout().
 leftbox:addLabel("Target Apoapsis").
 local tfAp to leftbox:addTextField(tApo:toString).
-set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tApo"] to tApo. }.
+set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tAp"] to tApo. }.
 
 leftbox:addspacing(20).
 
@@ -177,7 +177,7 @@ gui:hide().
 set cacheObj["launchS1"] to launchS1.
 set cacheObj["missionS1"] to missionS1.
 set cacheObj["missionS2"] to missionS2.
-set cacheObj["tApo"] to tApo.
+set cacheObj["tAp"] to tApo.
 set cacheObj["tPe"] to tPe.
 set cacheObj["tInc"] to tInc.
 set cacheObj["gtAlt"] to gtAlt.

@@ -31,7 +31,7 @@ local launchScript to cache["launchS1"].
 local missionScript to cache["missionS1"].
 local endScript to cache["missionS2"].
 
-local tApo to choose cache["tApo"] if cache["tApo"]:isType("scalar") else cache["tApo"]:toNumber.
+local tApo to choose cache["tAp"] if cache["tAp"]:isType("scalar") else cache["tAp"]:toNumber.
 local tPe to choose cache["tPe"] if cache["tPe"]:isType("scalar") else cache["tPe"]:toNumber.
 local tInc to choose cache["tInc"] if cache["tPe"]:isType("scalar") else cache["tInc"]:toNumber.
 local gtAlt to choose cache["gtAlt"] if cache["gtAlt"]:isType("scalar") else cache["gtAlt"]:toNumber.

@@ -24,7 +24,7 @@ local cache is choose readJson("local:/launchSelectCache.json") if exists("local
 if launchScript = "" set launchScript to cache["launchScript"].
 if missionScript = "" set missionScript to cache["missionScript"].
 
-if tApo:isType("String") set tApo to choose tApo:tonumber if tApo <> "" else cache["tApo"].
+if tApo:isType("String") set tApo to choose tApo:tonumber if tApo <> "" else cache["tAp"].
 if tPe:isType("String") set tPe to choose tPe:tonumber if tPe <> "" else cache["tPe"].
 
 if tInc:isType("String") set tInc to choose cache["tInc"] if tInc = "" else tInc:tonumber.

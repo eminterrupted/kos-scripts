@@ -13,7 +13,7 @@ runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_circ_burn").
+runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/part/lib_antenna").
 
 //Paths to other scripts used here

@@ -3,8 +3,8 @@
 parameter tgtBody is "Mun",
           tgtInc is 84,
           tgtPe0 is 500000,
-          tgtAp1 is 35000,
-          tgtPe1 is 35000.
+          tgtAp1 is 135000,
+          tgtPe1 is 135000.
 //
 
 clearscreen.
@@ -15,15 +15,13 @@ runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_circ_burn").
 runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/part/lib_solar").
 
 //Paths to other scripts used here
-// local sciScript to "local:/sciScript".
-// copyPath("0:/_main/component/deploy_scansat", sciScript).
-
 local incChangeScript to "local:/incChange". 
 copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
 
@@ -159,14 +157,16 @@ local function main {
 
         //Set up a trigger for activating solar and comms on stage.
         else if runmode = 47 {
-            when stage:number = 0 then {
-                panels on.
+            when stage:number <= 1 then {
+                for p in ship:partsTaggedPattern("solar.array.*.onDeploy") {
+                    activate_solar(p).
+                }
 
-                for p in ship:partsTaggedPattern("comm.dish") {
+                for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") {
                     activate_dish(p).
                 }
 
-                for p in ship:partsTaggedPattern("comm.omni") {
+                for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") {
                     activate_omni(p).
                 }
             }
