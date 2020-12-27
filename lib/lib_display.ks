@@ -482,6 +482,17 @@ global function disp_get_pos_obj {
     return posObj[pos].
 }
 
+
+
+// Prints a "MSG" line at (2, 7)
+global function out_msg {
+    parameter str.
+
+    print str:padright(60) at (2, 7).
+}
+
+
+
 //Main launch display updater
 global function update_display {
     disp_main().

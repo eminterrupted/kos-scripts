@@ -4,7 +4,7 @@ runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/part/lib_heatshield").
-
+runOncePath("0:/lib/part/lib_chute").
 
 
 global function do_kerbin_reentry_burn {

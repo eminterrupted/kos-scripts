@@ -1,7 +1,5 @@
 @lazyGlobal off. 
 
-parameter _tgtInc is ship:orbit:inclination.
-
 clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_display").
@@ -24,54 +22,15 @@ runOncePath("0:/lib/part/lib_scansat").
 //Vars
 local scanSatList to ship:partsTaggedPattern("sci.scan").
 
-//Picks up the runmode in the state object. This should be 0 if first run, but this allows resume mid-flight.
-//local stateObj to init_state_obj().
+//This is not a long-running script or one that needs runmode persistence, so hardcode it here
 local runmode to 100. 
 
-local sVal is lookDirUp(ship:prograde:vector, sun:position).
-lock steering to sVal.
-
-wait 1.
+lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
 until runmode = 199 {
-    
-    local tStamp to 0.
 
     if runmode = 100 {
-        disp_obt_data().
-        
-        set runmode to 110.
-    }
-
-    else if runmode = 110 {
-        if warp = 0 {
-            set runmode to 120. 
-            warpTo(tStamp).
-        }
-    }
-
-    //Inclination change
-    else if runmode = 120 {
-        if ship:obt:inclination < _tgtInc -1 or ship:obt:inclination > _tgtInc + 1 {
-            runPath("0:/_main/adhoc/simple_inclination_change", _tgtInc).
-        }
-        set runmode to 130.
-    }
-
-    else if runmode = 130 {
-        set tStamp to time:seconds + 130.
-        deploy_payload().
-        disp_clear_block("deploy").
-        set runmode to 140.
-    }
-
-    else if runmode = 140 {
-        if time:seconds >= tStamp set runmode to 150.
-        disp_eta(tStamp).
-    }
-
-    else if runmode = 150 {
-        set runmode to 160.
+       set runmode to 160.
     }
 
     else if runmode = 160 {
@@ -99,7 +58,6 @@ until runmode = 199 {
         update_scan_disp().
     }
 
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     
     update_display().
 

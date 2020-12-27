@@ -190,7 +190,5 @@ copyPath(cache, localCache).
 local mc to "0:/_main/mc".
 local localMC to rProc:volume:name + ":/boot/mc".
 compile(mc) to localMC.
-set rProc:bootfilename to localMC.
-if exists("local:/boot/gui_stage") deletePath("local:/boot/gui_stage").
 
 runPath(localMC).

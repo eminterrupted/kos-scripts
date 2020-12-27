@@ -399,7 +399,23 @@
         "Multi-Spectral Imaging Platform",
         "dmImagingPlatform",
         "MLT-10 Multipurpose Fuel Tank Cluster",
-        "nfex-fueltank-stack-tiny-1"
+        "nfex-fueltank-stack-tiny-1",
+        "M700 Survey Scanner",
+        "SurveyScanner",
+        "MS-R Enhanced Multispectral Scanner",
+        "scansat-multi-abi-1",
+        "SENTINEL Infrared Telescope",
+        "InfraredTelescope",
+        "F-DA Direct Antenna Feed",
+        "nfex-antenna-feeder-direct-1",
+        "OX-STAT-XL Photovoltaic Panels",
+        "LgRadialSolarPanel",
+        "RFL-1 Dish Reflector",
+        "nfex-antenna-reflector-side-1",
+        "G-00 Hinge",
+        "hinge.01.s",
+        "Communotron HG-61",
+        "restock-antenna-stack-3"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

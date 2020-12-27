@@ -13,7 +13,12 @@ runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 init_uplink().
 
-if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
+local mlp to false.
+
+if ship:partsTaggedPattern("mlp"):length > 0 {
+    runOncePath("0:/lib/part/lib_launchpad").
+    set mlp to true.
+}
 
 //Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
 //local stateObj is init_state_obj().
@@ -46,6 +51,8 @@ if program = "LAUNCH" {
     set_program("MISSION_S1").
 }
 
+set core:bootfilename to "local:/boot/mc".
+
 if program = "MISSION_S1" {
     exec_mission(missionScript).
     set_program("MISSION_S2").
@@ -62,13 +69,13 @@ local function exec_launch {
     parameter script.
 
     disp_main().
-    wait 1.
+
     //Activate generator on launch pad in case of hold
-    mlp_gen_on().
+    if mlp mlp_gen_on().
     logStr("Vehicle on external power").
-    wait 1.
+
     //Activate fueling in case we forgot to fuel
-    mlp_fuel_on().
+    if mlp mlp_fuel_on().
     logStr("Vehicle fuel loading commenced").
     wait 1.
 

@@ -7,19 +7,27 @@ runOncePath("0:/lib/lib_sci").
 
 local scanMod is "SCANsat".
 local expMod is "SCANexperiment".
-
+local resMod is "ModuleSCANResourceScanner".
 
     //Basic functions
     global function start_scansat {
         parameter p.
 
-        local m is p:getModule(scanMod).
-        if m:hasEvent("start scan: multispectral")  m:doEvent("start scan: multispectral").
-        else if m:hasEvent("start scan: radar")     m:doEvent("start scan: radar").
-        else if m:hasEvent("start scan: sar")       m:doEvent("start scan: sar").
-        else if m:hasEvent("start scan: visual")    m:doEvent("start scan: visual").
-        else if m:hasEvent("start scan: resource")  m:doEvent("start scan: resource").
+        if p:hasModule(scanMod) {
+            local m is p:getModule(scanMod).
+            if m:hasEvent("start scan: multispectral")  m:doEvent("start scan: multispectral").
+            else if m:hasEvent("start scan: radar")     m:doEvent("start scan: radar").
+            else if m:hasEvent("start scan: sar")       m:doEvent("start scan: sar").
+            else if m:hasEvent("start scan: visual")    m:doEvent("start scan: visual").
+            else if m:hasEvent("start scan: resource")  m:doEvent("start scan: resource").
+        }
+
+        if p:hasModule(resMod) {
+            local m is p:getModule(resMod).
+            if m:hasEvent("start scan: resource")       m:doEvent("start scan: resource").
+        }
     }
+    
 
     global function stop_scansat{
         parameter p.

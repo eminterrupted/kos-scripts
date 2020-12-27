@@ -551,7 +551,7 @@
         "D25 Heavy Drone Core",
         "cmd.core",
         "M4435 Narrow-Band Scanner",
-        "sci.scan.rsrc",
+        "sci.scan.resource.legacy",
         "K20-K 1+2+1 Concentrating Photovoltaic Panels",
         "ec.solar.array",
         "MS-R Enhanced Multispectral Scanner",
@@ -919,13 +919,19 @@
         "KS-10AJ 'Walrus' Liquid Fuel Engine",
         "eng",
         "Soil Moisture Sensor",
-        "",
+        "sci.dmag.soil",
         "Probodobodyne OKTO Bus",
-        "",
+        "struct.bus",
         "Multi-Spectral Imaging Platform",
-        "",
+        "sci.scan.dmag.multispectral",
         "MLT-10 Multipurpose Fuel Tank Cluster",
-        ""
+        "tank",
+        "M700 Survey Scanner",
+        "sci.scan.resource.legacy",
+        "F-DA Direct Antenna Feed",
+        "comm.dish",
+        "RFL-1 Dish Reflector",
+        "comm.reflector"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

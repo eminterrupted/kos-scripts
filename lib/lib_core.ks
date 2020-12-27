@@ -24,14 +24,117 @@ global info is lex(
     ).
 
 
+// Check orbital value against target range
+    global function check_argpe {
+        parameter _tArgPe, 
+                _range.
 
-global function time_to_alt_next {
-    parameter _alt.
+        if ship:orbit:argumentOfPeriapsis >= _tArgPe - _range or 
+        ship:orbit:argumentOfPeriapsis <= _tArgPe + _range {
+            return true.
+        } else { 
+            return false.
+        }
+    }
 
-    if ship:altitude < _alt {
-        return _alt - ship:altitude / ship:verticalSpeed.
+    global function check_lan {
+        parameter _tLAN, 
+                _range.
+
+        if ship:orbit:longitudeofascendingnode >= _tLAN - _range or 
+        ship:orbit:longitudeofascendingnode <= _tLAN + _range {
+            return true.
+        } else { 
+            return false.
+        }
+    }
+
+    global function check_ap {
+        parameter _tAp, 
+                _range.
+
+        if ship:apoapsis >= _tAp - _range or 
+        ship:apoapsis <= _tAp + _range {
+            return true.
+        } else { 
+            return false.
+        }
+    }
+
+    global function check_pe {
+        parameter _tPe, 
+                _range.
+
+        if ship:periapsis >= _tPe - _range or 
+        ship:periapsis <= _tPe + _range {
+            return true.
+        } else { 
+            return false.
+        }
+    }
+
+
+// Checks a given module for presence of an event, and does it 
+// if available
+global function do_action {
+    parameter _m,       // Module
+              _event,   // Event to do if present
+              _bit is true.     // The true/false bit for an action.
+                                // Not usually needed, hence the default
+
+    if _m:hasAction(_event) {
+        _m:doAction(_event, _bit).
+        return true.
     } else {
-        return ship:altitude - _alt / ship:verticalSpeed.
+        return false.
+    }
+}
+
+
+// Checks a given module for presence of an event, and does it 
+// if available
+global function do_event {
+    parameter _m,       // Module
+              _event.   // Event to do if present
+
+    if _m:hasEvent(_event) {
+        _m:doEvent(_event).
+        return true.
+    } else {
+        return false.
+    }
+}
+
+
+// Checks a given module for presence of an event, and does it 
+// if available
+global function get_field {
+    parameter _m,       // Module
+              _field.   // Event to do if present
+
+    if _m:hasField(_field) {
+        _m:getField(_field).
+        return true.
+    } else {
+        return false.
+    }
+}
+
+
+global function get_solar_exp {
+    local solList is ship:partsDubbedPattern("solar").
+    local exp is 0.
+    local mod is "ModuleDeployableSolarPanel".
+
+    for p in solList {
+        local m is p:getModule(mod).
+        set exp to exp + m:getField("sun exposure").        
+    }
+
+    if not (exp = 0) {
+        return exp / solList:length.
+    } else {
+        return 0.
     }
 }
 
@@ -77,33 +180,12 @@ global function staging_triggers {
 }
 
 
-global function arm_chutes {
-    parameter pList is ship:parts.
+global function time_to_alt_next {
+    parameter _alt.
 
-    local chuteMod is "RealChuteModule".
-
-    for p in pList {
-        if p:hasModule(chuteMod) {
-            local m is p:getModule(chuteMod).
-            if m:hasEvent("arm parachute") m:doEvent("arm parachute").
-        }
-    }
-}
-
-
-global function get_solar_exp {
-    local solList is ship:partsDubbedPattern("solar").
-    local exp is 0.
-    local mod is "ModuleDeployableSolarPanel".
-
-    for p in solList {
-        local m is p:getModule(mod).
-        set exp to exp + m:getField("sun exposure").        
-    }
-
-    if not (exp = 0) {
-        return exp / solList:length.
+    if ship:altitude < _alt {
+        return _alt - ship:altitude / ship:verticalSpeed.
     } else {
-        return 0.
+        return ship:altitude - _alt / ship:verticalSpeed.
     }
 }

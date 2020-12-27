@@ -6,7 +6,26 @@ runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_calc_mnv").
 
-global function do_circ_burn {
+global function exec_circ_burn_next {
+    parameter _nodeAt,
+              _tgtAlt.
+
+    out_msg("MSG: Executing add_simple_circ_node()").
+    local burnNode to add_simple_circ_node(_nodeAt, _tgtAlt).
+    
+    out_msg("MSG: Executing get_burn_obj_from_node(burnNode)").
+    local burnObj to get_burn_obj_from_node(burnNode).
+
+    out_msg("MSG: Executing warp_to_circ_burn()").
+    warp_to_circ_burn(burnObj).
+    
+    out_msg("MSG: Executing exec_circ_burn()").
+    do_circ_burn(burnObj).
+
+
+}
+
+global function exec_circ_burn {
     parameter circObj.
 
     print "MSG: Executing setup_circ_burn()             " at (2, 7).
@@ -19,7 +38,7 @@ global function do_circ_burn {
     warp_to_circ_burn(circObj).
     
     print "MSG: Executing exec_circ_burn()              " at (2, 7).
-    exec_circ_burn(circObj).
+    do_circ_burn(circObj).
 }
 
 
@@ -56,7 +75,7 @@ local function warp_to_circ_burn {
 }
 
 
-local function exec_circ_burn {
+local function do_circ_burn {
     parameter cObj.
     
     set_rm(24).

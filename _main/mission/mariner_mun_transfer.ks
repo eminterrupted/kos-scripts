@@ -1,10 +1,10 @@
 @lazyGlobal off.
 
 parameter tgtBody is "Mun",
-          tgtInc is 35,
-          tgtPe0 is 250000,
-          tgtAp1 is 50000,
-          tgtPe1 is 50000.
+          tgtInc is 84,
+          tgtPe0 is 500000,
+          tgtAp1 is 35000,
+          tgtPe1 is 35000.
 //
 
 clearscreen.
@@ -21,8 +21,8 @@ runOncePath("0:/lib/nav/lib_circ_burn").
 runOncePath("0:/lib/part/lib_antenna").
 
 //Paths to other scripts used here
-local sciScript to "local:/sciScript".
-copyPath("0:/_main/component/deploy_scansat", sciScript).
+// local sciScript to "local:/sciScript".
+// copyPath("0:/_main/component/deploy_scansat", sciScript).
 
 local incChangeScript to "local:/incChange". 
 copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
@@ -62,11 +62,16 @@ local function main {
         
         //Activate the antenna
         else if runmode = 2 {
-            local p to ship:partsTaggedPattern("comm.dish").
-            if p:length > 0 activate_dish(p[0]).
+            for p in ship:partsTaggedPattern("comm.dish") {
+                if not p:tag:matchesPattern("onDeploy") {
+                    activate_dish(p).
+                }
+            }
 
-            for o in ship:partsTaggedPattern("comm.omni") {
-                activate_omni(o).
+            for p in ship:partsTaggedPattern("comm.omni") {
+                if not p:tag:matchesPattern("onDeploy") {
+                    activate_omni(p).
+                }
             }
             
             set runmode to 5.
@@ -149,6 +154,23 @@ local function main {
 
             if warp > 0 kuniverse:timewarp:cancelwarp().
             wait until kuniverse:timewarp:issettled.
+            set runmode to 47.
+        }
+
+        //Set up a trigger for activating solar and comms on stage.
+        else if runmode = 47 {
+            when stage:number = 0 then {
+                panels on.
+
+                for p in ship:partsTaggedPattern("comm.dish") {
+                    activate_dish(p).
+                }
+
+                for p in ship:partsTaggedPattern("comm.omni") {
+                    activate_omni(p).
+                }
+            }
+
             set runmode to 50.
         }
 

@@ -381,7 +381,27 @@
         "nflv-engine-ar1-1",
         "eng",
         "OrbitalScanner",
-        "sci.scan.rsrc"
+        "sci.scan.rsrc",
+        "SurveyScanner",
+        "sci.scan.resource",
+        "scansat-multi-abi-1",
+        "sci.scan.multi",
+        "InfraredTelescope",
+        "sci.asteroidScope",
+        "LgRadialSolarPanel",
+        "ec.solar.fixed",
+        "hinge.01.s",
+        "rbt.hinge.small",
+        "restock-antenna-stack-3",
+        "comm.dish.25g",
+        "dmSoilMoisture",
+        "sci.dmag.soil",
+        "nfex-bus-okto-1",
+        "struct.bus",
+        "dmImagingPlatform",
+        "sci.dmag.multispec",
+        "nfex-fueltank-stack-tiny-1",
+        "tank"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

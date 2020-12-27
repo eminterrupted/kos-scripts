@@ -95,7 +95,7 @@ local function main {
     launch_sequence(launchObj).
 
     print "MSG: Executing circularization_burn()        " at (2, 7).
-    do_circ_burn(launchObj).
+    exec_circ_burn(launchObj).
 
     print "MSG: Logging launch to launchLog             " at (2, 7).
     write_launch_log().

@@ -67,7 +67,7 @@ local function main {
     launch_sequence(launchObj).
 
     print "MSG: Executing circularization_burn()        " at (2, 7).
-    do_circ_burn(launchObj).
+    exec_circ_burn(launchObj).
 
     print "MSG: Executing prep_for_orbit()              " at (2, 7).
     set runmode to prep_for_orbit().
@@ -90,13 +90,22 @@ local function prep_for_orbit {
 
     wait 2.
     
-    logStr("Deploying solar panels").
-    panels on.
+    local solarMod to "ModuleDeployableSolarPanel".
 
-    logStr("Activating all omni antennae").
-    for a in ship:partsTaggedPattern("comm.omni") {
-        activate_omni(a).
+    logStr("Deploying launch vehicle solar panels").
+    for p in ship:partsTaggedPattern("solar.array") {
+        if not p:tag:matchesPattern("onDeploy") {
+            do_event(p:getModule(solarMod), "extend solar panel").
+        }
     }
+
+    logStr("Activating launch vehicle omni antennae").
+    for p in ship:partsTaggedPattern("comm.omni") {
+        if not p:tag:matchesPattern("onDeploy") {
+            activate_omni(p).
+        }
+    }
+
     logStr("Orbtial configuration set").
 
     update_display().

@@ -93,7 +93,7 @@ until runmode = 99 {
 
     else if runmode = 5 {
         set situation to choose "[LOW]" if ship:altitude < info:altForSci[ship:body:name] else "[HIGH]".
-        if not biomeList:join(";"):contains(addons:scanSat:currentbiome + situation) {
+        if not biomeList:join(";"):matchesPattern(addons:scanSat:currentbiome + situation) {
             set runmode to 7.
         }
 

@@ -1,9 +1,9 @@
 {
     "entries": [
         "tApo",
-        225000,
+        175000,
         "tPe",
-        225000,
+        175000,
         "tInc",
         0,
         "gtAlt",
@@ -15,9 +15,9 @@
         "launchS1",
         "multistage_base",
         "missionS1",
-        "mariner_mun_mission",
+        "mariner_mun_transfer",
         "missionS2",
-        "scansat"
+        "log_sci_for_biome"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

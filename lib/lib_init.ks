@@ -22,53 +22,32 @@ global function init_disk {
 
     // Get all the disks from the vessel
     for cpu in ship:modulesNamed("kOSProcessor") {
-        if cpu:part:uid = core:part:uid {
-            set core:volume:name to "local".
+        disks:add(cpu:volume).
+    }
 
-        } else if not cpu:volume:name:contains("local") {
-            if cpu:volume:capacity < logSize {
+    if not disks:join(";"):contains("local") set core:volume:name to "local".
+
+    for d in disks {
+        
+        if d:name <> "local" {
+            if d:capacity < logSize {
                 if logDisk:isType("Volume") {
                     set logDisk:name to "data_" + logDiskIdx.
                 }
 
-                set cpu:volume:name to "log".
+                set d:name to "log".
 
-                set logDisk to cpu:volume.
+                set logDisk to d.
                 set logDiskIdx to diskIdx. 
                 set logSize to logDisk:capacity.
             } else {
-                set cpu:volume:name to "data_" + diskIdx.
+                set d:name to "data_" + diskIdx.
             }
 
         }
         
         set diskIdx to diskIdx + 1.
     }
-
-    // local di is disks:iterator.
-    // local idx to 0.
-    // local logDisk to "".
-    // local logDiskIdx to 0.
-    // local logSize is 999999.
-    
-    // //Set smallest remaining disk as log disk
-    // until not di:next {
-    //     if di:value:name <> "local" and di:value:name <> "Archive" {
-    //         if di:value:capacity < logSize {
-
-    //             if logDisk:isType("Volume") {
-    //                 set logDisk:name to "data_" + logDiskIdx.
-    //             }
-
-    //             set di:value:name to "log".
-    //             set logDisk to di:value.
-    //             set logDiskIdx to di:index - 1.
-    //             set logSize to di:value:capacity.
-    //         }
-    //     }
-        
-    //     set idx to idx + 1.
-    // }
 
     local dLex is lex().
     list volumes in disks.

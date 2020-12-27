@@ -7,6 +7,7 @@ runOncePath("0:/lib/part/lib_antenna").
 local containMod is "ModuleScienceContainer".
 local dmagMod is "DMModuleScienceAnimate".
 local sciMod is "ModuleScienceExperiment".
+local soilMod is "DMSoilMoisture".
 
 local usSimpleMod is "USSimpleScience".
 local usAdvMod is "USAdvancedScience".
@@ -51,6 +52,7 @@ local transmitQueue is queue().
             else if m:name = dmagMod        toggle_sci_mod_dmag(m, true).
             else if m:name = usAdvMod       toggle_sci_mod_us(m, true).
             else if m:name = usSimpleMod    toggle_sci_mod_us(m, true).
+            else if m:name = soilMod        toggle_sci_mod_dmag(m, true).
         }
     }
 
@@ -110,6 +112,8 @@ local transmitQueue is queue().
                 get_sci_mod_multi_for_part(p, usAdvMod).
             } else if p:hasModule(usSimpleMod) {
                 get_sci_mod_multi_for_part(p, usSimpleMod).
+            } else if p:hasModule(soilMod) {
+                sciList:add(p:getModule(soilMod)).
             }
         }
 
@@ -137,8 +141,6 @@ local transmitQueue is queue().
     //Logs science experiment for a given module
     local function log_sci {
         parameter m. 
-
-        print m:name at (2, 8).
 
         if not m:inoperable {
             if not m:hasData {
@@ -194,6 +196,7 @@ local transmitQueue is queue().
             else if m:name = dmagMod        toggle_sci_mod_dmag(m, false).
             else if m:name = usAdvMod       toggle_sci_mod_us(m, false).
             else if m:name = usSimpleMod    toggle_sci_mod_us(m, false).
+            else if m:name = soilMod        toggle_sci_mod_dmag(m, false).
         }
     }
 
