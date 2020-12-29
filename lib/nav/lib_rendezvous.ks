@@ -63,3 +63,32 @@ global function ta_offset {
     // how far ahead is obt0's TA measured from obt1's in degrees?
     return pe_lng_0 - pe_lng_1.
 }
+
+
+//Formats a target string as an orbitable object
+global function orbitable {
+    parameter _tgt.
+
+    local vList to list().
+    list targets in vList.
+
+    for vs in vList {
+        if vs:name = _tgt {
+            return vessel(_tgt).
+        }
+    }
+    
+    return body(_tgt).
+}
+
+
+// How many degrees difference between ship and a target
+global function target_angle {
+    parameter _tgt.
+
+    return mod(
+        lng_to_degrees(orbitable(_tgt):longitude)
+        - lng_to_degrees(ship:longitude) + 360,
+        360
+    ).
+}

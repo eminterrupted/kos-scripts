@@ -2,6 +2,7 @@
 
 if terminal:width < 65 set terminal:width to 65.
 if terminal:height < 50 set terminal:height to 55.
+core:doAction("open terminal", true).
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_pid").
@@ -486,9 +487,9 @@ global function disp_get_pos_obj {
 
 // Prints a "MSG" line at (2, 7)
 global function out_msg {
-    parameter str.
+    parameter str is "".
 
-    print str:padright(60) at (2, 7).
+    print "MSG: " + str:padright(55) at (2, 7).
 }
 
 
@@ -496,7 +497,7 @@ global function out_msg {
 //Main launch display updater
 global function update_display {
     disp_main().
-    disp_obt_data().
-    disp_tel().
-    if get_active_engs():length > 0 disp_eng_perf_data().
+    //disp_obt_data().
+    //disp_tel().
+    //if get_active_engs():length > 0 disp_eng_perf_data().
 }

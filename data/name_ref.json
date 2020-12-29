@@ -417,7 +417,19 @@
         "Communotron HG-61",
         "restock-antenna-stack-3",
         "SCAN-R Resource Mapper",
-        "scansat-resources-crism-1"
+        "scansat-resources-crism-1",
+        "LT-05 Micro Landing Strut",
+        "miniLandingLeg",
+        "Z-2.5K Rechargeable Battery Bank",
+        "restock-battery-1875-1",
+        "Procedural Thrust Plate Adapter",
+        "KzThrustPlate",
+        "Aerocam",
+        "aerocam",
+        "KerbPro",
+        "kerbpro",
+        "Illuminator Mk2",
+        "spotLight2"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

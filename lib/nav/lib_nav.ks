@@ -455,3 +455,10 @@ global function obt_alt_at_ta {
     // Subtract the body radius from the resulting SMA to get alt
     return r - _obtIn:body:radius.
 }
+
+
+global function lng_to_degrees {
+    parameter lng.
+
+    return mod(lng + 360, 360).
+}

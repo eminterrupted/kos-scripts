@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/nav/lib_calc_mnv").
+runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/lib_warp").
 
@@ -128,6 +129,37 @@ runOncePath("0:/lib/lib_warp").
         }
 
         set_sr("").
+    }
+
+
+// Argument of Peripasis
+
+    // Matches an ArgPe within the given tolerance range in degrees
+    global function exec_match_arg_pe {
+        parameter _tgtObt.
+
+        // First get the difference in target degrees vs. current degrees
+        local taDiff to mod(_tgtObt:argumentOfPeriapsis + _tgtObt:lan + ( 360 - ship:orbit:argumentOfPeriapsis - ship:orbit:lan), 360).
+
+        // Subtract the diff from 360 to get our desured true anomaly
+        local taTgt to mod(360 - taDiff, 360).
+
+        // Get the num of seconds until desired true anomaly.
+        local nodeAt to time:seconds + eta_to_ta(ship:orbit, taTgt).
+
+        // Add the burn node        
+        local burnNode to node(nodeAt, 0, 0, 1).
+        add burnNode.
+
+        // Get the burn object from the node
+        local burnObj to get_burn_obj_from_node(burnNode).
+        
+        // Warp ahead
+        warp_to_burn_node(burnObj).
+        
+        // Exec when settled
+        wait until warp = 0 and kuniverse:timewarp:issettled.
+        exec_node(nextNode).
     }
 
 

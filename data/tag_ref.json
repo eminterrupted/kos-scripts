@@ -785,7 +785,7 @@
         "Mk1b Fuselage (0.25m)",
         "tank",
         "BoosterCam",
-        "cam",
+        "util.camera",
         "GORESat",
         "sci.dmag.gore",
         "S1 SRB-KD25k \"Kickback\" Solid Fuel Booster",
@@ -933,7 +933,11 @@
         "RFL-1 Dish Reflector",
         "comm.reflector",
         "SCAN-R Resource Mapper",
-        "sci.scan.resource"
+        "sci.scan.resource",
+        "Z-2.5K Rechargeable Battery Bank",
+        "ec.battery",
+        "Aerocam",
+        "util.camera"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

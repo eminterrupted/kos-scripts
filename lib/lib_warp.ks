@@ -91,7 +91,7 @@ global function warp_to_alt {
             }
         }
 
-        else if ship:altitude >= pAlt * 1.050 {
+        else if ship:altitude >= pAlt * 1.0125 {
             if kuniverse:timewarp:warp <> 1 {
                 setWarp(1).
                 set subroutine to set_sr(5).
@@ -169,7 +169,7 @@ global function warp_to_ksc_reentry_window {
 
     until time:seconds >= ts {
         update_display().
-        disp_timer(ts).
+        disp_timer(ts, "Timestamp").
     }
 
     if warp > 0 set warp to 0.

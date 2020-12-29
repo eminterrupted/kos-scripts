@@ -1,19 +1,19 @@
 @lazyGlobal off.
 
+parameter _tgt is "Megfrid's Debris".
+
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/nav/lib_mnv").
+runOncePath("0:/lib/nav/lib_calc_mnv").
+runOncePath("0:/lib/nav/lib_node").
+runOncePath("0:/lib/nav/lib_rendezvous").
 
-local sciMod to get_sci_mod_for_parts(ship:parts).
+set target to orbitable(_tgt).
 
-clearScreen.
+out_msg("Checking target phase").
 
-from { local n to 0.} until n = 5 step { set n to n + 1.} do {
-    print n at (2, 10).
-    wait 1.
-}
-
-log_sci_list(sciMod).
-
-recover_sci_list(sciMod).
-
-transmit_when_avail().
+local transObj to get_transfer_obj().
+print transObj.

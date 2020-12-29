@@ -3,9 +3,6 @@
 // Change these variables per orbit
 local tgtBody is kerbin.
 
-local tgtAp0 is 2500000.
-local tgtPe0 is 2500000.
-
 local obtAp is 8509523.
 local obtPe is 7303756.
 local obtInc is 1.
@@ -92,7 +89,19 @@ local function main {
         // If isCircBurn is false, raise; else, circularize
         else if runmode = 5 {
             print ("I'm in cleversat:runmode 5") at (2, 50).
-            exec_hohmann_burn(tgtAp0, tgtPe0).
+
+            if ship:orbit:argumentofperiapsis < tgtObt:argumentofPeriapsis - 5 or ship:orbit:argumentofperiapsis > tgtObt:argumentOfPeriapsis + 5 {
+                exec_match_arg_pe(tgtObt).
+            }
+
+            set runmode to 6.
+        }
+
+        
+        else if runmode = 6 {
+            print ("I'm in cleversat:runmode 6") at (2, 50).
+            
+            exec_hohmann_burn((obtAp + ship:apoapsis) / 2, (obtPe + ship:periapsis) / 2).
 
             set runmode to 8.
         }

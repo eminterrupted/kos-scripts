@@ -1,9 +1,9 @@
 {
     "entries": [
         "tAp",
-        175000,
+        100000,
         "tPe",
-        175000,
+        100000,
         "tInc",
         0,
         "gtAlt",
@@ -17,7 +17,7 @@
         "missionS1",
         "simple_orbit",
         "missionS2",
-        "simple_orbit"
+        "simple_reentry"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -54,31 +54,30 @@ global function get_dv_for_transfer {
 
 global function get_dv_for_capture {
     parameter tgtObt,
-              stObt,
-              mnvBody is ship:body.
+              stObt.
 
     //semi-major axis 
-    local tgtSMA is tgtAlt + mnvBody:radius.
-    local stSMA is stAlt + mnvBody:radius.
+    local tgtSMA is tgtObt:semimajoraxis.
+    local stSMA is stObt:semimajoraxis.
 
     //Return dv
-    local dv to ((sqrt(ship:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
+    local dv to ((sqrt(stObt:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
     return dv.
 }
 
 
-global function get_dv_for_mun_transfer {
+global function get_dv_for_tgt_transfer {
 
     //semi-major axis
-    local tgtSMA to target:altitude + target:body:radius.
-    local stSMA to ship:altitude + ship:body:radius.
+    local tgtSMA to target:orbit:semimajoraxis.
+    local stSMA to ship:periapsis + ship:body:radius.
     
     //Return dv
     return ((sqrt(ship:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
 }
 
 
-global function get_dv_for_mun_transfer_next {
+global function get_dv_for_tgt_transfer_next {
 
     //semi-major axis
     local tgtSMA to target:orbit:semimajoraxis.
@@ -156,6 +155,9 @@ global function get_stages_for_dv {
     // The object we'll store the result in
     local stageObj is lex().
 
+    // Make dv absolute
+    set _deltaV to abs(_deltaV).
+
     // Loop until either the needed DeltaV is accounted for, or
     // we run out of stages
     until _deltaV <= 0 or _stageNum <= -1 {
@@ -189,42 +191,3 @@ global function get_stages_for_dv {
     // DeltaV for each stage needed to execute the burn
     return stageObj.
 }
-
-
-
-// //Calculate a circulization burn
-// global function get_circularization_burn {
-    
-//     set targetPitch to get_pitch_for_altitude(0, targetPeriapsis).
-//     set sVal to heading(get_heading(), targetPitch, 0).
-//     set tVal to 0.0.
-
-//             //Calculate variables
-//             //set cbThrust to get_thrust("available").
-//             set cbIsp to get_isp("vacuum").
-
-//             //set cbTwr to get_twr("vacuum").
-//             set cbStartMass to get_mass_object():current.
-//             set exhaustVelocity to (constant:g0 * cbIsp ). 
-//             set obtVelocity to sqrt(body:mu / (body:radius + targetPeriapsis )).
-
-//             //calculate deltaV
-//             //From: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
-//             set dV to ((sqrt(body:mu / (targetPeriapsis + body:radius))) * (1 - sqrt((2 * (ship:periapsis + body:radius)) / (ship:periapsis + targetPeriapsis + (2 * (body:radius)))))).
-            
-//             //Calculate vessel end mass
-//             set cbEndMass to (1 / ((cbStartMass * constant:e) ^ (dV / exhaustVelocity))).  
-
-//             //Calculate time parameters for the burn
-//             set cbDuration to exhaustVelocity * ln(cbStartMass) - exhaustVelocity * ln(cbEndMass).
-//             set cbMarkApo to time:seconds + eta:apoapsis.
-//             set cbStartBurn to cbMarkApo - (cbDuration / 2).
-
-//             //create the manuever node
-//             set cbNode to node(cbMarkApo, 0, 0, dV).
-
-//             //Add to flight path
-//             add cbNode. 
-
-//             set runmode to 10.
-// }.

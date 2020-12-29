@@ -3,8 +3,8 @@
 parameter tgtBody is "Mun",
           tgtInc is 84,
           tgtPe0 is 500000,
-          tgtAp1 is 135000,
-          tgtPe1 is 135000.
+          tgtAp1 is 225000,
+          tgtPe1 is 225000.
 //
 
 clearscreen.
@@ -72,13 +72,12 @@ local function main {
                 }
             }
             
-            set runmode to 5.
+            set runmode to 3.
         }
 
         //Sets the transfer target
-        else if runmode = 5 {
+        else if runmode = 3 {
             set target to tgtBody.
-            update_display().
             set runmode to 7.
         }
 
@@ -100,7 +99,7 @@ local function main {
             set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
             add mnvNode. 
 
-            local accuracy is 0.0005.
+            local accuracy is 0.001.
             set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "pe", target, accuracy).
             
             set runmode to 30.
@@ -115,10 +114,27 @@ local function main {
         //Executes the transfer burn
         else if runmode = 35 {
             exec_node(nextNode).
+            set runmode to 37.
+        }
+
+        else if runmode = 37 {
+            when stage:number <= 1 then {
+                for p in ship:partsTaggedPattern("solar.array.*.onDeploy") {
+                    activate_solar(p).
+                }
+
+                for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") {
+                    activate_dish(p).
+                }
+
+                for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") {
+                    activate_omni(p).
+                }
+            }
+
             set runmode to 40.
         }
 
-        //Clears the target data so we don't have weird behaviors when we reach its SOI
         //Then warps to the SOI change
         else if runmode = 40 {
             
@@ -130,7 +146,9 @@ local function main {
 
             disp_clear_block("timer").
 
-            warp_to_next_soi().
+            if ship:body:name <> tgtBody {
+                warp_to_next_soi().
+            }
             
             until ship:body:name = tgtBody {
                 update_display().
@@ -247,6 +265,8 @@ local function main {
         //Logs the runmode change and writes to disk in case we need to resume the script later
         set stateObj["runmode"] to runmode.
         log_state(stateObj).
+
+        update_display().
     }
 }
 

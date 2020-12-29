@@ -189,7 +189,7 @@ global function optimize_existing_node {
               _tgtAlt,
               _compMode,
               _tgtBody is _mnvNode:obt:body,
-              _mnvAcc is 0.025.
+              _mnvAcc is 0.005.
 
     local mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
     remove _mnvNode.
@@ -201,6 +201,7 @@ global function optimize_existing_node {
 
     return _mnvNode.
 }
+
 
 
 global function optimize_node_list {
@@ -698,4 +699,159 @@ local function get_node_score_for_orbit {
     if mnvTest:orbit:hasNextPatch {
         set resultBody to mnvTest:orbit:body.
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+global function optimize_arg_pe_existing_node {
+    parameter _mnvNode,
+              _tgtArgPe,
+              _tgtBody is _mnvNode:obt:body,
+              _mnvAcc is 0.005.
+
+    local mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
+    remove _mnvNode.
+
+    local optParam to optimize_arg_pe_node_list(mnvParam, _tgtArgPe, _tgtBody, _mnvAcc).
+    
+    set _mnvNode to node(optParam[0], optParam[1], optParam[2], optParam[3]).
+    add _mnvNode.
+
+    return _mnvNode.
+}
+
+
+global function optimize_arg_pe_node_list {
+    parameter _data,
+              _tgtArgPe,
+              _tgtBody,
+              _mnvAcc.
+
+    out_msg("Optimizing maneuver").
+
+    local limLo to 1 - _mnvAcc.
+    local limHi to 1 + _mnvAcc. 
+
+    until false {
+        set _data to improve_arg_pe_node(_data, _tgtArgPe, _tgtBody, _mnvAcc).
+        local nodeScore to get_arg_pe_node_score(_data, _tgtArgPe, _tgtBody)["score"].
+
+        wait 0.01.
+
+        if nodeScore >= limLo and nodeScore <= limHi {
+            break.
+        }
+    }
+    out_msg("Optimized maneuver found").
+    return _data.
+}
+
+
+local function improve_arg_pe_node {
+    parameter _data,
+              _tgtArgPe,
+              _tgtBody,
+              _mnvAcc.
+
+    local limLo to 1 - _mnvAcc.
+    local limHi to 1 + _mnvAcc.
+
+    //hill climb to find the best time
+    local curScore is get_arg_pe_node_score(_data, _tgtArgPe, _tgtBody).
+
+    local mnvFactor is 0.25.
+    if curScore:score > (limLo * 0.985) and curScore:score < (limHi * 1.015) {
+        set mnvFactor to 0.015625 * mnvFactor.
+    } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
+        set mnvFactor to 0.03125 * mnvFactor. 
+    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+        set mnvFactor to 0.125 * mnvFactor.
+    } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
+        set mnvFactor to .5 * mnvFactor.
+    } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
+        set mnvFactor to 1.75 * mnvFactor.
+    } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
+        set mnvFactor to 3 * mnvFactor. 
+    } else {
+        set mnvFactor to 10 * mnvFactor.
+    }
+    
+    local mnvCandidates is list(
+        list(_data[0] + mnvFactor, _data[1], _data[2], _data[3]) //Time
+        ,list(_data[0] - mnvFactor, _data[1], _data[2], _data[3]) //Time
+        ,list(_data[0], _data[1], _data[2], _data[3] + mnvFactor)    //Prograde
+        ,list(_data[0], _data[1], _data[2], _data[3] + - mnvFactor) //Prograde
+        ,list(_data[0], _data[1] + mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1] - mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1], _data[2] + mnvFactor, _data[3]) //Normal
+        ,list(_data[0], _data[1], _data[2] - mnvFactor, _data[3]) //Normal
+
+        ).
+
+    for c in mnvCandidates {
+        local candScore to get_arg_pe_node_score(c, _tgtArgPe, _tgtBody).
+        if candScore:result > _tgtArgPe {
+            if candScore:score < curScore:score {
+                set curScore to get_arg_pe_node_score(c, _tgtArgPe, _tgtBody).
+                set _data to c.
+                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+            }
+        } else {
+            if candScore:score > curScore:score {
+                set curScore to get_arg_pe_node_score(c, _tgtArgPe, _tgtBody).
+                set _data to c.
+                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+            }
+        }
+    }
+
+    return _data.
+}
+
+
+local function get_arg_pe_node_score {
+    parameter _data,
+              _tgtArgPe,
+              _tgtBody.
+
+    local score to 0.
+    local resultArgPe to 0.
+    local mnvTest to node(_data[0], _data[1], _data[2], _data[3]).
+
+    add mnvTest.
+  
+    if mnvTest:obt:body = _tgtBody {
+         set resultArgPe to mnvTest:obt:apoapsis.
+    
+    } else if mnvTest:obt:hasNextPatch {
+        if mnvTest:obt:nextpatch:body = _tgtBody {
+            set resultArgPe to mnvTest:obt:nextpatch:apoapsis.
+        
+        } else if mnvTest:obt:nextpatch:hasnextpatch {
+            if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
+                set resultArgPe to mnvTest:obt:nextpatch:nextpatch:apoapsis.
+                
+            } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
+                if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
+                    set resultArgPe to mnvTest:obt:nextpatch:nextpatch:nextpatch:apoapsis.
+                }
+            }
+        }
+    }
+
+    set score to resultArgPe / _tgtArgPe.
+
+    remove mnvTest.
+
+    return lex("score", score, "result", resultArgPe).
 }

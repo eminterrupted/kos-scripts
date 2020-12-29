@@ -134,9 +134,9 @@ global function get_mnv_param_list {
 }
 
 
-// Returns a coplanar mun transfer burn object. Must be called 
+// Returns a coplanar transfer burn object. Must be called 
 // with a node timestamp derived from get_mun_transfer_window 
-// and have the desired mun set as target
+// and have the desired target set
 global function get_transfer_burn_data {
     parameter _nodeAt.
 
@@ -144,7 +144,7 @@ global function get_transfer_burn_data {
     if not hasTarget return false.
 
     // Burn details
-    local dv to get_dv_for_mun_transfer().    // deltaV for transfer
+    local dv to get_dv_for_tgt_transfer().    // deltaV for transfer
     local burnDur to get_burn_dur(dV).              // Duration of the burn
     local halfDur to get_burn_dur(dV / 2).          // Duration to burn half the dV
     local burnEta to (_nodeAt) - (halfDur).         // UT timestamp to start the burn
@@ -154,7 +154,7 @@ global function get_transfer_burn_data {
 
 
 
-// Returns an object describing the transfer window to a mun
+// Returns an object describing a transfer window to the current target
 // TODO - Call from above to abstract from mainline scripts
 global function get_transfer_phase_angle {
     parameter _startAlt is (ship:apoapsis + ship:periapsis) / 2, // Average altitude
@@ -173,7 +173,7 @@ global function get_transfer_phase_angle {
     local transferPhaseAng to 180 - (1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360).
     
     // UT Timestamp of point we will reach the transfer phase angle
-    local nodeAt to get_transfer_window(transferPhaseAng) - 60.
+    local nodeAt to get_transfer_eta(transferPhaseAng).// - 60.
 
     return lex("xfrPhaseAng", transferPhaseAng, "nodeAt", nodeAt).
 }
@@ -181,7 +181,7 @@ global function get_transfer_phase_angle {
 
 // Returns a timestamp of next transfer window based on the 
 // phase angle found in get_mun_transfer_phase
-global function get_transfer_window {
+global function get_transfer_eta {
     parameter _transferPhaseAng,    // The phase angle of the transfer window
               _tgt is target.       // The target (body or ship)
 
@@ -191,9 +191,15 @@ global function get_transfer_window {
     // over the course of 5 seconds to get phase change / sec
     print "MSG: Sampling phase angle period" at (2, 7).
     local p0 to get_phase_angle(_tgt).
-    wait 5. 
+    local tStamp to time:seconds + 5.
+    until time:seconds >= tStamp {
+        update_display().
+        disp_timer(tStamp, "Phase Sampling").
+    }
     local p1 to get_phase_angle(_tgt).
     local phasePeriod to abs((p1 - p0) / 5).
+
+    disp_clear_block("timer").
 
     // Update the phase angle for calculation below
     local phaseAng to get_phase_angle(_tgt).

@@ -116,7 +116,6 @@ local function main {
             if warp > 0 kuniverse:timewarp:cancelwarp().
 
             until time:seconds >= leadTime {
-                print "Burn starting in " + round(leadTime - time:seconds) + "s     " at (2, 44).
                 set sVal to burnVector.
 
                 update_display().
@@ -131,8 +130,6 @@ local function main {
             until dvToGo <= 0.1 {
                 set sVal to burnVector.
                 set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
-                //if dvToGo < 10 { set tVal to max(0, min(1, dvToGo / 10)). } 
-                print "Burn dV remaining: " + round(dvToGo, 2) + " m/s      " at (2, 44).
 
                 update_display().
                 disp_burn_data().

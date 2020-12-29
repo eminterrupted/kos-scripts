@@ -401,7 +401,21 @@
         "dmImagingPlatform",
         "sci.dmag.multispec",
         "nfex-fueltank-stack-tiny-1",
-        "tank"
+        "tank",
+        "miniLandingLeg",
+        "gear",
+        "scansat-resources-crism-1",
+        "sci.scan.resource",
+        "restock-battery-1875-1",
+        "ec.battery",
+        "KzThrustPlate",
+        "struct.emount",
+        "kerbpro",
+        "util.camera",
+        "aerocam",
+        "util.camera",
+        "spotLight2",
+        "lgt.flood"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }
