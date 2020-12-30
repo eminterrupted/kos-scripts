@@ -70,9 +70,12 @@ end_main().
 local function main {
     until runmode = 99 {
 
+        if runmode = 0 {
+            set runmode to 2.
+        }
         
         // Vecdraw to show the maneuver
-        if runmode = 0 {
+        if runmode = 1 {
 
             set burnVDTail to positionAt(ship, utime).
             set burnVD to 

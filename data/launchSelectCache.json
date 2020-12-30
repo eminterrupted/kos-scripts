@@ -1,13 +1,13 @@
 {
     "entries": [
         "tAp",
-        125000,
+        175000,
         "tPe",
-        125000,
+        175000,
         "tInc",
         0,
         "gtAlt",
-        55000,
+        60000,
         "gtPitch",
         0,
         "rVal",
@@ -15,9 +15,9 @@
         "launchS1",
         "multistage_base",
         "missionS1",
-        "simple_orbit",
+        "mariner_mun_transfer",
         "missionS2",
-        "simple_reentry"
+        "mariner_return"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

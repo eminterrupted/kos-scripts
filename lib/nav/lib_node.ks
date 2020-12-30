@@ -132,9 +132,9 @@ global function add_simple_circ_node {
         set mode to "ap".
     }
 
-    //local mnvAcc is list(0.995, 1.005).
+    local mnvAcc is 0.005.
 
-    //set mnv to optimize_node_list(mnv, tgtAlt, mode, ship:body, mnvAcc).
+    set mnv to optimize_node_list(mnv, _tgtAlt, mode, ship:body, mnvAcc).
     set mnv to add_node_to_plan(mnv).
     
     return mnv.
@@ -186,7 +186,7 @@ global function add_optimized_node {
 
 global function optimize_existing_node {
     parameter _mnvNode,
-              _tgtAlt,
+              _tgtVal,
               _compMode,
               _tgtBody is _mnvNode:obt:body,
               _mnvAcc is 0.005.
@@ -194,7 +194,7 @@ global function optimize_existing_node {
     local mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
     remove _mnvNode.
 
-    local optParam to optimize_node_list(mnvParam, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
+    local optParam to optimize_node_list(mnvParam, _tgtVal, _compMode, _tgtBody, _mnvAcc).
     
     set _mnvNode to node(optParam[0], optParam[1], optParam[2], optParam[3]).
     add _mnvNode.
@@ -206,7 +206,7 @@ global function optimize_existing_node {
 
 global function optimize_node_list {
     parameter _data,
-              _tgtAlt,
+              _tgtVal,
               _compMode,
               _tgtBody,
               _mnvAcc.
@@ -217,10 +217,10 @@ global function optimize_node_list {
     local limHi to 1 + _mnvAcc. 
 
     until false {
-        set _data to improve_node(_data, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
-        local nodeScore to get_node_score(_data, _tgtAlt, _compMode, _tgtBody)["score"].
+        set _data to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
+        local nodeScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody)["score"].
 
-        wait 0.01.
+        wait 0.001.
 
         if nodeScore >= limLo and nodeScore <= limHi {
             break.
@@ -235,7 +235,7 @@ global function optimize_node_list {
 
 local function improve_node {
     parameter _data,
-              _tgtAlt,
+              _tgtVal,
               _compMode,
               _tgtBody,
               _mnvAcc.
@@ -244,10 +244,10 @@ local function improve_node {
     local limHi to 1 + _mnvAcc.
 
     //hill climb to find the best time
-    local curScore is get_node_score(_data, _tgtAlt, _compMode, _tgtBody).
+    local curScore is get_node_score(_data, _tgtVal, _compMode, _tgtBody).
 
     local mnvFactor is 0.25.
-    if curScore:score > (limLo * 0.985) and curScore:score < (limHi * 1.015) {
+    if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025) {
         set mnvFactor to 0.015625 * mnvFactor.
     } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
         set mnvFactor to 0.03125 * mnvFactor. 
@@ -266,12 +266,12 @@ local function improve_node {
     local mnvCandidates is list(
         list(_data[0] + mnvFactor, _data[1], _data[2], _data[3]) //Time
         ,list(_data[0] - mnvFactor, _data[1], _data[2], _data[3]) //Time
-        ,list(_data[0], _data[1], _data[2], _data[3] + mnvFactor)    //Prograde
-        ,list(_data[0], _data[1], _data[2], _data[3] + - mnvFactor) //Prograde
         ,list(_data[0], _data[1] + mnvFactor, _data[2], _data[3]) //Radial
         ,list(_data[0], _data[1] - mnvFactor, _data[2], _data[3]) //Radial
         ,list(_data[0], _data[1], _data[2] + mnvFactor, _data[3]) //Normal
         ,list(_data[0], _data[1], _data[2] - mnvFactor, _data[3]) //Normal
+        ,list(_data[0], _data[1], _data[2], _data[3] + mnvFactor)    //Prograde
+        ,list(_data[0], _data[1], _data[2], _data[3] + - mnvFactor) //Prograde
 
         ).
 
@@ -281,16 +281,16 @@ local function improve_node {
     // }
 
     for c in mnvCandidates {
-        local candScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
-        if candScore:result > _tgtAlt {
+        local candScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
+        if candScore:result > _tgtVal {
             if candScore:score < curScore:score {
-                set curScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
+                set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
                 print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
             }
         } else {
             if candScore:score > curScore:score {
-                set curScore to get_node_score(c, _tgtAlt, _compMode, _tgtBody).
+                set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
                 print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
             }
@@ -301,65 +301,58 @@ local function improve_node {
 }
 
 
+local function get_node_result {
+
+    parameter _compMode,
+                _obt.
+
+    if _compMode = "pe" {     
+        return _obt:periapsis.
+    } else if _compMode = "ap" {
+        return _obt:apoapsis.
+    } else if _compMode = "inc" {
+        return _obt:inclination.
+    } else if _compMode = "lan" {
+        return _obt:longitudeOfAscendingNode.
+    } else if _compMode = "argpe" {
+        return _obt:argumentofperiapsis.
+    }
+}
+
+
 local function get_node_score {
     parameter _data,
-              _tgtAlt,
+              _tgtVal,
               _compMode,
               _tgtBody.
 
     local score to 0.
-    local resultAlt to 0.
+    local result to 0.
     local mnvTest to node(_data[0], _data[1], _data[2], _data[3]).
 
     add mnvTest.
     
-    if _compMode = "pe" {     
-        if mnvTest:obt:body = _tgtBody {
-            set resultAlt to mnvTest:obt:periapsis.
-
-        } else if mnvTest:obt:hasNextPatch {
-            if mnvTest:obt:nextpatch:body = _tgtBody {
-                set resultAlt to mnvTest:obt:nextpatch:periapsis.
-
-            } else if mnvTest:obt:nextpatch:hasnextpatch {
-                if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
-                    set resultAlt to mnvTest:obt:nextpatch:nextpatch:periapsis.
-
-                } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
-                    if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
-                        set resultAlt to mnvTest:obt:nextpatch:nextpatch:nextpatch:periapsis.
-                    }
+    if mnvTest:obt:body = _tgtBody {
+        set result to get_node_result(_compMode, mnvTest:obt).
+    } else if mnvTest:obt:hasNextPatch {
+        if mnvTest:obt:nextpatch:body = _tgtBody {
+            set result to get_node_result(_compMode, mnvTest:obt:nextPatch).
+        } else if mnvTest:obt:nextpatch:hasnextpatch {
+            if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
+                set result to get_node_result(_compMode, mnvTest:obt:nextpatch:nextpatch).
+            } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
+                if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
+                    set result to get_node_result(_compMode, mnvTest:obt:nextpatch:nextpatch:nextpatch).
                 }
             }
         }
     }
-
-    if _compMode = "ap" {     
-        if mnvTest:obt:body = _tgtBody {
-            set resultAlt to mnvTest:obt:apoapsis.
-
-        } else if mnvTest:obt:hasNextPatch {
-            if mnvTest:obt:nextpatch:body = _tgtBody {
-                set resultAlt to mnvTest:obt:nextpatch:apoapsis.
-
-            } else if mnvTest:obt:nextpatch:hasnextpatch {
-                if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
-                    set resultAlt to mnvTest:obt:nextpatch:nextpatch:apoapsis.
-                    
-                } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
-                    if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
-                        set resultAlt to mnvTest:obt:nextpatch:nextpatch:nextpatch:apoapsis.
-                    }
-                }
-            }
-        }
-    }
-
-    set score to resultAlt / _tgtAlt.
+    
+    set score to result / _tgtVal.
 
     remove mnvTest.
 
-    return lex("score", score, "result", resultAlt).
+    return lex("score", score, "result", result).
 }
 
 

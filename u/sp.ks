@@ -23,8 +23,7 @@ local incChangeScript to "local:/incChange".
 copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
 
 //local stateObj to init_state_obj().
-local runmode to stateObj["runmode"].
-if runmode = 99 set runmode to 0.
+local runmode to 0.
 
 disp_main().
 
@@ -96,8 +95,8 @@ local function main {
             set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
             add mnvNode. 
 
-            local accuracy is 0.001.
-            set mnvNode to optimize_existing_node(mnvNode, target:orbit:periapsis, "pe", target, accuracy).
+            //local accuracy is 0.001.
+            //set mnvNode to optimize_existing_node(mnvNode, target:orbit:periapsis, "pe", target, accuracy).
             
             set runmode to 30.
         }

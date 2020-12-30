@@ -176,7 +176,7 @@ global function get_transfer_phase_angle {
         -((1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360)).
     
     // UT Timestamp of point we will reach the transfer phase angle
-    local nodeAt to get_transfer_eta(transferPhaseAng) - 60.
+    local nodeAt to get_transfer_eta(transferPhaseAng) - 90.
 
     return lex("xfrPhaseAng", transferPhaseAng, "nodeAt", nodeAt).
 }

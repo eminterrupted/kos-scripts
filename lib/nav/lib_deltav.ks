@@ -19,7 +19,7 @@ global function get_dv_for_prograde {
     local stSMA is stAlt + mnvBody:radius.
 
     //Return dv
-    local dv to ((sqrt(mnvBody:mu / tgtSMA)) * (1 - sqrt((2 * (stSMA)) / (tgtSMA + stSMA)))).
+    local dv to (sqrt(mnvBody:mu / tgtSMA)) * (1 - sqrt((2 * (stSMA)) / (tgtSMA + stSMA))).
     return dv.
 }
 
@@ -34,7 +34,7 @@ global function get_dv_for_retrograde {
     local stSMA is stAlt + mnvBody:radius.
 
     //Return dv
-    local dv to ((sqrt(ship:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
+    local dv to (sqrt(mnvBody:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1).
     return dv.
 }
 

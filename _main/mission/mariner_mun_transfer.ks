@@ -1,10 +1,10 @@
 @lazyGlobal off.
 
-parameter tgtBody is "Mun",
-          tgtInc is 84,
-          tgtPe0 is 500000,
-          tgtAp1 is 225000,
-          tgtPe1 is 225000.
+parameter tgtBody is "Minmus",
+          tgtInc is 82,
+          tgtPe0 is 250000,
+          tgtAp1 is 25000,
+          tgtPe1 is 25000.
 //
 
 clearscreen.
