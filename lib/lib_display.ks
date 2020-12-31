@@ -227,6 +227,8 @@ global function disp_eng_perf_data {
 //Burn data - dV, dur, start / end timestamps.
 global function disp_burn_data {
 
+    parameter _burnEta is 0.
+
     local pos is "assign".
     if dispObj:haskey("burn_data") set pos to disp_get_pos_obj( dispObj["burn_data"]).
     else {
@@ -241,6 +243,11 @@ global function disp_burn_data {
     print "BURN DATA" at (h1,ln).
     print "---------" at (h1,cr).
     print "DELTA-V:       " + round(nextNode:deltaV:mag, 1) + " m/s  "   at (h1,cr).
+    if _burnEta > 0 {
+        print "BURN ETA:      " + round(_burnEta - time:seconds) + "s   " at (h1, cr).
+    } else {
+        print "                                    " at (h1, cr).
+    }
 }
 
 

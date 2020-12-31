@@ -188,7 +188,6 @@ global function warp_to_burn_node {
         warp_to_timestamp(mnvObj["burnEta"]).
         update_display().
         disp_burn_data().
-        disp_timer(mnvObj["burnEta"]).
     }
 
     if warp > 0 set warp to 0.
@@ -197,7 +196,6 @@ global function warp_to_burn_node {
     until time:seconds >= mnvObj["burnEta"] {
         update_display().
         disp_burn_data().
-        disp_timer(mnvObj["burnEta"]).
     }
 
     disp_clear_block("timer").

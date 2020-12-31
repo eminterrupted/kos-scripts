@@ -417,7 +417,15 @@
         "spotLight2",
         "lgt.flood",
         "USRadialTanks",
-        "tank"
+        "tank",
+        "roverBody.v2",
+        "cmd.rover",
+        "roverWheel2",
+        "gear.rover",
+        "dmSeismicHammer",
+        "sci.dmag.impactHammer",
+        "dmSeismicPod",
+        "sci.dmag.seismicPod"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -431,7 +431,21 @@
         "Illuminator Mk2",
         "spotLight2",
         "Universal Storage: Radial Tank",
-        "USRadialTanks"
+        "USRadialTanks",
+        "Probodobodyne RoveMate",
+        "roverBody.v2",
+        "RoveMax Model S2",
+        "roverWheel2",
+        "Rovemax Model S2-T",
+        "restock-wheel-1-T",
+        "Seismic Impact Hammer",
+        "dmSeismicHammer",
+        "Seismic Sensor Pod",
+        "dmSeismicPod",
+        "Submersible Oceanography and Bathymetry",
+        "dmBathymetry",
+        "Communotron 32",
+        "RTLongAntenna2"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

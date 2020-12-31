@@ -246,9 +246,10 @@ global function get_transfer_eta_next {
     // Get the total number of degrees to travel
     local degToWait to abs(abs(phaseAng) - abs(_transferAng)).
 
-    // Calculates the transfer window based on whether it's in front of us or behind us
+    // Calculates the transfer window based on amount of time it takes
+    // to travel the needed degrees.
     local xfrWindow to (time:seconds + (degToWait / phasePeriod)).
-    
+
     out_msg().
     return xfrWindow.
 }

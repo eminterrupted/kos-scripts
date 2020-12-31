@@ -937,7 +937,13 @@
         "Z-2.5K Rechargeable Battery Bank",
         "ec.battery",
         "Aerocam",
-        "util.camera"
+        "util.camera",
+        "Rovemax Model S2-T",
+        "cmd.core",
+        "Submersible Oceanography and Bathymetry",
+        "sci.bath",
+        "Communotron 32",
+        "comm.omni "
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

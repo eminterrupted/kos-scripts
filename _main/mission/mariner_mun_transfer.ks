@@ -2,8 +2,8 @@
 
 parameter tgtBody is "Minmus",
           tgtInc is 82,
-          tgtLan is 150,
-          tgtPe0 is 250000,
+          tgtLan is 90,
+          pkgAlt is 250000,
           tgtAp1 is 125000,
           tgtPe1 is 125000.
 //
@@ -61,6 +61,8 @@ local function main {
         
         //Activate the antenna
         else if runmode = 2 {
+            out_msg("Deploying antenna").
+
             for p in ship:partsTaggedPattern("comm.dish") {
                 if not p:tag:matchesPattern("onDeploy") {
                     activate_dish(p).
@@ -78,12 +80,15 @@ local function main {
 
         //Sets the transfer target
         else if runmode = 3 {
+            out_msg("Setting target to " + tgtBody).
             set target to tgtBody.
             set runmode to 7.
         }
 
         else if runmode = 7 {
+            out_msg("Checking inclination").
             if ship:orbit:inclination < target:orbit:inclination - 2.5 or ship:orbit:inclination > target:orbit:inclination + 2.5 {
+                out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + target:obt:inclination + "]").
                 runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
             }
             set runmode to 15.
@@ -91,34 +96,44 @@ local function main {
 
         //Returns needed parameters for the transfer burn
         else if runmode = 15 {
+            out_msg("Getting transfer object").
+            if not hasTarget set target to tgtBody.
             set mnvObj to get_transfer_obj().
             set runmode to 25.
         }
 
-        //Adds the transfer burn node to the flight plan
+        // Adds the transfer burn node to the flight plan
+        // Center the node at 60s earlier than predicted to ensure we have the 
+        // proper orbit direction on arrival
         else if runmode = 25 {
+            out_msg("Adding transfer node").
+
             set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
             add mnvNode. 
 
             local accuracy is 0.001.
-            set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "pe", target, accuracy).
-            
+            set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+
             set runmode to 30.
         }
 
         //Warps to the burn node
         else if runmode = 30 {
+            out_msg("Warping to burn node").
             warp_to_burn_node(mnvObj).
             set runmode to 35.
         }
 
         //Executes the transfer burn
         else if runmode = 35 {
+            out_msg("Executing burn node").
             exec_node(nextNode).
             set runmode to 37.
         }
 
         else if runmode = 37 {
+            out_msg("Setting onDeploy triggers").
             when stage:number <= 1 then {
                 for p in ship:partsTaggedPattern("solar.array.*.onDeploy") {
                     activate_solar(p).
@@ -139,6 +154,8 @@ local function main {
         //Then warps to the SOI change
         else if runmode = 40 {
             
+            out_msg("SOI Warp").
+
             set tStamp to time:seconds + 30.
             until time:seconds >= tStamp {
                 update_display().
@@ -161,6 +178,8 @@ local function main {
 // Circularization node
         // Adds a 60s timer for player to do anything needed before warp
         else if runmode = 45 {
+
+            out_msg("Circ burn countdown").
             set tStamp to time:seconds + 60.
             until time:seconds >= tStamp {
                 update_display().
@@ -174,33 +193,16 @@ local function main {
             set runmode to 47.
         }
 
-        //Set up a trigger for activating solar and comms on stage.
-        else if runmode = 47 {
-            when stage:number <= 1 then {
-                for p in ship:partsTaggedPattern("solar.array.*.onDeploy") {
-                    activate_solar(p).
-                }
-
-                for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") {
-                    activate_dish(p).
-                }
-
-                for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") {
-                    activate_omni(p).
-                }
-            }
-
-            set runmode to 50.
-        }
-
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
-        else if runmode = 50 {
+        else if runmode = 47 {
+            out_msg("Adding capture node").
             set mnvNode to add_capture_node(tgtAp1).
             set runmode to 55.
         }
 
         //Gets burn data from the node
         else if runmode = 55 {
+            out_msg("Getting burn object from existing node").
             set mnvObj to get_burn_obj_from_node(mnvNode).
             set mnvObj["mnv"] to mnvNode. 
             set runmode to 60.
@@ -208,19 +210,23 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 60 {
+            out_msg("Warping to burn node").
             warp_to_burn_node(mnvObj).
             set runmode to 65.
         }
 
         //Executes the circ burn
         else if runmode = 65 {
+            out_msg("Executing burn node").
             exec_node(nextNode).
             wait 2.
             set runmode to 70.
         }
 
         else if runmode = 70 {
+            out_msg("Checking orbit inclination").
             if (ship:orbit:inclination < tgtInc - 2 or ship:orbit:inclination > tgtInc + 2) {
+                out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + tgtInc + "]").
                 runpath(incChangeScript, tgtInc, tgtLan).
             }
 
@@ -229,12 +235,14 @@ local function main {
 
         //Adds a hohmann burn top lower to final altitude
         else if runmode = 75 {
+            out_msg("Lowering to final altitude").
             exec_circ_burn("ap", tgtPe1).
             set runmode to 80.
         }
 
         //
         else if runmode = 80 {
+            out_msg("Final alt circ burn").
             exec_circ_burn("pe", tgtAp1).
             set runmode to 98.
         }
