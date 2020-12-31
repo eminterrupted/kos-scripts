@@ -21,19 +21,19 @@ global function cust_warp_to_timestamp {
 
 
 global function warp_to_timestamp {
-    parameter ts.
+    parameter _ts.
     
     logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
-    logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(ts) + "][MET: " + round(missionTime + (ts - time:seconds)) + "]").
+    logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(_ts) + "][MET: " + round(missionTime + (_ts - time:seconds)) + "]").
 
     if ship:altitude > ship:body:atm:height + 2500 set kuniverse:timewarp:mode to "RAILS".
     else set kuniverse:timewarp:mode to "PHYSICS".
 
-    until time:seconds >= ts - 30 {
+    until time:seconds >= _ts - 30 {
 
         if warp = 0 {
             if steeringmanager:angleerror >= -0.05 and steeringmanager:angleerror <= 0.05 {
-                if steeringmanager:rollerror >= -0.05 and steeringmanager:rollerror <= 0.05 warpTo(ts - 15).
+                if steeringmanager:rollerror >= -0.05 and steeringmanager:rollerror <= 0.05 warpTo(_ts - 15).
             }
         }
 
@@ -184,10 +184,11 @@ global function warp_to_burn_node {
     local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
     lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
     
-    until time:seconds >= (mnvObj["burnEta"] - 30) {
+    until time:seconds >= (mnvObj["burnEta"] - 15) {
         warp_to_timestamp(mnvObj["burnEta"]).
-        disp_burn_data().
         update_display().
+        disp_burn_data().
+        disp_timer(mnvObj["burnEta"]).
     }
 
     if warp > 0 set warp to 0.
@@ -196,7 +197,46 @@ global function warp_to_burn_node {
     until time:seconds >= mnvObj["burnEta"] {
         update_display().
         disp_burn_data().
+        disp_timer(mnvObj["burnEta"]).
     }
+
+    disp_clear_block("timer").
+
+    update_display().
+}
+
+
+global function stop_warp_at_mark {
+    parameter _ts, 
+              dispDelegate is "".
+    
+    local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
+    lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
+    
+    until time:seconds >= (_ts - 60) {
+       update_display().
+       disp_timer(_ts, "Wait until").
+       wait 1.
+    }
+
+    if warp > 2 set warp to 2.
+
+    until time:seconds >= (_ts - 30) {
+       update_display().
+       disp_timer(_ts, "Wait until").
+       wait 1.
+    }
+
+    if warp > 1 set warp to 1.
+
+    until time:seconds >= (_ts - 15) {
+       if warp > 1 set warp to 1.
+       update_display().
+       disp_timer(_ts, "Wait until").
+    }
+
+    if warp > 0 set warp to 0.
+    wait until kuniverse:timewarp:issettled.
 
     update_display().
 }

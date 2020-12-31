@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 parameter _tgt is "Megfrid's Debris".
+//parameter _tgt is "Mun".
 //
 
 clearscreen.
@@ -23,7 +24,7 @@ local incChangeScript to "local:/incChange".
 copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
 
 //local stateObj to init_state_obj().
-local runmode to 0.
+local runmode to init_rm(0).
 
 disp_main().
 
@@ -51,7 +52,7 @@ local function main {
 
         //Get the list of science experiments
         if runmode = 0 {
-            set runmode to 2.
+            set runmode to set_rm(2).
         }
         
         //Activate the antenna
@@ -68,49 +69,187 @@ local function main {
                 }
             }
             
-            set runmode to 3.
+            set runmode to set_rm(3).
         }
 
         //Sets the transfer target
         else if runmode = 3 {
+            out_msg("Set target").
             set target to orbitable(_tgt).
-            set runmode to 7.
+            set runmode to set_rm(7).
         }
 
+
+        // Matches inclination
         else if runmode = 7 {
-            if ship:orbit:inclination < target:orbit:inclination - 2.5 or ship:orbit:inclination > target:orbit:inclination + 2.5 {
+            out_msg("Checking inclination").
+            if not check_value(ship:obt:inclination, target:obt:inclination, 1) {
+                out_msg("Inclination out of range. Current[" + round(ship:obt:inclination, 3) + "] | Target[" + round(target:obt:inclination, 3) + "]").
+                wait 5.
                 runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
             }
-            set runmode to 15.
+
+            else if not check_value(ship:obt:lan, target:obt:lan, 5) {
+                out_msg("LAN out of range. Current[" + round(ship:obt:LAN, 3) + "] | Target[" + round(target:obt:LAN, 3) + "]").
+                wait 5.
+                runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
+            }
+            set runmode to set_rm(15).
         }
+
+
+        // Matches argPe
+        else if runmode = 10 {
+            out_msg("Checking argPe").
+            if not check_value(ship:obt:argumentofperiapsis, target:orbit:argumentofperiapsis, 10) {
+                out_msg("argPe out of range, identifying maneuver").
+                runpath("0:/_main/adhoc/simple_argpe_change", target:orbit:argumentofperiapsis, target:orbit:lan).
+                out_msg().
+            }
+            set runmode to set_rm(15).
+        }
+
 
         //Returns needed parameters for the transfer burn
         else if runmode = 15 {
+            out_msg("Getting transfer object").
             set mnvObj to get_transfer_obj().
-            set runmode to 25.
+            set runmode to set_rm(25).
         }
 
         //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
+            out_msg("Setting up the maneuver node").
             set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
             add mnvNode. 
 
             //local accuracy is 0.001.
             //set mnvNode to optimize_existing_node(mnvNode, target:orbit:periapsis, "pe", target, accuracy).
             
-            set runmode to 30.
+            set runmode to set_rm(30).
         }
 
         //Warps to the burn node
         else if runmode = 30 {
+            out_msg("Manuever added, warping to burn eta").
             warp_to_burn_node(mnvObj).
-            set runmode to 35.
+            set runmode to set_rm(35).
         }
 
         //Executes the transfer burn
         else if runmode = 35 {
+            out_msg("Executing node").
             exec_node(nextNode).
-            set runmode to 37.
+            set runmode to set_rm(37).
+        }
+
+        //Add a circ node at Pe.
+        else if runmode = 37 {
+            out_msg("Executing circularization burn").
+            exec_circ_burn(time:seconds + eta:periapsis, target:altitude).
+            set runmode to set_rm(40).
+        }
+
+        else if runmode = 40 {
+            if target:distance > 5000 {
+                runPath("0:/_main/adhoc/rendezvous_phased_approach", _tgt).
+            }
+
+            set runmode to set_rm(45).
+        }
+
+        else if runmode = 45 {
+            out_msg("Awaiting closest approach").
+            await_closest_approach.
+            set runmode to set_rm(50).
+        }
+
+        else if runmode = 50 {
+            out_msg("Cancelling relative velocity").
+            cancel_relative_velocity().
+            set runmode to set_rm(55).
+        }
+
+        else if runmode = 55 {
+            out_msg("Approaching target").
+            approach_target().
+            set runmode to set_rm(60).
+        }
+
+        else if runmode = 60 {
+            if target:distance <= 1000 {
+                set runmode to set_rm(70). 
+            } else {
+                set runmode to set_rm(45).
+            }
+        }
+
+        else if runmode = 70 {
+            out_msg("Final approach, cancelling velocity").
+            cancel_relative_velocity().
+            set runmode to set_rm(75).
+        }
+
+        else if runmode = 75{
+            out_msg("Rendezvous complete").
+            set runmode to set_rm(99).
+        }
+
+        update_display().
+    }
+}
+
+// Loop until distance from target starts increasing
+local function await_closest_approach {
+    
+    until false {
+        local lastDistance to target:distance.
+        wait 1.
+        if target:distance > lastDistance {
+            break.
+        } else {
+            out_msg("Awaiting closest approach. Distance: " + round(target:distance)).
+            update_display().
         }
     }
+}
+
+
+// Throttle against our relative velocity vector until we're increasing it
+local function cancel_relative_velocity {
+    lock steering to lookDirUp(target:velocity:orbit - ship:velocity:orbit, sun:position).
+    wait_until_ship_settled().
+
+    lock throttle to 0.25.
+
+    until false {
+        local lastDiff to (target:velocity:orbit - ship:velocity:orbit):mag.
+        wait 0.01.
+        if (target:velocity:orbit - ship:velocity:orbit):mag > lastDiff {
+            lock throttle to 0. 
+            out_msg().
+            break.
+        } else {
+            update_display().
+            out_msg("Cancelling relative velocity. Current: " + round(lastDiff)).
+        }
+    }
+}
+
+local function approach_target {
+    lock steering to target:position.
+    wait wait_until_ship_settled().
+    
+    set tStamp to time:seconds + 2.5.
+
+    lock throttle to 0.25.
+    until time:seconds >= tStamp {
+        update_display().
+        disp_timer(tStamp, "Approach Burn").
+        out_msg("Approaching target. Current distance: " + round(target:distance)).
+    }
+
+    lock throttle to 0.
+
+    disp_clear_block("timer").
 }

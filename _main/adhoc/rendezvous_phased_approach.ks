@@ -23,7 +23,7 @@ if not check_value(ship:apoapsis, target:apoapsis, 1000) or not check_value(ship
 out_msg("Orbit aligned, waiting until Pe").
 lock steering to lookDirUp(ship:prograde:vector, sun:position). 
 
-until eta:periapsis < 60 {
+until eta:periapsis < 300 {
     update_display().
     disp_timer(time:seconds + eta:periapsis, "ETA PE").
     wait 1.
@@ -41,18 +41,7 @@ out_msg("Changing orbital period for intercept").
 
 change_period(desiredPeriod).
 
-out_msg("Waiting until Pe approach").
-
-until eta:periapsis < 60 {
-    update_display().
-    disp_timer(time:seconds + eta:periapsis, "ETA PE").
-    wait 1.
-}
-
-disp_clear_block("timer").
-
-if warp > 0 set warp to 0.
-wait until kuniverse:timewarp:issettled.
+exec_circ_burn(time:seconds + eta:periapsis, ship:periapsis).
 
 out_msg("On approach").
 
@@ -87,12 +76,12 @@ global function await_closest_approach {
 // Throttle against our relative velocity vector until we're increasing it
 global function cancel_relative_velocity {
     lock steering to lookDirUp(target:velocity:orbit - ship:velocity:orbit, sun:position).
-    wait_unti_ship_settled().
+    wait_until_ship_settled().
 
-    lock throttle to 0.25.
+    lock throttle to 0.1.
     until false {
         local lastDiff to (target:velocity:orbit - ship:velocity:orbit):mag.
-        wait 1.
+        wait 0.1.
         if (target:velocity:orbit - ship:velocity:orbit):mag > lastDiff {
             lock throttle to 0. 
             out_msg().
@@ -108,7 +97,7 @@ global function cancel_relative_velocity {
 // Throttle towards target to approach 
 global function approach {
     lock steering to lookdirup(target:position, sun:position). 
-    wait_unti_ship_settled().
+    wait_until_ship_settled().
 
     out_msg("Approaching target").
     lock throttle to 0.1.
@@ -133,7 +122,7 @@ global function change_period {
         lock steering to lookDirUp(ship:retrograde:vector, sun:position).
     }
 
-    wait_unti_ship_settled().
+    wait_until_ship_settled().
     lock throttle to 0.5.
 
     if boost {

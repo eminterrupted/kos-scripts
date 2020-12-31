@@ -2,9 +2,10 @@
 
 parameter tgtBody is "Minmus",
           tgtInc is 82,
+          tgtLan is 150,
           tgtPe0 is 250000,
-          tgtAp1 is 25000,
-          tgtPe1 is 25000.
+          tgtAp1 is 125000,
+          tgtPe1 is 125000.
 //
 
 clearscreen.
@@ -220,39 +221,21 @@ local function main {
 
         else if runmode = 70 {
             if (ship:orbit:inclination < tgtInc - 2 or ship:orbit:inclination > tgtInc + 2) {
-                runpath(incChangeScript, tgtInc).
+                runpath(incChangeScript, tgtInc, tgtLan).
             }
 
             set runmode to 75.
         }
 
-        //Adds a hohmann burn to lower Pe
+        //Adds a hohmann burn top lower to final altitude
         else if runmode = 75 {
-            set mnvNode to add_simple_circ_node("ap", tgtPe1).
+            exec_circ_burn("ap", tgtPe1).
             set runmode to 80.
         }
 
-        //Gets burn data from the node
+        //
         else if runmode = 80 {
-            set mnvObj to get_burn_obj_from_node(mnvNode).
-            set mnvObj["mnv"] to mnvNode. 
-            set runmode to 85.
-        }
-
-        //Warps to the burn node
-        else if runmode = 85 {
-            warp_to_burn_node(mnvObj).
-            set runmode to 90.
-        }
-
-        //Executes the circ burn
-        else if runmode = 90 {
-            exec_node(nextNode).
-            set runmode to 95.
-        }
-
-        else if runmode = 95 {
-            
+            exec_circ_burn("pe", tgtAp1).
             set runmode to 98.
         }
 

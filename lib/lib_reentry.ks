@@ -1,6 +1,7 @@
 @lazyGlobal off. 
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/part/lib_heatshield").
@@ -15,11 +16,13 @@ global function do_kerbin_reentry_burn {
     
     until subroutine = "" {
         if subroutine = 0 {
+            out_msg("Beginning reentry burn subroutine"). 
             set subroutine to set_sr(2).
             update_display().
         } 
         
         else if subroutine = 2 {
+            out_msg("Waiting until KSC Reentry window").
             if ship:periapsis > 70000 {
                 warp_to_ksc_reentry_window().
             }
@@ -29,6 +32,7 @@ global function do_kerbin_reentry_burn {
         }
 
         else if subroutine = 4 {
+            out_msg("Perform reentry burn").
             reentry_burn(reentryAlt).
             set subroutine to set_sr("").
             update_display().
@@ -42,7 +46,6 @@ global function do_kerbin_reentry_burn {
 
 global function do_kerbin_reentry {
 
-    local rVal to utils:getRVal().
     lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
     
     local subroutine to init_subroutine().
@@ -50,18 +53,21 @@ global function do_kerbin_reentry {
     until false {
     
         if subroutine = 0 {
+            out_msg("Arming parachutes").
             local chuteList to ship:partsTaggedPattern("chute"). 
             arm_chutes(chuteList).    
             set subroutine to set_sr(2).
         }
 
         else if subroutine = 2 {
+            out_msg("Warping to 15000m above atmosphere").
             local warpAlt is body:atm:height + 15000.
             warp_to_alt(warpAlt).
             set subroutine to set_sr(4).
         }
 
         else if subroutine = 4 {
+            out_msg("Staging CSM").
             if warp = 0 and kuniverse:timewarp:issettled {
                 lock steering to ship:retrograde + r(45, 0, 180).
                 wait 5. 
@@ -75,6 +81,7 @@ global function do_kerbin_reentry {
         }
             
         else if subroutine = 6 {
+            out_msg("Controlled descent").
             until ship:altitude <= 12500 {
                 update_display().    
                 wait 0.01.
@@ -84,6 +91,7 @@ global function do_kerbin_reentry {
         }
 
         else if subroutine = 8 {
+            out_msg("Free fall").
             until alt:radar <= 500 and ship:verticalSpeed <= 75 {
                 update_display().
                 disp_timer(time:seconds + utils:timeToGround()).
@@ -94,6 +102,7 @@ global function do_kerbin_reentry {
         }
 
         else if subroutine = 10 {
+            out_msg("Heatshield jettison").
             until alt:radar < 25 {
                 update_display().
                 disp_timer(time:seconds + utils:timeToGround()).

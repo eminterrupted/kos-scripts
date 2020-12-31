@@ -415,7 +415,9 @@
         "aerocam",
         "util.camera",
         "spotLight2",
-        "lgt.flood"
+        "lgt.flood",
+        "USRadialTanks",
+        "tank"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

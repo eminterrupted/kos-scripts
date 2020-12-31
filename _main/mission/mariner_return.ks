@@ -91,7 +91,7 @@ until runmode = 99 {
     }
 
     else if runmode = 12 {
-        if ship:periapsis < _returnAlt * 0.95 or ship:periapsis > _returnAlt * 1.05 {
+        if not check_value(ship:periapsis, _returnAlt, 2500) {
             if not hasNode {
                 set runmode to 14.
             } else {

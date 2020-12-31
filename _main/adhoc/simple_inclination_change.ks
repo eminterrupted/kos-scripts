@@ -104,10 +104,10 @@ local function main {
             
             set sVal to burnVector.
 
-            warpTo(leadTime - 30).
+            warpTo(leadTime - 15).
 
             // Wait until we get to the burn
-            until time:seconds >= leadTime  - 30 {
+            until time:seconds >= leadTime  - 15 {
                 set sVal to burnVector.
                 update_display().
                 disp_timer(leadTime, "burn eta"). 

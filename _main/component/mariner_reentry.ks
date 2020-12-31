@@ -33,6 +33,8 @@ if runmode = 99 set runmode to 0.
 
 if ship:periapsis >= 70000 do_kerbin_reentry_burn(tPe, rVal).
 
+set_sr("").
+
 do_kerbin_reentry().
 
 clearscreen.

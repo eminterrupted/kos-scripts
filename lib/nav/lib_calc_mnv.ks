@@ -155,10 +155,10 @@ global function get_transfer_burn_data {
 
 
 // Returns an object describing a transfer window to the current target
-// TODO - Call from above to abstract from mainline scripts
+// TODO - Make _startBody a function call to get the common ancestor
 global function get_transfer_phase_angle {
     parameter _startAlt is (ship:apoapsis + ship:periapsis) / 2, // Average altitude
-              _startBody is ship:body.                           // Body we are starting from
+              _startBody is body("Kerbin").                           // Body we are starting from
 
 
     // If no target set, return false. This will fail
@@ -170,13 +170,11 @@ global function get_transfer_phase_angle {
     local hohSMA to (curSMA + tgtSMA) / 2.              // The halfway point for hohmann transfer
 
     // Transfer phase angle
-    local transferPhaseAng to choose 
-        180 - (1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360)
-            if curSMA <= tgtSMA else 
-        -((1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360)).
+    //local transferPhaseAng to choose 180 - (1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360) if curSMA <= tgtSMA else -((1 / (2 * sqrt(tgtSMA ^ 3 / hohSMA ^ 3)) * 360)).
+    local transferPhaseAng to 180 - (1/2 * (2 * constant():pi * sqrt(hohSMA ^ 3 / _startBody:mu)) * ((360 / (2 * constant():pi)) * sqrt( _startBody:mu / tgtSma ^ 3))).
     
-    // UT Timestamp of point we will reach the transfer phase angle
-    local nodeAt to get_transfer_eta(transferPhaseAng) - 90.
+// UT Timestamp of point we will reach the transfer phase angle
+    local nodeAt to get_transfer_eta_next(transferPhaseAng).
 
     return lex("xfrPhaseAng", transferPhaseAng, "nodeAt", nodeAt).
 }
@@ -192,7 +190,7 @@ global function get_transfer_eta {
     // Get the period of the phase angle (change per second) 
     // Takes a sample of the change in phase angle to the target 
     // over the course of 5 seconds to get phase change / sec
-    print "MSG: Sampling phase angle period" at (2, 7).
+    out_msg("Sampling phase angle period").
     local p0 to get_phase_angle(_tgt).
     local tStamp to time:seconds + 5.
     until time:seconds >= tStamp {
@@ -200,7 +198,9 @@ global function get_transfer_eta {
         disp_timer(tStamp, "Phase Sampling").
     }
     local p1 to get_phase_angle(_tgt).
-    local phasePeriod to abs((p1 - p0) / 5).
+    local phasePeriod to abs(abs(p1) - abs(p0)) / 5.
+
+    print "Phase Period: " + phasePeriod at (2,23).
 
     disp_clear_block("timer").
 
@@ -210,7 +210,46 @@ global function get_transfer_eta {
     // Calculates the transfer window based on whether it's in front of us or behind us
     local xfrWindow to choose (time:seconds + ((phaseAng - _transferPhaseAng) / phasePeriod)) if phaseAng > _transferPhaseAng else (time:seconds + (((phaseAng + 360) - _transferPhaseAng) / phasePeriod)).
     
-    print "                                " at (2, 7).
+    out_msg().
+    return xfrWindow.
+}
+
+
+// Returns a timestamp of next transfer window based on the 
+// phase angle found in get_transfer_phase_angle
+global function get_transfer_eta_next {
+    parameter _transferAng.    // The phase angle of the transfer window
+
+
+    // Get the period of the phase angle (change per second) 
+    // Takes a sample of the change in phase angle to the target 
+    // over the course of 5 seconds to get phase change / sec
+    out_msg("Sampling phase angle period").
+    local p0 to get_phase_angle(target).
+    local tStamp to time:seconds + 3.
+    until time:seconds >= tStamp {
+        update_display().
+        disp_timer(tStamp, "Phase Sampling").
+    }
+    local p1 to get_phase_angle(target).
+    local phasePeriod to abs(abs(p1) - abs(p0)) / 3.
+
+    disp_clear_block("timer").
+
+    // Update the phase angle for calculation below
+    local phaseAng to get_phase_angle(target).
+    
+    // Handle negative phase angle numbers
+    set phaseAng to mod(phaseAng + 360, 360).
+    set _transferAng to mod(_transferAng + 360, 360).
+
+    // Get the total number of degrees to travel
+    local degToWait to abs(abs(phaseAng) - abs(_transferAng)).
+
+    // Calculates the transfer window based on whether it's in front of us or behind us
+    local xfrWindow to (time:seconds + (degToWait / phasePeriod)).
+    
+    out_msg().
     return xfrWindow.
 }
 

@@ -33,9 +33,9 @@ global function add_node_mun_return {
         wait 0.01.
     }
 
-    set dv to get_dv_for_prograde(tgtAlt, mnvNode:obt:nextPatch:periapsis, mnvNode:obt:nextPatch:body).
+    set dv to get_dv_for_retrograde(tgtAlt, mnvNode:obt:nextPatch:periapsis, mnvNode:obt:nextPatch:body).
 
-    set mnvNode to node(time:seconds + 2400 + mnvNode:obt:nextpatcheta, 0, 0, dv).
+    set mnvNode to node(7200 + time:seconds + mnvNode:obt:nextpatcheta, 0, 0, dv).
     add mnvNode.
 
     set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe").

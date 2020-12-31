@@ -198,16 +198,18 @@ global function time_to_alt_next {
 
 // Wait functions
     // Waits until the ship is settled
-    global function wait_unti_ship_settled {
-        until shipSettled {
+    global function wait_until_ship_settled {
+        parameter tStamp is 5.
+
+        until shipSettled or time:seconds >= tStamp {
             update_display().
         }
     }
 
     // Checks if the ship is settled with respect to it's intended orientation
     global function shipSettled {
-        if steeringmanager:angleerror >= -0.05 and steeringmanager:angleerror <= 0.05 {
-            if steeringmanager:rollerror >= -0.05 and steeringmanager:rollerror <= 0.05 {
+        if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 {
+            if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 {
                 return true.
             }
         }

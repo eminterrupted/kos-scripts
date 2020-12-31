@@ -376,7 +376,7 @@ global function disp_scan_status {
 
 global function disp_timer {
     parameter pTimer,
-              pTitle is "Generic".
+              pTitle is "".
 
     local pos is "assign".
     if dispObj:haskey("timer") set pos to disp_get_pos_obj(dispObj["timer"]).

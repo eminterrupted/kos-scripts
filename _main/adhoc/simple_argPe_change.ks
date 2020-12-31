@@ -39,7 +39,7 @@ local tgtObt is createOrbit(
 local utime to time:seconds + 1200.
 
 //Maneuver node structures
-local mnvParam is list(utime, 0, 0, 50).
+local mnvParam is list(utime, 0, 0, 5).
 local mnvNode is node(0, 0, 0, 0).
 local mnvObj is lex().
 local tStamp is 0.
@@ -67,55 +67,34 @@ end_main().
 //Main
 local function main {
     until runmode = 99 {
-
         
         // get wait time
         if runmode = 0 {
             set tStamp to abs(tgtAnomaly - ship:orbit:trueanomaly) * (ship:obt:period / 360).
-
             set runmode to 1.
         }
 
         else if runmode = 1 {
-
             set mnvParam to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], mnvParam[3]).
-            set mnvParam to optimize_node_list(mnvParam, _tgtAp, "ap", list(0.975, 1.025), true).
-
+            set mnvParam to optimize_node_list(mnvParam, _tgtAp, "ap", ship:body, 0.25).
             set runmode to 2.
         }
 
         else if runmode = 2 {
-            
             set mnvNode to node(mnvParam[0], mnvParam[1], mnvParam[2], mnvParam[3]).
             add mnvNode.
-            
             set mnvObj to get_burn_obj_from_node(mnvNode).
-
             set runmode to 3.
         }
 
         else if runmode = 3 {
-            warpTo(mnvObj["burnEta"] - 15).
-            until time:seconds >= mnvObj["burnEta"] {
-                update_display().
-                disp_timer(mnvObj["burnEta"]).
-            }
-
-            if warp > 0 set warp to 0.
-            wait until kuniverse:timewarp:issettled.
-
-            disp_clear_block("timer").
-
+            warp_to_burn_node(mnvObj).
             set runmode to 5.
         }
 
         // Do burn
         else if runmode = 5 {
-
             exec_node(nextNode).
-
-            remove mnvNode.
-
             set runmode to 99.
         }
 

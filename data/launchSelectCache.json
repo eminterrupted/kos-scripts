@@ -1,9 +1,9 @@
 {
     "entries": [
         "tAp",
-        175000,
+        150000,
         "tPe",
-        175000,
+        150000,
         "tInc",
         0,
         "gtAlt",
@@ -17,7 +17,7 @@
         "missionS1",
         "mariner_mun_transfer",
         "missionS2",
-        "mariner_return"
+        "scansat"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

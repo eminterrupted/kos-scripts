@@ -315,7 +315,7 @@ global function get_phase_angle {
     ).
     local sign is vdot(binormal, signVector).
     if sign < 0 {
-        return -phase + 360.
+        return -phase.// + 360.
     }
     else {
         return phase.

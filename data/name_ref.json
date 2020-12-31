@@ -429,7 +429,9 @@
         "KerbPro",
         "kerbpro",
         "Illuminator Mk2",
-        "spotLight2"
+        "spotLight2",
+        "Universal Storage: Radial Tank",
+        "USRadialTanks"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

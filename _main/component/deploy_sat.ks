@@ -23,8 +23,10 @@ local runmode to stateObj["runmode"].
 
 //Vars
 local sVal is ship:prograde + r(0, 0, rval).
-local tVal is 0.
 lock steering to sVal.
+
+local tVal is 0.
+local tStamp is 0.
 
 if runmode = 99 set runmode to 0. 
 
@@ -36,7 +38,7 @@ until runmode = 99 {
         disp_clear_block("eng_perf").
         set sVal to ship:prograde. 
         local sunExp is get_solar_exp().
-        global tStamp is choose time:seconds + 600 if sunExp <= 0.01 else time:seconds + 30.
+        set tStamp to choose time:seconds + 600 if sunExp <= 0.01 else time:seconds + 30.
         set runmode to 10.
     }
 
