@@ -1,7 +1,7 @@
 //lib for getting engine performance data
 @lazyGlobal off. 
 
-runOncePath("0:/lib/lib_init.ks").
+runOncePath("0:/lib/lib_init").
 
 //Available thrust - Max throttle for active engines with limiter respected
 global function get_avail_thrust {

@@ -1,7 +1,7 @@
 //Data Vessel Engine library
 @lazyGlobal off.
 
-runOncePath("0:/lib/data/engine/lib_isp.ks").
+runOncePath("0:/lib/data/engine/lib_isp").
 
 // Delegates
     local get_ship_engs is get_engs_obj_by_stg@.
@@ -39,7 +39,7 @@ global function get_engs_obj_by_stg {
 
 
 //Returns engines by a given stage on the current vessel
-global function get_engs_for_stg {
+global function get_engs_for_stage {
     parameter pStage is stage:number.
     logStr("get_engs_for_stg [stg:" + pstage + "]").
 
@@ -48,13 +48,13 @@ global function get_engs_for_stg {
 }
 
 
-global function get_engs_for_next_stg {
+global function get_engs_for_next_stage {
     
     logStr("get_engs_for_next_stg").
 
     local eList is list().
     from {local n is 1.} until eList:length > 0 step { set n to n + 1.} do {
-        set eList to get_engs_for_stg(stage:number - n).
+        set eList to get_engs_for_stage(stage:number - n).
     }
     return eList.
 }
@@ -68,7 +68,7 @@ global function get_next_stage_with_eng {
     local eList is list().
     from { local n is stg - 1.} until eList:length > 0 or n < -1 step { set n to n - 1.} do {
         set stg to n.
-        set eList to get_engs_for_stg(stg).
+        set eList to get_engs_for_stage(stg).
     }
 
     logStr("return: " + stg).
@@ -124,9 +124,7 @@ global function get_engs_exh_vel {
     parameter engList to get_active_engs(),
               pAlt to ship:apoapsis,
               pBody is ship:body.
-
-    //local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
-    
+ 
     local apIsp to get_avail_isp(pBody:atm:altitudePressure(pAlt), engList).
     return constant:g0 * apIsp.
 }

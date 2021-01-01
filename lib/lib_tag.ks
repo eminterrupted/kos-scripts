@@ -4,19 +4,31 @@
 parameter mode to "".
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_log").
 global tagRef to tag_init_ref().
 
 if mode = "" {
-    logStr("[lib_tag.ks] Loading library").
     tag_parts_by_title(ship:parts).
 }
 else if mode = "tag" tag_parts_by_title(ship:parts).
 else if mode = "clr" tag_clear().
 
-uplink_telemetry().
-
 //-- main functions
+global function get_stg_id_from_tag {
+    parameter p.
+
+    local tagList to p:tag:split(".").
+    for t in tagList {
+        if t:startsWith("stgId") {
+            return t:split(":")[1].
+        }
+    }
+
+    return "".
+}
+
+
+
+
 local function tag_init_ref {
     local nRefFile to "0:/data/name_ref.json".
     local n to choose readJson(nRefFile) if exists(nRefFile) else lex().
@@ -35,7 +47,6 @@ global function tag_clear {
     parameter inList to ship:parts.
 
     local func to "[tag_clear_tags] ".
-    logStr(func + "Clearing tags").
 
     for p in inList {
         set p:tag to "".
@@ -82,7 +93,6 @@ global function tag_parts_by_title {
 
     tag_light_meta().
 
-    logStr(func + "Tagging completed, writing updates to ref files").
     writeJson(tagRef["t"], tagRef["file"]["t"]).
     writeJson(tagRef["nt"], tagRef["file"]["nt"]).
     writeJson(tagRef["n"], tagRef["file"]["n"]).
@@ -343,13 +353,15 @@ local function tag_meta_type {
 local function tag_stage_meta {
     parameter p.
 
-    if p:tag:matchesPattern(".stgId:-??\d") return "".
-
-    if p:isType("engine") {
-        if p:decoupler:isType("string") return ".stgId:" + p:decoupledin.
-        else return ".stgId:" + p:decoupler:stage.
+    if p:tag:matchesPattern(".stgId:-??\d") {
+        return "".
+    } else {
+        if p:typeName <> "Decoupler" {
+            return ".stgId:" + p:decoupledIn.
+        } else {
+            return ".stgId:" + p:stage.
+        }
     }
-    else return ".stgId:" + p:stage.
 }
 
 
@@ -370,6 +382,7 @@ local function tag_tank_meta {
             else if r:name = "LqdHydrogen" set meta to "lh2".
             else if r:name = "Oxidizer" set meta to meta + "o".
             else if r:name = "MonoPropellant" set meta to meta + "mono".
+            else if r:name = "SolidFuel" set meta to meta + "solid".
             else if r:name = "XenonGas" set meta to meta + "xe".
             else if r:name = "ArgonGas" set meta to meta + "ar".
             else if r:name = "Snacks" set meta to meta + "snacks".
@@ -379,13 +392,11 @@ local function tag_tank_meta {
             else if r:name = "Oxygen" set meta to meta + "o2".
             else if r:name = "Soil" {
                 set errLvl to 1. 
-                logStr(func + "Ignoring resource type: " + r:name, errLvl).
                 print func + "Ignoring resource type: " + r:name.
             }
             else {
                 set errLvl to 1.
                 set meta to meta + "unk".
-                logStr(func + "Unknown resource type: " + r:name, errLvl).
                 print func + "Unknown resource type: " + r:name.
             }
         }

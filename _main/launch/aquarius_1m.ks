@@ -8,30 +8,31 @@ parameter tApo to 125000,
           rVal to 180.
 
 clearScreen.
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_display.ks").
-runOncePath("0:/lib/lib_launch.ks").
-runOncePath("0:/lib/lib_core.ks").
-runOncePath("0:/lib/lib_sci.ks").
-runOncePath("0:/lib/lib_warp.ks").
-runOncePath("0:/lib/lib_pid.ks").
-runOncePath("0:/lib/lib_misc_parts.ks").
-runOncePath("0:/lib/data/engine/lib_engine.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/nav/lib_nav").
-runOncePath("0:/lib/part/lib_fairing.ks").
-runOncePath("0:/lib/part/lib_antenna.ks").
-runOncePath("0:/kslib/library/lib_l_az_calc.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_warp").
+runOncePath("0:/lib/lib_pid").
+runOncePath("0:/lib/lib_misc_parts").
+runOncePath("0:/lib/data/engine/lib_engine").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/data/ship/lib_mass").
+runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_calc_mnv").
+runOncePath("0:/lib/part/lib_fairing").
+runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/kslib/library/lib_l_az_calc").
 
 
 //
 //** Main
 
 //Vars
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 
 local sVal to heading(90, 90, -90).
@@ -119,7 +120,7 @@ until runmode = 99 {
 
     //circularization burn setup
     else if runmode = 22 {
-        set burnObj to get_circ_burn_data(tPe).
+        set burnObj to get_coplanar_burn_data(tPe).
         if dispState:hasKey("burn_data") disp_burn_data(burnObj).
         else set dispState["burn_data"] to disp_burn_data(burnObj).
         
@@ -191,7 +192,7 @@ until runmode = 99 {
 
     if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
 
-    disp_launch_main().
+    disp_main().
     disp_obt_data().
     disp_tel().
     disp_eng_perf_data().

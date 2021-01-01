@@ -1,30 +1,30 @@
 //Library for science
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_sci.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_sci").
 
 local dmagMod is "DMModuleScienceAnimate".
 
 //Deploy without running the experiment - useful for experiments that can't run until deployed
-global function deploy_dmag_list {
-    parameter mList.
+// global function deploy_dmag_list {
+//     parameter mList.
 
-    for m in mList {
-        deploy_dmag_sci_mod(m).
-    }
-}
+//     for m in mList {
+//         deploy_dmag_sci_mod(m).
+//     }
+// }
 
 
-global function deploy_dmag_sci_mod {
-    parameter m.
+// global function deploy_dmag_sci_mod {
+//     parameter m.
     
-    if m:part:hasModule(dmagMod) {
-        for a in m:allActions {
-            if a:contains("deploy") m:doAction(a:replace("(callable) ",""):replace(", is KSPAction",""), true).
-        }
-    }
-}
+//     if m:part:hasModule(dmagMod) {
+//         for a in m:allActions {
+//             if a:contains("deploy") m:doAction(a:replace("(callable) ",""):replace(", is KSPAction",""), true).
+//         }
+//     }
+// }
 
 
 //Gets all science modules on the vessel

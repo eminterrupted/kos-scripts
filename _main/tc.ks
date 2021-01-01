@@ -17,6 +17,7 @@ runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_engine").
 runOncePath("0:/lib/part/lib_light").
 runOncePath("0:/lib/lib_contract").
+runOncePath("0:/lib/lib_sci").
 
 //- start main
 
@@ -31,6 +32,10 @@ local pStack to stack().
 local uSet to uniqueSet().
 
 for p in pList pStack:push(p).
+
+if lightList:length > 0 {
+    for l in lightList tog_cherry_light(l).
+}
 
 for p in pStack {
     if p:tag:contains("test") and not uSet:contains(p:name) {
@@ -50,6 +55,8 @@ for p in pStack {
         }
     }
 }
+
+test_sci_list().
 
 wait 2.
 if lightList:length > 0 for l in lightList tog_cherry_light(l, false).
@@ -133,6 +140,20 @@ local function engine_test_throttle_sequence {
 }
 
 
+local function test_sci_list {
+    local sciList to get_sci_mod_for_parts(ship:parts).
+
+
+
+    if sciList:length > 0 {
+        from { local x is 0. } until x = sciList:length step { set x to x + 1. } do {
+            disp_test_main(sciList[x]:part, -1, x).
+            sciList[x]:deploy().
+            wait until sciList[x]:hasData.
+            wait 1.
+        }
+    }
+}
 
 local function test_cd {
     parameter p.

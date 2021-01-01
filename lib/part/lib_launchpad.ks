@@ -53,6 +53,20 @@ global function mlp_retract_holddown {
 }
 
 
+//Swing arms
+global function mlp_retract_crewarm {
+    local armEvent is "retract crew arm".
+
+    do_pad_event@:call(aniMod, armEvent).
+}
+
+global function mlp_retract_swingarm {
+    local armEvent is "retract arm right".
+
+    do_pad_event@:call(aniMod, armEvent).
+}
+
+
 //Umbilicals
 global function mlp_drop_umbilical {
     local event is "drop umbilical".

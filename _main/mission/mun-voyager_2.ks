@@ -7,27 +7,32 @@ clearscreen.
 
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/data/nav/lib_deltav").
-runOncePath("0:/lib/data/nav/lib_nav").
-runOncePath("0:/lib/lib_util").
-runOncePath("0:/lib/data/nav/lib_node").
-runOncePath("0:/lib/part/lib_antenna").
-runOncePath("0:/lib/lib_dmag_sci").
 runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_warp").
+runOncePath("0:/lib/nav/lib_calc_mnv").
+runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/nav/lib_node").
+runOncePath("0:/lib/nav/lib_mnv").
+runOncePath("0:/lib/part/lib_antenna").
 
-local stateObj to init_state_obj().
+//local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
 if runmode = 99 set runmode to 0.
 
-disp_obt_main().
+disp_main().
 
 wait 5.
 
-local finalAlt is 30000.
-local waitTime is 300 + time:seconds.
+local tgtAp0 is 306000.
+//local tgtPe0 is 306000.
 
-local sciMod is list().
-local dmagMod is list().
+local tgtAp1 is 50000.
+local tgtPe1 is 50000.
+
+
+local sciList to get_sci_mod_for_parts(ship:parts).
 
 local mnvNode is 0.
 local mnvObj is lex().
@@ -48,97 +53,179 @@ main().
 //Main
 local function main {
     until runmode = 99 {
+
+        //Get the list of science experiments
         if runmode = 0 {
-            set_target(tgt).
             set runmode to 5.
         }
         
+        //Set up the triggers for science
         else if runmode = 5 {
-            get_sci_modules().
+            log_sci_list(sciList).
+            recover_sci_list(sciList).
+            update_display().
+            set runmode to 8.
+        }
+
+        //Stages to remove the kick stage for better accuracy on the transfer burn
+        else if runmode = 8 {
+            //safe_stage().
             set runmode to 10.
         }
 
+        //Sets the transfer target
         else if runmode = 10 {
-            log_sci_exp(dmagMod).
+            set target to tgt.
+            update_display().
             set runmode to 15.
         }
 
+        //Returns needed parameters for the transfer burn
         else if runmode = 15 {
-            get_transfer_obj().
-            set runmode to 20.
-        }
-
-        else if runmode = 20 {
-            warp_to_waittime(waitTime).
+            set mnvObj to get_transfer_obj().
             set runmode to 25.
         }
 
+        //Adds the transfer burn node to the flight plan
         else if runmode = 25 {
-            add_burn_node(mnvObj, finalAlt).
+            set mnvObj to add_burn_node(mnvObj, tgtAp0, "pe").
             set runmode to 30.
         }
 
+        //Warps to the burn node
         else if runmode = 30 {
-            warp_to_burn_node(mnvNode).
+            warp_to_burn_node(mnvObj).
             set runmode to 35.
         }
 
+        //Executes the transfer burn
         else if runmode = 35 {
-            exec_burn(mnvNode).
-            disp_clear_block("rendevous").
+            exec_node(mnvObj["mnv"]).
             set runmode to 40.
         }
 
+        //If the dish antenna is not yet activated, does so
         else if runmode = 40 {
             deploy_dish().
             set runmode to 45.
         }
 
+        //Sets up a trigger for logging science in high orbit
         else if runmode = 45 {
-            set_target("kerbin").
+            when ship:altitude > 250000 then {
+                log_sci_list(sciList).
+                recover_sci_list(scilist).
+            }
             set runmode to 50.
         }
 
+        //Clears the target data so we don't have weird behaviors when we reach its SOI
+        //Then warps to the SOI change
         else if runmode = 50 {
+            set_target("").
             warp_to_next_soi().
             set runmode to 55.
+            update_display().
         }
 
+        //Sets up triggers for science experiments
         else if runmode = 55 {
-            log_sci_exp(dmagMod).
+            when ship:altitude > 30000 then {
+                log_sci_list(sciList).
+                recover_sci_list(sciList).
+            }
+            when ship:altitude < 30000 then {
+                log_sci_list(sciList).
+                recover_sci_list(sciList).
+            }
             set runmode to 60.
+            update_display().
         }
 
+        //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 60 {
-            get_circ_obj().
-            set runmode to 65.
+            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set runmode to 62.
         }
 
-        else if runmode = 65 {
-            add_burn_node(mnvObj, finalAlt).
+        //Gets burn data from the node
+        else if runmode = 62 {
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+            set mnvObj["mnv"] to mnvNode. 
+            set runmode to 64.
+        }
+
+        //Warps to the burn node
+        else if runmode = 64 {
+            warp_to_burn_node(mnvObj).
+            set runmode to 66.
+        }
+
+        //Executes the circ burn
+        else if runmode = 66 {
+            exec_burn(mnvNode).
+            wait 2.
+            set runmode to 68.
+        }
+
+        //Adds a hohmann burn to lower Pe
+        else if runmode = 68 {
+            set mnvNode to add_simple_circ_node("ap", tgtPe1).
             set runmode to 70.
         }
 
+        //Gets burn data from the node
         else if runmode = 70 {
-            warp_to_burn_node(mnvNode).
-            set runmode to 75.
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+            set mnvObj["mnv"] to mnvNode. 
+            set runmode to 72.
         }
 
-        else if runmode = 75 {
+        //Warps to the burn node
+        else if runmode = 72 {
+            warp_to_burn_node(mnvObj).
+            set runmode to 74.
+        }
+
+        //Executes the circ burn
+        else if runmode = 74 {
             exec_burn(mnvNode).
+            set runmode to 76.
+        }
+
+        //Adds a circularization node to finish circ in lower orbit
+        else if runmode = 76 {
+            set mnvNode to add_simple_circ_node("pe", tgtAp1).
+            set runmode to 78.
+        }
+
+        //Gets burn data from the node
+        else if runmode = 78{
+            set mnvObj to get_burn_obj_from_node(mnvNode).
+            set mnvObj["mnv"] to mnvNode. 
             set runmode to 80.
         }
 
+        //Warps to the burn node
         else if runmode = 80 {
-            log_sci_exp(sciMod).
-            set runmode to 85.
+            warp_to_burn_node(mnvObj).
+            set runmode to 82.
         }
 
-        else if runmode = 85 {
+        //Executes the circ burn
+        else if runmode = 82 {
+            exec_burn(mnvNode).
+            wait 2.
+            set runmode to 84.
+        }
+
+        //Preps the vessel for long-term orbit
+        else if runmode = 84 {
             end_main().
             set runmode to 99.
         }
 
+        //Logs the runmode change and writes to disk in case we need to resume the script later
         set stateObj["runmode"] to runmode.
         log_state(stateObj).
     }
@@ -155,200 +242,36 @@ local function set_target {
     set tVal to 0.
     lock throttle to tVal.
 
-    if not hasTarget set target to body(pTgt).
+    set target to pTgt.
 
-    update_disp().
-}
-
-
-local function get_sci_modules {
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-    
-    set sciMod to get_sci_mod().
-    set dmagMod to get_dmag_mod().
-
-    update_disp().
-}
-
-
-local function log_sci_exp {
-    parameter modList.
-    
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-    
-    if modList:length > 0 {
-        if modlist[0]:name = ("ModuleScienceExperiment") log_sci_list(modList).
-        else if modList[0]:name = ("DMModuleScienceAnimate") log_dmag_list(modList).
-    }
-    recover_sci_list(modList, true).
-
-    update_disp().
-}
-
-
-local function get_transfer_obj {
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-    
-    local window to get_mun_xfr_window().
-    local burn to get_mun_xfr_burn_data(window["nodeAt"]).
-
-    set mnvObj["tgt"] to target.
-
-    for key in window:keys {
-        set mnvObj[key] to window[key].
-    }
-
-    update_phase().
-
-    for key in burn:keys {
-        set mnvObj[key] to burn[key].
-    }
-    
-    update_disp().
-    disp_rendezvous_data(mnvObj).
-}
-
-
-local function warp_to_waittime {
-    parameter tstamp.
-
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    until time:seconds >= tstamp {
-        if warp = 0 set warp to 3. 
-        update_disp().
-        disp_rendezvous_data(mnvObj).
-    }
-
-    kuniverse:timewarp:cancelwarp().
-    wait until kuniverse:timewarp:issettled.
-
-    update_disp().
-    disp_rendezvous_data(mnvObj).
+    update_display().
 }
 
 
 local function add_burn_node {
     parameter burnObj,
-              tgtAlt.
-
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
+              tgtAlt,
+              mode.
     
     local mnvList to list(burnObj["nodeAt"], 0, 0, burnObj["dv"]).
-    set mnvNode to add_optimized_node(mnvList, tgtAlt).
+    set mnvNode to add_optimized_node(mnvList, tgtAlt, mode).
 
     set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
     set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
+    set mnvObj["mnv"] to mnvNode.
     
-    update_disp().
-}
+    update_display().
 
-
-local function warp_to_burn_node {
-    parameter burnNode.
-    
-    until time:seconds >= (mnvObj["burnEta"] - 30) {
-        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
-        lock steering to sVal.
-        
-        if warp = 0 warpTo(mnvObj["burnEta"] - 30).
-        update_phase().
-        
-        update_disp().
-    }
-
-    if warp > 0 kuniverse:timewarp:cancelwarp().
-    wait until kuniverse:timewarp:issettled.
-    
-    until time:seconds >= mnvObj["burnEta"] {
-        update_disp().
-    }
-
-    update_disp().
+    return mnvObj.
 }
 
 
 local function exec_burn {
     parameter burnNode.
 
-    until burnNode:burnvector:mag <= 5 {
-        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
-        lock steering to sVal.
+    exec_node(burnNode).
 
-        set tval to 1.
-        lock throttle to tVal.
-        
-        update_disp().
-    }
-
-    until burnNode:burnvector:mag <= 0.1 {
-        set sVal to burnNode:burnVector:direction + r(0, 0, rval - 90).
-        lock steering to sVal.
-
-        set tval to max(0, min(1, burnNode:burnVector:mag / 5)).
-        lock throttle to tVal.
-
-        update_disp().
-    }
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    remove burnNode.
-
-    disp_clear_block("rendezvous").
-    update_disp().
-}
-
-
-local function warp_to_next_soi {
-    if ship:obt:hasnextpatch warpTo(ship:obt:nextpatcheta + time:seconds - 30).
-    until ship:body:name = tgt {
-        update_disp().
-        update_phase().
-        disp_rendezvous_data(mnvObj).
-    }
-
-    if warp > 0 kuniverse:timewarp:cancelwarp().
-    wait until kuniverse:timewarp:issettled.
-
-    update_disp().
-}
-
-
-local function get_circ_obj {
-    set sVal to ship:prograde + r(0, 0, rVal).
-    lock steering to sVal.
-
-    set tVal to 0. 
-    lock throttle to tVal.
-
-    logStr("Setting up circularization burn object").
-    set finalAlt to ship:periapsis.
-    set mnvObj to get_circ_burn_data(finalAlt).
-    logStr("Burn object created").
-
-    update_disp().
+    update_display().
 }
 
 
@@ -360,19 +283,6 @@ local function end_main {
     lock throttle to tVal.
 
     logStr("Mission completed").
-}
-
-
-local function update_disp {
-    disp_obt_main().
-    disp_obt_data().
-    disp_tel().
-    disp_eng_perf_data().
-}
-
-
-local function update_phase {
-    set mnvObj["curPhaseAng"] to get_phase_angle().
 }
 
 

@@ -59,11 +59,32 @@ global function get_mass_for_mode_parts {
 }
 
 
-// global function get_mass_obj_at_stage {
-//     parameter pStage.
+global function get_res_mass_for_part {
+    parameter _p,
+              _res.
 
-//     return true.
-// }
+    for r in _p:resources {
+        if r:name = _res {
+            return r:amount * r:density.
+        }
+    }
+
+    return 0.
+}
+
+
+global function get_res_mass_for_stg {
+    parameter _stg, 
+              _res.
+
+    local stgId to 0.
+    local stgList to list().
+
+    for p in ship:parts {
+        set stgId to get_stg_id_from_tag(p).
+        
+    }
+}
 
 
 
@@ -128,20 +149,39 @@ global function get_stage_mass_obj {
 
     local pList is ship:partsTaggedPattern("stgId:" + stg).
 
-
     local cMass to 0.
     local dMass to 0.
     local wMass to 0.
+    local pResources to lex().
 
     for p in pList {
-        if not p:tag:startswith("lp") {
+        if not p:tag:startswith("mlp") {
             set cMass to cMass + p:mass.
             set dMass to dMass + p:dryMass.
             set wMass to wMass + p:wetMass.
+            set pResources to get_fuel_mass_obj_for_stage(stg).
         }
     }
 
-    return lex("cur", cMass, "dry", dMass, "wet", wMass).
+    return lex("cur", cMass, "dry", dMass, "wet", wMass, "res", pResources).
+}
+
+
+global function get_fuel_mass_obj_for_stage {
+    parameter stg is stage:number.
+
+    local pList is ship:partsTaggedPattern("stgId:" + stg).
+    local stgFuelObj is lex().
+
+    for p in pList {
+        if p:resources:length > 0 {
+            for r in p:resources {
+                set stgFuelObj[r:name] to r:amount * r:density.
+            }
+        }
+    }
+
+    return stgFuelObj.
 }
 
 
@@ -161,7 +201,7 @@ global function get_ship_mass_at_launch {
 }
 
 
-global function get_vmass_at_stg {
+global function get_ves_mass_at_stage {
     parameter stgId.
 
     logStr("get_vmass_at_stg [stgId:" + stgId + "]").

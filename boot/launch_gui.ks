@@ -2,8 +2,8 @@
 
 clearscreen. 
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/display/gui/lib_gui.ks").
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/display/gui/lib_gui").
 
 
 
@@ -13,7 +13,7 @@ local cacheObj to lexicon().
 
 local launchS1 to "scout_1.ks".
 local missionS1 to "deploy_sat.ks".
-//local missionS2 to "no_reentry.ks".
+local missionS2 to "no_reentry.ks".
 local tApo to "250000".
 local tPe to "250000".
 local tInc to "0".
@@ -26,8 +26,8 @@ if exists(cache) {
 
         if cacheObj:hasKey("launchS1") set launchS1 to cacheObj["launchS1"]:toString.
         if cacheObj:hasKey("missionS1") set missionS1 to cacheObj["missionS1"]:toString.
-        //if cacheObj:hasKey("missionS2") set missionS2 to cacheObj["missionS2"]:toString.
-        if cacheObj:hasKey("tApo") set tApo to cacheObj["tApo"].
+        if cacheObj:hasKey("missionS2") set missionS2 to cacheObj["missionS2"]:toString.
+        if cacheObj:hasKey("tAp") set tApo to cacheObj["tAp"].
         if cacheObj:hasKey("tPe") set tPe to cacheObj["tPe"].
         if cacheObj:hasKey("tInc") set tInc to cacheObj["tInc"].
         if cacheObj:hasKey("gtAlt") set gtAlt to cacheObj["gtAlt"].
@@ -54,7 +54,7 @@ local obox to lbox:addhlayout().
 local leftbox to obox:addvlayout().
 leftbox:addLabel("Target Apoapsis").
 local tfAp to leftbox:addTextField(tApo:toString).
-set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tApo"] to tApo. }.
+set tfAp:onConfirm to { parameter ap. set tApo to round(ap:toNumber). set cacheObj["tAp"] to tApo. }.
 
 leftbox:addspacing(20).
 
@@ -125,6 +125,13 @@ s1box:addspacing(10).
 local s1 to add_popup_menu(s1box, mScriptList).
 set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString:replace(".ks",""). set cacheObj["missionS1"] to missionS1.}.
 
+local s2box to hbox:addvbox().
+s2box:addspacing(5).
+s2box:addLabel("Mission Stage 2").
+s2box:addspacing(10).
+local s2 to add_popup_menu(s2box, mScriptList).
+set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replace(".ks",""). set cacheObj["missionS2"] to missionS2.}.
+
 local close to gui:addButton("Close").
 
 when True then {
@@ -143,7 +150,7 @@ when True then {
 gui:show().
 local tStamp to time:seconds + 60.
 local closeGui to false.
-local rProc to ship:rootpart:getModule("kOSProcessor").
+local rProc to core.
 rProc:doAction("open terminal",true).
 
 until closeGui = true {
@@ -152,7 +159,7 @@ until closeGui = true {
         print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).
         print "Launch script selected:  " + launchS1 + "         " at (2,4).
         print "Stage 1 script selected: " + missionS1 + "         " at (2,5).
-        //print "Stage 2 script selected: " + missionS2 + "         " at (2,6).
+        print "Stage 2 script selected: " + missionS2 + "         " at (2,6).
 
         print "Target Apoapsis:         " + tApo + "      " at (2,7).
         print "Target Periapsis:        " + tPe + "      " at (2,8).
@@ -169,8 +176,8 @@ gui:hide().
 
 set cacheObj["launchS1"] to launchS1.
 set cacheObj["missionS1"] to missionS1.
-//set cacheObj["missionS2"] to missionS2.
-set cacheObj["tApo"] to tApo.
+set cacheObj["missionS2"] to missionS2.
+set cacheObj["tAp"] to tApo.
 set cacheObj["tPe"] to tPe.
 set cacheObj["tInc"] to tInc.
 set cacheObj["gtAlt"] to gtAlt.
@@ -180,11 +187,8 @@ set cacheObj["rVal"] to rVal.
 writeJson(cacheObj, cache).
 copyPath(cache, localCache).
 
-local mc to "0:/_main/mc_vnext".
+local mc to "0:/_main/mc".
 local localMC to rProc:volume:name + ":/boot/mc".
-//copyPath(mc, localMC).
 compile(mc) to localMC.
-set rProc:bootfilename to localMC:replace("local:","").
-//if exists("local:/boot/gui_stage") deletePath("local:/boot/gui_stage").
 
 runPath(localMC).

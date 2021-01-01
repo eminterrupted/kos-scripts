@@ -2,19 +2,16 @@
 
 if terminal:width < 65 set terminal:width to 65.
 if terminal:height < 50 set terminal:height to 55.
+core:doAction("open terminal", true).
 
-runOncePath("0:/lib/lib_init.ks").
-runOncePath("0:/lib/lib_pid.ks").
-runOncePath("0:/lib/lib_util.ks").
-runOncePath("0:/lib/lib_launch.ks").
-runOncePath("0:/lib/data/ship/lib_mass.ks").
-runOncePath("0:/lib/data/engine/lib_thrust.ks").
-runOncePath("0:/lib/data/engine/lib_isp.ks").
-runOncePath("0:/lib/data/engine/lib_twr.ks").
-
-//For custom strings to be added by scripts. 
-//  Schema is lex(["x,y"]screen location key, list(["str"]string,[[var]value, etc...])). 
-//  Example: lex("2,6",list("EXAMPLE:     ", exampleVar, "    "))
+runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_pid").
+runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/data/ship/lib_mass").
+runOncePath("0:/lib/data/engine/lib_thrust").
+runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/data/engine/lib_twr").
 
 local dispObj is lex().
 
@@ -36,40 +33,41 @@ local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
 local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
 local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
+// local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
+// local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
 // local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
 // local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
-
-local posw_x is lex("id", "posw_x", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-//local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_z is lex("id", "posw_z", "v", 74, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
-                "posmain", posmain, 
-                "pos_a", pos_a, 
-                "pos_b", pos_b, 
-                "pos_c", pos_c, 
-                "pos_d", pos_d, 
-                "pos_e", pos_e, 
-                "pos_f", pos_f,
-                // "pos_g", pos_g, 
-                // "pos_h", pos_h, 
-                "posw_x", posw_x
-                //"posw_y", posw_y
+                "posmain", posmain 
+                ,"pos_a", pos_a 
+                ,"pos_b", pos_b 
+                ,"pos_c", pos_c 
+                ,"pos_d", pos_d
+                // ,"pos_e", pos_e
+                // ,"pos_f", pos_f
+                // ,"pos_g", pos_g 
+                // ,"pos_h", pos_h 
+                ,"posw_x", posw_x
+                ,"posw_y", posw_y
+                ,"posw_z", posw_z
                 ).
                 
 local posState is lex(
-                "posmain", false,
-                "pos_a", false, 
-                "pos_b", false, 
-                "pos_c", false, 
-                "pos_d", false, 
-                "pos_e", false, 
-                "pos_f", false, 
-                // "pos_g", false, 
-                // "pos_h", false, 
-                "posw_x", false
-                //"posw_y", false
+                //"posmain", false
+                "pos_a", false 
+                ,"pos_b", false
+                ,"pos_c", false 
+                ,"pos_d", false 
+                // ,"pos_e", false 
+                // ,"pos_f", false 
+                // ,"pos_g", false 
+                // ,"pos_h", false 
+                ,"posw_x", false
+                ,"posw_y", false
                 ).
 
 
@@ -77,12 +75,12 @@ global ln is 0.
 
 //Common strings
 local divDbl to "=============================================================".
+local divSgl to "-------------------------------------------------------------".
 
 
 //-- Main Headers
-global function disp_launch_main {
+global function disp_main {
     local pos is posmain.
-    local stateObj is init_state_obj().
 
     set ln to pos["v"].
     set h1 to pos["h1"].
@@ -98,36 +96,13 @@ global function disp_launch_main {
     print "MISSION:       " + ship:name + "    " at (h1,cr).
         print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
     print "BODY:          " + body:name + "     " at (h1,cr).
-        print "STATUS:        " + status + "     "             at (h3,ln).
+        print "STATUS:        " + status:padright(12 - status:length) at (h3,ln).
     print "PROGRAM:       " + stateObj["program"] + "   " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
+        print "RUNMODE:       " + stateObj["runmode"] + "  " at (h3,ln).
+            print "SR: " + stateObj["subroutine"] at (h3 + 19, ln).
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
-}
-
-
-global function disp_obt_main {
-    local pos is posmain.
-    local stateObj is init_state_obj().
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-    set h3 to pos["h3"].
-    set h4 to pos["h4"].
-
-    print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 2,ln).
-    print time:clock at (h4 + 3,ln).
-    print divDbl at (2,cr).
-    cr.
-    print "MISSION:       " + ship:name                             at (h1,cr).
-        print "MET:           " + format_timestamp(missionTime) + "    "            at (h3,ln).
-    print "BODY:          " + body:name + "     "               at (h1,cr).
-        print "STATUS:        " + status + "              "             at (h3,ln).
-    print "PROGRAM:       " + stateObj["program"] + "               " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
 }
 
 global function disp_test_main {
@@ -207,9 +182,11 @@ global function disp_tel {
     print "---------             " at (h1,cr).
     print "ALT:           " + round(ship:altitude) + "      " at (h1,cr).
     print "OBTVEL:        " + round(ship:velocity:orbit:mag) + "     " at (h1,cr).
-    print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
+    print "SRFVEL:        " + round(ship:velocity:surface:mag) + "     " at (h1, cr).
     cr.
-    print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,ln).
+    print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
+    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "     " at (h1, cr).
+    cr.
     cr.
     print "BIOME:         " + addons:scansat:currentbiome + "    " at (h1,cr).
     print "LATITUDE:      " +  round(ship:geoposition:lat, 3) + "   " at (h1,cr).
@@ -235,7 +212,9 @@ global function disp_eng_perf_data {
     print "THROTTLE:      " + round(throttle * 100, 2) + "%     "    at (h1,cr).
     print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,cr).
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
+    cr.
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).
+    print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,cr).
 
     return pos.
 }
@@ -244,8 +223,8 @@ global function disp_eng_perf_data {
 //Burn data - dV, dur, start / end timestamps.
 global function disp_burn_data {
 
-    parameter pObj.
-    
+    parameter _burnEta is 0.
+
     local pos is "assign".
     if dispObj:haskey("burn_data") set pos to disp_get_pos_obj( dispObj["burn_data"]).
     else {
@@ -259,10 +238,12 @@ global function disp_burn_data {
 
     print "BURN DATA" at (h1,ln).
     print "---------" at (h1,cr).
-    if pObj:haskey("dV")        print "DELTA-V:       " + round(pObj["dV"], 1) + " m/s  "   at (h1,cr).
-    if pObj:haskey("burnDur")   print "BURN DURATION: " + round(pObj["burnDur"]) + " s  "    at (h1,cr).
-    if pObj:haskey("burnEta")   print "BURN START:    " + format_timestamp(max(0, pObj["burnEta"] - time:seconds)) + "  "    at (h1,cr).
-    if pObj:haskey("burnEnd")   print "BURN END:      " + format_timestamp(max(0, pObj["burnEnd"] - time:seconds)) + "  "    at (h1,cr).
+    print "DELTA-V:       " + round(nextNode:deltaV:mag, 1) + " m/s  "   at (h1,cr).
+    if _burnEta > 0 {
+        print "BURN ETA:      " + round(_burnEta - time:seconds) + "s   " at (h1, cr).
+    } else {
+        print "                                    " at (h1, cr).
+    }
 }
 
 
@@ -372,13 +353,15 @@ global function disp_rendezvous_data {
 
 //SCANsat data
 global function disp_scan_status {
-    parameter pData.
+    parameter pData, nScan.
+
+    set nScan to "scan_" + nScan:tostring.
 
     local pos is "assign_wide".
-    if dispObj:haskey("scan") set pos to disp_get_pos_obj( dispObj["scan"]).
+    if dispObj:haskey(nScan) set pos to disp_get_pos_obj( dispObj[nScan]).
     else {
         set pos to disp_get_pos_obj(pos).
-        set dispObj["scan"] to pos["id"].
+        set dispObj[nScan] to pos["id"].
     }
 
     set ln to pos["v"].
@@ -395,7 +378,8 @@ global function disp_scan_status {
 
 
 global function disp_timer {
-    parameter pTimer.
+    parameter pTimer,
+              pTitle is "".
 
     local pos is "assign".
     if dispObj:haskey("timer") set pos to disp_get_pos_obj(dispObj["timer"]).
@@ -410,8 +394,10 @@ global function disp_timer {
 
     print "TIMER" at (h1,ln).
     print "-----" at (h1,cr).
+    print "TYPE:" at (h1,cr).
+        print pTitle:toupper at (h2,ln).
     print "MARK:" at (h1,cr). 
-        print format_timestamp(pTimer - time:seconds) + "           " at (h2,ln). 
+        print format_timestamp(pTimer - time:seconds) + "   " at (h2,ln). 
 }
 
 
@@ -432,6 +418,15 @@ global function disp_clear_block {
         if pos:hasKey("h4") print clr at (pos["h4"], line).
     }
     set posState[pos["id"]] to false.
+}
+
+
+global function disp_clear_block_all {
+    for d in dispObj:keys {
+        if d <> "main" disp_clear_block(d).
+    }
+
+    clearScreen.
 }
 
 
@@ -488,4 +483,67 @@ global function disp_get_pos_obj {
     if pos = "assign" set pos to disp_get_next_pos(0).
     else if pos = "assign_wide" set pos to disp_get_next_pos(1).
     return posObj[pos].
+}
+
+
+// Prints an "INFO" line at (2, 8) for adding context to out_msg
+global function out_info {
+    parameter str is "".
+
+    print "     " + str:padRight(55) at (2, 8).
+}
+
+
+// Prints a "MSG" line at (2, 7) for describing current status
+global function out_msg {
+    parameter str is "".
+
+    print "MSG: " + str:padright(55) at (2, 7).
+}
+
+
+
+//Main launch display updater
+global function update_display {
+    disp_main().
+    //disp_obt_data().
+    //disp_tel().
+    //if get_active_engs():length > 0 disp_eng_perf_data().
+}
+
+
+
+// WIP BELOW //
+
+
+// WIP generic display block function
+global function disp_block {
+    parameter strList.  // Format:
+                        // [0]  : ID for block used to reserve screen space (ex: "timer")
+                        // [1]  : Title of the display block (ex: "timer")
+                        // [2+] : Strings to display, in key / value pairs (ex: "mark", timeRemaining) 
+    
+    local pos is "assign".
+    if dispObj:haskey(strList[0]) set pos to disp_get_pos_obj(dispObj[strList[0]]).
+    else {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj[strList[0]] to pos["id"].
+    }
+
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print strList[1]:toupper at (h1,ln).
+    print divSgl:substring(0, strList[1]:length) at (h1,cr).
+    from { local idx to 2.} until idx >= strList:length step { set idx to idx + 2.} do {
+        local str to choose strList[idx] if strList[idx]:length <= 14 else strList[idx]:substring(0, 14).
+        print str:toupper + ":" at (h1,cr).
+        
+        set str to strList[idx + 1].
+        if str:typename <> "string" set str to str:tostring.
+
+        if str:length > 14 set str to str:substring(0, 14).
+        print str:toupper:padright(20 - str:length) at (h2, ln).
+    }
 }
