@@ -1,11 +1,11 @@
 @lazyGlobal off.
 
 parameter tgtBody is "Minmus",
-          tgtInc is 82,
+          tgtInc is 60,
           tgtLan is 90,
           pkgAlt is 250000,
-          tgtAp1 is 125000,
-          tgtPe1 is 125000.
+          tgtAp1 is 25000,
+          tgtPe1 is 25000.
 //
 
 clearscreen.
@@ -24,7 +24,7 @@ runOncePath("0:/lib/part/lib_solar").
 
 //Paths to other scripts used here
 local incChangeScript to "local:/incChange". 
-copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
+copyPath("0:/_adhoc/simple_inclination_change", incChangeScript).
 
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].

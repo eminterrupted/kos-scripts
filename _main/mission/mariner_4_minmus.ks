@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter tgt is "Minmus"..
+parameter tgt is "Minmus".
 
 clearscreen.
 
@@ -29,16 +29,12 @@ if runmode = 99 set runmode to 0.
 
 disp_main().
 
-local tgtAp0 is 150000.
-local tgtPe0 is 150000.
-local retPe is 35000.
-
-local sciList to get_sci_mod_for_parts(ship:parts).
 
 local mnvNode is 0.
 local mnvObj is lex().
-
-local sciStamp to 0.
+local sciList to get_sci_mod_for_parts(ship:parts).
+local tgtAp0 is 150000.
+local tgtPe0 is 150000.
 local tStamp to 0.
 
 local sVal is lookdirup(ship:prograde:vector, sun:position).
@@ -229,7 +225,7 @@ local function main {
         }
 
         else if runmode = 76 {
-            runPath("0:/_main/adhoc/simple_inclination_change", 75).
+            runPath("0:/_adhoc/simple_inclination_change", 75).
             set runmode to 78.
         }
 
@@ -258,14 +254,6 @@ local function main {
 
 
 //Functions
-local function set_target {
-    parameter pTgt.
-
-    set target to pTgt.
-
-    update_display().
-}
-
 local function add_burn_node {
     parameter burnObj,
               tgtAlt,

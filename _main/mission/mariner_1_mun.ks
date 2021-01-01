@@ -34,14 +34,11 @@ local tgtInc is 82.
 local tgtAp0 is 25000.
 local tgtPe0 is 25000.
 
-local retPe is 35000.
-
 local sciList to get_sci_mod_for_parts(ship:parts).
 
 local mnvNode is 0.
 local mnvObj is lex().
 
-local sciStamp to 0.
 local tStamp to 0.
 
 local sVal is ship:prograde + r(0, 0, rVal).

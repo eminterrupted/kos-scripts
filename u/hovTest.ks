@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter holdAlt is 500.
+parameter holdAlt is 250.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
@@ -11,7 +11,7 @@ runOncePath("0:/lib/part/lib_chute").
 lock steering to up.
 
 local pidTgt to holdAlt.
-local tPid to setup_alt_pid(pidTgt).
+local tPid to setup_vSpeed_pid(5).
 local tVal is 0.
 local tPidVal is 0.
 
@@ -29,11 +29,24 @@ local startTime to time:seconds.
 
 // Get to altitude
 out_msg("Climbing to altitude: " + holdAlt).
-until ship:altitude >= holdAlt - 25 {
-    set tVal to 1.
+until ship:altitude >= holdAlt -25 {
+    set tPidVal to tPid:update(time:seconds, verticalSpeed).
+    set tVal to max(0, min((tPidVal), 1)).
 
     update_display().
+    disp_block(list(
+        "telemetry", 
+        "Telemetry", 
+        "throttle",     round(throttle, 1), 
+        "altitude",     round(ship:altitude), 
+        "radar alt",    round(alt:radar), 
+        "vertSpeed",    round(verticalSpeed, 2),
+        "tPidVal",      round(tPidVal, 4) 
+        )
+    ).
 }
+
+tPid:reset().
 
 // Reach hover state
 out_msg("Hover loop").
@@ -92,4 +105,3 @@ until alt:radar <= 1.5 {
 // Touchdown
 out_msg("Touchdown").
 lock throttle to 0.
-unlock steering.

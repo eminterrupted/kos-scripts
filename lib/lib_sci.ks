@@ -4,13 +4,15 @@
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/part/lib_antenna").
 
-local containMod is "ModuleScienceContainer".
-local dmagMod is "DMModuleScienceAnimate".
-local sciMod is "ModuleScienceExperiment".
-local soilMod is "DMSoilMoisture".
+local containMod        is "ModuleScienceContainer".
+local dmagMod           is "DMModuleScienceAnimate".
+local sciMod            is "ModuleScienceExperiment".
+local soilMod           is "DMSoilMoisture".
+local hammerMod         is "DMSeismicHammer".
+local seisPodMod        is "DMSeismicSensor".
 
-local usSimpleMod is "USSimpleScience".
-local usAdvMod is "USAdvancedScience".
+local usSimpleMod   is "USSimpleScience".
+local usAdvMod      is "USAdvancedScience".
 
 local usActTemp is "log temperature".
 local usActBaro is "log pressure data".
@@ -21,7 +23,7 @@ local usActGoo  is "observe mystery goo".
 
 local queuedEcSum is 0.
 local sciList is list().
-local transmitQueue is queue().
+//local transmitQueue is queue().
 
 //-- functions --//
 
@@ -53,6 +55,8 @@ local transmitQueue is queue().
             else if m:name = usAdvMod       toggle_sci_mod_us(m, true).
             else if m:name = usSimpleMod    toggle_sci_mod_us(m, true).
             else if m:name = soilMod        toggle_sci_mod_dmag(m, true).
+            else if m:name = hammerMod      toggle_sci_mod_dmag(m, true).
+            else if m:name = seisPodMod     toggle_sci_mod_dmag(m, true).
         }
     }
 
@@ -97,7 +101,13 @@ local transmitQueue is queue().
     }
 
 
-    //Gets all science modules in the given parts, defaults to vessel
+    // Helper that calls get_sci_mod_for_parts with all parts on vessel
+    global function get_sci_mod {
+        return get_sci_mod_for_parts(ship:parts).
+    }
+
+
+    //Gets all science modules in the given parts
     global function get_sci_mod_for_parts {
         parameter pList.
         
@@ -114,6 +124,10 @@ local transmitQueue is queue().
                 get_sci_mod_multi_for_part(p, usSimpleMod).
             } else if p:hasModule(soilMod) {
                 sciList:add(p:getModule(soilMod)).
+            } else if p:hasModule(hammerMod) {
+                sciList:add(p:getModule(hammerMod)).
+            } else if p:hasModule(seisPodMod) {
+                sciList:add(p:getModule(seisPodMod)).
             }
         }
 
@@ -274,7 +288,7 @@ local transmitQueue is queue().
 
             // If science can be recovered from the experiment via transmission, do that
             else if data:transmitValue > 0 and data:transmitValue = data:scienceValue {
-                logStr("[recover_sci] Transmit value [" + data:transmitValue + "] above threshold").
+                logStr("[recover_sci] Transmit value [" + data:transmitValue + "] above threshold [" + data:title + "]").
                 transmit_on_connection(_m, minEc).
             }
 

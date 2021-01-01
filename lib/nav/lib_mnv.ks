@@ -14,19 +14,24 @@ runOncePath("0:/lib/lib_warp").
         local burnNode to node(0, 0, 0, 0).
         local burnObj to lex().
     
+        out_msg("Executing exec_circ_burn").
+
         if not hasNode {
-            out_msg("Executing add_simple_circ_node()").
+            out_info("Executing add_simple_circ_node()").
             set burnNode to add_simple_circ_node(_nodeAt, _tgtAlt).
         }
 
-        out_msg("Executing get_burn_obj_from_node(burnNode)").
+        out_info("Executing get_burn_obj_from_node(burnNode)").
         set burnObj to get_burn_obj_from_node(burnNode).
             
-        out_msg("Executing warp_to_circ_burn()").
+        out_info("Executing warp_to_circ_burn()").
         warp_to_circ_burn(burnObj["burnEta"]).
 
-        out_msg("Executing exec_circ_burn()").
+        out_info("Executing exec_circ_burn()").
         do_circ_burn(burnObj).
+
+        out_info().
+        out_msg().
     }
 
     local function warp_to_circ_burn {

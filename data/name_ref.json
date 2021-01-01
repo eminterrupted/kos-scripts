@@ -445,7 +445,9 @@
         "Submersible Oceanography and Bathymetry",
         "dmBathymetry",
         "Communotron 32",
-        "RTLongAntenna2"
+        "RTLongAntenna2",
+        "Surface Ablation Laser Light Imager",
+        "dmsurfacelaser"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

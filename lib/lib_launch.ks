@@ -422,29 +422,3 @@ local function coast_to_space {
     
     logStr("Reached space").
 }
-
-global function slow_throttle_for_time {
-    parameter pEta.
-
-    return 1 - ( missiontime / pEta).
-}
-
-global function slow_throttle_for_alt {
-    parameter pAlt.
-
-    return 1 - ( ship:altitude / pAlt).
-}
-
-
-global function slow_throttle_for_ap {
-    parameter pAlt.
-
-    return 1 - ( ship:apoapsis / pAlt).
-}
-
-
-global function slow_throttle_for_pe {
-    parameter pAlt.
-
-    return 1 - ( ship:periapsis / pAlt).
-}

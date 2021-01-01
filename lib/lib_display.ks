@@ -13,10 +13,6 @@ runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_twr").
 
-//For custom strings to be added by scripts. 
-//  Schema is lex(["x,y"]screen location key, list(["str"]string,[[var]value, etc...])). 
-//  Example: lex("2,6",list("EXAMPLE:     ", exampleVar, "    "))
-
 local dispObj is lex().
 
 local clrWide is "                                                                      ".
@@ -37,8 +33,8 @@ local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
 local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
 local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-//local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-//local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
+// local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
+// local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
 // local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
 // local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
 local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
@@ -79,12 +75,12 @@ global ln is 0.
 
 //Common strings
 local divDbl to "=============================================================".
+local divSgl to "-------------------------------------------------------------".
 
 
 //-- Main Headers
 global function disp_main {
     local pos is posmain.
-    //local stateObj is init_state_obj().
 
     set ln to pos["v"].
     set h1 to pos["h1"].
@@ -100,9 +96,9 @@ global function disp_main {
     print "MISSION:       " + ship:name + "    " at (h1,cr).
         print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
     print "BODY:          " + body:name + "     " at (h1,cr).
-        print "STATUS:        " + status + "     "             at (h3,ln).
+        print "STATUS:        " + status:padright(12 - status:length) at (h3,ln).
     print "PROGRAM:       " + stateObj["program"] + "   " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "   " at (h3,ln).
+        print "RUNMODE:       " + stateObj["runmode"] + "  " at (h3,ln).
             print "SR: " + stateObj["subroutine"] at (h3 + 19, ln).
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
@@ -426,9 +422,8 @@ global function disp_clear_block {
 
 
 global function disp_clear_block_all {
-    local dispList is list("obt", "l_tel", "eng_perf", "burn_data", "timer", "scan", "rendezvous", "pid", "l_param", "eta").
-    for d in dispList {
-        disp_clear_block(d).
+    for d in dispObj:keys {
+        if d <> "main" disp_clear_block(d).
     }
 
     clearScreen.
@@ -491,8 +486,15 @@ global function disp_get_pos_obj {
 }
 
 
+// Prints an "INFO" line at (2, 8) for adding context to out_msg
+global function out_info {
+    parameter str is "".
 
-// Prints a "MSG" line at (2, 7)
+    print "     " + str:padRight(55) at (2, 8).
+}
+
+
+// Prints a "MSG" line at (2, 7) for describing current status
 global function out_msg {
     parameter str is "".
 
@@ -507,4 +509,41 @@ global function update_display {
     //disp_obt_data().
     //disp_tel().
     //if get_active_engs():length > 0 disp_eng_perf_data().
+}
+
+
+
+// WIP BELOW //
+
+
+// WIP generic display block function
+global function disp_block {
+    parameter strList.  // Format:
+                        // [0]  : ID for block used to reserve screen space (ex: "timer")
+                        // [1]  : Title of the display block (ex: "timer")
+                        // [2+] : Strings to display, in key / value pairs (ex: "mark", timeRemaining) 
+    
+    local pos is "assign".
+    if dispObj:haskey(strList[0]) set pos to disp_get_pos_obj(dispObj[strList[0]]).
+    else {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj[strList[0]] to pos["id"].
+    }
+
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print strList[1]:toupper at (h1,ln).
+    print divSgl:substring(0, strList[1]:length) at (h1,cr).
+    from { local idx to 2.} until idx >= strList:length step { set idx to idx + 2.} do {
+        local str to choose strList[idx] if strList[idx]:length <= 14 else strList[idx]:substring(0, 14).
+        print str:toupper + ":" at (h1,cr).
+        
+        set str to strList[idx + 1].
+        if str:typename <> "string" set str to str:tostring.
+
+        if str:length > 14 set str to str:substring(0, 14).
+        print str:toupper:padright(20 - str:length) at (h2, ln).
+    }
 }

@@ -211,7 +211,7 @@ global function optimize_node_list {
               _tgtBody,
               _mnvAcc.
 
-    print "MSG: Optimizing maneuver                                     " at (2, 7).
+    out_msg("Optimizing node.").
 
     local limLo to 1 - _mnvAcc.
     local limHi to 1 + _mnvAcc. 
@@ -220,6 +220,13 @@ global function optimize_node_list {
         set _data to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
         local nodeScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody)["score"].
 
+        // print "_tgtVal    : " + _tgtVal at (2, 20).
+        // print "_compMode  : " + _compMode at (2, 21).
+        // print "_data[eta] : " + _data[0] at (2, 22).
+        // print "_data[rad] : " + _data[1] at (2, 23).
+        // print "_data[nrm] : " + _data[2] at (2, 24).
+        // print "_data[prg] : " + _data[3] at (2, 25).
+
         wait 0.001.
 
         if nodeScore >= limLo and nodeScore <= limHi {
@@ -227,7 +234,8 @@ global function optimize_node_list {
         }
     }
 
-    print "MSG: Optimized maneuver found                                " at (2, 7).
+    out_info().
+    out_msg("Optimized maneuver found").
     return _data.
 }
 
@@ -246,23 +254,36 @@ local function improve_node {
     //hill climb to find the best time
     local curScore is get_node_score(_data, _tgtVal, _compMode, _tgtBody).
 
-    local mnvFactor is 0.25.
+    // Base maneuver factor - the amount of dV that is used for hill
+    // climb iterations
+    local mnvFactor is 1.
+
+    // If this is an altitude-only change (_compMode - ap or pe), adjust for 
+    // _tgtBody gravity.
+    if _compMode = "ap" or _compMode = "pe" {
+        set mnvFactor to mnvFactor * sqrt(_tgtBody:radius) / 500.
+    }
+
     if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025) {
         set mnvFactor to 0.015625 * mnvFactor.
     } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
         set mnvFactor to 0.03125 * mnvFactor. 
-    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
-        set mnvFactor to 0.125 * mnvFactor.
+    // } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+    //     set mnvFactor to 0.125 * mnvFactor.
+    } else if curScore:score > (limLo * 0.50) and curScore:score < (limHi * 1.50) {
+        set mnvFactor to 0.5 * mnvFactor.
     } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
-        set mnvFactor to .5 * mnvFactor.
+        set mnvFactor to 1 * mnvFactor.
     } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
-        set mnvFactor to 1.75 * mnvFactor.
+        set mnvFactor to 2 * mnvFactor.
     } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
-        set mnvFactor to 3 * mnvFactor. 
+        set mnvFactor to 4 * mnvFactor. 
     } else {
-        set mnvFactor to 10 * mnvFactor.
+        set mnvFactor to 12 * mnvFactor.
     }
     
+    out_msg("Optimizing node.").
+
     local mnvCandidates is list(
         list(_data[0] + mnvFactor, _data[1], _data[2], _data[3]) //Time
         ,list(_data[0] - mnvFactor, _data[1], _data[2], _data[3]) //Time
@@ -286,13 +307,13 @@ local function improve_node {
             if candScore:score < curScore:score {
                 set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
-                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore:score > curScore:score {
                 set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
-                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }
@@ -382,7 +403,7 @@ global function optimize_node_list_next {
               mode,
               dir is "all".
 
-    print "MSG: Optimizing maneuver                                     " at (2, 7).
+    out_msg("Optimizing maneuver").
 
     local cnt to 0. 
     local prevScore to 0.
@@ -401,7 +422,8 @@ global function optimize_node_list_next {
         }
     }
 
-    print "MSG: Optimized maneuver found                                " at (2, 7).
+    out_info().
+    out_msg("Optimized maneuver found").
     return mnvList.
 }
 
@@ -497,13 +519,13 @@ global function improve_node_prograde {
             if candScore["score"] < curScore["score"] {
                 set curScore to get_node_prograde_score(c, tgtAlt, mode).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore["score"] > curScore["score"] {
                 set curScore to get_node_prograde_score(c, tgtAlt, mode).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }
@@ -575,13 +597,13 @@ global function improve_node_radial {
             if candScore["score"] < curScore["score"] {
                 set curScore to get_node_prograde_score(c, tgtArgPe, mode).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore["score"] > curScore["score"] {
                 set curScore to get_node_prograde_score(c, tgtArgPe, mode).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }
@@ -643,13 +665,13 @@ global function improve_node_normal {
             if candScore["score"] < curScore["score"] {
                 set curScore to get_node_normal_score(c, tgtInc).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore["score"] > curScore["score"] {
                 set curScore to get_node_normal_score(c, tgtInc).
                 set data to c.
-                print "(Current score: " + round(curScore["score"], 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }
@@ -797,13 +819,13 @@ local function improve_arg_pe_node {
             if candScore:score < curScore:score {
                 set curScore to get_arg_pe_node_score(c, _tgtArgPe, _tgtBody).
                 set _data to c.
-                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore:score > curScore:score {
                 set curScore to get_arg_pe_node_score(c, _tgtArgPe, _tgtBody).
                 set _data to c.
-                print "(Current score: " + round(curScore:score, 5) + ")   " at (27, 7).
+                out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }

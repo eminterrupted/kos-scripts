@@ -81,7 +81,6 @@ print "MSG:     other_eta: " + round(other_intersect_eta, 1) + " s     " at (2, 
 
 //Obtain a list of the next 5 utimes the target will cross the intersect point
 local rendezvous_utimes to list().
-local i to 0.
 from { local i to 0.} until i = 4 step { set i to i + 1.} do {
     rendezvous_utimes:add(time:seconds + other_intersect_eta + other:obt:period * i).
 }

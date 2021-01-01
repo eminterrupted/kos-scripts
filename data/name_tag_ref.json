@@ -425,7 +425,13 @@
         "dmSeismicHammer",
         "sci.dmag.impactHammer",
         "dmSeismicPod",
-        "sci.dmag.seismicPod"
+        "sci.dmag.seismicPod",
+        "restock-wheel-1-T",
+        "cmd.core",
+        "RTLongAntenna2",
+        "comm.omni ",
+        "dmsurfacelaser",
+        "sci.dmag.laserImager"
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

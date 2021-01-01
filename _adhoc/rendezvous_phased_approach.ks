@@ -17,7 +17,7 @@ out_msg("Checking current orbit").
 
 if not check_value(ship:apoapsis, target:apoapsis, 1000) or not check_value(ship:periapsis, target:periapsis, 1000) {
     out_msg("Aligning orbits").
-    runPath("0:/_main/adhoc/orbit_change", target:apoapsis, target:periapsis).
+    runPath("0:/_adhoc/orbit_change", target:apoapsis, target:periapsis).
 }
 
 out_msg("Orbit aligned, waiting until Pe").

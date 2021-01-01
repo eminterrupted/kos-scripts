@@ -71,6 +71,8 @@ local function main {
     until runmode = 99 {
 
         if runmode = 0 {
+            out_msg("Executing simple_inclination_change.ks").
+            out_info("Current: " + ship:obt:inclination + "     Target: " + _tgtInclination).
             set runmode to 2.
         }
         
@@ -93,7 +95,6 @@ local function main {
         }
 
         else if runmode = 2 {
-
             add mnvNode.
 
             set runmode to 5.
@@ -110,7 +111,7 @@ local function main {
             until time:seconds >= leadTime  - 15 {
                 set sVal to burnVector.
                 update_display().
-                disp_timer(leadTime, "burn eta"). 
+                disp_burn_data(leadtime - time:seconds).
                 wait 0.01.
             }
 
@@ -120,8 +121,8 @@ local function main {
 
             until time:seconds >= leadTime {
                 set sVal to burnVector.
-
                 update_display().
+                disp_burn_data(leadTime - time:seconds).
                 wait 0.01.
 
             }
@@ -163,11 +164,7 @@ local function main {
 
 //Functions
 local function end_main {
-    set sVal to lookDirUp(ship:facing:forevector, sun:position).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    wait 5.
+    unlock steering.
+    unlock throttle.
+    clearScreen.
 }

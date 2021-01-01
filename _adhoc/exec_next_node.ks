@@ -48,14 +48,16 @@ until runmode = 99 {
 
 
     else if runmode = 7 {
-        // set tStamp to choose 30 if tStamp < mnvNode:eta else mnvNode:eta.
-        // set tStamp to time:seconds + tStamp.
-        // until time:seconds >= tStamp {
-        //     update_display().
-        //     disp_timer(tStamp).
-        // }
+        set tStamp to choose 15 if 15 < mnvNode:eta else 0.
+        set tStamp to time:seconds + tStamp.
+        until time:seconds >= tStamp {
+            update_display().
+            local t to choose "-" + round(tStamp - time:seconds) if tStamp - time:seconds < 0 else "+" + round(tStamp - time:seconds).
+            disp_block(list("warptimer", "warp in", "mark", "T" + t)).
+            wait 1.
+        }
 
-        // disp_clear_block("timer").
+        disp_clear_block("warptimer").
 
         set runmode to 8.
     }

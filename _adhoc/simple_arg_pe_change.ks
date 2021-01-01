@@ -1,7 +1,6 @@
 @lazyGlobal off.
 
 parameter _tgtArgPe,
-          _tgtLAN,
           _tgtAp is ship:apoapsis + 1000,
           _tgtPe is ship:periapsis.
 
@@ -22,19 +21,6 @@ local runmode to 0.
 
 disp_main().
 
-wait 2.
-
-// Creating the new orbit
-local tgtObt is createOrbit(
-    ship:orbit:inclination, 
-    (((_tgtAp + ship:body:radius) - (_tgtPe + ship:body:radius)) / (_tgtAp + _tgtPe + (ship:body:radius * 2))),
-    ((_tgtAp + _tgtPe) / 2), 
-    _tgtLAN,
-    _tgtArgPe,
-    ship:orbit:meanAnomalyAtEpoch,
-    ship:orbit:epoch,
-    ship:body).
-
 // Inclination match burn data
 local utime to time:seconds + 1200.
 
@@ -47,9 +33,7 @@ local tStamp is 0.
 local tgtAnomaly is 360 - (ship:orbit:argumentofperiapsis - _tgtArgPe).
 
 //Steering
-local rVal is 0.
-
-local sVal is lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
+local sVal is lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
 local tVal is 0.
@@ -76,7 +60,7 @@ local function main {
 
         else if runmode = 1 {
             set mnvParam to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], mnvParam[3]).
-            set mnvParam to optimize_node_list(mnvParam, _tgtAp, "ap", ship:body, 0.25).
+            set mnvParam to optimize_node_list(mnvParam, _tgtAp, "ap", ship:body, 0.001).
             set runmode to 2.
         }
 
@@ -95,6 +79,13 @@ local function main {
         // Do burn
         else if runmode = 5 {
             exec_node(nextNode).
+            set runmode to 7.
+        }
+
+        // Now do a circ burn at Ap to bring Pe to target
+        else if runmode = 7 {
+            exec_circ_burn("ap", _tgtPe).
+
             set runmode to 99.
         }
 
@@ -105,11 +96,6 @@ local function main {
 
 //Functions
 local function end_main {
-    set sVal to lookDirUp(ship:facing:forevector, sun:position).
-    lock steering to sVal.
-
-    set tVal to 0.
-    lock throttle to tVal.
-
-    wait 5.
+    unlock steering.
+    unlock throttle.
 }
