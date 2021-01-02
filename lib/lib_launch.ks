@@ -2,7 +2,6 @@
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/payload/lib_deploy_payload").
 
 if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
 
@@ -75,19 +74,6 @@ global function arm_stock_fairings {
         logStr("Fairings jettison").
     }
 }
-
-//Correction burn execute
-// local function exec_correction_burn {
-//     parameter tApo.
-
-//     //If in atm and below target
-//     lock steering to heading(get_nav_heading(), get_la_for_alt(0, tApo) , 0).
-
-//     lock throttle to 0.05.
-
-//     logStr("Current apoapsis below target, correction burn [" + ship:apoapsis + " / " + tApo +"]").
-// }
-
 
 
 // Launch a vessel with a countdown timer
