@@ -64,6 +64,12 @@ local function init_uplink {
     return lex("lastUplink", lastUplink, "nextUplink", nextUplink).
 }
 
+local function format_datetime {
+    parameter _t.
+
+    set _t to _t:string.
+}
+
 //-- Main function--// 
 global function logStr {
     
@@ -83,8 +89,8 @@ global function logStr {
     if missionTime = 0 and defined cd set timestamp to 0 - cd.
     else set timestamp to missionTime.
 
-    if logLvl >= 0 {            
-        set str to "[MET:" + round(timestamp,3) + "]" + lvlStr + str.
+    if logLvl >= 0 {       
+        set str to "[MET:" + round(timestamp, 3) + "]" + lvlStr + str.
 
         if tee = 0 {
             logFile:writeLn(str).
@@ -100,9 +106,13 @@ global function logStr {
         }
     }
     
-    if (path(localLog):volume):freeSpace < 1000 uplink_telemetry().
-    else if time:seconds > uplinkObj["nextUplink"] uplink_telemetry().
-    else if uplink uplink_telemetry().
+    if (path(localLog):volume):freeSpace < 1000 {
+        uplink_telemetry().
+    } else if time:seconds > uplinkObj["nextUplink"] {
+        uplink_telemetry().
+    } else if uplink {
+        uplink_telemetry().
+    }
 }
 
 

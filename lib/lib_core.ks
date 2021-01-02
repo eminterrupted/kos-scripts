@@ -13,7 +13,7 @@ global utils is lex(
         ,"checkRadarHi"     ,{ parameter _alt. return alt:radar >= _alt.}
         ,"checkRadarLo"     ,{ parameter _alt. return alt:radar < _alt.}
         ,"getRVal"          ,{ return ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.}
-        ,"timeToGround"     ,{ local ttg to choose 0 if ship:verticalSpeed > 0 else alt:radar / ship:verticalSpeed. return ttg. }
+        ,"timeToGround"     ,{ local ttg to choose 0 if ship:verticalSpeed > 0 else alt:radar / -(ship:verticalSpeed). return ttg. }
         ,"stgFromTag"       ,{ parameter _p. for t in _p:tag:split(".") { if t:startsWith("stgId") { return t:split(":")[1].} return "".}}
         ).
 

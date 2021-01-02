@@ -133,7 +133,7 @@ global function get_engs_exh_vel {
               _alt to ship:apoapsis,
               _body is ship:body.
  
-    logStr("[get_engs_exh_vel] _engList: " + _engList(";") + "   _alt: " + _alt + "    _body: " + _body).
+    logStr("[get_engs_exh_vel] _engList: " + _engList:join(";") + "   _alt: " + _alt + "    _body: " + _body).
 
     local apIsp to get_avail_isp(_body:atm:altitudePressure(_alt), _engList).
     local exhVel to constant:g0 * apIsp.

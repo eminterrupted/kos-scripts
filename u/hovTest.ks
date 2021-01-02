@@ -107,7 +107,7 @@ set tVal to 0.
 
 // Descent
 out_msg("Free fall").
-until get_burn_dur(verticalSpeed) <= utils:timeToGround() - 3 {
+until get_burn_dur(verticalSpeed) >= utils:timeToGround() - 3 {
     set tPidVal to tPid:update(time:seconds, verticalSpeed).
     
     log (time:seconds - startTime) + "," + verticalSpeed + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_descent_output.csv".
