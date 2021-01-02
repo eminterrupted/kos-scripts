@@ -156,28 +156,34 @@ global function get_mass_for_mode_stage {
 
 
 global function get_stage_mass_obj {
-    parameter stg is stage:number.
+    parameter _stg is stage:number.
 
-    local pList is ship:partsTaggedPattern("stgId:" + stg).
+    logStr("[get_stage_mass_obj] _stg: " + _stg).
+
+    local pList is ship:partsTaggedPattern("stgId:" + _stg).
 
     local cMass to 0.
     local dMass to 0.
     local wMass to 0.
-    local pResources to lex().
+    //local pResources to lex().
 
     for p in pList {
-        if not p:tag:startswith("mlp") {
-            set cMass to cMass + p:mass.
-            set dMass to dMass + p:dryMass.
-            set wMass to wMass + p:wetMass.
-            set pResources to get_fuel_mass_obj_for_stage(stg).
-        }
+        set cMass to cMass + p:mass.
+        set dMass to dMass + p:dryMass.
+        set wMass to wMass + p:wetMass.
+        //set pResources to get_fuel_mass_obj_for_stage(_stg).
     }
 
-    return lex("cur", cMass, "dry", dMass, "wet", wMass, "res", pResources).
+    //local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass, "res", pResources).
+    local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass).
+
+    logStr("[get_stage_mass_obj]-> return" + massObj).
+
+    return massObj.
 }
 
 
+// This is an incredibly perf-intensive function and probably not a good idea
 global function get_fuel_mass_obj_for_stage {
     parameter stg is stage:number.
 

@@ -74,6 +74,8 @@ global function get_avail_isp {
     local avIsp to get_avail_isp_for_parts(_pres, _eList).
 
     logStr("[get_avail_isp]-> return: " + avIsp).
+
+    return avIsp.
 }
 
 
