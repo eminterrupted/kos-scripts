@@ -12,12 +12,12 @@ local cache to lexicon().
 local launchS1  to "multistage_base".   // Launch script
 local missionS1 to "simple_orbit".      // First stage mission script
 local missionS2 to "simple_reentry".    // Second stage mission script
-local lAp       to "250000".            // Desired launch ap
-local lPe       to "250000".            // Desired launch pe
-local lInc      to "0".                 // Desired launch inclination
-local lTAlt     to "60000".             // Altitude that the script will use for launch angle calcs
-local rVal      to 0.                   // Orientation of the craft for the duration of the mission
-                                        // Typically 0 for probes, 180 for manned vessels cuz windows :) 
+local lAp       to 250000.            // Desired launch ap
+local lPe       to 250000.            // Desired launch pe
+local lInc      to 0.                 // Desired launch inclination
+local lTAlt     to 60000.             // Altitude that the script will use for launch angle calcs
+local rVal      to 0.                   // Orientation of vessel for the duration of the mission
+                                        // 0 for probes, 180 for manned vessels cuz there are windows :) 
 
 // Load the above from the cache
 if exists(kscCache) {

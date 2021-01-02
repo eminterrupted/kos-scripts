@@ -9,7 +9,7 @@ wait 2.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").
-runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_core").
 
 // Paths

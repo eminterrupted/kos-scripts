@@ -2,7 +2,7 @@
 
 clearScreen.
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_sci").

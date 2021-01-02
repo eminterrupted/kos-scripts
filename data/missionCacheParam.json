@@ -17,7 +17,15 @@
         "missionS1",
         "change_orbit",
         "missionS2",
-        "orbital_survey"
+        "simple_orbit",
+        "lAp",
+        375000,
+        "lPe",
+        375000,
+        "lTAlt",
+        60000,
+        "lInc",
+        0
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

@@ -4,7 +4,7 @@ parameter holdAlt is 2500.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/part/lib_chute").

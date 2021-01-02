@@ -4,7 +4,7 @@ parameter _tgt is "Minmus".
 
 clearscreen.
 
-runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_util").

@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/part/lib_antenna").
