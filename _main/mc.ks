@@ -12,14 +12,15 @@ runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
 
-// Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
-local program is stateObj["program"].
-
 // Paths
 local kscPath is "0:/_main/".
 local locPath is core:volume:name + ":/".
 
+// Initialize the mission cache
+local cache is init_mission_cache().
+
 //-- Main --//
+local program is stateObj["program"].
 if program = 0 set_program("LAUNCH").
 
 if program = "LAUNCH" {
