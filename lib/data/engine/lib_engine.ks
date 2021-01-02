@@ -104,6 +104,8 @@ global function get_active_engs {
 global function get_eng_perf_obj {
     parameter eList is get_ship_engs().
     
+    logStr("[get_eng_perf_obj] eList: " + eList:join(";")).
+
     local perfObj is lex().
     
     for e in elist {
@@ -123,6 +125,8 @@ global function get_eng_perf_obj {
             )
         ).
     }
+
+    logStr("[get_eng_perf_obj]-> return: " + perfObj).
 
     return perfObj.
 }

@@ -13,11 +13,14 @@ global function get_burn_dur_by_stage {
     parameter _deltaV,
               _stageNum is stage:number.
     
+    logStr("[get_burn_dur_by_stage] _deltaV: " + _deltaV + "   _stageNum: " + _stageNum).
+
     // Returns the engines in the stage if the provided stage has any.
     // If no engines found, returns the next stage engines
     local engineList to get_engs_for_stage(_stageNum).
-    if engineList:length > 0 {
-        set engineList to get_engs_for_next_stage().
+    if engineList:length = 0 {
+        logStr("[get_burn_dur_by_stage]-> return: 0. No engines found in stage: " + _stageNum).
+        return 0.
     }
     
     // Engine performance object for the given list of engines.
@@ -39,7 +42,10 @@ global function get_burn_dur_by_stage {
 
     // Returns the duration that this stage will take to burn its fuel
     // This is basically the rocket equation
-    return ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
+    local burnDur to ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
+
+    logStr("[get_burn_dur_by_stage]-> return: " + burnDur).
+    return burnDur.
 }
 
 
