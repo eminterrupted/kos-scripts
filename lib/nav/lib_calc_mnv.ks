@@ -64,7 +64,7 @@ global function get_burn_dur {
         set allDur to allDur + stageDur.
     }
 
-    logStr("[get_burn_dur] -> return " + allDur).
+    logStr("[get_burn_dur]-> return " + allDur).
 
     // Total duration of the burn
     return allDur.

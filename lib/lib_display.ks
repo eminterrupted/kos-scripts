@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-if terminal:width < 65 set terminal:width to 65.
+if terminal:width < 80 set terminal:width to 80.
 if terminal:height < 50 set terminal:height to 55.
 core:doAction("open terminal", true).
 
@@ -74,8 +74,8 @@ local posState is lex(
 global ln is 0.
 
 //Common strings
-local divDbl to "=============================================================".
-local divSgl to "-------------------------------------------------------------".
+local divDbl to "==========================================================================".
+local divSgl to "--------------------------------------------------------------------------".
 
 
 //-- Main Headers
@@ -89,8 +89,8 @@ global function disp_main {
     set h4 to pos["h4"].
 
     print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 - 2,ln).
-    print time:clock at (h4 + 3,ln).
+    print "UTC:" at (h4 + 12,ln).
+    print time:clock at (h4 + 17,ln).
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name + "    " at (h1,cr).

@@ -13,15 +13,9 @@ lock steering to up + r(0, 0, 180).
 
 local tPid      to setup_alt_pid(holdAlt).
 local tPidVal   to 0.
-local vPid      to setup_vspeed_pid(25).
-local vPidVal   to 0.
 local tVal      to 0.
 
 lock throttle to tVal.
-
-
-// Writing the deltaV and mass calculations to cache
-
 
 
 // Set up a trigger to arm chute when fuel is low
@@ -32,14 +26,17 @@ when ship:liquidfuel <= 0.1 then {
 
 // triggers to raise the landing legs
 when alt:radar >= 10 and verticalSpeed > 0 then {
+    logStr("Raising landing legs").
     gear off.
 }
 
 // Activate the engine and mark the time
+logStr("Ignition").
 stage.
 local startTime to time:seconds.
 
 // Get to altitude
+logStr("Rapid climbing to altitude: " + holdAlt).
 out_msg("Rapid climbing to altitude: " + holdAlt).
 until alt:radar >= holdAlt - 50 {
     set tPidVal     to tPid:update(time:seconds, alt:radar).
@@ -51,6 +48,7 @@ until alt:radar >= holdAlt - 50 {
     wait 0.001.
 }
 
+logStr("Slow climbing to altitude: " + holdAlt).
 out_msg("Slow climbing to altitude: " + holdAlt).
 until alt:radar >= holdAlt - 10 {
     set tPidVal         to tPid:update(time:seconds, alt:radar).
@@ -63,6 +61,7 @@ until alt:radar >= holdAlt - 10 {
 }
 
 // Reach hover state
+logStr("Hover loop").
 out_msg("Hover loop").
 until check_value(verticalSpeed, 0, 0.1) and check_value(alt:radar, holdAlt, 1) {
 
@@ -79,6 +78,7 @@ until check_value(verticalSpeed, 0, 0.1) and check_value(alt:radar, holdAlt, 1) 
 
 // Hover
 local tStamp to time:seconds + 5.
+logStr("Hovering").
 until time:seconds >= tStamp {
     out_msg("Hovering in place for " + round(tStamp - time:seconds) + "s  ").
     // Pidloop update
@@ -93,6 +93,7 @@ until time:seconds >= tStamp {
 }
 
 // Reset the pid
+logStr("Resetting pid").
 out_msg("Resetting pid").
 //tPid:reset().
 set tPid:setpoint to 0.
@@ -105,21 +106,26 @@ when alt:radar <= 50 and verticalSpeed < 0 then {
 set tPid to setup_vspeed_pid(-2.5).
 set tVal to 0.
 
+local localGravAccel to constant():g * ship:body:mass / ship:body:radius^2. 
+
+logStr("localGravAccel calculated: " + localGravAccel).
+
 // Descent
+logStr("Free fall").
 out_msg("Free fall").
-until get_burn_dur(verticalSpeed) >= utils:timeToGround() - 3 {
+until get_burn_dur(verticalSpeed - localGravAccel) >= utils:timeToGround() - 5 {
     set tPidVal to tPid:update(time:seconds, verticalSpeed).
     
+    logStr("Time to ground impact: " + utils:timeToGround()).
+
     log (time:seconds - startTime) + "," + verticalSpeed + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_descent_output.csv".
 
     pid_display().
     wait 0.001.
 }
 
-// Set pid to vertical speed mode
-
-
 // Hoverslam
+logStr("Powered descent").
 out_msg("Powered descent").
 until status = "landed" {
 
@@ -133,6 +139,7 @@ until status = "landed" {
 }
 
 // Touchdown
+logStr("Touchdown").
 out_msg("Touchdown").
 lock throttle to 0.
 

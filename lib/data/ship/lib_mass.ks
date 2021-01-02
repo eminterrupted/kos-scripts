@@ -218,9 +218,14 @@ global function get_ves_mass_at_stage {
     logStr("[get_ves_mass_at_stage] stgId:" + _stg).
 
     local vMass is 0.
-    from { local n to _stg. } until n < -1 step { set n to n - 1. } do {
-        for p in ship:parts { 
-            if p:tag:matchespattern("stgId:" + n) set vMass to vMass + p:mass.
+
+    if _stg = stage:number {
+        set vMass to ship:mass.
+    } else {
+        from { local n to _stg. } until n < -1 step { set n to n - 1. } do {
+            for p in ship:parts { 
+                if p:tag:matchespattern("stgId:" + n) set vMass to vMass + p:mass.
+            }
         }
     }
 
