@@ -114,16 +114,16 @@ global function get_dv_for_tgt_transfer_next {
 
 
 global function get_avail_dv_for_stage {
-    parameter stg is stage:number.
+    parameter _stg is stage:number.
 
-    logStr("[get_avail_dv_for_stage] stg:" + stg).
+    logStr("[get_avail_dv_for_stage] _stg:" + _stg).
 
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
-    local vMass to get_ves_mass_at_stage(stg).
-    local eList is ship:partsTaggedPattern("eng.stgId:" + stg).
+    local vMass to get_ves_mass_at_stage(_stg).
+    local eList is ship:partsTaggedPattern("eng.stgId:" + _stg).
     if eList:length = 0 {
-        set stg to stg - 1.
-        set eList to ship:partsTaggedPattern("eng.stgId:" + stg). 
+        set _stg to _stg - 1.
+        set eList to ship:partsTaggedPattern("eng.stgId:" + _stg). 
         if eList = 0 {
             logStr("[get_avail_dv_for_stage]-> return: -1"). 
             return -1.
@@ -131,7 +131,7 @@ global function get_avail_dv_for_stage {
     }
     
     local exhVel is get_engs_exh_vel(eList, ship:altitude).
-    local stgMassObj to get_stage_mass_obj(stg).
+    local stgMassObj to get_stage_mass_obj(_stg).
 
     local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
     local spentMass to vMass - fuelMass.

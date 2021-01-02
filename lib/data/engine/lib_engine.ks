@@ -129,19 +129,30 @@ global function get_eng_perf_obj {
 
 
 global function get_engs_exh_vel {
-    parameter engList to get_active_engs(),
-              pAlt to ship:apoapsis,
-              pBody is ship:body.
+    parameter _engList to get_active_engs(),
+              _alt to ship:apoapsis,
+              _body is ship:body.
  
-    local apIsp to get_avail_isp(pBody:atm:altitudePressure(pAlt), engList).
-    return constant:g0 * apIsp.
+    logStr("[get_engs_exh_vel] _engList: " + _engList(";") + "   _alt: " + _alt + "    _body: " + _body).
+
+    local apIsp to get_avail_isp(_body:atm:altitudePressure(_alt), _engList).
+    local exhVel to constant:g0 * apIsp.
+
+    logStr("[get_engs_exh_vel]-> return: " + exhVel).
+
+    return exhVel.
 }
 
 
 global function get_eng_exh_vel {
-    parameter eng,
-              pAlt to body:atm:height.
+    parameter _eng,
+              _alt to body:atm:height.
 
-    local apIsp to choose eng:visp if pAlt >= body:atm:height else eng:ispAt(body:atm:altitudepressure(pAlt)).
-    return constant:g0 * apIsp.
+    logStr("[get_eng_exh_vel] _eng: " + _eng + "   _alt: " + _alt).
+
+    local apIsp to choose _eng:visp if _alt >= body:atm:height else _eng:ispAt(body:atm:altitudepressure(_alt)).
+    local exhVel to constant:g0 * apIsp.
+
+    logStr("[get_eng_exh_vel]-> return: " + exhVel).
+    return exhVel.
 }

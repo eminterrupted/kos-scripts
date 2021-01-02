@@ -13,6 +13,9 @@ runOncePath("0:/lib/data/engine/lib_engine").
 
 global function get_isp {
     
+    logStr("[get_isp]").
+
+    local avIsp  is 0.
     local relThr is 0. 
     local stgThr is 0.
 
@@ -23,33 +26,54 @@ global function get_isp {
         set relThr to relThr + (stgThr / eng:isp).
     }
 
-    if stgThr = 0 or relThr = 0 return 0.
-    else return stgThr / relThr. 
+    if stgThr = 0 or relThr = 0 {
+        set avIsp to 0.
+    } else {
+        set avIsp to stgThr / relThr. 
+    }
+
+    logStr("[get_isp]-> return: " + avIsp).
+
+    return avIsp.
 }
 
 
 global function get_avail_isp_for_parts {
-    parameter pPres is body:atm:altitudePressure(ship:altitude),
-              pList is get_engs_for_stage(stage:number).
+    parameter _pres is body:atm:altitudePressure(ship:altitude),
+              _pList is get_engs_for_stage(stage:number).
 
+    logStr("[get_avail_isp_for_parts] _pres: " + _pres + "   _pList: " + _pList:join(";")).
+
+    local avIsp  is 0.
     local relThr is 0.
     local stgThr is 0.
     
-    for e in pList {
-        set stgThr to stgThr + e:possibleThrustAt(pPres).
-        set relThr to relThr + (stgThr / e:ispAt(pPres)).
+    for e in _pList {
+        set stgThr to stgThr + e:possibleThrustAt(_pres).
+        set relThr to relThr + (stgThr / e:ispAt(_pres)).
     }
 
-    if stgThr = 0 or relThr = 0 return 0. 
-    else return stgThr / relThr. 
+    if stgThr = 0 or relThr = 0 {
+        set avIsp to 0. 
+    } else {
+        set avIsp to stgThr / relThr. 
+    }
+
+    logStr("[get_avail_isp_for_parts]-> return: " + avIsp).
+
+    return avIsp.
 }
 
 
 global function get_avail_isp {
-    parameter pPres is body:atm:altitudepressure(ship:altitude),
-              eList is get_active_engs().
+    parameter _pres is body:atm:altitudepressure(ship:altitude),
+              _eList is get_active_engs().
    
-    return get_avail_isp_for_parts(pPres, eList).
+    logStr("[get_avail_isp] _pres: " + _pres + "   _eList: " + _eList:join(";")).
+
+    local avIsp to get_avail_isp_for_parts(_pres, _eList).
+
+    logStr("[get_avail_isp]-> return: " + avIsp).
 }
 
 
