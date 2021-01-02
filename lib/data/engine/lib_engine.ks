@@ -126,7 +126,7 @@ global function get_eng_perf_obj {
         ).
     }
 
-    logStr("[get_eng_perf_obj]-> return: " + perfObj).
+    logStr("[get_eng_perf_obj]-> return: <obj>").
 
     return perfObj.
 }

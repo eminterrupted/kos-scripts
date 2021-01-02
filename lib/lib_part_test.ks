@@ -1,3 +1,6 @@
+@lazyGlobal off.
+
+// Runs a test on a part, used with tc.ks
 global function test_part {
     parameter p.
 

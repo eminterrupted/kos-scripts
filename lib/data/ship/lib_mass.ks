@@ -177,7 +177,7 @@ global function get_stage_mass_obj {
     //local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass, "res", pResources).
     local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass).
 
-    logStr("[get_stage_mass_obj]-> return" + massObj).
+    logStr("[get_stage_mass_obj]-> return <obj>").
 
     return massObj.
 }

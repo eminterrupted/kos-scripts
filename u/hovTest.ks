@@ -1,11 +1,12 @@
 @lazyGlobal off.
 
-parameter holdAlt is 500.
+parameter holdAlt is 250.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_pid").
+runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/part/lib_chute").
 runOncePath("0:/lib/nav/lib_calc_mnv").
 
@@ -54,12 +55,12 @@ local startTime to time:seconds.
 // Get to altitude
 logStr("Rapid climbing to altitude: " + holdAlt).
 out_msg("Rapid climbing to altitude: " + holdAlt).
-until alt:radar >= holdAlt * 0.90 {
-    set tPidVal     to tPid:update(time:seconds, alt:radar).
+until ship:altitude >= holdAlt * 0.90 {
+    set tPidVal     to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to min(tPidVal, vsPidVal).
 
-    log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
+    log (time:seconds - startTime) + "," + throttle + "," + ship:altitude + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
 
     pid_display().
     wait 0.001.
@@ -69,12 +70,12 @@ logStr("Slow climbing to altitude: " + holdAlt).
 out_msg("Slow climbing to altitude: " + holdAlt).
 set vsPid:setpoint to min(10, (holdAlt * 0.9) / 10).
 vsPid:reset().
-until alt:radar >= holdAlt - 10 {
-    set tPidVal         to tPid:update(time:seconds, alt:radar).
+until ship:altitude >= holdAlt - 10 {
+    set tPidVal         to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to min(tPidVal, vsPidVal).
 
-    log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
+    log (time:seconds - startTime) + "," + throttle + "," + ship:altitude + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
 
     pid_display().
     wait 0.001.
@@ -83,22 +84,22 @@ until alt:radar >= holdAlt - 10 {
 // Reach hover state
 logStr("Hover loop").
 out_msg("Hover loop").
-until check_value(verticalSpeed, 0, 0.1) and check_value(alt:radar, holdAlt, 1) {
+until check_value(verticalSpeed, 0, 0.1) and check_value(ship:altitude, holdAlt, 1) {
 
     // Pidloop update
-    set tPidVal     to tPid:update(time:seconds, alt:radar).
+    set tPidVal     to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).        
     set tVal        to min(tPidVal, vsPidVal).
 
     // Log out
-    log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
+    log (time:seconds - startTime) + "," + throttle + "," + ship:altitude + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to ascLog.
 
     pid_display().
     wait 0.001.
 }
 
 // Hover
-local tStamp to time:seconds + 5.
+local tStamp to time:seconds + 15.
 set vsPid:setpoint to 0.
 vsPid:reset().
 
@@ -106,20 +107,20 @@ logStr("Hovering").
 until time:seconds >= tStamp {
     out_msg("Hovering in place for " + round(tStamp - time:seconds) + "s  ").
     // Pidloop update
-    set tPidVal     to tPid:update(time:seconds, alt:radar).
+    set tPidVal     to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to max(0, min((tPidVal), 1)).
 
     // Log out
-    log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to hovLog.
+    log (time:seconds - startTime) + "," + throttle + "," + ship:altitude + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to hovLog.
 
     pid_display().
     wait 0.001.
 }
 
 // Reset the pid
-logStr("Resetting pid").
-out_msg("Resetting pid").
+logStr("Resetting tpid for  descent, switching to alt:radar mode").
+out_msg("Resetting tpid for descent, switching to alt:radar mode").
 tPid:reset().
 set tPid:setpoint to 0.
 
@@ -129,28 +130,41 @@ when alt:radar <= 50 and verticalSpeed < 0 then {
     gear on.
 }
 
-set vsPid:setpoint to -25.
+logStr("Resetting vsPid for descent").
+out_msg("Resetting vsPid for descent").
+set vsPid:setpoint to -10.
 vsPid:reset().
+
+logStr("MECO").
 set tVal to 0.
 
 local localGravAccel to constant():g * ship:body:mass / ship:body:radius^2. 
-
 logStr("localGravAccel calculated: " + localGravAccel).
+
+// Wait until we start falling, then lock steering to srfretrograde
+// WARNING - do not let the ship go positive VS! It will flip
+wait until verticalSpeed < 0.
+lock steering to ship:srfretrograde + r(0, 0, 180).
+
 
 // Descent
 logStr("Free fall").
 out_msg("Free fall").
-until burnDur > utils:timeToGround() {
-    logStr("Time to ground impact: " + utils:timeToGround()).
+local tti to 999999.
+until burnDur > tti {
+    set tti to time_to_impact(50).
     set burnDur to get_burn_dur(verticalSpeed).
 
+    logStr("Time to impact (50m buffer): " + tti + "s").
     pid_display().
     wait 0.001.
 }
 
 // Hoverslam
-logStr("Powered descent").
-out_msg("Powered descent").
+logStr("Ignition").
+
+logStr("Entering powered descent at radar alt: " + round(alt:radar)).
+out_msg("Entering powered descent phase at alt: " + round(alt:radar)).
 until alt:radar <= 50 {
     set tPidVal     to tPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
@@ -158,26 +172,19 @@ until alt:radar <= 50 {
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to desLog.
 
+    set tti to time_to_impact().
+    logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
+
     pid_display().
     wait 0.001.
 }
+
+logStr("Locking steering to up for final descent").
+lock steering to up + r(0, 0, 180).
 
 logStr("Slowing rate of descent").
 out_msg("Slowing rate of descent").
-set vsPid:setpoint to -5.
-vsPid:reset().
-until alt:radar <= 25 {
-    set tPidVal     to tPid:update(time:seconds, alt:radar).
-    set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal        to max(vsPidVal, tPidVal).
-
-    log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to desLog.
-
-    pid_display().
-    wait 0.001.
-}
-
-set vsPid:setpoint to -1.
+set vsPid:setpoint to -2.5.
 vsPid:reset().
 until status = "landed" {
     set tPidVal     to tPid:update(time:seconds, alt:radar).
@@ -185,6 +192,9 @@ until status = "landed" {
     set tVal        to max(vsPidVal, tPidVal).
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to desLog.
+
+    set tti to time_to_impact().
+    logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
 
     pid_display().
     wait 0.001.
@@ -196,6 +206,7 @@ out_msg("Touchdown").
 lock throttle to 0.
 unlock steering.
 sas on.
+uplink_telemetry().
 
 
 // Test display controller

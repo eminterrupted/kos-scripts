@@ -20,19 +20,6 @@ global info is lex(
     ).
 
 
-global function get_module_fields {
-    parameter m.
-
-    local retObj is lexicon().
-    
-    for f in m:allFieldNames {
-        set retObj[f] to m:getField(f).
-    }
-
-    return retObj.
-}
-
-
 // Check functions
 
     // Checks whether a value falls within a target range
@@ -96,6 +83,19 @@ global function get_module_fields {
         }
     }
 
+    // Returns alls fields for a given module in a lex
+    global function get_module_fields {
+    parameter m.
+
+    local retObj is lexicon().
+    
+    for f in m:allFieldNames {
+        set retObj[f] to m:getField(f).
+    }
+
+    return retObj.
+}
+
 
 //Staging
 
@@ -156,4 +156,17 @@ global function get_module_fields {
         }
 
         return false.
+    }
+
+
+    // Gets the time until impact with the ground, with optional margin
+    // From CheersKevin - https://www.youtube.com/watch?v=-goK27y6Xd4&list=PLb6UbFXBdbCrvdXVgY_3jp5swtvW24fYv&index=16
+    global function time_to_impact {
+        parameter margin is 0.
+
+        local d is alt:radar - margin.
+        local v is -(ship:verticalspeed).
+        local g is ship:body:mu / ship:body:radius^2. 
+
+        return (sqrt(v^2 + 2 * g * d) - v) / g.
     }

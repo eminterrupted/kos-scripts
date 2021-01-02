@@ -4,7 +4,7 @@ parameter pList to ship:parts.
 
 //set config:ipu to 500.
 clearScreen.
-ship:rootPart:getModule("kOSProcessor"):doAction("open terminal",true).
+core:doAction("open terminal",true).
 for p in pList {
     if p:tag <> "test" set p:tag to "".
 }
@@ -18,6 +18,7 @@ runOncePath("0:/lib/lib_engine").
 runOncePath("0:/lib/part/lib_light").
 runOncePath("0:/lib/lib_contract").
 runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_part_test").
 
 //- start main
 
