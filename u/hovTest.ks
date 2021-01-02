@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter holdAlt is 250.
+parameter holdAlt is 2500.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
