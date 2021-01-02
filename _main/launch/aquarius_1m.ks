@@ -4,7 +4,6 @@ parameter tApo to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
-          tGEndPitch to 3,
           rVal to 180.
 
 clearScreen.
@@ -43,6 +42,8 @@ local az to l_az_calc(azObj).
 local burnObj is lex().
 local dispState to lex().
 local maxQPid to setup_q_pid(.135).
+
+local tGEndPitch to 0.
 
 until runmode = 99 {
 

@@ -4,7 +4,6 @@ parameter tAp to 1067581,
           tPe to 1067581,
           tInc to 0,
           tGTurnAlt to 60000,
-          tGEndPitch to 3,
           rVal to 0.
 
 clearScreen.
@@ -60,7 +59,7 @@ local launchObj to lex(
     ,"rVal", rVal
     ,"tAp", tAp
     ,"tGTurnAlt", tGTurnAlt
-    ,"tGEndPitch", tGEndPitch
+    ,"tGEndPitch", 0
     ,"tInc", tInc
     ,"tPe",tPe
 ).
@@ -91,22 +90,22 @@ main().
 local function main {
     
     clearScreen.
-    print "MSG: Executing launch sequence()             " at (2, 7).
+    out_msg("Executing launch sequence()").
     launch_sequence(launchObj).
 
-    print "MSG: Executing circularization_burn()        " at (2, 7).
+    out_msg("Executing circularization_burn()").
     exec_circ_burn("ap", launchObj["tAp"]).
 
-    print "MSG: Logging launch to launchLog             " at (2, 7).
+    out_msg("Logging launch to launchLog").
     write_launch_log().
 
-    print "MSG: Executing prep_for_orbit()              " at (2, 7).
+    out_msg("Executing prep_for_orbit()").
     set runmode to prep_for_orbit().
     
-    print "MSG: Executing cleanup()                     " at (2, 7).
+    out_msg("Executing cleanup()").
     set runmode to cleanup().
 
-    print "MSG: Executing end_main()                    " at (2, 7).
+    out_msg("Executing end_main()").
     set runmode to end_main().
 
     clearScreen.
@@ -174,8 +173,8 @@ local function wait_until_launch_window {
 
         set currentLong to choose ship:longitude if ship:longitude >= 0 else (360 + ship:longitude).
 
-        print "MSG: Current target position: " + degrees_behind_target() + "          " at (2, 7).
-        print "MSG: Needed target position : " + desiredDegreesBehind + "    " at (2, 8).
+        out_msg("Current target position: " + degrees_behind_target()).
+        out_msg("Needed target position : " + desiredDegreesBehind).
     }
 
     if warp > 0 kuniverse:timewarp:cancelwarp().

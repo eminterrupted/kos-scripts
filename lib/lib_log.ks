@@ -10,7 +10,7 @@ local tee is 0.
 
 //-- local functions --//
 
-global function init_log {
+local function init_log {
     
     set errLvl to 0.
     local diskObj is init_disk().
@@ -56,14 +56,13 @@ global function init_log {
 }
 
 
-//
-global function init_uplink {
+// Initializes the uplink object.
+local function init_uplink {
     local lastUplink is time:seconds.
     local nextUplink is time:seconds + 15.
     
     return lex("lastUplink", lastUplink, "nextUplink", nextUplink).
 }
-
 
 //-- Main function--// 
 global function logStr {

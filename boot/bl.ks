@@ -1,4 +1,4 @@
-local guiPath to "0:/boot/launch_gui".
+local guiPath to "0:/_main/launch_gui".
 local mcPath to "local:/boot/mc".
 
 if ship:status = "PRELAUNCH" {

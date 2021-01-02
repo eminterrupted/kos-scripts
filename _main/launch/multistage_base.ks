@@ -4,7 +4,6 @@ parameter tAp to 125000,
           tPe to 125000,
           tInc to 0,
           tGTurnAlt to 60000,
-          tGEndPitch to 3,
           rVal to 0.
 
 clearScreen.
@@ -51,7 +50,7 @@ local launchObj to lex(
     ,"rVal", rVal
     ,"tAp", tAp
     ,"tGTurnAlt", tGTurnAlt
-    ,"tGEndPitch", tGEndPitch
+    ,"tGEndPitch", 0
     ,"tInc", tInc
     ,"tPe",tPe
 ).
@@ -62,20 +61,20 @@ main().
 local function main {
     
     clearScreen.
-    print "MSG: Executing launch sequence()             " at (2, 7).
+    out_msg("Executing launch sequence()").
     launch_sequence(launchObj).
 
-    print "MSG: Executing circularization_burn()        " at (2, 7).
+    out_msg("Executing circularization_burn()").
     exec_circ_burn("ap", launchObj["tAp"]).
 
-    print "MSG: Executing prep_for_orbit()              " at (2, 7).
-    set runmode to prep_for_orbit().
+    out_msg("Executing prep_for_orbit()").
+    prep_for_orbit().
     
-    print "MSG: Executing cleanup()                     " at (2, 7).
-    set runmode to cleanup().
+    out_msg("Executing cleanup()").
+    cleanup().
 
-    print "MSG: Executing end_main()                    " at (2, 7).
-    set runmode to end_main().
+    out_msg("Executing end_main()").
+    end_main().
 
     clearScreen.
 }
@@ -84,24 +83,34 @@ local function main {
 local function prep_for_orbit {
     logStr("Preparing for orbit").
 
+    //TODO - fix this so it doesn't open all bay doors, all the time
     logStr("Opening bay doors").
     bays on.
 
     wait 2.
     
-    local solarMod to "ModuleDeployableSolarPanel".
-
+    // Solar panel deployment
     logStr("Deploying launch vehicle solar panels").
+    local sMod to "ModuleDeployableSolarPanel".
     for p in ship:partsTaggedPattern("solar.array") {
         if not p:tag:matchesPattern("onDeploy") {
-            do_event(p:getModule(solarMod), "extend solar panel").
+            do_event(p:getModule(sMod), "extend solar panel").
         }
     }
 
-    logStr("Activating launch vehicle omni antennae").
-    for p in ship:partsTaggedPattern("comm.omni") {
+    // Omni antenna deployment
+    logStr("Activating orbital antennae").
+    local aMod to "ModuleRTAntenna".
+
+    for p in ship:partsTaggedPattern("comm") {
         if not p:tag:matchesPattern("onDeploy") {
-            activate_omni(p).
+            do_event(p:getModule(aMod), "activate").
+        }
+
+        if p:tag:matchesPattern("dish") {
+            if get_dish_target(p) = "No target" {
+                set_dish_target(p, "kerbin").
+            }
         }
     }
 
@@ -109,11 +118,7 @@ local function prep_for_orbit {
 
     update_display().
 
-    set runmode to 28.
-    set stateObj["runmode"] to runmode.
-    log_state(stateObj).
-    
-    return runmode.
+    set runmode to set_rm(28).
 }
 
 local function cleanup {

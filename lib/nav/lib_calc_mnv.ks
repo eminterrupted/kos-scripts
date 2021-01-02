@@ -15,7 +15,10 @@ global function get_burn_dur_by_stage {
     
     // Returns the engines in the stage if the provided stage has any.
     // If no engines found, returns the next stage engines
-    local engineList to choose get_engs_for_stage(_stageNum) if get_engs_for_stage(_stageNum):length > 0 else get_engs_for_next_stage().
+    local engineList to get_engs_for_stage(_stageNum).
+    if engineList:length > 0 {
+        set engineList to get_engs_for_next_stage().
+    }
     
     // Engine performance object for the given list of engines.
     // This includes thrust, isp, and exhaust velocity for each engine
@@ -44,6 +47,8 @@ global function get_burn_dur_by_stage {
 global function get_burn_dur {
     parameter _deltaV.  // Total delta v of the burn
     
+    logStr("get_burn_dur called with dV[" + _deltaV + "]").
+
     // Variables
     local allDur   is 0.    // Var for total duration of the burn
     local stageDur is 0.    // Var for total duration of the stage's burn

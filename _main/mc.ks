@@ -1,89 +1,84 @@
 @lazyGlobal off.
 
-set config:ipu to 500.
-
 clearScreen.
 
 wait until ship:unpacked.
-wait until addons:rt:haskscconnection(ship).
+wait 2.
 
+// Dependencies
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").
 runOncePath("0:/lib/lib_display").
-init_uplink().
+runOncePath("0:/lib/lib_core").
 
-local mlp to false.
-
-if ship:partsTaggedPattern("mlp"):length > 0 {
-    runOncePath("0:/lib/part/lib_launchpad").
-    set mlp to true.
-}
-
-//Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
-//local stateObj is init_state_obj().
+// Set up the state object used to track program progress. Allows for resuming the mission in event of power loss.
 local program is stateObj["program"].
 
-//Load from cache
-local cache is choose readJson("local:/launchSelectCache.json") if exists("local:/launchSelectCache.json") else readJson("0:/data/launchSelectCache.json").
-
-local launchScript to cache["launchS1"].
-local missionScript to cache["missionS1"].
-local endScript to cache["missionS2"].
-
-local tApo to choose cache["tAp"] if cache["tAp"]:isType("scalar") else cache["tAp"]:toNumber.
-local tPe to choose cache["tPe"] if cache["tPe"]:isType("scalar") else cache["tPe"]:toNumber.
-local tInc to choose cache["tInc"] if cache["tPe"]:isType("scalar") else cache["tInc"]:toNumber.
-local gtAlt to choose cache["gtAlt"] if cache["gtAlt"]:isType("scalar") else cache["gtAlt"]:toNumber.
-local gtPitch to choose cache["gtPitch"] if cache["gtPitch"]:istype("scalar") else cache["gtPitch"]:toNumber.
-local rVal to choose cache["rVal"] if cache["rVal"]:istype("scalar") else cache["rVal"]:toNumber.
-
-//Paths
+// Paths
 local kscPath is "0:/_main/".
 local locPath is core:volume:name + ":/".
 
-
-//Main
+//-- Main --//
 if program = 0 set_program("LAUNCH").
 
 if program = "LAUNCH" {
-    exec_launch(launchScript).
+    exec_launch().
     set_program("MISSION_S1").
 }
 
 set core:bootfilename to "local:/boot/mc".
 
 if program = "MISSION_S1" {
-    exec_mission(missionScript).
+    exec_mission(cache["missionS1"]).
     set_program("MISSION_S2").
 }
 
 if program = "MISSION_S2" {
-    exec_mission(endScript).
+    exec_mission(cache["missionS2"]).
     set_program("COMPLETED").
 }
+//-- End Main --//
 
 
-//Functions
+
+
+// Functions
 local function exec_launch {
-    parameter script.
-
     disp_main().
 
-    //Activate generator on launch pad in case of hold
-    if mlp mlp_gen_on().
-    logStr("Vehicle on external power").
-
-    //Activate fueling in case we forgot to fuel
-    if mlp mlp_fuel_on().
-    logStr("Vehicle fuel loading commenced").
-    wait 1.
-
-    local kscScrPath to kscPath + "/launch/" + script.
-    local locScrPath to locPath + script.
+    // Get the launch script from cache and copy to the local volume
+    local kscScrPath to kscPath + "/launch/" + cache["launchS1"].
+    local locScrPath to locPath + cache["launchS1"].
     if not exists(locScrPath) compile(kscScrPath) to locScrPath.
 
-    runPath(locScrPath, tApo, tPe, tInc, gtAlt, gtPitch, rVal).
+    // Load the launch parameters from cache
+    local lAp       to choose cache["lAp"]      if cache["lAp"]:isType("scalar")    else cache["lAp"]:toNumber.
+    local lPe       to choose cache["lPe"]      if cache["lPe"]:isType("scalar")    else cache["lPe"]:toNumber.
+    local lInc      to choose cache["lInc"]     if cache["lPe"]:isType("scalar")    else cache["lInc"]:toNumber.
+    local lTAlt     to choose cache["lTAlt"]    if cache["lTAlt"]:isType("scalar")  else cache["lTAlt"]:toNumber.
+    local rVal      to choose cache["rVal"]     if cache["rVal"]:istype("scalar")   else cache["rVal"]:toNumber.
+
+    // Check if we are on a modular launch pad.
+    if ship:partsTaggedPattern("mlp"):length > 0 {
+        
+        // Load the MLP lib
+        runOncePath("0:/lib/part/lib_launchpad").
+    
+        // Activate generator on launch pad in case of hold
+        mlp_gen_on().
+        logStr("Vehicle on external power").
+
+        // Activate fueling in case we forgot to fuel
+        mlp_fuel_on().
+        logStr("Vehicle fuel loading commenced").
+        wait 1.
+    }
+
+    // Run the script
+    runPath(locScrPath, lAp, lPe, lInc, lTAlt, rVal).
+
+    // Delete the local copy of the launch script since it is no longer needed
     deletePath(locScrPath).
 
     return true.

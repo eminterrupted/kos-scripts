@@ -1,21 +1,21 @@
 @lazyGlobal off.
 
-parameter holdAlt is 150.
+parameter holdAlt is 500.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/part/lib_chute").
+runOncePath("0:/lib/nav/lib_calc_mnv").
 
 lock steering to up + r(0, 0, 180).
 
-local altPid to setup_alt_pid(holdAlt).
-local altPidVal to 0.
-local pidTgt to holdAlt.
-local tPid to setup_vSpeed_pid(25).
-local tPidVal is 0.
-local tVal is 0.
+local tPid      to setup_alt_pid(holdAlt).
+local tPidVal   to 0.
+local vPid      to setup_vspeed_pid(25).
+local vPidVal   to 0.
+local tVal      to 0.
 
 lock throttle to tVal.
 
@@ -37,12 +37,10 @@ local startTime to time:seconds.
 // Get to altitude
 out_msg("Rapid climbing to altitude: " + holdAlt).
 until alt:radar >= holdAlt - 50 {
-    set altPidVal   to altPid:update(time:seconds, alt:radar).
-    set tPidVal     to tPid:update(time:seconds, verticalSpeed).
+    set tPidVal     to tPid:update(time:seconds, alt:radar).
     set tVal        to max(0, min((tPidVal), 1)).
 
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+    log (time:seconds - startTime) + "," + alt:radar + "," + tPidVal + "," + throttle   to "0:/logs/Lander_Test/tpid_output.csv".
 
     pid_display().
     wait 0.001.
@@ -50,96 +48,80 @@ until alt:radar >= holdAlt - 50 {
 
 out_msg("Slow climbing to altitude: " + holdAlt).
 until alt:radar >= holdAlt - 10 {
-    set tPid:setpoint   to 2.5.
-    set altPidVal       to altPid:update(time:seconds, alt:radar).
-    set tPidVal         to tPid:update(time:seconds, verticalSpeed).
+    set tPidVal         to tPid:update(time:seconds, alt:radar).
     set tVal            to max(0, min((tPidVal), 1)).
 
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+    log (time:seconds - startTime) + "," + alt:radar + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_output.csv".
 
     pid_display().
     wait 0.001.
 }
-
-out_msg("Setting throttle to AltPid mode").
-altPid:reset().
 
 // Reach hover state
 out_msg("Hover loop").
 until check_value(verticalSpeed, 0, 0.1) and check_value(alt:radar, holdAlt, 1) {
 
     // Pidloop update
-    set altPidVal       to altPid:update(time:seconds, alt:radar).
-    set tPidVal         to tPid:update(time:seconds, verticalSpeed).
-    set tVal            to max(0, min((altPidVal), 1)).
+    set tPidVal         to tPid:update(time:seconds, alt:radar).
+    set tVal            to max(0, min((tPidVal), 1)).
 
     // Log out
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+    log (time:seconds - startTime) + "," + alt:radar + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_output.csv".
     
     pid_display().
     wait 0.001.
 }
 
 // Hover
-out_msg("Waiting 5s").
 local tStamp to time:seconds + 5.
 until time:seconds >= tStamp {
-
+    out_msg("Hovering in place for " + round(tStamp - time:seconds) + "s  ").
     // Pidloop update
-    set altPidVal       to altPid:update(time:seconds, alt:radar).
-    set tPidVal         to tPid:update(time:seconds, verticalSpeed).
-    set tVal            to max(0, min((altPidVal), 1)).
+    set tPidVal         to tPid:update(time:seconds, alt:radar).
+    set tVal            to max(0, min((tPidVal), 1)).
 
     // Log out
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+    log (time:seconds - startTime) + "," + alt:radar + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_output.csv".
 
     pid_display().
     wait 0.001.
 }
 
-// Reset the pid to new vspeed params
-out_msg("Resetting pid to vspeed mode").
-tPid:reset().
-set tPid:setpoint to -25.
-
-altPid:reset().
-set altPid:setpoint to 0.
+// Reset the pid
+out_msg("Resetting pid").
+//tPid:reset().
+set tPid:setpoint to 0.
 
 // Trigger to lower landing gear when close to landing
-when alt:radar <= 25 and verticalSpeed < 0 then {
+when alt:radar <= 50 and verticalSpeed < 0 then {
     gear on.
 }
 
-// Descent
-out_msg("Descending").
-until alt:radar <= 60 {
-    set altPidVal       to altPid:update(time:seconds, alt:radar).
-    set tPidVal         to tPid:update(time:seconds, ship:verticalSpeed).
-    set tVal            to max(0, min((tPidVal), 1)).
+set tPid to setup_vspeed_pid(-2.5).
+set tVal to 0.
 
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+// Descent
+out_msg("Free fall").
+until get_burn_dur(verticalSpeed) <= utils:timeToGround() - 3 {
+    set tPidVal to tPid:update(time:seconds, verticalSpeed).
+    
+    log (time:seconds - startTime) + "," + verticalSpeed + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_descent_output.csv".
 
     pid_display().
     wait 0.001.
 }
 
+// Set pid to vertical speed mode
+
 
 // Hoverslam
-out_msg("Descending").
-until alt:radar <= 1.5 {
+out_msg("Powered descent").
+until status = "landed" {
 
-    set pidTgt to max(-10, - (alt:radar / 10)).
-    set tPid:setpoint to pidTgt.
-
-    set tPidVal to tPid:update(time:seconds, ship:verticalSpeed).
+    set tPidVal to tPid:update(time:seconds, verticalSpeed).
     set tVal to max(0, min((tPidVal), 1)).
 
-    log (time:seconds - startTime) + "," + ship:verticalspeed   + "," + tPidVal     to "0:/logs/Lander_Test/tpid_output.csv".
-    log (time:seconds - startTime) + "," + alt:radar            + "," + altPidVal   to "0:/logs/Lander_Test/altpid_output.csv".
+    log (time:seconds - startTime) + "," + verticalSpeed + "," + tPidVal + "," + throttle to "0:/logs/Lander_Test/tpid_descent_output.csv".
 
     pid_display().
     wait 0.001.
@@ -150,6 +132,7 @@ out_msg("Touchdown").
 lock throttle to 0.
 
 
+// Test display controller
 local function pid_display {
     update_display().
     disp_block(list(
@@ -159,7 +142,16 @@ local function pid_display {
         "altitude",     round(ship:altitude), 
         "radar alt",    round(alt:radar), 
         "vertSpeed",    round(verticalSpeed, 2),
-        "tPidVal",      round(tPidVal, 4) 
+        "timetoground", round(utils:timetoground())
+        )
+    ).
+    disp_block(list(
+        "pid",
+        "pid values",
+        "p", round(tPid:pterm, 5),
+        "i", round(tPid:iterm, 5),
+        "d", round(tPid:dterm, 5),
+        "output", round(tPid:output, 2)
         )
     ).
 }

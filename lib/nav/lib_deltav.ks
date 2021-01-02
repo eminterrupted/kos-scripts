@@ -176,6 +176,8 @@ global function get_stages_for_dv {
     parameter _deltaV,                      // Amount of dv needed
               _stageNum is stage:number.    // Stage to start with
 
+    logStr("get_stages_for_dv(" + _deltaV + "," + _stageNum +")").
+
     // The object we'll store the result in
     local stageObj is lex().
 

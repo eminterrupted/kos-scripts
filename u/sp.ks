@@ -218,7 +218,7 @@ local function await_closest_approach {
 // Throttle against our relative velocity vector until we're increasing it
 local function cancel_relative_velocity {
     lock steering to lookDirUp(target:velocity:orbit - ship:velocity:orbit, sun:position).
-    wait_until_ship_settled().
+    wait until shipSettled().
 
     lock throttle to 0.25.
 
@@ -238,7 +238,7 @@ local function cancel_relative_velocity {
 
 local function approach_target {
     lock steering to target:position.
-    wait wait_until_ship_settled().
+    wait until shipSettled().
     
     set tStamp to time:seconds + 2.5.
 

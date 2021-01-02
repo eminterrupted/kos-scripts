@@ -3,6 +3,9 @@
 
 runOncePath("0:/lib/lib_init").
 
+// Common variables for the library
+local cacheFile to "local:/missionCache.json".
+
 //Global lexicon of various anonymous function delegates
 global utils is lex(
         "checkAltHi"        ,{ parameter _alt. return ship:altitude >= _alt.}
@@ -10,9 +13,8 @@ global utils is lex(
         ,"checkRadarHi"     ,{ parameter _alt. return alt:radar >= _alt.}
         ,"checkRadarLo"     ,{ parameter _alt. return alt:radar < _alt.}
         ,"getRVal"          ,{ return ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.}
-        ,"timeToAlt"        ,{ parameter _alt. return time_to_alt_next(_alt).}
-        ,"timeToGround"     ,{ return alt:radar / ship:verticalSpeed.}
-        ,"stgFromTag"       ,{ parameter _p. for t in p:tag:split(".") { if t:startsWith("stgId") { return t:split(":")[1].} return "".}}
+        ,"timeToGround"     ,{ local ttg to choose 0 if ship:verticalSpeed > 0 else alt:radar / ship:verticalSpeed. return ttg. }
+        ,"stgFromTag"       ,{ parameter _p. for t in _p:tag:split(".") { if t:startsWith("stgId") { return t:split(":")[1].} return "".}}
         ).
 
 global info is lex(
@@ -23,11 +25,77 @@ global info is lex(
         )
     ).
 
-
-
 //
 //-- Functions --//
 //
+
+// Cache functions
+
+    // Retrieves a key/value pair from missionCache is present. 
+    // It not present, function will return "null".
+    global function from_cache {
+        parameter _key.
+
+        local cache to readJson(cacheFile).
+        if cache:hasKey(_key) {
+            return cache[_key].
+        } else {
+            return "null".
+        }
+    }
+
+
+    // Initiatilizes the cache file, first checking internally. If
+    // not present, loads from one of two archive locations based 
+    // on ship status
+    global function init_mission_cache {
+        if not exists(cacheFile) {
+            if status = "PRELAUNCH" {
+                copyPath("0:/data/missionCacheParam.json", cacheFile).
+            } else {
+                local kscCache to ksc_cache_file_name().
+                copyPath(kscCache, cacheFile).
+            }
+        }
+
+        return readJson(cacheFile).
+    }
+
+
+    // Simple helper to properly format the file name on the archive
+    local function ksc_cache_file_name {
+        local fileName      to shipName:replace(" ", "_").
+        local fileNameLast_ to fileName:findLast("_").
+        local folderName    to fileName:remove(fileNameLast_, fileName - fileNameLast_).
+
+        return "archive:/logs/" + folderName + "/" + fileName + ".missionCache.json".
+    }
+
+
+    // Function to log the local mission cache to archive for debugging
+    local function log_mission_cache_to_archive {
+        parameter _cache.
+
+        local kscCache to ksc_cache_file_name().
+        writeJson(_cache, kscCache).
+    }
+
+
+    // Takes a key/value pair and writes it to the mission cache
+    // file at "local:/missionCache.json".
+    // Also calls a debugging function to log the cache to archive
+    global function to_cache {
+        parameter _key, 
+                  _val.
+
+        local cache       to lex().
+        set   cache       to readJson(cacheFile).
+        set   cache[_key] to _val.
+        writeJson(cache, cacheFile).
+
+        log_mission_cache_to_archive(cache).
+    }
+
 
 // Check functions
 
@@ -196,15 +264,7 @@ global function time_to_alt_next {
     }
 
 
-// Wait functions
-    // Waits until the ship is settled
-    global function wait_until_ship_settled {
-        parameter tStamp is 5.
-
-        until shipSettled or time:seconds >= tStamp {
-            update_display().
-        }
-    }
+// Vessel state
 
     // Checks if the ship is settled with respect to it's intended orientation
     global function shipSettled {
@@ -215,20 +275,4 @@ global function time_to_alt_next {
         }
 
         return false.
-    }
-
-
-    // Waits until a given timestamp, updates the display
-    global function wait_with_display {
-        parameter tStamp,
-                name is "Wait".
-
-        lock steering to lookDirUp(ship:facing:forevector, sun:position).
-
-        until time:seconds >= tStamp {
-            update_display().
-            disp_timer(tStamp, name).
-        }
-
-        disp_clear_block("timer").
     }

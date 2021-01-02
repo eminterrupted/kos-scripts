@@ -4,6 +4,10 @@ local rtMod to "ModuleRTAntenna".
 local reflectMod to "ModuleDeployableReflector".
 
 //Activate
+global function activate_antenna {
+    parameter p.
+}
+
 global function activate_omni {
     parameter p.
 
@@ -19,14 +23,6 @@ global function activate_dish {
     if m:hasEvent("activate") m:doEvent("activate").
 
     return true.
-}
-
-
-global function activate_comm_reflector {
-    parameter p.
-
-    local m to p:getModule(reflectMod).
-    if m:hasEvent("extend reflector") m:doEvent("extend reflector").
 }
 
 
@@ -47,13 +43,6 @@ global function deactivate_omni {
     if m:hasEvent("deactivate") m:doEvent("deactivate").
 }
 
-
-global function deactivate_comm_reflector {
-    parameter p.
-
-    local m to p:getModule(reflectMod).
-    if m:hasEvent("retract reflector") m:doEvent("retract reflector").
-}
 
 global function get_antenna_fields {
     parameter p.
@@ -89,7 +78,6 @@ global function get_antenna_range {
 
 
 //Dish antenna
-
 global function set_dish_target {
     parameter p,
               pTarget.

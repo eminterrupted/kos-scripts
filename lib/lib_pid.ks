@@ -30,11 +30,11 @@ global function setup_acc_pid {
 
 global function setup_alt_pid {
     parameter pSetpoint, 
-              kP is 0.125,
-              kI is 0.075,
-              kD is 0.075,
+              kP is 0.05,
+              kI is 0.01,
+              kD is 0.1,
               maxOutput is 1,
-              minOutput is -1.
+              minOutput is 0.
 
     local newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
     set newPid:setpoint to pSetpoint.
@@ -44,11 +44,11 @@ global function setup_alt_pid {
 
 global function setup_vspeed_pid {
     parameter pSetpoint, 
-              kP is 0.1,
-              kI is 0.05,
-              kD is 0.02,
+              kP is 0.05,
+              kI is 0.02,
+              kD is 0.01,
               maxOutput is 1,
-              minOutput is -1.
+              minOutput is 0.
 
     local newPid is pidLoop(kP, kI, kD, minOutput, maxOutput).
     set newPid:setpoint to pSetpoint.
