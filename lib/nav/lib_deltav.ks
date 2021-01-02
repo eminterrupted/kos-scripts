@@ -116,7 +116,7 @@ global function get_dv_for_tgt_transfer_next {
 global function get_avail_dv_for_stage {
     parameter stg is stage:number.
 
-    logStr("get_avail_dv_for_stage [stg:" + stg + "]").
+    logStr("[get_avail_dv_for_stage] stg:" + stg).
 
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
     local vMass to get_ves_mass_at_stage(stg).
@@ -125,7 +125,7 @@ global function get_avail_dv_for_stage {
         set stg to stg - 1.
         set eList to ship:partsTaggedPattern("eng.stgId:" + stg). 
         if eList = 0 {
-            logStr("return: -1"). 
+            logStr("[get_avail_dv_for_stage]-> return: -1"). 
             return -1.
         }
     }
@@ -135,7 +135,8 @@ global function get_avail_dv_for_stage {
 
     local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
     local spentMass to vMass - fuelMass.
-    logStr("exhVel: return: " + exhVel * ln(vMass / spentMass)).
+    
+    logStr("[get_avail_dv_for_stage]-> return: " + exhVel * ln(vMass / spentMass)).
     return exhVel * ln(vMass / spentMass).
 }
 
@@ -176,7 +177,7 @@ global function get_stages_for_dv {
     parameter _deltaV,                      // Amount of dv needed
               _stageNum is stage:number.    // Stage to start with
 
-    logStr("get_stages_for_dv(" + _deltaV + "," + _stageNum +")").
+    logStr("[get_stages_for_dv] _dV: " + _deltaV + ";  _stageNum: " + _stageNum).
 
     // The object we'll store the result in
     local stageObj is lex().

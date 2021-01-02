@@ -47,7 +47,7 @@ global function get_burn_dur_by_stage {
 global function get_burn_dur {
     parameter _deltaV.  // Total delta v of the burn
     
-    logStr("get_burn_dur called with dV[" + _deltaV + "]").
+    logStr("[get_burn_dur] dV: " + _deltaV).
 
     // Variables
     local allDur   is 0.    // Var for total duration of the burn
@@ -63,6 +63,8 @@ global function get_burn_dur {
         set stageDur to get_burn_dur_by_stage(dvObj[key], key).
         set allDur to allDur + stageDur.
     }
+
+    logStr("[get_burn_dur] -> return " + allDur).
 
     // Total duration of the burn
     return allDur.

@@ -41,21 +41,25 @@ global function get_engs_obj_by_stg {
 //Returns engines by a given stage on the current vessel
 global function get_engs_for_stage {
     parameter pStage is stage:number.
-    logStr("get_engs_for_stg [stg:" + pstage + "]").
+    logStr("[get_engs_for_stg] pStage:" + pstage).
 
-    local ret is ship:partsTaggedPattern("eng.stgId:" + pStage).
-    return ret.
+    local eList is ship:partsTaggedPattern("eng.*.stgId:" + pStage).
+
+    logStr("[get_engs_for_stage]-> return: " + eList:join(";")).
+    return eList.
 }
 
 
 global function get_engs_for_next_stage {
     
-    logStr("get_engs_for_next_stg").
+    logStr("[get_engs_for_next_stg]").
 
     local eList is list().
     from {local n is 1.} until eList:length > 0 step { set n to n + 1.} do {
         set eList to get_engs_for_stage(stage:number - n).
     }
+
+    logStr("[get_engs_for_next_stg]-> return: " + eList:join(";")).
     return eList.
 }
 
@@ -63,7 +67,7 @@ global function get_engs_for_next_stage {
 global function get_next_stage_with_eng {
     parameter stg is stage:number.
     
-    logStr("get_next_stage_with_eng [stg:" + stg + "]").
+    logStr("[get_next_stage_with_eng] stg:" + stg).
     
     local eList is list().
     from { local n is stg - 1.} until eList:length > 0 or n < -1 step { set n to n - 1.} do {
@@ -71,7 +75,7 @@ global function get_next_stage_with_eng {
         set eList to get_engs_for_stage(stg).
     }
 
-    logStr("return: " + stg).
+    logStr("[get_next_stage_with_eng]-> return: " + stg).
     return stg.
 }
 
@@ -79,6 +83,8 @@ global function get_next_stage_with_eng {
 //Returns active engines
 global function get_active_engs {
     parameter pList is ship:parts.
+
+    logStr("[get_active_engs] pList: " + pList:join(";")).
 
     set pList to get_engs().
     local eList is list().
@@ -89,6 +95,8 @@ global function get_active_engs {
         }
     }
     
+    logStr("[get_active_engs]-> return: " + eList:join(";")).
+
     return eList.
 }
 

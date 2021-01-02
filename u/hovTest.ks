@@ -19,6 +19,11 @@ local tVal      to 0.
 
 lock throttle to tVal.
 
+
+// Writing the deltaV and mass calculations to cache
+
+
+
 // Set up a trigger to arm chute when fuel is low
 out_msg("Arming chutes").
 when ship:liquidfuel <= 0.1 then {

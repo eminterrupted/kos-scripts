@@ -4,58 +4,56 @@
 //Delegates    
     //Mass by stage
     global get_dry_mass_at_stage to get_mass_at_mode_stage@:bind("dry").
-    //global get_dry_mass_for_stage to get_mass_for_mode_stage@:bind("dry").
     global get_mass_at_stage to get_mass_at_mode_stage@:bind("mass").
-    //global get_mass_for_stage to get_mass_for_mode_stage@:bind("mass").
-    //global get_wet_mass_at_stage to get_mass_at_mode_stage@:bind("wet").
-    //global get_wet_mass_for_stage to get_mass_for_mode_stage@:bind("wet").
-
-
-    //Mass by parts list
-    //global get_dry_mass to get_mass_for_mode_parts@:bind("dry").
-    //global get_mass to get_mass_for_mode_parts@:bind("mass").
-    //global get_wet_mass to get_mass_for_mode_parts@:bind("wet").
 
 //--
 global function get_mass_for_stage_next {
-    parameter pStage.
+    parameter _stg.
+
+    logStr("[get_mass_for_stage_next] _stg: " + _stg).
 
     local stgMass to 0. 
 
     for p in ship:parts {
-        if p:stage = pStage set stgMass to stgMass + p:mass. 
-        if p:stage = pStage + 1 and not (p:isType("engine")) set stgMass to stgMass + p:mass. 
+        if p:stage = _stg set stgMass to stgMass + p:mass. 
+        if p:stage = _stg + 1 and not (p:isType("engine")) set stgMass to stgMass + p:mass. 
     }
+
+    logStr("[get_mass_for_stage_next]-> return: " + stgMass).
 
     return stgMass.
 }
 
 
 global function get_mass_for_mode_parts {
-    parameter pMode,
-              pList.
+    parameter _mode,
+              _pList.
 
-    local stageMass to 0.
+    logStr("[get_mass_for_mode_parts] _mode: " + _mode + "   _pList: " + _pList:join(";")).    
+
+    local stgMass to 0.
     
-    if pMode = "mass" {
-        for p in pList {
-            set stageMass to stageMass + p:mass.
+    if _mode = "mass" {
+        for p in _pList {
+            set stgMass to stgMass + p:mass.
         }
     }
 
-    else if pMode = "wet" {
-        for p in pList {
-            set stageMass to stageMass + p:wetMass.
+    else if _mode = "wet" {
+        for p in _pList {
+            set stgMass to stgMass + p:wetMass.
         }
     }
 
-    else if pMode = "dry" {
-        for p in pList {
-            set stageMass to stageMass + p:dryMass.
+    else if _mode = "dry" {
+        for p in _pList {
+            set stgMass to stgMass + p:dryMass.
         }
     }
 
-    return stageMass.
+    logStr("[get_mass_for_mode_parts]-> return: " + stgMass).
+
+    return stgMass.
 }
 
 
@@ -73,74 +71,87 @@ global function get_res_mass_for_part {
 }
 
 
-global function get_res_mass_for_stg {
-    parameter _stg, 
-              _res.
+// TODO
+// global function get_res_mass_for_stg {
+//     parameter _stg, 
+//               _res.
 
-    local stgId to 0.
-    local stgList to list().
+//     local stgId to 0.
+//     local stgList to list().
 
-    for p in ship:parts {
-        set stgId to get_stg_id_from_tag(p).
+//     for p in ship:parts {
+//         set stgId to get_stg_id_from_tag(p).
         
-    }
-}
+//     }
+
+//     return false.
+// }
 
 
 
 global function get_mass_at_mode_stage {
-    parameter pMode,
-              pStage.
+    parameter _mode,
+              _stg.
 
-    local stageMass to 0.
+    logStr("[get_mass_at_mode_stage] _mode: " + _mode + "  _stg: " + _stg).    
+
+
+    local stgMass to 0.
     
-    if pMode = "mass" {
+    if _mode = "mass" {
         for p in ship:parts {
-            if p:stage <= pStage set stageMass to stageMass + p:mass.
+            if p:stage <= _stg set stgMass to stgMass + p:mass.
         }
     }
 
-    else if pMode = "wet" {
+    else if _mode = "wet" {
         for p in ship:parts {
-            if p:stage <= pStage set stageMass to stageMass + p:wetMass.
+            if p:stage <= _stg set stgMass to stgMass + p:wetMass.
         }
     }
 
-    else if pMode = "dry" {
+    else if _mode = "dry" {
         for p in ship:parts {
-            if p:stage <= pStage set stageMass to stageMass + p:dryMass.
+            if p:stage <= _stg set stgMass to stgMass + p:dryMass.
         }
     }
 
-    return stageMass.
+    logStr("[get_mass_at_mode_stage]-> return: " + stgMass).
+
+
+    return stgMass.
 }
 
 
 global function get_mass_for_mode_stage {
-    parameter pMode,
-              pStage.
+    parameter _mode,
+              _stg.
 
-    local stageMass to 0.
+    logStr("[get_mass_for_mode_stage] _mode: " + _mode + "  _stg: " + _stg).    
 
-    if pMode = "mass" {
+    local stgMass to 0.
+
+    if _mode = "mass" {
         for p in ship:parts {
-            if p:stage = pStage set stageMass to stageMass + p:mass.
+            if p:stage = _stg set stgMass to stgMass + p:mass.
         }
     }
 
-    else if pMode = "wet" {
+    else if _mode = "wet" {
         for p in ship:parts {
-            if p:stage = pStage set stageMass to stageMass + p:wetMass.
+            if p:stage = _stg set stgMass to stgMass + p:wetMass.
         }
     }
 
-    else if pMode = "dry" {
+    else if _mode = "dry" {
         for p in ship:parts {
-            if p:stage = pStage set stageMass to stageMass + p:dryMass.
+            if p:stage = _stg set stgMass to stgMass + p:dryMass.
         }
     }
 
-    return stageMass.
+    logStr("[get_mass_for_mode_stage]-> return: " + stgMass).
+
+    return stgMass.
 }
 
 
@@ -202,17 +213,17 @@ global function get_ship_mass_at_launch {
 
 
 global function get_ves_mass_at_stage {
-    parameter stgId.
+    parameter _stg.
 
-    logStr("get_vmass_at_stg [stgId:" + stgId + "]").
+    logStr("[get_ves_mass_at_stage] stgId:" + _stg).
 
-    local vmass is 0.
-    from { local n to stgId. } until n < -1 step { set n to n - 1. } do {
+    local vMass is 0.
+    from { local n to _stg. } until n < -1 step { set n to n - 1. } do {
         for p in ship:parts { 
-            if p:tag:matchespattern("stgId:" + n) set vmass to vmass + p:mass.
+            if p:tag:matchespattern("stgId:" + n) set vMass to vMass + p:mass.
         }
     }
 
-    logStr("return vmass[" + vmass + "]").
-    return vmass.
+    logStr("[get_ves_mass_at_stage]-> return: " + vMass).
+    return vMass.
 }
