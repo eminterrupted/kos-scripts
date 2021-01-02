@@ -119,17 +119,20 @@ global function get_avail_dv_for_stage {
     logStr("[get_avail_dv_for_stage] _stg:" + _stg).
 
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
-    local vMass to get_ves_mass_at_stage(_stg).
     local eList is ship:partsTaggedPattern("eng.stgId:" + _stg).
-    if eList:length = 0 {
-        set _stg to _stg - 1.
-        set eList to ship:partsTaggedPattern("eng.stgId:" + _stg). 
-        if eList = 0 {
-            logStr("[get_avail_dv_for_stage]-> return: -1"). 
-            return -1.
+    if eList:length = 0 { 
+        logStr("[get_avail_dv_for_stage]-> return 0. No engines in provided stage").
+        return 0.
         }
-    }
+    //     //set _stg to _stg - 1.
+    //     set eList to ship:partsTaggedPattern("eng.stgId:" + _stg). 
+    //     if eList = 0 {
+    //         logStr("[get_avail_dv_for_stage]-> return: -1"). 
+    //         return -1.
+    //     }
+    // }
     
+    local vMass to get_ves_mass_at_stage(_stg).
     local exhVel is get_engs_exh_vel(eList, ship:altitude).
     local stgMassObj to get_stage_mass_obj(_stg).
 
@@ -187,7 +190,7 @@ global function get_stages_for_dv {
 
     // Loop until either the needed DeltaV is accounted for, or
     // we run out of stages
-    until _deltaV <= 0 or _stageNum <= -1 {
+    until _deltaV <= 0 or _stageNum < -1 {
         // Get the deltaV possible for the stage we are on
         local dvStg is get_avail_dv_for_stage(_stageNum).
 
@@ -211,9 +214,12 @@ global function get_stages_for_dv {
 
             // Get the next stage that has engines. This is if the 
             // previous stage did not already cover what we needed
-            set _stageNum to get_next_stage_with_eng(_stageNum).
+            set _stageNum to _stageNum - 1.
+            //set _stageNum to get_next_stage_with_eng(_stageNum).
         }
     }
+
+    logStr("[get_stages_for_dv]-> return: " + stageObj).
 
     // DeltaV for each stage needed to execute the burn
     return stageObj.

@@ -45,7 +45,7 @@ global function setup_alt_pid {
 global function setup_vspeed_pid {
     parameter pSetpoint, 
               kP is 0.05,
-              kI is 0.02,
+              kI is 0.025,
               kD is 0.01,
               maxOutput is 1,
               minOutput is 0.
