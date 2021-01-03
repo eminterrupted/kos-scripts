@@ -2,6 +2,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
+runOncePath("0:/lib/lib_core").
 //
 
 // -- Functions -- //
@@ -265,7 +266,19 @@ runOncePath("0:/lib/lib_init").
     }
 
 
-    //
+    // Current thrust for the vessel
+    global function active_thrust {
+
+        if verbose logStr("[active_thrust]").
+        local allThr to 0.
+
+        for e in active_engs() {
+            set allThr to allThr + e:thrust.
+        }
+
+        if verbose logStr("[active_thrust]-> return: " + allThr).
+        return allThr.
+    }
 
 
     // Return the possible combined thrust for a list of engines at a specific
@@ -293,7 +306,11 @@ runOncePath("0:/lib/lib_init").
 
 
 // TWR
-    // Returns the current TWR for the vessel.
+    // Returns the current TWR for the vessel. Takes throttle position into account.
     global function get_cur_twr {
-        return ship:thrust / (ship:mass * body:mu / (ship:altitude + body:radius)^2).
+        return active_thrust() / (ship:mass * body:mu / (ship:altitude + body:radius)^2).
+    }
+
+    global function get_poss_twr {
+        return ship:availablethrust / (ship:mass * body:mu / (ship:altitude + body:radius)^2).
     }
