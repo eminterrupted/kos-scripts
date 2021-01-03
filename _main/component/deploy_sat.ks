@@ -46,7 +46,9 @@ until runmode = 99 {
     else if runmode = 30 {
         set sVal to ship:prograde. 
         unset tStamp.
-        deploy_payload().
+        until stage:number <= 0 {
+            safe_stage().
+        }
 
         set runmode to set_rm(99).
     }

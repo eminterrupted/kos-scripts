@@ -103,7 +103,7 @@ local function main {
             out_msg("Checking argPe").
             if not check_value(ship:obt:argumentofperiapsis, target:orbit:argumentofperiapsis, 10) {
                 out_msg("argPe out of range, identifying maneuver").
-                runpath("0:/_main/adhoc/simple_argpe_change", target:orbit:argumentofperiapsis, target:orbit:lan).
+                runpath("0:/_adhoc/simple_arg_pe_change", target:orbit:argumentofperiapsis, target:orbit:lan).
                 out_msg().
             }
             set runmode to set_rm(15).
@@ -152,7 +152,7 @@ local function main {
 
         else if runmode = 40 {
             if target:distance > 5000 {
-                runPath("0:/_main/adhoc/rendezvous_phased_approach", _tgt).
+                runPath("0:/_adhoc/rendezvous_phased_approach", _tgt).
             }
 
             set runmode to set_rm(45).

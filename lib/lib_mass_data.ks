@@ -74,16 +74,6 @@ global function get_res_mass_for_part {
 // TODO - cache resource data for stages in the global 
 // cache file. Needed for rcs (and other) dv / res calcs
 global function get_res_mass_for_stg {
-    parameter _stg, 
-              _res.
-
-    local stgId to 0.
-    local stgList to list().
-
-    for p in ship:parts {
-        set stgId to get_stg_id_from_tag(p).
-        
-    }
 
     return false.
 }

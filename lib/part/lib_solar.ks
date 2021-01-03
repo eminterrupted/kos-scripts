@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_util").
 
 local solMod to "ModuleDeployableSolarPanel".
 

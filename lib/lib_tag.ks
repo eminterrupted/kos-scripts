@@ -46,8 +46,6 @@ local function tag_init_ref {
 global function tag_clear {
     parameter inList to ship:parts.
 
-    local func to "[tag_clear_tags] ".
-
     for p in inList {
         set p:tag to "".
     }
@@ -56,8 +54,6 @@ global function tag_clear {
 global function tag_parts_by_title {
     
     parameter inList.
-    local func to "[tag_parts_by_title] ".
-
 
     global idxObj to lex().
 

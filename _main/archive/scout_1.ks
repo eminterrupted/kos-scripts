@@ -98,7 +98,6 @@ until runmode = 99 {
     lock steering to sVal.
 
     update_display().
-    disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tgtPitch).
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
