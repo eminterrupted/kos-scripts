@@ -19,7 +19,7 @@ runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_misc_parts").
 runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
-runOncePath("0:/lib/data/engine/lib_thrust").
+
 
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_calc_mnv").

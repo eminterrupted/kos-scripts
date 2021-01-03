@@ -21,7 +21,6 @@ global info is lex(
 
 
 // Check functions
-
     // Checks whether a value falls within a target range
     global function check_value {
         parameter _val,
@@ -69,21 +68,20 @@ global info is lex(
     }
 
 
-    // Checks a given module for presence of an event, and does it 
-    // if available
+    // Checks a given module for presence of a field, and 
+    // returns it if present, false if not 
     global function get_field {
-        parameter _m,       // Module
-                _field.   // Event to do if present
+        parameter _m,
+                  _field.
 
         if _m:hasField(_field) {
-            _m:getField(_field).
-            return true.
+            return _m:getField(_field).
         } else {
             return false.
         }
     }
 
-    // Returns alls fields for a given module in a lex
+    // Returns an obj with all fields for a given module
     global function get_module_fields {
     parameter m.
 

@@ -16,20 +16,20 @@ runOncePath("0:/lib/data/engine/lib_isp").
 
 // Return engine lists
 // Returns a list of all engines for the current vessel
-global function get_active_engs {
-    if verbose logStr("[get_active_engs]").
+global function active_engs {
+    if verbose logStr("[active_engs]").
 
     local eList is list().
     for p in ship:partsTaggedPattern("eng.") {
         if p:ignition eList:add(p).
     }
 
-    if verbose logStr("[get_active_engs]-> return: " + eList).
+    if verbose logStr("[active_engs]-> return: " + eList).
     return eList.
 }
 
 // Returns all engines for a given ship, defaults to current vessel
-global function get_ship_engs {
+global function ship_engs {
     parameter _ves is ship.
 
     if verbose logStr("[get_ship_engs] _ves: " + _ves).
@@ -45,7 +45,7 @@ global function get_ship_engs {
 
 
 // Returns engines that will be lit for a given stage. 
-global function get_engs_for_stage {
+global function engs_for_stg {
     parameter pStage is stage:number.
     
     if verbose logStr("[get_engs_for_stg] pStage:" + pstage).
@@ -58,13 +58,13 @@ global function get_engs_for_stage {
 
 
 // Returns the next set of engines that will be lit after the current stage
-global function get_engs_for_next_stage {
+global function engs_for_next_stg {
     
     if verbose logStr("[get_engs_for_next_stg]").
 
     local eList is list().
     from {local n is 1.} until eList:length > 0 step { set n to n + 1.} do {
-        set eList to get_engs_for_stage(stage:number - n).
+        set eList to engs_for_stg(stage:number - n).
     }
 
     if verbose logStr("[get_engs_for_next_stg]-> return: " + eList:join(";")).
@@ -73,7 +73,7 @@ global function get_engs_for_next_stage {
 
 
 // Given a starting stage number, returns the next stage number with engines
-global function get_next_stage_with_eng {
+global function next_stg_with_eng {
     parameter stg is stage:number.
     
     if verbose logStr("[get_next_stage_with_eng] stg:" + stg).
@@ -81,7 +81,7 @@ global function get_next_stage_with_eng {
     local eList is list().
     from { local n is stg - 1.} until eList:length > 0 or n < -1 step { set n to n - 1.} do {
         set stg to n.
-        set eList to get_engs_for_stage(stg).
+        set eList to engs_for_stg(stg).
     }
 
     if verbose logStr("[get_next_stage_with_eng]-> return: " + stg).
@@ -93,7 +93,7 @@ global function get_next_stage_with_eng {
 // list of engines. Used for maneuver calculations and telemetry displays.
 // Will return most data from cache if present. 
 global function eng_perf_obj {
-    parameter eList is get_ship_engs().
+    parameter eList is ship_engs().
 
     if verbose logStr("[get_eng_perf_obj] eList: " + eList:join(";")).
 
@@ -103,26 +103,18 @@ global function eng_perf_obj {
     // Loop through the engines in the list. Only update possible changed values 
     // if the key already exists, else create the initial dictionary for the engine
     for e in elist {
-        if perfObj:hasKey(e:uid) {
-            set perfObj[e:uid]["thr"]["poss"] to e:possibleThrust.
+        local id to e:name + "|" + e:uid.
+        if perfObj:hasKey(id) {
+            set perfObj[id]["possThr"] to e:possibleThrust.
         } else {
-            set perfObj[e:uid] to lex(
-                "part",      e,
-                "massStage", e:decoupledIn,
-                "burnStage", e:stage,
-                "thr",    lex(
-                    "poss",  e:possiblethrust,
-                    "sl",    e:possiblethrustat(body:atm:sealevelpressure),
-                    "vac",   e:possibleThrustAt(0)
-                ),
-                "isp",    lex(
-                    "sl",    e:slisp,
-                    "vac",   e:visp
-                ),
-                "exhvel", lex(
-                    "sl",    get_eng_exh_vel(e, 0),
-                    "vac",   get_eng_exh_vel(e, body:atm:height)
-                )
+            set perfObj[id] to lex(
+                "tag",      e:tag,
+                "massStg",  e:decoupledIn,
+                "burnStg",  e:stage,
+                "possThr",  e:possibleThrust,
+                "vThr",     e:possibleThrustAt(0),
+                "vIsp",     e:visp,
+                "vExhVel",  get_eng_exh_vel(e, body:atm:height)
             ).
         }
     }
@@ -163,4 +155,50 @@ global function get_eng_exh_vel {
 
     if verbose logStr("[get_eng_exh_vel]-> return: " + exhVel).
     return exhVel.
+}
+
+// Return the current available combined thrust for a list of engines at a 
+// specific atmospheric pressure. Default pressure is vacuum.
+global function avail_thr_for_eng_list {
+    parameter _engList,
+              _pres is 0.
+
+    if verbose logStr("[avail_thr_for_eng_list] _engList: " + _engList:join(";") + "   _pres: " + _pres).
+    local allThr to 0.
+
+    if _pres > 0 {
+        for e in _engList {
+            set allThr to allThr + e:availableThrustAt(_pres).
+        }
+    } else {
+        for e in _engList {
+            set allThr to allThr + e:availableThrust.
+        }
+    }
+
+    if verbose logStr("[avail_thr_for_eng_list]-> return: " + allThr).
+    return allThr.
+}
+
+// Return the possible combined thrust for a list of engines at a specific
+// atmospheric pressure. Default pressure is vacuum.
+global function poss_thr_for_eng_list {
+    parameter _engList,
+              _pres is 0.
+
+    if verbose logStr("[poss_thr_for_eng_list] _engList: " + _engList:join(";") + "   _pres: " + _pres).
+    local allThr to 0.
+
+    if _pres > 0 {
+        for e in _engList {
+            set allThr to allThr + e:possibleThrustAt(_pres).
+        }
+    } else {
+        for e in _engList {
+            set allThr to allThr + e:possibleThrust.
+        }
+    }
+
+    if verbose logStr("[poss_thr_for_eng_list]-> return: " + allThr).
+    return allThr.
 }

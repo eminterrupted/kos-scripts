@@ -35,8 +35,7 @@ local kscCacheFile  to ksc_cache_file_name().
             if status = "PRELAUNCH" {
                 copyPath("0:/data/missionCacheParam.json", cacheFile).
             } else {
-                local kscCache to ksc_cache_file_name().
-                copyPath(kscCache, cacheFile).
+                copyPath(kscCacheFile, cacheFile).
             }
         }
 
@@ -81,15 +80,14 @@ local kscCacheFile  to ksc_cache_file_name().
 // String formatting
     // Formats a timestamp into a pretty-printed string
     global function format_timestamp {
-        parameter pSec.
+        parameter _t.
 
-        local hour is floor(pSec / 3600).
-        local min is floor((pSec / 60) - (hour * 60)).
-        local sec is round(pSec - (hour * 3600 + min * 60)).
+        local hour is floor(_t / 3600).
+        local min is floor((_t / 60) - (hour * 60)).
+        local sec is round(_t - (hour * 3600 + min * 60)).
 
         return hour + "h " + min + "m " + sec + "s".
     }
-
 
 
 // Terminal

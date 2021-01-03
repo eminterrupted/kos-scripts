@@ -17,7 +17,7 @@ global function get_isp {
     local relThr is 0. 
     local stgThr is 0.
 
-    local eList is get_engs_for_stage(stage:number).
+    local eList is engs_for_stg(stage:number).
     
     for eng in eList {
         set stgThr to stgThr + eng:thrust.
@@ -38,7 +38,7 @@ global function get_isp {
 
 global function get_avail_isp_for_parts {
     parameter _pres is body:atm:altitudePressure(ship:altitude),
-              _pList is get_engs_for_stage(stage:number).
+              _pList is engs_for_stg(stage:number).
 
     if verbose logStr("[get_avail_isp_for_parts] _pres: " + _pres + "   _pList: " + _pList:join(";")).
 
@@ -66,7 +66,7 @@ global function get_avail_isp_for_parts {
 // Returns combined isp for a set of active engines at a given pressure.
 // Default parameters are all active engines, and current altitude
 global function get_avail_isp {
-    parameter _eList is get_active_engs(),
+    parameter _eList is active_engs(),
               _pres is body:atm:altitudepressure(ship:altitude).
    
     if verbose logStr("[get_avail_isp] _pres: " + _pres + "   _eList: " + _eList:join(";")).
@@ -97,7 +97,7 @@ global function get_avail_isp_for_alt {
     parameter pAlt is ship:altitude, 
               pStage is stage:number. 
 
-    local eList is get_engs_for_stage(pStage).
+    local eList is engs_for_stg(pStage).
 
     return get_avail_isp_for_parts(body:atm:altitudePressure(pAlt), eList).
 }

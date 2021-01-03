@@ -17,32 +17,20 @@ global function get_burn_dur_by_stage {
 
     // Returns the engines in the stage if the provided stage has any.
     // If no engines found, returns the next stage engines
-    local engineList to get_engs_for_stage(_stageNum).
+    local engineList    to engs_for_stg(_stageNum).
     if engineList:length = 0 {
         if verbose logStr("[get_burn_dur_by_stage]-> return: 0. No engines found in stage: " + _stageNum).
         return 0.
     }
     
-    // Engine performance object for the given list of engines.
-    // This includes thrust, isp, and exhaust velocity for each engine
-    local enginePerf to eng_perf_obj(engineList).
-
-    // Effective exhaust velocity of the stage, based on the effective isp
-    local exhaustVel to get_engs_exh_vel(engineList, max(0, ship:apoapsis)).
-
-    // Mass of the vessel at this stage (including all later stage mass)
-    local vesselMass to get_ves_mass_at_stage(_stageNum).
-
-    // Add up the thrust for each engine in the stage, using the 
-    // possible thrust method (which returns thrust even when engine is off)
-    local stageThrust to 0.
-    for e in enginePerf:keys {
-        set stageThrust to stageThrust + enginePerf[e]["thr"]["poss"].
-    }
+    // Get performance data for the stage
+    local stgThr        to poss_thr_for_eng_list(engineList).
+    local exhaustVel    to get_engs_exh_vel(engineList, max(0, ship:apoapsis)).
+    local vesselMass    to get_ves_mass_at_stage(_stageNum).
 
     // Returns the duration that this stage will take to burn its fuel
     // This is basically the rocket equation
-    local burnDur to ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
+    local burnDur       to ((vesselMass * exhaustVel) / stgThr) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
 
     if verbose logStr("[get_burn_dur_by_stage]-> return: " + burnDur).
     return burnDur.
