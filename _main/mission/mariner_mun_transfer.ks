@@ -104,11 +104,16 @@ local function main {
             set runmode to 15.
         }
 
-        //Returns needed parameters for the transfer burn
+        // Gets the transfer parameters for the burn
+        // Adds the node
         else if runmode = 15 {
-            out_msg("Getting transfer object").
+            out_msg("Getting transfer object and adding node").
             if not hasTarget set target to tgtBody.
             set mnvObj to get_transfer_obj().
+
+            set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
+            add mnvNode. 
+
             set runmode to 25.
         }
 
@@ -116,16 +121,17 @@ local function main {
         // Center the node at 60s earlier than predicted to ensure we have the 
         // proper orbit direction on arrival
         else if runmode = 25 {
-            out_msg("Adding transfer node").
+            if  not hasNode {
+                out_msg("No node on flight plan!").
+                set runmode to 15. 
+            } else {
+                out_msg("Optimimzing transfer node").
+                local accuracy is 0.001.
+                set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
+                set mnvObj to get_burn_obj_from_node(mnvNode).
 
-            set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
-            add mnvNode. 
-
-            local accuracy is 0.001.
-            set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
-            set mnvObj to get_burn_obj_from_node(mnvNode).
-
-            set runmode to 30.
+                set runmode to 30.
+            }
         }
 
         //Warps to the burn node

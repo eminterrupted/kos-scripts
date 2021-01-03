@@ -220,14 +220,14 @@ global function optimize_node_list {
         set _data to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
         local nodeScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody)["score"].
 
-        // print "_tgtVal    : " + _tgtVal at (2, 20).
-        // print "_compMode  : " + _compMode at (2, 21).
-        // print "_data[eta] : " + _data[0] at (2, 22).
-        // print "_data[rad] : " + _data[1] at (2, 23).
-        // print "_data[nrm] : " + _data[2] at (2, 24).
-        // print "_data[prg] : " + _data[3] at (2, 25).
+        // print "_tgtVal    : " + _tgtVal at (2, 40).
+        // print "_compMode  : " + _compMode at (2, 41).
+        // print "_data[eta] : " + _data[0] at (2, 42).
+        // print "_data[rad] : " + _data[1] at (2, 43).
+        // print "_data[nrm] : " + _data[2] at (2, 44).
+        // print "_data[prg] : " + _data[3] at (2, 45).
 
-        wait 0.001.
+        wait 0.01.
 
         if nodeScore >= limLo and nodeScore <= limHi {
             break.
