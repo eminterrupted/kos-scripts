@@ -4,7 +4,8 @@
 runOncePath("0:/lib/lib_init").
 
 // Common variables for the library
-local cacheFile to "local:/missionCache.json".
+local cacheFile     to "local:/missionCache.json".
+local kscCacheFile  to ksc_cache_file_name().
 
 //
 //-- Functions --//
@@ -47,18 +48,17 @@ local cacheFile to "local:/missionCache.json".
     local function ksc_cache_file_name {
         local fileName      to shipName:replace(" ", "_").
         local fileNameLast_ to fileName:findLast("_").
-        local folderName    to fileName:remove(fileNameLast_, fileName - fileNameLast_).
+        local folderName    to fileName:remove(fileNameLast_, fileName:length - fileNameLast_).
 
         return "archive:/logs/" + folderName + "/" + fileName + ".missionCache.json".
     }
 
 
     // Function to log the local mission cache to archive for debugging
-    local function log_mission_cache_to_archive {
+    local function log_cache_to_archive {
         parameter _cache.
 
-        local kscCache to ksc_cache_file_name().
-        writeJson(_cache, kscCache).
+        writeJson(_cache, kscCacheFile).
     }
 
 
@@ -74,7 +74,7 @@ local cacheFile to "local:/missionCache.json".
         set   cache[_key] to _val.
         writeJson(cache, cacheFile).
 
-        log_mission_cache_to_archive(cache).
+        log_cache_to_archive(cache).
     }
 
 

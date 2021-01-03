@@ -11,7 +11,7 @@ runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/data/engine/lib_thrust").
 runOncePath("0:/lib/data/engine/lib_isp").
-runOncePath("0:/lib/data/engine/lib_twr").
+runOncePath("0:/lib/data/engine/lib_engine").
 
 local dispObj is lex().
 
@@ -213,7 +213,7 @@ global function disp_eng_perf_data {
     print "THRUST:        " + round(ship:availablethrust, 2) + "     " at (h1,cr).
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
     cr.
-    print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).
+    print "TWR:           " + round(get_cur_twr(), 2) + "      "  at (h1,cr).
     print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,cr).
 
     return pos.

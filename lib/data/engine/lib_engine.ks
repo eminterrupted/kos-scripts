@@ -6,6 +6,15 @@ runOncePath("0:/lib/data/engine/lib_isp").
 
 // -- Functions -- //
 
+// Engine performance
+
+    // Returns the current twr for the vessel
+    global function get_cur_twr {
+        return ship:availableThrust / (ship:mass * body:mu / body:radius^2).
+    }
+
+
+// Return engine lists
 // Returns a list of all engines for the current vessel
 global function get_active_engs {
     if verbose logStr("[get_active_engs]").

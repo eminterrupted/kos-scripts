@@ -18,7 +18,7 @@ runOncePath("0:/lib/data/ship/lib_mass").
 runOncePath("0:/lib/data/engine/lib_engine").
 runOncePath("0:/lib/data/engine/lib_isp").
 runOncePath("0:/lib/data/engine/lib_thrust").
-runOncePath("0:/lib/data/engine/lib_twr").
+
 runOncePath("0:/lib/data/ship/lib_mass").
 
 clearScreen.

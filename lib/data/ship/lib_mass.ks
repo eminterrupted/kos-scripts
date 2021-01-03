@@ -3,8 +3,8 @@
 
 //Delegates    
     //Mass by stage
-    global get_dry_mass_at_stage to get_mass_at_mode_stage@:bind("dry").
-    global get_mass_at_stage to get_mass_at_mode_stage@:bind("mass").
+    //global get_dry_mass_at_stage to get_mass_at_mode_stage@:bind("dry").
+    //global get_mass_at_stage to get_mass_at_mode_stage@:bind("mass").
 
 //--
 global function get_mass_for_stage_next {
@@ -88,37 +88,42 @@ global function get_res_mass_for_part {
 // }
 
 
+// Returns the dry mass for the vessel at a given stage.
+global function get_dry_mass_at_stage {
+    parameter _stg.
 
-global function get_mass_at_mode_stage {
-    parameter _mode,
-              _stg.
+    if verbose logStr("[get_dry_mass_at_stage] _stg: " + _stg).    
 
-    logStr("[get_mass_at_mode_stage] _mode: " + _mode + "  _stg: " + _stg).    
+    local dryMass to 0.
+    if _stg = stage:nextdecoupler:stage {
+        set dryMass to ship:drymass.
+    } else {
+        for p in ship:parts {
+            if p:stage <= _stg set dryMass to dryMass + p:drymass.
+        }
+    }
 
+    if verbose logStr("[get_dry_mass_at_stage]-> return: " + dryMass).
+    return dryMass.
+}
+
+
+// Returns the current mass for the vessel at the provided stage
+global function get_mass_at_stage {
+    parameter _stg.
+
+    if verbose logStr("[get_mass_at_stage] _stg: " + _stg).    
 
     local stgMass to 0.
-    
-    if _mode = "mass" {
+    if _stg = stage:nextdecoupler:stage {
+        set stgMass to ship:mass.
+    } else {
         for p in ship:parts {
             if p:stage <= _stg set stgMass to stgMass + p:mass.
         }
     }
 
-    else if _mode = "wet" {
-        for p in ship:parts {
-            if p:stage <= _stg set stgMass to stgMass + p:wetMass.
-        }
-    }
-
-    else if _mode = "dry" {
-        for p in ship:parts {
-            if p:stage <= _stg set stgMass to stgMass + p:dryMass.
-        }
-    }
-
-    logStr("[get_mass_at_mode_stage]-> return: " + stgMass).
-
-
+    if verbose logStr("[get_mass_at_stage]-> return: " + stgMass).
     return stgMass.
 }
 
