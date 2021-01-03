@@ -13,19 +13,19 @@ global function get_burn_dur_by_stage {
     parameter _deltaV,
               _stageNum is stage:number.
     
-    logStr("[get_burn_dur_by_stage] _deltaV: " + _deltaV + "   _stageNum: " + _stageNum).
+    if verbose logStr("[get_burn_dur_by_stage] _deltaV: " + _deltaV + "   _stageNum: " + _stageNum).
 
     // Returns the engines in the stage if the provided stage has any.
     // If no engines found, returns the next stage engines
     local engineList to get_engs_for_stage(_stageNum).
     if engineList:length = 0 {
-        logStr("[get_burn_dur_by_stage]-> return: 0. No engines found in stage: " + _stageNum).
+        if verbose logStr("[get_burn_dur_by_stage]-> return: 0. No engines found in stage: " + _stageNum).
         return 0.
     }
     
     // Engine performance object for the given list of engines.
     // This includes thrust, isp, and exhaust velocity for each engine
-    local enginePerf to get_eng_perf_obj(engineList).
+    local enginePerf to eng_perf_obj(engineList).
 
     // Effective exhaust velocity of the stage, based on the effective isp
     local exhaustVel to get_engs_exh_vel(engineList, max(0, ship:apoapsis)).
@@ -44,7 +44,7 @@ global function get_burn_dur_by_stage {
     // This is basically the rocket equation
     local burnDur to ((vesselMass * exhaustVel) / stageThrust) * ( 1 - (constant:e ^ (-1 * (_deltaV / exhaustVel)))).
 
-    logStr("[get_burn_dur_by_stage]-> return: " + burnDur).
+    if verbose logStr("[get_burn_dur_by_stage]-> return: " + burnDur).
     return burnDur.
 }
 
@@ -53,7 +53,7 @@ global function get_burn_dur_by_stage {
 global function get_burn_dur {
     parameter _deltaV.  // Total delta v of the burn
     
-    logStr("[get_burn_dur] dV: " + _deltaV).
+    if verbose logStr("[get_burn_dur] dV: " + _deltaV).
 
     // Variables
     local allDur   is 0.    // Var for total duration of the burn
@@ -70,7 +70,7 @@ global function get_burn_dur {
         set allDur to allDur + stageDur.
     }
 
-    logStr("[get_burn_dur]-> return " + allDur).
+    if verbose logStr("[get_burn_dur]-> return " + allDur).
 
     // Total duration of the burn
     return allDur.
