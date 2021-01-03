@@ -14,12 +14,9 @@ runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_rendezvous").
 
-runOncePath("0:/lib/data/ship/lib_mass").
-runOncePath("0:/lib/data/engine/lib_engine").
-runOncePath("0:/lib/data/engine/lib_isp").
+runOncePath("0:/lib/lib_mass_data").
+runOncePath("0:/lib/lib_engine_data").
 
-
-runOncePath("0:/lib/data/ship/lib_mass").
 
 clearScreen.
 

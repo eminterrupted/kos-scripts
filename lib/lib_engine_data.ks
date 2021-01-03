@@ -2,7 +2,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
-//runOncePath("0:/lib/data/engine/lib_isp").
+//
 
 // -- Functions -- //
 
