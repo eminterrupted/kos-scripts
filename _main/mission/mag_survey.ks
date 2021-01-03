@@ -25,7 +25,7 @@ runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/part/lib_antenna").
 
 local matchIncScript is "0:/_main/adhoc/simple_inclination_change".
-copyPath(matchIncScript, "local:/matchInc").
+compile(matchIncScript) to "local:/matchInc".
 set matchIncScript to "local:/matchInc".
 
 local orbitChangeScript is "0:/_main/adhoc/orbit_change".
@@ -59,9 +59,11 @@ main().
 local function main {
     until runmode = 99 {
 
-        //Deploy dish if not already
+        //Deploy the sat panels / antennas if not already
         if runmode = 0 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
+
+            panels on.
 
             local dish is ship:partsTaggedPattern("comm.dish").
             for d in dish {
@@ -69,7 +71,7 @@ local function main {
                 logStr("Comm object Dish activated").
                 wait 1.
                 set_dish_target(d, kerbin:name).
-                logStr("Dish target: " + kerbin:name).
+                logStr("Dish target: " + get_dish_target(d)).
             }
 
             set runmode to 2.
@@ -77,12 +79,12 @@ local function main {
 
         // Setup the science triggers
         else if runmode = 2 {
-            when ship:altitude < 250000 then {
+            when ship:altitude < info:altForSci[ship:body:name] then {
                 log_sci_list(sciList).
                 recover_sci_list(sciList, true).
             }
 
-            when ship:altitude > 250000 then {
+            when ship:altitude > info:altForSci[ship:body:name] then {
                 log_sci_list(sciList).
                 recover_sci_list(sciList, true).
             }

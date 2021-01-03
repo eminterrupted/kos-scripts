@@ -24,7 +24,7 @@ runOncePath("0:/lib/part/lib_solar").
 
 //Paths to other scripts used here
 local incChangeScript to "local:/incChange". 
-copyPath("0:/_adhoc/simple_inclination_change", incChangeScript).
+compile("0:/_adhoc/simple_inclination_change") to incChangeScript.
 
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
