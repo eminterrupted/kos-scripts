@@ -86,8 +86,8 @@ global function add_tab_widget {
         // to the panel below it, especially if it to the current selected tab.
         local style to pBox:gui:skin:add("TabWidgetTab", pBox:gui:skin:button).
 
-        set style:bg to "lib/display/gui/assets/back".
-        set style:on:bg to "lib/display/gui/assets/front".
+        set style:bg to "lib/display/assets/back".
+        set style:on:bg to "lib/display/assets/front".
         
         //Tweaking the style
         set style:textColor to rgba(0.7, 0.75, 0.7, 1).
@@ -99,7 +99,7 @@ global function add_tab_widget {
 
     if not pBox:gui:skin:has("TabWidgetPanel") { 
         local style to pBox:gui:skin:add("TabWidgetPanel", pBox:gui:skin:window).
-        set style:bg to "lib/display/gui/assets/panel".
+        set style:bg to "lib/display/assets/panel".
         set style:padding:top to 0.
     }
 

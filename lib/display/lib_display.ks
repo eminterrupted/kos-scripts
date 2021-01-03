@@ -19,9 +19,9 @@ local clrWide is "                                                              
 local clr is "                                        ".
 
 local col1 is 2.
-local col2 is col1 + 14.  
-local col3 is 38.
-local col4 is col3 + 14.
+local col2 is col1 + 20.  
+local col3 is 43.
+local col4 is col3 + 20.
 
 local h1 to 0.
 local h2 is 0.
@@ -89,8 +89,8 @@ global function disp_main {
     set h4 to pos["h4"].
 
     print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 + 12,ln).
-    print time:clock at (h4 + 17,ln).
+    print "UTC:" at (h4 + 1,ln).
+    print time:clock at (h4 + 6,ln).
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name + "    " at (h1,cr).
@@ -118,8 +118,8 @@ global function disp_test_main {
     set h4 to pos["h4"].
 
     print "KUSP Test Stand Controller v0.01" at (2,ln).
-    print "UTC:" at (h4 - 2,ln).
-    print time:clock at (h4 + 3,ln).
+    print "UTC:" at (h4 + 6,ln).
+    print time:clock at (h4 + 11,ln).
     print divDbl at (2,cr).
     cr.
     cr.
@@ -506,9 +506,9 @@ global function out_msg {
 //Main launch display updater
 global function update_display {
     disp_main().
-    //disp_obt_data().
-    //disp_tel().
-    //if get_active_engs():length > 0 disp_eng_perf_data().
+    disp_obt_data().
+    disp_tel().
+    if get_active_engs():length > 0 disp_eng_perf_data().
 }
 
 

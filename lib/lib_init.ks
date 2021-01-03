@@ -2,9 +2,10 @@
 @lazyGlobal off.
 
 //Global variables
-global errLvl to 0.
-global errObj to lexicon().
-global sun is Body("Sun").
+global errLvl   to 0.
+global errObj   to lexicon().
+global sun      to Body("Sun").
+global verbose  to false.
 
 runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").
