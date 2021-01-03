@@ -1,26 +1,25 @@
 @lazyGlobal off.
 
 local rtMod to "ModuleRTAntenna".
-local reflectMod to "ModuleDeployableReflector".
 
 //Activate
 global function activate_antenna {
     parameter p.
+
+    do_event(p:getModule(rtMod), "activate"). 
 }
 
 global function activate_omni {
     parameter p.
 
-    local m to p:getModule(rtMod).
-    if m:hasEvent("activate") m:doEvent("activate").
+    do_event(p:getModule(rtMod), "activate").
 }
 
 
 global function activate_dish {
     parameter p.
     
-    local m is p:getModule(rtMod).
-    if m:hasEvent("activate") m:doEvent("activate").
+    do_event(p:getModule(rtMod), "activate").
 
     return true.
 }
