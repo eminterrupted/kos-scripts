@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-if terminal:width < 80 set terminal:width to 80.
-if terminal:height < 50 set terminal:height to 55.
+if terminal:width < 75 set terminal:width to 75.
+if terminal:height < 50 set terminal:height to 50.
 core:doAction("open terminal", true).
 
 runOncePath("0:/lib/lib_init").
@@ -19,9 +19,9 @@ local clrWide is "                                                              
 local clr is "                                        ".
 
 local col1 is 2.
-local col2 is col1 + 20.  
+local col2 is col1 + 18.  
 local col3 is 43.
-local col4 is col3 + 20.
+local col4 is col3 + 18.
 
 local h1 to 0.
 local h2 is 0.
@@ -31,15 +31,15 @@ local h4 is 0.
 local posmain is lex("id", "posmain", "v", 0, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 local pos_a is lex("id", "pos_a", "v", 10, "h1", col1, "h2", col2).
 local pos_b is lex("id","pos_b", "v", 10, "h1", col3, "h2", col4).
-local pos_c is lex("id", "pos_c", "v", 26, "h1", col1, "h2", col2).
-local pos_d is lex("id", "pos_d", "v", 26, "h1", col3, "h2", col4).
-// local pos_e is lex("id", "pos_e", "v", 42, "h1", col1, "h2", col2).
-// local pos_f is lex("id","pos_f", "v", 42, "h1", col3, "h2", col4).
-// local pos_g is lex("id", "pos_g", "v", 58, "h1", col1, "h2", col2).
-// local pos_h is lex("id", "pos_h", "v", 58, "h1", col3, "h2", col4).
-local posw_x is lex("id", "posw_x", "v", 42, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-local posw_y is lex("id", "posw_y", "v", 58, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
-local posw_z is lex("id", "posw_z", "v", 74, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local pos_c is lex("id", "pos_c", "v", 28, "h1", col1, "h2", col2).
+local pos_d is lex("id", "pos_d", "v", 28, "h1", col3, "h2", col4).
+// local pos_e is lex("id", "pos_e", "v", 44, "h1", col1, "h2", col2).
+// local pos_f is lex("id","pos_f", "v", 44, "h1", col3, "h2", col4).
+// local pos_g is lex("id", "pos_g", "v", 60, "h1", col1, "h2", col2).
+// local pos_h is lex("id", "pos_h", "v", 60, "h1", col3, "h2", col4).
+local posw_x is lex("id", "posw_x", "v", 44, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_y is lex("id", "posw_y", "v", 60, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
+local posw_z is lex("id", "posw_z", "v", 78, "h1", col1, "h2", col2, "h3", col3, "h4", col4).
 
 local posObj is lex(
                 "posmain", posmain 
@@ -210,7 +210,7 @@ global function disp_eng_perf_data {
     print "ENGINE PERFORMANCE           " at (h1,ln).
     print "------------------           " at (h1,cr).
     print "THROTTLE:      " + round(throttle * 100, 2) + "%     "    at (h1,cr).
-    print "THRUST:        " + round(get_thrust(), 2) + "     " at (h1,cr).
+    print "THRUST:        " + round(ship:availablethrust, 2) + "     " at (h1,cr).
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
     cr.
     print "TWR:           " + round(get_twr_for_modes_stage_alt("mass","cur",stage:number, ship:altitude), 2) + "      "  at (h1,cr).
@@ -244,60 +244,6 @@ global function disp_burn_data {
     } else {
         print "                                    " at (h1, cr).
     }
-}
-
-
-global function disp_eta {
-    parameter stamp.
-
-    local pos is "assign".
-    if dispObj:haskey("eta") set pos to disp_get_pos_obj(dispObj["eta"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["eta"] to pos["id"].
-    }
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-
-    print "ETA" at (h1, ln).
-    print "---" at (h1, cr).
-    print "TSTAMP ETA:    " + format_timestamp(stamp).
-}
-
-
-//Launch param data - useful for confirming well, launch parameters
-global function disp_launch_params {
-    parameter tApo, 
-              tPe, 
-              tInc, 
-              gtAlt, 
-              gtPitch.
-
-    local pos is "assign".
-    if dispObj:haskey("l_param") set pos to disp_get_pos_obj(dispObj["l_param"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["l_param"] to pos["id"].
-    }
-
-    set ln to pos["v"].
-    set h1 to pos["h1"].
-    set h2 to pos["h2"].
-
-    print "LAUNCH PARAMETERS" at (h1,ln).
-    print "-----------------" at (h1,cr).
-    print "TAPO:     " at (h1,cr).
-    print tApo + "               " at (h2, ln).
-    print "TPE:" at (h1,cr).
-    print tPe  + "               " at (h2, ln).
-    print "TINC:" at (h1,cr).
-    print tInc  + "               " at (h2, ln).
-    print "gtAlt:" at (h1,cr).
-    print gtAlt + "               " at (h2, ln).
-    print "gtPitch:" at (h1,cr).
-    print gtPitch  + "               " at (h2, ln).
 }
 
 
@@ -508,7 +454,7 @@ global function update_display {
     disp_main().
     disp_obt_data().
     disp_tel().
-    if get_active_engs():length > 0 disp_eng_perf_data().
+    if ship:availablethrust > 0 disp_eng_perf_data().
 }
 
 
