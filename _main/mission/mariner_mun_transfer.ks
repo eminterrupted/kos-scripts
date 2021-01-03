@@ -48,6 +48,16 @@ when ship:availableThrust < 0.1 and tVal > 0 then {
     preserve.
 }
 
+// Payload onDeploy trigger
+when stage:number <= 0 then {
+    panels on.
+
+    for p in ship:partsTaggedPattern("comm.omni") {
+        activate_omni(p).
+    }
+}
+
+
 main().
 
 //Main
