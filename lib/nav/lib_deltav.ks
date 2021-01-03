@@ -126,13 +126,6 @@ global function get_avail_dv_for_stage {
         if verbose logStr("[get_avail_dv_for_stage]-> return 0. No engines in provided stage").
         return 0.
         }
-    //     //set _stg to _stg - 1.
-    //     set eList to ship:partsTaggedPattern("eng.stgId:" + _stg). 
-    //     if eList = 0 {
-    //         logStr("[get_avail_dv_for_stage]-> return: -1"). 
-    //         return -1.
-    //     }
-    // }
     
     local vMass to get_ves_mass_at_stage(_stg).
     local exhVel is get_engs_exh_vel(eList, ship:altitude).
