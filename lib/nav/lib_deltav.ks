@@ -123,7 +123,7 @@ global function get_avail_dv_for_stage {
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
     local eList is ship:partsTaggedPattern("eng.stgId:" + _stg).
     if eList:length = 0 { 
-        logStr("[get_avail_dv_for_stage]-> return 0. No engines in provided stage").
+        if verbose logStr("[get_avail_dv_for_stage]-> return 0. No engines in provided stage").
         return 0.
         }
     //     //set _stg to _stg - 1.
@@ -184,7 +184,7 @@ global function get_stages_for_dv {
     parameter _deltaV,                      // Amount of dv needed
               _stageNum is stage:number.    // Stage to start with
 
-    logStr("[get_stages_for_dv] _dV: " + _deltaV + ";  _stageNum: " + _stageNum).
+    if verbose logStr("[get_stages_for_dv] _dV: " + _deltaV + ";  _stageNum: " + _stageNum).
 
     // The object we'll store the result in
     local stageObj is lex().
@@ -223,7 +223,7 @@ global function get_stages_for_dv {
         }
     }
 
-    logStr("[get_stages_for_dv]-> return: " + stageObj).
+    if verbose logStr("[get_stages_for_dv]-> return: " + stageObj).
 
     // DeltaV for each stage needed to execute the burn
     return stageObj.

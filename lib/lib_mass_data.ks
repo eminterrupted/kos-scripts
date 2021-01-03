@@ -133,7 +133,7 @@ global function get_mass_for_mode_stage {
     parameter _mode,
               _stg.
 
-    logStr("[get_mass_for_mode_stage] _mode: " + _mode + "  _stg: " + _stg).    
+    if verbose logStr("[get_mass_for_mode_stage] _mode: " + _mode + "  _stg: " + _stg).    
 
     local stgMass to 0.
 
@@ -155,7 +155,7 @@ global function get_mass_for_mode_stage {
         }
     }
 
-    logStr("[get_mass_for_mode_stage]-> return: " + stgMass).
+    if verbose logStr("[get_mass_for_mode_stage]-> return: " + stgMass).
 
     return stgMass.
 }
@@ -164,7 +164,7 @@ global function get_mass_for_mode_stage {
 global function get_stage_mass_obj {
     parameter _stg is stage:number.
 
-    logStr("[get_stage_mass_obj] _stg: " + _stg).
+    if verbose logStr("[get_stage_mass_obj] _stg: " + _stg).
 
     local pList is ship:partsTaggedPattern("stgId:" + _stg).
 
@@ -183,7 +183,7 @@ global function get_stage_mass_obj {
     //local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass, "res", pResources).
     local massObj to lex("cur", cMass, "dry", dMass, "wet", wMass).
 
-    logStr("[get_stage_mass_obj]-> return <obj>").
+    if verbose logStr("[get_stage_mass_obj]-> return <obj>").
 
     return massObj.
 }
@@ -227,7 +227,7 @@ global function get_ship_mass_at_launch {
 global function get_ves_mass_at_stage {
     parameter _stg.
 
-    logStr("[get_ves_mass_at_stage] stgId:" + _stg).
+    if verbose logStr("[get_ves_mass_at_stage] stgId:" + _stg).
 
     local vMass is 0.
 
@@ -241,6 +241,6 @@ global function get_ves_mass_at_stage {
         }
     }
 
-    logStr("[get_ves_mass_at_stage]-> return: " + vMass).
+    if verbose logStr("[get_ves_mass_at_stage]-> return: " + vMass).
     return vMass.
 }
