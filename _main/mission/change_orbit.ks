@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-parameter _tgtAp    is 2500000,
-          _tgtPe    is 225000,
-          _tgtInc   is 22,
+parameter _tgtAp    is 250000,
+          _tgtPe    is 25000,
+          _tgtInc   is 20,
           _tgtLAN   is ship:orbit:longitudeofascendingnode,
           _tgtArgPe is 270.
 

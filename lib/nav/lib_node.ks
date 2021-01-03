@@ -215,18 +215,22 @@ global function optimize_node_list {
 
     local limLo to 1 - _mnvAcc.
     local limHi to 1 + _mnvAcc. 
+    local nodeScore to 0.
 
     until false {
         set _data to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
-        local nodeScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody)["score"].
+        set nodeScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody)["score"].
 
-        // print "_tgtVal    : " + _tgtVal at (2, 40).
-        // print "_compMode  : " + _compMode at (2, 41).
-        // print "_data[eta] : " + _data[0] at (2, 42).
-        // print "_data[rad] : " + _data[1] at (2, 43).
-        // print "_data[nrm] : " + _data[2] at (2, 44).
-        // print "_data[prg] : " + _data[3] at (2, 45).
-
+        // disp_block(list(
+        //     "nodeOptimize",
+        //     "Node Optimization",
+        //     "_tgtVal",      _tgtVal,
+        //     "_compMode",    _compMode,
+        //     "_data[eta]",   _data[0],
+        //     "_data[rad]",   _data[1],
+        //     "_data[nrm]",   _data[2],
+        //     "_data[prg]",   _data[3]
+        // )).
         wait 0.01.
 
         if nodeScore >= limLo and nodeScore <= limHi {
@@ -234,8 +238,11 @@ global function optimize_node_list {
         }
     }
 
+    disp_clear_block("nodeOptimize").
+    disp_clear_block("nodeResult").
+
     out_info().
-    out_msg("Optimized maneuver found").
+    out_msg("Optimized maneuver found (score: " + nodeScore + ")").
     return _data.
 }
 
@@ -268,18 +275,18 @@ local function improve_node {
         set mnvFactor to 0.015625 * mnvFactor.
     } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
         set mnvFactor to 0.03125 * mnvFactor. 
-    // } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
-    //     set mnvFactor to 0.125 * mnvFactor.
+    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+        set mnvFactor to 0.125 * mnvFactor.
     } else if curScore:score > (limLo * 0.50) and curScore:score < (limHi * 1.50) {
-        set mnvFactor to 0.5 * mnvFactor.
+        set mnvFactor to 0.25 * mnvFactor.
     } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
-        set mnvFactor to 1 * mnvFactor.
+        set mnvFactor to 0.5 * mnvFactor.
     } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
-        set mnvFactor to 2 * mnvFactor.
+        set mnvFactor to 1 * mnvFactor.
     } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
-        set mnvFactor to 4 * mnvFactor. 
+        set mnvFactor to 2 * mnvFactor. 
     } else {
-        set mnvFactor to 12 * mnvFactor.
+        set mnvFactor to 5 * mnvFactor.
     }
     
     out_msg("Optimizing node.").
@@ -307,13 +314,13 @@ local function improve_node {
             if candScore:score < curScore:score {
                 set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
-                out_info("Current score: " + round(curScore:score, 5)).
+                //out_info("Current score: " + round(curScore:score, 5)).
             }
         } else {
             if candScore:score > curScore:score {
                 set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                 set _data to c.
-                out_info("Current score: " + round(curScore:score, 5)).
+                //out_info("Current score: " + round(curScore:score, 5)).
             }
         }
     }
@@ -347,33 +354,51 @@ local function get_node_score {
               _compMode,
               _tgtBody.
 
+    local intersect to false.
     local score to 0.
     local result to 0.
+    local resultPatch to "".
     local mnvTest to node(_data[0], _data[1], _data[2], _data[3]).
 
     add mnvTest.
     
     if mnvTest:obt:body = _tgtBody {
+        set intersect to true.
         set result to get_node_result(_compMode, mnvTest:obt).
     } else if mnvTest:obt:hasNextPatch {
         if mnvTest:obt:nextpatch:body = _tgtBody {
+            set intersect to true.
             set result to get_node_result(_compMode, mnvTest:obt:nextPatch).
         } else if mnvTest:obt:nextpatch:hasnextpatch {
             if mnvTest:obt:nextpatch:nextpatch:body = _tgtBody {
+                set intersect to true.
                 set result to get_node_result(_compMode, mnvTest:obt:nextpatch:nextpatch).
             } else if mnvTest:obt:nextpatch:nextpatch:hasnextpatch {
                 if mnvTest:obt:nextpatch:nextpatch:nextpatch:body = _tgtBody {
+                    set intersect to true.
                     set result to get_node_result(_compMode, mnvTest:obt:nextpatch:nextpatch:nextpatch).
+                } else {
+                    out_info("WARNING: Orbit does not pass through target SOI!").
                 }
             }
         }
     }
-    
+
     set score to result / _tgtVal.
+
+    disp_block(list(
+        "nodeResult",
+        "node result",
+        "score",        round(score, 5),
+        "tgtBody",     _tgtBody,
+        "intersect",    intersect,
+        "tgtVal",      _tgtVal,
+        "resultVal",    round(result)
+    )).
 
     remove mnvTest.
 
-    return lex("score", score, "result", result).
+    return lex("score", score, "result", result, "intersect", intersect).
 }
 
 

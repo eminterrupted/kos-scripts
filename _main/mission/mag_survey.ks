@@ -3,8 +3,9 @@
 parameter _rVal is 0.
 
 // Change these variables per orbit
-local tgtEcc is .175.
+local tgtEcc is .225.
 local tgtInc is 20.
+local tgtLan is 135.
 // End user-managed variables
 
 clearscreen.
@@ -24,11 +25,11 @@ runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/part/lib_antenna").
 
-local matchIncScript is "0:/_main/adhoc/simple_inclination_change".
-compile(matchIncScript) to "local:/matchInc".
-set matchIncScript to "local:/matchInc".
+local matchIncScript is "0:/_adhoc/simple_inclination_change".
+compile(matchIncScript) to "local:/incChange".
+set matchIncScript to "local:/incChange".
 
-local orbitChangeScript is "0:/_main/adhoc/orbit_change".
+local orbitChangeScript is "0:/_adhoc/orbit_change".
 copyPath(orbitChangeScript, "local:/orbit_change").
 set orbitChangeScript to "local:/orbit_change".
 
@@ -130,7 +131,7 @@ local function main {
         
         // Check our inclination. If low, run inclination change routine
         else if runmode = 20 {
-            if ship:orbit:inclination < tgtInc {
+            if ship:orbit:inclination < tgtInc or not check_value(ship:obt:lan, tgtLan, 15) {
                 set runmode to 22.
             } else {
                 set runmode to 30.
@@ -138,7 +139,7 @@ local function main {
         }
 
         else if runmode = 22 {
-            runPath(matchIncScript, tgtInc).
+            runPath(matchIncScript, tgtInc, tgtLan).
             set runmode to 30.
         }
 

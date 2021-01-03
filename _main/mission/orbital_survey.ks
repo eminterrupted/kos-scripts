@@ -59,12 +59,12 @@ out_msg("Commencing orbital survey").
 lock steering to lookDirUp(ves_srf_normal(), sun:position).
 
 // Setup the science trigger
-when ship:altitude < 250000 then {
+when ship:altitude < info:altForSci[ship:body] then {
     log_sci_list(sciList).
     recover_sci_list(sciList, true).
 }
 
-when ship:altitude > 250000 then {
+when ship:altitude > info:altForSci[ship:body] then {
     log_sci_list(sciList).
     recover_sci_list(sciList, true).
 }

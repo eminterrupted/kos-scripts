@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 parameter tgtBody is "Minmus",
-          tgtInc is 60,
-          tgtLan is 90,
+          tgtInc is 20,
+          tgtLan is 135,
           pkgAlt is 250000,
           tgtAp1 is 25000,
           tgtPe1 is 25000.

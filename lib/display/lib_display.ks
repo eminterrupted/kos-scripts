@@ -352,9 +352,9 @@ global function disp_clear_block {
 
     if dispObj:haskey(pos) {
         set pos to disp_get_pos_obj(dispObj[pos]).
-    } 
-
-    else return false.
+    } else {
+        return false.
+    }
 
     set ln to pos["v"].
     from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do {
@@ -454,7 +454,7 @@ global function update_display {
     disp_main().
     disp_obt_data().
     disp_tel().
-    if ship:availablethrust > 0 disp_eng_perf_data().
+    //if ship:availablethrust > 0 disp_eng_perf_data().
 }
 
 
