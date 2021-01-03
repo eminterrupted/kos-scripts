@@ -60,6 +60,8 @@ global function dv_for_hohmann_arrival {
     local r2 is tgtObt:semimajoraxis.
 
     local dv to sqrt(stObt:body:mu / r2) * (1 - sqrt((2 * r1) / (r1 + r1))).
+
+    return dv.
 }
 
 
@@ -116,7 +118,7 @@ global function get_dv_for_tgt_transfer_next {
 global function get_avail_dv_for_stage {
     parameter _stg is stage:number.
 
-    logStr("[get_avail_dv_for_stage] _stg:" + _stg).
+    if verbose logStr("[get_avail_dv_for_stage] _stg:" + _stg).
 
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
     local eList is ship:partsTaggedPattern("eng.stgId:" + _stg).
@@ -139,19 +141,19 @@ global function get_avail_dv_for_stage {
     local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
     local spentMass to vMass - fuelMass.
     
-    logStr("[get_avail_dv_for_stage]-> return: " + exhVel * ln(vMass / spentMass)).
+    if verbose logStr("[get_avail_dv_for_stage]-> return: " + exhVel * ln(vMass / spentMass)).
     return exhVel * ln(vMass / spentMass).
 }
 
 
-global function get_rcs_dv_at_stage {
-    parameter stg is stage:number.
+global function rcs_dv_at_stage {
+    parameter _stg is stage:number.
 
-    logStr("get_avail_monoprop_dv_at_stage [stg:" + stg + "]").
+    if verbose logStr("[rcs_dv_at_stage] _stg:" + _stg).
 
     local avgExhVel to 0.
 
-    local vMass to get_ves_mass_at_stage(stg).
+    local vMass to get_ves_mass_at_stage(_stg).
     local mpList is ship:partsTaggedPattern("ctrl.rcs").
     if mpList:length = 0 {
         return 0.
@@ -159,17 +161,19 @@ global function get_rcs_dv_at_stage {
 
     for p in mpList {
         local pStg to utils:stgFromTag(p).
-        if pStg <= stg {
+        if pStg <= _stg {
             local rcsObj to rcs_obj(p).
             set avgExhVel to avgExhVel + (constant:g0 * rcsObj["rcs isp"]) / 2.
         }
     }
 
-    local fuelMass to get_res_mass_for_stg(stg, "MonoPropellant").
+    local fuelMass to get_res_mass_for_stg(_stg, "MonoPropellant").
     local spentMass to vMass - fuelMass.
-    // logStr("exhVel: return: " + avgExhVel * ln(vMass / spentMass)).
+    local rcsDv to avgExhVel * ln(vMass / spentMass).
 
-    return avgExhVel * ln(vMass / spentMass).
+    if verbose logStr("[rcs_dv_at_stage]-> return : " + rcsDv).
+
+    return rcsDv.
 }
 
 
