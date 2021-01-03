@@ -214,7 +214,7 @@ global function disp_eng_perf_data {
     print "ISP:           " + round(get_avail_isp(), 2) + "      " at (h1,cr).
     cr.
     print "TWR:           " + round(get_cur_twr(), 2) + "      "  at (h1,cr).
-    print "MASS:          " +  round(ship:mass, 2) + "     " at (h1,cr).
+    print "MASS:          " + round(ship:mass, 2) + "     " at (h1,cr).
 
     return pos.
 }

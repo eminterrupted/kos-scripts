@@ -72,7 +72,7 @@ local function main {
 
         if runmode = 0 {
             out_msg("Executing simple_inclination_change.ks").
-            out_info("Current: " + ship:obt:inclination + "     Target: " + _tgtInclination).
+            out_info("Current: " + round(ship:obt:inclination, 5) + "     Target: " + _tgtInclination).
             set runmode to 2.
         }
         
