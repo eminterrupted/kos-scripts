@@ -9,19 +9,22 @@ runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_mass_data").
-
-
 runOncePath("0:/lib/lib_engine_data").
 
+// Temp vars
+local ts is time:seconds.
+//
+
+// Vars
 local dispObj is lex().
 
 local clrWide is "                                                                      ".
 local clr is "                                        ".
 
 local col1 is 2.
-local col2 is col1 + 18.  
-local col3 is 43.
-local col4 is col3 + 18.
+local col2 is col1 + 16.  
+local col3 is 38.
+local col4 is col3 + 16.
 
 local h1 to 0.
 local h2 is 0.
@@ -88,21 +91,25 @@ global function disp_main {
     set h3 to pos["h3"].
     set h4 to pos["h4"].
 
-    print "KUSP Mission Controller v0.03c" at (2,ln).
-    print "UTC:" at (h4 -2,ln).
-    print time:clock at (h4 + 3,ln).
+    print "KUSP Mission Controller v0.31b" at (2,ln).
+    print "UTC:" at (h4 +5,ln).
+    print time:clock at (h4 + 10,ln).
     print divDbl at (2,cr).
     cr.
     print "MISSION:       " + ship:name + "    " at (h1,cr).
         print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
     print "BODY:          " + body:name + "     " at (h1,cr).
         print "STATUS:        " + status:padright(12 - status:length) at (h3,ln).
-    print "PROGRAM:       " + stateObj["program"] + "   " at (h1,cr).
+    print "PROGRAM:       " + from_cache(stateObj["program"]) + "   " at (h1,cr).
         print "RUNMODE:       " + stateObj["runmode"] + "  " at (h3,ln).
             print "SR: " + stateObj["subroutine"] at (h3 + 19, ln).
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
+
+    // Uncomment below to monitor total loop time delta
+    // print "delta-T: " + round(time:seconds - ts, 5) + "   " at (2, 45).
+    // set ts to time:seconds.
 }
 
 global function disp_test_main {
@@ -452,8 +459,8 @@ global function out_msg {
 //Main launch display updater
 global function update_display {
     disp_main().
-    disp_obt_data().
-    disp_tel().
+    //disp_obt_data().
+    //disp_tel().
     //if ship:availablethrust > 0 disp_eng_perf_data().
 }
 
@@ -483,13 +490,13 @@ global function disp_block {
     print strList[1]:toupper at (h1,ln).
     print divSgl:substring(0, strList[1]:length) at (h1,cr).
     from { local idx to 2.} until idx >= strList:length step { set idx to idx + 2.} do {
-        local str to choose strList[idx] if strList[idx]:length <= 14 else strList[idx]:substring(0, 14).
+        local str to choose strList[idx] if strList[idx]:length <= 16 else strList[idx]:substring(0, 16).
         print str:toupper + ":" at (h1,cr).
         
         set str to strList[idx + 1].
         if str:typename <> "string" set str to str:tostring.
 
-        if str:length > 14 set str to str:substring(0, 14).
+        if str:length > 16 set str to str:substring(0, 16).
         print str:toupper:padright(20 - str:length) at (h2, ln).
     }
 }

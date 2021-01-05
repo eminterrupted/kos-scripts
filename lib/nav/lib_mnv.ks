@@ -51,7 +51,7 @@ runOncePath("0:/lib/lib_warp").
 
         until time:seconds >= _burnObj["burnEta"] {
             update_display().
-            disp_timer(_burnObj["burnEta"]).
+            disp_burn_data(_burnObj["burnEta"]).
         }
 
         disp_clear_block("timer").

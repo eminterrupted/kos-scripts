@@ -23,9 +23,9 @@ local rVal      to 0.                   // Orientation of vessel for the duratio
 if exists(kscCache) {
         set cache to readJson(kscCache).
 
-        if cache:hasKey("launchS1")     set launchS1    to cache["launchS1"]:toString.
-        if cache:hasKey("missionS1")    set missionS1   to cache["missionS1"]:toString.
-        if cache:hasKey("missionS2")    set missionS2   to cache["missionS2"]:toString.
+        if cache:hasKey("ls0")          set launchS1    to cache["ls0"]:toString.
+        if cache:hasKey("ms0")          set missionS1   to cache["ms0"]:toString.
+        if cache:hasKey("ms1")          set missionS2   to cache["ms1"]:toString.
         if cache:hasKey("lAp")          set lAp         to cache["lAp"].
         if cache:hasKey("lPe")          set lPe         to cache["lPe"].
         if cache:hasKey("lInc")         set lInc        to cache["lInc"].
@@ -108,21 +108,21 @@ lsbox:addspacing(5).
 lsbox:addLabel("Launch / Ascent").
 lsbox:addspacing(10).
 local ls1 to add_popup_menu(lsbox, lScriptList).
-set ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString:replace(".ks", ""). set cache["launchS1"] to launchS1.}.
+set ls1:onchange to { parameter lChoice. set launchS1 to lChoice:toString:replace(".ks", ""). set cache["ls1"] to launchS1.}.
 
 local s1box to hbox:addvbox().
 s1box:addspacing(5).
 s1box:addLabel("Mission Stage 1").
 s1box:addspacing(10).
 local s1 to add_popup_menu(s1box, mScriptList).
-set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString:replace(".ks",""). set cache["missionS1"] to missionS1.}.
+set s1:onchange to { parameter mChoice. set missionS1 to mChoice:toString:replace(".ks",""). set cache["ms0"] to missionS1.}.
 
 local s2box to hbox:addvbox().
 s2box:addspacing(5).
 s2box:addLabel("Mission Stage 2").
 s2box:addspacing(10).
 local s2 to add_popup_menu(s2box, mScriptList).
-set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replace(".ks",""). set cache["missionS2"] to missionS2.}.
+set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replace(".ks",""). set cache["ms1"] to missionS2.}.
 
 local close to gui:addButton("Close").
 
@@ -164,14 +164,14 @@ until closeGui = true {
 
 gui:hide().
 
-set cache["launchS1"] to launchS1.
-set cache["missionS1"] to missionS1.
-set cache["missionS2"] to missionS2.
-set cache["lAp"] to lAp.
-set cache["lPe"] to lPe.
-set cache["lInc"] to lInc.
+set cache["ls0"]   to launchS1.
+set cache["ms0"]   to missionS1.
+set cache["ms1"]   to missionS2.
+set cache["lAp"]   to lAp.
+set cache["lPe"]   to lPe.
+set cache["lInc"]  to lInc.
 set cache["lTAlt"] to lTAlt.
-set cache["rVal"] to rVal.
+set cache["rVal"]  to rVal.
 
 writeJson(cache, kscCache).
 copyPath(kscCache, shipCache).

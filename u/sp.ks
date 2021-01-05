@@ -103,7 +103,7 @@ local function main {
             out_msg("Checking argPe").
             if not check_value(ship:obt:argumentofperiapsis, target:orbit:argumentofperiapsis, 10) {
                 out_msg("argPe out of range, identifying maneuver").
-                runpath("0:/_adhoc/simple_arg_pe_change", target:orbit:argumentofperiapsis, target:orbit:lan).
+                runpath("0:/_adhoc/simple_orbit_change", target:orbit:argumentofperiapsis, target:orbit:lan).
                 out_msg().
             }
             set runmode to set_rm(15).

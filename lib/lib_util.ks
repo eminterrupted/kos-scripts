@@ -47,6 +47,31 @@ global info is lex(
         return (_ap + _body:radius) - (_pe + _body:radius) / (_ap + _pe + (_body:radius * 2)).
     }
 
+    // Returns the desired apoapsis given a known periapsis and
+    // eccentricity
+    global function get_ap_for_pe_ecc {
+        parameter _pe,
+                  _ecc,
+                  _body is ship:body.
+
+        local sma   to (_pe + _body:radius) / (1 - _ecc).
+        local rA    to sma * (1 + _ecc).
+
+        return rA - _body:radius.
+    }
+
+    // Returns the desired periapsis given a known apoapsis and
+    // eccentricity
+    global function get_pe_for_ap_ecc {
+        parameter _ap,
+                  _ecc,
+                  _body is ship:body.
+
+        local sma   to (_ap + _body:radius) / (1 + _ecc).
+        local rP    to sma * (1 - _ecc).
+
+        return rP - _body:radius.
+    }
 
 
 //Part module utils

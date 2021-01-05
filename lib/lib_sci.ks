@@ -49,6 +49,8 @@ local sciList is list().
     global function deploy_sci_list {
         parameter mList.
 
+        out_info("I'm in deploy_sci_list").
+        
         for m in mList {
             if m:name = sciMod              toggle_sci_mod_st(m, true).
             else if m:name = dmagMod        toggle_sci_mod_dmag(m, true).
@@ -58,6 +60,8 @@ local sciList is list().
             else if m:name = hammerMod      toggle_sci_mod_dmag(m, true).
             else if m:name = seisPodMod     toggle_sci_mod_dmag(m, true).
         }
+
+        out_info().
     }
 
 
@@ -224,11 +228,14 @@ local sciList is list().
                   _openMode.
         
         if _m:name = sciMod {
-            if _m:hasAction("toggle cover")              _m:doAction("toggle cover", true).
-            else if _m:hasEvent("open doors")            _m:doEvent("open doors").
+            if _m:hasAction("toggle cover") {
+                _m:doAction("toggle cover", true).
+                wait until _m:deployed = _openMode.
+            } else if _m:hasEvent("open doors") {
+                _m:doEvent("open doors").
+                wait until _m:deployed = _openMode.
+            }
         }
-
-        wait until _m:deployed = _openMode.
     }
 
 
@@ -239,10 +246,9 @@ local sciList is list().
         for a in _m:allActions {
             if a:contains("deploy") {
                 _m:doAction(a:replace("(callable) ",""):replace(", is KSPAction",""), true).
+                wait until _m:deployed = _openMode.
             }
         }
-
-        wait until _m:deployed = _openMode.
     }
         
     local function toggle_sci_mod_us {
@@ -252,10 +258,9 @@ local sciList is list().
         for a in _m:allActions {
             if a:contains("toggle") {
                 _m:doAction(a:replace("(callable ", ""):replace(", is KSPAction", ""), true).
+                wait until _m:deployed = _openMode.
             }
         }
-
-        wait until _m:deployed = _openMode.
     }
 
 

@@ -34,11 +34,11 @@ local targetObt is createOrbit(
     ship:body).
 
 // Inclination match burn data
-local burn to get_inc_match_burn(ship, targetObt).
-local utime to burn[0].
-local burnVector to burn[1].
-local dur to get_burn_dur(burnVector:mag).
-local leadTime to utime - get_burn_dur(burnVector:mag / 2).
+local burn to "".
+local utime to 0.
+local burnVector to v(0, 0, 0).
+local dur to 0.
+local leadTime to 0.
 
 //Vec draw vars
 local burnDone to false.
@@ -46,7 +46,7 @@ local burnVDTail to 0.
 local burnVD to 0.
 
 //Maneuver node structures
-local mnvNode is burn[2].
+local mnvNode is node(0, 0, 0, 0).
 
 //Steering
 local rVal is 0.
@@ -76,25 +76,14 @@ local function main {
             set runmode to 2.
         }
         
-        // Vecdraw to show the maneuver
-        if runmode = 1 {
-
-            set burnVDTail to positionAt(ship, utime).
-            set burnVD to 
-                vecDraw(
-                    burnVDTail,
-                    500 * burnVector,
-                    magenta,
-                    "dV:" + round(burnVector:mag, 1) + " m/s, dur:" + round(dur, 1) + "s",
-                    1,
-                    true).
-
-            // Keep the draw updating the start position until the burn is done.
-            set burnVD:startUpdater to { return positionAt(ship, utime). }.
-            set runmode to 2.
-        }
-
+        // Add the burn node after getting the data
         else if runmode = 2 {
+            set burn to get_inc_match_burn(ship, targetObt).
+            set utime to burn[0].
+            set burnVector to burn[1].
+            set dur to get_burn_dur(burnVector:mag).
+            set leadTime to utime - get_burn_dur(burnVector:mag / 2).
+            set mnvNode to burn[2].
             add mnvNode.
 
             set runmode to 5.
@@ -111,7 +100,7 @@ local function main {
             until time:seconds >= leadTime  - 15 {
                 set sVal to burnVector.
                 update_display().
-                disp_burn_data(leadtime - time:seconds).
+                disp_burn_data(leadtime).
                 wait 0.01.
             }
 
@@ -122,7 +111,7 @@ local function main {
             until time:seconds >= leadTime {
                 set sVal to burnVector.
                 update_display().
-                disp_burn_data(leadTime - time:seconds).
+                disp_burn_data(leadTime).
                 wait 0.01.
 
             }
@@ -136,7 +125,7 @@ local function main {
                 set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
 
                 update_display().
-                disp_burn_data().
+                disp_burn_data(0).
                 wait 0.01.
             }
 

@@ -16,8 +16,8 @@ runOncePath("0:/lib/part/lib_solar").
 local incPath is "local:/incChange". 
 copyPath("0:/_adhoc/simple_inclination_change", incPath).
 
-local argPePath is "local:/argPeChange".
-copyPath("0:/_adhoc/simple_arg_pe_change", argPePath).
+local obtPath is "local:/argPeChange".
+copyPath("0:/_adhoc/simple_orbit_change", obtPath).
 
 
 //-- Main --//
@@ -33,7 +33,7 @@ if not check_value(ship:orbit:inclination, _tgtInc, 2.5) or not check_value(ship
 // Run the orbit boost script
 out_msg("Executing orbit change at desired argPe").
 out_info("tgtAp: " + _tgtAp + "   tgtPe: " + _tgtPe + "   tgtArgPe: " + _tgtArgPe).
-runpath(argPePath, _tgtArgPe, _tgtAp, _tgtPe).
+runpath(obtPath, _tgtAp, _tgtPe, _tgtArgPe).
 
 out_msg("change_orbit.ks complete!").
 out_info().

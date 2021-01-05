@@ -21,23 +21,23 @@ local cache is init_mission_cache().
 
 //-- Main --//
 local program is stateObj["program"].
-if program = 0 set_program("LAUNCH").
+if program = 0 set_program("ls0").
 
-if program = "LAUNCH" {
+if program = "ls0" {
     exec_launch().
-    set_program("MISSION_S1").
+    set_program("ms0").
 }
 
 set core:bootfilename to "local:/boot/mc".
 
-if program = "MISSION_S1" {
-    exec_mission(cache["missionS1"]).
-    set_program("MISSION_S2").
+if program = "ms0" {
+    exec_mission(cache["ms0"]).
+    set_program("ms1").
 }
 
-if program = "MISSION_S2" {
-    exec_mission(cache["missionS2"]).
-    set_program("COMPLETED").
+if program = "ms1" {
+    exec_mission(cache["ms1"]).
+    set_program("completed").
 }
 //-- End Main --//
 
@@ -49,8 +49,8 @@ local function exec_launch {
     disp_main().
 
     // Get the launch script from cache and copy to the local volume
-    local kscScrPath to kscPath + "/launch/" + cache["launchS1"].
-    local locScrPath to locPath + cache["launchS1"].
+    local kscScrPath to kscPath + "/launch/" + cache["ls0"].
+    local locScrPath to locPath + cache["ls0"].
     if not exists(locScrPath) compile(kscScrPath) to locScrPath.
 
     // Load the launch parameters from cache

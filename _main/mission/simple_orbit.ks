@@ -7,16 +7,6 @@ clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/lib_launch").
-runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/lib_warp").
-runOncePath("0:/lib/lib_engine_data").
-
-
-
-runOncePath("0:/lib/lib_mass_data").
-runOncePath("0:/lib/part/lib_heatshield").
-
 
 //Vars
 //local stateObj to init_state_obj().
@@ -34,7 +24,7 @@ until time:seconds >= tStamp {
     if runmode = 0 set runmode to 90.
 
     update_display().
-    disp_timer(tStamp, "Simple Orbit").
+    //disp_timer(tStamp, "Simple Orbit").
 
     wait 1.
 }

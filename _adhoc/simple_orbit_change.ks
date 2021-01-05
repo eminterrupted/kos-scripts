@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-parameter _tgtArgPe,
-          _tgtAp is ship:apoapsis + 1000,
-          _tgtPe is ship:periapsis.
+parameter _tgtAp,
+          _tgtPe,
+          _tgtArgPe is ship:obt:argumentofperiapsis.
 
 clearscreen.
 

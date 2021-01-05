@@ -23,8 +23,8 @@ global function cust_warp_to_timestamp {
 global function warp_to_timestamp {
     parameter _ts.
     
-    logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
-    logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(_ts) + "][MET: " + round(missionTime + (_ts - time:seconds)) + "]").
+    if verbose logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
+    if verbose logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(_ts) + "][MET: " + round(missionTime + (_ts - time:seconds)) + "]").
 
     if ship:altitude > ship:body:atm:height + 2500 set kuniverse:timewarp:mode to "RAILS".
     else set kuniverse:timewarp:mode to "PHYSICS".
@@ -59,42 +59,42 @@ global function warp_to_alt {
     }
 
     local setWarp to { parameter _warp. set warp to _warp. wait until kuniverse:timewarp:issettled. }.
-    local subroutine to init_subroutine().
+    init_subroutine().
 
     until not check(pAlt) {
 
         if ship:altitude >= pAlt * 15 {
             if kuniverse:timewarp:warp <> 6 {
                 setWarp(6).
-                set subroutine to set_sr(1).
+                set_sr(1).
             }
         }
 
         else if ship:altitude >= pAlt * 5 {
             if kuniverse:timewarp:warp <> 5 {
                 setWarp(5).
-                set subroutine to set_sr(2).
+                set_sr(2).
             }
         }
 
         else if ship:altitude >= pAlt * 2.5 {
             if kuniverse:timewarp:warp <> 4 {
                 setWarp(4).
-                set subroutine to set_sr(3).
+                set_sr(3).
             }
         }
 
         else if ship:altitude >= pAlt * 1.25 {
             if kuniverse:timewarp:warp <> 3 {
                 setWarp(3).
-                set subroutine to set_sr(4).
+                set_sr(4).
             }
         }
 
         else if ship:altitude >= pAlt * 1.0125 {
             if kuniverse:timewarp:warp <> 1 {
                 setWarp(1).
-                set subroutine to set_sr(5).
+                set_sr(5).
             }
         }
         
@@ -133,14 +133,13 @@ global function warp_to_ksc_reentry_window {
     local sVal to lookDirUp( - ship:prograde:forevector, sun:position) + r(0, 0, rVal).
     lock steering to sVal.
 
-    local minLongitude to 125.
-    local maxLongitude to 135.
+    local minLongitude to choose 125 if ship:obt:inclination <= 90 else 135.
     local ts is time:seconds + 5.
 
     if ship:body:name = "Kerbin" {
         
 
-        print "MSG: Sampling longitude advancement during orbit       " at (2, 7).
+        out_msg("Sampling longitude advancement during orbit").
         local longitudeSample is ship:longitude.
         until time:seconds >= ts {
             update_display().
@@ -159,7 +158,7 @@ global function warp_to_ksc_reentry_window {
         until time:seconds >= ts - 60 {
             update_display().
             disp_timer(ts).
-            print "MSG: Warping to reentry window for KSC landing       " at (2, 7).
+            out_msg("Warping to reentry window for KSC landing").
         }
     }
 
