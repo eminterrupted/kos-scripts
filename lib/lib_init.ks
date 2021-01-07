@@ -83,7 +83,6 @@ global function log_state {
     writeJson(sObj, statePath).
 }
 
-
 global function init_state_obj {
     parameter program is 0.
     
@@ -110,7 +109,6 @@ global function init_state_obj {
 
     return sObj.
 }
-
 
 global function init_rm {
     parameter rmPrimer.

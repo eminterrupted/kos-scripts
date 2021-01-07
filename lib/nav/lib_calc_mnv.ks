@@ -144,8 +144,14 @@ global function get_transfer_burn_data {
     // If no target is set, return false. This will fail
     if not hasTarget return false.
 
+    // TODO - Get our altitude at our burn position
+    // local posAtBurn to orbitAt(_nodeAt).
+    // Calculate trueanomaly
+    // Calculate based on eccentricty the altitude at the trueanomaly
+    // Pass alt into next function
+
     // Burn details
-    local dv to get_dv_for_tgt_transfer().    // deltaV for transfer
+    local dv to get_dv_for_tgt_transfer().          // deltaV for transfer
     local burnDur to get_burn_dur(dV).              // Duration of the burn
     local halfDur to get_burn_dur(dV / 2).          // Duration to burn half the dV
     local burnEta to (_nodeAt) - (halfDur).         // UT timestamp to start the burn

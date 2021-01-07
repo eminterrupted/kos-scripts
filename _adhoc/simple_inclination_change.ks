@@ -20,8 +20,6 @@ local runmode to 0.
 
 disp_main().
 
-wait 2.
-
 // Creating the new orbit
 local targetObt is createOrbit(
     _tgtInclination, 
@@ -37,7 +35,6 @@ local targetObt is createOrbit(
 local burn to "".
 local utime to 0.
 local burnVector to v(0, 0, 0).
-local dur to 0.
 local leadTime to 0.
 
 //Vec draw vars
@@ -81,7 +78,6 @@ local function main {
             set burn to get_inc_match_burn(ship, targetObt).
             set utime to burn[0].
             set burnVector to burn[1].
-            set dur to get_burn_dur(burnVector:mag).
             set leadTime to utime - get_burn_dur(burnVector:mag / 2).
             set mnvNode to burn[2].
             add mnvNode.

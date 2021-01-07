@@ -3,9 +3,9 @@
 parameter tgtBody is "Minmus",
           tgtInc is 20,
           tgtLan is 135,
-          pkgAlt is 250000,
-          tgtAp1 is 25000,
-          tgtPe1 is 25000.
+          pkgAlt is 100000,
+          tgtAp1 is 50000,
+          tgtPe1 is 50000.
 //
 
 clearscreen.
@@ -23,7 +23,7 @@ runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/lib/part/lib_solar").
 
 //Paths to other scripts used here
-local incChangeScript to "local:/incChange". 
+local incChangeScript to "local:/inc_change". 
 compile("0:/_adhoc/simple_inclination_change") to incChangeScript.
 
 //local stateObj to init_state_obj().
@@ -43,7 +43,7 @@ local tVal is 0.
 lock throttle to tVal.
 
 //Staging trigger
-when ship:availableThrust < 0.1 and tVal > 0 then {
+when ship:availableThrust < 0.1 and throttle > 0 then {
     safe_stage().
     preserve.
 }
@@ -110,28 +110,16 @@ local function main {
             out_msg("Getting transfer object and adding node").
             if not hasTarget set target to tgtBody.
             set mnvObj to get_transfer_obj().
-
             set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
             add mnvNode. 
 
-            set runmode to 25.
-        }
+        // Optimizes the maneuver node via hill climbing
+            out_msg("Optimimzing transfer node").
+            local accuracy is 0.001.
+            set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
+            set mnvObj to get_burn_obj_from_node(mnvNode).
 
-        // Adds the transfer burn node to the flight plan
-        // Center the node at 60s earlier than predicted to ensure we have the 
-        // proper orbit direction on arrival
-        else if runmode = 25 {
-            if  not hasNode {
-                out_msg("No node on flight plan!").
-                set runmode to 15. 
-            } else {
-                out_msg("Optimimzing transfer node").
-                local accuracy is 0.001.
-                set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
-                set mnvObj to get_burn_obj_from_node(mnvNode).
-
-                set runmode to 30.
-            }
+            set runmode to 30.
         }
 
         //Warps to the burn node

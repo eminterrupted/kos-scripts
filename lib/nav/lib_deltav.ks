@@ -96,7 +96,7 @@ global function get_dv_for_tgt_transfer {
 
     //semi-major axis
     local tgtSMA to target:orbit:semimajoraxis.
-    local stSMA to ship:periapsis + ship:body:radius.
+    local stSMA to ship:apoapsis + ship:body:radius.
     
     //Return dv
     return ((sqrt(ship:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).

@@ -21,24 +21,26 @@ runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/part/lib_antenna").
 
-local matchIncScript is "0:/_adhoc/simple_inclination_change".
-compile(matchIncScript) to "local:/inc_change".
-set matchIncScript to "local:/inc_change".
+local incScript is "local:/inc_change".
+if not exists(incScript) {
+    local kscIncScript is "0:/_adhoc/inclination_change".
+    compile(kscIncScript) to incScript.
+    set incScript to "local:/inc_change".
+}
 
-local orbitChangeScript is "0:/_adhoc/simple_orbit_change".
-compile(orbitChangeScript) to "local:/orbit_change".
-set orbitChangeScript to "local:/orbit_change".
+local obtScript to "local:/orbit_change".
+if not exists(obtScript) {
+    local kscObtScript is "0:/_adhoc/simple_orbit_change".
+    compile(kscObtScript) to obtScript.
+}
 
+local runmode to init_rm(0).
 local sciList is get_sci_mod_for_parts(ship:parts).
 local tgtAp is 0.
 local tgtPe is info:altForSci[ship:body:name] - 5000.
 local tStamp is 0.
-
-local runmode to stateObj["runmode"].
-if runmode = 99 set runmode to 0.
 
 local sVal is lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
 lock steering to sVal.
@@ -80,11 +82,41 @@ local function main {
                 }
             }
 
-            set runmode to 2.
+            set runmode to set_rm(5).
         }
 
-        // Setup the science triggers
-        else if runmode = 2 {
+        // Check our inclination. If low, run inclination change routine
+        else if runmode = 5 {
+            out_msg("Checking current inclination / LAN against target").
+            if ship:orbit:inclination < tgtInc or not check_value(ship:obt:lan, tgtLan, 15) {
+                runPath(incScript, tgtInc, tgtLan).
+            } else {
+                set runmode to set_rm(10).
+            }
+        }
+            
+        // Check to see if launch script placed us in proper eccentricity
+        // If not, calc the needed Ap then run the orbit change script
+        else if runmode = 10 {   
+            out_msg("Checking current orbit ap / pe against target").
+            if ship:orbit:eccentricity < tgtEcc or not ship:periapsis < info:altForSci[ship:body:name] {
+                set tgtAp to get_ap_for_pe_ecc(tgtPe, tgtEcc).
+                out_info("Values: tgtAp: " + round(tgtAp) + "  tgtPe: " + round(tgtPe) + " tgtEcc: " + tgtEcc).
+                runPath(orbitChangeScript, tgtAp, tgtPe, ship:obt:argumentOfPeriapsis).
+            } else {
+                set runmode to set_rm(20).
+            }
+        }
+
+        // Effective end of the loop. Will loop here forever until program is quit
+        else if runmode = 20 {
+            out_msg("Maneuvers complete, commencing survey").
+            lock steering to lookDirUp(ship:prograde:vector, sun:position).
+            set runmode to set_rm(30).
+        }
+
+                // Setup the science triggers
+        else if runmode = 30 {
             
             logStr("Readying science experiments").
             out_msg("Deploying science").
@@ -122,38 +154,7 @@ local function main {
                 logStr("Science recovered in high orbit").
             }
 
-            set runmode to 5.
-        }
-
-        // Check our inclination. If low, run inclination change routine
-        else if runmode = 5 {
-            out_msg("Checking current inclination / LAN against target").
-            if ship:orbit:inclination < tgtInc or not check_value(ship:obt:lan, tgtLan, 15) {
-                runPath(matchIncScript, tgtInc, tgtLan).
-            } else {
-                set runmode to 10.
-            }
-        }
-            
-        // Check to see if launch script placed us in proper eccentricity
-        // If not, calc the needed Ap then run the orbit change script
-        else if runmode = 10 {   
-            out_msg("Checking current orbit ap / pe against target").
-            if ship:orbit:eccentricity < tgtEcc or not ship:periapsis < info:altForSci[ship:body:name] {
-                set tgtAp to get_ap_for_pe_ecc(tgtPe, tgtEcc).
-                out_info("Values: tgtAp: " + round(tgtAp) + "  tgtPe: " + round(tgtPe) + " tgtEcc: " + tgtEcc).
-                breakpoint().
-                runPath(orbitChangeScript, tgtAp, tgtPe, 270).
-            } else {
-                set runmode to 20.
-            }
-        }
-
-        // Effective end of the loop. Will loop here forever until program is quit
-        else if runmode = 20 {
-            out_msg("Maneuvers complete, commencing survey").
-            lock steering to lookDirUp(ship:prograde:vector, sun:position).
-            set runmode to 30.
+            set runmode to set_rm(50).
         }
         
         update_display().
