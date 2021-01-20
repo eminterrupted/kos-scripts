@@ -151,14 +151,14 @@ global info is lex(
 
             if stage:ready {
                 stage.
-                wait 1.
+                wait 0.5.
                 break.
             }
         }
 
         for r in stage:resources {
             if r:name = "lqdHydrogen" {
-                if r:amount > 0 wait 3.5.
+                if r:amount > 0 wait 5.
             }
         }
     }

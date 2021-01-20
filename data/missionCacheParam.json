@@ -1,21 +1,77 @@
 {
     "entries": [
-        "rVal",
-        0,
-        "ls0",
-        "multistage_base",
-        "ms0",
-        "mariner_mun_transfer",
-        "ms1",
-        "mag_survey",
-        "lAp",
-        175000,
-        "lPe",
-        175000,
-        "lTAlt",
-        60000,
-        "lInc",
-        0
+        {
+            "value": "rVal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": 0,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": "ls0",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "multistage_base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ms0",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mariner_mun_transfer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ms1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "change_orbit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lAp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": 175000,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": "lPe",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": 175000,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": "lTAlt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": 60000,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": "lInc",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": 0,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": "ls1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "multistage_base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

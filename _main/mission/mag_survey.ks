@@ -102,7 +102,9 @@ local function main {
             if ship:orbit:eccentricity < tgtEcc or not ship:periapsis < info:altForSci[ship:body:name] {
                 set tgtAp to get_ap_for_pe_ecc(tgtPe, tgtEcc).
                 out_info("Values: tgtAp: " + round(tgtAp) + "  tgtPe: " + round(tgtPe) + " tgtEcc: " + tgtEcc).
-                runPath(orbitChangeScript, tgtAp, tgtPe, ship:obt:argumentOfPeriapsis).
+                runPath(obtScript, tgtAp, tgtPe, ship:obt:argumentOfPeriapsis).
+                set runmode to set_rm(20).
+                
             } else {
                 set runmode to set_rm(20).
             }

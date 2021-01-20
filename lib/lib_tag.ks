@@ -48,6 +48,7 @@ global function tag_clear {
 
     for p in inList {
         set p:tag to "".
+        print p + ";" + p:tag.
     }
 }
 

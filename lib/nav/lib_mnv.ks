@@ -47,9 +47,13 @@ runOncePath("0:/lib/lib_warp").
     local function do_circ_burn {
         parameter _burnObj.
         
+        local sVal to lookDirUp(nextNode:burnvector, sun:position).
         logStr("Executing circularization burn").
 
+        lock steering to sVal.
+
         until time:seconds >= _burnObj["burnEta"] {
+            set sVal to lookDirUp(nextNode:burnvector, sun:position).
             update_display().
             disp_burn_data(_burnObj["burnEta"]).
         }
@@ -181,17 +185,11 @@ runOncePath("0:/lib/lib_warp").
         // Inclination match burn data
         local burn to get_inc_match_burn(ship, _tgtOrbit).
         local burnVector to burn[1].
-        local dur to get_burn_dur(burnVector:mag).
         local utime to burn[0].
         local leadTime to utime - get_burn_dur(burnVector:mag / 2).
 
         //Maneuver node structures
         local mnvNode is burn[2].
-
-        //Vec draw vars
-        local burnDone to false.
-        local burnVDTail to 0.
-        local burnVD to 0.
 
         //Steering
         local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
@@ -209,82 +207,65 @@ runOncePath("0:/lib/lib_warp").
         }
         
         until subroutine = 10 {
+            set subroutine to 1.
+        }
 
-            // Vecdraw to show the maneuver
-            if subroutine = 0 {
+        if subroutine = 1 {
+            add mnvNode.
+            set subroutine to 2.
+        }
 
-                set burnVDTail to positionAt(ship, utime).
-                set burnVD to 
-                    vecDraw(
-                        burnVDTail,
-                        500 * burnVector,
-                        magenta,
-                        "dV:" + round(burnVector:mag, 1) + " m/s, dur:" + round(dur, 1) + "s",
-                        1,
-                        true).
+        // Warpable wait until burn
+        else if subroutine = 2 {
+            until time:seconds >= leadTime  - 30 {
+                set sVal to lookDirUp(nextNode:burnVector, sun:position) + r(0, 0, rVal).
+                update_display().
+                disp_burn_data().
+                wait 0.01.
+            }
+            set subroutine to 3.
+        }
 
-                // Keep the draw updating the start position until the burn is done.
-                set burnVD:startUpdater to { return positionAt(ship, utime). }.
-                set subroutine to 1.
+        // Stop warping
+        else if subroutine = 3 {
+            until time:seconds >= leadTime {
+                if warp > 0 kuniverse:timewarp:cancelwarp().
+                update_display().
+                disp_burn_data().
+                wait 0.01.
+            }
+            set subroutine to 4.
+        }
+
+        // Exec burn.
+        else if subroutine = 4 {
+            //Start burn
+            set tVal to 1.
+            local startVel to ship:velocity:orbit.
+            local dvToGo to 9999999.
+            until dvToGo <= 0.1 {
+                set sVal to burnVector.
+                set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
+                update_display().
+                disp_burn_data().
+                wait 0.01.
             }
 
-            if subroutine = 1 {
-                add mnvNode.
-                set subroutine to 2.
-            }
+            //End burn
+            set tVal to 0.
+            set subroutine to 5.
+        }
 
-            // Warpable wait until burn
-            else if subroutine = 2 {
-                until time:seconds >= leadTime  - 30 {
-                    set sVal to lookDirUp(nextNode:burnVector, sun:position) + r(0, 0, rVal).
-                    update_display().
-                    disp_burn_data().
-                    wait 0.01.
-                }
-                set subroutine to 3.
-            }
+        // Removes the node, ends routine
+        else if subroutine = 5 {
+            remove mnvNode.
+            set subroutine to 10.
+        }
 
-            // Stop warping
-            else if subroutine = 3 {
-                until time:seconds >= leadTime {
-                    if warp > 0 kuniverse:timewarp:cancelwarp().
-                    update_display().
-                    disp_burn_data().
-                    wait 0.01.
-                }
-                set subroutine to 4.
-            }
+        update_display().
 
-            // Exec burn.
-            else if subroutine = 4 {
-                //Start burn
-                set tVal to 1.
-                local startVel to ship:velocity:orbit.
-                local dvToGo to 9999999.
-                until dvToGo <= 0.1 {
-                    set sVal to burnVector.
-                    set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
-                    update_display().
-                    disp_burn_data().
-                    wait 0.01.
-                }
-
-                //End burn
-                set tVal to 0.
-                set subroutine to 5.
-            }
-
-            // Removes the node, ends routine
-            else if subroutine = 5 {
-                remove mnvNode.
-                set subroutine to 10.
-            }
-
-            update_display().
-
-            if stateObj:subroutine <> subroutine {
-                set stateObj["subroutine"] to subroutine.
-                log_state(stateObj).
-            }
+        if stateObj:subroutine <> subroutine {
+            set stateObj["subroutine"] to subroutine.
+            log_state(stateObj).
         }
     }

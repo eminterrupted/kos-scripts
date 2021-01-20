@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
-parameter pList to ship:parts.
+parameter pList to ship:parts,
+          mode  to "testStand".
 
 //set config:ipu to 500.
 clearScreen.
@@ -28,7 +29,7 @@ runOncePath("0:/lib/lib_part_test").
 check_contracts().
 tag_parts_by_title(pList).
 
-local lightList to ship:partsDubbedPattern("lgt").
+local lightList to ship:partsDubbedPattern("lgt.cherry").
 local pStack to stack().
 local uSet to uniqueSet().
 
@@ -38,26 +39,44 @@ if lightList:length > 0 {
     for l in lightList tog_cherry_light(l).
 }
 
-for p in pStack {
-    if p:tag:contains("test") and not uSet:contains(p:name) {
-        uSet:add(p:name).
-        test_cd(p).
-        if p:istype("engine") {
-            for e in ship:partsNamed(p:name) test_part(e).
-            engine_test_throttle_sequence(p).
-        }
-        
-        else if p:isType("decoupler") {
-            for dc in ship:partsNamed(p:name) test_part(dc).
-        }
+if mode = "testStand" {
+    for p in pStack {
+        if p:tag:contains("test") and not uSet:contains(p:name) {
+            uSet:add(p:name).
+            test_cd(p).
+            if p:istype("engine") {
+                for e in ship:partsNamed(p:name) test_part(e).
+                engine_test_throttle_sequence(p).
+            }
+            
+            else if p:isType("decoupler") {
+                for dc in ship:partsNamed(p:name) test_part(dc).
+            }
 
-        else {
-            for tpart in ship:partsNamed(p:name) test_part(tpart).
+            else {
+                for tpart in ship:partsNamed(p:name) test_part(tpart).
+            }
         }
     }
-}
 
-test_sci_list().
+    test_sci_list().
+
+} else if mode = "staticFire" {
+    local pTestRep to "".
+    for p in pStack {
+        set pTestRep to p.
+        p:activate.
+    }
+
+    local tStamp to 10.
+    until tStamp <= 0 {
+        disp_test_main(pTestRep, -1, tStamp).
+        wait 1.
+        set tStamp to tStamp - 1.
+    }
+
+    engine_test_throttle_sequence(pTestRep, 10).
+}
 
 wait 2.
 if lightList:length > 0 for l in lightList tog_cherry_light(l, false).
@@ -111,9 +130,9 @@ local function end_eng_test {
 
 
 local function engine_test_throttle_sequence {
-    parameter p.
+    parameter p,
+              tDur is 15.
 
-    local tDur to 15.
     local t to time:seconds.
     local tEnd to t + tDur. 
     local tSpool to 0.

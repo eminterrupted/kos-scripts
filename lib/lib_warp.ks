@@ -29,6 +29,8 @@ global function warp_to_timestamp {
     if ship:altitude > ship:body:atm:height + 2500 set kuniverse:timewarp:mode to "RAILS".
     else set kuniverse:timewarp:mode to "PHYSICS".
 
+    lock steering to lookDirUp(ship:facing:forevector, sun:position).
+
     until time:seconds >= _ts - 30 {
 
         if warp = 0 {
@@ -39,6 +41,8 @@ global function warp_to_timestamp {
 
         update_display().
     }
+
+    unlock steering.
 }
 
 
@@ -192,6 +196,8 @@ global function warp_to_burn_node {
     if warp > 0 set warp to 0.
     wait until kuniverse:timewarp:issettled.
     
+    lock steering to lookDirUp(nextNode:burnvector, sun:position).
+
     until time:seconds >= mnvObj["burnEta"] {
         update_display().
         disp_burn_data().
@@ -204,9 +210,8 @@ global function warp_to_burn_node {
 
 
 global function stop_warp_at_mark {
-    parameter _ts, 
-              dispDelegate is "".
-    
+    parameter _ts.
+        
     local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
     lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
     

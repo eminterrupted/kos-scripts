@@ -199,43 +199,6 @@ local function main {
     }
 }
 
-// Loop until distance from target starts increasing
-local function await_closest_approach {
-    
-    until false {
-        local lastDistance to target:distance.
-        wait 1.
-        if target:distance > lastDistance {
-            break.
-        } else {
-            out_msg("Awaiting closest approach. Distance: " + round(target:distance)).
-            update_display().
-        }
-    }
-}
-
-
-// Throttle against our relative velocity vector until we're increasing it
-local function cancel_relative_velocity {
-    lock steering to lookDirUp(target:velocity:orbit - ship:velocity:orbit, sun:position).
-    wait until shipSettled().
-
-    lock throttle to 0.25.
-
-    until false {
-        local lastDiff to (target:velocity:orbit - ship:velocity:orbit):mag.
-        wait 0.01.
-        if (target:velocity:orbit - ship:velocity:orbit):mag > lastDiff {
-            lock throttle to 0. 
-            out_msg().
-            break.
-        } else {
-            update_display().
-            out_msg("Cancelling relative velocity. Current: " + round(lastDiff)).
-        }
-    }
-}
-
 local function approach_target {
     lock steering to target:position.
     wait until shipSettled().

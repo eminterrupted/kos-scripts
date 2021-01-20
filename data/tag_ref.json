@@ -1,949 +1,3829 @@
 {
     "entries": [
-        "Probodobodyne HECS2",
-        "cmd.core",
-        "Light, Aviation",
-        "lgt.nav.aviation",
-        "Surface Mounted Omni Light",
-        "lgt.omni",
-        "Procedural Liquid Tank",
-        "tank",
-        "KR-1M-V 'Sphinx' Liquid Fuel Engine",
-        "eng",
-        "TT18-A Launch Stability Enhancer",
-        "mlp.clamp",
-        "Surface Mounted Spotlight",
-        "lgt.spot",
-        "Procedural Battery",
-        "ec.battery",
-        "RealChute Cone Chute",
-        "chute.cone",
-        "Surface Mounted 4-Way Spotlight",
-        "lgt.spot.srfMulti",
-        "Mk4-1 'Amalthea' Specialized cmd Module",
-        "cmd.crew",
-        "Heat Shield (3.75m)",
-        "thrm.heatshield",
-        "ShroudedDecoupler",
-        "dc.st.shroud",
-        "Probodobodyne OKTO2",
-        "cmd.core",
-        "Universal Storage: Attitude Control decoupler (2.5m)",
-        "dc.st.ctrl",
-        "Procedural RCS Tank",
-        "tank",
-        "BZ-3 Adjustable Base Frame",
-        "gear.baseFrame",
-        "LV-95-6 Orbital Maneuvering Engine Cluster",
-        "eng",
-        "NR-U3 Upper Stage Engine Mount",
-        "struct.emount",
-        "KR-74 'Lynx' Liquid Fuel Engine",
-        "eng",
-        "NR-L3 Lower Stage Engine Mount",
-        "struct.emount",
-        "KR-84 'Ocelot' Liquid Fuel Engine",
-        "eng",
-        "General Launch Base",
-        "mlp.base.clamp",
-        "Saturn Tower Base Section",
-        "mlp.tower",
-        "AGT-Timer Timed Action Group Trigger",
-        "ctrl.sensor.timer",
-        "Saturn Tower Modular Multi Section",
-        "mlp.tower",
-        "Saturn Tower Lightning Mast",
-        "mlp.tower",
-        "Saturn Tower Crew Access Arm",
-        "mlp.tower.crewarm",
-        "Saturn Hold Down - Saturn V",
-        "mlp.clamp",
-        "Drainex 1 - Fuel Sensor and Action Group Trigger",
-        "ctrl.sensor.fuel",
-        "T2 Solid Rocket Separation Retro-Booster",
-        "eng",
-        "Long decal 1x4",
-        "decal",
-        "Mk2-R Radial-Mount Parachute",
-        "chute.radial",
-        "Mk12-R Radial-Mount Drogue Chute",
-        "chute.radial.drogue",
-        "Curved decal",
-        "decal",
-        "T2 Solid Rocket Separation Booster",
-        "eng",
-        "Illuminator Mk2",
-        "lgt.flood",
-        "GRAVMAX Negative Gravioli Detector",
-        "sci.gravimeter",
-        "Double-C Seismic Accelerometer",
-        "sci.accelerometer",
-        "PresMat Barometer",
-        "sci.barometer",
-        "2HOT Thermometer",
-        "sci.thermometer",
-        "SP-W 3x2 Photovoltaic Panels",
-        "ec.solar.array.retractable",
-        "R6 RCS Thruster Block",
-        "ctrl.rcs",
-        "Communotron 16-S",
-        "comm.omni",
-        "Seismic Sensor Pod",
-        "sci.dmag.seismicPod",
-        "Surface Ablation Laser Light Imager",
-        "sci.dmag.laserImager",
-        "Seismic Impact Hammer",
-        "sci.dmag.impactHammer",
-        "Dynamic Albedo of Neutrons",
-        "sci.dmag.neutrons",
-        "Anomalous Signal Sensor - BTDT",
-        "sci.dmag.anomaly",
-        "Magnetometer Boom",
-        "sci.dmag.magBoom",
-        "Micro Goo Containment Pod",
-        "sci.dmag.gooPod.micro",
-        "SC-901 Science Micro",
-        "sci.dmag.matBay.micro",
-        "Surface Scanning Module",
-        "sci.dmag.srfrsrcScan",
-        "ALT-Pro Altimeter and Action Group Trigger",
-        "ctrl.sensor.altimeter",
-        "Radiator Panel (small)",
-        "thrm.radiator",
-        "PROX-Pro Proximity Sensor",
-        "ctrl.sensor.proximity",
-        "Pegasus II Mobility Enhancer",
-        "util.ladder",
-        "Kelus-LV Bay Mobility Enhancer",
-        "util.ladder",
-        "Flat decal",
-        "decal",
-        "SEQ-9 Container Module",
-        "cargo.container",
-        "RealChute Cone Double Chute",
-        "chute.cone.double",
-        "OX-STAT Photovoltaic Panels",
-        "ec.solar.fixed",
-        "K40-AR 'Oar' Advanced Solar Array",
-        "ec.solar.array.retractable",
-        "Universal Storage: Four bay service core (1.25m)",
-        "bay.core.us",
-        "Univ. store 2 - GORESat",
-        "sci.dmag.usGoreSat",
-        "Univ. store 2 - Multi-Spectral Imaging Platform",
-        "sci.dmag.usMultiSpectral",
-        "Universal Storage: Battery",
-        "ec.battery",
-        "Univ. store 2 - RPWS Antenna",
-        "sci.dmag.usRpws",
-        "Univ. store 2 - Solar Particle Collector",
-        "sci.dmag.solarParticle",
-        "Universal Storage: Cylindrical fairing (1.25m)",
-        "bay.doors.us",
-        "Little Brother Surveillance Camera",
-        "sci.dmag.lbSurveillanceCam",
-        "Procedural Xenon Tank",
-        "tank",
-        "Communotron 88-88",
-        "comm.dish",
-        "CAP-106 Capacitor",
-        "ec.cap",
-        "SM-3 Stack Triple Adapter",
-        "struct.adapter",
-        "IX-8219 'AFTER' Ion Thruster",
-        "eng",
-        "K22 'Observer' 1x5 Advanced Photovoltaic Panels",
-        "solar.array.extendable",
-        "Mk3B 'Pandora' Advanced cmd Pod",
-        "cmd.crew",
-        "Procedural Heatshield",
-        "thrm.heatshield",
-        "Mobile Processing Lab MPL-LG-2",
-        "sci.mobileLab",
-        "Solar Particle Collector",
-        "sci.dmag.usSolarParticle",
-        "Radial Snack Tin",
-        "tank",
-        "Kelus Mobility Enhancer",
-        "util.ladder",
-        "Universal Storage: Eight bay service core (2.5m)",
-        "bay.core.us",
-        "Univ. store 2 - Soil Moisture Sensor",
-        "sci.dmag.usSoilSensor",
-        "Univ. store 2 - Magnetometer Boom",
-        "sci.dmag.usMagBoom",
-        "Univ. store 2 - Orbital Telescope",
-        "sci.dmag.usScope",
-        "Universal Storage: Advanced Goo Unit",
-        "sci.dmag.usGoo",
-        "Universal Storage: store Inventory System",
-        "util.store",
-        "Universal Storage: Snack package",
-        "tank",
-        "Universal Storage: Cylindrical fairing (2.5m)",
-        "bay.doors.us",
-        "G-00 Hinge",
-        "rbt.hinge.small",
-        "Communotron HG-61",
-        "comm.dish.25g",
-        "CommTech EXP-VR-2T",
-        "comm.omni",
-        "Procedural Thrust Plate Adapter",
-        "struct.emount",
-        "LV-N \"Nerv\" Atomic Rocket Motor",
-        "eng",
-        "OKEB-25R 'Starship' Blanket Photovoltaic Array",
-        "ec.solar.array.retractable",
-        "RX-30 Bidirectional RCS Thruster Block",
-        "ctrl.rcs",
-        "RealChute Stack Chute",
-        "chute.stack.double",
-        "Clamp-O-Tron Docking Port",
-        "dock.port.1",
-        "RC-001S Remote Guidance Unit",
-        "cmd.core",
-        "R-12 'Doughnut' External Tank",
-        "tank",
-        "Place-Anywhere 7 Linear RCS Port",
-        "ctrl.rcs",
-        "Universal Storage: Attitude Control decoupler (1.25m)",
-        "dc.st.ctrl",
-        "Universal Storage: Physical Science Unit",
-        "sci.us.physicalSci",
-        "Universal Storage: Advanced Material Bay",
-        "sci.us.matBay",
-        "Universal Storage: Liquid Fuel Tank",
-        "tank",
-        "Universal Storage: Atmospheric Science Unit",
-        "sci.us.atmosphericSci",
-        "LV-303 'Pug' Liquid Fuel Engine",
-        "eng",
-        "K5 1x3 'Aquila' Advanced Photovoltaic Panels",
-        "ec.solar.array",
-        "Experiment Return Unit",
-        "sci.container.return",
-        "Universal Storage: Monopropellant Tank",
-        "tank",
-        "KR-1E-V 'Angora' Liquid Fuel Engine",
-        "eng",
-        "Procedural Hollow Truss pl.base",
-        "pl.base",
-        "RE-L10 \"Poodle\" Liquid Fuel Engine",
-        "eng",
-        "Procedural Fairing (Conic)",
-        "pl.pf.fairing",
-        "RC-14-A RCS Thruster Block",
-        "ctrl.rcs",
-        "SCAN-R rsrc Mapper",
-        "sci.scan.rsrc",
-        "K4 3x1 'Relay' Advanced Photovoltaic Panels",
-        "ec.solar.array",
-        "Advanced Grabbing Unit",
-        "util.grabber",
-        "SENTINEL Infrared Telescope",
-        "sci.asteroidScope",
-        "N1 Small Omni Light",
-        "lgt.omni",
-        "Communotron HG-55",
-        "comm.dish",
-        "PPD-12 Cupola Module",
-        "cmd.crew.cupola",
-        "Rockomax HubMax Multi-Point Connector",
-        "struct.hub",
-        "PPD-10 Hitchhiker store Container",
-        "cmd.cabin",
-        "S-1500 Snack Tin",
-        "tank",
-        "HG-5 High Gain Antenna",
-        "comm.dish",
-        "Procedural Ore Tank",
-        "tank",
-        "24-77 \"Twitch\" Liquid Fuel Engine",
-        "eng",
-        "RV-105-A RCS Thruster Block",
-        "ctrl.rcs",
-        "OX-STAT-XL Photovoltaic Panels",
-        "ec.solar.fixed",
-        "Gigantor XL Solar Array",
-        "ec.solar.array",
-        "IWC-3K \"Wyvern\"",
-        "store.container.pod",
-        "Heat Shield (2.5m)",
-        "thrm.heatshield",
-        "RX-15T Tridirectional RCS Block",
-        "ctrl.rcs",
-        "OX-4W 3x2 Photovoltaic Panels",
-        "ec.solar.array",
-        "S-500 Snack Tin",
-        "tank",
-        "Clamp-O-Tron Docking Port Sr.",
-        "dock.port.sr",
-        "S5 RCS Thruster Block",
-        "ctrl.rcs",
-        "Rockomax Brand Adapter 02",
-        "struct.adapter",
-        "Mk1 Crew Cabin",
-        "cmd.cabin",
-        "struct Fuselage",
-        "struct",
-        "OKEB-15 'Copernicus' Blanket Photovoltaic Array",
-        "ec.solar.array",
-        "KX-STAT-8 1x4 Advanced Photovoltaic Truss",
-        "ec.solar",
-        "R5 RCS Thruster Block",
-        "ctrl.rcs",
-        "Procedural struct Element",
-        "struct",
-        "Y1 Protective Cap",
-        "struct.end",
-        "Small Radial Gyroscope",
-        "ctrl.rw",
-        "ISC-6K Container",
-        "store.container",
-        "RV-105-X RCS Thruster Block",
-        "ctrl.rcs",
-        "TVR-300L Stack Tri-Adapter",
-        "struct.adapter",
-        "Convert-O-Tron 125",
-        "rsrc.isru",
-        "thrm Control System (small)",
-        "thrm.radiator",
-        "Advanced Inline Stabilizer",
-        "ctrl.rw",
-        "NIV-30 Curved Solar Array",
-        "ec.solar.array",
-        "L2 Atlas Low-Profile Engine",
-        "eng",
-        "Mk2 Lander Can",
-        "cmd.crew",
-        "Pegasus I Mobility Enhancer",
-        "util.ladder",
-        "TVR-400L Stack Quad-Adapter",
-        "struct.adapter",
-        "LT-2 Landing Strut",
-        "gear.strut",
-        "LV-909 \"Terrier\" Liquid Fuel Engine",
-        "eng",
-        "JS-1 Joint Socket",
-        "kas.socket",
-        "SEQ-3 Cargo store Unit",
-        "store.cargo",
-        "EAS-4 Strut Connector",
-        "struct.strut",
-        "Illuminator Mk1",
-        "lgt.spot",
-        "Universal Storage: Radioisotope Thermoelectric Generator",
-        "ec.rtg",
-        "RTS-1 rsrc Transfer Station",
-        "kas.transfer",
-        "BGP-400 Pylon on Steroids",
-        "kas.pylonbatt",
-        "CB1 Ground Base",
-        "kas.base",
-        "Large Holding Tank",
-        "tank",
-        "'Drill-O-Matic' Mining Excavator",
-        "rsrc.drill",
-        "Stratus-V Cylindrified Monopropellant Tank",
-        "tank",
-        "Radiator Panel (edge)",
-        "thrm.radiator",
-        "OKEB-4R Circular Blanket Photovoltaic Array",
-        "ec.solar.array",
-        "RC-L01 Remote Guidance Unit",
-        "cmd.core",
-        "BZ-2 Adjustable Base Frame",
-        "gear.baseframe",
-        "64-8S 'Chickadee' Landing Engine",
-        "eng",
-        "Info Drive",
-        "util.info",
-        "Sensor Package",
-        "sci.b9.sensorpackage",
-        "Universal Storage: kOS Guidance Computer",
-        "ctrl.kos.cpu",
-        "NH-24 Monopropellant APU",
-        "ec.apu.mono",
-        "K3 'Globe' 3x1 Advanced Photovoltaic Panels",
-        "ec.solar.array",
-        "EC Level Detector",
-        "ctrl.sensor.powerlevel",
-        "Universal Storage: Surface Mountable Inventory Container",
-        "store.container.us",
-        "Radial Holding Tank",
-        "tank",
-        "VS-3 Advanced High Resolution Imager",
-        "sci.scan.visual",
-        "Long decal 1x2",
-        "decal",
-        "SAR-X Antenna",
-        "sci.scan.altimeter",
-        "CommTech EXP-VR-2T-XL",
-        "comm.omni",
-        "SCAN-R2 Advanced rsrc Mapper",
-        "sci.scan.rsrc",
-        "LV-95 Orbital Maneuvering Engine",
-        "eng",
-        "Universal Storage: Water Tank",
-        "tank",
-        "Universal Storage: Oxygen tank",
-        "tank",
-        "Universal Storage: Combination Lifesupport Bag",
-        "tank",
-        "Stratus-V Roundified Monopropellant Tank",
-        "tank",
-        "R-4 'Dumpling' External Tank",
-        "tank",
-        "PB-X50R Xenon Container",
-        "tank",
-        "A101 Argon Tank",
-        "tank",
-        "Rockomax Brand Adapter",
-        "struct.adapter",
-        "Static Test Stand - Small",
-        "ts",
-        "Universal Storage: Radial Tank",
-        "tank",
-        "TS-25 Stack Separator",
-        "dc.st.sep",
-        "PB-Z02 Xenon Tank",
-        "tank",
-        "SE-4-OMNI Stack Multi-Adapter",
-        "struct.adapter",
-        "FI-1124 'HI-SNAP' Ion Thruster",
-        "eng",
-        "GW0101 'Gyro-1' Hall Thruster",
-        "eng",
-        "LV-N410 'Cherenkov' Atomic Rocket Motor",
-        "eng",
-        "A102 Argon Tank",
-        "tank",
-        "BZ-26 Radial Attachment Point Jr.",
-        "struct.attachpoint",
-        "Service Bay (1.25m)",
-        "bay.doors.st",
-        "Mk1b Cargo Bay (2m)",
-        "bay.doors.b9",
-        "Universal Storage: Tapered fairing (0.625m to 1.25m)",
-        "bay.doors.us",
-        "K2 1x2 'Recon' Advanced Photovoltaic Panels",
-        "ec.solar.array",
-        "Universal Storage: Cylindrical service module (0.625m)",
-        "bay.doors.us",
-        "Universal Storage: Soyuz fairing (1.25m to 1.5m)",
-        "bay.doors.us",
-        "Universal Storage: Five bay service core (1.5m)",
-        "bay.core.us",
-        "Universal Storage: Tapered fairing (1.5m to 1.875m)",
-        "bay.doors.us",
-        "FL-XA30 Adapter",
-        "struct.adapter",
-        "General Launch Plate v2",
-        "mlp.base.clamp",
-        "Probodobodyne QBE",
-        "cmd.core",
-        "Light, Beacon, Amber",
-        "lgt.nav.amber",
-        "Light, Navigation, Red",
-        "lgt.nav.red",
-        "N2 Large Omni Light",
-        "lgt.omni",
-        "Cherry Light",
-        "lgt.cherry",
-        "1x1m Universal Panel",
-        "struct.panel",
-        "Light, Navigation, Green",
-        "lgt.nav.green",
-        "Light, Navigation, White",
-        "lgt.nav.white",
-        "Light, Navigation, Blue",
-        "lgt.nav.blue",
-        "Light, Strobe, White",
-        "lgt.strobe.white",
-        "Mk25 Parachute",
-        "chute.cone",
-        "Mk16-XL Parachute",
-        "chute.cone",
-        "PXL-AR Pressurized Radial Attachment Module",
-        "stn.structure",
-        "RealChute Radial Chute",
-        "chute.radial",
-        "PPD-8 'Wharf' Station Core",
-        "cmd.crew.station.cpu",
-        "Universal Storage: Soil Recycler",
-        "util.soil.converter",
-        "PPD-24 'Panorama' Observation Module",
-        "cmd.crew.observation",
-        "PPD-A2 Pressurized Crew Tube",
-        "stn.structure",
-        "RC-XL001 Remote Guidance Unit",
-        "cmd.core",
-        "PFD-C 'Coriolis' Inflatable Centrifuge Module",
-        "stn.structure.centrifuge",
-        "PPD-MULT Multi-Point Station Connector",
-        "stn.structure",
-        "PPD-PTD Adapter",
-        "stn.structure",
-        "OKEB-45 'Nautilus' Blanket Photovoltaic Array",
-        "ec.solar.array",
-        "Procedural Truss pl.base",
-        "pl.base",
-        "Procedural Fairing (Ogive)",
-        "pl.pf.fairing",
-        "OX-4L 1x6 Photovoltaic Panels",
-        "ec.solar.array",
-        "Aerocam 180",
-        "util.camera",
-        "Clamp-O-Tron Shielded Docking Port",
-        "dock.port.shielded",
-        "K3x75 'Hermes' 3x1 Advanced Photovoltaic Panels",
-        "ec.solar.array",
-        "Procedural Hollow Interstage Ring",
-        "pl.base",
-        "KR-10A 'Corgi' Liquid Fuel Engine Cluster",
-        "eng",
-        "KR-701 'Cougar' Liquid Fuel Engine",
-        "eng",
-        "Large Launch Stand",
-        "mlp.base.clamp",
-        "TS-37 Stack Separator",
-        "dc.st.sep",
-        "XRD Surface Analyzer",
-        "sci.dmag.xraysrf",
-        "LT-1 Landing Struts",
-        "gear",
-        "KS-160 'Orca' Liquid Fuel Engine",
-        "eng",
-        "Sepratron I",
-        "eng.sep",
-        "RX-15 Bidirectional RCS Thruster Block",
-        "ctrl.rcs",
-        "RV-102 RCS Thruster Block",
-        "ctrl.rcs",
-        "K5-R 'Aquila-R' 1x3 Advanced Photovoltaic Panels",
-        "ec.solar.array.retractable",
-        "Heat Shield (1.25m)",
-        "thrm.heatshield",
-        "K12-K 1x4 Concentrating Photovoltaic Panels",
-        "ec.solar.array",
-        "Procedural Ribbed pl.base",
-        "pl.base",
-        "SM-2 Stack Dual Adapter",
-        "struct.adapter",
-        "48-7S \"Spark\" Liquid Fuel Engine",
-        "eng",
-        "KS-1E 'Goldfish' Liquid Fuel Engine",
-        "eng",
-        "LT-05 Micro Landing Strut",
-        "gear",
-        "Universal Storage: Attitude Control decoupler (0.625m)",
-        "dc.st.ctrl",
-        "Mk16 Parachute",
-        "chute.cone",
-        "Atmospheric Fluid Spectro-Variometer SSE - Special Smaller Edition",
-        "sci.atmosphericSci",
-        "Procedural Hollow pl.base Ring",
-        "pl.base",
-        "T-1 Toroidal Aerospike \"Dart\" Liquid Fuel Engine",
-        "eng",
-        "S3 KS-25x4 \"Mammoth\" Liquid Fuel Engine",
-        "eng",
-        "D25 Heavy Drone Core",
-        "cmd.core",
-        "M4435 Narrow-Band Scanner",
-        "sci.scan.resource.legacy",
-        "K20-K 1+2+1 Concentrating Photovoltaic Panels",
-        "ec.solar.array",
-        "MS-R Enhanced Multispectral Scanner",
-        "sci.scan.multi",
-        "R-3B Radar Altimeter",
-        "sci.scan.alt",
-        "VS-1 High Resolution Imager",
-        "sci.scan.visual",
-        "PPD-F412M Hydroponics Module",
-        "sci.hydro",
-        "Stratus-V Minified Monopropellant Tank",
-        "tank",
-        "RPWS Antenna",
-        "sci.dmag.rwps",
-        "Orbital Telescope",
-        "sci.dmag.scope",
-        "PB-X150 Xenon Container",
-        "tank",
-        "IX-6315 \"Dawn\" Electric Propulsion System",
-        "eng",
-        "CAP-101 Capacitor",
-        "ec.cap.radial",
-        "Z-1k Rechargeable Battery Bank",
-        "ec.battery.stack",
-        "SC-9001 Science Jr.",
-        "sci.matBay",
-        "Mystery Goo™ Inline Containment Unit",
-        "sci.gooPod",
-        "FL-R25 RCS Fuel Tank",
-        "tank",
-        "Oscar-B Fuel Tank",
-        "tank",
-        "Basic Hull Camera Deluxe",
-        "util.camera",
-        "RV-103 RCS Thruster Block",
-        "ctrl.rcs",
-        "NR-L2 Lower Stage Engine Mount",
-        "tank",
-        "RC-XS1 Remote Guidance Unit",
-        "cmd.core",
-        "ARH-1M Argon Tank",
-        "tank",
-        "GW7201 'Gyro-2' Lensed Hall Thruster",
-        "eng",
-        "thrm Control System (medium)",
-        "thrm.radiator",
-        "RV-105x5 RCS Thruster Block",
-        "ctrl.rcs",
-        "PTD-C 'Porthole' Observation Window",
-        "cmd.crew",
-        "Probodobodyne RoveMate",
-        "cmd.rover",
-        "RoveMax Model S2",
-        "gear.rover",
-        "SCAN Been There Done That®",
-        "sci.dmag.btdt",
-        "ExoKerbol Core Drill",
-        "sci.dmag.coreDrill",
-        "KerbPro",
-        "util.camera",
-        "Modular Girder Small Adapter",
-        "struct.cube.adapter",
-        "SPRT Medium Scanning Arm",
-        "sci.srfScanArm",
-        "Experiment store Unit",
-        "sci.container",
-        "Cubic-Family Strut",
-        "struct.cube.strut",
-        "Cubic-Family Strut Adapter",
-        "struct.cube.adapater",
-        "Mk1 Cockpit",
-        "cmd.crew",
-        "LY-10 Small Landing Gear",
-        "gear.small",
-        "Atmospheric Science Package",
-        "sci.b9.sciPackage",
-        "Universal Storage: Remote Operations System",
-        "cmd.core",
-        "B9-PW Procedural wing",
-        "aero.wing",
-        "B9-PCST Procedural control surface",
-        "aero.ctrl",
-        "Mk0 Liquid Fuel Fuselage",
-        "tank",
-        "Advanced Nose Cone - Type B",
-        "tank",
-        "Adjustable Ramp Intake",
-        "aero.intake",
-        "LY-35 Medium Landing Gear",
-        "gear.medium",
-        "Mk1 Diverterless Supersonic Intake",
-        "aero.intake",
-        "D-30F7 Turbojet Engine",
-        "eng",
-        "Tail Fin",
-        "aero.ctrl.fin",
-        "Mk1-3 cmd Pod",
-        "cmd.crew",
-        "KR-1 'Boar' Liquid Fuel Engine",
-        "eng",
-        "SP-L 1x6 Photovoltaic Panels",
-        "ec.solar.array.retractable",
-        "KS-600AJ 'Manatee' Liquid Fuel Engine",
-        "eng",
-        "RX-55 Advanced RCS Block",
-        "ctrl.rcs",
-        "Probodobodyne Stayputnik",
-        "cmd.core",
-        "FM1 \"Mite\" Solid Fuel Booster",
-        "eng.solid",
-        "Reflectron DP-10",
-        "comm.omni",
-        "Small Launch Stand",
-        "mlp.base.clamp",
-        "Basic Fin",
-        "aero.fin",
-        "Z-100 Rechargeable Battery Pack",
-        "ec.battery.radial",
-        "F3S0 \"Shrimp\" Solid Fuel Booster",
-        "eng.solid",
-        "Procedural SRB",
-        "eng.solid",
-        "Probodobodyne OKTO",
-        "cmd.core",
-        "Z-200 Rechargeable Battery Bank",
-        "ec.battery",
-        "Heat Shield (0.625m)",
-        "thrm.heatshield",
-        "LV-T45 \"Swivel\" Liquid Fuel Engine",
-        "eng",
-        "RT-5 \"Flea\" Solid Fuel Booster",
-        "eng.solid",
-        "Miniature Rocket Nose",
-        "struct.cone",
-        "Small Inline Reaction Wheel",
-        "ctrl.rw",
-        "KR-2042 b Scriptable Control System",
-        "ctrl.kos.cpu",
-        "Mystery Goo™ Containment Unit ",
-        "sci.gooPod",
-        "Probodobodyne HECS",
-        "cmd.probe.core",
-        "Small Nose Cone",
-        "aero.cone",
-        "Modular Girder Segment",
-        "struct.girder",
-        "Procedural Nose Cone",
-        "aero.cone",
-        "Kerbodyne S3-14400 Tank",
-        "tank",
-        "Kerbodyne KR-2L+ \"Rhino\" Liquid Fuel Engine",
-        "eng",
-        "Rockomax Jumbo-64 Fuel Tank",
-        "tank",
-        "CR-0120 'Erebus' Cryogenic Rocket Engine",
-        "eng",
-        "FL-T100 Fuel Tank",
-        "tank",
-        "FL-T400 Fuel Tank",
-        "tank",
-        "FL-T800 Fuel Tank",
-        "tank",
-        "Mk-1H 'Torch' Liquid Fuel Engine",
-        "eng",
-        "Procedural Fairing Base",
-        "pl.pf.base",
-        "MS-1 Multispectral Scanner",
-        "sci.scan.multi",
-        "General Round Launch Stand",
-        "mlp.base.clamp",
-        "FL-R10 RCS Fuel Tank",
-        "tank",
-        "AE-FF1 Airstream Protective Shell (1.25m)",
-        "pl.st.fairing",
-        "FL-A5 Adapter",
-        "tank",
-        "Communotron 16",
-        "comm.omni",
-        "Static Test Stand - Tower Type",
-        "ts",
-        "BACC \"Thumper\" Solid Fuel Booster",
-        "eng.solid",
-        "FL-T200 Fuel Tank",
-        "tank",
-        "LV-T15 'Valiant' Liquid Fuel Engine",
-        "eng",
-        "Static Test Stand - Engine Type",
-        "ts",
-        "CX-4181 Scriptable Control System",
-        "ctrl.kos.cpu",
-        "TD-12 Decoupler",
-        "dc.st",
-        "CR-2 'Vesuvius' Cryogenic Rocket Engine",
-        "eng",
-        "Mk1 Command Pod",
-        "cmd.crew",
-        "LV-1R \"Spider\" Liquid Fuel Engine",
-        "eng",
-        "CR-10A 'Stromboli' Cryogenic Rocket Engine",
-        "eng",
-        "TT-38K Radial Decoupler",
-        "dc.rad",
-        "TD-06 Decoupler",
-        "dc.st",
-        "Oscar-A Liquid Fuel Tank",
-        "tank",
-        "Mk1 Liquid Fuel Fuselage",
-        "tank",
-        "SC-9001R Radial Science Jr.",
-        "sci.matbay.rad",
-        "Beamer 100x Dist-o-meter",
-        "sci.dist",
-        "R-11 'Baguette' External Tank",
-        "tank",
-        "LV-T30 \"Reliant\" Liquid Fuel Engine",
-        "eng",
-        "TS-12 Stack Separator",
-        "dc.st",
-        "TS-06 Stack Separator",
-        "dc.st",
-        "Reflectron KR-7",
-        "comm.dish",
-        "LV-1 \"Ant\" Liquid Fuel Engine",
-        "eng",
-        "Procedural Truss Payload Adapter",
-        "pl.pf.base",
-        "Small Hardpoint",
-        "dc.hp",
-        "Structural Fuselage",
-        "struct",
-        "Mk1b Fuselage (0.25m)",
-        "tank",
-        "BoosterCam",
-        "util.camera",
-        "GORESat",
-        "sci.dmag.gore",
-        "S1 SRB-KD25k \"Kickback\" Solid Fuel Booster",
-        "eng.solid",
-        "Mk-55 \"Thud\" Liquid Fuel Engine",
-        "eng",
-        "HG-20 High Gain Antenna",
-        "comm.dish",
-        "TT-14 Radial Decoupler",
-        "dc.rad",
-        "Size 1.5 Decoupler",
-        "dc.st",
-        "KS-1M 'Otter' Liquid Fuel Engine",
-        "eng",
-        "Flat Launch Base 2 - Small Frame",
-        "mlp.base.clamp",
-        "General Fallback Tower - Small",
-        "mlp.fallback.tower",
-        "General Hold-Down Type 3: Vert Bolt Flat",
-        "mlp.holddown",
-        "General Hold-Down Type 1: Side-Arm",
-        "mlp.holddown",
-        "LV-601 Orbital Maneuvering Engine",
-        "eng",
-        "General Launch Base 1 - Small",
-        "mlp.base.clamp",
-        "General Hold-Down Type 6: Clamp Arm Small",
-        "mlp.holddown",
-        "Medium Modular Service Tower Core",
-        "mlp.tower",
-        "Medium Modular Service Tower Section",
-        "mlp.tower",
-        "Medium Modular Service Tower Top",
-        "mlp.tower",
-        "Droop-Style Umbilical Size 1 - Short",
-        "mlp.umbilical",
-        "AE-FF0 Airstream Protective Shell (0.625m)",
-        "pl.st.fairing",
-        "Atmospheric Fluid Spectro-Variometer",
-        "sci.atmosphericSci",
-        "CE-10 'Hecate' Cryogenic Rocket Engine",
-        "eng",
-        "General Hold-Down Type 2: Drop-Arm",
-        "mlp.holddown",
-        "LV-TX87 \"Bobcat\" Liquid Fuel Engine",
-        "eng",
-        "RV-1 \"Cub\" Vernier Engine",
-        "eng",
-        "Bangometer",
-        "sci.impact",
-        "Flat Launch Base 1 - Mini Frame",
-        "mlp.base.clamp",
-        "Small Modular Service Tower Core",
-        "mlp.tower",
-        "Small Modular Crew Elevator Top",
-        "mlp.tower",
-        "CDL-F Flag Decal",
-        "decal",
-        "RA-2 Relay Antenna",
-        "comm.dish.relay",
-        "Communotron DTS-M1",
-        "comm.dish",
-        "Mk1-TMA 'Proteus' Advanced Command Pod",
-        "cmd.crew",
-        "A1 Spot Light",
-        "lgt.spot",
-        "CE-60 'Pavonis' Cryogenic Rocket Engine",
-        "eng",
-        "RE-I5 \"Skipper\" Liquid Fuel Engine",
-        "eng",
-        "General Swing Arm - Small",
-        "mlp.swingarm",
-        "Communotron DTS-J1",
-        "comm.dish",
-        "RC-13 RCS Thruster Block",
-        "ctrl.rcs ",
-        "Small General Crew Access Arm - Small Mount",
-        "mlp.crewarm",
-        "Swept Wing Type B",
-        "aero.wing",
-        "Elevon 1",
-        "aero.wing.ctrl",
-        "Universal Storage: Remote Operations System MKII",
-        "cmd.core",
-        "Universal Storage: Atmospheric Fluid Spectro Variometer",
-        "sci.atmosphericSci",
-        "Engine Nacelle",
-        "tank.air",
-        "J-33 \"Wheesley\" Turbofan Engine",
-        "eng",
-        "CR-9B 'Fuji' Cryogenic Rocket Engine",
-        "eng",
-        "Small Modular Service Tower Section",
-        "mlp.tower",
-        "Univ. Storage 2 - Magnetometer Boom",
-        "sci.magBoom.dmag.us",
-        "Univ. Storage 2 - RPWS Antenna",
-        "sci.rwps.dmag.us",
-        "Univ. Storage 2 - GORESat",
-        "sci.goreSat.dmag.us",
-        "Flat Launch Base 3 - Medium Frame",
-        "mlp.base.clamp",
-        "Delta II Modular Service Tower Core Section",
-        "mlp.tower",
-        "Delta II Modular Service Tower Top",
-        "mlp.tower",
-        "RC-15 RCS Thruster Block",
-        "ctrl.rcs",
-        "Swept Wing Type A",
-        "aero.wing",
-        "Structural Wing Type D",
-        "aero.wing",
-        "General Launch Base 2 - Medium",
-        "mlp.base.clamp",
-        "Droop-Style Umbilical Size 2 - Medium",
-        "mlp.umbilical",
-        "MLT-R10  Multipurpose Fuel Tank",
-        "tank",
-        "SCAN-R2 Advanced Resource Mapper",
-        "sci.scan.resource",
-        "MLT-R20  Multipurpose Fuel Tank",
-        "tank",
-        "D-2 Spot Antenna",
-        "comm.dish",
-        "Probodobodyne OKTO Compact Bus",
-        "struct.bus",
-        "Procedural Ribbed Payload Adapter",
-        "pl.pf.base",
-        "LV-T91 \"Cheetah\" Liquid Fuel Engine",
-        "eng",
-        "KS-10AJ 'Walrus' Liquid Fuel Engine",
-        "eng",
-        "Soil Moisture Sensor",
-        "sci.dmag.soil",
-        "Probodobodyne OKTO Bus",
-        "struct.bus",
-        "Multi-Spectral Imaging Platform",
-        "sci.scan.dmag.multispectral",
-        "MLT-10 Multipurpose Fuel Tank Cluster",
-        "tank",
-        "M700 Survey Scanner",
-        "sci.scan.resource.legacy",
-        "F-DA Direct Antenna Feed",
-        "comm.dish",
-        "RFL-1 Dish Reflector",
-        "comm.reflector",
-        "SCAN-R Resource Mapper",
-        "sci.scan.resource",
-        "Z-2.5K Rechargeable Battery Bank",
-        "ec.battery",
-        "Aerocam",
-        "util.camera",
-        "Rovemax Model S2-T",
-        "cmd.core",
-        "Submersible Oceanography and Bathymetry",
-        "sci.bath",
-        "Communotron 32",
-        "comm.omni "
+        {
+            "value": "Probodobodyne HECS2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Aviation",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.aviation",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Surface Mounted Omni Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Liquid Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-1M-V 'Sphinx' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TT18-A Launch Stability Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Surface Mounted Spotlight",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RealChute Cone Chute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Surface Mounted 4-Way Spotlight",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot.srfMulti",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk4-1 'Amalthea' Specialized cmd Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Heat Shield (3.75m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ShroudedDecoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.shroud",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne OKTO2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control decoupler (2.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural RCS Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BZ-3 Adjustable Base Frame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.baseFrame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-95-6 Orbital Maneuvering Engine Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NR-U3 Upper Stage Engine Mount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.emount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-74 'Lynx' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NR-L3 Lower Stage Engine Mount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.emount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-84 'Ocelot' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Saturn Tower Base Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AGT-Timer Timed Action Group Trigger",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.sensor.timer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Saturn Tower Modular Multi Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Saturn Tower Lightning Mast",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Saturn Tower Crew Access Arm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower.crewarm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Saturn Hold Down - Saturn V",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Drainex 1 - Fuel Sensor and Action Group Trigger",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.sensor.fuel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "T2 Solid Rocket Separation Retro-Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Long decal 1x4",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk2-R Radial-Mount Parachute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk12-R Radial-Mount Drogue Chute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial.drogue",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Curved decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "T2 Solid Rocket Separation Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Illuminator Mk2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.flood",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GRAVMAX Negative Gravioli Detector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gravimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Double-C Seismic Accelerometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.accelerometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PresMat Barometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.barometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "2HOT Thermometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.thermometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SP-W 3x2 Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R6 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron 16-S",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Seismic Sensor Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.seismicPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Surface Ablation Laser Light Imager",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.laserImager",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Seismic Impact Hammer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.impactHammer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Dynamic Albedo of Neutrons",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.neutrons",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Anomalous Signal Sensor - BTDT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.anomaly",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Magnetometer Boom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.magBoom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Micro Goo Containment Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.gooPod.micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SC-901 Science Micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.matBay.micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Surface Scanning Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.srfrsrcScan",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ALT-Pro Altimeter and Action Group Trigger",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.sensor.altimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Radiator Panel (small)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.radiator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PROX-Pro Proximity Sensor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.sensor.proximity",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pegasus II Mobility Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Kelus-LV Bay Mobility Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Flat decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEQ-9 Container Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cargo.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RealChute Cone Double Chute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone.double",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OX-STAT Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K40-AR 'Oar' Advanced Solar Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Four bay service core (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.core.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - GORESat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usGoreSat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - Multi-Spectral Imaging Platform",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usMultiSpectral",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - RPWS Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usRpws",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - Solar Particle Collector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.solarParticle",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical fairing (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Little Brother Surveillance Camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.recon.lb",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Xenon Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron 88-88",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CAP-106 Capacitor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.cap",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SM-3 Stack Triple Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "IX-8219 'AFTER' Ion Thruster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K22 'Observer' 1x5 Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solar.array.extendable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk3B 'Pandora' Advanced cmd Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mobile Processing Lab MPL-LG-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.mobileLab",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Solar Particle Collector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usSolarParticle",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Radial Snack Tin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Kelus Mobility Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Eight bay service core (2.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.core.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - Soil Moisture Sensor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usSoilSensor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - Magnetometer Boom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usMagBoom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. store 2 - Orbital Telescope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usScope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Advanced Goo Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usGoo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: store Inventory System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.store",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Snack package",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical fairing (2.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "G-00 Hinge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rbt.hinge.small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron HG-61",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish.25g",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CommTech EXP-VR-2T",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Thrust Plate Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.emount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-N \"Nerv\" Atomic Rocket Motor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OKEB-25R 'Starship' Blanket Photovoltaic Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RX-30 Bidirectional RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RealChute Stack Chute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.stack.double",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Clamp-O-Tron Docking Port",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-001S Remote Guidance Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R-12 'Doughnut' External Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Place-Anywhere 7 Linear RCS Port",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control decoupler (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Physical Science Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.physicalSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Advanced Material Bay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.matBay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Liquid Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Atmospheric Science Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-303 'Pug' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K5 1x3 'Aquila' Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Experiment Return Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.container.return",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Monopropellant Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-1E-V 'Angora' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Hollow Truss pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RE-L10 \"Poodle\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Fairing (Conic)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-14-A RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SCAN-R rsrc Mapper",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.rsrc",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K4 3x1 'Relay' Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Advanced Grabbing Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.grabber",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SENTINEL Infrared Telescope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.asteroidScope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "N1 Small Omni Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron HG-55",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-12 Cupola Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew.cupola",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Rockomax HubMax Multi-Point Connector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.hub",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-10 Hitchhiker store Container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.cabin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "S-1500 Snack Tin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HG-5 High Gain Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Ore Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "24-77 \"Twitch\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-105-A RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OX-STAT-XL Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Gigantor XL Solar Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "IWC-3K \"Wyvern\"",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "store.container.pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Heat Shield (2.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RX-15T Tridirectional RCS Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OX-4W 3x2 Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "S-500 Snack Tin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Clamp-O-Tron Docking Port Sr.",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.sr",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "S5 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Rockomax Brand Adapter 02",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1 Crew Cabin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.cabin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct Fuselage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OKEB-15 'Copernicus' Blanket Photovoltaic Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KX-STAT-8 1x4 Advanced Photovoltaic Truss",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R5 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural struct Element",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Y1 Protective Cap",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.end",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Radial Gyroscope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ISC-6K Container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "store.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-105-X RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TVR-300L Stack Tri-Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Convert-O-Tron 125",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rsrc.isru",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm Control System (small)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.radiator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Advanced Inline Stabilizer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NIV-30 Curved Solar Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "L2 Atlas Low-Profile Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk2 Lander Can",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pegasus I Mobility Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TVR-400L Stack Quad-Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LT-2 Landing Strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-909 \"Terrier\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "JS-1 Joint Socket",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kas.socket",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEQ-3 Cargo store Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "store.cargo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "EAS-4 Strut Connector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Illuminator Mk1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Radioisotope Thermoelectric Generator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.rtg",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RTS-1 rsrc Transfer Station",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kas.transfer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BGP-400 Pylon on Steroids",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kas.pylonbatt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CB1 Ground Base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kas.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Holding Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "'Drill-O-Matic' Mining Excavator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rsrc.drill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Stratus-V Cylindrified Monopropellant Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Radiator Panel (edge)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.radiator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OKEB-4R Circular Blanket Photovoltaic Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-L01 Remote Guidance Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BZ-2 Adjustable Base Frame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.baseframe",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "64-8S 'Chickadee' Landing Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Info Drive",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.info",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Sensor Package",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.b9.sensorpackage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: kOS Guidance Computer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.kos.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NH-24 Monopropellant APU",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.apu.mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K3 'Globe' 3x1 Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "EC Level Detector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.sensor.powerlevel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Surface Mountable Inventory Container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "store.container.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Radial Holding Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "VS-3 Advanced High Resolution Imager",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.visual",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Long decal 1x2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SAR-X Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.altimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CommTech EXP-VR-2T-XL",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SCAN-R2 Advanced rsrc Mapper",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.rsrc",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-95 Orbital Maneuvering Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Water Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Oxygen tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Combination Lifesupport Bag",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Stratus-V Roundified Monopropellant Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R-4 'Dumpling' External Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PB-X50R Xenon Container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "A101 Argon Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Rockomax Brand Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Static Test Stand - Small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Radial Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TS-25 Stack Separator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.sep",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PB-Z02 Xenon Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SE-4-OMNI Stack Multi-Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FI-1124 'HI-SNAP' Ion Thruster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GW0101 'Gyro-1' Hall Thruster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-N410 'Cherenkov' Atomic Rocket Motor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "A102 Argon Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BZ-26 Radial Attachment Point Jr.",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.attachpoint",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Service Bay (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1b Cargo Bay (2m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.b9",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Tapered fairing (0.625m to 1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K2 1x2 'Recon' Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical service module (0.625m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Soyuz fairing (1.25m to 1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Five bay service core (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.core.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Tapered fairing (1.5m to 1.875m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-XA30 Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Plate v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne QBE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Beacon, Amber",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.amber",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Navigation, Red",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.red",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "N2 Large Omni Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cherry Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.cherry",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "1x1m Universal Panel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.panel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Navigation, Green",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.green",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Navigation, White",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.white",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Navigation, Blue",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.blue",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Light, Strobe, White",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.strobe.white",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk25 Parachute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk16-XL Parachute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PXL-AR Pressurized Radial Attachment Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stn.structure",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RealChute Radial Chute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-8 'Wharf' Station Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew.station.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Soil Recycler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.soil.converter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-24 'Panorama' Observation Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew.observation",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-A2 Pressurized Crew Tube",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stn.structure",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-XL001 Remote Guidance Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PFD-C 'Coriolis' Inflatable Centrifuge Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stn.structure.centrifuge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-MULT Multi-Point Station Connector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stn.structure",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-PTD Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stn.structure",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OKEB-45 'Nautilus' Blanket Photovoltaic Array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Truss pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Fairing (Ogive)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OX-4L 1x6 Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aerocam 180",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Clamp-O-Tron Shielded Docking Port",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.shielded",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K3x75 'Hermes' 3x1 Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Hollow Interstage Ring",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-10A 'Corgi' Liquid Fuel Engine Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-701 'Cougar' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Launch Stand",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TS-37 Stack Separator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.sep",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "XRD Surface Analyzer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.xraysrf",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LT-1 Landing Struts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KS-160 'Orca' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Sepratron I",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.sep",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RX-15 Bidirectional RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-102 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K5-R 'Aquila-R' 1x3 Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Heat Shield (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K12-K 1x4 Concentrating Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Ribbed pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SM-2 Stack Dual Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "48-7S \"Spark\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KS-1E 'Goldfish' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LT-05 Micro Landing Strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control decoupler (0.625m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk16 Parachute",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Atmospheric Fluid Spectro-Variometer SSE - Special Smaller Edition",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Hollow pl.base Ring",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "T-1 Toroidal Aerospike \"Dart\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "S3 KS-25x4 \"Mammoth\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "D25 Heavy Drone Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "M4435 Narrow-Band Scanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource.legacy",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K20-K 1+2+1 Concentrating Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MS-R Enhanced Multispectral Scanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.multi",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R-3B Radar Altimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.alt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "VS-1 High Resolution Imager",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.visual",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PPD-F412M Hydroponics Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.hydro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Stratus-V Minified Monopropellant Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RPWS Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.rwps",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Orbital Telescope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.scope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PB-X150 Xenon Container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "IX-6315 \"Dawn\" Electric Propulsion System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CAP-101 Capacitor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.cap.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Z-1k Rechargeable Battery Bank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery.stack",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SC-9001 Science Jr.",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.matBay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mystery Goo™ Inline Containment Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gooPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-R25 RCS Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Oscar-B Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Basic Hull Camera Deluxe",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-103 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NR-L2 Lower Stage Engine Mount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-XS1 Remote Guidance Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ARH-1M Argon Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GW7201 'Gyro-2' Lensed Hall Thruster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm Control System (medium)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.radiator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-105x5 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PTD-C 'Porthole' Observation Window",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne RoveMate",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.rover",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RoveMax Model S2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.rover",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SCAN Been There Done That®",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.btdt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ExoKerbol Core Drill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.coreDrill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KerbPro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Modular Girder Small Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.cube.adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SPRT Medium Scanning Arm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.srfScanArm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Experiment store Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cubic-Family Strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.cube.strut",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cubic-Family Strut Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.cube.adapater",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1 Cockpit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LY-10 Small Landing Gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Atmospheric Science Package",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.b9.sciPackage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Remote Operations System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9-PW Procedural wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9-PCST Procedural control surface",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk0 Liquid Fuel Fuselage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Advanced Nose Cone - Type B",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Adjustable Ramp Intake",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.intake",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LY-35 Medium Landing Gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.medium",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1 Diverterless Supersonic Intake",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.intake",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "D-30F7 Turbojet Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Tail Fin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.ctrl.fin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-3 cmd Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-1 'Boar' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SP-L 1x6 Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KS-600AJ 'Manatee' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RX-55 Advanced RCS Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne Stayputnik",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FM1 \"Mite\" Solid Fuel Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Reflectron DP-10",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Launch Stand",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Basic Fin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.fin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Z-100 Rechargeable Battery Pack",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "F3S0 \"Shrimp\" Solid Fuel Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural SRB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne OKTO",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Z-200 Rechargeable Battery Bank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Heat Shield (0.625m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-T45 \"Swivel\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RT-5 \"Flea\" Solid Fuel Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Miniature Rocket Nose",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Inline Reaction Wheel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-2042 b Scriptable Control System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.kos.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mystery Goo™ Containment Unit ",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gooPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne HECS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.probe.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Nose Cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Modular Girder Segment",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.girder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Nose Cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Kerbodyne S3-14400 Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Kerbodyne KR-2L+ \"Rhino\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Rockomax Jumbo-64 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CR-0120 'Erebus' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-T100 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-T400 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-T800 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk-1H 'Torch' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Fairing Base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MS-1 Multispectral Scanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.multi",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Round Launch Stand",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-R10 RCS Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AE-FF1 Airstream Protective Shell (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.st.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-A5 Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron 16",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Static Test Stand - Tower Type",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BACC \"Thumper\" Solid Fuel Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-T200 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-T15 'Valiant' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Static Test Stand - Engine Type",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CX-4181 Scriptable Control System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.kos.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TD-12 Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CR-2 'Vesuvius' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1 Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-1R \"Spider\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CR-10A 'Stromboli' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TT-38K Radial Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.rad",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TD-06 Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Oscar-A Liquid Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1 Liquid Fuel Fuselage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SC-9001R Radial Science Jr.",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.matbay.rad",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Beamer 100x Dist-o-meter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dist",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "R-11 'Baguette' External Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-T30 \"Reliant\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TS-12 Stack Separator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TS-06 Stack Separator",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Reflectron KR-7",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-1 \"Ant\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Truss Payload Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Hardpoint",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.hp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Structural Fuselage",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1b Fuselage (0.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BoosterCam",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GORESat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.gore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "S1 SRB-KD25k \"Kickback\" Solid Fuel Booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk-55 \"Thud\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HG-20 High Gain Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TT-14 Radial Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.rad",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Size 1.5 Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KS-1M 'Otter' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Flat Launch Base 2 - Small Frame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Fallback Tower - Small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.fallback.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Hold-Down Type 3: Vert Bolt Flat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.holddown",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Hold-Down Type 1: Side-Arm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.holddown",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-601 Orbital Maneuvering Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base 1 - Small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Hold-Down Type 6: Clamp Arm Small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.holddown",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Medium Modular Service Tower Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Medium Modular Service Tower Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Medium Modular Service Tower Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Droop-Style Umbilical Size 1 - Short",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.umbilical",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AE-FF0 Airstream Protective Shell (0.625m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.st.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Atmospheric Fluid Spectro-Variometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CE-10 'Hecate' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Hold-Down Type 2: Drop-Arm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.holddown",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-TX87 \"Bobcat\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-1 \"Cub\" Vernier Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Bangometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.impact",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Flat Launch Base 1 - Mini Frame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Modular Service Tower Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Modular Crew Elevator Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CDL-F Flag Decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RA-2 Relay Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish.relay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron DTS-M1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-TMA 'Proteus' Advanced Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "A1 Spot Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CE-60 'Pavonis' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RE-I5 \"Skipper\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Swing Arm - Small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.swingarm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron DTS-J1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-13 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs ",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small General Crew Access Arm - Small Mount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.crewarm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Swept Wing Type B",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Elevon 1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Remote Operations System MKII",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Atmospheric Fluid Spectro Variometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Engine Nacelle",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank.air",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "J-33 \"Wheesley\" Turbofan Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CR-9B 'Fuji' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Small Modular Service Tower Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. Storage 2 - Magnetometer Boom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.magBoom.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. Storage 2 - RPWS Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.rwps.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. Storage 2 - GORESat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.goreSat.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Flat Launch Base 3 - Medium Frame",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Delta II Modular Service Tower Core Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Delta II Modular Service Tower Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC-15 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Swept Wing Type A",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Structural Wing Type D",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base 2 - Medium",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Droop-Style Umbilical Size 2 - Medium",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.umbilical",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-R10  Multipurpose Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SCAN-R2 Advanced Resource Mapper",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-R20  Multipurpose Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "D-2 Spot Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne OKTO Compact Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Ribbed Payload Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LV-T91 \"Cheetah\" Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KS-10AJ 'Walrus' Liquid Fuel Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Soil Moisture Sensor",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.soil",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne OKTO Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Multi-Spectral Imaging Platform",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.dmag.multispectral",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-10 Multipurpose Fuel Tank Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "M700 Survey Scanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource.legacy",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "F-DA Direct Antenna Feed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RFL-1 Dish Reflector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.reflector",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SCAN-R Resource Mapper",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Z-2.5K Rechargeable Battery Bank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aerocam",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Rovemax Model S2-T",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Submersible Oceanography and Bathymetry",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.bath",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Communotron 32",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni ",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne HECS Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Univ. Storage 2 - Orbital Telescope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usScope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TVR-200 Stack Bi-Coupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Procedural Hollow Truss Payload Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "A1S Enclosed Spot Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DR-3 Deployable High Gain Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

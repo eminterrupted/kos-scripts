@@ -37,18 +37,13 @@ local utime to 0.
 local burnVector to v(0, 0, 0).
 local leadTime to 0.
 
-//Vec draw vars
-local burnDone to false.
-local burnVDTail to 0.
-local burnVD to 0.
-
 //Maneuver node structures
 local mnvNode is node(0, 0, 0, 0).
 
 //Steering
 local rVal is 0.
 
-local sVal is lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
+local sVal is lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 lock steering to sVal.
 
 local tVal is 0.
@@ -88,16 +83,17 @@ local function main {
         // Do burn
         else if runmode = 5 {
             
-            set sVal to burnVector.
+            set sVal to lookDirUp(nextNode:burnVector, sun:position).
+            wait until shipSettled().
 
             warpTo(leadTime - 15).
 
             // Wait until we get to the burn
             until time:seconds >= leadTime  - 15 {
-                set sVal to burnVector.
+                set sVal to lookDirUp(nextNode:burnVector, sun:position).
                 update_display().
                 disp_burn_data(leadtime).
-                wait 0.01.
+                wait 0.1.
             }
 
             disp_clear_block("timer").
@@ -105,39 +101,25 @@ local function main {
             if warp > 0 kuniverse:timewarp:cancelwarp().
 
             until time:seconds >= leadTime {
-                set sVal to burnVector.
+                set sVal to lookDirUp(nextNode:burnVector, sun:position).
                 update_display().
                 disp_burn_data(leadTime).
                 wait 0.01.
-
             }
 
-            //Start the burn.
-            set tVal to 1.
-            local startVel to ship:velocity:orbit.
-            local dvToGo to 9999999.
-            until dvToGo <= 0.1 {
-                set sVal to burnVector.
-                set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
+            set runmode to 7.
+        }
 
-                update_display().
-                disp_burn_data(0).
-                wait 0.01.
-            }
+        else if runmode = 7 {
 
-            set tVal to 0.
-            
+            //Do the burn.
+            exec_node(mnvNode).
             disp_clear_block("burn_data").
-            
-            remove mnvNode.
             
             set runmode to 10.
         }
 
         else if runmode = 10 {
-            
-            set burnDone to true.
-            set burnVD to 0.
 
             set runmode to 99.
         }

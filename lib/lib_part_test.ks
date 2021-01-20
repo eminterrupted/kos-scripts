@@ -26,5 +26,7 @@ global function test_part {
                 stage.
             }
         }
+    } else if p:typeName = "engine" {
+        p:activate.
     }
 }

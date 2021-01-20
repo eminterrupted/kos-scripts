@@ -1,11 +1,12 @@
 @lazyGlobal off.
 
-parameter tgtBody is "Minmus",
-          tgtInc is 20,
-          tgtLan is 135,
-          pkgAlt is 100000,
-          tgtAp1 is 50000,
-          tgtPe1 is 50000.
+parameter tgtBody   is "Mun",
+          tgtInc    is 0,
+          tgtLan    is 0,
+          trnsfrAlt is 100000,
+          tgtAp1    is 15000,
+          tgtPe1    is 15000.
+          
 //
 
 clearscreen.
@@ -50,10 +51,12 @@ when ship:availableThrust < 0.1 and throttle > 0 then {
 
 // Payload onDeploy trigger
 when stage:number <= 0 then {
-    panels on.
-
-    for p in ship:partsTaggedPattern("comm.omni") {
-        activate_omni(p).
+    for p in ship:partsTaggedPattern("onDeploy") {
+        if p:tag:matchesPattern("solar") {
+            activate_solar(p).
+        } else if p:tag:matchesPattern("comm.omni") {
+            activate_omni(p).
+        }
     }
 }
 
@@ -115,15 +118,22 @@ local function main {
 
         // Optimizes the maneuver node via hill climbing
             out_msg("Optimimzing transfer node").
-            local accuracy is 0.001.
-            set mnvNode to optimize_existing_node(mnvNode, pkgAlt, "pe", target, accuracy).
+            local accuracy is 0.005.
+            set mnvNode to optimize_transfer_node(mnvNode, trnsfrAlt, tgtInc, target, accuracy).
+            set sVal to lookDirUp(mnvNode:burnVector, sun:position).
+            set tStamp to time:seconds + 15.
+            until time:seconds >= tStamp {
+                update_display().
+                disp_timer(tStamp, "mnvObj creation").
+            }
+            disp_clear_block("timer").
             set mnvObj to get_burn_obj_from_node(mnvNode).
-
             set runmode to 30.
         }
 
         //Warps to the burn node
         else if runmode = 30 {
+            
             out_msg("Warping to burn node").
             warp_to_burn_node(mnvObj).
             set runmode to 35.
@@ -184,7 +194,8 @@ local function main {
         else if runmode = 45 {
 
             out_msg("Circ burn countdown").
-            set tStamp to time:seconds + 60.
+            
+            set tStamp to time:seconds + 15.
             until time:seconds >= tStamp {
                 update_display().
                 disp_timer(tStamp, "circ node").
@@ -215,6 +226,8 @@ local function main {
         //Warps to the burn node
         else if runmode = 60 {
             out_msg("Warping to burn node").
+            set sVal to lookDirUp(mnvNode:burnVector, sun:position).
+            wait until shipSettled().
             warp_to_burn_node(mnvObj).
             set runmode to 65.
         }
@@ -232,6 +245,7 @@ local function main {
             if (ship:orbit:inclination < tgtInc - 2 or ship:orbit:inclination > tgtInc + 2) {
                 out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + tgtInc + "]").
                 runpath(incChangeScript, tgtInc, tgtLan).
+                deletePath(incChangeScript).
             }
 
             set runmode to 75.

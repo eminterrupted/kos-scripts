@@ -4,22 +4,23 @@
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/part/lib_antenna").
 
-local containMod        is "ModuleScienceContainer".
-local dmagMod           is "DMModuleScienceAnimate".
-local sciMod            is "ModuleScienceExperiment".
-local soilMod           is "DMSoilMoisture".
-local hammerMod         is "DMSeismicHammer".
-local seisPodMod        is "DMSeismicSensor".
+local containMod    is "ModuleScienceContainer".
+local dmagMod       is "DMModuleScienceAnimate".
+local sciMod        is "ModuleScienceExperiment".
+local soilMod       is "DMSoilMoisture".
+local hammerMod     is "DMSeismicHammer".
+local seisPodMod    is "DMSeismicSensor".
+local reconMod      is "DMReconScope".
 
 local usSimpleMod   is "USSimpleScience".
 local usAdvMod      is "USAdvancedScience".
 
-local usActTemp is "log temperature".
-local usActBaro is "log pressure data".
-local usActGrav is "log gravity data".
-local usActSeis is "log seismic data".
-local usActMBay is "observe materials bay".
-local usActGoo  is "observe mystery goo".
+local usActTemp     is "log temperature".
+local usActBaro     is "log pressure data".
+local usActGrav     is "log gravity data".
+local usActSeis     is "log seismic data".
+local usActMBay     is "observe materials bay".
+local usActGoo      is "observe mystery goo".
 
 local queuedEcSum is 0.
 local sciList is list().
@@ -59,6 +60,7 @@ local sciList is list().
             else if m:name = soilMod        toggle_sci_mod_dmag(m, true).
             else if m:name = hammerMod      toggle_sci_mod_dmag(m, true).
             else if m:name = seisPodMod     toggle_sci_mod_dmag(m, true).
+            else if m:name = reconMod       toggle_sci_mod_dmag(m, true).
         }
 
         out_info().
@@ -132,6 +134,8 @@ local sciList is list().
                 sciList:add(p:getModule(hammerMod)).
             } else if p:hasModule(seisPodMod) {
                 sciList:add(p:getModule(seisPodMod)).
+            } else if p:hasModule(reconMod) {
+                sciList:add(p:getModule(reconMod)).
             }
         }
 
@@ -155,6 +159,22 @@ local sciList is list().
 
 
 //-- Log science data in experiments --//
+    local function log_recon {
+        parameter m.
+
+        if ship:latitude > 0 {
+            if from_cache("recon_north") <> "null" {
+                m:deploy().
+                to_cache("recon_north", true).
+            }
+        } else {
+            if from_cache("recon_south") <> "null" {
+                m:deploy().
+                to_cache("recon_south", true).
+            }
+        }
+    }
+
 
     //Logs science experiment for a given module
     local function log_sci {
@@ -162,8 +182,13 @@ local sciList is list().
 
         if not m:inoperable {
             if not m:hasData {
-                m:deploy().
-                addons:career:closedialogs().
+                if m:name <> reconMod {
+                    m:deploy().
+                    wait until m:hasData.
+                    addons:career:closedialogs().
+                } else if m:name = reconMod {
+                    log_recon(m). 
+                }
             }
         }
     }
@@ -254,6 +279,7 @@ local sciList is list().
     local function toggle_sci_mod_us {
         parameter _m,
                   _openMode.
+                
         
         for a in _m:allActions {
             if a:contains("toggle") {

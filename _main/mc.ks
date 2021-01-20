@@ -90,7 +90,7 @@ local function exec_mission {
 
     local kscScrPath to kscPath + "/mission/" + script.
     local locScrPath to locPath + script.
-    if not exists(locScrPath) copyPath(kscScrPath, locScrPath).
+    if not exists(locScrPath) compile(kscScrPath) to locScrPath.
 
     runPath(locScrPath).
     deletePath(locScrPath).

@@ -19,6 +19,7 @@ runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/nav/lib_mnv").
 
 set stateObj to init_state_obj("ADHOC").
+local runmode to stateObj:runmode.
 if runmode = 99 set runmode to 0.
 if runmodeReset set runmode to 0.
 

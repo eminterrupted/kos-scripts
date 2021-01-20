@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter holdAlt is 2500.
+parameter holdAlt is 1500.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
@@ -125,7 +125,7 @@ tPid:reset().
 set tPid:setpoint to 0.
 
 // Trigger to lower landing gear when close to landing
-when alt:radar <= 50 and verticalSpeed < 0 then {
+when alt:radar <= 250 and verticalSpeed < 0 then {
     logStr("Lowering landing legs").
     gear on.
 }
@@ -172,7 +172,7 @@ until alt:radar <= 50 {
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to desLog.
 
-    set tti to time_to_impact().
+    set tti to time_to_impact(50).
     logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
 
     pid_display().
@@ -193,7 +193,7 @@ until status = "landed" {
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to desLog.
 
-    set tti to time_to_impact().
+    set tti to time_to_impact(50).
     logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
 
     pid_display().

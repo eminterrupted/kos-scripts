@@ -3,11 +3,11 @@
 // Change these variables per orbit
 local tgtBody is kerbin.
 
-local obtAp is 8509523.
-local obtPe is 7303756.
-local obtInc is 1.
-local obtLAN is ship:orbit:longitudeofascendingnode.
-local obtArgPe is 50.6.
+local obtAp is 3828793.
+local obtPe is 3618781.
+local obtInc is 4.4.
+local obtLAN is 265.4.
+local obtArgPe is ship:obt:argumentofperiapsis.
 // End user-managed variables
 
 parameter _rVal is 0.
@@ -28,7 +28,7 @@ runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/part/lib_antenna").
 
-local matchIncScript is "0:/_main/adhoc/simple_inclination_change".
+local matchIncScript is "0:/_adhoc/simple_inclination_change".
 copyPath(matchIncScript, "local:/matchInc").
 set matchIncScript to "local:/matchInc".
 

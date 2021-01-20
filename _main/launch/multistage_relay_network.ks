@@ -166,12 +166,12 @@ local function wait_until_launch_window {
     local desiredDegreesBehind is _window[0].
     local secsPerDegree is _window[1].
 
-    local currentLong to choose ship:longitude if ship:longitude >= 0 else (360 + ship:longitude).
+    //local currentLong to choose ship:longitude if ship:longitude >= 0 else (360 + ship:longitude).
 
     until round(degrees_behind_target, 2) = round(desiredDegreesBehind - (12 * (secsPerDegree / 360)), 2) {
         update_display().
 
-        set currentLong to choose ship:longitude if ship:longitude >= 0 else (360 + ship:longitude).
+        //set currentLong to choose ship:longitude if ship:longitude >= 0 else (360 + ship:longitude).
 
         out_msg("Current target position: " + degrees_behind_target()).
         out_msg("Needed target position : " + desiredDegreesBehind).

@@ -36,13 +36,7 @@ local targetObt is createOrbit(
 local burn to get_inc_match_burn(ship, targetObt).
 local utime to burn[0].
 local burnVector to burn[1].
-local dur to get_burn_dur(burnVector:mag).
 local leadTime to utime - get_burn_dur(burnVector:mag / 2).
-
-//Vec draw vars
-local burnDone to false.
-local burnVDTail to 0.
-local burnVD to 0.
 
 //Maneuver node structures
 local mnvNode is burn[2].
@@ -72,19 +66,6 @@ local function main {
         
         // Vecdraw to show the maneuver
         if runmode = 0 {
-
-            set burnVDTail to positionAt(ship, utime).
-            set burnVD to 
-                vecDraw(
-                    burnVDTail,
-                    500 * burnVector,
-                    magenta,
-                    "dV:" + round(burnVector:mag, 1) + " m/s, dur:" + round(dur, 1) + "s",
-                    1,
-                    true).
-
-            // Keep the draw updating the start position until the burn is done.
-            set burnVD:startUpdater to { return positionAt(ship, utime). }.
             set runmode to 2.
         }
 
@@ -148,9 +129,6 @@ local function main {
         }
 
         else if runmode = 10 {
-            
-            set burnDone to true.
-            set burnVD to 0.
 
             set runmode to 99.
         }

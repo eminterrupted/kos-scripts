@@ -136,6 +136,7 @@ until found {
                 set tVal to 0.
                 set found to true.
                 set num_orbits to i.
+                print num_orbits at (2, 75).
             }
 
             set j to j + 1.

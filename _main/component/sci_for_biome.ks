@@ -107,7 +107,7 @@ until runmode = 99 {
 
         print "BiomeList" at (2, 40).
         print "---------" at (2, 41).
-        local n is 42. 
+        local n is 20. 
         for b in biomeList {
             print b + "            " at (2, n).
             set n to n + 1.

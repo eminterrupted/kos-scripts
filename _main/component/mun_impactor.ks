@@ -25,7 +25,6 @@ update_display().
 wait 5.
 
 local tgtAltAp is -100000.
-local tgtAltPe is -100000.
 
 local mnvCache is "local:/mnvCache.json".
 local mnvObj is lex().

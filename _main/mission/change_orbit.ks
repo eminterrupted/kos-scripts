@@ -1,10 +1,10 @@
 @lazyGlobal off.
 
-parameter _tgtAp    is 250000,
-          _tgtPe    is 25000,
-          _tgtInc   is 20,
-          _tgtLAN   is ship:orbit:longitudeofascendingnode,
-          _tgtArgPe is 270.
+parameter _tgtAp    is 125000,
+          _tgtPe    is 125000,
+          _tgtInc   is 0,
+          _tgtLAN   is 0,
+          _tgtArgPe is 90.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/display/lib_display").
@@ -13,11 +13,18 @@ runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/lib/part/lib_solar").
 
-local incPath is "local:/incChange". 
+local incPath is "local:/inc_change". 
 copyPath("0:/_adhoc/simple_inclination_change", incPath).
 
-local obtPath is "local:/argPeChange".
+local obtPath is "local:/obt_change".
 copyPath("0:/_adhoc/simple_orbit_change", obtPath).
+
+when stage:number <= 0 then {
+    panels on.
+    for p in ship:partsTaggedPattern("comm") {
+        activate_antenna(p).
+    }
+}
 
 
 //-- Main --//

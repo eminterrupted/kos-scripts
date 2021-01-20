@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 if terminal:width < 75 set terminal:width to 75.
-if terminal:height < 50 set terminal:height to 50.
+if terminal:height < 35 set terminal:height to 35.
 core:doAction("open terminal", true).
 
 runOncePath("0:/lib/lib_init").
@@ -11,12 +11,9 @@ runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_mass_data").
 runOncePath("0:/lib/lib_engine_data").
 
-// Temp vars
-local ts is time:seconds.
-//
-
 // Vars
 local dispObj is lex().
+local ts is 0.
 
 local clrWide is "                                                                      ".
 local clr is "                                        ".
@@ -96,19 +93,18 @@ global function disp_main {
     print time:clock at (h4 + 10,ln).
     print divDbl at (2,cr).
     cr.
-    print "MISSION:       " + ship:name + "    " at (h1,cr).
-        print "MET:           " + format_timestamp(missionTime) + "    " at (h3,ln).
-    print "BODY:          " + body:name + "     " at (h1,cr).
-        print "STATUS:        " + status:padright(12 - status:length) at (h3,ln).
-    print "PROGRAM:       " + from_cache(stateObj["program"]) + "   " at (h1,cr).
-        print "RUNMODE:       " + stateObj["runmode"] + "  " at (h3,ln).
-            print "SR: " + stateObj["subroutine"] at (h3 + 19, ln).
+    print "MISSION:  " + ship:name + "    " at (h1,cr).
+        print "MET:      " + format_timestamp(missionTime) + "    " at (h3 + 5,ln).
+    print "BODY:     " + body:name + "     " at (h1,cr).
+        print "STATUS:   " + status:padright(12 - status:length) at (h3 + 5,ln).
+    print "PROGRAM:  " + stateObj["program"] + "   " at (h1,cr).
+        print "RUNMODE:  " + stateObj["runmode"] + "  " at (h3 + 5,ln).
     cr.
     if defined cd print "COUNTDOWN:     " + round(cd, 1) + "  " at (h1, cr).
     else print clr at (h1, ln).
 
     // Uncomment below to monitor total loop time delta
-    // print "delta-T: " + round(time:seconds - ts, 5) + "   " at (2, 45).
+    // print "delta-T: " + round(time:seconds - ts, 5) + "   " at (2, 35).
     // set ts to time:seconds.
 }
 
@@ -125,8 +121,8 @@ global function disp_test_main {
     set h4 to pos["h4"].
 
     print "KUSP Test Stand Controller v0.01" at (2,ln).
-    print "UTC:" at (h4 + 6,ln).
-    print time:clock at (h4 + 11,ln).
+    print "UTC:" at (h4 + 5,ln).
+    print time:clock at (h4 + 10,ln).
     print divDbl at (2,cr).
     cr.
     cr.

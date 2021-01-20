@@ -87,7 +87,7 @@ local function prep_for_orbit {
     logStr("Deploying launch vehicle solar panels").
     local sMod to "ModuleDeployableSolarPanel".
     for p in ship:partsTaggedPattern("solar.array") {
-        if not p:tag:matchesPattern("onDeploy") {
+        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
             do_event(p:getModule(sMod), "extend solar panel").
         }
     }
@@ -97,7 +97,7 @@ local function prep_for_orbit {
     local aMod to "ModuleRTAntenna".
 
     for p in ship:partsTaggedPattern("comm") {
-        if not p:tag:matchesPattern("onDeploy") {
+        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
             do_event(p:getModule(aMod), "activate").
         }
 

@@ -1,437 +1,1805 @@
 {
     "entries": [
-        "nflv-engine-rutherford-1",
-        "eng",
-        "AM.MLP.TestStandEngine",
-        "ts",
-        "longAntenna",
-        "comm.omni",
-        "trussPiece1x",
-        "struct.girder",
-        "adapterSmallMiniShort",
-        "tank",
-        "kOSMachine1m",
-        "ctrl.kos.cpu",
-        "Decoupler.1",
-        "dc.st",
-        "proceduralTankLiquid",
-        "tank",
-        "Cherry Light",
-        "lgt.cherry",
-        "nflv-engine-m1d-vac-1",
-        "eng",
-        "mk1pod.v2",
-        "cmd.crew",
-        "KR-2042",
-        "ctrl.kos.cpu",
-        "parachuteSingle",
-        "chute.cone",
-        "HeatShield1",
-        "thrm.heatShield",
-        "ShroudedDecoupler",
-        "dc.st.shroud",
-        "restock-engine-125-pug",
-        "eng",
-        "liquidEngine3.v2",
-        "eng",
-        "liquidEngine2",
-        "eng",
-        "AM.MLP.SmallLaunchStand",
-        "lp.base.clamp",
-        "Long decal 1x4",
-        "decal",
-        "solarPanels5",
-        "ec.solar.fixed",
-        "SurfAntenna",
-        "comm.omni",
-        "launchClamp1",
-        "lp.clamp",
-        "probeCoreHex.v2",
-        "cmd.probe.core",
-        "RC.cone",
-        "chute.cone",
-        "restock-sciencebox-stack-1",
-        "sci.container.return",
-        "ServiceBay.125.v2",
-        "bay.doors.st",
-        "science.module",
-        "sci.matBay",
-        "cryoengine-vesuvius-1",
-        "eng",
-        "sensorThermometer",
-        "sci.thermometer",
-        "proceduralBattery",
-        "ec.battery",
-        "dmmagBoom",
-        "sci.dmag.magBoom",
-        "sensorBarometer",
-        "sci.barometer",
-        "AM.MLP.TestStandTower",
-        "ts",
-        "USQuadcore",
-        "bay.core.us",
-        "USCylindricalShroud125",
-        "bay.doors.us",
-        "restock-goocanister-625-1",
-        "sci.gooPod",
-        "USThermoBaroWedge",
-        "sci.us.atmosphericSci",
-        "sasModule",
-        "ctrl.rw",
-        "Decal curved",
-        "decal",
-        "cryoengine-erebus-1",
-        "eng",
-        "USACDSmall",
-        "dc.st.ctrl",
-        "cryoengine-stromboli-1",
-        "eng",
-        "liquidEngine",
-        "",
-        "HighGainAntenna5",
-        "comm.dish",
-        "miniFuelTank",
-        "tank",
-        "linearRcs",
-        "ctrl.rcs",
-        "fairingSize1",
-        "pl.fairing",
-        "Separator.1",
-        "",
-        "Separator.0",
-        "",
-        "USACDTiny",
-        "dc.st.ctrl",
-        "restock-engine-torch",
-        "eng",
-        "Decoupler.0",
-        "dc.st",
-        "batteryBankMini",
-        "ec.battery",
-        "solarPanels4",
-        "ec.solar.array",
-        "restock-fuel-tank-0625-5",
-        "tank",
-        "KzProcFairingSide2",
-        "pl.fairing",
-        "probeCoreHex.v2 (Tristar TRS 1)",
-        "cmd.probe.core",
-        "RTShortDish2",
-        "comm.dish",
-        "microEngine.v2",
-        "eng",
-        "RSBTrussBase",
-        "pl.pf.base",
-        "probeCoreOcto.v2",
-        "cmd.core",
-        "smallHardpoint",
-        "",
-        "monopropMiniSphere",
-        "tank",
-        "restock-rcs-block-quad-angled-mini-1",
-        "ctrl.rcs",
-        "W485.SurfaceOmniLight",
-        "lgt.omni",
-        "B9.Body.Mk1.Fuselage.025m",
-        "tank",
-        "hc.booster",
-        "cam",
-        "dmGoreSat",
-        "sci.dmag.gore",
-        "MassiveBooster",
-        "",
-        "radialLiquidEngine1-2",
-        "",
-        "restock-relay-radial-2",
-        "comm.dish",
-        "liquidEngineMini.v2",
-        "eng",
-        "restock-decoupler-radial-tiny-1",
-        "",
-        "Size1p5.Strut.Decoupler",
-        "",
-        "nflv-engine-m1d-1",
-        "",
-        "sepMotor1",
-        "eng.sep",
-        "orbital-engine-0625",
-        "eng",
-        "probeCoreCube",
-        "cmd.core",
-        "fuelTankSmall",
-        "tank",
-        "parachuteRadial",
-        "chute.radial",
-        "AM.MLP.FlatLaunchBaseSmall",
-        "mlp.base.clamp",
-        "AM.MLP.GeneralStrongbackTowerSmall",
-        "mlp.tower",
-        "AM.MLP.GeneralHold3",
-        "mlp.clamp",
-        "solidBooster1-1",
-        "eng",
-        "AM.MLP.GeneralHold1",
-        "mlp.clamp",
-        "smallRadialEngine.v2",
-        "eng",
-        "orbital-engine-125",
-        "",
-        "AM.MLP.GeneralLaunchBaseSmall",
-        "mlp.base.clamp",
-        "AM.MLP.GeneralHold6",
-        "mlp.clamp",
-        "AM.MLP.GeneralServiceTowerMedium",
-        "mlp.tower",
-        "AM.MLP.GeneralServiceTowerMediumSec1",
-        "mlp.tower",
-        "AM.MLP.GeneralServiceTowerMediumTop",
-        "mlp.tower",
-        "AM.MLP.GeneralUmbilicalDroopA",
-        "mlp.umbilical",
-        "Separator.2",
-        "dc.st.sep",
-        "restock-fairing-base-0625-1",
-        "",
-        "externalTankCapsule",
-        "tank",
-        "solidBooster.sm.v2",
-        "eng",
-        "scansat-multi-modis-1",
-        "sci.scan.multi",
-        "scansat-radar-poseidon-3b-1",
-        "sci.scan.alt",
-        "solarPanels3",
-        "ec.solar.array",
-        "rpwsAnt",
-        "sci.dmag.rwps",
-        "sensorAccelerometer",
-        "sci.accelerometer",
-        "sensorAtmosphere",
-        "sci.atmosphericSci",
-        "cryoengine-hecate-1",
-        "eng",
-        "USAerozineWedge",
-        "tank",
-        "USHydrazineWedge",
-        "tank",
-        "externalTankToroid",
-        "tank",
-        "DecalCurvedHorizontalRectangle",
-        "decal",
-        "LiquidEngineRV-1",
-        "eng",
-        "LiquidEngineLV-TX87",
-        "eng",
-        "AM.MLP.GeneralHold2",
-        "mlp.holddown",
-        "scansat-sar-paz-1",
-        "sci.scan.altimeter",
-        "AM.MLP.FlatLaunchBaseMini",
-        "mlp.base.clamp",
-        "AM.MLP.GeneralServiceTowerSmall",
-        "mlp.tower",
-        "AM.MLP.CrewElevatorSmallTop",
-        "mlp.tower",
-        "KzProcFairingSide1",
-        "pl.pf.fairing",
-        "RelayAntenna5",
-        "comm.dish.relay",
-        "solarPanels1",
-        "ec.solar.array.retractable",
-        "solarPanels2",
-        "ec.solar.array.retractable",
-        "RTLongAntenna3",
-        "comm.omni",
-        "mediumDishAntenna",
-        "comm.dish",
-        "B9.Utility.Light.A1.White",
-        "lgt.spot",
-        "conformaldecals-flag",
-        "decal",
-        "batteryBank",
-        "ec.battery.stack",
-        "batteryPack",
-        "ec.battery.radial",
-        "nflv-engine-rutherford-vac-1",
-        "eng",
-        "command-125-1",
-        "cmd.crew",
-        "radialDecoupler",
-        "dc.rad",
-        "proceduralTankSRB",
-        "eng.solid",
-        "proceduralNoseCone",
-        "aero.cone",
-        "Impact Seismometer",
-        "sci.impact",
-        "probeCoreOcto2.v2",
-        "cmd.core",
-        "engineLargeSkipper.v2",
-        "eng",
-        "AM.MLP.GeneralTowerSwingArm",
-        "mlp.swingarm",
-        "restock-antenna-stack-2",
-        "comm.dish",
-        "restock-rcs-block-triple-angled-mini-1",
-        "ctrl.rcs ",
-        "cryoengine-pavonis-1",
-        "eng",
-        "AM.MLP.GeneralCrewElevatorMiniArmS",
-        "mlp.crewarm",
-        "Mark1Cockpit",
-        "cmd.crew",
-        "MK1CrewCabin",
-        "cmd.cabin",
-        "SmallGearBay",
-        "gear.small",
-        "light.aviation",
-        "lgt.nav.aviation",
-        "USGooBayWedge",
-        "sci.dmag.usGoo",
-        "USAccelGravWedge",
-        "sci.us.physicalSci",
-        "USBatteryWedge",
-        "ec.battery",
-        "USMatBayWedge",
-        "sci.us.matBay",
-        "tailfin",
-        "aero.ctrl.fin",
-        "telescopicLadder",
-        "util.ladder",
-        "cryoengine-fuji-1",
-        "eng",
-        "sensorGravimeter",
-        "sci.gravimeter",
-        "GooExperiment",
-        "sci.gooPod",
-        "dmscope",
-        "sci.dmag.scope",
-        "restock-reactionwheel-radial-1",
-        "ctrl.rw",
-        "proceduralTankRCS",
-        "tank",
-        "dmUS2MagBoom",
-        "sci.magBoom.dmag.us",
-        "dmUS2RPWS",
-        "sci.rwps.dmag.us",
-        "dmUS2GoreSat",
-        "sci.goreSat.dmag.us",
-        "AM.MLP.GeneralLaunchPlate",
-        "mlp.base.clamp",
-        "AM.MLP.SpecialServiceTowerDeltaIISec2",
-        "mlp.tower",
-        "AM.MLP.SpecialServiceTowerDeltaIITop",
-        "mlp.tower",
-        "AM.MLP.GeneralServiceTowerSmallSec1",
-        "mlp.tower",
-        "B9.Engine.T2.SRBS",
-        "eng",
-        "USCylindricalShroud0625",
-        "bay.doors.us",
-        "scansat-recon-ikonos-1",
-        "sci.scan.visual",
-        "USSingleProbeCore",
-        "cmd.core",
-        "USFluidSpectroWedge",
-        "sci.atmosphericSci",
-        "nacelleBody",
-        "tank.air",
-        "JetEngine",
-        "eng",
-        "StandardCtrlSrf",
-        "aero.wing.ctrl",
-        "sweptWing2",
-        "aero.wing",
-        "radialDrogue",
-        "chute.radial.drogue",
-        "RC.radial",
-        "chute.radial",
-        "restock-rcs-block-qunit-mini-1",
-        "ctrl.rcs",
-        "AM.MLP.GeneralLaunchBaseMedium",
-        "mlp.base.clamp",
-        "AM.MLP.GeneralUmbilicalDroopB",
-        "mlp.umbilical",
-        "structuralWing4",
-        "aero.wing",
-        "sweptWing1",
-        "aero.wing",
-        "scansat-recon-worldview-3-1",
-        "sci.scan.visual",
-        "probeCoreOcto2.v2 (Looking Glass 2)",
-        "cmd.core",
-        "nfex-fueltank-radial-small-2",
-        "tank",
-        "probeStackSmall",
-        "cmd.core",
-        "probeCoreOcto2.v2 (MunStar Relay A)",
-        "cmd.core",
-        "nfex-antenna-top-dish-1",
-        "comm.dish",
-        "nfex-bus-okto-2",
-        "struct.bus",
-        "RSBRibbedBase",
-        "pl.pf.base",
-        "scansat-resources-mise-1",
-        "sci.scan.resource",
-        "nfex-fueltank-radial-small-1",
-        "tank",
-        "LiquidEngineLV-T91",
-        "eng",
-        "nflv-engine-ar1-1",
-        "eng",
-        "OrbitalScanner",
-        "sci.scan.rsrc",
-        "SurveyScanner",
-        "sci.scan.resource",
-        "scansat-multi-abi-1",
-        "sci.scan.multi",
-        "InfraredTelescope",
-        "sci.asteroidScope",
-        "LgRadialSolarPanel",
-        "ec.solar.fixed",
-        "hinge.01.s",
-        "rbt.hinge.small",
-        "restock-antenna-stack-3",
-        "comm.dish.25g",
-        "dmSoilMoisture",
-        "sci.dmag.soil",
-        "nfex-bus-okto-1",
-        "struct.bus",
-        "dmImagingPlatform",
-        "sci.dmag.multispec",
-        "nfex-fueltank-stack-tiny-1",
-        "tank",
-        "miniLandingLeg",
-        "gear",
-        "scansat-resources-crism-1",
-        "sci.scan.resource",
-        "restock-battery-1875-1",
-        "ec.battery",
-        "KzThrustPlate",
-        "struct.emount",
-        "kerbpro",
-        "util.camera",
-        "aerocam",
-        "util.camera",
-        "spotLight2",
-        "lgt.flood",
-        "USRadialTanks",
-        "tank",
-        "roverBody.v2",
-        "cmd.rover",
-        "roverWheel2",
-        "gear.rover",
-        "dmSeismicHammer",
-        "sci.dmag.impactHammer",
-        "dmSeismicPod",
-        "sci.dmag.seismicPod",
-        "restock-wheel-1-T",
-        "cmd.core",
-        "RTLongAntenna2",
-        "comm.omni ",
-        "dmsurfacelaser",
-        "sci.dmag.laserImager"
+        {
+            "value": "nflv-engine-rutherford-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.TestStandEngine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "longAntenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "trussPiece1x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.girder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "adapterSmallMiniShort",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kOSMachine1m",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.kos.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Decoupler.1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralTankLiquid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cherry Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.cherry",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nflv-engine-m1d-vac-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mk1pod.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KR-2042",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.kos.cpu",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "parachuteSingle",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HeatShield1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatShield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ShroudedDecoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.shroud",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-engine-125-pug",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "liquidEngine3.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "liquidEngine2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.SmallLaunchStand",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Long decal 1x4",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solarPanels5",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SurfAntenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "launchClamp1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreHex.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.probe.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-sciencebox-stack-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.container.return",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ServiceBay.125.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "science.module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.matBay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-vesuvius-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sensorThermometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.thermometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralBattery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmmagBoom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.magBoom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sensorBarometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.barometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.TestStandTower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USQuadcore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.core.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USCylindricalShroud125",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-goocanister-625-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gooPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USThermoBaroWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sasModule",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Decal curved",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-erebus-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACDSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-stromboli-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "liquidEngine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HighGainAntenna5",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "miniFuelTank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "linearRcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "fairingSize1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Separator.1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Separator.0",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACDTiny",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-engine-torch",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Decoupler.0",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "batteryBankMini",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solarPanels4",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-fuel-tank-0625-5",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KzProcFairingSide2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreHex.v2 (Tristar TRS 1)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.probe.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RTShortDish2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "microEngine.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RSBTrussBase",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "smallHardpoint",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "monopropMiniSphere",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-rcs-block-quad-angled-mini-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "W485.SurfaceOmniLight",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Body.Mk1.Fuselage.025m",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "hc.booster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cam",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmGoreSat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.gore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MassiveBooster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "radialLiquidEngine1-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-relay-radial-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "liquidEngineMini.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-decoupler-radial-tiny-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Size1p5.Strut.Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nflv-engine-m1d-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sepMotor1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.sep",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "orbital-engine-0625",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreCube",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "fuelTankSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "parachuteRadial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.FlatLaunchBaseSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralStrongbackTowerSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralHold3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solidBooster1-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralHold1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "smallRadialEngine.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "orbital-engine-125",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralLaunchBaseSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralHold6",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerMedium",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerMediumSec1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerMediumTop",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralUmbilicalDroopA",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.umbilical",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Separator.2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.sep",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-fairing-base-0625-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "externalTankCapsule",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solidBooster.sm.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-multi-modis-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.multi",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-radar-poseidon-3b-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.alt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solarPanels3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rpwsAnt",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.rwps",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sensorAccelerometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.accelerometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sensorAtmosphere",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-hecate-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USAerozineWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USHydrazineWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "externalTankToroid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DecalCurvedHorizontalRectangle",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LiquidEngineRV-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LiquidEngineLV-TX87",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralHold2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.holddown",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-sar-paz-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.altimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.FlatLaunchBaseMini",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.CrewElevatorSmallTop",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KzProcFairingSide1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.fairing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RelayAntenna5",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish.relay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solarPanels1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "solarPanels2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractable",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RTLongAntenna3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mediumDishAntenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Utility.Light.A1.White",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "conformaldecals-flag",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "batteryBank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery.stack",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "batteryPack",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nflv-engine-rutherford-vac-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "command-125-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "radialDecoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.rad",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralTankSRB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng.solid",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralNoseCone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.cone",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Impact Seismometer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.impact",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto2.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "engineLargeSkipper.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralTowerSwingArm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.swingarm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-antenna-stack-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-rcs-block-triple-angled-mini-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs ",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-pavonis-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralCrewElevatorMiniArmS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.crewarm",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mark1Cockpit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MK1CrewCabin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.cabin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SmallGearBay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "light.aviation",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.nav.aviation",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USGooBayWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usGoo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USAccelGravWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.physicalSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USBatteryWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USMatBayWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.us.matBay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tailfin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.ctrl.fin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "telescopicLadder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cryoengine-fuji-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sensorGravimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gravimeter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GooExperiment",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.gooPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmscope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.scope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-reactionwheel-radial-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralTankRCS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmUS2MagBoom",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.magBoom.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmUS2RPWS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.rwps.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmUS2GoreSat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.goreSat.dmag.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralLaunchPlate",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.SpecialServiceTowerDeltaIISec2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.SpecialServiceTowerDeltaIITop",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerSmallSec1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Engine.T2.SRBS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USCylindricalShroud0625",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-recon-ikonos-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.visual",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USSingleProbeCore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USFluidSpectroWedge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.atmosphericSci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nacelleBody",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank.air",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "JetEngine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "StandardCtrlSrf",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sweptWing2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "radialDrogue",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial.drogue",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RC.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "chute.radial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-rcs-block-qunit-mini-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralLaunchBaseMedium",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralUmbilicalDroopB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.umbilical",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "structuralWing4",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sweptWing1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aero.wing",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-recon-worldview-3-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.visual",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto2.v2 (Looking Glass 2)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-fueltank-radial-small-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeStackSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto2.v2 (MunStar Relay A)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-antenna-top-dish-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-bus-okto-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RSBRibbedBase",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-resources-mise-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-fueltank-radial-small-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LiquidEngineLV-T91",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nflv-engine-ar1-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OrbitalScanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.rsrc",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SurveyScanner",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-multi-abi-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.multi",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "InfraredTelescope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.asteroidScope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LgRadialSolarPanel",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "hinge.01.s",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rbt.hinge.small",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-antenna-stack-3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish.25g",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmSoilMoisture",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.soil",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-bus-okto-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmImagingPlatform",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.multispec",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-fueltank-stack-tiny-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "miniLandingLeg",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "scansat-resources-crism-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.scan.resource",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-battery-1875-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KzThrustPlate",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.emount",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kerbpro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "aerocam",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.camera",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "spotLight2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.flood",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USRadialTanks",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "roverBody.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.rover",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "roverWheel2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear.rover",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmSeismicHammer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.impactHammer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmSeismicPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.seismicPod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-wheel-1-T",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RTLongAntenna2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.omni ",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmsurfacelaser",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.laserImager",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USDoubleProbeCore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmReconSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.lbSurveillanceCam",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "advSasModule",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmUS2Scope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.usScope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "stackBiCoupler.v2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SSTUBase",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "pl.pf.base",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Utility.Light.A1.Closed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.spot",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-antenna-deploy-wv3-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto2.v2 (MunNet 3)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
 }

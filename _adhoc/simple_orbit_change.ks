@@ -22,19 +22,27 @@ local runmode to 0.
 disp_main().
 
 // Inclination match burn data
-local utime to time:seconds + 1200.
+local utime to time:seconds + 60.
 
-//Maneuver node structures
-local mnvParam is list(utime, 0, 0, 5).
+//Variables
+local burnMode to "".
+local mnvParam is list(utime, 0, 0, 100).
 local mnvNode is node(0, 0, 0, 0).
 local mnvObj is lex().
+local tgtAnomaly is 0.
 local tStamp is 0.
 
-local tgtAnomaly is 360 - (ship:orbit:argumentofperiapsis - _tgtArgPe).
+//local tgtAnomaly is mod(360 - _tgtArgPe + (ship:orbit:longitudeOfAscendingNode / 2), 360).
+set tgtAnomaly to mod(360 + _tgtArgPe - ship:orbit:argumentofperiapsis, 360).
+
+print "tgtAnomaly: " + tgtAnomaly at (2, 25).
+print "_tgtArgPe:  " + _tgtArgPe at (2,26).
+print "argPe:      " + ship:orbit:argumentofperiapsis at (2, 27).
+print "LAN:        " + ship:orbit:lan at (2, 28).
+
 
 //Steering
-local sVal is lookDirUp(ship:prograde:vector, sun:position).
-lock steering to sVal.
+lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
 local tVal is 0.
 lock throttle to tVal.
@@ -54,13 +62,14 @@ local function main {
         
         // get wait time
         if runmode = 0 {
-            set tStamp to abs(tgtAnomaly - ship:orbit:trueanomaly) * (ship:obt:period / 360).
+            set tStamp to eta_to_ta(ship:orbit, tgtAnomaly).
             set runmode to 1.
         }
 
         else if runmode = 1 {
-            set mnvParam to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], mnvParam[3]).
-            set mnvParam to optimize_node_list(mnvParam, _tgtAp, "ap", ship:body, 0.001).
+            set burnMode    to choose "ap" if _tgtAp > ship:periapsis else "pe".
+            set mnvParam    to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], get_dv_for_prograde(_tgtAp, ship:periapsis, ship:body)).
+            set mnvParam    to optimize_node_list(mnvParam, _tgtAp, burnMode, ship:body, 0.001).
             set runmode to 2.
         }
 
@@ -84,7 +93,8 @@ local function main {
 
         // Now do a circ burn at Ap to bring Pe to target
         else if runmode = 7 {
-            exec_circ_burn("ap", _tgtPe).
+            set burnMode to choose "ap" if eta:apoapsis < eta:periapsis else "pe".
+            exec_circ_burn(burnMode, _tgtPe).
 
             set runmode to 99.
         }
