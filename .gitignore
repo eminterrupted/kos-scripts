@@ -1,3 +1,4 @@
 logs/**
 vscode/**
 data/launchSelectCache.json
+data/missionCacheParam.json
