@@ -41,10 +41,13 @@ global function add_node_to_plan {
 }
 
 
+//TODO - Add a rendezvous node with optional phase angle
 global function add_rendezvous_node {
     parameter _mnvObj,
               _tgtAlt,
               _tgtObj.
+
+    return false.
 }
 
 
