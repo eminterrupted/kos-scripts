@@ -100,7 +100,7 @@ local function main {
 
         //Executes the transfer burn
         else if runmode = 35 {
-            exec_node(mnvObj["mnv"]).
+            ExecuteNode(mnvObj["mnv"]).
             set runmode to 40.
         }
 
@@ -144,7 +144,7 @@ local function main {
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 60 {
-            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set mnvNode to AddCircularizationNode("pe", tgtAp0).
             set runmode to 62.
         }
 
@@ -170,7 +170,7 @@ local function main {
 
         //Adds a hohmann burn to lower Pe
         else if runmode = 68 {
-            set mnvNode to add_simple_circ_node("ap", tgtPe1).
+            set mnvNode to AddCircularizationNode("ap", tgtPe1).
             set runmode to 70.
         }
 
@@ -195,7 +195,7 @@ local function main {
 
         //Adds a circularization node to finish circ in lower orbit
         else if runmode = 76 {
-            set mnvNode to add_simple_circ_node("pe", tgtAp1).
+            set mnvNode to AddCircularizationNode("pe", tgtAp1).
             set runmode to 78.
         }
 
@@ -254,7 +254,7 @@ local function add_burn_node {
               mode.
     
     local mnvList to list(burnObj["nodeAt"], 0, 0, burnObj["dv"]).
-    set mnvNode to add_optimized_node(mnvList, tgtAlt, mode).
+    set mnvNode to AddOptimizedNode(mnvList, tgtAlt, mode).
 
     set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
     set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
@@ -269,7 +269,7 @@ local function add_burn_node {
 local function exec_burn {
     parameter burnNode.
 
-    exec_node(burnNode).
+    ExecuteNode(burnNode).
 
     update_display().
 }

@@ -119,7 +119,7 @@ local function main {
         // Optimizes the maneuver node via hill climbing
             out_msg("Optimimzing transfer node").
             local accuracy is 0.005.
-            set mnvNode to optimize_transfer_node(mnvNode, trnsfrAlt, tgtInc, target, accuracy).
+            set mnvNode to OptimizeTransferNode(mnvNode, trnsfrAlt, tgtInc, target, accuracy).
             set sVal to lookDirUp(mnvNode:burnVector, sun:position).
             set tStamp to time:seconds + 5.
             until time:seconds >= tStamp {
@@ -142,7 +142,7 @@ local function main {
         //Executes the transfer burn
         else if runmode = 35 {
             out_msg("Executing burn node").
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             set runmode to 37.
         }
 
@@ -211,7 +211,7 @@ local function main {
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 47 {
             out_msg("Adding capture node").
-            set mnvNode to add_capture_node(tgtAp1).
+            set mnvNode to AddCaptureNode(tgtAp1).
             set runmode to 55.
         }
 
@@ -235,7 +235,7 @@ local function main {
         //Executes the circ burn
         else if runmode = 65 {
             out_msg("Executing burn node").
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             wait 2.
             set runmode to 70.
         }

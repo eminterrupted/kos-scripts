@@ -139,7 +139,7 @@ local function main {
         //Executes the transfer burn
         else if runmode = 35 {
             out_msg("Executing node").
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             set runmode to set_rm(37).
         }
 

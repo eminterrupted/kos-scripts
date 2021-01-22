@@ -71,7 +71,7 @@ until runmode = 99 {
 
     else if runmode = 6 {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
-        set mnvObj to add_transfer_node(mnvObj, tgtAltAp).
+        set mnvObj to AddTransferNode(mnvObj, tgtAltAp).
         set mnvNode to mnvObj["mnv"].
         set runmode to 8.
     }
@@ -86,7 +86,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        exec_node(mnvNode).
+        ExecuteNode(mnvNode).
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
         set runmode to 12.
     }
@@ -106,7 +106,7 @@ until runmode = 99 {
 
     //Circularize, step 1 (initial)
     else if runmode = 14 {
-        set mnvNode to add_simple_circ_node("pe", tgtAltAp).
+        set mnvNode to AddCircularizationNode("pe", tgtAltAp).
         set mnvObj to get_burn_obj_from_node(mnvNode).
         set runmode to 16.
     }
@@ -117,7 +117,7 @@ until runmode = 99 {
     }
 
     else if runmode = 18 {
-        exec_node(mnvNode).
+        ExecuteNode(mnvNode).
         set runmode to 20.
     }
 
@@ -149,13 +149,13 @@ until runmode = 99 {
     }
 
     else if runmode = 24 {
-        exec_node(mnvNode).
+        ExecuteNode(mnvNode).
         set runmode to 26.
     }
 
     //Circularize, step 2 (Correction)
     else if runmode = 26 {
-        set mnvNode to add_simple_circ_node("ap", tgtAltPe).
+        set mnvNode to AddCircularizationNode("ap", tgtAltPe).
         set mnvObj to get_burn_obj_from_node(mnvNode).
         set runmode to 28.
     }
@@ -166,7 +166,7 @@ until runmode = 99 {
     }
 
     else if runmode = 30 {
-        exec_node(mnvNode).
+        ExecuteNode(mnvNode).
         set runmode to 32.
     }
 

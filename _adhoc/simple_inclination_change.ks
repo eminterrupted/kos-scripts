@@ -113,7 +113,7 @@ local function main {
         else if runmode = 7 {
 
             //Do the burn.
-            exec_node(mnvNode).
+            ExecuteNode(mnvNode).
             disp_clear_block("burn_data").
             
             set runmode to 10.

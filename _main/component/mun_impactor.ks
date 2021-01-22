@@ -70,7 +70,7 @@ until runmode = 99 {
 
     else if runmode = 6 {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
-        set mnvObj to add_transfer_node(mnvObj, tgtAltAp).
+        set mnvObj to AddTransferNode(mnvObj, tgtAltAp).
         cache_mnv_obj(mnvObj).
         set mnvNode to mnvObj["mnv"].
         set runmode to 8.
@@ -86,7 +86,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        exec_node(nextNode).
+        ExecuteNode(nextNode).
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         set runmode to 12.

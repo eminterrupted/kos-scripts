@@ -44,7 +44,7 @@ until runmode = 99 {
     if runmode = 0 {
         out_msg("Adding return nodes from mun").
         set sVal to lookDirUp(ship:prograde:vector, sun:position).
-        add_node_mun_return(_returnAlt).
+        AddReturnNode(_returnAlt).
         
         set runmode to 1.
     }
@@ -85,7 +85,7 @@ until runmode = 99 {
     else if runmode = 8 {
         out_msg("Executing node").
         set sVal to lookDirUp(nextNode:burnvector, sun:position).
-        exec_node(nextNode).
+        ExecuteNode(nextNode).
         deletePath(mnvCache).
         disp_clear_block("burn_data").
         set runmode to 1.
@@ -110,7 +110,7 @@ until runmode = 99 {
 //Correction burn
     else if runmode = 14 {
         out_msg("Adding free return trajectory correction burn").
-        set mnvNode to add_optimized_node(list(time:seconds + 300, 0, 0, 10), _returnAlt, "pe", ship:body, 0.005).
+        set mnvNode to AddOptimizedNode(list(time:seconds + 300, 0, 0, 10), _returnAlt, "pe", ship:body, 0.005).
         out_info().
         set runmode to 1.
     }

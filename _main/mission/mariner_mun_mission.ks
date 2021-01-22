@@ -98,7 +98,7 @@ local function main {
             add mnvNode. 
 
             local accuracy is 0.0005.
-            set mnvNode to optimize_existing_node(mnvNode, tgtAlt0, "pe", target, accuracy).
+            set mnvNode to OptimizeManeuverNode(mnvNode, tgtAlt0, "pe", target, accuracy).
             
             set runmode to 30.
         }
@@ -111,7 +111,7 @@ local function main {
 
         //Executes the transfer burn
         else if runmode = 35 {
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             set runmode to 40.
         }
 
@@ -155,7 +155,7 @@ local function main {
 
         //Adds a node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 50 {
-            set mnvNode to add_capture_node(tgtAlt0).
+            set mnvNode to AddCaptureNode(tgtAlt0).
             set runmode to 52.
         }
 
@@ -174,7 +174,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 56 {
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             wait 2.
             set runmode to 58.
         }
@@ -192,7 +192,7 @@ local function main {
 // Lower to final altitude
         //Adds a hohmann burn to lower Pe
         else if runmode = 60 {
-            set mnvNode to add_simple_circ_node("ap", tgtPe1).
+            set mnvNode to AddCircularizationNode("ap", tgtPe1).
             set runmode to 62.
         }
 
@@ -211,13 +211,13 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 66 {
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             set runmode to 68.
         }
 
         //Circularize at PE
         else if runmode = 68 {
-            set mnvNode to add_simple_circ_node("pe", tgtAp1).
+            set mnvNode to AddCircularizationNode("pe", tgtAp1).
             set runmode to 70.
         }
 
@@ -236,7 +236,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 74 {
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             set runmode to 95.
         }
 

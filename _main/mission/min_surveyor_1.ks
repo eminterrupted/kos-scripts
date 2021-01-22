@@ -114,7 +114,7 @@ local function main {
         else if runmode = 25 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
-            set mnvObj to add_transfer_node(mnvObj, tgtAp0).
+            set mnvObj to AddTransferNode(mnvObj, tgtAp0).
 
             set runmode to 30.
         }
@@ -132,7 +132,7 @@ local function main {
         else if runmode = 35 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
 
             set runmode to 45.
         }
@@ -182,7 +182,7 @@ local function main {
         else if runmode = 60 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
-            set mnvNode to add_capture_node(tgtAp0).
+            set mnvNode to AddCaptureNode(tgtAp0).
 
             set runmode to 62.
         }
@@ -210,7 +210,7 @@ local function main {
         else if runmode = 66 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
 
             set runmode to 68.
         }
@@ -233,7 +233,7 @@ local function main {
         else if runmode = 76 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
-            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set mnvNode to AddCircularizationNode("pe", tgtAp0).
             //set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "ap").
 
             set runmode to 78.
@@ -260,7 +260,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 82 {
-            exec_node(nextNode).
+            ExecuteNode(nextNode).
             wait 2.
             set runmode to 84.
         }
