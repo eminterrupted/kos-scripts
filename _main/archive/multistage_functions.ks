@@ -323,7 +323,7 @@ local function setup_circularization_burn {
     lock throttle to tVal.
 
     //Add the circ node
-    set burnNode to AddCircularizationNode("ap", tPe).
+    set burnNode to add_simple_circ_node("ap", tPe).
     set burnObj to get_burn_obj_from_node(burnNode).
 
     if dispState:hasKey("burn_data") disp_burn_data(burnObj).

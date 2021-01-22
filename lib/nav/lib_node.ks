@@ -1,219 +1,212 @@
-@LazyGlobal off.
+@lazyGlobal off.
 
-RunOncePath("0:/lib/display/lib_display").
-RunOncePath("0:/lib/nav/lib_deltav").
-RunOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/nav/lib_nav").
 
 // Functions
-global function AddNodeToPlan {
-    parameter _maneuver.
+global function add_node_mun_return {
+    parameter tgtAlt.
+
+    local dv is 0.
+    local mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
+    add mnvNode.
+
+    until nextNode:obt:hasNextPatch {
+        remove mnvNode.
+        set dv to dv + 5.
+        set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dv).
+        add mnvNode.
+        wait 0.01.
+    }
+
+    set dv to get_dv_for_retrograde(tgtAlt, mnvNode:obt:nextPatch:periapsis, mnvNode:obt:nextPatch:body).
+
+    set mnvNode to node(7200 + time:seconds + mnvNode:obt:nextpatcheta, 0, 0, dv).
+    add mnvNode.
+
+    set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe").
+}
+
+
+global function add_node_to_plan {
+    parameter mnv.
 
     //Maneuver node is time, radial, normal, prograde.
-    if career():CanMakeNodes {
-        set _maneuver to node(_maneuver[0], _maneuver[1], _maneuver[2], _maneuver[3]).
-        add _maneuver.
-        return _maneuver.
+    if career():canmakenodes {
+        set mnv to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        add mnv.
+        return mnv.
     }
 }
 
 
-//TODO - add a rendezvous node with optional phase angle
-global function AddRendezvousNode {
-    parameter _maneuverObj,
-              _targetAlt,
-              _targetObj.
+//TODO - Add a rendezvous node with optional phase angle
+global function add_rendezvous_node {
+    parameter _mnvObj,
+              _tgtAlt,
+              _tgtObj.
 
     return false.
 }
 
 
-global function AddReturnNode {
-    parameter _targetAlt.
+global function add_transfer_node {
+    parameter mnvObj,
+              tgtAlt,
+              impact is false.
 
-    local dV is 0.
-    local maneuverNode to node(Time:Seconds + Eta:Periapsis, 0, 0, 0).
-    add maneuverNode.
-
-    until NextNode:Orbit:HasNextPatch {
-        remove maneuverNode.
-        set dV to dV + 5.
-        set maneuverNode to node(Time:Seconds + Eta:Periapsis, 0, 0, dV).
-        add maneuverNode.
-        wait 0.01.
-    }
-
-    set dV to GetDVForRetrograde(_targetAlt, maneuverNode:Orbit:NextPatch:Periapsis, maneuverNode:Orbit:NextPatch:Body).
-    set maneuverNode to node(7200 + Time:Seconds + maneuverNode:Orbit:NextPatchEta, 0, 0, dV).
-    add maneuverNode.
-
-    set maneuverNode to OptimizeManeuverNode(maneuverNode, _targetAlt, "pe").
-}
-
-
-global function AddTransferNode {
-    parameter _maneuverObj,
-              _targetAlt,
-              _impact is false.
-
-    local maneuverList to list(_maneuverObj["nodeAt"], 0, 0, _maneuverObj["dV"]).
-    local maneuverNode to node(maneuverList[0],maneuverList[1], maneuverList[2], maneuverList[3]).
+    local mnvList to list(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
+    local mnvNode to node(mnvList[0],mnvList[1], mnvList[2], mnvList[3]).
     
-    add maneuverNode.
-    until nextNode:Orbit:HasNextPatch {
-        local dV to maneuverNode:burnvector:mag.
-        remove maneuverNode.
-        set maneuverNode to node(maneuverList[0],maneuverList[1], maneuverList[2], dV + 1).
-        add maneuverNode.
+    add mnvNode.
+    until nextNode:obt:hasnextpatch {
+        local dv to mnvNode:burnvector:mag.
+        remove mnvNode.
+        set mnvNode to node(mnvList[0],mnvList[1], mnvList[2], dv + 1).
+        add mnvNode.
         wait 0.1.
     }
 
-    if not _impact {
-        local maneuverAccuracy to 0.005.
-        set maneuverNode to OptimizeManeuverNode(maneuverNode, _targetAlt, "pe", Target, maneuverAccuracy).
+    if not impact {
+        local mnvAcc to 0.005.
+        set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe", target, mnvAcc).
     }
 
-    set _maneuverObj["nodeAt"] to Time:Seconds + maneuverNode:Eta.
-    set _maneuverObj["burnEta"] to (maneuverNode:Eta + Time:Seconds) - (_maneuverObj["burnDur"] / 2).
-    set _maneuverObj["mnv"] to maneuverNode.
+    set mnvObj["nodeAt"] to time:seconds + mnvNode:eta.
+    set mnvObj["burnEta"] to (mnvNode:eta + time:seconds) - (mnvObj["burnDur"] / 2).
+    set mnvObj["mnv"] to mnvNode.
 
-    return _maneuverObj.
+    return mnvObj.
 }
 
 
-global function AddCaptureNode {
-    parameter _targetAlt.
+global function add_capture_node {
+    parameter tgtAlt.
 
-    local dV to GetDVForPrograde(_targetAlt, ship:Periapsis).
-    local maneuver to list(Time:Seconds + Eta:Periapsis, 0, 0, dV).
+    local dv to get_dv_for_prograde(tgtAlt, ship:periapsis).
+    local mnv to list(time:seconds + eta:periapsis, 0, 0, dv).
 
-    local maneuverNode to node(maneuver[0], maneuver[1], maneuver[3], maneuver[3]).
-    add maneuverNode.
+    local mnvNode to node(mnv[0], mnv[1], mnv[3], mnv[3]).
+    add mnvNode.
 
-    until not maneuverNode:orbit:hasNextPatch {
-        set maneuver     to list(maneuver[0], maneuver[1], maneuver[2], maneuver[3] - 5).
-        set maneuverNode to node(maneuver[0], maneuver[1], maneuver[2], maneuver[3]).
-        if hasNode {
-            remove nextNode.
-        }
-        add maneuverNode.
+    until not mnvNode:orbit:hasNextPatch {
+        set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 5).
+        set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        if hasNode remove nextNode.
+        add mnvNode.
         wait 0.01.
     }
 
-    until maneuverNode:orbit:Apoapsis <= max(_targetAlt, ship:Periapsis + 1000) {
-        if hasNode {
-            remove nextNode.
-        }
-        set maneuver     to list(maneuver[0], maneuver[1], maneuver[2], maneuver[3] - 0.25).
-        set maneuverNode to node(maneuver[0], maneuver[1], maneuver[2], maneuver[3]).
-        add maneuverNode.
+    until mnvNode:orbit:apoapsis <= max(tgtAlt, ship:periapsis + 1000) {
+        if hasNode remove nextNode.
+        set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 0.25).
+        set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
+        add mnvNode.
         wait 0.01.
     }
     
-    return maneuverNode.
+    return mnvNode.
 }
 
 
-global function AddOptimizedNode {
-    parameter _maneuverParam,
-              _targetAlt,
-              _comparisonMode,
-              _targetBody,
-              _maneuverAccuracy.
+global function add_optimized_node {
+    parameter _mnvParam,
+              _tgtAlt,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
 
-    local maneuver  to OptimizeNodeData(_maneuverParam, _targetAlt, _comparisonMode, _targetBody, _maneuverAccuracy).
-    set   maneuver  to AddNodeToPlan(maneuver).
+    local mnv to optimize_node_list(_mnvParam, _tgtAlt, _compMode, _tgtBody, _mnvAcc).
+    set mnv to add_node_to_plan(mnv).
 
-    return maneuver.
+    return mnv.
 }
 
 
-global function AddCircularizationNode {
+global function add_simple_circ_node {
     parameter _nodeAt,
-              _targetAlt.
+              _tgtAlt.
 
-    local dV to choose GetDVForRetrograde(_targetAlt, ship:Apoapsis) if _nodeAt = "pe" else GetDVForPrograde(_targetAlt, ship:Periapsis).
-    if dV > 9999 {
-        set dV to 50.
-    }
+    local dv to choose get_dv_for_retrograde(_tgtAlt, ship:apoapsis) if _nodeAt = "pe" else get_dv_for_prograde(_tgtAlt, ship:periapsis).
+    if dv > 9999 set dv to 50.
 
-    local maneuver is list().
+    local mnv is list().
     local mode is "".
 
     if _nodeAt = "ap" {
-        set maneuver to list(Time:Seconds + Eta:Apoapsis, 0, 0, dV).
+        set mnv to list(time:seconds + eta:apoapsis, 0, 0, dv).
         set mode to "pe".
     } else {
-        set maneuver to list(Time:Seconds + Eta:Periapsis, 0, 0, dV).
+        set mnv to list(time:seconds + eta:periapsis, 0, 0, dv).
         set mode to "ap".
     }
 
     local mnvAcc is 0.005.
-    set   maneuver to OptimizeNodeData(maneuver, _targetAlt, mode, ship:Body, mnvAcc).
-    set   maneuver to AddNodeToPlan(maneuver).
+
+    set mnv to optimize_node_list(mnv, _tgtAlt, mode, ship:body, mnvAcc).
+    set mnv to add_node_to_plan(mnv).
     
-    return maneuver.
+    return mnv.
 }
 
 
-local function EvaluateCandidates {
-    parameter _maneuverData,
-              _candidates,
-              _targetValue,
-              _comparisonMode,
-              _targetBody.
+local function eval_candidates {
+    parameter _data,
+              _candList,
+              _tgtVal,
+              _compMode,
+              _tgtBody.
 
-    local currenScore to NodeScore(_maneuverData, _targetValue, _comparisonMode, _targetBody).
+    local curScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody).
     
-    for c in _candidates {
-        local candidateScore to NodeScore(c, _targetValue, _comparisonMode, _targetBody).
-        
-        if candidateScore:intersect {
-            
-            if candidateScore:result > _targetValue {
-                
-                if candidateScore:score < currenScore:score {
-                    set currenScore to NodeScore(c, _targetValue, _comparisonMode, _targetBody).
-                    set _maneuverData to c.
-                }    
-
-            } else if candidateScore:result < _targetValue {
-                
-                if candidateScore:score > currenScore:score {
-                    set currenScore to NodeScore(c, _targetValue, _comparisonMode, _targetBody).
-                    set _maneuverData to c.
+    for c in _candList {
+        local candScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
+        if candScore:intersect {
+            if candScore:result > _tgtVal {
+                if candScore:score < curScore:score {
+                    set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
+                    set _data to c.
+                }
+            } else if candScore:result < _tgtVal {
+                if candScore:score > curScore:score {
+                    set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
+                    set _data to c.
                 }
             }
         }
     }
 
-    return lex("_data", _maneuverData, "curScore", currenScore).
+    return lex("_data", _data, "curScore", curScore).
 }
 
 
-global function ExecuteNode {
-    parameter _maneuverNode.
+global function exec_node {
+    parameter nd.
     
-    local sVal      to LookDirUp(_maneuverNode:BurnVector, sun:Position).
-    lock steering   to sVal.
-    local tVal      to 0.
-    lock throttle   to tVal.
+    local sVal to lookDirUp(nd:burnvector, sun:position).
+    lock steering to sVal.
 
-    local done  to false.
-    local dV    to _maneuverNode:DeltaV.
-    local maxAcceleration to ship:MaxThrust / ship:Mass.
+    local tVal to 0.
+    lock throttle to tVal.
+
+    local done to false.
+    local dv0 to nd:deltav.
+    local maxAcc to ship:maxThrust / ship:mass.
 
     until done {
-        set maxAcceleration to ship:MaxThrust / ship:Mass.
+        set maxAcc to ship:maxThrust / ship:mass.
 
-        set tVal to min(_maneuverNode:DeltaV:Mag / maxAcceleration, 1).
+        set tVal to min(nd:deltaV:mag / maxAcc, 1).
 
-        if VDot(dV, _maneuverNode:DeltaV) < 0 {
+        if vdot(dv0, nd:deltaV) < 0 {
             lock throttle to 0.
             set done to true.
             break.
+        }
 
-        } else if _maneuverNode:DeltaV:Mag < 0.1 {
-            wait until VDot(dV, _maneuverNode:DeltaV) < 0.1.
+        else if nd:deltaV:mag < 0.1 {
+            wait until vDot(dv0, nd:deltaV) < 0.1.
 
             lock throttle to 0.
             set done to true.
@@ -223,166 +216,54 @@ global function ExecuteNode {
         disp_burn_data().
     }
 
-    remove _maneuverNode.
+    remove nd.
     disp_clear_block("burn_data").
 }
 
 
-local function ImproveNode {
-    parameter _maneuverData,
-              _targetVal,
-              _comparisonMode,
-              _targetBody,
-              _maneuverAccuracy.
+local function get_node_result {
 
-    local limLow  to 1 - _maneuverAccuracy.
-    local limHigh to 1 + _maneuverAccuracy.
+    parameter _compMode,
+              _obt.
 
-    //hill climb to find the best time
-    local currenScore is NodeScore(_maneuverData, _targetVal, _comparisonMode, _targetBody).
-
-    // mnvCandidates placeholder
-    local candidates is list().
-
-    // Base maneuver factor - the amount of dV that is used for hill
-    // climb iterations
-    local maneuverFactor is 1.
-
-    if currenScore:score > (limLow * 0.975) and currenScore:score < (limHigh * 1.025) {
-        set maneuverFactor to 0.05 * maneuverFactor.
-
-    } else if currenScore:score > (limLow * 0.875) and currenScore:score < (limHigh * 1.125) {
-        set maneuverFactor to 0.125 * maneuverFactor. 
-
-    } else if currenScore:score > (limLow * 0.75) and currenScore:score < (limHigh * 1.25) {
-        set maneuverFactor to 0.25 * maneuverFactor.
-
-    } else if currenScore:score > (limLow * 0.50) and currenScore:score < (limHigh * 1.50) {
-        set maneuverFactor to 0.50 * maneuverFactor.
-
-    } else if currenScore:score > (limLow * 0.25) and currenScore:score < (limHigh * 1.75) {
-        set maneuverFactor to 0.75 * maneuverFactor.
-
-    } else if currenScore:score > -1 * limLow and currenScore:score < limHigh * 3 {
-        set maneuverFactor to 1 * maneuverFactor.
-
-    } else if currenScore:score > -10 * limLow and currenScore:score < limHigh * 11 {
-        set maneuverFactor to 2 * maneuverFactor. 
-
-    } else {
-        set maneuverFactor to 5 * maneuverFactor.
-    }
-    
-    out_msg("Optimizing node.").
-
-    set candidates to list(
-         list(_maneuverData[0] + maneuverFactor, _maneuverData[1], _maneuverData[2], _maneuverData[3])  //Time
-        ,list(_maneuverData[0] - maneuverFactor, _maneuverData[1], _maneuverData[2], _maneuverData[3]) //Time
-        ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3] + maneuverFactor) //Prograde
-        ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3] - maneuverFactor) //Prograde
-        ,list(_maneuverData[0], _maneuverData[1] + maneuverFactor, _maneuverData[2], _maneuverData[3]) //Radial
-        ,list(_maneuverData[0], _maneuverData[1] - maneuverFactor, _maneuverData[2], _maneuverData[3]) //Radial
-        ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2] + maneuverFactor, _maneuverData[3]) //Normal
-        ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2] - maneuverFactor, _maneuverData[3]) //Normal
-    ).
-
-    local bestCandidate to EvaluateCandidates(_maneuverData, candidates, _targetVal, _comparisonMode, _targetBody).
-    return bestCandidate.
-}
-
-
-local function ImproveTransferNode {
-    parameter _maneuverData,
-              _targetVal,
-              _targetBody.
-    
-    local bestCandidate to lex().
-    local orbitRetro    to choose false if _targetVal <= 90 else true.
-    local nodeScore     to NodeScore(_maneuverData, _targetVal, "tliInc", _targetBody).
-    local intersect     to nodeScore["intersect"].
-
-    out_msg("Optimizing transfer node timing for proper inclination.").
-    
-    if not intersect {
-        until intersect {
-            local mnvCandidates to list(
-                 list(_maneuverData[0] + 1, _maneuverData[1], _maneuverData[2], _maneuverData[3])
-                ,list(_maneuverData[0] - 1, _maneuverData[1], _maneuverData[2], _maneuverData[3])
-                ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3] + 1)
-                ,list(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3] - 1)
-            ).
-            set bestCandidate to EvaluateCandidates(_maneuverData, mnvCandidates, _targetVal, "tliInc", _targetBody).
-            set _maneuverData to bestCandidate["_data"].
-            set nodeScore to bestCandidate["curScore"]:score.
-            set intersect to bestCandidate["curScore"]:intersect.
-            wait 0.01.
-        }
-    }
-
-    set nodeScore to NodeScore(_maneuverData, _targetVal, "tliInc", _targetBody).
-
-    if orbitRetro {
-        until nodeScore["intersect"] and nodeScore["result"] > 90 {
-            set _maneuverData to list(_maneuverData[0] - 1, _maneuverData[1], _maneuverData[2], _maneuverData[3]).
-            set nodeScore to NodeScore(_maneuverData, _targetVal, "tliInc", _targetBody).
-        }
-        return _maneuverData.
-
-    } else {
-        until nodeScore["intersect"] and nodeScore["result"] <= 90 {
-            set _maneuverData to list(_maneuverData[0] + 1, _maneuverData[1], _maneuverData[2], _maneuverData[3]).
-            set nodeScore to NodeScore(_maneuverData, _targetVal, "tliInc", _targetBody).
-        }
-
-        return _maneuverData.
+    if _compMode = "pe" {     
+        return _obt:periapsis.
+    } else if _compMode = "ap" {
+        return _obt:apoapsis.
+    } else if _compMode = "inc" {
+        return _obt:inclination.
+    } else if _compMode = "tliInc" { 
+        return _obt:inclination.
+    } else if _compMode = "lan" {
+        return _obt:longitudeOfAscendingNode.
+    } else if _compMode = "argpe" {
+        return _obt:argumentofperiapsis.
     }
 }
 
 
-local function NodeResultValue {
-    parameter _comparisonMode,
-              _orbit.
+local function get_node_score {
+    parameter _data,
+              _tgtVal,
+              _compMode,
+              _tgtBody.
 
-    if _comparisonMode = "pe" {     
-        return _orbit:Periapsis.
-    } else if _comparisonMode = "ap" {
-        return _orbit:Apoapsis.
-    } else if _comparisonMode = "inc" {
-        return _orbit:Inclination.
-    } else if _comparisonMode = "tliInc" { 
-        return _orbit:Inclination.
-    } else if _comparisonMode = "lan" {
-        return _orbit:LongitudeOfAscendingNode.
-    } else if _comparisonMode = "argpe" {
-        return _orbit:ArgumentOfPeriapsis.
-    }
-}
-
-
-local function NodeScore {
-    parameter _maneuverData,
-              _targetVal,
-              _comparisonMode,
-              _targetBody.
-
-    local intersect     to false.
-    local maneuverTest  to node(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3]).
-    local result        to -999999.
-    local score         to -999999.
+    local intersect to false.
+    local mnvTest to node(_data[0], _data[1], _data[2], _data[3]).
+    local result to -999999.
+    local score to -999999.
     
-    add maneuverTest.
-    local scoredOrbit to maneuverTest:Orbit.
+    add mnvTest.
+    local scoredObt to mnvTest:obt.
 
     until intersect {
-        if scoredOrbit:Body = _targetBody {
-            set result      to NodeResultValue(_comparisonMode, scoredOrbit).
-            set score       to result / _targetVal.
-            set intersect   to true.
-        
-        } else if scoredOrbit:HasNextPatch {
-            set scoredOrbit to scoredOrbit:NextPatch.
-        
-        } else {
+        if scoredObt:body = _tgtBody {
+            set result to get_node_result(_compMode, scoredObt).
+            set score to result / _tgtVal.
+            set intersect to true.
+        } else if scoredObt:hasnextpatch {
+            set scoredObt to scoredObt:nextpatch.
+        } else  {
             break.
         }
     }
@@ -390,57 +271,158 @@ local function NodeScore {
     disp_block(list(
         "nodeResult",
         "node result",
-        "tgtBody",     _targetBody,
+        "tgtBody",     _tgtBody,
         "intersect",    intersect,
         "score",        round(score, 5),
-        "tgtVal",      _targetVal,
+        "tgtVal",      _tgtVal,
         "resultVal",    round(result)
     )).
-
-    remove maneuverTest.
+    remove mnvTest.
 
     return lex("score", score, "result", result, "intersect", intersect).
 }
 
 
-global function OptimizeManeuverNode {
-    parameter _maneuverNode,
-              _targetVal,
-              _comparisonType,
-              _targetBody is _maneuverNode:Orbit:Body,
-              _maneuverAccuracy is 0.005.
+local function improve_node {
+    parameter _data,
+              _tgtVal,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
 
-    local maneuverParam to list(_maneuverNode:Eta + Time:Seconds, _maneuverNode:radialOut, _maneuverNode:normal, _maneuverNode:prograde).
-    remove _maneuverNode.
-    local optimizedParam to OptimizeNodeData(maneuverParam, _targetVal, _comparisonType, _targetBody, _maneuverAccuracy).
-    set _maneuverNode to node(optimizedParam[0], optimizedParam[1], optimizedParam[2], optimizedParam[3]).
-    add _maneuverNode.
+    local limLo to 1 - _mnvAcc.
+    local limHi to 1 + _mnvAcc.
 
-    return _maneuverNode.
+    //hill climb to find the best time
+    local curScore is get_node_score(_data, _tgtVal, _compMode, _tgtBody).
+
+    // mnvCandidates placeholder
+    local mnvCandidates is list().
+
+    // Base maneuver factor - the amount of dV that is used for hill
+    // climb iterations
+    local mnvFactor is 1.
+
+    if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025) {
+        set mnvFactor to 0.05 * mnvFactor.
+    } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
+        set mnvFactor to 0.125 * mnvFactor. 
+    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+        set mnvFactor to 0.25 * mnvFactor.
+    } else if curScore:score > (limLo * 0.50) and curScore:score < (limHi * 1.50) {
+        set mnvFactor to 0.50 * mnvFactor.
+    } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
+        set mnvFactor to 0.75 * mnvFactor.
+    } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
+        set mnvFactor to 1 * mnvFactor.
+    } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
+        set mnvFactor to 2 * mnvFactor. 
+    } else {
+        set mnvFactor to 5 * mnvFactor.
+    }
+    
+    out_msg("Optimizing node.").
+
+    set mnvCandidates to list(
+        list(_data[0] + mnvFactor, _data[1], _data[2], _data[3])  //Time
+        ,list(_data[0] - mnvFactor, _data[1], _data[2], _data[3]) //Time
+        ,list(_data[0], _data[1], _data[2], _data[3] + mnvFactor) //Prograde
+        ,list(_data[0], _data[1], _data[2], _data[3] - mnvFactor) //Prograde
+        ,list(_data[0], _data[1] + mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1] - mnvFactor, _data[2], _data[3]) //Radial
+        ,list(_data[0], _data[1], _data[2] + mnvFactor, _data[3]) //Normal
+        ,list(_data[0], _data[1], _data[2] - mnvFactor, _data[3]) //Normal
+    ).
+
+    local bestCandidate to eval_candidates(_data, mnvCandidates, _tgtVal, _compMode, _tgtBody).
+    return bestCandidate.
 }
 
 
-global function OptimizeNodeData {
-    parameter _maneuverData,
-              _targetVal,
-              _comparisonType,
-              _targetBody,
-              _maneuverAccuracy.
+local function improve_transfer_node_timing {
+    parameter _data,
+              _tgtVal,
+              _tgtBody.
+    
+    local bestCandidate to lex().
+    local obtRetro      to choose false if _tgtVal <= 90 else true.
+    local nodeScore     to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
+    local intersect     to nodeScore["intersect"].
+
+    out_msg("Optimizing transfer node timing for proper inclination.").
+    
+    if not intersect {
+        until intersect {
+            local mnvCandidates to list(
+                list(_data[0] + 1, _data[1], _data[2], _data[3])
+                ,list(_data[0] - 1, _data[1], _data[2], _data[3])
+                ,list(_data[0], _data[1], _data[2], _data[3] + 1)
+                ,list(_data[0], _data[1], _data[2], _data[3] - 1)
+            ).
+            set bestCandidate to eval_candidates(_data, mnvCandidates, _tgtVal, "tliInc", _tgtBody).
+            set _data to bestCandidate["_data"].
+            set nodeScore to bestCandidate["curScore"]:score.
+            set intersect to bestCandidate["curScore"]:intersect.
+            wait 0.01.
+        }
+    }
+
+    set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
+    if obtRetro {
+        until nodeScore["intersect"] and nodeScore["result"] > 90 {
+            set _data to list(_data[0] - 1, _data[1], _data[2], _data[3]).
+            set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
+        }
+        return _data.
+    } else {
+        until nodeScore["intersect"] and nodeScore["result"] <= 90 {
+            set _data to list(_data[0] + 1, _data[1], _data[2], _data[3]).
+            set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
+        }
+        return _data.
+    }
+}
+
+
+global function optimize_existing_node {
+    parameter _mnvNode,
+              _tgtVal,
+              _compMode,
+              _tgtBody is _mnvNode:obt:body,
+              _mnvAcc is 0.005.
+
+    local mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
+    remove _mnvNode.
+
+    local optParam to optimize_node_list(mnvParam, _tgtVal, _compMode, _tgtBody, _mnvAcc).
+    
+    set _mnvNode to node(optParam[0], optParam[1], optParam[2], optParam[3]).
+    add _mnvNode.
+
+    return _mnvNode.
+}
+
+
+global function optimize_node_list {
+    parameter _data,
+              _tgtVal,
+              _compMode,
+              _tgtBody,
+              _mnvAcc.
 
     out_msg("Optimizing node.").
 
     local improvedData  to lex().
-    local limLow        to 1 - _maneuverAccuracy.
-    local limHigh       to 1 + _maneuverAccuracy. 
+    local limLo         to 1 - _mnvAcc.
+    local limHi         to 1 + _mnvAcc. 
     local nodeScore     to 0.
 
     until false {
-        set improvedData    to Improvenode(_maneuverData, _targetVal, _comparisonType, _targetBody, _maneuverAccuracy).
-        set _maneuverData   to improvedData["_data"].
-        set nodeScore       to improvedData["curScore"]:score.
+        set improvedData to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
+        set _data to improvedData["_data"].
+        set nodeScore to improvedData["curScore"]:score.
         wait 0.001.
-        
-        if nodeScore >= limLow and nodeScore <= limHigh {
+        if nodeScore >= limLo and nodeScore <= limHi {
             break.
         }
     }
@@ -450,57 +432,57 @@ global function OptimizeNodeData {
 
     out_info().
     out_msg("Optimized maneuver found (score: " + nodeScore + ")").
-    return _maneuverData.
+    return _data.
 }
 
 
-global function OptimizeTransferNode {
-    parameter _maneuverNode,
-              _targetAlt,
-              _targetInc,
-              _targetBody,
-              _maneuverAccuracy.
+global function optimize_transfer_node {
+    parameter _mnvNode,
+              _tgtAlt,
+              _tgtInc,
+              _tgtBody,
+              _mnvAcc.
 
-    local   maneuverData    to list(_maneuverNode:Eta + Time:Seconds, _maneuverNode:radialOut, _maneuverNode:normal, _maneuverNode:prograde + 1).
-    remove _maneuverNode.
+    local   mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde + 1).
+    remove _mnvNode.
 
-    local   optimizedData   to ImproveTransfernode(maneuverData, _targetInc, _targetBody).
-    set     optimizedData   to OptimizeNodeData(optimizedData, _targetAlt, "pe", _targetBody, _maneuverAccuracy).
-    set     _maneuverNode   to node(optimizedData[0], optimizedData[1], optimizedData[2], optimizedData[3]).
-    add     _maneuverNode.
+    local   optParam to improve_transfer_node_timing(mnvParam, _tgtInc, _tgtBody).
+    set     optParam to optimize_node_list(optParam, _tgtAlt, "pe", _tgtBody, _mnvAcc).
+    set     _mnvNode to node(optParam[0], optParam[1], optParam[2], optParam[3]).
+    add _mnvNode.
 
-    return _maneuverNode.
+    return _mnvNode.
 }
 
 
 
 //-- WIP --//
-local function NodeMultiScore {
-    parameter _maneuverData,     // mnv list
-              _targetParams,  // list of target parameters in format: (tgtBody, tgtAlt, tgtInc, tgtLAN, tgtArgPe)
-              _accuracy.   // Accuracy factor
+local function get_node_multi_score {
+    parameter _data,     // mnv list
+              _tgtList,  // list of target parameters in format: (tgtBody, tgtAlt, tgtInc, tgtLAN, tgtArgPe)
+              _tgtAcc.   // Accuracy factor
 
-    local intersect     to false.
-    local maneuverTest  to node(_maneuverData[0], _maneuverData[1], _maneuverData[2], _maneuverData[3]).
-    local result        to -999999.
-    local score         to -999999.
-    local targetBody    to _targetParams[0].
-    local targetAlt     to _targetParams[1].
-    local targetInc     to _targetParams[2].
-    local targetLAN     to _targetParams[3].
-    local targetArgPe   to _targetParams[4].
+    local intersect to false.
+    local mnvTest   to node(_data[0], _data[1], _data[2], _data[3]).
+    local result    to -999999.
+    local score     to -999999.
+    local tgtBody   to _tgtList[0].
+    local tgtAlt    to _tgtList[1].
+    local tgtInc    to _tgtList[2].
+    local tgtLAN    to _tgtList[3].
+    local tgtArgPe  to _tgtList[4].
 
-    add maneuverTest.
-    local scoredOrbit       to maneuverTest:Orbit.
-    local scoredOrbitPeriod to scoredOrbit:period.
+    add mnvTest.
+    local scoredObt to mnvTest:obt.
+    local scoredObtPeriod to scoredObt:period.
 
     until intersect {
-        if scoredOrbit:Body = targetBody {
+        if scoredObt:body = tgtBody {
             set intersect to true.
-        } else if scoredOrbit:HasNextPatch {
-            set scoredOrbit to scoredOrbit:NextPatch.
+        } else if scoredObt:hasnextpatch {
+            set scoredObt to scoredObt:nextpatch.
         } else  {
-            return lex("intersect", intersect). // return a lex with only the intersect value
+            return lex("intersect", intersect). // Return a lex with only the intersect value
         }
     }
 

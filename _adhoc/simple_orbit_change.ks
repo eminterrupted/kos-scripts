@@ -68,8 +68,8 @@ local function main {
 
         else if runmode = 1 {
             set burnMode    to choose "ap" if _tgtAp > ship:periapsis else "pe".
-            set mnvParam    to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], GetDVForPrograde(_tgtAp, ship:periapsis, ship:body)).
-            set mnvParam    to OptimizeNodeData(mnvParam, _tgtAp, burnMode, ship:body, 0.001).
+            set mnvParam    to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], get_dv_for_prograde(_tgtAp, ship:periapsis, ship:body)).
+            set mnvParam    to optimize_node_list(mnvParam, _tgtAp, burnMode, ship:body, 0.001).
             set runmode to 2.
         }
 
@@ -87,7 +87,7 @@ local function main {
 
         // Do burn
         else if runmode = 5 {
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
             set runmode to 7.
         }
 

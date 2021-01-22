@@ -71,7 +71,7 @@ until runmode = 99 {
 
     else if runmode = 6 {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, rVal).
-        set mnvObj to AddTransferNode(mnvObj, tgtAltAp).
+        set mnvObj to add_transfer_node(mnvObj, tgtAltAp).
         cache_mnv_obj(mnvObj).
         set mnvNode to mnvObj["mnv"].
         set runmode to 8.
@@ -87,7 +87,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         set runmode to choose 11 if ship:crewCapacity > 0 else 12.
@@ -122,7 +122,7 @@ until runmode = 99 {
 
     //Circularize, step 1 (initial)
     else if runmode = 14 {
-        set mnvNode to AddCircularizationNode("pe", tgtAltAp).
+        set mnvNode to add_simple_circ_node("pe", tgtAltAp).
         set mnvObj to get_burn_obj_from_node(mnvNode).
         cache_mnv_obj(mnvObj).
         set runmode to 16.
@@ -136,7 +136,7 @@ until runmode = 99 {
 
     else if runmode = 18 {
         set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
         deletePath(mnvCache).
         set runmode to 20.
     }
@@ -144,7 +144,7 @@ until runmode = 99 {
 
     //Circularize, step 2 (Correction)
     else if runmode = 20 {
-        set mnvNode to AddCircularizationNode("ap", tgtAltPe).
+        set mnvNode to add_simple_circ_node("ap", tgtAltPe).
         set mnvObj to get_burn_obj_from_node(mnvNode).
         cache_mnv_obj(mnvObj).
         set runmode to 22.
@@ -157,7 +157,7 @@ until runmode = 99 {
     }
 
     else if runmode = 24 {
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
         deletePath(mnvCache).
         set runmode to 26.
     }

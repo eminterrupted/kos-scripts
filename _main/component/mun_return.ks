@@ -56,8 +56,8 @@ until runmode = 99 {
 
     else if runmode = 6 {
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
-        set mnvObj to AddTransferNode(mnvObj, tgtAlt).
-        set mnvObj["mnv"] to OptimizeManeuverNode(mnvObj["mnv"]).
+        set mnvObj to add_transfer_node(mnvObj, tgtAlt).
+        set mnvObj["mnv"] to optimize_existing_node(mnvObj["mnv"]).
         cache_mnv_obj(mnvObj).
         set mnvNode to mnvObj["mnv"].
         set runmode to 7.
@@ -83,7 +83,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         set runmode to choose 11 if ship:crewCapacity > 0 else 12.

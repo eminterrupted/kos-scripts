@@ -100,7 +100,7 @@ local function main {
             add mnvNode. 
 
             local accuracy is 0.005.
-            set mnvNode to OptimizeManeuverNode(mnvNode, tgtPe0, "pe", target, accuracy).
+            set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "pe", target, accuracy).
             
             set runmode to 30.
         }
@@ -113,7 +113,7 @@ local function main {
 
         //Executes the transfer burn
         else if runmode = 35 {
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
             set runmode to 40.
         }
 
@@ -180,7 +180,7 @@ local function main {
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
         else if runmode = 60 {
-            set mnvNode to AddCaptureNode(tgtAp0).
+            set mnvNode to add_capture_node(tgtAp0).
             set runmode to 62.
         }
 
@@ -212,7 +212,7 @@ local function main {
 
         //Adds a hohmann burn to lower Pe
         else if runmode = 69 {
-            set mnvNode to AddCircularizationNode("ap", tgtPe0).
+            set mnvNode to add_simple_circ_node("ap", tgtPe0).
             set runmode to 70.
         }
 
@@ -231,7 +231,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 74 {
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
             set runmode to 75.
         }
 
@@ -288,7 +288,7 @@ local function main {
 local function exec_burn {
     parameter burnNode.
 
-    ExecuteNode(burnNode).
+    exec_node(burnNode).
 
     update_display().
 }

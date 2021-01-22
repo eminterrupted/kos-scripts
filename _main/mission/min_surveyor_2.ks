@@ -110,7 +110,7 @@ local function main {
         else if runmode = 25 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
 
-            set mnvObj to AddTransferNode(mnvObj, tgtAp0).
+            set mnvObj to add_transfer_node(mnvObj, tgtAp0).
 
             set runmode to 30.
         }
@@ -128,7 +128,7 @@ local function main {
         else if runmode = 35 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
 
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
 
             set runmode to 45.
         }
@@ -178,8 +178,8 @@ local function main {
         else if runmode = 60 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
 
-            set mnvNode to AddCircularizationNode("pe", tgtAp0).
-            set mnvNode to OptimizeManeuverNode(mnvNode, tgtAp0, "pe").
+            set mnvNode to add_simple_circ_node("pe", tgtAp0).
+            set mnvNode to optimize_existing_node(mnvNode, tgtAp0, "pe").
 
             set runmode to 62.
         }
@@ -207,7 +207,7 @@ local function main {
         else if runmode = 66 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position) + r(0, 0, _rVal).
 
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
             wait 2.
 
             set runmode to 68.
@@ -231,8 +231,8 @@ local function main {
         else if runmode = 76 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, _rVal).
 
-            set mnvNode to AddCircularizationNode("ap", tgtPe0).
-            set mnvNode to OptimizeManeuverNode(mnvNode, tgtPe0, "ap ").
+            set mnvNode to add_simple_circ_node("ap", tgtPe0).
+            set mnvNode to optimize_existing_node(mnvNode, tgtPe0, "ap ").
 
             set runmode to 78.
         }
@@ -258,7 +258,7 @@ local function main {
 
         //Executes the circ burn
         else if runmode = 82 {
-            ExecuteNode(nextNode).
+            exec_node(nextNode).
             wait 2.
             set runmode to 84.
         }

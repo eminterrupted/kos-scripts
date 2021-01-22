@@ -71,7 +71,7 @@ until runmode = 99 {
 
     else if runmode = 10 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position).
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:prograde:vector, sun:position).
         set runmode to 99.

@@ -18,7 +18,7 @@ runOncePath("0:/lib/lib_warp").
 
         if not hasNode {
             out_info("Executing add_simple_circ_node()").
-            set burnNode to AddCircularizationNode(_nodeAt, _tgtAlt).
+            set burnNode to add_simple_circ_node(_nodeAt, _tgtAlt).
         }
 
         out_info("Executing get_burn_obj_from_node(burnNode)").
@@ -59,7 +59,7 @@ runOncePath("0:/lib/lib_warp").
         }
 
         disp_clear_block("timer").
-        ExecuteNode(_burnObj["mnv"]).
+        exec_node(_burnObj["mnv"]).
     }
 
 
@@ -96,14 +96,14 @@ runOncePath("0:/lib/lib_warp").
             else if subroutine = 1 {
                 set burnAt to choose "pe" if not isCircBurn else "ap".
                 local tgtAlt to choose _tgtAp if not isCircBurn else _tgtPe.
-                set mnvNode to AddCircularizationNode(burnAt, tgtAlt).
+                set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
                 set subroutine to set_sr(3).
             }
 
             else if subroutine = 2 {
                 set burnAt to choose "ap" if not isCircBurn else "pe".
                 local tgtAlt to choose _tgtPe if not isCircBurn else _tgtAp.
-                set mnvNode to AddCircularizationNode(burnAt, tgtAlt).
+                set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
                 set subroutine to set_sr(3).
             }
 
@@ -124,7 +124,7 @@ runOncePath("0:/lib/lib_warp").
 
             //Executes the circ burn
             else if subroutine = 5 {
-                ExecuteNode(nextNode).
+                exec_node(nextNode).
                 wait 1.
                 if not isCircBurn {
                     set isCircBurn to true.
@@ -168,7 +168,7 @@ runOncePath("0:/lib/lib_warp").
         
         // Exec when settled
         wait until warp = 0 and kuniverse:timewarp:issettled.
-        ExecuteNode(nextNode).
+        exec_node(nextNode).
     }
 
 
