@@ -65,6 +65,7 @@ global function add_transfer_node {
         remove mnvNode.
         set mnvNode to node(mnvList[0],mnvList[1], mnvList[2], dv + 1).
         add mnvNode.
+        wait 0.1.
     }
 
     if not impact {
@@ -362,6 +363,7 @@ local function improve_transfer_node_timing {
             set _data to bestCandidate["_data"].
             set nodeScore to bestCandidate["curScore"]:score.
             set intersect to bestCandidate["curScore"]:intersect.
+            wait 0.01.
         }
     }
 
@@ -441,7 +443,7 @@ global function optimize_transfer_node {
               _tgtBody,
               _mnvAcc.
 
-    local   mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
+    local   mnvParam to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde + 1).
     remove _mnvNode.
 
     local   optParam to improve_transfer_node_timing(mnvParam, _tgtInc, _tgtBody).

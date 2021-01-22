@@ -38,6 +38,7 @@ runOncePath("0:/lib/part/lib_antenna").
 
 logStr("localGravAccel: " + localGravAccel).
 
+rcs off. rcs on.
 local sVal to ship:retrograde.
 lock steering to sVal.
 
@@ -51,7 +52,7 @@ disp_clear_block("timer").
 until ship:velocity:surface:mag < 250 {
     set tVal to 0.5.
 
-    out_msg("ship:verticalSpeed < -25").
+    out_msg("ship:velocity:surface:mag < 250").
 
     update_landing_disp().
     wait 0.001.
@@ -70,9 +71,10 @@ wait 5.
 lock steering to steer_up().
 
 until ship:velocity:surface:mag < 55 {
-    set altPidVal   to altPid:update(time:seconds, alt:radar).
+    //set altPidVal   to altPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal        to max(vsPidVal, altPidVal).
+    set tVal to vsPidVal.
+    //set tVal        to max(vsPidVal, altPidVal).
 
     out_msg("surface velocity < 55 loop").
 
@@ -82,13 +84,15 @@ until ship:velocity:surface:mag < 55 {
 out_msg().
 set tVal to 0.
 
-until alt:radar <= 500 {
-    set altPidVal   to altPid:update(time:seconds, alt:radar).
+until alt:radar <= 1000 {
+    //set altPidVal   to altPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal        to max(vsPidVal, altPidVal).
+    set tVal to vsPidVal.
+    //set tVal        to max(vsPidVal, altPidVal).
+
 
     update_landing_disp().
-    out_msg("alt:radar <= 500").
+    out_msg("alt:radar <= 1000").
 }
 out_msg().
 
@@ -150,6 +154,7 @@ out_msg("Touchdown").
 lock throttle to 0.
 unlock steering.
 sas on.
+rcs off.
 panels on.
 for p in ship:partsTaggedPattern("comm") {
     activate_antenna(p).

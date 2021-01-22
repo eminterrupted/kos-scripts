@@ -3823,6 +3823,14 @@
         {
             "value": "comm.dish",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RA-00-2 Micro-Relay Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

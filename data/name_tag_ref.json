@@ -1799,6 +1799,30 @@
         {
             "value": "cmd.core",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "landingLeg1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "gear",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmbioDrill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.coreDrill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-antenna-relay-tiny-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

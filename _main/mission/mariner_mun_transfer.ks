@@ -1,11 +1,11 @@
 @lazyGlobal off.
 
-parameter tgtBody   is "Mun",
+parameter tgtBody   is "Minmus",
           tgtInc    is 0,
           tgtLan    is 0,
-          trnsfrAlt is 100000,
-          tgtAp1    is 15000,
-          tgtPe1    is 15000.
+          trnsfrAlt is 120000,
+          tgtAp1    is 62500,
+          tgtPe1    is 62500.
           
 //
 
@@ -121,7 +121,7 @@ local function main {
             local accuracy is 0.005.
             set mnvNode to optimize_transfer_node(mnvNode, trnsfrAlt, tgtInc, target, accuracy).
             set sVal to lookDirUp(mnvNode:burnVector, sun:position).
-            set tStamp to time:seconds + 15.
+            set tStamp to time:seconds + 5.
             until time:seconds >= tStamp {
                 update_display().
                 disp_timer(tStamp, "mnvObj creation").
@@ -170,7 +170,7 @@ local function main {
             
             out_msg("SOI Warp").
 
-            set tStamp to time:seconds + 30.
+            set tStamp to time:seconds + 15.
             until time:seconds >= tStamp {
                 update_display().
                 disp_timer(tStamp, "soi warp").

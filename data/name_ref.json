@@ -1863,6 +1863,30 @@
         {
             "value": "nfex-antenna-deploy-wv3-1",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LT-1 Landing Struts",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "landingLeg1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ExoKerbol Core Drill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmbioDrill",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RA-00-2 Micro-Relay Antenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-antenna-relay-tiny-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"
