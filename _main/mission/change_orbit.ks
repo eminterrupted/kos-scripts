@@ -1,10 +1,10 @@
 @lazyGlobal off.
 
-parameter _tgtAp    is 125000,
-          _tgtPe    is 125000,
+parameter _tgtAp    is 200000,
+          _tgtPe    is 200000,
           _tgtInc   is 0,
           _tgtLAN   is 0,
-          _tgtArgPe is 90.
+          _tgtArgPe is 0.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/display/lib_display").

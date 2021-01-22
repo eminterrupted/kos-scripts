@@ -3,9 +3,9 @@
 parameter tgtBody   is "Minmus",
           tgtInc    is 0,
           tgtLan    is 0,
-          trnsfrAlt is 120000,
-          tgtAp1    is 62500,
-          tgtPe1    is 62500.
+          trnsfrAlt is 250000,
+          tgtAp1    is 200000,
+          tgtPe1    is 200000.
           
 //
 

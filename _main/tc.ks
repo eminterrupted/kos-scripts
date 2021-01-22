@@ -68,7 +68,7 @@ if mode = "testStand" {
         p:activate.
     }
 
-    local tStamp to 10.
+    local tStamp to 5.
     until tStamp <= 0 {
         disp_test_main(pTestRep, -1, tStamp).
         wait 1.

@@ -9,8 +9,6 @@ local highStg   to 0.
 local boostEngs to list().
 
 update_display().
-out_msg("Preparing static fire. Press any key to continue").
-breakpoint().
 
 // Get the engine with the highest stageId - this is our booster stage
 list engines in engList.

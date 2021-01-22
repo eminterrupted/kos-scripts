@@ -3829,7 +3829,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "",
+            "value": "comm.dish",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],

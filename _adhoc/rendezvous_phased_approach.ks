@@ -1,11 +1,12 @@
 @lazyGlobal off.
 
-parameter _tgt is "Megfrid's Debris".
+parameter _tgt.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_deltav").
+
 runOncePath("0:/lib/nav/lib_mnv").
 runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/nav/lib_node").
