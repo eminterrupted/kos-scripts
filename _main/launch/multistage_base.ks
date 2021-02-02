@@ -1,9 +1,9 @@
 @lazyGlobal off. 
 
-parameter tAp to 125000,
-          tPe to 125000,
+parameter tAp to 50000,
+          tPe to 50000,
           tInc to 0,
-          tGTurnAlt to 60000,
+          tGTurnAlt to 12500,
           rVal to 0.
 
 clearScreen.
@@ -87,7 +87,7 @@ local function prep_for_orbit {
     logStr("Deploying launch vehicle solar panels").
     local sMod to "ModuleDeployableSolarPanel".
     for p in ship:partsTaggedPattern("solar.array") {
-        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
+        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") and not p:tag:matchespattern("onAscent") {
             do_event(p:getModule(sMod), "extend solar panel").
         }
     }
@@ -97,7 +97,7 @@ local function prep_for_orbit {
     local aMod to "ModuleRTAntenna".
 
     for p in ship:partsTaggedPattern("comm") {
-        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
+        if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown")  and not p:tag:matchespattern("onAscent") {
             do_event(p:getModule(aMod), "activate").
         }
 
@@ -112,7 +112,7 @@ local function prep_for_orbit {
 
     update_display().
 
-    set runmode to set_rm(28).
+    set runmode to rm(28).
 }
 
 local function cleanup {

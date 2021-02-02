@@ -1,6 +1,8 @@
 @lazyGlobal off.
 
-parameter runmodeReset is false.
+parameter runmodeReset is false,
+          autostage is true.
+
 
 clearscreen.
 
@@ -34,6 +36,14 @@ lock steering to sVal.
 local tVal is 0.
 lock throttle to tVal.
 
+if autostage {
+    when ship:availableThrust < 0.1 and tVal > 0 then {
+        logStr("Staging").
+        safe_stage().
+
+        preserve.
+    }
+}
 
 until runmode = 99 {
     
@@ -48,7 +58,7 @@ until runmode = 99 {
 
 
     else if runmode = 7 {
-        set tStamp to choose 15 if 15 < mnvNode:eta else 0.
+        set tStamp to choose 5 if 5 < mnvNode:eta else 0.
         set tStamp to time:seconds + tStamp.
         until time:seconds >= tStamp {
             update_display().
@@ -75,11 +85,6 @@ until runmode = 99 {
         deletePath(mnvCache).
         set sVal to lookDirUp(ship:prograde:vector, sun:position).
         set runmode to 99.
-    }
-
-    if ship:availableThrust < 0.1 and tVal > 0 {
-        logStr("Staging").
-        safe_stage().
     }
 
     if stateObj["runmode"] <> runmode {

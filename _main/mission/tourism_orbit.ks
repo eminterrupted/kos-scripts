@@ -25,7 +25,7 @@ clearscreen.
 until runmode = 99 {
 
     if runmode = 0 {
-        set runmode to set_rm(2).
+        set runmode to rm(2).
     }
 
     else if runmode = 2 {
@@ -34,14 +34,14 @@ until runmode = 99 {
             disp_timer(tStamp).
         }
         
-        set runmode to set_rm(4).
+        set runmode to rm(4).
     }
 
     else if runmode = 4 {
         if warp > 0 set warp to 0.
         wait until kuniverse:timewarp:issettled.
 
-        set runmode to set_rm(99).
+        set runmode to rm(99).
     }    
 
     update_display().

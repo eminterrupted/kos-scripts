@@ -28,6 +28,19 @@ local sciList is list().
 
 //-- functions --//
 
+//-- Arm and release seismic pods --//
+
+    // Arms the dmag seismic pods, and then deploys them
+    global function deploy_seismic_pods {
+        local podList to ship:partsTaggedPattern("pod").
+        if podList:length > 0 {
+            for p in podList {
+                p:getModule("DMSeismicSensor"):doAction("arm pod", true).
+                p:getModule("ModuleAnchoredDecoupler"):doEvent("decouple").
+            }
+        }
+    }
+
 //-- Collect science in container --//
     
     // Collect science into a container if one is present on board

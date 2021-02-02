@@ -5,7 +5,7 @@ runOncePath("0:/lib/lib_log").
 global function cust_warp_to_timestamp {
     parameter pStamp.
 
-    lock steering to "kill".
+    lock steering to lookDirUp(ship:facing:forevector, sun:position).
     wait 1. 
     local tDelta is pStamp - time:seconds.
     
@@ -54,51 +54,54 @@ global function warp_to_alt {
         set kuniverse:timewarp:mode to choose "RAILS" if ship:altitude > body:atm:height else "PHYSICS".
     }
 
-    local check to { return true.}. 
+    local function checkFunction { 
+        parameter _alt.
 
-    if ship:altitude > pAlt {
-        set check to utils:checkAltHi@.
-    } else {
-        set check to utils:checkAltLo@.
+        if ship:altitude > _alt {
+            return utils:checkAltHi(_alt).
+        } else {
+            return utils:checkAltLo(_alt).
+        }
     }
 
+    local cd to checkFunction(pAlt).
     local setWarp to { parameter _warp. set warp to _warp. wait until kuniverse:timewarp:issettled. }.
     init_subroutine().
 
-    until not check(pAlt) {
+    until not cd {
 
-        if ship:altitude >= pAlt * 15 {
+        if ship:altitude >= pAlt * 20 {
             if kuniverse:timewarp:warp <> 6 {
                 setWarp(6).
-                set_sr(1).
+                sr(1).
+            }
+        }
+
+        else if ship:altitude >= pAlt * 10 {
+            if kuniverse:timewarp:warp <> 5 {
+                setWarp(5).
+                sr(2).
             }
         }
 
         else if ship:altitude >= pAlt * 5 {
-            if kuniverse:timewarp:warp <> 5 {
-                setWarp(5).
-                set_sr(2).
+            if kuniverse:timewarp:warp <> 4 {
+                setWarp(4).
+                sr(3).
             }
         }
 
         else if ship:altitude >= pAlt * 2.5 {
-            if kuniverse:timewarp:warp <> 4 {
-                setWarp(4).
-                set_sr(3).
+            if kuniverse:timewarp:warp <> 3 {
+                setWarp(3).
+                sr(4).
             }
         }
 
         else if ship:altitude >= pAlt * 1.25 {
-            if kuniverse:timewarp:warp <> 3 {
-                setWarp(3).
-                set_sr(4).
-            }
-        }
-
-        else if ship:altitude >= pAlt * 1.0125 {
             if kuniverse:timewarp:warp <> 1 {
                 setWarp(1).
-                set_sr(5).
+                sr(5).
             }
         }
         
@@ -108,6 +111,7 @@ global function warp_to_alt {
             break.
         }
 
+        set cd to checkFunction(pAlt).
         update_display().
         wait 0.01.
     }
@@ -121,7 +125,7 @@ global function warp_to_next_soi {
     if ship:obt:hasnextpatch {
         set target to "".
         wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
-        warpTo(ship:obt:nextpatcheta + time:seconds - 15).
+        warpTo(ship:obt:nextpatcheta + time:seconds - 5).
     }
 
     until warp = 0 {
@@ -190,7 +194,7 @@ global function warp_to_burn_node {
     until time:seconds >= (mnvObj["burnEta"] - 15) {
         warp_to_timestamp(mnvObj["burnEta"]).
         update_display().
-        disp_burn_data().
+        disp_burn_data(mnvObj["burnEta"]).
     }
 
     if warp > 0 set warp to 0.
@@ -200,7 +204,7 @@ global function warp_to_burn_node {
 
     until time:seconds >= mnvObj["burnEta"] {
         update_display().
-        disp_burn_data().
+        disp_burn_data(mnvObj["burnEta"]).
     }
 
     disp_clear_block("timer").

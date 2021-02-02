@@ -156,11 +156,20 @@ global info is lex(
             }
         }
 
-        for r in stage:resources {
-            if r:name = "lqdHydrogen" {
-                if r:amount > 0 wait 5.
-            }
+        if stage:resourcesLex:lqdHydrogen:amount > 0 {
+            wait 5.
         }
+
+        if ship:partsTaggedPattern("sep.*.stgId:" + stage:number):length > 0 {
+            wait 0.5. 
+            stage.
+        }
+        
+        // for r in stage:resources {
+        //     if r:name = "lqdHydrogen" {
+        //         if r:amount > 0 wait 5.
+        //     }
+        // }
     }
 
 

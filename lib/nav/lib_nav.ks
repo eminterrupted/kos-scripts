@@ -183,6 +183,22 @@ global function ves_local_vertical {
 }
 
 
+
+// Gets the active waypoint
+global function active_waypoint {
+    local wpList to allWaypoints().
+
+    for wp in wpList {
+        if wp:isselected {
+            return wp.
+        }
+    }
+    
+    return -1.
+}
+
+
+
 // Angle to ascending node with respect to ves' body's equator
 global function ang_to_body_asc_node {
     parameter _ves is ship.

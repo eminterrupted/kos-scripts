@@ -87,9 +87,9 @@ runOncePath("0:/lib/lib_warp").
             
             if subroutine = 0 {
                 if raiseObt {
-                    set subroutine to set_sr(1).    // Subroutine 1 handles raised orbits
+                    set subroutine to sr(1).    // Subroutine 1 handles raised orbits
                 } else {
-                    set subroutine to set_sr(2).    // Subroutine 2 handles lowered orbits
+                    set subroutine to sr(2).    // Subroutine 2 handles lowered orbits
                 }
             }
 
@@ -97,14 +97,14 @@ runOncePath("0:/lib/lib_warp").
                 set burnAt to choose "pe" if not isCircBurn else "ap".
                 local tgtAlt to choose _tgtAp if not isCircBurn else _tgtPe.
                 set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
-                set subroutine to set_sr(3).
+                set subroutine to sr(3).
             }
 
             else if subroutine = 2 {
                 set burnAt to choose "ap" if not isCircBurn else "pe".
                 local tgtAlt to choose _tgtPe if not isCircBurn else _tgtAp.
                 set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
-                set subroutine to set_sr(3).
+                set subroutine to sr(3).
             }
 
             //Gets burn data from the node, write to cache in case needed later
@@ -112,14 +112,14 @@ runOncePath("0:/lib/lib_warp").
                 set mnvObj to get_burn_obj_from_node(mnvNode).
                 writeJson(mnvObj, mnvCache).
                 set mnvObj["mnv"] to mnvNode. 
-                set subroutine to set_sr(4).
+                set subroutine to sr(4).
             }
 
             //Warps to the burn node
             else if subroutine = 4 {
                 warp_to_burn_node(mnvObj).
                 wait until warp = 0 and kuniverse:timewarp:issettled.
-                set subroutine to set_sr(5).
+                set subroutine to sr(5).
             }
 
             //Executes the circ burn
@@ -128,16 +128,16 @@ runOncePath("0:/lib/lib_warp").
                 wait 1.
                 if not isCircBurn {
                     set isCircBurn to true.
-                    set subroutine to set_sr(0).
+                    set subroutine to sr(0).
                 } else {
-                    set subroutine to set_sr(10).
+                    set subroutine to sr(10).
                 }
             }
 
             update_display().
         }
 
-        set_sr("").
+        sr("").
     }
 
 

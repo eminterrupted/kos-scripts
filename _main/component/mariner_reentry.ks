@@ -34,7 +34,7 @@ if runmode = 99 set runmode to 0.
 out_msg("Trajectory does not enter atmosphere, performing reentry burn").
 if ship:periapsis >= 70000 do_kerbin_reentry_burn(tPe, rVal).
 
-set_sr("").
+sr("").
 
 out_msg("Performing reentry").
 do_kerbin_reentry().

@@ -61,7 +61,7 @@ local function main {
 
             add mnvNode.
 
-            set runmode to set_sr(5).
+            set runmode to sr(5).
         }
 
         // Do burn
@@ -91,7 +91,7 @@ local function main {
 
             disp_clear_block("timer").
 
-            set runmode to set_sr(6).
+            set runmode to sr(6).
         }
 
         else if runmode = 6 {
@@ -111,11 +111,11 @@ local function main {
             set tVal to 0.
             remove mnvNode.
             
-            set runmode to set_sr(10).
+            set runmode to sr(10).
         }
 
         else if runmode = 10 {
-            set runmode to set_sr(99).
+            set runmode to sr(99).
         }
 
         update_display().

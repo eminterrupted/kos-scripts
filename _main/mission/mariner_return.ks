@@ -17,7 +17,7 @@ runOncePath("0:/lib/nav/lib_node").
 //FilePaths
 local mnvCache is "local:/mnvCache.json".
 local reentryPath is "local:/mariner_reentry". 
-copyPath("0:/_main/component/mariner_reentry", reentryPath).
+compile("0:/_main/mission/simple_reentry") to reentryPath.
 
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
@@ -116,29 +116,14 @@ until runmode = 99 {
     }
 
     else if runmode = 20 {
-        out_msg("Warping during free return trajectory").
-        set sVal to lookDirUp(ship:prograde:vector, sun:position).
-        warp_to_alt(125000).
-        until ship:altitude <= 125000 {
-            update_display().
-        }
-
-        if warp > 0 set warp to 0.
-        wait until kuniverse:timewarp:issettled.
-        set runmode to 26.
-    }
-    
-    
-    //Finish script
-    else if runmode = 26 {
         out_msg("Vessel ready for reentry").
-        logStr("Transfer maneuvers completed, ready for Reentry").
+        logStr("Transfer maneuvers completed, ready for simple_reentry").
         runPath(reentryPath).
         
         set runmode to 99.
     }
 
-    set_rm(runmode).
+    rm(runmode).
 }
 
 unlock steering.

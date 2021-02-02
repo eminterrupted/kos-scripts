@@ -3,7 +3,12 @@
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
 
-if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
+local mlp to false.
+
+if ship:partsTaggedPattern("mlp"):length > 0 {
+    runOncePath("0:/lib/part/lib_launchpad").
+    set mlp to true.
+}
 
 //Main launch sequencer
 global function launch_sequence {
@@ -78,7 +83,7 @@ global function arm_stock_fairings {
 
 // Launch a vessel with a countdown timer
 global function launch_vessel {
-    parameter countdown is 5, 
+    parameter countdown is 10, 
               engStart is 2.2.
 
     logStr("launch_vessel").
@@ -90,6 +95,7 @@ global function launch_vessel {
 
     local fallback is false.
     local holddown is false.
+    local launchFlag to choose true if ship:status = "PRELAUNCH" else false.
     local swingarm is false.
     local umbilical is false.
 
@@ -101,55 +107,70 @@ global function launch_vessel {
     }
 
     //Setup the launch triggers. 
-    when cd <= countdown * 0.95 then {
-        mlp_retract_crewarm().
-        logStr("Crew arm retract").
-    }   
-    when cd <= countdown * 0.5 then {
-        mlp_fuel_off().
-        logStr("Fueling complete").
-    }
-    when cd <= countdown * 0.45 then {
-        mlp_gen_off(). 
-        logStr("Vehicle on internal power").
-        if fallback {
-            mlp_fallback_open_clamp().
-            logStr("Fallback clamp open").
-        }
-    }
-    when cd <= countdown * 0.4 then {
-        if fallback {
-            mlp_fallback_partial().
-            logStr("Fallback tower partial retract").
-        }
-    }
-    when cd <= engStart then {
-        logStr("Engine start sequence").
-        engine_start_sequence().
-    }
-    when cd <= 0.8 then {
-        if fallback {
-            mlp_fallback_full().
-            logStr("Fallback tower full retract").
+    if mlp {
+        when cd <= countdown * 0.95 then {
+            mlp_retract_crewarm().
+            logStr("Crew arm retract").
         }
 
-        if swingarm {
-            mlp_retract_swingarm().
-            logStr("Swing arms detached").
+        when cd <= countdown * 0.75 then {
+            if fallback {
+                mlp_fallback_open_clamp().
+                logStr("Fallback clamp open").
+            }
+        }
+
+        when cd <= countdown * 0.5 then {
+            mlp_fuel_off().
+            logStr("Fueling complete").
+        }
+
+        when cd <= countdown * 0.45 then {
+            mlp_gen_off(). 
+            logStr("Vehicle on internal power").
+        }
+
+        when cd <= countdown * 0.4 then {
+            if fallback {
+                mlp_fallback_partial().
+                logStr("Fallback tower partial retract").
+            }
+        }
+
+        when cd <= 0.8 then {
+            if fallback {
+                mlp_fallback_full().
+                logStr("Fallback tower full retract").
+            }
+
+            if swingarm {
+                mlp_retract_swingarm().
+                logStr("Swing arms detached").
+            }
+        }
+
+        when cd <= 0.2 then {
+            if umbilical {
+                mlp_drop_umbilical().
+                logStr("Umbilicals detached").
+            }
+        }
+
+        when cd <= 0.1 then {
+            if holddown {
+                mlp_retract_holddown().
+                logStr("Holddown retracted").
+            }
         }
     }
-    when cd <= 0.2 then {
-        if umbilical {
-            mlp_drop_umbilical().
-            logStr("Umbilicals detached").
+
+    if launchFlag {
+        when cd <= engStart then {
+            logStr("Engine start sequence").
+            engine_start_sequence().
         }
     }
-    when cd <= 0.1 then {
-        if holddown {
-            mlp_retract_holddown().
-            logStr("Holddown retracted").
-        }
-    }
+    
 
     logStr("Beginning launch countdown").
     until cd <= 0 {
@@ -219,7 +240,7 @@ global function get_circ_burn_pitch {
 
 
 local function preLaunch {
-    local runmode is set_rm(0).
+    local runmode is rm(0).
     logStr("[Runmode " + runmode + "]: Preparing for launch").
     
     disp_main().
@@ -227,7 +248,7 @@ local function preLaunch {
 
 
 local function launch {
-    local runmode to set_rm(5).
+    local runmode to rm(5).
     logStr("[Runmode " + runmode + "]: Begin launch procedure").
 
     if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
@@ -247,7 +268,7 @@ local function launch {
 
 
 local function clear_tower {
-    local runmode to set_rm(10).
+    local runmode to rm(10).
     logStr("[Runmode " + runmode + "]: Liftoff!").
     
     local sVal to heading(90, 90, -90).
@@ -269,7 +290,7 @@ local function clear_tower {
 local function roll_program {
     parameter lObj.
 
-    local runmode to set_rm(15).
+    local runmode to rm(15).
     logStr("[Runmode " + runmode + "]: Roll program").
 
     local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
@@ -285,7 +306,7 @@ local function roll_program {
 local function vertical_ascent {
     parameter lObj.
 
-    local runmode to set_rm(20).
+    local runmode to rm(20).
     logStr("[Runmode " + runmode + "]: Vertical ascent").
     
     local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
@@ -308,7 +329,7 @@ local function vertical_ascent {
 local function gravity_turn {
     parameter lObj.
            
-    local runmode to set_rm(25).
+    local runmode to rm(25).
     logStr("[Runmode " + runmode + "]: Pitch program").
     
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
@@ -350,7 +371,7 @@ local function gravity_turn {
 local function slow_burn_to_apo {
     parameter lObj. 
 
-    local runmode to set_rm(30).
+    local runmode to rm(30).
     logStr("[Runmode " + runmode + "]: Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
 
     local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
@@ -370,7 +391,7 @@ local function slow_burn_to_apo {
 local function meco {
     parameter lObj.
 
-    local runmode to set_rm(35).
+    local runmode to rm(35).
     logStr("[Runmode " + runmode + "]: MECO").
 
     local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
@@ -385,7 +406,7 @@ local function meco {
 local function coast_to_space {
     parameter lObj.
     
-    local runmode to set_rm(40).
+    local runmode to rm(40).
     logStr("[Runmode " + runmode + "]: Coast phase").
 
     local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).

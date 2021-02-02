@@ -29,7 +29,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "change_orbit",
+            "value": "simple_orbit",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -37,7 +37,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 400000,
+            "value": 150000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
@@ -45,7 +45,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 400000,
+            "value": 150000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {

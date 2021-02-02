@@ -353,10 +353,10 @@ local function tag_stage_meta {
     if p:tag:matchesPattern(".stgId:-??\d") {
         return "".
     } else {
-        if p:typeName <> "Decoupler" {
-            return ".stgId:" + p:decoupledIn.
-        } else {
+        if p:title:contains("sepratron") or p:typeName = "Decoupler" { 
             return ".stgId:" + p:stage.
+        } else {
+            return ".stgId:" + p:decoupledIn.
         }
     }
 }

@@ -52,7 +52,7 @@ local function main {
 
         //Get the list of science experiments
         if runmode = 0 {
-            set runmode to set_rm(2).
+            set runmode to rm(2).
         }
         
         //Activate the antenna
@@ -69,14 +69,14 @@ local function main {
                 }
             }
             
-            set runmode to set_rm(3).
+            set runmode to rm(3).
         }
 
         //Sets the transfer target
         else if runmode = 3 {
             out_msg("Set target").
             set target to orbitable(_tgt).
-            set runmode to set_rm(7).
+            set runmode to rm(7).
         }
 
 
@@ -94,7 +94,7 @@ local function main {
                 wait 5.
                 runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
             }
-            set runmode to set_rm(15).
+            set runmode to rm(15).
         }
 
 
@@ -106,7 +106,7 @@ local function main {
                 runpath("0:/_adhoc/simple_orbit_change", target:orbit:argumentofperiapsis, target:orbit:lan).
                 out_msg().
             }
-            set runmode to set_rm(15).
+            set runmode to rm(15).
         }
 
 
@@ -114,7 +114,7 @@ local function main {
         else if runmode = 15 {
             out_msg("Getting transfer object").
             set mnvObj to get_transfer_obj().
-            set runmode to set_rm(25).
+            set runmode to rm(25).
         }
 
         //Adds the transfer burn node to the flight plan
@@ -126,28 +126,28 @@ local function main {
             //local accuracy is 0.001.
             //set mnvNode to optimize_existing_node(mnvNode, target:orbit:periapsis, "pe", target, accuracy).
             
-            set runmode to set_rm(30).
+            set runmode to rm(30).
         }
 
         //Warps to the burn node
         else if runmode = 30 {
             out_msg("Manuever added, warping to burn eta").
             warp_to_burn_node(mnvObj).
-            set runmode to set_rm(35).
+            set runmode to rm(35).
         }
 
         //Executes the transfer burn
         else if runmode = 35 {
             out_msg("Executing node").
             exec_node(nextNode).
-            set runmode to set_rm(37).
+            set runmode to rm(37).
         }
 
         //Add a circ node at Pe.
         else if runmode = 37 {
             out_msg("Executing circularization burn").
             exec_circ_burn(time:seconds + eta:periapsis, target:altitude).
-            set runmode to set_rm(40).
+            set runmode to rm(40).
         }
 
         else if runmode = 40 {
@@ -155,44 +155,44 @@ local function main {
                 runPath("0:/_adhoc/rendezvous_phased_approach", _tgt).
             }
 
-            set runmode to set_rm(45).
+            set runmode to rm(45).
         }
 
         else if runmode = 45 {
             out_msg("Awaiting closest approach").
             await_closest_approach.
-            set runmode to set_rm(50).
+            set runmode to rm(50).
         }
 
         else if runmode = 50 {
             out_msg("Cancelling relative velocity").
             cancel_relative_velocity().
-            set runmode to set_rm(55).
+            set runmode to rm(55).
         }
 
         else if runmode = 55 {
             out_msg("Approaching target").
             approach_target().
-            set runmode to set_rm(60).
+            set runmode to rm(60).
         }
 
         else if runmode = 60 {
             if target:distance <= 1000 {
-                set runmode to set_rm(70). 
+                set runmode to rm(70). 
             } else {
-                set runmode to set_rm(45).
+                set runmode to rm(45).
             }
         }
 
         else if runmode = 70 {
             out_msg("Final approach, cancelling velocity").
             cancel_relative_velocity().
-            set runmode to set_rm(75).
+            set runmode to rm(75).
         }
 
         else if runmode = 75{
             out_msg("Rendezvous complete").
-            set runmode to set_rm(99).
+            set runmode to rm(99).
         }
 
         update_display().

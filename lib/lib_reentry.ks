@@ -17,7 +17,7 @@ global function do_kerbin_reentry_burn {
     until subroutine = "" {
         if subroutine = 0 {
             out_info("Beginning reentry burn subroutine"). 
-            set subroutine to set_sr(2).
+            set subroutine to sr(2).
             update_display().
         } 
         
@@ -27,14 +27,14 @@ global function do_kerbin_reentry_burn {
                 warp_to_ksc_reentry_window().
             }
 
-            set subroutine to set_sr(4).
+            set subroutine to sr(4).
             update_display().
         }
 
         else if subroutine = 4 {
             out_info("Perform reentry burn").
             reentry_burn(reentryAlt).
-            set subroutine to set_sr("").
+            set subroutine to sr("").
             update_display().
         }
 
@@ -58,26 +58,26 @@ global function do_kerbin_reentry {
             out_info("Arming parachutes").
             local chuteList to ship:partsTaggedPattern("chute"). 
             arm_chutes(chuteList).    
-            set subroutine to set_sr(2).
+            set subroutine to sr(2).
         }
 
         else if subroutine = 2 {
-            out_info("Warping to 25000m above atmosphere").
-            local warpAlt is body:atm:height + 25000.
+            out_info("Warping to 50000m above atmosphere").
+            local warpAlt is body:atm:height + 50000.
             warp_to_alt(warpAlt).
-            set subroutine to set_sr(4).
+            set subroutine to sr(4).
         }
 
         else if subroutine = 4 {
             out_info("Staging CSM").
             if warp = 0 and kuniverse:timewarp:issettled {
                 lock steering to ship:retrograde + r(45, 0, 180).
-                wait until shipSettled. 
+                wait 2. 
                 until stage:number = 1 {
                     safe_stage().
                 }
                 lock steering to ship:retrograde + r(0, 0, 180).
-                set subroutine to set_sr(6).
+                set subroutine to sr(6).
             }
         }
             
@@ -87,7 +87,7 @@ global function do_kerbin_reentry {
                 update_display().    
                 wait 0.01.
             }
-            set subroutine to set_sr(8).
+            set subroutine to sr(8).
         }
 
         else if subroutine = 8 {
@@ -98,13 +98,13 @@ global function do_kerbin_reentry {
                 disp_timer(time:seconds + utils:timeToGround(), "Time to ground").
                 wait 0.01.
             }
-            set subroutine to set_sr(10).
+            set subroutine to sr(10).
         }
 
         else if subroutine = 10 {
             out_info("Heatshield jettison").
             jettison_heatshield(ship:partsTaggedPattern("heatshield")[0]).
-            set subroutine to set_sr(12).
+            set subroutine to sr(12).
         }
 
         else if subroutine = 12 {
@@ -121,7 +121,7 @@ global function do_kerbin_reentry {
         update_display().
     }
 
-    set_sr("").
+    sr("").
     out_info().
 }
 
@@ -134,7 +134,7 @@ local function reentry_burn {
     lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
 
     out_info("Waiting until ship is settled").    
-    until steeringManager:angleerror < 0.25 and steeringManager:angleerror > -0.25 {
+    until shipSettled() {
         update_display().
         wait 0.01.
     }

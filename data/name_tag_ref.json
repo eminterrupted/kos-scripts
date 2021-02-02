@@ -1823,6 +1823,142 @@
         {
             "value": "",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeStackSmall (Luna-LM 2)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "rcsTankMini",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Utility.Light.N1.White",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "lgt.omni",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmRoverGoo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.gooPod.micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmRoverMat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.matBay.micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-rcs-block-multi-mini-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PicoPortF",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.f",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmXRay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.xraysrf",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-probe-stp-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-bus-stp-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmDAN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "sci.dmag.neutrons",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nesdIRmp1eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-reaction-wheel-mini-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-fueltank-stack-medium-3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeCoreOcto2.v2 (Luna-L 8)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ladder1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "util.ladder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "radialSnackTin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

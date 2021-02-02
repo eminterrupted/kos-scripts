@@ -1,13 +1,17 @@
 @lazyGlobal off.
 
-parameter _tgtLong,
-          _tgtLat.
+parameter wp. // either a waypoint object, or the waypoint name as a string
+
+if wp:isType("string") {
+    set wp to waypoint(wp).
+}
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/display/lib_display").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_land").
 runOncePath("0:/lib/nav/lib_calc_mnv").
 runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/lib/part/lib_solar").
@@ -22,12 +26,23 @@ runOncePath("0:/lib/part/lib_solar").
     // Local gravity
     local localGravAccel to body:mu / ship:body:radius^2. 
 
-    // Pid
-    local altPid    to setup_alt_pid(0).
-    local altPidVal to 0.
-    local vsPidthresh to choose -25 if body:name = "Minmus" else -100.
-    local vsPid     to setup_vspeed_pid(vsPidthresh).
-    local vsPidVal  to 0.
+    // Waypoint / Landing variables
+    local targetDistOld is 0.
+    local wpGeo to wp:geoPosition.
+    
+
+    // Pids
+    local climbPid    to pidLoop(0.4, 0.3, 0.005, 0, 1). // Controls vertical speed
+    local hoverPid    to pidLoop(1, 0.01, 0.0, -15, 15). // Controls altitude by changing setpoint of climbPid
+    set hoverPid:setpoint to addons:scansat:elevation(wp:body, wpGeo) + 25.
+
+    local eastVelPid  to pidLoop(3, 0.01, 0.0, -35, 35). // Controls horizontal speed by pitching
+    local northVelPid to pidLoop(3, 0.01, 0.0, -35, 35). // ^
+    local eastPosPid  to pidLoop(1700, 0, 100, -30, 30). // Controls horizontal position be changing velPid setpoints
+    local northPosPid to pidLoop(1700, 0, 100, -30, 30). // ^
+    set eastPosPid:setpoint to wpGeo:lng.
+    set northPosPid:setpoint to wpGeo:lat.
+    
 
 //-- Triggers --//
 
@@ -46,34 +61,68 @@ runOncePath("0:/lib/part/lib_solar").
 
 logStr("localGravAccel: " + localGravAccel).
 
-
-wait 3.
-
 rcs off. rcs on.
 lock steering to ship:srfretrograde.
 update_display().
-local srfThreshold to choose 50 if ship:body:name = "Minmus" else 100.
 
-until ship:velocity:surface:mag < srfThreshold {
-    set tVal to 1.
+wait 3.
 
-    out_msg("ship:velocity:surface:mag < threshold:" + srfThreshold).
-
+// Burn until we are impacting the body
+set tVal to 1. 
+until addons:tr:hasImpact {
+    out_msg("addons:tr:hasImpact: " + addons:tr:hasImpact).
     update_landing_disp().
-    wait 0.001.
+    wait 0.01.
 }
-
 set tVal to 0.
 
-// if stage:number > 4 {
-//     safe_stage().
-//     safe_stage().
-// }
+// Get the angle and distance between current impact and waypoint target
+lock targetDist to geo_dist(wpGeo, addons:tr:impactpos).
+lock targetDir  to geo_dir(addons:tr:impactpos, wpGeo).
+
+// Orient the vessel towards the target
+local steerDir to targetDir - 180. 
+local steerPitch to 0.
+lock steering to heading(steerDir, steerPitch, 0).
+wait until shipSettled().
+
+// Execute the burn
+until false {
+    
+    set steerDir to targetDir - 180.
+    set steerPitch to 0.
+    if vAng(heading(steeringDir, steeringPitch):vector, ship:facing:vector) < 20 {
+        set tVal to targetDist / 5000 + 0.2.
+    } else {
+        set tVal to 0.2.
+    }
+    
+    if targetDist > targetDistOld and targetDist < 300 {
+        set tVal to 0.
+        break.
+    }
+
+    set targetDistOld to targetDist.
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 lock steering to steer_up().
 wait 2.5.
 
-until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 10000 or alt:radar <= 7500 {
+until ship:velocity:surface:mag < srfThreshold / 2 or alt:radar <= 7500 {
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal to vsPidVal.
     
@@ -85,9 +134,7 @@ until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 10000 or 
 out_msg().
 set tVal to 0.
 
-set vsPid:setpoint to -75.
-
-until ship:altitude <= 7500 or alt:radar <= 5000 {
+until alt:radar <= 5000 {
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal to vsPidVal.
 
@@ -96,8 +143,7 @@ until ship:altitude <= 7500 or alt:radar <= 5000 {
 }
 out_msg().
 
-set vsPid:setpoint to -50.
-
+logStr("Entering TTI loop").
 local tti to 999999.
 until burnDur >= tti {
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
@@ -108,7 +154,7 @@ until burnDur >= tti {
 
     out_msg("tti loop").
 
-    logStr("Time to impact (100m buffer): " + tti + "s").
+    //logStr("Time to impact (100m buffer): " + tti + "s").
     update_landing_disp().
     wait 0.001.
 }
@@ -181,28 +227,7 @@ uplink_telemetry().
 
 //-- Local functions --//
 
-    // From CheersKevin tutorial #16
-    local function steer_up {
-        if ship:verticalSpeed < 0 {
-            return lookDirUp(ship:srfRetrograde:vector, sun:position).
-        } else {
-            return lookDirUp(up:vector, sun:position).
-        }
-    }
-
     local function update_landing_disp {
         update_display().
-        disp_block(list(
-            "telemetry", 
-            "Telemetry", 
-            "throttle",     round(throttle, 2), 
-            "altitude",     round(ship:altitude), 
-            "radar alt",    round(alt:radar), 
-            "vertSpeed",    round(verticalSpeed, 2),
-            "groundSpeed",  round(ship:groundspeed, 2),
-            "srfVelocity",  round(ship:velocity:surface:mag, 2),
-            "timetoground", round(utils:timetoground(), 1),
-            "burnDur",      round(burnDur, 1)
-            )
-        ).
+        disp_landing(wpGeo, burnDur).
     }

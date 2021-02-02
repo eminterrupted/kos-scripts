@@ -1887,6 +1887,142 @@
         {
             "value": "nfex-antenna-relay-tiny-1",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-probe-stp-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-bus-stp-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-1X-A RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "restock-rcs-block-multi-mini-2",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KAL9000 Scriptable Control System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KAL9000",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'M'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PicoPortM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'F'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PicoPortF",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "N1 Small Omni Light",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "B9.Utility.Light.N1.White",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Micro Goo Containment Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmRoverGoo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SC-901 Science Micro",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmRoverMat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "XRD Surface Analyzer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmXRay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-60 Multipurpose Fuel Tank Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-fueltank-stack-medium-3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "EVR-WR MP1 - Monopropellant Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nesdIRmp1eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Micro Control Moment Gyroscope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfex-reaction-wheel-mini-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Dynamic Albedo of Neutrons",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dmDAN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-L 'Nereid' Specialized Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "command-125-landing-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pegasus I Mobility Enhancer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ladder1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Radial Snack Tin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "radialSnackTin",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

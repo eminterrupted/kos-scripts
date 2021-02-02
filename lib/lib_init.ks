@@ -26,7 +26,11 @@ global function init_disk {
         disks:add(cpu:volume).
     }
 
-    if not disks:join(";"):contains("local") set core:volume:name to "local".
+    for d in disks {
+        set d:name to "".
+    }
+
+    set core:volume:name to "local".
 
     for d in disks {
         
@@ -118,7 +122,7 @@ global function init_rm {
 }
 
 
-global function set_rm {
+global function rm {
     parameter runmode.
 
     set stateObj["runmode"] to runmode.
@@ -133,7 +137,7 @@ global function init_subroutine {
     return subroutine.
 }
 
-global function set_sr {
+global function sr {
     parameter subroutine.
     
     set stateObj["subroutine"] to subroutine.

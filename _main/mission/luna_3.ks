@@ -68,7 +68,7 @@ local function main {
                 logStr("Dish target: " + kerbin:name).
             }
 
-            set runmode to set_rm(2).
+            set runmode to rm(2).
         }
         
         //Test science experiments
@@ -79,7 +79,7 @@ local function main {
             recover_sci_list(sciList).
             update_display().
 
-            set runmode to set_rm(4).
+            set runmode to rm(4).
         }
 
         //Sets the transfer target
@@ -89,7 +89,7 @@ local function main {
             set target to _tgt.
             update_display().
 
-            set runmode to set_rm(15).
+            set runmode to rm(15).
         }
 
 
@@ -97,7 +97,7 @@ local function main {
         else if runmode = 15 {
             set sVal to lookDirUp(ship:prograde:vector, sun:position).
 
-            set runmode to set_rm(25).
+            set runmode to rm(25).
         }
 
         //Adds the transfer burn node to the flight plan
@@ -107,7 +107,7 @@ local function main {
             set mnvObj to get_transfer_obj().
             set mnvObj to add_transfer_node(mnvObj, tgtAp0).
             
-            set runmode to set_rm(30).
+            set runmode to rm(30).
         }
 
         //Warps to the burn node
@@ -116,7 +116,7 @@ local function main {
 
             warp_to_burn_node(mnvObj).
 
-            set runmode to set_rm(35).
+            set runmode to rm(35).
         }
 
         //Executes the transfer burn
@@ -125,7 +125,7 @@ local function main {
 
             exec_node(nextNode).
 
-            set runmode to set_rm(45).
+            set runmode to rm(45).
         }
 
         //Clears the target data so we don't have weird behaviors when we reach its SOI
@@ -137,7 +137,7 @@ local function main {
             //warp_to_next_soi().
             update_display().
 
-            set runmode to set_rm(50).
+            set runmode to rm(50).
         }
 
         //Sets up triggers for science experiments
@@ -160,7 +160,7 @@ local function main {
                 recover_sci_list(sciList).
             }
 
-            set runmode to set_rm(55).
+            set runmode to rm(55).
         }
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
@@ -169,7 +169,7 @@ local function main {
 
             set mnvNode to add_simple_circ_node("pe", tgtAp0).
 
-            set runmode to set_rm(62).
+            set runmode to rm(62).
         }
 
         //Gets burn data from the node
@@ -180,7 +180,7 @@ local function main {
             writeJson(mnvObj, mnvCache).
 
             set mnvObj["mnv"] to mnvNode. 
-            set runmode to set_rm(64).
+            set runmode to rm(64).
         }
 
         //Warps to the burn node
@@ -189,7 +189,7 @@ local function main {
 
             warp_to_burn_node(mnvObj).
 
-            set runmode to set_rm(66).
+            set runmode to rm(66).
         }
 
         //Executes the circ burn
@@ -199,7 +199,7 @@ local function main {
             exec_node(nextNode).
             wait 2.
 
-            set runmode to set_rm(76).
+            set runmode to rm(76).
         }
 
         //Adds a circularization node to finish orbit placement
@@ -208,7 +208,7 @@ local function main {
 
             set mnvNode to add_simple_circ_node("ap", tgtPe0).
 
-            set runmode to set_rm(78).
+            set runmode to rm(78).
         }
 
         //Gets burn data from the node
@@ -219,7 +219,7 @@ local function main {
             set mnvObj["mnv"] to mnvNode. 
             writeJson(mnvObj, mnvCache).
 
-            set runmode to set_rm(80).
+            set runmode to rm(80).
         }
 
         //Warps to the burn node
@@ -228,14 +228,14 @@ local function main {
 
             warp_to_burn_node(mnvObj).
 
-            set runmode to set_rm(82).
+            set runmode to rm(82).
         }
 
         //Executes the circ burn
         else if runmode = 82 {
             exec_node(nextNode).
             wait 2.
-            set runmode to set_rm(84).
+            set runmode to rm(84).
         }
 
         //Make the inclination change
@@ -244,7 +244,7 @@ local function main {
 
             runPath("0:/_main/component/simple_inclination_change", 75, 90).
 
-            set runmode to set_rm(86).
+            set runmode to rm(86).
         }
 
         //Runmode 88MPH - You're going to see some seriously mild shit
@@ -252,7 +252,7 @@ local function main {
         else if runmode = 86 {
             runPath(collectSci).
 
-            set runmode to set_rm(88).
+            set runmode to rm(88).
         }
 
         //End main
@@ -261,7 +261,7 @@ local function main {
 
             end_main().
 
-            set runmode to set_rm(99).
+            set runmode to rm(99).
         }
 
         update_display().

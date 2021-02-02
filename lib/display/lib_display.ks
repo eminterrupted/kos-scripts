@@ -250,6 +250,40 @@ global function disp_burn_data {
 }
 
 
+//Landing data
+global function disp_landing {
+    parameter tgtGeoPos is latLng(0, 0), // geocoordinates of the target
+              burnDur is 0. // Duration of hoverslam burn
+    
+    local pos is "assign".
+    if dispObj:hasKey("landing") {
+        set pos to disp_get_pos_obj(dispObj["landing"]).
+    } else {
+        set dispObj["landing"] to disp_get_pos_obj(pos).
+        set pos to disp_get_pos_obj(pos).
+    }
+
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print "LANDING TELEMETRY" at (h1, ln).
+    print "-----------------" at (h1, cr).
+    print "RADAR ALT:    " + round(alt:radar) at (h1, cr).
+    print "VERT SPEED:   " + round(verticalSpeed, 2) at (h1, cr).
+    print "GROUND SPEED: " + round(ship:groundspeed, 2) at (h1, cr).
+    print "SRF VELOCITY: " + round(ship:velocity:surface:mag, 2) at (h1, cr).
+    print "ETA IMPACT:   " + round(utils:timetoground(), 1) at (h1, cr).
+    print "REQ BURN DUR: " + round(burnDur, 1) at (h1, cr).
+    print "TARGET LNG:   " + round(tgtGeoPos:lng, 5) at (h1, cr).
+    print "TARGET LAT:   " + round(tgtGeoPos:lat, 5) at (h1, cr).
+    if addons:tr:hasImpact {
+        print "IMPACT LNG:   " + round(addons:tr:impactPos:lng) at (h1, cr).
+        print "IMPACT LAT:   " + round(addons:tr:impactPos:lat) at (h1, cr).
+    }
+}
+
+
 //PID controller data
 global function disp_pid_data {
     parameter pPid.

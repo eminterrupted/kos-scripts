@@ -18,7 +18,7 @@ lock steering to sVal.
 
 local tStamp is 0.
 
-if runmode = 99 set runmode to set_rm(0). 
+if runmode = 99 set runmode to rm(0). 
 
 clearscreen.
 
@@ -26,20 +26,20 @@ until runmode = 99 {
     
     if runmode = 0 {
         set sVal to ship:prograde. 
-        set runmode to set_rm(10).
+        set runmode to rm(10).
     }
 
     else if runmode = 10 {
         set sVal to ship:prograde. 
         if warp = 0 {
-            set runmode to set_rm(20). 
+            set runmode to rm(20). 
             warpTo(tStamp).
         }
     }
 
     else if runmode = 20 {
         set sVal to ship:prograde. 
-        if time:seconds >= tStamp set runmode to set_rm(30).
+        if time:seconds >= tStamp set runmode to rm(30).
         else disp_timer(tStamp).
     }
 
@@ -50,7 +50,7 @@ until runmode = 99 {
             safe_stage().
         }
 
-        set runmode to set_rm(99).
+        set runmode to rm(99).
     }
 
     else if runmode < 99 {

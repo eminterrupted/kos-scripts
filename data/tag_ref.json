@@ -3831,6 +3831,86 @@
         {
             "value": "comm.dish",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-1X-A RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KAL9000 Scriptable Control System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'M'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.m",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'F'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.f",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-60 Multipurpose Fuel Tank Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "EVR-WR MP1 - Monopropellant Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Micro Control Moment Gyroscope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-L 'Nereid' Specialized Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

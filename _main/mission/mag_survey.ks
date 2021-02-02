@@ -82,7 +82,7 @@ local function main {
                 }
             }
 
-            set runmode to set_rm(5).
+            set runmode to rm(5).
         }
 
         // Check our inclination. If low, run inclination change routine
@@ -91,7 +91,7 @@ local function main {
             if ship:orbit:inclination < tgtInc or not check_value(ship:obt:lan, tgtLan, 15) {
                 runPath(incScript, tgtInc, tgtLan).
             } else {
-                set runmode to set_rm(10).
+                set runmode to rm(10).
             }
         }
             
@@ -103,10 +103,10 @@ local function main {
                 set tgtAp to get_ap_for_pe_ecc(tgtPe, tgtEcc).
                 out_info("Values: tgtAp: " + round(tgtAp) + "  tgtPe: " + round(tgtPe) + " tgtEcc: " + tgtEcc).
                 runPath(obtScript, tgtAp, tgtPe, ship:obt:argumentOfPeriapsis).
-                set runmode to set_rm(20).
+                set runmode to rm(20).
                 
             } else {
-                set runmode to set_rm(20).
+                set runmode to rm(20).
             }
         }
 
@@ -114,7 +114,7 @@ local function main {
         else if runmode = 20 {
             out_msg("Maneuvers complete, commencing survey").
             lock steering to lookDirUp(ship:prograde:vector, sun:position).
-            set runmode to set_rm(30).
+            set runmode to rm(30).
         }
 
                 // Setup the science triggers
@@ -156,7 +156,7 @@ local function main {
                 logStr("Science recovered in high orbit").
             }
 
-            set runmode to set_rm(50).
+            set runmode to rm(50).
         }
         
         update_display().

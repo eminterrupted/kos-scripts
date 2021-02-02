@@ -142,7 +142,7 @@ global function add_simple_circ_node {
         set mode to "ap".
     }
 
-    local mnvAcc is 0.005.
+    local mnvAcc is 0.01.
 
     set mnv to optimize_node_list(mnv, _tgtAlt, mode, ship:body, mnvAcc).
     set mnv to add_node_to_plan(mnv).
