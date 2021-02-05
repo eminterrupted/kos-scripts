@@ -7,13 +7,19 @@ local landingPath to "1:/land_on_mun".
 update_display().
 
 out_msg("Compiling landing script to local drive").
-compile("0:/_adhoc/land_on_mun") to landingPath.
+local script to "0:/_adhoc/land_on_mun".
+if exists(landingPath) {
+    deletePath(landingPath).
+}
+compile(script) to landingPath.
 
 lock steering to ship:retrograde.
 
 // local tStamp to time:seconds + (ship:orbit:period / 1.85).
-out_msg("Press any key to start landing sequence").
-breakpoint().
+if ship:altitude > 10000 {
+    out_msg("Press any key to start landing sequence").
+    breakpoint().
+}
 
 out_msg("Running landing script").
 runpath(landingPath, 0, 0).

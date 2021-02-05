@@ -2,7 +2,7 @@
 
 // ASSUME EQUATORIAL CIRCULAR ORBIT
 parameter target_ltlng is "wp",
-		  landing_peri is 20000.
+		  landing_peri is 25000.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/nav/lib_nav").

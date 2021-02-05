@@ -4,7 +4,8 @@ parameter _tgtAp    is 200000,
           _tgtPe    is 200000,
           _tgtInc   is 0,
           _tgtLAN   is 0,
-          _tgtArgPe is 0.
+          _tgtArgPe is 0,
+          _mnvAcc   is 0.0025. 
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/display/lib_display").
@@ -40,7 +41,7 @@ if not check_value(ship:orbit:inclination, _tgtInc, 2.5) or not check_value(ship
 // Run the orbit boost script
 out_msg("Executing orbit change at desired argPe").
 out_info("tgtAp: " + _tgtAp + "   tgtPe: " + _tgtPe + "   tgtArgPe: " + _tgtArgPe).
-runpath(obtPath, _tgtAp, _tgtPe, _tgtArgPe).
+runpath(obtPath, _tgtAp, _tgtPe, _tgtArgPe, _mnvAcc).
 
 out_msg("change_orbit.ks complete!").
 out_info().

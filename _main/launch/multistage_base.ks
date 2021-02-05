@@ -1,9 +1,9 @@
 @lazyGlobal off. 
 
-parameter tAp to 50000,
-          tPe to 50000,
+parameter tAp to 30000,
+          tPe to 30000,
           tInc to 0,
-          tGTurnAlt to 12500,
+          tGTurnAlt to 15000,
           rVal to 0.
 
 clearScreen.

@@ -126,7 +126,8 @@ global function add_optimized_node {
 
 global function add_simple_circ_node {
     parameter _nodeAt,
-              _tgtAlt.
+              _tgtAlt,
+              _mnvAcc is 0.01.
 
     local dv to choose get_dv_for_retrograde(_tgtAlt, ship:apoapsis) if _nodeAt = "pe" else get_dv_for_prograde(_tgtAlt, ship:periapsis).
     if dv > 9999 set dv to 50.
@@ -142,9 +143,7 @@ global function add_simple_circ_node {
         set mode to "ap".
     }
 
-    local mnvAcc is 0.01.
-
-    set mnv to optimize_node_list(mnv, _tgtAlt, mode, ship:body, mnvAcc).
+    set mnv to optimize_node_list(mnv, _tgtAlt, mode, ship:body, _mnvAcc).
     set mnv to add_node_to_plan(mnv).
     
     return mnv.

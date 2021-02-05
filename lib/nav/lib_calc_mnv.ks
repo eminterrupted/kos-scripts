@@ -233,13 +233,13 @@ global function get_transfer_eta_next {
     // over the course of 5 seconds to get phase change / sec
     out_msg("Sampling phase angle period").
     local p0 to get_phase_angle(target).
-    local tStamp to time:seconds + 3.
+    local tStamp to time:seconds + 5.
     until time:seconds >= tStamp {
         update_display().
         disp_timer(tStamp, "Phase Sampling").
     }
     local p1 to get_phase_angle(target).
-    local phasePeriod to abs(abs(p1) - abs(p0)) / 3.
+    local phasePeriod to abs(abs(p1) - abs(p0)) / 5.
 
     disp_clear_block("timer").
 

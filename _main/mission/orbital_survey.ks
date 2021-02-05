@@ -15,7 +15,7 @@ local tStamp is 0.
 update_display().
 
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
-wait until shipSettled.
+wait until shipSettled().
 
 out_msg("Deploying satellite").
 until stage:number <= 0 {

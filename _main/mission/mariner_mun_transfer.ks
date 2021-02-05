@@ -1,11 +1,11 @@
 @lazyGlobal off.
 
-parameter tgtBody   is "Mun",
+parameter tgtBody   is "Minmus",
           tgtInc    is 0,
           tgtLan    is ship:orbit:longitudeofascendingnode,
           trnsfrAlt is 500000,
-          tgtAp1    is 250000,
-          tgtPe1    is 250000 .
+          tgtAp1    is 100000,
+          tgtPe1    is 100000.
           
 //
 
@@ -129,8 +129,16 @@ local function main {
                 disp_timer(tStamp, "mnvObj creation").
             }
             disp_clear_block("timer").
-            set mnvObj to get_burn_obj_from_node(mnvNode).
-            set runmode to rm(30).
+            set runmode to rm(20).
+        }
+
+        if runmode = 20 {
+            if not hasNode {
+                set runmode to rm(15).
+            } else {
+                set mnvObj to get_burn_obj_from_node(nextNode).
+                set runmode to rm(30).
+            }
         }
 
         //Warps to the burn node

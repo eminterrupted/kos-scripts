@@ -9,7 +9,8 @@ runOncePath("0:/lib/lib_warp").
 // Circularization burns
     global function exec_circ_burn {
         parameter _nodeAt,
-                _tgtAlt.
+                _tgtAlt,
+                _mnvAcc is 0.005.
 
         local burnNode to node(0, 0, 0, 0).
         local burnObj to lex().
@@ -18,7 +19,7 @@ runOncePath("0:/lib/lib_warp").
 
         if not hasNode {
             out_info("Executing add_simple_circ_node()").
-            set burnNode to add_simple_circ_node(_nodeAt, _tgtAlt).
+            set burnNode to add_simple_circ_node(_nodeAt, _tgtAlt, _mnvAcc).
         }
 
         out_info("Executing get_burn_obj_from_node(burnNode)").

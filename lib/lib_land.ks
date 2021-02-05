@@ -62,7 +62,12 @@ function geo_dir {
 }
 
 
-function steering_pids { //Sets global variables steeringDir and steeringPitch
+function steering_pids {
+	parameter eastPosPID,
+			  northPosPID,
+			  cardVelCached.
+			  
+	 //Sets global variables steeringDir and steeringPitch
 	SET eastVelPID:SETPOINT TO eastPosPID:UPDATE(TIME:SECONDS, SHIP:GEOPOSITION:LNG).
 	SET northVelPID:SETPOINT TO northPosPID:UPDATE(TIME:SECONDS,SHIP:GEOPOSITION:LAT).
 	LOCAL eastVelPIDOut IS eastVelPID:UPDATE(TIME:SECONDS, cardVelCached:X).

@@ -71,8 +71,8 @@ global function do_kerbin_reentry {
         else if subroutine = 4 {
             out_info("Staging CSM").
             if warp = 0 and kuniverse:timewarp:issettled {
-                lock steering to ship:retrograde + r(45, 0, 180).
-                wait 2. 
+                lock steering to ship:retrograde + r(0, 90, 180).
+                wait 3. 
                 until stage:number = 1 {
                     safe_stage().
                 }

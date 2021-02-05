@@ -21,7 +21,14 @@ local cache is init_mission_cache().
 
 //-- Main --//
 local program is stateObj["program"].
-if program = 0 set_program("ls0").
+if program = 0 {
+    set_program("ls0").
+} else if program = "completed" and ship:status = "LANDED" {
+    set_program("ls0").
+    rm().
+    sr().
+}
+
 
 if program = "ls0" {
     exec_launch().

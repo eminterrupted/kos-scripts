@@ -19,14 +19,22 @@ lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 
 clearscreen.
 
-until time:seconds >= tStamp {
+print "*** Press any key to continue ***" at (2, 25).
+
+until time:seconds >= tStamp or terminal:input:haschar {
 
     if runmode = 0 set runmode to 90.
 
     update_display().
-    //disp_timer(tStamp, "Simple Orbit").
+    disp_timer(tStamp, "Simple Orbit").
 
     wait 1.
+}
+
+print "                                  " at (2, 25).
+
+if terminal:input:haschar {
+    terminal:input:clear.
 }
 
 clearScreen.

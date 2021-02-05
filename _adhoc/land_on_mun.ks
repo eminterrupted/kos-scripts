@@ -25,7 +25,7 @@ runOncePath("0:/lib/part/lib_solar").
     // Pid
     local altPid    to setup_alt_pid(0).
     local altPidVal to 0.
-    local vsPidthresh to choose -25 if body:name = "Minmus" else -100.
+    local vsPidthresh to -75.
     local vsPid     to setup_vspeed_pid(vsPidthresh).
     local vsPidVal  to 0.
 
@@ -73,9 +73,9 @@ set tVal to 0.
 lock steering to steer_up().
 wait 2.5.
 
-until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 10000 or alt:radar <= 7500 {
+until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 12500 or alt:radar <= 7500 {
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal to vsPidVal.
+    //set tVal to vsPidVal.
     
     out_msg("surface velocity < srfThreshold / 2 loop").
 
@@ -85,7 +85,7 @@ until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 10000 or 
 out_msg().
 set tVal to 0.
 
-set vsPid:setpoint to -75.
+set vsPid:setpoint to -65.
 
 until ship:altitude <= 7500 or alt:radar <= 5000 {
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).

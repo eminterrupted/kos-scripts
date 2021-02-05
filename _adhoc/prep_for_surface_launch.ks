@@ -13,10 +13,14 @@ for p in tdList {
     } else if p:tag:contains("omni") {
         deactivate_omni(p).
     }
-    set s:tag to s:tag:replace(".onTouchdown", "").
+    set p:tag to p:tag:replace(".onTouchdown", "").
 }
 
-local curEngs to engs_for_stg().
+local curEngs to engs_for_next_stg().
 for eng in curEngs {
     eng:activate.
+}
+
+for f in volume("local"):files:keys {
+    deletePath(f).
 }

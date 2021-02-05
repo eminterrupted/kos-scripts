@@ -72,7 +72,7 @@ until runmode = 99 {
     else if runmode = 4 {
         out_msg("Warping to burn node").
         set sVal to lookDirUp(nextNode:burnvector, sun:position).
-        local tStamp to choose time:seconds + 15 if time:seconds < mnvObj["burnEta"] else mnvObj["burnEta"].
+        local tStamp to choose time:seconds + 30 if time:seconds < mnvObj["burnEta"] else mnvObj["burnEta"].
 
         until time:seconds >= tStamp {
             update_display().

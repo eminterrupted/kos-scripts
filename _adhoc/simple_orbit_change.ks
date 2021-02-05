@@ -2,7 +2,8 @@
 
 parameter _tgtAp,
           _tgtPe,
-          _tgtArgPe is ship:obt:argumentofperiapsis.
+          _tgtArgPe is ship:obt:argumentofperiapsis,
+          _mnvAcc is 0.0025.
 
 clearscreen.
 
@@ -69,11 +70,7 @@ local function main {
         else if runmode = 1 {
             set burnMode    to choose "ap" if _tgtAp > ship:periapsis else "pe".
             set mnvParam    to list(time:seconds + tStamp, mnvParam[1], mnvParam[2], get_dv_for_prograde(_tgtAp, ship:periapsis, ship:body)).
-            set mnvParam    to optimize_node_list(mnvParam, _tgtAp, burnMode, ship:body, 0.001).
-            set runmode to 2.
-        }
-
-        else if runmode = 2 {
+            set mnvParam    to optimize_node_list(mnvParam, _tgtAp, burnMode, ship:body, _mnvAcc).
             set mnvNode to node(mnvParam[0], mnvParam[1], mnvParam[2], mnvParam[3]).
             add mnvNode.
             set mnvObj to get_burn_obj_from_node(mnvNode).
@@ -94,7 +91,7 @@ local function main {
         // Now do a circ burn at Ap to bring Pe to target
         else if runmode = 7 {
             set burnMode to choose "ap" if eta:apoapsis < eta:periapsis else "pe".
-            exec_circ_burn(burnMode, _tgtPe).
+            exec_circ_burn(burnMode, _tgtPe, _mnvAcc).
 
             set runmode to 99.
         }

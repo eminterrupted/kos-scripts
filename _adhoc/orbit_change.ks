@@ -1,7 +1,10 @@
 @lazyGlobal off.
 
+//ToDo - Add accuracy param and plumb through the node stack
+
 parameter tgtAlt0,
           tgtAlt1,
+          mnvAcc is 0.01,
           flipPhase is false,
           runmodeReset is false.
 
@@ -44,11 +47,11 @@ local nodeAt to 0.
 // Executes the intial hohmann burn node 
 // at the desired point
 set nodeAt to choose "ap" if flipPhase else "pe".
-exec_circ_burn(nodeAt, tgtAlt0).
+exec_circ_burn(nodeAt, tgtAlt0, mnvAcc).
 
 // Executes the second hohman burn.
 set nodeAt to choose "pe" if flipPhase else "ap".
-exec_circ_burn(nodeAt, tgtAlt1).
+exec_circ_burn(nodeAt, tgtAlt1, mnvAcc).
 
 // Preps the vessel for long-term orbit
 unlock steering.

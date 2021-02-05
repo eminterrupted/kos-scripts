@@ -1,8 +1,6 @@
 @lazyGlobal off.
 
 parameter _tgt is "Megfrid's Debris".
-//parameter _tgt is "Mun".
-//
 
 clearscreen.
 
@@ -146,7 +144,7 @@ local function main {
         //Add a circ node at Pe.
         else if runmode = 37 {
             out_msg("Executing circularization burn").
-            exec_circ_burn(time:seconds + eta:periapsis, target:altitude).
+            exec_circ_burn(time:seconds + eta:periapsis, target:altitude, 0.001).
             set runmode to rm(40).
         }
 

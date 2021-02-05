@@ -123,7 +123,7 @@ global function init_rm {
 
 
 global function rm {
-    parameter runmode.
+    parameter runmode is 0.
 
     set stateObj["runmode"] to runmode.
     log_state(stateObj).
@@ -138,8 +138,8 @@ global function init_subroutine {
 }
 
 global function sr {
-    parameter subroutine.
-    
+    parameter subroutine is "".
+     
     set stateObj["subroutine"] to subroutine.
     log_state(stateObj).
 

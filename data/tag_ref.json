@@ -3909,7 +3909,23 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "",
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-3 Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Long decal 1x8",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
