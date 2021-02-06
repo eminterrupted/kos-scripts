@@ -3,9 +3,9 @@
 parameter tgtBody   is "Minmus",
           tgtInc    is 0,
           tgtLan    is ship:orbit:longitudeofascendingnode,
-          trnsfrAlt is 500000,
-          tgtAp1    is 100000,
-          tgtPe1    is 100000.
+          trnsfrAlt is 325000,
+          tgtAp1    is 50000,
+          tgtPe1    is 50000.
           
 //
 

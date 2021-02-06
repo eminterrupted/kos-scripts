@@ -42,7 +42,7 @@ global function setup_alt_pid {
     return newPid.
 }
 
-global function setup_vspeed_pid {
+global function setup_speed_pid {
     parameter pSetpoint, 
               kP is 0.05,
               kI is 0.025,

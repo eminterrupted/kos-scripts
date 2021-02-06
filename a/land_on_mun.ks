@@ -25,8 +25,11 @@ runOncePath("0:/lib/part/lib_solar").
     // Pid
     local altPid    to setup_alt_pid(0).
     local altPidVal to 0.
-    local vsPidthresh to -75.
-    local vsPid     to setup_vspeed_pid(vsPidthresh).
+    local hsPidThresh to 25.
+    local hsPid     to setup_speed_pid(hsPidThresh).
+    local hsPidVal to 0.
+    local vsPidthresh to choose -40 if ship:body:name = "Minmus" else -75.
+    local vsPid     to setup_speed_pid(vsPidthresh).
     local vsPidVal  to 0.
 
 //-- Triggers --//
@@ -52,7 +55,7 @@ wait 3.
 rcs off. rcs on.
 lock steering to ship:srfretrograde.
 update_display().
-local srfThreshold to choose 50 if ship:body:name = "Minmus" else 100.
+local srfThreshold to choose 35 if ship:body:name = "Minmus" else 100.
 
 until ship:velocity:surface:mag < srfThreshold {
     set tVal to 1.
@@ -74,8 +77,9 @@ lock steering to steer_up().
 wait 2.5.
 
 until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 12500 or alt:radar <= 7500 {
-    set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    //set tVal to vsPidVal.
+    //set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
+    set hsPidVal to hsPid:update(time:seconds, groundSpeed).
+    set tVal to 1 - hsPidVal.
     
     out_msg("surface velocity < srfThreshold / 2 loop").
 
@@ -85,25 +89,29 @@ until ship:velocity:surface:mag < srfThreshold / 2 or ship:altitude <= 12500 or 
 out_msg().
 set tVal to 0.
 
-set vsPid:setpoint to -65.
+set hsPid:setpoint to 15.
+set vsPid:setpoint to vsPidthresh / 1.5.
 
 until ship:altitude <= 7500 or alt:radar <= 5000 {
-    set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal to vsPidVal.
+    set hsPidVal to hsPid:update(time:seconds, groundSpeed).
+    set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
+    set tVal to max(vsPidVal, 1 - hsPidVal).
 
     update_landing_disp().
     out_msg("alt:radar <= 5000").
 }
 out_msg().
 
-set vsPid:setpoint to -50.
+set hsPid:setpoint to 5.
+set vsPid:setpoint to vsPidthresh / 2.
 
 local tti to 999999.
 until burnDur >= tti {
-    set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
-    set tVal to vsPidVal.
+    set hsPidVal to hsPid:update(time:seconds, groundSpeed).
+    set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
+    set tVal to max(vsPidVal, 1 - hsPidVal).
     
-    set tti to time_to_impact(125).
+    set tti to time_to_impact(50).
     set burnDur to get_burn_dur(verticalSpeed).
 
     out_msg("tti loop").
@@ -121,7 +129,7 @@ logStr("Ignition").
 
 logStr("Entering powered descent at radar alt: " + round(alt:radar)).
 out_msg("Entering powered descent phase at alt: " + round(alt:radar)).
-until alt:radar <= 100 {
+until alt:radar <= 50 {
     set altPidVal   to altPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to max(vsPidVal, altPidVal).

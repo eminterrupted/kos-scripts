@@ -225,7 +225,7 @@ local function main {
         }
 
         else if runmode = 76 {
-            runPath("0:/_adhoc/simple_inclination_change", 75).
+            runPath("0:/a/simple_inclination_change", 75).
             set runmode to 78.
         }
 

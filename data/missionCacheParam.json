@@ -21,7 +21,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "mariner_mun_transfer",
+            "value": "mariner_return",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -29,7 +29,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "simple_orbit",
+            "value": "simple_reentry",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -37,7 +37,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 150000,
+            "value": 60000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
@@ -45,7 +45,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 150000,
+            "value": 60000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
