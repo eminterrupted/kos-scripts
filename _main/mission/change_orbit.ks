@@ -15,10 +15,10 @@ runOncePath("0:/lib/part/lib_antenna").
 runOncePath("0:/lib/part/lib_solar").
 
 local incPath is "local:/inc_change". 
-copyPath("0:/_adhoc/simple_inclination_change", incPath).
+copyPath("0:/a/simple_inclination_change", incPath).
 
 local obtPath is "local:/obt_change".
-copyPath("0:/_adhoc/simple_orbit_change", obtPath).
+copyPath("0:/a/simple_orbit_change", obtPath).
 
 when stage:number <= 0 then {
     panels on.

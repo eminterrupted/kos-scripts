@@ -1,15 +1,20 @@
 // Functions from: https://github.com/CalebJ2/kOS-landing-script/blob/master/land_lib.ks
 
 // From CheersKevin tutorial #16
-global function steer_up {
-    if ship:verticalSpeed < 0 {
+global function steer_up 
+{
+    if ship:verticalSpeed < 0 
+	{
         return ship:srfRetrograde.
-    } else {
+    } 
+	else 
+	{
         return lookDirUp(up:vector, sun:position).
     }
 }
 
-global function card_vel {
+global function card_vel 
+{
 	//Convert velocity vectors relative to SOI into easting and northing.
 	local vect IS SHIP:VELOCITY:SURFACE.
 	local eastVect is VCRS(UP:VECTOR, NORTH:VECTOR).
@@ -20,18 +25,21 @@ global function card_vel {
 }
 
 
-function vel_pitch { //angle of ship velocity relative to horizon
+function vel_pitch 
+{ //angle of ship velocity relative to horizon
 	LOCAL cardVelFlat IS V(cardVelCached:X, 0, cardVelCached:Z).
 	RETURN VANG(cardVelCached, cardVelFlat).
 }
 
 
-function vel_dir { //compass angle of velocity
+function vel_dir 
+{ //compass angle of velocity
 	return ARCTAN2(cardVelCached:X, cardVelCached:Y).
 }
 
 
-function scalar_proj { //Scalar projection of two vectors. Find component of a along b. a(dot)b/||b||
+function scalar_proj 
+{ //Scalar projection of two vectors. Find component of a along b. a(dot)b/||b||
 	parameter a.
 	parameter b.
 	if b:mag = 0 { PRINT "scalarProj: Tried to divide by 0. Returning 1". RETURN 1. } //error check
@@ -39,30 +47,37 @@ function scalar_proj { //Scalar projection of two vectors. Find component of a a
 }
 
 
-function terrain_dist { //GEOPOSITION:TERRAINHEIGHT doesn't see water
-	if SHIP:GEOPOSITION:TERRAINHEIGHT > 0{
+function terrain_dist 
+{ //GEOPOSITION:TERRAINHEIGHT doesn't see water
+	if SHIP:GEOPOSITION:TERRAINHEIGHT > 0
+	{
 		RETURN SHIP:ALTITUDE - SHIP:GEOPOSITION:TERRAINHEIGHT.
-	} else {
+	} 
+	else 
+	{
 		RETURN SHIP:ALTITUDE.
 	}
 }
 
 
-function geo_dist { //Approx in meters
+function geo_dist 
+{ //Approx in meters
 	parameter geo1.
 	parameter geo2.
 	return (geo1:POSITION - geo2:POSITION):MAG. //SQRT((geo1:lng - geo2:lng)^2 + (geo1:lat - geo2:lat)^2) * 10472.
 }
 
 
-function geo_dir {
+function geo_dir 
+{
 	parameter geo1.
 	parameter geo2.
 	return ARCTAN2(geo1:LNG - geo2:LNG, geo1:LAT - geo2:LAT).
 }
 
 
-function steering_pids {
+function steering_pids 
+{
 	parameter eastPosPID,
 			  northPosPID,
 			  cardVelCached.
@@ -76,9 +91,12 @@ function steering_pids {
 	LOCAL eastPlusNorth is MAX(ABS(eastVelPIDOut), ABS(northVelPIDOut)).//SQRT(eastVelPIDOut^2 + northVelPIDOut^2). 
 	SET steeringPitch TO 90 - eastPlusNorth.
 	LOCAL steeringDirNonNorm IS ARCTAN2(eastVelPID:OUTPUT, northVelPID:OUTPUT). //might be negative
-	if steeringDirNonNorm >= 0 {
+	if steeringDirNonNorm >= 0 
+	{
 		SET steeringDir TO steeringDirNonNorm.
-	} else {
+	} 
+	else 
+	{
 		SET steeringDir TO 360 + steeringDirNonNorm.
 	}
 }

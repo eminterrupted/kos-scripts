@@ -36,8 +36,10 @@ lock steering to sVal.
 local tVal is 0.
 lock throttle to tVal.
 
-if autostage {
-    when ship:availableThrust < 0.1 and tVal > 0 then {
+if autostage 
+{
+    when ship:availableThrust < 0.1 and tVal > 0 then 
+    {
         logStr("Staging").
         safe_stage().
 
@@ -45,10 +47,12 @@ if autostage {
     }
 }
 
-until runmode = 99 {
+until runmode = 99 
+{
     
     //Make sure dish is deployed
-    if runmode = 0 {
+    if runmode = 0 
+    {
         set sVal to lookDirUp(nextnode:burnvector, sun:position).
         set mnvNode to nextNode.
         set mnvObj to get_burn_obj_from_node(mnvNode).
@@ -57,10 +61,12 @@ until runmode = 99 {
     }
 
 
-    else if runmode = 7 {
+    else if runmode = 7 
+    {
         set tStamp to choose 5 if 5 < mnvNode:eta else 0.
         set tStamp to time:seconds + tStamp.
-        until time:seconds >= tStamp {
+        until time:seconds >= tStamp 
+        {
             update_display().
             local t to choose "-" + round(tStamp - time:seconds) if tStamp - time:seconds < 0 else "+" + round(tStamp - time:seconds).
             disp_block(list("warptimer", "warp in", "mark", "T" + t)).
@@ -73,13 +79,15 @@ until runmode = 99 {
     }
 
     //Execute Transfer
-    else if runmode = 8 {
+    else if runmode = 8 
+    {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position).
         warp_to_burn_node(mnvObj).
         set runmode to 10.
     }
 
-    else if runmode = 10 {
+    else if runmode = 10 
+    {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position).
         exec_node(nextNode).
         deletePath(mnvCache).
@@ -87,7 +95,8 @@ until runmode = 99 {
         set runmode to 99.
     }
 
-    if stateObj["runmode"] <> runmode {
+    if stateObj["runmode"] <> runmode 
+    {
         set stateObj["runmode"] to runmode.
         log_state(stateObj).
     }

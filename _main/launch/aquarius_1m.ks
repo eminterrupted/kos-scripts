@@ -196,7 +196,7 @@ until runmode = 99 {
     disp_main().
     disp_obt_data().
     disp_tel().
-    disp_eng_perf_data().
+    disp_eng_perf().
     //disp_launch_params(tApo, tPe, tInc, tGTurnAlt, tGEndPitch).
     
     if stateObj["runmode"] <> runmode {

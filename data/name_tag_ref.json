@@ -1991,6 +1991,38 @@
         {
             "value": "sci.dmag.srfrsrcScan",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "command-125-landing-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "proceduralHeatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "thrm.heatshield",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfs-panel-deploying-blanket-orion-1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HighGainAntenna",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

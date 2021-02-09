@@ -50,7 +50,8 @@ local tVal is 0.
 lock throttle to tVal.
 
 //Staging trigger
-when ship:availableThrust < 0.1 and tVal > 0 then {
+when ship:availableThrust < 0.1 and tVal > 0 then 
+{
     safe_stage().
     preserve.
 }
@@ -59,17 +60,21 @@ main().
 end_main().
 
 //Main
-local function main {
-    until runmode = 99 {
+local function main 
+{
+    until runmode = 99 
+    {
 
-        if runmode = 0 {
+        if runmode = 0 
+        {
             out_msg("Executing simple_inclination_change.ks").
             out_info("Target: " + _tgtInclination + "   Current: " + round(ship:obt:inclination, 5)).
             set runmode to 2.
         }
         
         // Add the burn node after getting the data
-        else if runmode = 2 {
+        else if runmode = 2 
+        {
             set burn to get_inc_match_burn(ship, targetObt).
             set utime to burn[0].
             set burnVector to burn[1].
@@ -81,7 +86,8 @@ local function main {
         }
 
         // Do burn
-        else if runmode = 5 {
+        else if runmode = 5 
+        {
             
             set sVal to lookDirUp(nextNode:burnVector, sun:position).
             wait until shipSettled().
@@ -89,7 +95,8 @@ local function main {
             warpTo(leadTime - 15).
 
             // Wait until we get to the burn
-            until time:seconds >= leadTime  - 15 {
+            until time:seconds >= leadTime  - 15 
+            {
                 set sVal to lookDirUp(nextNode:burnVector, sun:position).
                 update_display().
                 disp_burn_data(leadtime).
@@ -100,7 +107,8 @@ local function main {
 
             if warp > 0 kuniverse:timewarp:cancelwarp().
 
-            until time:seconds >= leadTime {
+            until time:seconds >= leadTime 
+            {
                 set sVal to lookDirUp(nextNode:burnVector, sun:position).
                 update_display().
                 disp_burn_data(leadTime).
@@ -110,7 +118,8 @@ local function main {
             set runmode to 7.
         }
 
-        else if runmode = 7 {
+        else if runmode = 7 
+        {
 
             //Do the burn.
             exec_node(mnvNode).
@@ -119,7 +128,8 @@ local function main {
             set runmode to 10.
         }
 
-        else if runmode = 10 {
+        else if runmode = 10 
+        {
 
             set runmode to 99.
         }
@@ -130,7 +140,8 @@ local function main {
 
 
 //Functions
-local function end_main {
+local function end_main 
+{
     unlock steering.
     unlock throttle.
     clearScreen.

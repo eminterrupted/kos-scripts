@@ -142,7 +142,7 @@ local function engine_test_throttle_sequence {
         set tSpool to 1 - max((tval / 1), 0).
         set tDur to time:seconds - t.
         disp_test_main(p, tDur).
-        disp_eng_perf_data().
+        disp_eng_perf().
     }
 
     lock throttle to 1.
@@ -150,7 +150,7 @@ local function engine_test_throttle_sequence {
     until end_eng_test(p, tEnd) {
         set tDur to time:seconds - t.
         disp_test_main(p, tDur).
-        disp_eng_perf_data().
+        disp_eng_perf().
     }
 
     shutdown_eng(p).

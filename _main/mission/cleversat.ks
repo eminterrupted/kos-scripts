@@ -28,7 +28,7 @@ runOncePath("0:/lib/nav/lib_nav").
 runOncePath("0:/lib/nav/lib_node").
 runOncePath("0:/lib/part/lib_antenna").
 
-local matchIncScript is "0:/_adhoc/simple_inclination_change".
+local matchIncScript is "0:/a/simple_inclination_change".
 copyPath(matchIncScript, "local:/matchInc").
 set matchIncScript to "local:/matchInc".
 

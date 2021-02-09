@@ -2,7 +2,7 @@
 
 // ASSUME EQUATORIAL CIRCULAR ORBIT
 parameter target_ltlng is "wp",
-		  landing_peri is 25000.
+		  landing_peri is 15000.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/nav/lib_nav").
@@ -136,7 +136,8 @@ if show_vecdraws {
 	set target_ltlng_draw:color to RGB(255,255,255).
 }
 
-wait until false.
+clearVecDraws().
+clearScreen.
 // Determine the angle ALPHA to rotate a circular orbit velocity vector in order to achieve a desired periapsis.
 // 
 // *************** Known ***************

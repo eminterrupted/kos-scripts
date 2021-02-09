@@ -79,7 +79,8 @@ local divSgl to "---------------------------------------------------------------
 
 
 //-- Main Headers
-global function disp_main {
+global function disp_main 
+{
     local pos is posmain.
 
     set ln to pos["v"].
@@ -108,7 +109,8 @@ global function disp_main {
     // set ts to time:seconds.
 }
 
-global function disp_test_main {
+global function disp_test_main 
+{
     parameter p,
               t is -1,
               cd is 0.
@@ -129,22 +131,40 @@ global function disp_test_main {
     print "TEST PART:  " + p:title:padright(55 - p:title:length) at (h1,cr).
     print "PART NAME:  " + p:name:padRight(55 - p:name:length) at (h1,cr).
     cr. 
-    if t = -1 print "TEST STARTING IN: " + cd + clr at (2,cr).
-    else if t = -2 print "TEST COMPLETE!" + clrWide at (2,cr).
-    else {
+    if t = -1 
+    {
+        print "TEST STARTING IN: " + cd + clr at (2,cr).
+    }
+    else if t = -2 
+    {
+        print "TEST COMPLETE!" + clrWide at (2,cr).
+    }
+    else 
+    {
         print "TEST TIMER: " + format_timestamp(t) + "  " at (h1,cr).
-        if mod(round(t), 2) = 0 print "** TEST IN PROGRESS **" at (h3,ln).
-        else if mod(round(t), 2) = 1 print clr at (h3,ln).
+        if mod(round(t), 2) = 0 
+        {
+            print "** TEST IN PROGRESS **" at (h3,ln).
+        }
+        else if mod(round(t), 2) = 1 
+        {
+            print clr at (h3,ln).
+        }
     }
 }
 
 
 //-- Panels
-global function disp_obt_data {
+global function disp_obt_data 
+{
     
     local pos is "assign".
-    if dispObj:haskey("obt") set pos to disp_get_pos_obj(dispObj["obt"]).
-    else {
+    if dispObj:haskey("obt") 
+    {
+        set pos to disp_get_pos_obj(dispObj["obt"]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj["obt"] to pos["id"].
     }
@@ -168,15 +188,20 @@ global function disp_obt_data {
     print "ORBITAL PER:   " + format_timestamp(ship:obt:period) + "    " at (h1,cr).
 }
 
-global function disp_tel {
+global function disp_tel 
+{
     
     local pos is "assign".
-    if dispObj:haskey("l_tel") set pos to disp_get_pos_obj(dispObj["l_tel"]).
-    else {
-        set pos to disp_get_pos_obj(pos).
-        set dispObj["l_tel"] to pos["id"].
+    if dispObj:haskey("tel") 
+    {
+        set pos to disp_get_pos_obj(dispObj["tel"]).
     }
-    
+    else 
+    {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj["tel"] to pos["id"].
+    }
+
     set ln to pos["v"].
     set h1 to pos["h1"].
     set h2 to pos["h2"].
@@ -187,21 +212,33 @@ global function disp_tel {
     print "OBTVEL:        " + round(ship:velocity:orbit:mag) + "     " at (h1,cr).
     print "SRFVEL:        " + round(ship:velocity:surface:mag) + "     " at (h1, cr).
     cr.
-    print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
-    print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "     " at (h1, cr).
-    cr.
-    cr.
     print "BIOME:         " + addons:scansat:currentbiome + "    " at (h1,cr).
     print "LATITUDE:      " +  round(ship:geoposition:lat, 3) + "   " at (h1,cr).
     print "LONGITUDE:     " + round(ship:geoposition:lng, 3) + "   " at (h1,cr).
+    cr.
+    if body:atm:altitudepressure(ship:altitude) > 0 
+    {
+        print "DYNPRESS:      " + round(ship:q, 5) + "     " at (h1,cr).
+        print "ATMPRESS:      " + round(body:atm:altitudepressure(ship:altitude), 5) + "     " at (h1, cr).
+    } 
+    else
+    {
+        print clr at (h1, cr).
+        print clr at (h1, cr).
+    }
 }
 
 
-global function disp_eng_perf_data {
+global function disp_eng_perf 
+{
 
     local pos is "assign".
-    if dispObj:haskey("eng_perf") set pos to disp_get_pos_obj(dispObj["eng_perf"]).
-    else {
+    if dispObj:haskey("eng_perf") 
+    {
+        set pos to disp_get_pos_obj(dispObj["eng_perf"]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj["eng_perf"] to pos["id"].
     }
@@ -224,13 +261,18 @@ global function disp_eng_perf_data {
 
 
 //Burn data - dV, dur, start / end timestamps.
-global function disp_burn_data {
+global function disp_burn_data 
+{
 
     parameter _burnEta is 0.
 
     local pos is "assign".
-    if dispObj:haskey("burn_data") set pos to disp_get_pos_obj( dispObj["burn_data"]).
-    else {
+    if dispObj:haskey("burn_data") 
+    {
+        set pos to disp_get_pos_obj( dispObj["burn_data"]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj["burn_data"] to pos["id"].
     }
@@ -242,12 +284,16 @@ global function disp_burn_data {
     print "BURN DATA" at (h1,ln).
     print "---------" at (h1,cr).
     print "DELTA-V:       " + round(nextNode:deltaV:mag, 1) + " m/s  "   at (h1,cr).
-    if _burnEta > 0 {
+    if _burnEta > 0 
+    {
         print "BURN ETA:      " + round(_burnEta - time:seconds) + "s   " at (h1, cr).
-    } else {
+    } 
+    else 
+    {
         print "                                    " at (h1, cr).
     }
 }
+
 
 
 //Landing data
@@ -256,9 +302,12 @@ global function disp_landing {
               burnDur is 0. // Duration of hoverslam burn
     
     local pos is "assign".
-    if dispObj:hasKey("landing") {
+    if dispObj:hasKey("landing") 
+    {
         set pos to disp_get_pos_obj(dispObj["landing"]).
-    } else {
+    } 
+    else 
+    {
         set dispObj["landing"] to disp_get_pos_obj(pos).
         set pos to disp_get_pos_obj(pos).
     }
@@ -277,7 +326,8 @@ global function disp_landing {
     print "REQ BURN DUR: " + round(burnDur, 1) at (h1, cr).
     print "TARGET LNG:   " + round(tgtGeoPos:lng, 5) at (h1, cr).
     print "TARGET LAT:   " + round(tgtGeoPos:lat, 5) at (h1, cr).
-    if addons:tr:hasImpact {
+    if addons:tr:hasImpact 
+    {
         print "IMPACT LNG:   " + round(addons:tr:impactPos:lng) at (h1, cr).
         print "IMPACT LAT:   " + round(addons:tr:impactPos:lat) at (h1, cr).
     }
@@ -285,12 +335,17 @@ global function disp_landing {
 
 
 //PID controller data
-global function disp_pid_data {
+global function disp_pid_data 
+{
     parameter pPid.
 
     local pos is "assign".
-    if dispObj:haskey("pid") set pos to disp_get_pos_obj( dispObj["pid"]).
-    else {
+    if dispObj:haskey("pid") 
+    {
+        set pos to disp_get_pos_obj( dispObj["pid"]).
+    }
+    else
+    {
         set dispObj["pid"] to disp_get_pos_obj(pos).
         set pos to disp_get_pos_obj(pos).
     }
@@ -308,12 +363,17 @@ global function disp_pid_data {
 }
 
 //Rendezvous
-global function disp_rendezvous_data {
+global function disp_rendezvous_data 
+{
     parameter pData.
 
     local pos is "assign".
-    if dispObj:haskey("rendezvous") set pos to disp_get_pos_obj( dispObj["rendezvous"]).
-    else {
+    if dispObj:haskey("rendezvous") 
+    {
+        set pos to disp_get_pos_obj( dispObj["rendezvous"]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj["rendezvous"] to pos["id"].
     }
@@ -341,8 +401,12 @@ global function disp_scan_status {
     set nScan to "scan_" + nScan:tostring.
 
     local pos is "assign_wide".
-    if dispObj:haskey(nScan) set pos to disp_get_pos_obj( dispObj[nScan]).
-    else {
+    if dispObj:haskey(nScan) 
+    {
+        set pos to disp_get_pos_obj( dispObj[nScan]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj[nScan] to pos["id"].
     }
@@ -353,20 +417,26 @@ global function disp_scan_status {
 
     print "SCANSAT STATUS           " at (h1,ln).
     print "--------------           " at (h1,cr).
-    for field in pData:keys {
+    for field in pData:keys 
+    {
         print field:tostring:toupper + ":" at (h1, cr). 
         print pData[field] at (h2, ln).
     }
 }
 
 
-global function disp_timer {
+global function disp_timer 
+{
     parameter pTimer,
               pTitle is "".
 
     local pos is "assign".
-    if dispObj:haskey("timer") set pos to disp_get_pos_obj(dispObj["timer"]).
-    else {
+    if dispObj:haskey("timer") 
+    {
+        set pos to disp_get_pos_obj(dispObj["timer"]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj["timer"] to pos["id"].
     }
@@ -387,14 +457,18 @@ global function disp_timer {
 global function disp_clear_block {
     parameter pos.
 
-    if dispObj:haskey(pos) {
+    if dispObj:haskey(pos) 
+    {
         set pos to disp_get_pos_obj(dispObj[pos]).
-    } else {
+    } 
+    else 
+    {
         return false.
     }
 
     set ln to pos["v"].
-    from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do {
+    from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do 
+    {
         if pos:hasKey("h1") print clr at (pos["h1"], line).
         if pos:hasKey("h2") print clr at (pos["h2"], line).
         if pos:hasKey("h3") print clr at (pos["h3"], line).
@@ -404,22 +478,28 @@ global function disp_clear_block {
 }
 
 
-global function disp_clear_block_all {
-    for d in dispObj:keys {
+global function disp_clear_block_all 
+{
+    for d in dispObj:keys 
+    {
         if d <> "main" disp_clear_block(d).
     }
-
     clearScreen.
 }
 
 
-global function disp_clear_block_pos {
+global function disp_clear_block_pos 
+{
     parameter pos.
 
-    if dispObj:haskey(pos) set pos to disp_get_pos_obj(pos).
+    if dispObj:haskey(pos) 
+    {
+        set pos to disp_get_pos_obj(pos).
+    }
     
     set ln to pos["v"].
-    from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do {
+    from { local line is ln.} until line = ln + 13 step { set line to line + 1.} do 
+    {
         if pos:hasKey("h1") print clr at (pos["h1"], line).
         if pos:hasKey("h2") print clr at (pos["h2"], line).
         if pos:hasKey("h3") print clr at (pos["h3"], line).
@@ -430,27 +510,34 @@ global function disp_clear_block_pos {
 
 
 //Inserts a new line into display blocks
-local function cr {
+local function cr 
+{
     set ln to ln + 1.
     return ln.
 }
 
 
 //Assigns a data section to an open position in the display. pType 0 is standard, pType 1 is wide.
-local function disp_get_next_pos {
+local function disp_get_next_pos 
+{
     parameter pType.
 
-    for key in posState:keys {
-        if not posState[key] {
-            if pType = 0 {
-                if key:startsWith("pos_") {
+    for key in posState:keys 
+    {
+        if not posState[key] 
+        {
+            if pType = 0 
+            {
+                if key:startsWith("pos_") 
+                {
                     set posState[key] to true.
                     return key.
                 }
             }
-
-            else if pType = 1 {
-                if key:startsWith("posw_") {
+            else if pType = 1 
+            {
+                if key:startsWith("posw_") 
+                {
                     set posState[key] to true.
                     return key.
                 }
@@ -460,17 +547,26 @@ local function disp_get_next_pos {
 }
 
 
-global function disp_get_pos_obj {
+global function disp_get_pos_obj 
+{
     parameter pos.
     
-    if pos = "assign" set pos to disp_get_next_pos(0).
-    else if pos = "assign_wide" set pos to disp_get_next_pos(1).
+    if pos = "assign" 
+    {
+        set pos to disp_get_next_pos(0).
+    }
+    else if pos = "assign_wide" 
+    {
+        set pos to disp_get_next_pos(1).
+    }
+
     return posObj[pos].
 }
 
 
 // Prints an "INFO" line at (2, 8) for adding context to out_msg
-global function out_info {
+global function out_info 
+{
     parameter str is "".
 
     print "     " + str:padRight(55) at (2, 8).
@@ -478,7 +574,8 @@ global function out_info {
 
 
 // Prints a "MSG" line at (2, 7) for describing current status
-global function out_msg {
+global function out_msg 
+{
     parameter str is "".
 
     print "MSG: " + str:padright(55) at (2, 7).
@@ -487,11 +584,11 @@ global function out_msg {
 
 
 //Main launch display updater
-global function update_display {
+global function update_display 
+{
     disp_main().
     //disp_obt_data().
     //disp_tel().
-    //if ship:availablethrust > 0 disp_eng_perf_data().
 }
 
 
@@ -500,15 +597,20 @@ global function update_display {
 
 
 // WIP generic display block function
-global function disp_block {
+global function disp_block 
+{
     parameter strList.  // Format:
                         // [0]  : ID for block used to reserve screen space (ex: "timer")
                         // [1]  : Title of the display block (ex: "timer")
                         // [2+] : Strings to display, in key / value pairs (ex: "mark", timeRemaining) 
     
     local pos is "assign".
-    if dispObj:haskey(strList[0]) set pos to disp_get_pos_obj(dispObj[strList[0]]).
-    else {
+    if dispObj:haskey(strList[0]) 
+    {
+        set pos to disp_get_pos_obj(dispObj[strList[0]]).
+    }
+    else 
+    {
         set pos to disp_get_pos_obj(pos).
         set dispObj[strList[0]] to pos["id"].
     }
@@ -519,14 +621,21 @@ global function disp_block {
 
     print strList[1]:toupper at (h1,ln).
     print divSgl:substring(0, strList[1]:length) at (h1,cr).
-    from { local idx to 2.} until idx >= strList:length step { set idx to idx + 2.} do {
+    from { local idx to 2.} until idx >= strList:length step { set idx to idx + 2.} do 
+    {
         local str to choose strList[idx] if strList[idx]:length <= 16 else strList[idx]:substring(0, 16).
         print str:toupper + ":" at (h1,cr).
         
         set str to strList[idx + 1].
-        if str:typename <> "string" set str to str:tostring.
+        if str:typename <> "string" 
+        {
+            set str to str:tostring.
+        }
 
-        if str:length > 16 set str to str:substring(0, 16).
+        if str:length > 16 
+        {
+            set str to str:substring(0, 16).
+        }
         print str:toupper:padright(20 - str:length) at (h2, ln).
     }
 }

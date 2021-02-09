@@ -25,14 +25,14 @@ runOncePath("0:/lib/part/lib_antenna").
 
 local incScript is "local:/inc_change".
 if not exists(incScript) {
-    local kscIncScript is "0:/_adhoc/inclination_change".
+    local kscIncScript is "0:/a/inclination_change".
     compile(kscIncScript) to incScript.
     set incScript to "local:/inc_change".
 }
 
 local obtScript to "local:/orbit_change".
 if not exists(obtScript) {
-    local kscObtScript is "0:/_adhoc/simple_orbit_change".
+    local kscObtScript is "0:/a/simple_orbit_change".
     compile(kscObtScript) to obtScript.
 }
 

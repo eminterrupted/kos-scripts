@@ -4,8 +4,8 @@ parameter tgtBody   is "Minmus",
           tgtInc    is 0,
           tgtLan    is ship:orbit:longitudeofascendingnode,
           trnsfrAlt is 325000,
-          tgtAp1    is 50000,
-          tgtPe1    is 50000.
+          tgtAp1    is 100000,
+          tgtPe1    is 100000.
           
 //
 
@@ -25,7 +25,7 @@ runOncePath("0:/lib/part/lib_solar").
 
 //Paths to other scripts used here
 local incChangeScript to "local:/inc_change". 
-compile("0:/_adhoc/simple_inclination_change") to incChangeScript.
+compile("0:/a/simple_inclination_change") to incChangeScript.
 
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].
@@ -44,18 +44,24 @@ local tVal is 0.
 lock throttle to tVal.
 
 //Staging trigger
-when ship:availableThrust < 0.1 and throttle > 0 then {
+when ship:availableThrust < 0.1 and throttle > 0 then 
+{
     safe_stage().
     preserve.
 }
 
 // Payload onDeploy trigger
-if ship:partsTaggedPattern("onDeploy"):length > 0 {
-    when stage:number <= 0 then {
-        for p in ship:partsTaggedPattern("onDeploy") {
-            if p:tag:matchesPattern("solar") {
+if ship:partsTaggedPattern("onDeploy"):length > 0 
+{
+    when stage:number <= 0 then 
+    {
+        for p in ship:partsTaggedPattern("onDeploy") 
+        {
+            if p:tag:matchesPattern("solar") 
+            {
                 activate_solar(p).
-            } else if p:tag:matchesPattern("comm.omni") {
+            } else if p:tag:matchesPattern("comm.omni") 
+            {
                 activate_omni(p).
             }
         }
@@ -66,26 +72,34 @@ main().
 end_main().
 
 //Main
-local function main {
-    until runmode = 99 {
+local function main 
+{
+    until runmode = 99 
+    {
 
         //Get the list of science experiments
-        if runmode = 0 {
+        if runmode = 0 
+        {
             set runmode to rm(2).
         }
         
         //Activate the antenna
-        else if runmode = 2 {
+        else if runmode = 2 
+        {
             out_msg("Deploying antenna").
 
-            for p in ship:partsTaggedPattern("comm.dish") {
-                if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
+            for p in ship:partsTaggedPattern("comm.dish") 
+            {
+                if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") 
+                {
                     activate_dish(p).
                 }
             }
 
-            for p in ship:partsTaggedPattern("comm.omni") {
-                if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") {
+            for p in ship:partsTaggedPattern("comm.omni") 
+            {
+                if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") 
+                {
                     activate_omni(p).
                 }
             }
@@ -94,15 +108,18 @@ local function main {
         }
 
         //Sets the transfer target
-        else if runmode = 3 {
+        else if runmode = 3 
+        {
             out_msg("Setting target to " + tgtBody).
             set target to tgtBody.
             set runmode to rm(7).
         }
 
-        else if runmode = 7 {
+        else if runmode = 7 
+        {
             out_msg("Checking inclination").
-            if ship:orbit:inclination < target:orbit:inclination - 2.5 or ship:orbit:inclination > target:orbit:inclination + 2.5 {
+            if ship:orbit:inclination < target:orbit:inclination - 2.5 or ship:orbit:inclination > target:orbit:inclination + 2.5 
+            {
                 out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + target:obt:inclination + "]").
                 runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
             }
@@ -111,7 +128,8 @@ local function main {
 
         // Gets the transfer parameters for the burn
         // Adds the node
-        else if runmode = 15 {
+        else if runmode = 15 
+        {
             out_msg("Getting transfer object and adding node").
             if not hasTarget set target to tgtBody.
             set mnvObj to get_transfer_obj().
@@ -124,7 +142,8 @@ local function main {
             set mnvNode to optimize_transfer_node(mnvNode, trnsfrAlt, tgtInc, target, accuracy).
             set sVal to lookDirUp(mnvNode:burnVector, sun:position).
             set tStamp to time:seconds + 5.
-            until time:seconds >= tStamp {
+            until time:seconds >= tStamp 
+            {
                 update_display().
                 disp_timer(tStamp, "mnvObj creation").
             }
@@ -132,41 +151,51 @@ local function main {
             set runmode to rm(20).
         }
 
-        if runmode = 20 {
-            if not hasNode {
+        if runmode = 20 
+        {
+            if not hasNode 
+            {
                 set runmode to rm(15).
-            } else {
+            } else 
+            {
                 set mnvObj to get_burn_obj_from_node(nextNode).
                 set runmode to rm(30).
             }
         }
 
         //Warps to the burn node
-        else if runmode = 30 {
+        else if runmode = 30 
+        {
             out_msg("Warping to burn node").
             warp_to_burn_node(mnvObj).
             set runmode to rm(35).
         }
 
         //Executes the transfer burn
-        else if runmode = 35 {
+        else if runmode = 35 
+        {
             out_msg("Executing burn node").
             exec_node(nextNode).
             set runmode to rm(37).
         }
 
-        else if runmode = 37 {
+        else if runmode = 37 
+        {
             out_msg("Setting onDeploy triggers").
-            when stage:number <= 1 then {
-                for p in ship:partsTaggedPattern("solar.array.*.onDeploy") {
+            when stage:number <= 1 then 
+            {
+                for p in ship:partsTaggedPattern("solar.array.*.onDeploy") 
+                {
                     activate_solar(p).
                 }
 
-                for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") {
+                for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") 
+                {
                     activate_dish(p).
                 }
 
-                for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") {
+                for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") 
+                {
                     activate_omni(p).
                 }
             }
@@ -175,23 +204,27 @@ local function main {
         }
 
         //Then warps to the SOI change
-        else if runmode = 40 {
+        else if runmode = 40 
+        {
             
             out_msg("SOI Warp").
 
             set tStamp to time:seconds + 5.
-            until time:seconds >= tStamp {
+            until time:seconds >= tStamp 
+            {
                 update_display().
                 disp_timer(tStamp, "soi warp").
             }
 
             disp_clear_block("timer").
 
-            if ship:body:name <> tgtBody {
+            if ship:body:name <> tgtBody 
+            {
                 warp_to_next_soi().
             }
             
-            until ship:body:name = tgtBody {
+            until ship:body:name = tgtBody 
+            {
                 update_display().
             }
                 
@@ -200,12 +233,14 @@ local function main {
 
 // Circularization node
         // Adds a 60s timer for player to do anything needed before warp
-        else if runmode = 45 {
+        else if runmode = 45 
+        {
 
             out_msg("Circ burn countdown").
             
             set tStamp to time:seconds + 5.
-            until time:seconds >= tStamp {
+            until time:seconds >= tStamp 
+            {
                 update_display().
                 disp_timer(tStamp, "circ node").
             }
@@ -218,14 +253,16 @@ local function main {
         }
 
         //Adds a circularization node to the flight plan to capture into orbit around target, using desired tPe0
-        else if runmode = 47 {
+        else if runmode = 47 
+        {
             out_msg("Adding capture node").
             set mnvNode to add_capture_node(tgtAp1).
             set runmode to rm(55).
         }
 
         //Gets burn data from the node
-        else if runmode = 55 {
+        else if runmode = 55 
+        {
             out_msg("Getting burn object from existing node").
             set mnvObj to get_burn_obj_from_node(mnvNode).
             set mnvObj["mnv"] to mnvNode. 
@@ -233,7 +270,8 @@ local function main {
         }
 
         //Warps to the burn node
-        else if runmode = 60 {
+        else if runmode = 60 
+        {
             out_msg("Warping to burn node").
             set sVal to lookDirUp(mnvNode:burnVector, sun:position).
             wait until shipSettled().
@@ -242,16 +280,19 @@ local function main {
         }
 
         //Executes the circ burn
-        else if runmode = 65 {
+        else if runmode = 65 
+        {
             out_msg("Executing burn node").
             exec_node(nextNode).
             wait 2.
             set runmode to rm(70).
         }
 
-        else if runmode = 70 {
+        else if runmode = 70 
+        {
             out_msg("Checking orbit inclination").
-            if (ship:orbit:inclination < tgtInc - 2 or ship:orbit:inclination > tgtInc + 2) {
+            if (ship:orbit:inclination < tgtInc - 2 or ship:orbit:inclination > tgtInc + 2) 
+            {
                 out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + tgtInc + "]").
                 runpath(incChangeScript, tgtInc, tgtLan).
                 deletePath(incChangeScript).
@@ -261,21 +302,24 @@ local function main {
         }
 
         //Adds a hohmann burn top lower to final altitude
-        else if runmode = 75 {
+        else if runmode = 75 
+        {
             out_msg("Lowering to final altitude").
             exec_circ_burn("ap", tgtPe1).
             set runmode to rm(80).
         }
 
         //
-        else if runmode = 80 {
+        else if runmode = 80 
+        {
             out_msg("Final alt circ burn").
             exec_circ_burn("pe", tgtAp1).
             set runmode to rm(98).
         }
 
         //Preps the vessel for long-term orbit
-        else if runmode = 98 {
+        else if runmode = 98 
+        {
             end_main().
             set runmode to rm(99).
         }

@@ -5,14 +5,16 @@ runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/nav/lib_nav").
 
 // Functions
-global function add_node_mun_return {
+global function add_node_mun_return 
+{
     parameter tgtAlt.
 
     local dv is 0.
     local mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
     add mnvNode.
 
-    until nextNode:obt:hasNextPatch {
+    until nextNode:obt:hasNextPatch 
+    {
         remove mnvNode.
         set dv to dv + 5.
         set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dv).
@@ -29,11 +31,13 @@ global function add_node_mun_return {
 }
 
 
-global function add_node_to_plan {
+global function add_node_to_plan 
+{
     parameter mnv.
 
     //Maneuver node is time, radial, normal, prograde.
-    if career():canmakenodes {
+    if career():canmakenodes 
+    {
         set mnv to node(mnv[0], mnv[1], mnv[2], mnv[3]).
         add mnv.
         return mnv.
@@ -42,7 +46,8 @@ global function add_node_to_plan {
 
 
 //TODO - Add a rendezvous node with optional phase angle
-global function add_rendezvous_node {
+global function add_rendezvous_node 
+{
     parameter _mnvObj,
               _tgtAlt,
               _tgtObj.
@@ -51,7 +56,8 @@ global function add_rendezvous_node {
 }
 
 
-global function add_transfer_node {
+global function add_transfer_node 
+{
     parameter mnvObj,
               tgtAlt,
               impact is false.
@@ -60,7 +66,8 @@ global function add_transfer_node {
     local mnvNode to node(mnvList[0],mnvList[1], mnvList[2], mnvList[3]).
     
     add mnvNode.
-    until nextNode:obt:hasnextpatch {
+    until nextNode:obt:hasnextpatch 
+    {
         local dv to mnvNode:burnvector:mag.
         remove mnvNode.
         set mnvNode to node(mnvList[0],mnvList[1], mnvList[2], dv + 1).
@@ -68,7 +75,8 @@ global function add_transfer_node {
         wait 0.1.
     }
 
-    if not impact {
+    if not impact 
+    {
         local mnvAcc to 0.005.
         set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe", target, mnvAcc).
     }
@@ -81,7 +89,8 @@ global function add_transfer_node {
 }
 
 
-global function add_capture_node {
+global function add_capture_node 
+{
     parameter tgtAlt.
 
     local dv to get_dv_for_prograde(tgtAlt, ship:periapsis).
@@ -90,7 +99,8 @@ global function add_capture_node {
     local mnvNode to node(mnv[0], mnv[1], mnv[3], mnv[3]).
     add mnvNode.
 
-    until not mnvNode:orbit:hasNextPatch {
+    until not mnvNode:orbit:hasNextPatch 
+    {
         set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 5).
         set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
         if hasNode remove nextNode.
@@ -98,7 +108,8 @@ global function add_capture_node {
         wait 0.01.
     }
 
-    until mnvNode:orbit:apoapsis <= max(tgtAlt, ship:periapsis + 1000) {
+    until mnvNode:orbit:apoapsis <= max(tgtAlt, ship:periapsis + 1000) 
+    {
         if hasNode remove nextNode.
         set mnv to list(mnv[0], mnv[1], mnv[2], mnv[3] - 0.25).
         set mnvNode to node(mnv[0], mnv[1], mnv[2], mnv[3]).
@@ -110,7 +121,8 @@ global function add_capture_node {
 }
 
 
-global function add_optimized_node {
+global function add_optimized_node 
+{
     parameter _mnvParam,
               _tgtAlt,
               _compMode,
@@ -124,7 +136,8 @@ global function add_optimized_node {
 }
 
 
-global function add_simple_circ_node {
+global function add_simple_circ_node 
+{
     parameter _nodeAt,
               _tgtAlt,
               _mnvAcc is 0.01.
@@ -135,7 +148,8 @@ global function add_simple_circ_node {
     local mnv is list().
     local mode is "".
 
-    if _nodeAt = "ap" {
+    if _nodeAt = "ap" 
+    {
         set mnv to list(time:seconds + eta:apoapsis, 0, 0, dv).
         set mode to "pe".
     } else {
@@ -150,7 +164,8 @@ global function add_simple_circ_node {
 }
 
 
-local function eval_candidates {
+local function eval_candidates 
+{
     parameter _data,
               _candList,
               _tgtVal,
@@ -159,16 +174,23 @@ local function eval_candidates {
 
     local curScore to get_node_score(_data, _tgtVal, _compMode, _tgtBody).
     
-    for c in _candList {
+    for c in _candList 
+    {
         local candScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
-        if candScore:intersect {
-            if candScore:result > _tgtVal {
-                if candScore:score < curScore:score {
+        if candScore:intersect 
+        {
+            if candScore:result > _tgtVal 
+            {
+                if candScore:score < curScore:score 
+                {
                     set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                     set _data to c.
                 }
-            } else if candScore:result < _tgtVal {
-                if candScore:score > curScore:score {
+            } 
+            else if candScore:result < _tgtVal 
+            {
+                if candScore:score > curScore:score 
+                {
                     set curScore to get_node_score(c, _tgtVal, _compMode, _tgtBody).
                     set _data to c.
                 }
@@ -180,7 +202,8 @@ local function eval_candidates {
 }
 
 
-global function exec_node {
+global function exec_node 
+{
     parameter nd.
     
     local sVal to lookDirUp(nd:burnvector, sun:position).
@@ -189,26 +212,42 @@ global function exec_node {
     local tVal to 0.
     lock throttle to tVal.
 
-    local done to false.
+    //vNext
+    // local startVel to ship:velocity:orbit.
+    // local dvToGo to 9999999.
+    // set tVal to 1. 
+    // until dvToGo <= 0.1 
+    // {
+    //     set sVal to nd:burnVector.
+    //     set dvToGo to nd:burnVector:mag - sqrt(abs(vdot(nd:burnVector, (ship:velocity:orbit - startVel)))).
+
+    //     update_display().
+    //     disp_burn_data().
+    //     wait 0.01.
+    // }
+    // set tVal to 0.
+
+    // Old
     local dv0 to nd:deltav.
     local maxAcc to ship:maxThrust / ship:mass.
 
-    until done {
+    until false
+    {
         set maxAcc to ship:maxThrust / ship:mass.
 
-        set tVal to min(nd:deltaV:mag / maxAcc, 1).
-
-        if vdot(dv0, nd:deltaV) < 0 {
-            lock throttle to 0.
-            set done to true.
+        if vdot(dv0, nd:deltaV) <= 0 
+        {
+            set tVal to 0.
             break.
         }
 
-        else if nd:deltaV:mag < 0.1 {
-            wait until vDot(dv0, nd:deltaV) < 0.1.
-
-            lock throttle to 0.
-            set done to true.
+        else if nd:deltaV:mag < 0.25 
+        {
+            set tVal to 0.05.
+        }
+        else
+        {
+            set tVal to min(nd:deltaV:mag / maxAcc, 1).
         }
 
         update_display().
@@ -220,28 +259,41 @@ global function exec_node {
 }
 
 
-local function get_node_result {
+local function get_node_result 
+{
 
     parameter _compMode,
               _obt.
 
-    if _compMode = "pe" {     
+    if _compMode = "pe" 
+    {     
         return _obt:periapsis.
-    } else if _compMode = "ap" {
+    } 
+    else if _compMode = "ap" 
+    {
         return _obt:apoapsis.
-    } else if _compMode = "inc" {
+    } 
+    else if _compMode = "inc" 
+    {
         return _obt:inclination.
-    } else if _compMode = "tliInc" { 
+    } 
+    else if _compMode = "tliInc" 
+    { 
         return _obt:inclination.
-    } else if _compMode = "lan" {
+    } 
+    else if _compMode = "lan" 
+    {
         return _obt:longitudeOfAscendingNode.
-    } else if _compMode = "argpe" {
+    } 
+    else if _compMode = "argpe" 
+    {
         return _obt:argumentofperiapsis.
     }
 }
 
 
-local function get_node_score {
+local function get_node_score 
+{
     parameter _data,
               _tgtVal,
               _compMode,
@@ -255,14 +307,20 @@ local function get_node_score {
     add mnvTest.
     local scoredObt to mnvTest:obt.
 
-    until intersect {
-        if scoredObt:body = _tgtBody {
+    until intersect 
+    {
+        if scoredObt:body = _tgtBody 
+        {
             set result to get_node_result(_compMode, scoredObt).
             set score to result / _tgtVal.
             set intersect to true.
-        } else if scoredObt:hasnextpatch {
+        } 
+        else if scoredObt:hasnextpatch 
+        {
             set scoredObt to scoredObt:nextpatch.
-        } else  {
+        } 
+        else  
+        {
             break.
         }
     }
@@ -282,7 +340,8 @@ local function get_node_score {
 }
 
 
-local function improve_node {
+local function improve_node 
+{
     parameter _data,
               _tgtVal,
               _compMode,
@@ -302,21 +361,36 @@ local function improve_node {
     // climb iterations
     local mnvFactor is 1.
 
-    if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025) {
+    if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025) 
+    {
         set mnvFactor to 0.05 * mnvFactor.
-    } else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) {
+    } 
+    else if curScore:score > (limLo * 0.875) and curScore:score < (limHi * 1.125) 
+    {
         set mnvFactor to 0.125 * mnvFactor. 
-    } else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) {
+    } 
+    else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25) 
+    {
         set mnvFactor to 0.25 * mnvFactor.
-    } else if curScore:score > (limLo * 0.50) and curScore:score < (limHi * 1.50) {
+    } 
+    else if curScore:score > (limLo * 0.50) and curScore:score < (limHi * 1.50) 
+    {
         set mnvFactor to 0.50 * mnvFactor.
-    } else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) {
+    } 
+    else if curScore:score > (limLo * 0.25) and curScore:score < (limHi * 1.75) 
+    {
         set mnvFactor to 0.75 * mnvFactor.
-    } else if curScore:score > -1 * limLo and curScore:score < limHi * 3 {
+    } 
+    else if curScore:score > -1 * limLo and curScore:score < limHi * 3 
+    {
         set mnvFactor to 1 * mnvFactor.
-    } else if curScore:score > -10 * limLo and curScore:score < limHi * 11 {
+    } 
+    else if curScore:score > -10 * limLo and curScore:score < limHi * 11 
+    {
         set mnvFactor to 2 * mnvFactor. 
-    } else {
+    } 
+    else 
+    {
         set mnvFactor to 5 * mnvFactor.
     }
     
@@ -338,7 +412,8 @@ local function improve_node {
 }
 
 
-local function improve_transfer_node_timing {
+local function improve_transfer_node_timing 
+{
     parameter _data,
               _tgtVal,
               _tgtBody.
@@ -350,8 +425,10 @@ local function improve_transfer_node_timing {
 
     out_msg("Optimizing transfer node timing for proper inclination.").
     
-    if not intersect {
-        until intersect {
+    if not intersect 
+    {
+        until intersect 
+        {
             local mnvCandidates to list(
                 list(_data[0] + 1, _data[1], _data[2], _data[3])
                 ,list(_data[0] - 1, _data[1], _data[2], _data[3])
@@ -367,14 +444,19 @@ local function improve_transfer_node_timing {
     }
 
     set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
-    if obtRetro {
-        until nodeScore["intersect"] and nodeScore["result"] > 90 {
+    if obtRetro 
+    {
+        until nodeScore["intersect"] and nodeScore["result"] > 90 
+        {
             set _data to list(_data[0] - 1, _data[1], _data[2], _data[3]).
             set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
         }
         return _data.
-    } else {
-        until nodeScore["intersect"] and nodeScore["result"] <= 90 {
+    } 
+    else 
+    {
+        until nodeScore["intersect"] and nodeScore["result"] <= 90 
+        {
             set _data to list(_data[0] + 1, _data[1], _data[2], _data[3]).
             set nodeScore to get_node_score(_data, _tgtVal, "tliInc", _tgtBody).
         }
@@ -383,7 +465,35 @@ local function improve_transfer_node_timing {
 }
 
 
-global function optimize_existing_node {
+global function last_patch 
+{
+    local curPatch to ship:orbit.
+    until not curPatch:hasNextPatch 
+    {
+        set curPatch to curPatch:nextPatch.
+    }
+
+    return curPatch.
+}
+
+
+// Returns the last patch for a given node
+global function last_patch_for_node
+{
+    parameter _node.
+
+    local curPatch to _node:orbit.
+    until not curPatch:hasNextPatch 
+    {
+        set curPatch to curPatch:nextPatch.
+    }
+
+    return curPatch.
+}
+
+
+global function optimize_existing_node 
+{
     parameter _mnvNode,
               _tgtVal,
               _compMode,
@@ -402,7 +512,8 @@ global function optimize_existing_node {
 }
 
 
-global function optimize_node_list {
+global function optimize_node_list 
+{
     parameter _data,
               _tgtVal,
               _compMode,
@@ -416,12 +527,14 @@ global function optimize_node_list {
     local limHi         to 1 + _mnvAcc. 
     local nodeScore     to 0.
 
-    until false {
+    until false 
+    {
         set improvedData to improve_node(_data, _tgtVal, _compMode, _tgtBody, _mnvAcc).
         set _data to improvedData["_data"].
         set nodeScore to improvedData["curScore"]:score.
         wait 0.001.
-        if nodeScore >= limLo and nodeScore <= limHi {
+        if nodeScore >= limLo and nodeScore <= limHi 
+        {
             break.
         }
     }
@@ -435,7 +548,8 @@ global function optimize_node_list {
 }
 
 
-global function optimize_transfer_node {
+global function optimize_transfer_node 
+{
     parameter _mnvNode,
               _tgtAlt,
               _tgtInc,
@@ -456,36 +570,3 @@ global function optimize_transfer_node {
 
 
 //-- WIP --//
-local function get_node_multi_score {
-    parameter _data,     // mnv list
-              _tgtList,  // list of target parameters in format: (tgtBody, tgtAlt, tgtInc, tgtLAN, tgtArgPe)
-              _tgtAcc.   // Accuracy factor
-
-    local intersect to false.
-    local mnvTest   to node(_data[0], _data[1], _data[2], _data[3]).
-    local result    to -999999.
-    local score     to -999999.
-    local tgtBody   to _tgtList[0].
-    local tgtAlt    to _tgtList[1].
-    local tgtInc    to _tgtList[2].
-    local tgtLAN    to _tgtList[3].
-    local tgtArgPe  to _tgtList[4].
-
-    add mnvTest.
-    local scoredObt to mnvTest:obt.
-    local scoredObtPeriod to scoredObt:period.
-
-    until intersect {
-        if scoredObt:body = tgtBody {
-            set intersect to true.
-        } else if scoredObt:hasnextpatch {
-            set scoredObt to scoredObt:nextpatch.
-        } else  {
-            return lex("intersect", intersect). // Return a lex with only the intersect value
-        }
-    }
-
-    
-
-    return false.
-}

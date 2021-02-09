@@ -7,8 +7,9 @@ local landingPath to "1:/land_on_mun".
 update_display().
 
 out_msg("Compiling landing script to local drive").
-local script to "0:/_adhoc/land_on_mun".
-if exists(landingPath) {
+local script to "0:/a/land_on_mun".
+if exists(landingPath) 
+{
     deletePath(landingPath).
 }
 compile(script) to landingPath.
@@ -16,7 +17,8 @@ compile(script) to landingPath.
 lock steering to ship:retrograde.
 
 // local tStamp to time:seconds + (ship:orbit:period / 1.85).
-if ship:altitude > 10000 {
+if ship:altitude > 10000 
+{
     out_msg("Press any key to start landing sequence").
     breakpoint().
 }
@@ -31,6 +33,13 @@ local sciMod to get_sci_list(ship:parts).
 out_info("Deploying experiments").
 deploy_sci_list(sciMod).
 wait 3.
+
+if ship:partsTaggedPattern("seismicPod"):length > 0 
+{
+    out_info("Deploying seismic pods").
+    deploy_seismic_pods().
+    set sciMod to get_sci_mod().
+}
 
 out_info("Logging results of experiments").
 log_sci_list(sciMod).

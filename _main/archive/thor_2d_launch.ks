@@ -202,7 +202,7 @@ until runmode = 99 {
     disp_main().
     disp_tel().
     disp_obt_data().
-    disp_eng_perf_data().
+    disp_eng_perf().
 
     if stateObj["runmode"] <> runmode {
         set stateObj["runmode"] to runmode.
