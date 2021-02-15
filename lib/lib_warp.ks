@@ -36,7 +36,7 @@ global function warp_to_timestamp
     until shipSettled() 
     {
         update_display().
-    print "Ship settled: " + shipSettled() at (2, 35).
+        print "Ship settled: " + shipSettled() at (2, 35).
     }
     print "                    " at (2, 35).
 
