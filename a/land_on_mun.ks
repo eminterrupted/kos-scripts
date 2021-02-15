@@ -4,12 +4,12 @@ parameter _geo1, _geo2.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_util").
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/part/lib_antenna").
-runOncePath("0:/lib/part/lib_solar").
+runOncePath("0:/lib/lib_calc_mnv").
+runOncePath("0:/lib/lib_antenna").
+runOncePath("0:/lib/lib_solar").
 
 //-- Variables --//
 

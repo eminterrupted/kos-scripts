@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/nav/lib_deltav").
+runOncePath("0:/lib/lib_deltav").
 runOncePath("0:/lib/lib_mass_data").
 runOncePath("0:/lib/lib_engine").
 

@@ -6,7 +6,7 @@ runOncePath("0:/lib/lib_mass_data").
 runOncePath("0:/lib/lib_engine").
 
 
-runOncePath("0:/lib/part/lib_rcs").
+runOncePath("0:/lib/lib_rcs").
 
 //functions
 global function get_dv_for_prograde 

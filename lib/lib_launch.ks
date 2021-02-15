@@ -7,7 +7,7 @@ local mlp to false.
 
 if ship:partsTaggedPattern("mlp.base"):length > 0 
 {
-    runOncePath("0:/lib/part/lib_launchpad").
+    runOncePath("0:/lib/lib_launchpad").
     set mlp to true.
 }
 

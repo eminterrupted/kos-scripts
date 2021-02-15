@@ -8,11 +8,11 @@ parameter _tgtAp    is 200000,
           _mnvAcc   is 0.0025. 
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/part/lib_antenna").
-runOncePath("0:/lib/part/lib_solar").
+runOncePath("0:/lib/lib_antenna").
+runOncePath("0:/lib/lib_solar").
 
 local incPath is "local:/inc_change". 
 copyPath("0:/a/simple_inclination_change", incPath).

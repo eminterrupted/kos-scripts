@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/nav/lib_node").
+runOncePath("0:/lib/lib_calc_mnv").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_node").
 runOncePath("0:/lib/lib_warp").
 
 

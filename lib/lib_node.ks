@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/display/lib_display").
-runOncePath("0:/lib/nav/lib_deltav").
-runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_deltav").
+runOncePath("0:/lib/lib_nav").
 
 // Functions
 global function add_node_mun_return 

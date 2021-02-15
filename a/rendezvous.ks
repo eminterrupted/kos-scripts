@@ -4,15 +4,15 @@ parameter other. // The target
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_warp").
 
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/nav/lib_mnv").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_rendezvous").
+runOncePath("0:/lib/lib_calc_mnv").
+runOncePath("0:/lib/lib_mnv").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_node").
+runOncePath("0:/lib/lib_rendezvous").
 
 runOncePath("0:/lib/lib_mass_data").
 runOncePath("0:/lib/lib_engine").

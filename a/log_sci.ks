@@ -2,8 +2,8 @@
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/payload/lib_bays").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_bays").
+runOncePath("0:/lib/lib_display").
 
 out_msg("Opening bay doors").
 for p in ship:partsTaggedPattern("bay.doors") 

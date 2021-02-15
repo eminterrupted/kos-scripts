@@ -2,7 +2,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/lib_antenna").
 
 local containMod    is "ModuleScienceContainer".
 local sciMod        is "ModuleScienceExperiment".

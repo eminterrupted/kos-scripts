@@ -3,7 +3,7 @@
 parameter wp. // a waypoint to land at
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_land").
 
 // Format the input param

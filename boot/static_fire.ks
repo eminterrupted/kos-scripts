@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/display/lib_display").
-runOncePath("0:/lib/part/lib_launchpad").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_launchpad").
 
 local engList   to list().
 local highStg   to 0.

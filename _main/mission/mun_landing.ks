@@ -5,9 +5,9 @@ parameter distThresh is 30000.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/display/lib_display").
-runOncePath("0:/lib/payload/lib_bays").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_display").
+runOncePath("0:/lib/lib_bays").
 
 local landingPath to "1:/land_on_mun".
 

@@ -11,17 +11,17 @@ parameter tgtBody   is "Mun",
 
 clearscreen.
 
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_warp").
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/nav/lib_deltav").
-runOncePath("0:/lib/nav/lib_mnv").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/part/lib_antenna").
-runOncePath("0:/lib/part/lib_solar").
+runOncePath("0:/lib/lib_calc_mnv").
+runOncePath("0:/lib/lib_deltav").
+runOncePath("0:/lib/lib_mnv").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_node").
+runOncePath("0:/lib/lib_antenna").
+runOncePath("0:/lib/lib_solar").
 
 //Paths to other scripts used here
 local incChangeScript to "local:/inc_change". 

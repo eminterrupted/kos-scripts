@@ -2,8 +2,8 @@
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_engine").
-runOncePath("0:/lib/part/lib_solar").
-runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/lib_solar").
+runOncePath("0:/lib/lib_antenna").
 
 local tdList to ship:partsTaggedPattern("onTouchdown").
 

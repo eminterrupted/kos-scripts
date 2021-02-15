@@ -9,7 +9,7 @@ parameter tAp to 30000,
 clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_log").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_warp").
@@ -17,11 +17,11 @@ runOncePath("0:/lib/lib_pid").
 runOncePath("0:/lib/lib_misc_parts").
 runOncePath("0:/lib/lib_engine").
 runOncePath("0:/lib/lib_mass_data").
-runOncePath("0:/lib/nav/lib_mnv").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/part/lib_fairing").
-runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/lib_mnv").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_node").
+runOncePath("0:/lib/lib_fairing").
+runOncePath("0:/lib/lib_antenna").
 runOncePath("0:/kslib/library/lib_l_az_calc").
 
 //

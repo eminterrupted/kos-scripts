@@ -3,7 +3,7 @@
 clearscreen. 
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/display/lib_gui").
+runOncePath("0:/lib/lib_gui").
 
 local kscCache to "0:/data/missionCacheParam.json".
 local shipCache to "local:/missionCache.json".

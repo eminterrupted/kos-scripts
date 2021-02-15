@@ -5,7 +5,7 @@ parameter rVal is 0.
 clearScreen.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_dmag_sci").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_sci").
@@ -15,7 +15,7 @@ runOncePath("0:/lib/lib_engine").
 
 
 runOncePath("0:/lib/lib_mass_data").
-runOncePath("0:/lib/part/lib_heatshield").
+runOncePath("0:/lib/lib_heatshield").
 
 //
 //** Main

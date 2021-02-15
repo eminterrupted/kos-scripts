@@ -5,17 +5,17 @@ parameter _tgt is "Minmus",
 
 clearscreen.
 
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_warp").
-runOncePath("0:/lib/nav/lib_calc_mnv").
-runOncePath("0:/lib/nav/lib_deltav").
-runOncePath("0:/lib/nav/lib_nav").
-runOncePath("0:/lib/nav/lib_node").
-runOncePath("0:/lib/nav/lib_mnv").
-runOncePath("0:/lib/part/lib_antenna").
+runOncePath("0:/lib/lib_calc_mnv").
+runOncePath("0:/lib/lib_deltav").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_node").
+runOncePath("0:/lib/lib_mnv").
+runOncePath("0:/lib/lib_antenna").
 
 //local stateObj to init_state_obj().
 local runmode to stateObj["runmode"].

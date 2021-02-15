@@ -9,7 +9,7 @@ wait 2.
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_core").
 
 // Paths
@@ -79,7 +79,7 @@ local function exec_launch
     {
         
         // Load the MLP lib
-        runOncePath("0:/lib/part/lib_launchpad").
+        runOncePath("0:/lib/lib_launchpad").
     
         // Check for lights, and activate nightlight if true
         if ship:partsTaggedPattern("mlp.base")[0]:partsTaggedPattern("lgt"):length > 0 

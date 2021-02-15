@@ -6,9 +6,9 @@ clearscreen.
 
 runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_core").
-runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_util").
-runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/lib_nav").
 
 // Check for trajectories, fail if not found
 if not addons:tr:available
