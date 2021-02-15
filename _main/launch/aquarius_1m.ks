@@ -191,7 +191,7 @@ until runmode = 99 {
         safe_stage().
     }
 
-    if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
+    if not addons:rt:hasKscConnection(ship) activate_antenna(ship:partsTaggedPattern("comm.omni")[0]).
 
     disp_main().
     disp_obt_data().

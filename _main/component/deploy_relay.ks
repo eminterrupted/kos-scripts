@@ -36,7 +36,7 @@ until runmode = 99 {
 
     if runmode = 10 {
         for p in pList {
-            activate_dish(p).
+            activate_antenna(p).
             wait 1.
             local antObj to get_antenna_fields(p).
             if antObj["target"] = "" set_dish_target(p, "Kerbin").

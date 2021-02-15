@@ -32,13 +32,13 @@ until time:seconds >= tStamp {
     
     if tStamp - time:seconds <= 1 {
         for p in ship:partsTaggedPattern("comm.omni") {
-            activate_omni(p).
+            activate_antenna(p).
         }
     }
 
     else if tStamp - time:seconds <= 4 {
         for p in ship:partsTaggedPattern("comm.dish") {
-            activate_dish(p).
+            activate_antenna(p).
         }
     }
 

@@ -40,7 +40,7 @@ until runmode = 99 {
 
     if runmode = 10 {
         for p in pList {
-            activate_dish(p).
+            activate_antenna(p).
             wait 1.
             //local range to get_antenna_range(p).
             

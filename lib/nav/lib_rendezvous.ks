@@ -1,5 +1,6 @@
 // Returns the expected altitude for an orbit at a given true anomaly
-global function orbit_altitude_at_ta {
+global function orbit_altitude_at_ta 
+{
     parameter _obtIn,   // Orbit to check
               _ta.      // True anomaly in degrees
 
@@ -14,7 +15,8 @@ global function orbit_altitude_at_ta {
 // using a warmer / cooler algorithm. Specify the intended min/max
 // epsilon of accuracy, as this is expensive. Returns -1 as flag to 
 // indicate no crossing point.
-global function orbit_cross_ta {
+global function orbit_cross_ta 
+{
     parameter _obt0,        // Current orbit
               _obt1,        // Orbit to find intersect with
               _maxEpsilon,  // how coarse to search at first
@@ -27,11 +29,13 @@ global function orbit_cross_ta {
     local start_ta is _obt0:trueanomaly. // Start the search where the ship is
     local ta is start_ta.
 
-    until ta > start_ta + 360 or abs(incr) < _minEpsilon {
+    until ta > start_ta + 360 or abs(incr) < _minEpsilon 
+    {
         local diff is orbit_altitude_at_ta(_obt0, ta) - orbit_altitude_at_ta(_obt1, pe_ta_off + ta).
 
         // if pos / neg signs of diff and prev_diff differ and neither are zero:
-        if diff * prev_diff < 0 {
+        if diff * prev_diff < 0 
+        {
             // Then this is a hit, so we reverse direction and go slower
             set incr to - incr / 10.
         }
@@ -41,16 +45,20 @@ global function orbit_cross_ta {
         set ta to ta + incr.
     }
 
-    if ta > start_ta + 360 {
+    if ta > start_ta + 360 
+    {
         return -1.  // We've checked the entire orbit with no hits
-    } else {
+    } 
+    else 
+    {
         return mod(ta, 360).
     }
 }
 
 
 // How far ahead is _obt0's true anomaly measured from _obt1's in degrees?
-global function ta_offset {
+global function ta_offset 
+{
     parameter _obt0,
               _obt1.
 
@@ -66,14 +74,17 @@ global function ta_offset {
 
 
 //Formats a target string as an orbitable object
-global function orbitable {
+global function orbitable 
+{
     parameter _tgt.
 
     local vList to list().
     list targets in vList.
 
-    for vs in vList {
-        if vs:name = _tgt {
+    for vs in vList 
+    {
+        if vs:name = _tgt 
+        {
             return vessel(_tgt).
         }
     }
@@ -83,7 +94,8 @@ global function orbitable {
 
 
 // How many degrees difference between ship and a target
-global function target_angle {
+global function target_angle 
+{
     parameter _tgt.
 
     return mod(

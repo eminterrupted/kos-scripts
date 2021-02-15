@@ -45,7 +45,7 @@ until runmode = 99 {
     if runmode = 0 {
         local dish is ship:partsTaggedPattern("comm.dish").
         for d in dish {
-            activate_dish(d).
+            activate_antenna(d).
             logStr("Comm object Dish activated").
             wait 1.
             set_dish_target(d, kerbin:name).

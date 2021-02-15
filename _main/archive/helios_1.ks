@@ -65,7 +65,7 @@ until runmode = 99 {
     else if runmode = 10 {
         lock steering to ship:retrograde.
         local dish is ship:partsTaggedPattern("dish")[0].
-        activate_dish(dish).
+        activate_antenna(dish).
         set_dish_target(dish, "Kerbin").
         set runmode to 15.
     }

@@ -63,10 +63,10 @@ local function main {
         //Activate the antenna
         else if runmode = 2 {
             local p to ship:partsTaggedPattern("comm.dish").
-            if p:length > 0 activate_dish(p[0]).
+            if p:length > 0 activate_antenna(p[0]).
 
             for o in ship:partsTaggedPattern("comm.omni") {
-                activate_omni(o).
+                activate_antenna(o).
             }
             
             set runmode to 5.

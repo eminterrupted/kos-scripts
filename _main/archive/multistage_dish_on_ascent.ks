@@ -348,7 +348,7 @@ local function deploy_dish_panels {
         if idx = 0 set_dish_target(d, "kerbin").
         else set_dish_target(d, "mun").
 
-        activate_dish(d).
+        activate_antenna(d).
     }
 
     panels on.
@@ -436,7 +436,7 @@ local function prep_for_orbit {
     panels on.
 
     logStr("Verifying connection to KSC").
-    if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
+    if not addons:rt:hasKscConnection(ship) activate_antenna(ship:partsTaggedPattern("comm.omni")[0]).
     logStr("Orbtial configuration set").
 
     update_display().

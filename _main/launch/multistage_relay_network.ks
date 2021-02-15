@@ -206,7 +206,7 @@ local function prep_for_orbit {
     panels on.
 
     logStr("Verifying connection to KSC").
-    if not addons:rt:hasKscConnection(ship) activate_omni(ship:partsTaggedPattern("comm.omni")[0]).
+    if not addons:rt:hasKscConnection(ship) activate_antenna(ship:partsTaggedPattern("comm.omni")[0]).
     logStr("Orbtial configuration set").
 
     update_display().

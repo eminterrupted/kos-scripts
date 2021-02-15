@@ -288,6 +288,6 @@ local function end_main {
 
 local function deploy_dish {
     for p in ship:partsTaggedPattern("comm.dish") {
-        activate_dish(p).
+        activate_antenna(p).
     }
 }

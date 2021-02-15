@@ -55,7 +55,7 @@ local function main {
 
             local dish is ship:partsTaggedPattern("comm.dish").
             for d in dish {
-                activate_dish(d).
+                activate_antenna(d).
                 logStr("Comm object Dish activated").
                 wait 1.
                 set_dish_target(d, kerbin:name).
@@ -63,7 +63,7 @@ local function main {
             }
 
             for o in ship:partstaggedpattern("comm.omni") {
-                activate_omni(o).
+                activate_antenna(o).
                 
             }
 

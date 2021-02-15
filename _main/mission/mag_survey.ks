@@ -74,7 +74,7 @@ local function main {
             local dishList is ship:partsTaggedPattern("comm.dish").
             if dishList:length > 0 {
                 for d in dishList {
-                    activate_dish(d).
+                    activate_antenna(d).
                     logStr("Comm object Dish activated").
                     wait 1.
                     set_dish_target(d, kerbin:name).

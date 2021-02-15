@@ -11,7 +11,7 @@ for p in tdList {
     if p:tag:contains ("solar") {
         deactivate_solar(p).
     } else if p:tag:contains("omni") {
-        deactivate_omni(p).
+        deactivate_antenna(p).
     }
     set p:tag to p:tag:replace(".onTouchdown", "").
 }

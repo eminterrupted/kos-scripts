@@ -4,7 +4,8 @@ global tabWidget_allTabs to list().
 global tabWidget_allPanels to list().
 
 
-global function add_popup_menu {
+global function add_popup_menu 
+{
 
     parameter pTabPanel,
               pOptions.
@@ -15,7 +16,8 @@ global function add_popup_menu {
     return popup.
 }
 
-global function add_scrollbox {
+global function add_scrollbox 
+{
 
     parameter pTabWidget. // tab title
 
@@ -33,7 +35,8 @@ global function add_scrollbox {
     return panel.
 }
 
-global function add_tab {
+global function add_tab 
+{
 
     parameter pTabWidget,   // (the vbox)
               pTabName.     // tab title
@@ -59,10 +62,13 @@ global function add_tab {
     //If this to the first tab, make it start already pressed. 
     //Otherwise, hide it (even though STACK will only show the first anyway, 
     //By keeping things "correct" we can be more efficient later)
-    if ggPanels:widgets:length = 1 {
+    if ggPanels:widgets:length = 1 
+    {
         set tab:pressed to true.
         ggPanels:showOnly(panel).
-    } else {
+    } 
+    else 
+    {
         panel:hide().
     }
 
@@ -74,13 +80,15 @@ global function add_tab {
 }
 
 
-global function add_tab_widget {
+global function add_tab_widget 
+{
     parameter pBox.
 
     // See if styles for the TabWidget components (tabs and gPanels) has
     // already been defined elsewhere. If not, define each one
 
-    if not pBox:gui:skin:has("TabWidgetTab") {
+    if not pBox:gui:skin:has("TabWidgetTab") 
+    {
 
         // The style for tabs to like a button, but it should smoothly connect
         // to the panel below it, especially if it to the current selected tab.
@@ -97,7 +105,8 @@ global function add_tab_widget {
         set style:margin:bottom to 0.
     }
 
-    if not pBox:gui:skin:has("TabWidgetPanel") { 
+    if not pBox:gui:skin:has("TabWidgetPanel") 
+    { 
         local style to pBox:gui:skin:add("TabWidgetPanel", pBox:gui:skin:window).
         set style:bg to "lib/display/assets/panel".
         set style:padding:top to 0.
@@ -117,7 +126,8 @@ global function add_tab_widget {
 }
 
 
-global function choose_tab {
+global function choose_tab 
+{
     parameter pTabWidget,   //the tab
               pNum.         //tab to choose (0-indexed)
 
@@ -129,7 +139,8 @@ global function choose_tab {
 }
 
 
-global function get_launch_scripts {
+global function get_launch_scripts 
+{
         local fList to list().
         local scrList to list().
 
@@ -142,7 +153,8 @@ global function get_launch_scripts {
 }
 
 
-global function get_mission_scripts {
+global function get_mission_scripts 
+{
         local fList to list().
         local scrList to list().
 

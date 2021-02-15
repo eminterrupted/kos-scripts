@@ -7,7 +7,8 @@ runOncePath("0:/lib/lib_warp").
 
 
 // Circularization burns
-    global function exec_circ_burn {
+    global function exec_circ_burn 
+    {
         parameter _nodeAt,
                 _tgtAlt,
                 _mnvAcc is 0.005.
@@ -17,7 +18,8 @@ runOncePath("0:/lib/lib_warp").
     
         out_msg("Executing exec_circ_burn").
 
-        if not hasNode {
+        if not hasNode 
+        {
             out_info("Executing add_simple_circ_node()").
             set burnNode to add_simple_circ_node(_nodeAt, _tgtAlt, _mnvAcc).
         }
@@ -35,7 +37,8 @@ runOncePath("0:/lib/lib_warp").
         out_msg().
     }
 
-    local function warp_to_circ_burn {
+    local function warp_to_circ_burn 
+    {
         parameter _burnEta.
         
         logStr("[warp_to_circ_burn] Warping to _burnEta[" + _burnEta  + "]").
@@ -51,7 +54,8 @@ runOncePath("0:/lib/lib_warp").
     }
 
 
-    local function do_circ_burn {
+    local function do_circ_burn 
+    {
         parameter _burnObj.
         
         local sVal to lookDirUp(nextNode:burnvector, sun:position).
@@ -59,7 +63,8 @@ runOncePath("0:/lib/lib_warp").
 
         lock steering to sVal.
 
-        until time:seconds >= _burnObj["burnEta"] {
+        until time:seconds >= _burnObj["burnEta"] 
+        {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
             update_display().
             disp_burn_data(_burnObj["burnEta"]).
@@ -72,7 +77,8 @@ runOncePath("0:/lib/lib_warp").
 
 // Hohmann transfer
     // Does a complete simple hohmann transfer to new ap / pe
-    global function exec_hohmann_burn {
+    global function exec_hohmann_burn 
+    {
         parameter _tgtAp,
                 _tgtPe.
 
@@ -90,24 +96,31 @@ runOncePath("0:/lib/lib_warp").
         if exists(mnvCache) set mnvObj to mnvCache.
         lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         
-        until subroutine = 10 {
+        until subroutine = 10 
+        {
             
-            if subroutine = 0 {
-                if raiseObt {
+            if subroutine = 0 
+            {
+                if raiseObt 
+                {
                     set subroutine to sr(1).    // Subroutine 1 handles raised orbits
-                } else {
+                } 
+                else 
+                {
                     set subroutine to sr(2).    // Subroutine 2 handles lowered orbits
                 }
             }
 
-            else if subroutine = 1 {
+            else if subroutine = 1 
+            {
                 set burnAt to choose "pe" if not isCircBurn else "ap".
                 local tgtAlt to choose _tgtAp if not isCircBurn else _tgtPe.
                 set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
                 set subroutine to sr(3).
             }
 
-            else if subroutine = 2 {
+            else if subroutine = 2 
+            {
                 set burnAt to choose "ap" if not isCircBurn else "pe".
                 local tgtAlt to choose _tgtPe if not isCircBurn else _tgtAp.
                 set mnvNode to add_simple_circ_node(burnAt, tgtAlt).
@@ -115,7 +128,8 @@ runOncePath("0:/lib/lib_warp").
             }
 
             //Gets burn data from the node, write to cache in case needed later
-            else if subroutine = 3 {
+            else if subroutine = 3 
+            {
                 set mnvObj to get_burn_obj_from_node(mnvNode).
                 writeJson(mnvObj, mnvCache).
                 set mnvObj["mnv"] to mnvNode. 
@@ -123,20 +137,25 @@ runOncePath("0:/lib/lib_warp").
             }
 
             //Warps to the burn node
-            else if subroutine = 4 {
+            else if subroutine = 4 
+            {
                 warp_to_burn_node(mnvObj).
                 wait until warp = 0 and kuniverse:timewarp:issettled.
                 set subroutine to sr(5).
             }
 
             //Executes the circ burn
-            else if subroutine = 5 {
+            else if subroutine = 5 
+            {
                 exec_node(nextNode).
                 wait 1.
-                if not isCircBurn {
+                if not isCircBurn 
+                {
                     set isCircBurn to true.
                     set subroutine to sr(0).
-                } else {
+                } 
+                else 
+                {
                     set subroutine to sr(10).
                 }
             }
@@ -151,7 +170,8 @@ runOncePath("0:/lib/lib_warp").
 // Argument of Peripasis
 
     // Matches an ArgPe within the given tolerance range in degrees
-    global function exec_match_arg_pe {
+    global function exec_match_arg_pe 
+    {
         parameter _tgtObt.
 
         // First get the difference in target degrees vs. current degrees
@@ -183,7 +203,8 @@ runOncePath("0:/lib/lib_warp").
 // Inclination
     // Given an orbit, match the inclination of that orbit from 
     // the current vessel's orbit
-    global function exec_match_obt_inclination {
+    global function exec_match_obt_inclination 
+    {
 
         parameter _tgtOrbit.
 
@@ -208,23 +229,28 @@ runOncePath("0:/lib/lib_warp").
         lock throttle to tVal.
 
         //Staging trigger
-        when ship:availableThrust < 0.1 and throttle > 0 then {
+        when ship:availableThrust < 0.1 and throttle > 0 then 
+        {
             safe_stage().
             preserve.
         }
         
-        until subroutine = 10 {
+        until subroutine = 10 
+        {
             set subroutine to 1.
         }
 
-        if subroutine = 1 {
+        if subroutine = 1 
+        {
             add mnvNode.
             set subroutine to 2.
         }
 
         // Warpable wait until burn
-        else if subroutine = 2 {
-            until time:seconds >= leadTime  - 30 {
+        else if subroutine = 2 
+        {
+            until time:seconds >= leadTime  - 30 
+            {
                 set sVal to lookDirUp(nextNode:burnVector, sun:position) + r(0, 0, rVal).
                 update_display().
                 disp_burn_data().
@@ -234,8 +260,10 @@ runOncePath("0:/lib/lib_warp").
         }
 
         // Stop warping
-        else if subroutine = 3 {
-            until time:seconds >= leadTime {
+        else if subroutine = 3 
+        {
+            until time:seconds >= leadTime 
+            {
                 if warp > 0 kuniverse:timewarp:cancelwarp().
                 update_display().
                 disp_burn_data().
@@ -245,12 +273,14 @@ runOncePath("0:/lib/lib_warp").
         }
 
         // Exec burn.
-        else if subroutine = 4 {
+        else if subroutine = 4 
+        {
             //Start burn
             set tVal to 1.
             local startVel to ship:velocity:orbit.
             local dvToGo to 9999999.
-            until dvToGo <= 0.1 {
+            until dvToGo <= 0.1 
+            {
                 set sVal to burnVector.
                 set dvToGo to burnVector:mag - sqrt(abs(vdot(burnVector, (ship:velocity:orbit - startVel)))).
                 update_display().
@@ -264,14 +294,16 @@ runOncePath("0:/lib/lib_warp").
         }
 
         // Removes the node, ends routine
-        else if subroutine = 5 {
+        else if subroutine = 5 
+        {
             remove mnvNode.
             set subroutine to 10.
         }
 
         update_display().
 
-        if stateObj:subroutine <> subroutine {
+        if stateObj:subroutine <> subroutine 
+        {
             set stateObj["subroutine"] to subroutine.
             log_state(stateObj).
         }

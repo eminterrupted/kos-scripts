@@ -57,13 +57,13 @@ local function main {
         else if runmode = 2 {
             for p in ship:partsTaggedPattern("comm.dish") {
                 if not p:tag:matchesPattern("onDeploy") {
-                    activate_dish(p).
+                    activate_antenna(p).
                 }
             }
 
             for p in ship:partsTaggedPattern("comm.omni") {
                 if not p:tag:matchesPattern("onDeploy") {
-                    activate_omni(p).
+                    activate_antenna(p).
                 }
             }
             

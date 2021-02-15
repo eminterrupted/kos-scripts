@@ -1,45 +1,18 @@
 @lazyGlobal off.
 
-local rtMod to "ModuleRTAntenna".
+local commMod to "ModuleRTAntenna".
 
-//Activate
-global function activate_antenna {
+//Activate / Deactivate
+global function activate_antenna 
+{
     parameter p.
-
-    do_event(p:getModule(rtMod), "activate"). 
+    do_event(p:getModule(commMod), "activate"). 
 }
 
-global function activate_omni {
+global function deactivate_antenna
+{
     parameter p.
-
-    do_event(p:getModule(rtMod), "activate").
-}
-
-
-global function activate_dish {
-    parameter p.
-    
-    do_event(p:getModule(rtMod), "activate").
-
-    return true.
-}
-
-
-global function deactivate_dish {
-    parameter p.
-
-    local m is p:getModule(rtMod).
-    if m:hasEvent("deactivate") m:doEvent("deactivate").
-    
-    return true.
-}
-
-
-global function deactivate_omni {
-    parameter p.
-
-    local m to p:getModule(rtMod).
-    if m:hasEvent("deactivate") m:doEvent("deactivate").
+    do_event(p:getModule(commMod), "deactivate").
 }
 
 
@@ -47,7 +20,7 @@ global function get_antenna_fields {
     parameter p.
 
     local obj to lexicon().
-    local m to p:getModule(rtMod).
+    local m to p:getModule(commMod).
 
     for f in m:allFields {
         set f to f:replace("(settable) ", ""):split(",")[0].
@@ -60,7 +33,7 @@ global function get_antenna_fields {
 global function get_antenna_range {
     parameter p.
 
-    local m to p:getModule(rtMod).
+    local m to p:getModule(commMod).
     local range to 0.
 
     if m:hasField("dish range") set range to m:getField("dish range").

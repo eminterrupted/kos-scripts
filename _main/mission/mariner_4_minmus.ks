@@ -62,10 +62,10 @@ local function main {
         //Set up the triggers for science
         else if runmode = 5 {
             local p to ship:partsTaggedPattern("comm.dish").
-            if p:length > 0 activate_dish(p[0]).
+            if p:length > 0 activate_antenna(p[0]).
 
             for o in ship:partsTaggedPattern("comm.omni") {
-                activate_omni(o).
+                activate_antenna(o).
             }
             
             set runmode to 8.
@@ -292,6 +292,6 @@ local function end_main {
 
 local function deploy_dish {
     for p in ship:partsTaggedPattern("comm.dish") {
-        activate_dish(p).
+        activate_antenna(p).
     }
 }

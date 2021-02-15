@@ -60,9 +60,10 @@ if ship:partsTaggedPattern("onDeploy"):length > 0
             if p:tag:matchesPattern("solar") 
             {
                 activate_solar(p).
-            } else if p:tag:matchesPattern("comm.omni") 
+            } 
+            else if p:tag:matchesPattern("comm.omni") 
             {
-                activate_omni(p).
+                activate_antenna(p).
             }
         }
     }
@@ -92,7 +93,7 @@ local function main
             {
                 if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") 
                 {
-                    activate_dish(p).
+                    activate_antenna(p).
                 }
             }
 
@@ -100,7 +101,7 @@ local function main
             {
                 if not p:tag:matchesPattern("onDeploy") and not p:tag:matchesPattern("onTouchdown") 
                 {
-                    activate_omni(p).
+                    activate_antenna(p).
                 }
             }
             
@@ -191,12 +192,12 @@ local function main
 
                 for p in ship:partsTaggedPattern("comm.dish.*.onDeploy") 
                 {
-                    activate_dish(p).
+                    activate_antenna(p).
                 }
 
                 for p in ship:partsTaggedPattern("comm.omni.*.onDeploy") 
                 {
-                    activate_omni(p).
+                    activate_antenna(p).
                 }
             }
 
