@@ -14,7 +14,7 @@ runOncePath("0:/lib/lib_solar").
 //-- Variables --//
 
     // Altitude targets
-    local altBuffer to 50.
+    local altBuffer to 75.
 
     // Throttle / Control
     local burnDur   to 0.
@@ -77,7 +77,8 @@ until ship:altitude <= 15000 or alt:radar <= 10000
 {
     set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
     set hsPidVal to hsPid:update(time:seconds, groundSpeed).
-    set tVal to max(vsPidVal, 1 - hsPidVal).
+    //set tVal to max(vsPidVal, 1 - hsPidVal).
+    set tVal to 1 - hsPidVal.
     
     out_msg("15000 / 10000").
 
@@ -94,7 +95,8 @@ until ship:altitude <= 7500 or alt:radar <= 5000
 {
     set hsPidVal to hsPid:update(time:seconds, groundSpeed).
     set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
-    set tVal to max(vsPidVal, 1 - hsPidVal).
+    //set tVal to max(vsPidVal, 1 - hsPidVal).
+    set tVal to 1 - hsPidVal.
 
     update_landing_disp().
     out_msg("7500 / 5000").
@@ -111,7 +113,8 @@ until burnDur >= tti
 {
     set hsPidVal to hsPid:update(time:seconds, groundSpeed).
     set vsPidVal to vsPid:update(time:seconds, verticalSpeed).
-    set tVal to max(vsPidVal, 1 - hsPidVal).
+    //set tVal to max(vsPidVal, 1 - hsPidVal).
+    set tVal to 1 - hsPidVal.
     
     set tti to time_to_impact(altBuffer).
     set burnDur to get_burn_dur(verticalSpeed + localGravAccel).
@@ -122,7 +125,7 @@ until burnDur >= tti
 }
 
 // Set vspid controls to new setpoints
-set vsPid:setpoint to -25.
+set vsPid:setpoint to -10.
 
 // Hoverslam
 logStr("Ignition").

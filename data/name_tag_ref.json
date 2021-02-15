@@ -2127,6 +2127,14 @@
         {
             "value": "cargo.container",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PicoPortM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.m",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

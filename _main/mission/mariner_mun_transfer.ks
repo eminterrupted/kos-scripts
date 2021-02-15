@@ -1,13 +1,11 @@
 @lazyGlobal off.
 
-parameter tgtBody   is "Mun",
-          tgtInc    is 88,
+parameter tgtBody   is "Minmus",
+          tgtInc    is 0,
           tgtLan    is 120,
-          trnsfrAlt is 500000,
-          tgtAp1    is 15000,
-          tgtPe1    is 15000.
-          
-//
+          trnsfrAlt is 250000,
+          tgtAp1    is 50000,
+          tgtPe1    is 50000.
 
 clearscreen.
 
@@ -168,7 +166,7 @@ local function main
         else if runmode = 30 
         {
             out_msg("Warping to burn node").
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to rm(35).
         }
 
@@ -276,7 +274,7 @@ local function main
             out_msg("Warping to burn node").
             set sVal to lookDirUp(mnvNode:burnVector, sun:position).
             wait until shipSettled().
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to rm(65).
         }
 

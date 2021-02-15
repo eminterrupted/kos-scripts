@@ -109,10 +109,13 @@ global function rcs_thrust_limit
     set_field(m, field, limit).
 }
 
-// Not entirely sure
+//Attempt at a translation function based on CheersKevin #22 (https://www.youtube.com/watch?v=Wa7le4-7ogY&list=PLb6UbFXBdbCrvdXVgY_3jp5swtvW24fYv&index=23)
 global function rcs_translate_vec 
 {
-    parameter tVec. // Format: v(starboard[-1, 1], top[-1, 1], fore[1, 1])
-
-    set ship:control:translation to tVec.
+    parameter _vec.
+    if _vec:mag > 1 set _vec to _vec:normalized.
+    
+    set ship:control:fore       to _vec * ship:facing:forevector.
+    set ship:control:starboard  to _vec * ship:facing:starvector.
+    set ship:control:top        to _vec * ship:facing:topvector.
 }

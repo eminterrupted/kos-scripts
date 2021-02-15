@@ -23,7 +23,9 @@ global function init_disk
     // Get all the cores of the vessel
     for cpu in ship:modulesNamed("kOSProcessor") 
     {
+        set cpu:volume:name to "".
         cores:add(cpu).
+
     }
 
     set core:volume:name to "local".

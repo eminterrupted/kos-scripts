@@ -81,7 +81,7 @@ until runmode = 99 {
     //Execute Transfer
     else if runmode = 8 {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position) + r(0, 0, rVal).
-        warp_to_burn_node(mnvObj).
+        warp_to_timestamp(mnvObj["burnEta"]).
         set runmode to 10.
     }
 
@@ -130,7 +130,7 @@ until runmode = 99 {
 
     else if runmode = 16 {
         set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
-        warp_to_burn_node(mnvObj).
+        warp_to_timestamp(mnvObj["burnEta"]).
         set runmode to 18.
     }
 
@@ -152,7 +152,7 @@ until runmode = 99 {
 
     else if runmode = 22 {
         set mnvObj to choose mnvObj if defined mnvObj else readJson(mnvCache).
-        warp_to_burn_node(mnvObj).
+        warp_to_timestamp(mnvObj["burnEta"]).
         set runmode to 24.
     }
 

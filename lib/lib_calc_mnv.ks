@@ -247,9 +247,6 @@ global function get_transfer_burn_data
     // If no target is set, return false. This will fail
     if not hasTarget return false.
 
-    // Force a recalc of KSP dV to ensure latest values
-    ship:deltaV:forcecalc.
-
     // TODO - Get our altitude at our burn position
     // local posAtBurn to orbitAt(_nodeAt).
     // Calculate trueanomaly

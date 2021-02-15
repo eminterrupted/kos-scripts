@@ -78,7 +78,7 @@ local function main {
         }
 
         else if runmode = 3 {
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to 5.
         }
 

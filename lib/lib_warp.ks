@@ -2,31 +2,15 @@
 
 runOncePath("0:/lib/lib_log").
 
-global function cust_warp_to_timestamp 
-{
-    parameter pStamp.
-
-    lock steering to lookDirUp(ship:facing:forevector, sun:position).
-    wait 1. 
-    local tDelta is pStamp - time:seconds.
-    
-    if tDelta > 151200 and warp <> 7 set warp to 7.
-    else if tDelta > 21600 and warp <> 6 set warp to 6.
-    else if tDelta > 1800 and warp <> 5 set warp to 5. 
-    else if tDelta > 300 and warp <> 4 set warp to 4. 
-    else if tDelta > 120 and warp <> 3 set warp to 3.
-    else if tDelta > 30 and warp <> 2 set warp to 2. 
-    else if tDelta > 15 and warp <> 1 set warp to 1.
-    else if tDelta <= 15 kuniverse:timewarp:cancelwarp().
-}
-
-
 global function warp_to_timestamp 
 {
     parameter _ts.
     
-    if verbose logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
-    if verbose logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(_ts) + "][MET: " + round(missionTime + (_ts - time:seconds)) + "]").
+    if verbose 
+    {
+        logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
+        logStr("[warp_to_timestamp] Warping to timestamp: [UTC: " + round(_ts) + "][MET: " + round(missionTime + (_ts - time:seconds)) + "]").
+    }
 
     if ship:altitude > ship:body:atm:height + 2500 set kuniverse:timewarp:mode to "RAILS".
     else set kuniverse:timewarp:mode to "PHYSICS".
@@ -201,37 +185,6 @@ global function warp_to_ksc_reentry_window
     if warp > 0 set warp to 0.
 
     disp_clear_block("timer").
-}
-
-
-global function warp_to_burn_node 
-{
-    parameter mnvObj.
-    
-    local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
-    lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
-    
-    until time:seconds >= (mnvObj["burnEta"] - 30) 
-    {
-        warp_to_timestamp(mnvObj["burnEta"]).
-        update_display().
-        disp_burn_data(mnvObj["burnEta"]).
-    }
-
-    if warp > 0 set warp to 0.
-    wait until kuniverse:timewarp:issettled.
-    
-    lock steering to lookDirUp(nextNode:burnvector, sun:position).
-
-    until time:seconds >= mnvObj["burnEta"] 
-    {
-        update_display().
-        disp_burn_data(mnvObj["burnEta"]).
-    }
-
-    disp_clear_block("timer").
-
-    update_display().
 }
 
 

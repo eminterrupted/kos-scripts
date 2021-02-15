@@ -59,7 +59,7 @@ else
 
 // Now we execute the initial node
 set mnvObj to get_burn_obj_from_node(nextNode).
-warp_to_burn_node(mnvObj).
+warp_to_timestamp(mnvObj["burnEta"]).
 exec_node(nextNode).
 
 // Add the next node

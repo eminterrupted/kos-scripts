@@ -114,7 +114,7 @@ local function main {
         else if runmode = 30 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
 
             set runmode to rm(35).
         }
@@ -187,7 +187,7 @@ local function main {
         else if runmode = 64 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
 
             set runmode to rm(66).
         }
@@ -226,7 +226,7 @@ local function main {
         else if runmode = 80 {
             set sVal to lookDirUp(nextNode:burnvector, sun:position).
 
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
 
             set runmode to rm(82).
         }

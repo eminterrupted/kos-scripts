@@ -130,7 +130,7 @@ local function main {
         //Warps to the burn node
         else if runmode = 30 {
             out_msg("Manuever added, warping to burn eta").
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to rm(35).
         }
 

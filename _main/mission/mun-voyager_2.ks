@@ -94,7 +94,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 30 {
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to 35.
         }
 
@@ -157,7 +157,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 64 {
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to 66.
         }
 
@@ -183,7 +183,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 72 {
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to 74.
         }
 
@@ -208,7 +208,7 @@ local function main {
 
         //Warps to the burn node
         else if runmode = 80 {
-            warp_to_burn_node(mnvObj).
+            warp_to_timestamp(mnvObj["burnEta"]).
             set runmode to 82.
         }
 

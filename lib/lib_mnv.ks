@@ -139,7 +139,7 @@ runOncePath("0:/lib/lib_warp").
             //Warps to the burn node
             else if subroutine = 4 
             {
-                warp_to_burn_node(mnvObj).
+                warp_to_timestamp(mnvObj["burnEta"]).
                 wait until warp = 0 and kuniverse:timewarp:issettled.
                 set subroutine to sr(5).
             }
@@ -191,7 +191,7 @@ runOncePath("0:/lib/lib_warp").
         local burnObj to get_burn_obj_from_node(burnNode).
         
         // Warp ahead
-        warp_to_burn_node(burnObj).
+        warp_to_timestamp(burnObj["burnEta"]).
         
         // Exec when settled
         wait until warp = 0 and kuniverse:timewarp:issettled.

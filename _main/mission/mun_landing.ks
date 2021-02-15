@@ -29,7 +29,7 @@ lock steering to ship:retrograde.
 if ship:altitude > 10000 
 {
     out_msg("Waiting until distance target: " + distThresh).
-    until wp:geoPosition:distance <= distThresh or ag1
+    until wp:geoPosition:distance <= distThresh or ag10
     {
         update_display().
         disp_block(list(
@@ -39,7 +39,7 @@ if ship:altitude > 10000
             "distance", round(wp:geoposition:distance),
             "eta", round(wp:geoposition:distance / groundSpeed)
         )).
-        print "*** Press 1 to immediately trigger landing sequence ***" at (5, terminal:height - 5).
+        print "*** Press 0 to immediately trigger landing sequence ***" at (5, terminal:height - 5).
     }
     print "                                                        " at (5, terminal:height - 5).
     disp_clear_block("distance").
