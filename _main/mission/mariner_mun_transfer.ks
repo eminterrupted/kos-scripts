@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
-parameter tgtBody   is "Minmus",
-          tgtInc    is 0,
+parameter tgtBody   is "Mun",
+          tgtInc    is 88,
           tgtLan    is ship:orbit:longitudeofascendingnode,
-          trnsfrAlt is 325000,
+          trnsfrAlt is 250000,
           tgtAp1    is 100000,
           tgtPe1    is 100000.
           

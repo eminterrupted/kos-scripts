@@ -5,8 +5,12 @@ runOncePath("0:/lib/lib_core").
 
 local mlp to false.
 
-if ship:partsTaggedPattern("mlp"):length > 0 {
+if ship:partsTaggedPattern("mlp.base"):length > 0 {
     runOncePath("0:/lib/part/lib_launchpad").
+    if ship:partsTaggedPattern("mlp.base")[0]:partsTaggedPattern("lgt"):length > 0 
+    {
+        mlp_night_light().
+    }
     set mlp to true.
 }
 

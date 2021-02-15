@@ -52,7 +52,7 @@ until runmode = 99 {
     else if runmode = 1 {
         if hasNode {
             out_msg("Maneuver node found on flight plan").
-            set runmode to 2.
+            set runmode to 4.
         } else {
             out_msg("No nodes present").
             set runmode to 12.
@@ -60,19 +60,15 @@ until runmode = 99 {
     }
 
 //Execute transfer
-    else if runmode = 2 {
+    else if runmode = 4 {
         out_msg("Getting burn object from maneuver node").
         set mnvNode to nextNode.
         set mnvObj to get_burn_obj_from_node(mnvNode).
         cache_mnv_obj(mnvObj).
-        
-        set runmode to 4.
-    }
-
-    else if runmode = 4 {
+  
         out_msg("Warping to burn node").
         set sVal to lookDirUp(nextNode:burnvector, sun:position).
-        local tStamp to choose time:seconds + 30 if time:seconds < mnvObj["burnEta"] else mnvObj["burnEta"].
+        local tStamp to time:seconds + 15.
 
         until time:seconds >= tStamp {
             update_display().

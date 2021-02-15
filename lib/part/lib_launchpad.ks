@@ -4,47 +4,89 @@
 local genMod is "ModuleGenerator".
 local aniMod is "ModuleAnimateGeneric".
 
+//Launchpad light triggers
+global function mlp_night_light 
+{
+    local lgtList to ship:partsTaggedPattern("mlp.base")[0]:partsTaggedPattern("lgt").
+    if lgtList:length > 0
+    {
+        //Turn on the lights at night
+        when ship:sensors:light < 0.1 then
+        {
+            if ship:partsTaggedPattern("mlp.base"):length > 0 
+            {
+                for p in lgtList
+                {
+                    do_action(p:getModule("ModuleLight"), "turn light on", true).
+                    print "light on" at (2, 35).
+                }
+            }
+        }
+
+        //Turn off the nights at day
+        when ship:sensors:light > 0.1 then
+        {
+            if ship:partsTaggedPattern("mlp.base"):length > 0 
+            {
+                for p in lgtList
+                {
+                    do_action(p:getModule("ModuleLight"), "turn light off", true).
+                    print "light off" at (2, 35).
+                }
+            }
+        }
+    }
+}
+
 //Power, fueling
-global function mlp_gen_on {
+global function mlp_gen_on 
+{
     local event to "activate generator".
     do_pad_event@:call(genMod, event).
 }
 
-global function mlp_gen_off {
+global function mlp_gen_off 
+{
     local event to "shutdown generator".
     do_pad_event@:call(genMod, event).
 }
 
-global function mlp_fuel_on {
+global function mlp_fuel_on 
+{
     local event is "start fueling".
     do_pad_event@:call(genMod, event).
 }
 
-global function mlp_fuel_off {
+global function mlp_fuel_off 
+{
     local event is "stop fueling".
     do_pad_event@:call(genMod, event).
 }
 
 
 //Fallback tower
-global function mlp_fallback_open_clamp {
+global function mlp_fallback_open_clamp 
+{
     local event is "open upper clamp".
     do_pad_event@:call(aniMod, event).
 }
 
-global function mlp_fallback_partial {
+global function mlp_fallback_partial 
+{
     local event is "partial retract tower step 1".
     do_pad_event@:call(aniMod, event).
 }
 
-global function mlp_fallback_full {
+global function mlp_fallback_full 
+{
     local event is "full retract tower step 2".
     do_pad_event@:call(aniMod, event).
 }
 
 
 //Holddowns
-global function mlp_retract_holddown {
+global function mlp_retract_holddown 
+{
     local armEvent is "retract arm".
     local boltEvent is "retract bolt".
 
@@ -54,13 +96,15 @@ global function mlp_retract_holddown {
 
 
 //Swing arms
-global function mlp_retract_crewarm {
+global function mlp_retract_crewarm 
+{
     local armEvent is "retract crew arm".
 
     do_pad_event@:call(aniMod, armEvent).
 }
 
-global function mlp_retract_swingarm {
+global function mlp_retract_swingarm 
+{
     local armEvent is "retract arm right".
 
     do_pad_event@:call(aniMod, armEvent).
@@ -68,18 +112,22 @@ global function mlp_retract_swingarm {
 
 
 //Umbilicals
-global function mlp_drop_umbilical {
+global function mlp_drop_umbilical 
+{
     local event is "drop umbilical".
     do_pad_event@:call(aniMod, event).
 }
 
 
 //Delegate functions
-local function check_pad_event {
+local function check_pad_event 
+{
     parameter mod, event.
 
-    for m in ship:modulesNamed(mod) {
-        if m:part:tag:contains("mlp") {
+    for m in ship:modulesNamed(mod) 
+    {
+        if m:part:tag:contains("mlp") 
+        {
             if m:hasEvent(event) return true.
         }
     }
@@ -87,11 +135,14 @@ local function check_pad_event {
     return false.
 }
 
-local function do_pad_event {
+local function do_pad_event 
+{
     parameter mod, event.
 
-    for m in ship:modulesNamed(mod) {
-        if m:part:tag:contains("mlp") {
+    for m in ship:modulesNamed(mod) 
+    {
+        if m:part:tag:contains("mlp") 
+        {
             if m:hasEvent(event) m:doEvent(event).
         }
     }

@@ -2,7 +2,8 @@
 
 runOncePath("0:/lib/lib_log").
 
-global function cust_warp_to_timestamp {
+global function cust_warp_to_timestamp 
+{
     parameter pStamp.
 
     lock steering to lookDirUp(ship:facing:forevector, sun:position).
@@ -20,7 +21,8 @@ global function cust_warp_to_timestamp {
 }
 
 
-global function warp_to_timestamp {
+global function warp_to_timestamp 
+{
     parameter _ts.
     
     if verbose logStr("[warp_to_timestamp] Warp mode: " + kuniverse:timewarp:mode).
@@ -30,15 +32,17 @@ global function warp_to_timestamp {
     else set kuniverse:timewarp:mode to "PHYSICS".
 
     lock steering to lookDirUp(ship:facing:forevector, sun:position).
+    wait 0.1. 
+    until shipSettled() 
+    {
+        update_display().
+    print "Ship settled: " + shipSettled() at (2, 35).
+    }
+    print "                    " at (2, 35).
 
-    until time:seconds >= _ts - 30 {
-
-        if warp = 0 {
-            if steeringmanager:angleerror >= -0.05 and steeringmanager:angleerror <= 0.05 {
-                if steeringmanager:rollerror >= -0.05 and steeringmanager:rollerror <= 0.05 warpTo(_ts - 15).
-            }
-        }
-
+    until time:seconds >= _ts - 30 
+    {
+        if warp = 0 warpTo(_ts - 30).
         update_display().
     }
 
@@ -46,20 +50,26 @@ global function warp_to_timestamp {
 }
 
 
-global function warp_to_alt {
+global function warp_to_alt 
+{
     parameter pAlt.
 
     //local altWarpMode to choose 1 if ship:altitude >= pAlt else 0.
-    if kuniverse:timewarp:warp = 0 and kuniverse:timewarp:issettled {
+    if kuniverse:timewarp:warp = 0 and kuniverse:timewarp:issettled 
+    {
         set kuniverse:timewarp:mode to choose "RAILS" if ship:altitude > body:atm:height else "PHYSICS".
     }
 
-    local function checkFunction { 
+    local function checkFunction 
+    { 
         parameter _alt.
 
-        if ship:altitude > _alt {
+        if ship:altitude > _alt 
+        {
             return utils:checkAltHi(_alt).
-        } else {
+        } 
+        else 
+        {
             return utils:checkAltLo(_alt).
         }
     }
@@ -68,44 +78,50 @@ global function warp_to_alt {
     local setWarp to { parameter _warp. set warp to _warp. wait until kuniverse:timewarp:issettled. }.
     init_subroutine().
 
-    until not cd {
-
-        if ship:altitude >= pAlt * 20 {
-            if kuniverse:timewarp:warp <> 6 {
+    until not cd 
+    {
+        if ship:altitude >= pAlt * 16 
+        {
+            if kuniverse:timewarp:warp <> 6 
+            {
                 setWarp(6).
                 sr(1).
             }
         }
-
-        else if ship:altitude >= pAlt * 10 {
-            if kuniverse:timewarp:warp <> 5 {
+        else if ship:altitude >= pAlt * 8 
+        {
+            if kuniverse:timewarp:warp <> 5 
+            {
                 setWarp(5).
                 sr(2).
             }
         }
-
-        else if ship:altitude >= pAlt * 5 {
-            if kuniverse:timewarp:warp <> 4 {
+        else if ship:altitude >= pAlt * 4 
+        {
+            if kuniverse:timewarp:warp <> 4 
+            {
                 setWarp(4).
                 sr(3).
             }
         }
-
-        else if ship:altitude >= pAlt * 2.5 {
-            if kuniverse:timewarp:warp <> 3 {
+        else if ship:altitude >= pAlt * 2
+        {
+            if kuniverse:timewarp:warp <> 3 
+            {
                 setWarp(3).
                 sr(4).
             }
         }
-
-        else if ship:altitude >= pAlt * 1.25 {
-            if kuniverse:timewarp:warp <> 1 {
+        else if ship:altitude >= pAlt * 1.05 
+        {
+            if kuniverse:timewarp:warp <> 1 
+            {
                 setWarp(1).
                 sr(5).
             }
         }
-        
-        else if ship:altitude > pAlt {
+        else if ship:altitude > pAlt 
+        {
             if warp > 0 kuniverse:timewarp:cancelwarp().
             wait until kuniverse:timewarp:issettled.
             break.
@@ -118,24 +134,28 @@ global function warp_to_alt {
 }
 
 
-global function warp_to_next_soi {
+global function warp_to_next_soi 
+{
     local sVal to lookDirUp(ship:prograde:forevector, sun:position).
     lock steering to sval.
 
-    if ship:obt:hasnextpatch {
+    if ship:obt:hasnextpatch 
+    {
         set target to "".
-        wait until steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1. 
+        wait until shipSettled().
         warpTo(ship:obt:nextpatcheta + time:seconds - 5).
     }
 
-    until warp = 0 {
+    until warp = 0 
+    {
         set sVal to lookDirUp(ship:prograde:forevector, sun:position).
         update_display().
     }
 }
 
 
-global function warp_to_ksc_reentry_window {
+global function warp_to_ksc_reentry_window 
+{
     parameter rVal is 0.
 
     local sVal to lookDirUp( - ship:prograde:forevector, sun:position) + r(0, 0, rVal).
@@ -144,26 +164,24 @@ global function warp_to_ksc_reentry_window {
     local minLongitude to choose 125 if ship:obt:inclination <= 90 else 135.
     local ts is time:seconds + 5.
 
-    if ship:body:name = "Kerbin" {
-        
-
+    if ship:body:name = "Kerbin" 
+    {
         out_msg("Sampling longitude advancement during orbit").
         local longitudeSample is ship:longitude.
-        until time:seconds >= ts {
+        until time:seconds >= ts 
+        {
             update_display().
             disp_timer(ts).
         }
 
         set longitudeSample to mod(ship:longitude - longitudeSample, 360).
         local longPerSec is longitudeSample / 5.
-
         local shipLong to choose ship:longitude if ship:longitude < minLongitude else ship:longitude + 360.
-
         set ts to time:seconds + mod(minLongitude - shipLong, 360) / longPerSec.
-        
-        warpTo(ts - 60).
 
-        until time:seconds >= ts - 60 {
+        warpTo(ts - 30).
+        until time:seconds >= ts - 30 
+        {
             update_display().
             disp_timer(ts).
             out_msg("Warping to reentry window for KSC landing").
@@ -174,7 +192,8 @@ global function warp_to_ksc_reentry_window {
     if warp > 0 set warp to 0.
     wait until kuniverse:timewarp:issettled.
 
-    until time:seconds >= ts {
+    until time:seconds >= ts 
+    {
         update_display().
         disp_timer(ts, "Timestamp").
     }
@@ -185,13 +204,15 @@ global function warp_to_ksc_reentry_window {
 }
 
 
-global function warp_to_burn_node {
+global function warp_to_burn_node 
+{
     parameter mnvObj.
     
     local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
     lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
     
-    until time:seconds >= (mnvObj["burnEta"] - 15) {
+    until time:seconds >= (mnvObj["burnEta"] - 30) 
+    {
         warp_to_timestamp(mnvObj["burnEta"]).
         update_display().
         disp_burn_data(mnvObj["burnEta"]).
@@ -202,7 +223,8 @@ global function warp_to_burn_node {
     
     lock steering to lookDirUp(nextNode:burnvector, sun:position).
 
-    until time:seconds >= mnvObj["burnEta"] {
+    until time:seconds >= mnvObj["burnEta"] 
+    {
         update_display().
         disp_burn_data(mnvObj["burnEta"]).
     }
@@ -213,13 +235,15 @@ global function warp_to_burn_node {
 }
 
 
-global function stop_warp_at_mark {
+global function stop_warp_at_mark 
+{
     parameter _ts.
         
     local rVal is ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.
     lock steering to lookdirup(nextnode:burnVector, sun:position) + r(0, 0, rVal).
     
-    until time:seconds >= (_ts - 60) {
+    until time:seconds >= (_ts - 60) 
+    {
        update_display().
        disp_timer(_ts, "Wait until").
        wait 1.
@@ -227,7 +251,8 @@ global function stop_warp_at_mark {
 
     if warp > 2 set warp to 2.
 
-    until time:seconds >= (_ts - 30) {
+    until time:seconds >= (_ts - 30) 
+    {
        update_display().
        disp_timer(_ts, "Wait until").
        wait 1.
@@ -235,7 +260,8 @@ global function stop_warp_at_mark {
 
     if warp > 1 set warp to 1.
 
-    until time:seconds >= (_ts - 15) {
+    until time:seconds >= (_ts - 15) 
+    {
        if warp > 1 set warp to 1.
        update_display().
        disp_timer(_ts, "Wait until").

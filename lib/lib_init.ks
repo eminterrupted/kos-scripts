@@ -5,7 +5,7 @@
 global errLvl   to 0.
 global errObj   to lexicon().
 global sun      to Body("Sun").
-global verbose  to false.
+global verbose  to true.
 
 runOncePath("0:/lib/lib_tag").
 runOncePath("0:/lib/lib_log").

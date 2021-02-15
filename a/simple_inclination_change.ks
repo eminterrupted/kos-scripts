@@ -92,7 +92,7 @@ local function main
             set sVal to lookDirUp(nextNode:burnVector, sun:position).
             wait until shipSettled().
 
-            warpTo(leadTime - 15).
+            warpTo(leadTime - 30).
 
             // Wait until we get to the burn
             until time:seconds >= leadTime  - 15 
@@ -100,7 +100,7 @@ local function main
                 set sVal to lookDirUp(nextNode:burnVector, sun:position).
                 update_display().
                 disp_burn_data(leadtime).
-                wait 0.1.
+                wait 0.1. 
             }
 
             disp_clear_block("timer").

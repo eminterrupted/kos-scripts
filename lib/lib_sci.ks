@@ -9,10 +9,11 @@ local sciMod        is "ModuleScienceExperiment".
 
 local dmagMod       is "DMModuleScienceAnimate".
 local dmGooMatMod   is "DMRoverGooMat".
-local dmSoilMod     is "DMSoilMoisture".
 local dmHammerMod   is "DMSeismicHammer".
-local dmSeisPodMod  is "DMSeismicSensor".
 local dmReconMod    is "DMReconScope".
+local dmSeisPodMod  is "DMSeismicSensor".
+local dmSoilMod     is "DMSoilMoisture".
+local dmXrayMod     is "DMXrayDiffract".
 
 local usActBaro     is "log pressure data".
 local usActGrav     is "log gravity data".
@@ -23,25 +24,24 @@ local usActTemp     is "log temperature".
 local usAdvMod      is "USAdvancedScience".
 local usSimpleMod   is "USSimpleScience".
 
-local modList is list(
-                    sciMod,
-                    dmagMod,
-                    dmGooMatMod,
-                    dmSoilMod,
-                    dmHammerMod,
-                    dmSeisPodMod,
-                    dmReconMod,
-                    usActBaro,
-                    usActGoo,
-                    usActGrav,
-                    usActMBay,
-                    usActSeis,
-                    usActTemp,
-                    usAdvMod,
-                    usSimpleMod
-                    ).
-local queuedEcSum is 0.
+
+local dmModList is list(
+    dmagMod,
+    dmGooMatMod,
+    dmSoilMod,
+    dmHammerMod,
+    dmSeisPodMod,
+    dmReconMod,
+    dmXrayMod
+).
+local usModList is list(
+    usAdvMod,
+    usSimpleMod
+).
 local sciList is list().
+
+local queuedEcSum is 0.
+
 //local transmitQueue is queue().
 
 //-- functions --//
@@ -94,15 +94,21 @@ local sciList is list().
         
         for m in mList 
         {
-            if m:name = sciMod              toggle_sci_mod_st(m, true).
-            else if m:name = dmagMod        toggle_sci_mod_dmag(m, true).
-            else if m:name = usAdvMod       toggle_sci_mod_us(m, true).
-            else if m:name = usSimpleMod    toggle_sci_mod_us(m, true).
-            else if m:name = dmSoilMod      toggle_sci_mod_dmag(m, true).
-            else if m:name = dmHammerMod    toggle_sci_mod_dmag(m, true).
-            else if m:name = dmSeisPodMod   toggle_sci_mod_dmag(m, true).
-            else if m:name = dmReconMod     toggle_sci_mod_dmag(m, true).
-            else if m:name = dmGooMatMod    toggle_sci_mod_dmag(m, true).
+            if m:name = sciMod
+            {
+                out_info("stock mod detected").
+                toggle_sci_mod_st(m, true).
+            }   
+            else if dmModList:contains(m:name) 
+            {
+                out_info("dmMod detected").
+                toggle_sci_mod_dmag(m, true).
+            }
+            else if usModList:contains(m:name)
+            {
+                out_info("usMod detected").
+                toggle_sci_mod_us(m, true).
+            }
         }
 
         out_info().
@@ -170,42 +176,23 @@ local sciList is list().
         
         set sciList to list().
 
-        for p in pList {
+        for p in pList 
+        {
             if p:hasModule(sciMod) 
             {
                 sciList:add(p:getModule(sciMod)).
-            } 
-            else if p:hasModule(dmagMod) 
-            {
-                sciList:add(p:getModule(dmagMod)).
-            } 
-            else if p:hasModule(usAdvMod) 
-            {
-                get_sci_mod_multi_for_part(p, usAdvMod).
-            } 
-            else if p:hasModule(usSimpleMod) 
-            {
-                get_sci_mod_multi_for_part(p, usSimpleMod).
-            } 
-            else if p:hasModule(dmSoilMod) 
-            {
-                sciList:add(p:getModule(dmSoilMod)).
-            } 
-            else if p:hasModule(dmHammerMod) 
-            {
-                sciList:add(p:getModule(dmHammerMod)).
-            } 
-            else if p:hasModule(dmSeisPodMod) 
-            {
-                sciList:add(p:getModule(dmSeisPodMod)).
-            } 
-            else if p:hasModule(dmReconMod) 
-            {
-                sciList:add(p:getModule(dmReconMod)).
             }
-            else if p:hasModule(dmGooMatMod)
+            else 
             {
-                sciList:add(p:getModule(dmGooMatMod)
+                for mod in dmModList
+                {
+                    if p:hasModule(mod) sciList:add(p:getModule(mod)).
+                }
+                
+                for mod in usModList
+                {
+                    if p:hasModule(mod) sciList:add(p:getModule(mod)).
+                }
             }
         }
 
@@ -289,7 +276,7 @@ local sciList is list().
         {
             for m in mList 
             {
-                if m:name = usSimpleMod or m:name = usAdvMod 
+                if usModList:contains(m:name)
                 {
                     log_sci_us(m).
                 } 
@@ -307,14 +294,12 @@ local sciList is list().
     {
         parameter m.
 
-        print m:name at (2, 8).
-
-        if m:hasAction(usActTemp) m:doAction(usActTemp, true).
-        else if m:hasAction(usActBaro) m:doAction(usActBaro, true).
-        else if m:hasAction(usActGrav) m:doAction(usActGrav, true).
-        else if m:hasAction(usActSeis) m:doAction(usActSeis, true).
-        else if m:hasAction(usActMBay) m:doAction(usActMBay, true).
-        else if m:hasAction(usActGoo)  m:doAction(usActGoo,  true).
+        if m:hasAction(usActTemp)       m:doAction(usActTemp, true).
+        else if m:hasAction(usActBaro)  m:doAction(usActBaro, true).
+        else if m:hasAction(usActGrav)  m:doAction(usActGrav, true).
+        else if m:hasAction(usActSeis)  m:doAction(usActSeis, true).
+        else if m:hasAction(usActMBay)  m:doAction(usActMBay, true).
+        else if m:hasAction(usActGoo)   m:doAction(usActGoo,  true).
 
         addons:career:closedialogs().
     }
@@ -329,11 +314,9 @@ local sciList is list().
 
         for m in mList 
         {
-            if m:name = sciMod              toggle_sci_mod_st(m, false).
-            else if m:name = dmagMod        toggle_sci_mod_dmag(m, false).
-            else if m:name = usAdvMod       toggle_sci_mod_us(m, false).
-            else if m:name = usSimpleMod    toggle_sci_mod_us(m, false).
-            else if m:name = dmSoilMod        toggle_sci_mod_dmag(m, false).
+            if m:name = sciMod                  toggle_sci_mod_st(m, false).
+            else if dmModList:contains(m:name)  toggle_sci_mod_dmag(m, false).
+            else if usModList:contains(m:name)  toggle_sci_mod_us(m, false).
         }
     }
 
@@ -388,8 +371,8 @@ local sciList is list().
         {
             if a:contains("toggle") 
             {
-                _m:doAction(a:replace("(callable ", ""):replace(", is KSPAction", ""), true).
-                wait until _m:deployed = _openMode.
+                _m:doAction(a:replace("(callable) ", ""):replace(", is KSPAction", ""), true).
+                //wait until _m:deployed = _openMode.
             }
         }
     }

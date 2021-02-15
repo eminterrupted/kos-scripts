@@ -23,7 +23,7 @@ runOncePath("0:/lib/lib_warp").
         }
 
         out_info("Executing get_burn_obj_from_node(burnNode)").
-        set burnObj to get_burn_obj_from_node(burnNode).
+        set burnObj to get_burn_obj_from_node_next (burnNode).
             
         out_info("Executing warp_to_circ_burn()").
         warp_to_circ_burn(burnObj["burnEta"]).
@@ -39,8 +39,14 @@ runOncePath("0:/lib/lib_warp").
         parameter _burnEta.
         
         logStr("[warp_to_circ_burn] Warping to _burnEta[" + _burnEta  + "]").
-
         lock steering to choose lookdirup(nextnode:burnvector, sun:position) if hasNode else lookdirup(ship:prograde:vector, sun:position).
+        wait 1.
+        until shipSettled() 
+        {
+            update_display().
+            print "Ship settled: " + shipSettled() at (2, 35).
+        }
+        print "                    " at (2, 35).
         warp_to_timestamp(_burnEta).
     }
 

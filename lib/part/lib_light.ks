@@ -24,14 +24,3 @@ global function tog_cherry_light {
     }
     else if m:hasEvent("lights off") m:doEvent("lights off").
 }
-
-
-//RGB!
-// global function set_rgb_for_part {
-//     parameter p is 0,
-//             r is 0,
-//             g is 0,
-//             b is 0.
-
-//     return true.
-// }

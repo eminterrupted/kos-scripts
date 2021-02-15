@@ -2,14 +2,15 @@
 
 runOncePath("0:/lib/nav/lib_deltav").
 runOncePath("0:/lib/lib_mass_data").
-runOncePath("0:/lib/lib_engine_data").
+runOncePath("0:/lib/lib_engine").
 
 //-- Functions --//
 
 
 // Returns the burn duration of a single stage, used in other calculations
 //
-global function get_burn_dur_by_stage {
+global function get_burn_dur_by_stage 
+{
     parameter _deltaV,
               _stageNum is stage:number.
     
@@ -18,7 +19,8 @@ global function get_burn_dur_by_stage {
     // Returns the engines in the stage if the provided stage has any.
     // If no engines found, returns the next stage engines
     local engineList    to engs_for_stg(_stageNum).
-    if engineList:length = 0 {
+    if engineList:length = 0 
+    {
         if verbose logStr("[get_burn_dur_by_stage]-> return: 0. No engines found in stage: " + _stageNum).
         return 0.
     }
@@ -37,8 +39,36 @@ global function get_burn_dur_by_stage {
 }
 
 
+// vNext version of get_burn_dur using kos v1.3 built-in dv calculations
+global function get_burn_dur_next 
+{
+    parameter dv. 
+
+    if verbose logStr("[get_burn_dur_next] dv: " + dv).
+
+    local allDur    is 0.
+    local stgDvObj  is get_stages_for_dv_next(dv).
+
+    for key in stgDvObj:keys 
+    {
+        local stgDur to get_burn_dur_by_stage(stgDvObj[key], key - 1).
+        set allDur to allDur + stgDur.
+        
+        // local dvObj  to ship:stageDeltaV(key).
+        // local stgDur to dvObj:duration.
+        // local dvDur  to stgDvObj[key] / (dvObj:current / stgDur).
+        // set allDur   to allDur + dvDur.
+    }
+
+    if verbose logStr("[get_burn_dur_next]-> return " + allDur).
+    return allDur.
+}
+
+
+
 // Returns the total duration to burn the provided deltav, taking staging into account
-global function get_burn_dur {
+global function get_burn_dur 
+{
     parameter _deltaV.  // Total delta v of the burn
     
     if verbose logStr("[get_burn_dur] dV: " + _deltaV).
@@ -53,7 +83,8 @@ global function get_burn_dur {
 
     // Iterate through the stages, calculating how long it takes
     // to burn the necessary amount for each stage. 
-    for key in dvObj:keys {
+    for key in dvObj:keys 
+    {
         set stageDur to get_burn_dur_by_stage(dvObj[key], key).
         set allDur to allDur + stageDur.
     }
@@ -67,17 +98,26 @@ global function get_burn_dur {
 
 // Returns detailed burn data from a node in a lexicon, includes
 // the original node in the object for easy reference later
-global function get_burn_obj_from_node {
+global function get_burn_obj_from_node_next
+{
     parameter _mnvNode.
+
+    if verbose logStr("[get_burn_obj_from_node_next] _mnvNode in").
+
+    //Force DeltaV Recalc to ensure we have the latest values
+    if verbose logStr("[get_burn_obj_from_node_next] deltaV precalc: " + ship:deltaV:current).
+    ship:deltaV:forcecalc.
+    wait 1.
+    if verbose logStr("[get_burn_obj_from_node_next] deltaV postcalc: " + ship:deltaV:current).
 
     //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
     //Calculate variables
     local dV        to _mnvNode:burnvector:mag.     // DeltaV from the burn vector
     local nodeAt    to time:seconds + _mnvNode:eta. // Time in UT of the node
-    local burnDur   to get_burn_dur(dv).            // Total duration of the burn
-    local halfDur   to get_burn_dur(dv / 2).        // Duration of half of the burn
+    local burnDur   to get_burn_dur_next(dv).       // Total duration of the burn
+    local halfDur   to get_burn_dur_next(dv / 2).   // Duration of half of the burn
     local burnEta   to nodeAt - halfDur.            // When to start the burn
-    local burnEnd   to nodeAt + halfDur.            // When the burn should end
+    local burnEnd   to nodeAt + (burnDur / 2).      // When the burn should end
 
     local retObj to lexicon( 
         "dV", dv,
@@ -89,13 +129,46 @@ global function get_burn_obj_from_node {
         "mnv", _mnvNode
         ).
 
+    if verbose logStr("[get_burn_obj_from_node_next] retObj dump: " + retObj).
+    return retObj.
+}
+
+// Returns detailed burn data from a node in a lexicon, includes
+// the original node in the object for easy reference later
+global function get_burn_obj_from_node 
+{
+    parameter _mnvNode.
+
+    if verbose logStr("[get_burn_obj_from_node] _mnvNode in").
+
+    //Read calculating fuel flow in wiki: https://wiki.kerbalspaceprogram.com/wiki/Tutorial:Advanced_Rocket_Design
+    //Calculate variables
+    local dV        to _mnvNode:burnvector:mag.     // DeltaV from the burn vector
+    local nodeAt    to time:seconds + _mnvNode:eta. // Time in UT of the node
+    local burnDur   to get_burn_dur(dv).            // Total duration of the burn
+    local halfDur   to get_burn_dur(dv / 2).        // Duration of half of the burn
+    local burnEta   to nodeAt - halfDur.            // When to start the burn
+    local burnEnd   to nodeAt + (burnDur / 2).            // When the burn should end
+
+    local retObj to lexicon( 
+        "dV", dv,
+        "burnDur",burnDur,
+        "halfDur",halfDur,
+        "burnEta",burnEta,
+        "burnEnd",burnEnd,
+        "nodeAt",nodeAt,
+        "mnv", _mnvNode
+        ).
+    
+    if verbose logStr("[get_burn_obj_from_node] retObj dump: " + retObj).
     return retObj.
 }
 
 
 // Returns a simple coplanar burn object
 // Assumes burn is either at Ap or Pe
-global function get_coplanar_burn_data {
+global function get_coplanar_burn_data 
+{
     parameter _newAlt,
               _burnLocation is "ap".
 
@@ -120,7 +193,8 @@ global function get_coplanar_burn_data {
 // Returns a node-formatted list used to create a maneuver node.
 // Inputs are when to burn, and the change we want to make in altitude.
 // Calculates the needed deltaV
-global function get_mnv_param_list {    
+global function get_mnv_param_list 
+{    
     parameter _nodeAt                   // Timestamp of mnv
               ,_startAlt                // Starting altitude of mnv
               ,_finalAlt                // Target altitude after mnv
@@ -138,11 +212,43 @@ global function get_mnv_param_list {
 // Returns a coplanar transfer burn object. Must be called 
 // with a node timestamp derived from get_mun_transfer_window 
 // and have the desired target set
-global function get_transfer_burn_data {
+global function get_transfer_burn_data_next
+{
     parameter _nodeAt.
 
     // If no target is set, return false. This will fail
     if not hasTarget return false.
+
+    // Force a recalc of KSP dV to ensure latest values
+    ship:deltaV:forcecalc.
+
+    // TODO - Get our altitude at our burn position
+    // local posAtBurn to orbitAt(_nodeAt).
+    // Calculate trueanomaly
+    // Calculate based on eccentricty the altitude at the trueanomaly
+    // Pass alt into next function
+
+    // Burn details
+    local dv to get_dv_for_tgt_transfer_next().          // deltaV for transfer
+    local burnDur to get_burn_dur_next(dV).              // Duration of the burn
+    local halfDur to get_burn_dur_next(dV / 2).          // Duration to burn half the dV
+    local burnEta to (_nodeAt) - (halfDur).         // UT timestamp to start the burn
+
+    return lex("dv", dv, "nodeAt", _nodeAt, "burnDur", burnDur, "burnETA", burnETA).
+}
+
+// Returns a coplanar transfer burn object. Must be called 
+// with a node timestamp derived from get_mun_transfer_window 
+// and have the desired target set
+global function get_transfer_burn_data 
+{
+    parameter _nodeAt.
+
+    // If no target is set, return false. This will fail
+    if not hasTarget return false.
+
+    // Force a recalc of KSP dV to ensure latest values
+    ship:deltaV:forcecalc.
 
     // TODO - Get our altitude at our burn position
     // local posAtBurn to orbitAt(_nodeAt).
@@ -163,7 +269,8 @@ global function get_transfer_burn_data {
 
 // Returns an object describing a transfer window to the current target
 // TODO - Make _startBody a function call to get the common ancestor
-global function get_transfer_phase_angle {
+global function get_transfer_phase_angle 
+{
     parameter _startAlt is (ship:apoapsis + ship:periapsis) / 2, // Average altitude
               _startBody is body("Kerbin").                           // Body we are starting from
 
@@ -189,7 +296,8 @@ global function get_transfer_phase_angle {
 
 // Returns a timestamp of next transfer window based on the 
 // phase angle found in get_mun_transfer_phase
-global function get_transfer_eta {
+global function get_transfer_eta 
+{
     parameter _transferPhaseAng,    // The phase angle of the transfer window
               _tgt is target.       // The target (body or ship)
 
@@ -200,7 +308,8 @@ global function get_transfer_eta {
     out_msg("Sampling phase angle period").
     local p0 to get_phase_angle(_tgt).
     local tStamp to time:seconds + 5.
-    until time:seconds >= tStamp {
+    until time:seconds >= tStamp 
+    {
         update_display().
         disp_timer(tStamp, "Phase Sampling").
     }
@@ -224,7 +333,8 @@ global function get_transfer_eta {
 
 // Returns a timestamp of next transfer window based on the 
 // phase angle found in get_transfer_phase_angle
-global function get_transfer_eta_next {
+global function get_transfer_eta_next 
+{
     parameter _transferAng.    // The phase angle of the transfer window
 
 
@@ -234,7 +344,8 @@ global function get_transfer_eta_next {
     out_msg("Sampling phase angle period").
     local p0 to get_phase_angle(target).
     local tStamp to time:seconds + 5.
-    until time:seconds >= tStamp {
+    until time:seconds >= tStamp 
+    {
         update_display().
         disp_timer(tStamp, "Phase Sampling").
     }
@@ -265,7 +376,8 @@ global function get_transfer_eta_next {
 // Gets a transfer object for the current target
 // Combines both transfer window and transfer burn data functions
 // Returns a flat object with all burn data
-global function get_transfer_obj {
+global function get_transfer_obj 
+{
 
     // If the target is not set, return false
     if target = "" return false.
@@ -277,11 +389,13 @@ global function get_transfer_obj {
     local burnData to get_transfer_burn_data(transferWindow["nodeAt"]).
     local transferObj to lex("tgt", target).
 
-    for key in transferWindow:keys {
+    for key in transferWindow:keys 
+    {
         set transferObj[key] to transferWindow[key].
     }
 
-    for key in burnData:keys {
+    for key in burnData:keys 
+    {
         set transferObj[key] to burnData[key].
     }
 
@@ -289,12 +403,11 @@ global function get_transfer_obj {
 }
 
 
-global function cache_mnv_obj {
+global function cache_mnv_obj 
+{
     parameter mnvObj.
 
     local objPath is "local:/mnvCache.json".
-
     writeJson(mnvObj, objPath).
-
     return objPath.
 }

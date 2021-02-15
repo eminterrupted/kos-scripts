@@ -2023,6 +2023,110 @@
         {
             "value": "comm.dish",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USPenticore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.core.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KAL9000",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACDLarge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "command-125-1 (Min-Odyssey 5)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfs-panel-static-truss-3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeStackMediumSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACD1500",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USCylindricalShroud1500",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralLaunchBase",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralTowerMulti",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerLargeSec1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerLargeTop",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "smallCargoContainer",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cargo.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

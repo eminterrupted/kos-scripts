@@ -3933,7 +3933,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "",
+            "value": "ctrl.rcs",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -3941,7 +3941,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "",
+            "value": "cargo.container",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -3949,7 +3949,71 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "",
+            "value": "cargo.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "STEADLER RC-001MS Probe Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control Decoupler (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical fairing (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base 3 - Large",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KX-STAT-2 1x1 Advanced Photovoltaic Truss",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],

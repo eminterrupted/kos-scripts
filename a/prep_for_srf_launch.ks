@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_engine_data").
+runOncePath("0:/lib/lib_engine").
 runOncePath("0:/lib/part/lib_solar").
 runOncePath("0:/lib/part/lib_antenna").
 
@@ -24,3 +24,6 @@ for eng in curEngs {
 for f in volume("local"):files:keys {
     deletePath(f).
 }
+
+lights off.
+sas off.

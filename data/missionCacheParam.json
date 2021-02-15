@@ -37,7 +37,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 175000,
+            "value": 225000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
@@ -45,7 +45,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": 175000,
+            "value": 225000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {

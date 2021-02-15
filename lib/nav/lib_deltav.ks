@@ -3,13 +3,14 @@
 
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_mass_data").
-runOncePath("0:/lib/lib_engine_data").
+runOncePath("0:/lib/lib_engine").
 
 
 runOncePath("0:/lib/part/lib_rcs").
 
 //functions
-global function get_dv_for_prograde {
+global function get_dv_for_prograde 
+{
     parameter tgtAlt,
               stAlt,
               mnvBody is ship:body.
@@ -24,7 +25,8 @@ global function get_dv_for_prograde {
 }
 
 
-global function get_dv_for_retrograde {
+global function get_dv_for_retrograde 
+{
     parameter tgtAlt,
               stAlt,
               mnvBody is ship:body.
@@ -39,7 +41,8 @@ global function get_dv_for_retrograde {
 }
 
 
-global function dv_for_hohmann_transfer {
+global function dv_for_hohmann_transfer 
+{
     parameter tgtObt,
               stObt.
 
@@ -52,7 +55,8 @@ global function dv_for_hohmann_transfer {
 }
 
 
-global function dv_for_hohmann_arrival {
+global function dv_for_hohmann_arrival 
+{
     parameter tgtObt,
               stObt.
 
@@ -65,7 +69,8 @@ global function dv_for_hohmann_arrival {
 }
 
 
-global function get_dv_for_transfer {
+global function get_dv_for_transfer 
+{
     parameter tgtObt,
               stObt.
 
@@ -78,7 +83,8 @@ global function get_dv_for_transfer {
 }
 
 
-global function get_dv_for_capture {
+global function get_dv_for_capture 
+{
     parameter tgtObt,
               stObt.
 
@@ -87,13 +93,13 @@ global function get_dv_for_capture {
     local stSMA is stObt:semimajoraxis.
 
     //Return dv
-    local dv to ((sqrt(stObt:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
-    return dv.
+    return ((sqrt(stObt:body:mu / stSMA)) * ( sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1)).
 }
 
 
-global function get_dv_for_tgt_transfer {
-
+//Assumes a target is selected
+global function get_dv_for_tgt_transfer 
+{
     //semi-major axis
     local tgtSMA to target:orbit:semimajoraxis.
     local stSMA to ship:apoapsis + ship:body:radius.
@@ -103,8 +109,8 @@ global function get_dv_for_tgt_transfer {
 }
 
 
-global function get_dv_for_tgt_transfer_next {
-
+global function get_dv_for_tgt_transfer_next 
+{
     //semi-major axis
     local tgtSMA to target:orbit:semimajoraxis.
     local stSMA to ship:obt:semimajoraxis.
@@ -114,22 +120,35 @@ global function get_dv_for_tgt_transfer_next {
 }
 
 
+//Version of get_avail_dv_for_stage that uses built-in dV calc
+global function get_avail_dv_for_stage_next 
+{
+    parameter stgNum is stage:number.
 
-global function get_avail_dv_for_stage {
-    parameter _stg is stage:number.
+    if verbose logStr("[get_avail_dv_for_stage_next] stgNum:" + stgNum).
+    local dv to ship:stageDeltaV(stgNum):current.
+    if verbose logStr("[get_avail_dv_for_stage_next]-> return: " + round(dv, 2)).
+    return dv.
+}
 
-    if verbose logStr("[get_avail_dv_for_stage] _stg:" + _stg).
+
+global function get_avail_dv_for_stage 
+{
+    parameter stgNum is stage:number.
+
+    if verbose logStr("[get_avail_dv_for_stage] stgNum:" + stgNum).
 
     //Get all parts on the ship at the stage. Discards parts not on vessel by time supplied stage is triggered
-    local eList is ship:partsTaggedPattern("eng.stgId:" + _stg).
-    if eList:length = 0 { 
+    local eList is ship:partsTaggedPattern("eng.stgId:" + stgNum).
+    if eList:length = 0 
+    { 
         if verbose logStr("[get_avail_dv_for_stage]-> return 0. No engines in provided stage").
         return 0.
-        }
+    }
     
-    local vMass to get_ves_mass_at_stage(_stg).
+    local vMass to get_ves_mass_at_stage(stgNum).
     local exhVel is get_engs_exh_vel(eList, ship:altitude).
-    local stgMassObj to get_stage_mass_obj(_stg).
+    local stgMassObj to get_stage_mass_obj(stgNum).
 
     local fuelMass to stgMassObj["cur"] - stgMassObj["dry"].
     local spentMass to vMass - fuelMass.
@@ -139,28 +158,32 @@ global function get_avail_dv_for_stage {
 }
 
 
-global function rcs_dv_at_stage {
-    parameter _stg is stage:number.
+global function rcs_dv_at_stage 
+{
+    parameter stgNum is stage:number.
 
-    if verbose logStr("[rcs_dv_at_stage] _stg:" + _stg).
+    if verbose logStr("[rcs_dv_at_stage] stgNum:" + stgNum).
 
     local avgExhVel to 0.
 
-    local vMass to get_ves_mass_at_stage(_stg).
+    local vMass to get_ves_mass_at_stage(stgNum).
     local mpList is ship:partsTaggedPattern("ctrl.rcs").
-    if mpList:length = 0 {
+    if mpList:length = 0 
+    {
         return 0.
     }
 
-    for p in mpList {
+    for p in mpList 
+    {
         local pStg to utils:stgFromTag(p).
-        if pStg <= _stg {
+        if pStg <= stgNum 
+        {
             local rcsObj to rcs_obj(p).
             set avgExhVel to avgExhVel + (constant:g0 * rcsObj["rcs isp"]) / 2.
         }
     }
 
-    local fuelMass to get_res_mass_for_stg(_stg, "MonoPropellant").
+    local fuelMass to get_res_mass_for_stg(stgNum, "MonoPropellant").
     local spentMass to vMass - fuelMass.
     local rcsDv to avgExhVel * ln(vMass / spentMass).
 
@@ -169,49 +192,88 @@ global function rcs_dv_at_stage {
     return rcsDv.
 }
 
+// Version of get_stages_for_dv_next using built-in DV calc
+global function get_stages_for_dv_next 
+{
+    parameter dvNeeded,
+              stgNum is stage:number.
+
+    if verbose logStr("[get_stages_for_dv_next] dvNeeded: " + dvNeeded + ";  stgNum: " + stgNum).
+    
+    local stgObj to lex().
+    set dvNeeded to abs(dvNeeded).
+    until dvNeeded <= 0 or stgNum < -1 
+    {
+        local dvStg to ship:stageDeltaV(stgNum):current.
+
+        if dvNeeded < dvStg 
+        {
+            set stgObj[stgNum] to dvNeeded.
+            break.
+
+        } 
+        else 
+        {
+            if dvStg > 0 
+            {
+                set stgObj[stgNum] to dvStg.
+                set dvNeeded to dvNeeded - dvStg.
+            }
+            set stgNum to stgNum - 1.
+        }
+    }
+    
+    if verbose logStr("[get_stages_for_dv_next]-> return: " + stgObj).
+    return stgObj.
+}
+
+
 
 // Returns an object representing the number of stages involved 
 // in a specific deltaV amount, beginning with either the current
 // stage or a provided one.
-global function get_stages_for_dv {
-    parameter _deltaV,                      // Amount of dv needed
-              _stageNum is stage:number.    // Stage to start with
+global function get_stages_for_dv 
+{
+    parameter dvNeeded,                      // Amount of dv needed
+              stgNum is stage:number.    // Stage to start with
 
-    if verbose logStr("[get_stages_for_dv] _dV: " + _deltaV + ";  _stageNum: " + _stageNum).
+    if verbose logStr("[get_stages_for_dv] dvNeeded: " + dvNeeded + ";  _stgNum: " + stgNum).
 
     // The object we'll store the result in
     local stageObj is lex().
 
     // Make dv absolute
-    set _deltaV to abs(_deltaV).
+    set dvNeeded to abs(dvNeeded).
 
     // Loop until either the needed DeltaV is accounted for, or
     // we run out of stages
-    until _deltaV <= 0 or _stageNum < -1 {
+    until dvNeeded <= 0 or stgNum < -1 
+    {
         // Get the deltaV possible for the stage we are on
-        local dvStg is get_avail_dv_for_stage(_stageNum).
+        local dvStg is get_avail_dv_for_stage(stgNum).
 
         // If the deltaV needed is less than what the stage can 
         // deliver, then add the stage number we checked to the 
         // object and break the loop
-        if _deltaV < dvStg {
-            set stageObj[_stageNum] to round(_deltaV, 2).
+        if dvNeeded < dvStg {
+            set stageObj[stgNum] to dvNeeded.
             break.
-
-        } else {
-
+        } 
+        else 
+        {
             // If there is deltaV available in the stage we are
             // checking, add that stage to the stage object. Then,
             // subtract that total from the needed deltaV. If that
             // puts us below zero, loop will exit
-            if dvStg > 0 {
-                set stageObj[_stageNum] to round(dvStg, 2).
-                set _deltaV to _deltaV - dvStg.
+            if dvStg > 0 
+            {
+                set stageObj[stgNum] to dvStg.
+                set dvNeeded to dvNeeded - dvStg.
             }
 
             // Get the next stage that has engines. This is if the 
             // previous stage did not already cover what we needed
-            set _stageNum to _stageNum - 1.
+            set stgNum to stgNum - 1.
             //set _stageNum to get_next_stage_with_eng(_stageNum).
         }
     }

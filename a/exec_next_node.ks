@@ -82,6 +82,12 @@ until runmode = 99
     else if runmode = 8 
     {
         set sVal to lookDirUp(mnvNode:burnvector, sun:position).
+        wait 1.
+        until shipSettled() 
+        {
+            update_display().
+            disp_burn_data().
+        }
         warp_to_burn_node(mnvObj).
         set runmode to 10.
     }

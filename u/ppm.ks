@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter part. 
+parameter part is p. 
 
 local line is 5.
 
@@ -12,7 +12,7 @@ print " ".
 from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do {
     local m is part:getModuleByIndex(n).
 
-    if line < terminal:height - 20 {
+    if line < terminal:height - 35 {
         set line to line + 1.
         print "MODULE(" + m:name + "):".
 
@@ -24,7 +24,7 @@ from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do {
     }
 
     else {
-        print "** [press any key] **" at ( terminal:width - 25, terminal:height - 5).
+        print "** [press any key] **" at ( terminal:width - 30, terminal:height - 5).
         terminal:input:getChar().
         clearScreen.
         set line to 0.

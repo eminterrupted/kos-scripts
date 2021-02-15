@@ -1,6 +1,13 @@
-runOncePath("0:/lib/display/lib_display").
+@lazyGlobal off.
+
+parameter distThresh is 30000.
+
+runOncePath("0:/lib/lib_init").
 runOncePath("0:/lib/lib_warp").
 runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/nav/lib_nav").
+runOncePath("0:/lib/display/lib_display").
+runOncePath("0:/lib/payload/lib_bays").
 
 local landingPath to "1:/land_on_mun".
 
@@ -14,18 +21,39 @@ if exists(landingPath)
 }
 compile(script) to landingPath.
 
+local wp to active_waypoint().
+
 lock steering to ship:retrograde.
 
 // local tStamp to time:seconds + (ship:orbit:period / 1.85).
 if ship:altitude > 10000 
 {
-    out_msg("Press any key to start landing sequence").
-    breakpoint().
+    out_msg("Waiting until distance target: " + distThresh).
+    until wp:geoPosition:distance <= distThresh 
+    {
+        update_display().
+        disp_block(list(
+            "distance",
+            "waypoint info",
+            "name", wp:name,
+            "distance", round(wp:geoposition:distance),
+            "eta", round(wp:geoposition:distance / groundSpeed)
+        )).
+    }
+    disp_clear_block("distance").
+    // out_msg("Press any key to start landing sequence").
+    // breakpoint().
 }
 
 out_msg("Running landing script").
 runpath(landingPath, 0, 0).
 unlock steering.
+
+out_msg("Opening bay doors").
+for p in ship:partsTaggedPattern("bay.doors") 
+{
+    deploy_bay_doors(p).
+}
 
 out_msg("Doing surface science").
 local sciMod to get_sci_list(ship:parts).

@@ -9,24 +9,53 @@ global function add_node_mun_return
 {
     parameter tgtAlt.
 
-    local dv is 0.
     local mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
     add mnvNode.
 
-    until nextNode:obt:hasNextPatch 
+    // Make sure we add a node that escapes
+    until mnvNode:orbit:hasNextPatch
     {
+        local nodeParam to list(mnvNode:time, mnvNode:radialout, mnvNode:normal, mnvNode:burnvector:mag).
         remove mnvNode.
-        set dv to dv + 5.
-        set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dv).
+        set mnvNode to node(nodeParam[0], nodeParam[1], nodeParam[2], nodeParam[3] + 25).
         add mnvNode.
         wait 0.01.
     }
+    
 
-    set dv to get_dv_for_retrograde(tgtAlt, mnvNode:obt:nextPatch:periapsis, mnvNode:obt:nextPatch:body).
+    // Find the time to burn that will give us the lowest Pe.
+    local lastPe to ship:body:altitude + 5000.
+    until false
+    {
+        disp_block(list(
+            "return",
+            "return data",
+            "targetPe", tgtAlt,
+            "currentPe", mnvNode:orbit:nextpatch:periapsis,
+            "lastPe", lastPe
+        )).
+        if mnvNode:orbit:nextPatch:periapsis >= lastPe and lastPe < ship:body:altitude 
+        {
+            break.
+        }
+        else
+        {
+            local nodeParam to list(mnvNode:time, mnvNode:radialout, mnvNode:normal, mnvNode:burnvector:mag).
+            set lastPe to mnvNode:orbit:nextPatch:periapsis. 
+            remove mnvNode.
+            set mnvNode to node(nodeParam[0] + 30, nodeParam[1], nodeParam[2], nodeParam[3]).
+            add mnvNode.
+            wait 0.01.
+        }
+    }
 
-    set mnvNode to node(7200 + time:seconds + mnvNode:obt:nextpatcheta, 0, 0, dv).
+    local nextApEta to mnvNode:orbit:nextpatch:eta:apoapsis.
+    local nextPeEta to mnvNode:orbit:nextpatch:eta:periapsis.
+    local nodeTime  to choose nextApEta if nextApEta < nextPeEta else 3600 + time:seconds + mnvNode:orbit:nextpatcheta.
+    local dv        to get_dv_for_retrograde(tgtAlt, nextPeEta, mnvNode:obt:nextPatch:body).
+
+    set mnvNode to node(nodeTime, 0, 0, dv).
     add mnvNode.
-
     set mnvNode to optimize_existing_node(mnvNode, tgtAlt, "pe").
 }
 
@@ -240,14 +269,13 @@ global function exec_node
             set tVal to 0.
             break.
         }
-
-        else if nd:deltaV:mag < 0.25 
-        {
-            set tVal to 0.05.
-        }
+        // else if nd:deltaV:mag < 0.5 
+        // {
+        //     set tVal to 0.05.
+        // }
         else
         {
-            set tVal to min(nd:deltaV:mag / maxAcc, 1).
+            set tVal to max(0, min(nd:deltaV:mag / maxAcc, 1)).
         }
 
         update_display().

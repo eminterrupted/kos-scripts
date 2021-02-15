@@ -2103,6 +2103,86 @@
         {
             "value": "ConformalStorageUnit",
             "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "STEADLER RC-001MS Probe Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "probeStackMediumSmall",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control Decoupler (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACD1500",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Five bay service core (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USPenticore",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical fairing (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USCylindricalShroud1500",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base 3 - Large",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralLaunchBase",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralTowerMulti",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerLargeSec1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AM.MLP.GeneralServiceTowerLargeTop",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control Decoupler (2.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "USACDLarge",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KX-STAT-2 1x1 Advanced Photovoltaic Truss",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "nfs-panel-static-truss-3",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],
     "$type": "kOS.Safe.Encapsulation.Lexicon"

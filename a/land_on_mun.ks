@@ -14,7 +14,7 @@ runOncePath("0:/lib/part/lib_solar").
 //-- Variables --//
 
     // Altitude targets
-    local altBuffer to 100.
+    local altBuffer to 125.
 
     // Throttle / Control
     local burnDur   to 0.
@@ -27,7 +27,7 @@ runOncePath("0:/lib/part/lib_solar").
     // Pid
     local altPid    to setup_alt_pid(0).
     local altPidVal to 0.
-    local hsPidThresh to choose 25 if ship:body:name = "Minmus" else 75.
+    local hsPidThresh to choose 25 if ship:body:name = "Minmus" else 100.
     local hsPid     to setup_speed_pid(hsPidThresh).
     local hsPidVal to 0.
     local vsPidthresh to choose -50 if ship:body:name = "Minmus" else -100.
@@ -57,24 +57,21 @@ logStr("localGravAccel: " + localGravAccel).
 wait 3.
 
 rcs off. rcs on.
-lock steering to ship:srfretrograde.
+lock steering to ship:retrograde.
 update_display().
-local srfThreshold to choose 25 if ship:body:name = "Minmus" else 100.
 
-until ship:velocity:surface:mag < srfThreshold 
+until groundSpeed < hsPidThresh 
 {
     set tVal to 1.
-
-    out_msg("ship:velocity:surface:mag < threshold:" + srfThreshold).
-
+    out_msg("groundSpeed < hsPidThrest:" + hsPidThresh).
     update_landing_disp().
     wait 0.001.
 }
 
-set tVal to 0.
-
 lock steering to steer_up().
-wait 2.5.
+wait 1.
+
+set hsPid:setpoint to hsPidThresh / 1.33334.
 
 until ship:altitude <= 15000 or alt:radar <= 10000 
 {
@@ -90,8 +87,8 @@ until ship:altitude <= 15000 or alt:radar <= 10000
 out_msg().
 set tVal to 0.
 
-set hsPid:setpoint to hsPidThresh / 1.5.
-set vsPid:setpoint to vsPidthresh / 1.5.
+set hsPid:setpoint to hsPidThresh / 2.
+set vsPid:setpoint to vsPidthresh / 1.25.
 
 until ship:altitude <= 7500 or alt:radar <= 5000 
 {
@@ -104,8 +101,9 @@ until ship:altitude <= 7500 or alt:radar <= 5000
 }
 out_msg().
 
-set hsPid:setpoint to hsPidThresh / 3.
-set vsPid:setpoint to choose vsPidthresh / 1.75 if ship:body:name = "Minmus" else vsPidThresh / 3.
+set hsPid:setpoint to hsPidThresh / 4.
+set vsPid:setpoint to vsPidthresh / 2.
+//set vsPid:setpoint to choose vsPidthresh / 2 if ship:body:name = "Minmus" else vsPidThresh / 3.
 
 local tti to 999999.
 until burnDur >= tti 
@@ -115,13 +113,13 @@ until burnDur >= tti
     set tVal to max(vsPidVal, 1 - hsPidVal).
     
     set tti to time_to_impact(altBuffer).
-    set burnDur to get_burn_dur(verticalSpeed).
+    set burnDur to get_burn_dur(verticalSpeed + localGravAccel).
 
     out_msg("tti loop").
 
     //logStr("Time to impact (100m buffer): " + tti + "s").
     update_landing_disp().
-    wait 0.001.
+    wait 0.01.
 }
 
 // Set vspid controls to new setpoints
@@ -137,9 +135,7 @@ until alt:radar <= altBuffer
     set altPidVal to altPid:update(time:seconds, alt:radar).
     set vsPidVal  to vsPid:update(time:seconds, verticalSpeed).
     set tVal      to max(vsPidVal, altPidVal).
-
-    //set tti to time_to_impact(100).
-    //logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
+    set burnDur to get_burn_dur_next(verticalSpeed + localGravAccel).
 
     out_msg("powered descent").
 
@@ -157,6 +153,7 @@ until ship:status = "landed"
     set altPidVal to altPid:update(time:seconds, alt:radar).
     set vsPidVal  to vsPid:update(time:seconds, verticalSpeed).
     set tVal      to max(vsPidVal, altPidVal).
+    set burnDur   to get_burn_dur_next(verticalSpeed + localGravAccel).
 
     //set tti to time_to_impact(50).
     //logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
