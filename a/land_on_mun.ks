@@ -14,7 +14,7 @@ runOncePath("0:/lib/part/lib_solar").
 //-- Variables --//
 
     // Altitude targets
-    local altBuffer to 125.
+    local altBuffer to 50.
 
     // Throttle / Control
     local burnDur   to 0.
@@ -88,7 +88,7 @@ out_msg().
 set tVal to 0.
 
 set hsPid:setpoint to hsPidThresh / 2.
-set vsPid:setpoint to vsPidthresh / 1.25.
+//set vsPid:setpoint to vsPidthresh / 1.25.
 
 until ship:altitude <= 7500 or alt:radar <= 5000 
 {
@@ -102,9 +102,10 @@ until ship:altitude <= 7500 or alt:radar <= 5000
 out_msg().
 
 set hsPid:setpoint to hsPidThresh / 4.
-set vsPid:setpoint to vsPidthresh / 2.
+//set vsPid:setpoint to vsPidthresh / 2.
 //set vsPid:setpoint to choose vsPidthresh / 2 if ship:body:name = "Minmus" else vsPidThresh / 3.
 
+out_msg("tti loop").
 local tti to 999999.
 until burnDur >= tti 
 {
@@ -115,15 +116,13 @@ until burnDur >= tti
     set tti to time_to_impact(altBuffer).
     set burnDur to get_burn_dur(verticalSpeed + localGravAccel).
 
-    out_msg("tti loop").
-
-    //logStr("Time to impact (100m buffer): " + tti + "s").
+    //logStr("Time to impact (" + altBuffer + "m buffer): " + tti + "s").
     update_landing_disp().
     wait 0.01.
 }
 
 // Set vspid controls to new setpoints
-set vsPid:setpoint to -10.
+set vsPid:setpoint to -25.
 
 // Hoverslam
 logStr("Ignition").
@@ -135,17 +134,14 @@ until alt:radar <= altBuffer
     set altPidVal to altPid:update(time:seconds, alt:radar).
     set vsPidVal  to vsPid:update(time:seconds, verticalSpeed).
     set tVal      to max(vsPidVal, altPidVal).
-    set burnDur to get_burn_dur_next(verticalSpeed + localGravAccel).
-
-    out_msg("powered descent").
+    set burnDur to get_burn_dur(verticalSpeed + localGravAccel).
 
     update_landing_disp().
     wait 0.001.
 }
 
-logStr("Slowing rate of descent").
-out_msg("Slowing rate of descent").
-
+logStr("Final descent").
+out_msg("Final descent").
 set vsPid:setpoint to -2.5.
 vsPid:reset().
 until ship:status = "landed" 
@@ -153,12 +149,9 @@ until ship:status = "landed"
     set altPidVal to altPid:update(time:seconds, alt:radar).
     set vsPidVal  to vsPid:update(time:seconds, verticalSpeed).
     set tVal      to max(vsPidVal, altPidVal).
-    set burnDur   to get_burn_dur_next(verticalSpeed + localGravAccel).
+    set burnDur   to get_burn_dur(verticalSpeed + localGravAccel).
 
-    //set tti to time_to_impact(50).
-    //logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
-
-    out_msg("final descent").
+    
 
     update_landing_disp().
     wait 0.001.

@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
-global function setup_q_pid {
+global function setup_q_pid 
+{
     parameter pSetpoint,
               kP is 5.0,
               kI is 0.0,
@@ -14,7 +15,8 @@ global function setup_q_pid {
     return newPid.
 }
 
-global function setup_acc_pid {
+global function setup_acc_pid 
+{
     parameter pSetpoint,
               kP is 0.02,
               kI is 0.00,
@@ -28,7 +30,8 @@ global function setup_acc_pid {
     return newPid.
 }
 
-global function setup_alt_pid {
+global function setup_alt_pid 
+{
     parameter pSetpoint, 
               kP is 0.05,
               kI is 0.01,
@@ -42,7 +45,8 @@ global function setup_alt_pid {
     return newPid.
 }
 
-global function setup_speed_pid {
+global function setup_speed_pid 
+{
     parameter pSetpoint, 
               kP is 0.05,
               kI is 0.025,

@@ -1,17 +1,20 @@
 @lazyGlobal off.
 
 runOncePath("0:/lib/lib_core").
+runOncePath("0:/lib/lib_util").
 
 // Parachute functions
-    global function arm_chutes {
+    global function arm_chutes 
+    {
         parameter pList is ship:parts.
 
         local chuteMod is "RealChuteModule".
 
-        for p in pList {
-            if p:hasModule(chuteMod) {
-                local m is p:getModule(chuteMod).
-                if m:hasEvent("arm parachute") m:doEvent("arm parachute").
+        for p in pList 
+        {
+            if p:hasModule(chuteMod) 
+            {
+                do_event(p:getModule(chuteMod), "arm parachute").
             }
         }
     }

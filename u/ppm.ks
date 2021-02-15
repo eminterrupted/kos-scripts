@@ -9,10 +9,12 @@ print "MODULES FOR PART: " + part:name.
 print "----------------------------------------------------".
 print " ".
 
-from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do {
+from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do 
+{
     local m is part:getModuleByIndex(n).
 
-    if line < terminal:height - 35 {
+    if line < terminal:height - 35 
+    {
         set line to line + 1.
         print "MODULE(" + m:name + "):".
 
@@ -22,8 +24,8 @@ from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do {
         set line to line + 1.
         print " ".
     }
-
-    else {
+    else 
+    {
         print "** [press any key] **" at ( terminal:width - 30, terminal:height - 5).
         terminal:input:getChar().
         clearScreen.

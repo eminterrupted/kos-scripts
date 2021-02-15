@@ -5,17 +5,15 @@ runOncePath("0:/lib/lib_core").
 
 local mlp to false.
 
-if ship:partsTaggedPattern("mlp.base"):length > 0 {
+if ship:partsTaggedPattern("mlp.base"):length > 0 
+{
     runOncePath("0:/lib/part/lib_launchpad").
-    if ship:partsTaggedPattern("mlp.base")[0]:partsTaggedPattern("lgt"):length > 0 
-    {
-        mlp_night_light().
-    }
     set mlp to true.
 }
 
 //Main launch sequencer
-global function launch_sequence {
+global function launch_sequence 
+{
 
     parameter lObj.
                 
@@ -46,7 +44,8 @@ global function launch_sequence {
     print "MSG: Executing meco()                        " at (2, 7).
     meco(lObj).
 
-    if ship:altitude < 70000 {
+    if ship:altitude < 70000 
+    {
         print "MSG: Executing coast_to_space()              " at (2, 7).
         coast_to_space(lObj).
     }
@@ -56,7 +55,8 @@ global function launch_sequence {
 
 
 //Fairings
-global function arm_proc_fairings {
+global function arm_proc_fairings 
+{
     parameter pAlt,
               base.
 
@@ -64,29 +64,34 @@ global function arm_proc_fairings {
 
     local cList is base:children.
     
-    when ship:altitude > pAlt then {
-        for f in cList {
-            if f:tag:contains("pl.pf.fairing") jet_fairing(f).
+    when ship:altitude > pAlt then 
+    {
+        for f in cList 
+        {
+            if f:tag:contains("pl.pf.fairing") jettison_fairing(f).
         }
         logStr("Fairings jettison").
     }
 }
 
-global function arm_stock_fairings {
+global function arm_stock_fairings 
+{
     parameter pAlt,
               base.
 
     logStr("arm_stock_fairings").
 
-    when ship:altitude > pAlt then {
-        jet_fairing(base).
+    when ship:altitude > pAlt then 
+    {
+        jettison_fairing(base).
         logStr("Fairings jettison").
     }
 }
 
 
 // Launch a vessel with a countdown timer
-global function launch_vessel {
+global function launch_vessel 
+{
     parameter countdown is 10, 
               engStart is 2.2.
 
@@ -103,7 +108,8 @@ global function launch_vessel {
     local swingarm is false.
     local umbilical is false.
 
-    for p in ship:partsTaggedPattern("mlp") {
+    for p in ship:partsTaggedPattern("mlp") 
+    {
         if p:tag:matchesPattern("fallback") set fallback to true.
         else if p:tag:matchesPattern("holddown") set holddown to true.
         else if p:tag:matchesPattern("swingarm") set swingarm to true.
@@ -111,65 +117,82 @@ global function launch_vessel {
     }
 
     //Setup the launch triggers. 
-    if mlp {
-        when cd <= countdown * 0.95 then {
+    if mlp 
+    {
+        when cd <= countdown * 0.95 then 
+        {
             mlp_retract_crewarm().
             logStr("Crew arm retract").
         }
 
-        when cd <= countdown * 0.75 then {
-            if fallback {
+        when cd <= countdown * 0.75 then 
+        {
+            if fallback 
+            {
                 mlp_fallback_open_clamp().
                 logStr("Fallback clamp open").
             }
         }
 
-        when cd <= countdown * 0.5 then {
+        when cd <= countdown * 0.5 then 
+        {
             mlp_fuel_off().
             logStr("Fueling complete").
         }
 
-        when cd <= countdown * 0.45 then {
+        when cd <= countdown * 0.45 then 
+        {
             mlp_gen_off(). 
             logStr("Vehicle on internal power").
         }
 
-        when cd <= countdown * 0.4 then {
-            if fallback {
+        when cd <= countdown * 0.4 then 
+        {
+            if fallback 
+            {
                 mlp_fallback_partial().
                 logStr("Fallback tower partial retract").
             }
         }
 
-        when cd <= 0.8 then {
-            if fallback {
+        when cd <= 0.8 then 
+        {
+            if fallback 
+            {
                 mlp_fallback_full().
                 logStr("Fallback tower full retract").
             }
 
-            if swingarm {
+            if swingarm 
+            {
                 mlp_retract_swingarm().
                 logStr("Swing arms detached").
             }
         }
 
-        when cd <= 0.2 then {
-            if umbilical {
+        when cd <= 0.2 then 
+        {
+            if umbilical 
+            {
                 mlp_drop_umbilical().
                 logStr("Umbilicals detached").
             }
         }
 
-        when cd <= 0.1 then {
-            if holddown {
+        when cd <= 0.1 then 
+        {
+            if holddown 
+            {
                 mlp_retract_holddown().
                 logStr("Holddown retracted").
             }
         }
     }
 
-    if launchFlag {
-        when cd <= engStart then {
+    if launchFlag 
+    {
+        when cd <= engStart then 
+        {
             logStr("Engine start sequence").
             engine_start_sequence().
         }
@@ -177,7 +200,8 @@ global function launch_vessel {
     
 
     logStr("Beginning launch countdown").
-    until cd <= 0 {
+    until cd <= 0 
+    {
         disp_main().
         wait 0.1.
         set cd to cd - 0.1.
@@ -189,19 +213,22 @@ global function launch_vessel {
     clearScreen.
 }
 
-local function engine_start_sequence {
+local function engine_start_sequence 
+{
     
     local tSpool to 0.
     lock throttle to tSpool.
 
     stage.
-    from { local t to 0.} until t >= 0.15 step { set t to t + 0.01.} do {
+    from { local t to 0.} until t >= 0.15 step { set t to t + 0.01.} do 
+    {
         disp_main().
         set tSpool to t.
         set cd to cd - 0.015.
     }
 
-    from { local t to 0.16.} until t >= 1 step { set t to t + 0.02.} do {
+    from { local t to 0.16.} until t >= 1 step { set t to t + 0.02.} do 
+    {
         disp_main().
         lock throttle to tSpool.
         set tSpool to min(1, t).
@@ -213,7 +240,8 @@ local function engine_start_sequence {
 
 
 //Set pitch by deviation from a reference pitch to ensure more gradual gravity turns and course corrections
-global function get_la_for_alt {
+global function get_la_for_alt 
+{
 
     parameter rPitch, 
               tAlt,
@@ -221,11 +249,13 @@ global function get_la_for_alt {
     
     local tPitch is 0.
 
-    if rPitch < 0 {
+    if rPitch < 0 
+    {
         set tPitch to min( rPitch, -(90 * ( 1 - (ship:altitude - sAlt) / (tAlt)))).
     }
 
-    else if rPitch >= 0 {
+    else if rPitch >= 0 
+    {
         set tPitch to max( rPitch, 90 * ( 1 - (ship:altitude - sAlt) / (tAlt))).
     }
     
@@ -237,13 +267,15 @@ global function get_la_for_alt {
 }.
 
 
-global function get_circ_burn_pitch {
+global function get_circ_burn_pitch 
+{
     local obtPitch is 90 - vang(ship:up:vector, ship:prograde:vector).
     return obtPitch * -1.
 }
 
 
-local function preLaunch {
+local function preLaunch 
+{
     local runmode is rm(0).
     logStr("[Runmode " + runmode + "]: Preparing for launch").
     
@@ -251,14 +283,17 @@ local function preLaunch {
 }
 
 
-local function launch {
+local function launch 
+{
     local runmode to rm(5).
     logStr("[Runmode " + runmode + "]: Begin launch procedure").
 
-    if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
+    if ship:partsTaggedPattern("pl.st.fairing"):length > 0 
+    {
         arm_stock_fairings(72500, ship:partsTaggedPattern("pl.st.fairing")[0]).
     } 
-    else if ship:partsTaggedPattern("pl.pf.base"):length > 0 {
+    else if ship:partsTaggedPattern("pl.pf.base"):length > 0 
+    {
         arm_proc_fairings(72500, ship:partsTaggedPattern("pl.pf.base")[0]).
     }
 
@@ -271,7 +306,8 @@ local function launch {
 }    
 
 
-local function clear_tower {
+local function clear_tower 
+{
     local runmode to rm(10).
     logStr("[Runmode " + runmode + "]: Liftoff!").
     
@@ -282,7 +318,8 @@ local function clear_tower {
     lock throttle to tVal.
 
     //Wait until tower is effectively cleared
-    until alt:radar >= 100 {   
+    until alt:radar >= 100 
+    {   
         update_display().
     }
     
@@ -291,7 +328,8 @@ local function clear_tower {
 }
     
 
-local function roll_program {
+local function roll_program 
+{
     parameter lObj.
 
     local runmode to rm(15).
@@ -307,7 +345,8 @@ local function roll_program {
 }
 
 
-local function vertical_ascent {
+local function vertical_ascent 
+{
     parameter lObj.
 
     local runmode to rm(20).
@@ -323,14 +362,16 @@ local function vertical_ascent {
     staging_triggers().
 
     //Ascent loop
-    until ship:verticalSpeed >= 100 or ship:altitude >= 1000 {
+    until ship:verticalSpeed >= 100 or ship:altitude >= 1000 
+    {
         update_display().
     }
     
     return ship:altitude.
 }
 
-local function gravity_turn {
+local function gravity_turn 
+{
     parameter lObj.
            
     local runmode to rm(25).
@@ -350,16 +391,22 @@ local function gravity_turn {
     when acc >= lObj["maxAcc"] then logStr("Throttling back at maximum acceleration").
 
     //Gravity turn loop
-    until ship:apoapsis >= lObj["tAp"] * 0.995 {
+    until ship:apoapsis >= lObj["tAp"] * 0.995 
+    {
         set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
         set acc to ship:maxThrust / ship:mass.
 
         //Check for throttle conditions, otherwise keep it at 100%
-        if ship:q >= lObj["maxQ"] {
+        if ship:q >= lObj["maxQ"] 
+        {
             set tVal to max(0, min(1, 1 + qPid:update(time:seconds, ship:q))). 
-        } else if acc >= lObj["maxAcc"] - 5 {
+        } 
+        else if acc >= lObj["maxAcc"] - 5 
+        {
             set tVal to max(0, min(1, 1 + accPid:update(time:seconds, acc))).
-        } else {
+        } 
+        else 
+        {
             set tVal to 1.
         }
         update_display().
@@ -372,7 +419,8 @@ local function gravity_turn {
     return runmode.   
 }
 
-local function slow_burn_to_apo {
+local function slow_burn_to_apo 
+{
     parameter lObj. 
 
     local runmode to rm(30).
@@ -384,7 +432,8 @@ local function slow_burn_to_apo {
     local tVal to 1.
     lock throttle to tVal.
 
-    until ship:apoapsis >= lObj["tAp"] {
+    until ship:apoapsis >= lObj["tAp"] 
+    {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
         set tval to 0.35.
 
@@ -392,7 +441,9 @@ local function slow_burn_to_apo {
     }
 }
 
-local function meco {
+
+local function meco 
+{
     parameter lObj.
 
     local runmode to rm(35).
@@ -407,7 +458,9 @@ local function meco {
     update_display().
 }
 
-local function coast_to_space {
+
+local function coast_to_space 
+{
     parameter lObj.
     
     local runmode to rm(40).
@@ -419,12 +472,16 @@ local function coast_to_space {
     local tVal to 0.
     lock throttle to tVal.
 
-    until ship:altitude >= body:atm:height {
+    until ship:altitude >= body:atm:height 
+    {
         set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
 
-        if ship:apoapsis >= lObj["tAp"] {
+        if ship:apoapsis >= lObj["tAp"] 
+        {
             set tVal to 0.
-        } else {
+        } 
+        else 
+        {
             set tVal to 0.25.
         }
 

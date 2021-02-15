@@ -21,28 +21,34 @@ local cache is init_mission_cache().
 
 //-- Main --//
 local program is stateObj["program"].
-if program = 0 {
+if program = 0 
+{
     set_program("ls0").
-} else if program = "completed" and ship:status = "LANDED" {
+} 
+else if program = "completed" and ship:status = "LANDED" 
+{
     set_program("ls0").
     rm().
     sr().
 }
 
 
-if program = "ls0" {
+if program = "ls0" 
+{
     exec_launch().
     set_program("ms0").
 }
 
 set core:bootfilename to "local:/boot/mc".
 
-if program = "ms0" {
+if program = "ms0" 
+{
     exec_mission(cache["ms0"]).
     set_program("ms1").
 }
 
-if program = "ms1" {
+if program = "ms1" 
+{
     exec_mission(cache["ms1"]).
     set_program("completed").
 }
@@ -52,7 +58,8 @@ if program = "ms1" {
 
 
 // Functions
-local function exec_launch {
+local function exec_launch 
+{
     disp_main().
 
     // Get the launch script from cache and copy to the local volume
@@ -68,11 +75,19 @@ local function exec_launch {
     local rVal      to choose cache["rVal"]     if cache["rVal"]:istype("scalar")   else cache["rVal"]:toNumber.
 
     // Check if we are on a modular launch pad.
-    if ship:partsTaggedPattern("mlp"):length > 0 {
+    if ship:partsTaggedPattern("mlp"):length > 0 
+    {
         
         // Load the MLP lib
         runOncePath("0:/lib/part/lib_launchpad").
     
+        // Check for lights, and activate nightlight if true
+        if ship:partsTaggedPattern("mlp.base")[0]:partsTaggedPattern("lgt"):length > 0 
+        {
+            mlp_night_light().
+            logStr("Night light function enabled").
+        }
+
         // Activate generator on launch pad in case of hold
         mlp_gen_on().
         logStr("Vehicle on external power").
@@ -92,7 +107,8 @@ local function exec_launch {
     return true.
 }
 
-local function exec_mission {
+local function exec_mission 
+{
     parameter script.
 
     local kscScrPath to kscPath + "/mission/" + script.
@@ -104,7 +120,8 @@ local function exec_mission {
     return true.
 }
 
-local function set_program {
+local function set_program 
+{
     parameter prog.
 
     set program to prog.

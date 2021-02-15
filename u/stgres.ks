@@ -18,7 +18,8 @@ local n to 0.
 
     set ln to ln + 2.
 
-    for r in stage:resources {
+    for r in stage:resources 
+    {
         local pct to choose 0 if r:amount <= 0 else r:amount / r:capacity.
 
         print "R[" + n + "]: " + r:name at (2, ln).
@@ -28,7 +29,8 @@ local n to 0.
     
     set n to n + 1. set ln to ln + 1.
     
-    if ln >= 75 {
+    if ln >= 75 
+    {
         print "*** Press any key to continue ***" at (10, ln + 1).
         terminal:input:getChar().
         clearscreen.

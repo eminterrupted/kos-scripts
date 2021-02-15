@@ -10,10 +10,12 @@ local expMod is "SCANexperiment".
 local resMod is "ModuleSCANResourceScanner".
 
     //Basic functions
-    global function start_scansat {
+    global function start_scansat 
+    {
         parameter p.
 
-        if p:hasModule(scanMod) {
+        if p:hasModule(scanMod) 
+        {
             local m is p:getModule(scanMod).
             if m:hasEvent("start scan: multispectral")  m:doEvent("start scan: multispectral").
             else if m:hasEvent("start scan: radar")     m:doEvent("start scan: radar").
@@ -22,14 +24,16 @@ local resMod is "ModuleSCANResourceScanner".
             else if m:hasEvent("start scan: resource")  m:doEvent("start scan: resource").
         }
 
-        if p:hasModule(resMod) {
+        if p:hasModule(resMod) 
+        {
             local m is p:getModule(resMod).
             if m:hasEvent("start scan: resource")       m:doEvent("start scan: resource").
         }
     }
     
 
-    global function stop_scansat{
+    global function stop_scansat
+    {
         parameter p.
 
         local m is p:getModule(scanMod).
@@ -40,7 +44,8 @@ local resMod is "ModuleSCANResourceScanner".
         else if m:hasEvent("stop scan: resource")  m:doEvent("stop scan: resource").
     }
 
-    global function scansat_analyze_data {
+    global function scansat_analyze_data 
+    {
         parameter p.
 
         local m is p:getModule(expMod).
@@ -53,7 +58,8 @@ local resMod is "ModuleSCANResourceScanner".
     }
 
     //-- return if scanner is at ideal altitude for scanner type
-    global function check_scansat_alt {
+    global function check_scansat_alt 
+    {
         parameter p.
 
         local scanAlt is get_scansat_alt_range(p).
@@ -66,7 +72,8 @@ local resMod is "ModuleSCANResourceScanner".
 
 
     //Formats the altitude string to return an object containing min, max, and ideal values.
-    global function get_scansat_alt_range {
+    global function get_scansat_alt_range 
+    {
         parameter p.
 
         local m is p:getModule("SCANsat").
@@ -82,18 +89,21 @@ local resMod is "ModuleSCANResourceScanner".
 
 
     //-- return scanner field data in object
-    global function get_scansat_data {
+    global function get_scansat_data 
+    {
         parameter p.
 
         local m is p:getModule("SCANsat").
         local retObj is lexicon().
         
-        for f in m:allFieldNames {
+        for f in m:allFieldNames 
+        {
             set retObj[f] to m:getField(f).
         }
 
     //surface in daylight field contains html color codes - strip it out
-        if retObj:hasKey("surface in daylight") {
+        if retObj:hasKey("surface in daylight") 
+        {
             set retObj["surface in daylight"] to choose retObj["surface in daylight"]:substring(15,1) if retObj["surface in daylight"]:length > 0 else "".
         }
 

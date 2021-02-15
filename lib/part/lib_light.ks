@@ -1,7 +1,8 @@
 @lazyGlobal off.
 
 //Set RGB Values
-global function set_kos_rgb {
+global function set_kos_rgb 
+{
     parameter p,
             r is 0.45,
             g is 0.35,
@@ -14,13 +15,18 @@ global function set_kos_rgb {
     m:setField("light b", b).
 }
 
-global function tog_cherry_light {
+global function tog_cherry_light 
+{
     parameter p,
               mode is true.
 
     local m is p:getModule("ModuleLight").
-    if mode {
-        if m:hasEvent("lights on") m:doEvent("lights on").
+    if mode 
+    {
+        do_event(m, "lights on").
     }
-    else if m:hasEvent("lights off") m:doEvent("lights off").
+    else 
+    {
+        do_event(m, "lights off").
+    }
 }

@@ -77,16 +77,20 @@ global info is lex(
 //Part module utils
     // Checks a given module for presence of an event, and does it 
     // if available
-    global function do_action {
+    global function do_action 
+    {
         parameter _m,       // Module
                 _event,   // Event to do if present
                 _bit is true.     // The true/false bit for an action.
                                     // Not usually needed, hence the default
 
-        if _m:hasAction(_event) {
+        if _m:hasAction(_event) 
+        {
             _m:doAction(_event, _bit).
             return true.
-        } else {
+        } 
+        else 
+        {
             return false.
         }
     }
@@ -94,14 +98,18 @@ global info is lex(
 
     // Checks a given module for presence of an event, and does it 
     // if available
-    global function do_event {
+    global function do_event 
+    {
         parameter _m,       // Module
                 _event.   // Event to do if present
 
-        if _m:hasEvent(_event) {
+        if _m:hasEvent(_event) 
+        {
             _m:doEvent(_event).
             return true.
-        } else {
+        } 
+        else 
+        {
             return false.
         }
     }
@@ -109,24 +117,47 @@ global info is lex(
 
     // Checks a given module for presence of a field, and 
     // returns it if present, false if not 
-    global function get_field {
+    global function get_field 
+    {
         parameter _m,
                   _field.
 
-        if _m:hasField(_field) {
+        if _m:hasField(_field) 
+        {
             return _m:getField(_field).
-        } else {
+        } 
+        else 
+        {
+            return false.
+        }
+    }
+
+    global function set_field
+    {
+        parameter _m,
+                  _field,
+                  _val.
+
+        if _m:hasField(_field)
+        {
+            _m:setField(_field, _val).
+            return true.
+        }
+        else
+        {
             return false.
         }
     }
 
     // Returns an obj with all fields for a given module
-    global function get_module_fields {
+    global function get_module_fields 
+    {
     parameter m.
 
     local retObj is lexicon().
     
-    for f in m:allFieldNames {
+    for f in m:allFieldNames 
+    {
         set retObj[f] to m:getField(f).
     }
 
@@ -139,7 +170,8 @@ global info is lex(
     // Safe stage. Enforces wait between staging attempts.
     // Also will add delay for cryo upper stages with 
     // deployable nozzles if LH2 is present in the stage
-    global function safe_stage {
+    global function safe_stage 
+    {
         
         wait 0.5.
         logStr("Staging").

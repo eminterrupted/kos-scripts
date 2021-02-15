@@ -6,7 +6,8 @@ parameter pList to ship:parts,
 //set config:ipu to 500.
 clearScreen.
 core:doAction("open terminal",true).
-for p in pList {
+for p in pList 
+{
     if p:tag <> "test" set p:tag to "".
 }
 
@@ -35,25 +36,30 @@ local uSet to uniqueSet().
 
 for p in pList pStack:push(p).
 
-if lightList:length > 0 {
+if lightList:length > 0 
+{
     for l in lightList tog_cherry_light(l).
 }
 
-if mode = "testStand" {
-    for p in pStack {
-        if p:tag:contains("test") and not uSet:contains(p:name) {
+if mode = "testStand" 
+{
+    for p in pStack 
+    {
+        if p:tag:contains("test") and not uSet:contains(p:name) 
+        {
             uSet:add(p:name).
             test_cd(p).
-            if p:istype("engine") {
+            if p:istype("engine") 
+            {
                 for e in ship:partsNamed(p:name) test_part(e).
                 engine_test_throttle_sequence(p).
             }
-            
-            else if p:isType("decoupler") {
+            else if p:isType("decoupler") 
+            {
                 for dc in ship:partsNamed(p:name) test_part(dc).
             }
-
-            else {
+            else 
+            {
                 for tpart in ship:partsNamed(p:name) test_part(tpart).
             }
         }
@@ -61,15 +67,19 @@ if mode = "testStand" {
 
     test_sci_list().
 
-} else if mode = "staticFire" {
+} 
+else if mode = "staticFire" 
+{
     local pTestRep to "".
-    for p in pStack {
+    for p in pStack 
+    {
         set pTestRep to p.
         p:activate.
     }
 
     local tStamp to 5.
-    until tStamp <= 0 {
+    until tStamp <= 0 
+    {
         disp_test_main(pTestRep, -1, tStamp).
         wait 1.
         set tStamp to tStamp - 1.
@@ -85,20 +95,26 @@ clearScreen.
 //- end main
 
 
-local function check_contracts {
+local function check_contracts 
+{
 
-    if addons:available("career") {
+    if addons:available("career") 
+    {
         local clist to addons:career:activecontracts.
         local tpList to list().
 
-        for contract in clist {
-            if contract:title:startsWith("Test") {
+        for contract in clist 
+        {
+            if contract:title:startsWith("Test") 
+            {
                 print contract:title.
                 set tplist to parse_contract_param(contract).
             }
 
-            if tpList:length > 0 {
-                for p in tplist {
+            if tpList:length > 0 
+            {
+                for p in tplist 
+                {
                     set p:tag to "test".
                     print p at (2, 144).
                 }
@@ -108,28 +124,34 @@ local function check_contracts {
 }
 
 
-local function end_eng_test {
+local function end_eng_test 
+{
     parameter p,
               tEnd.
 
     local solid is false.
-    for res in p:resources {
+    for res in p:resources
+    {
         if res:name = "SolidFuel" set solid to true. 
     }
 
-    if solid {
-        until p:flameout {
+    if solid 
+    {
+        until p:flameout 
+        {
             return false.
         } 
-
+        return true.
+    }    
+    else if time:seconds >= tEnd 
+    {
         return true.
     }
-    
-    else if time:seconds >= tEnd return true.
 }
 
 
-local function engine_test_throttle_sequence {
+local function engine_test_throttle_sequence 
+{
     parameter p,
               tDur is 15.
 
@@ -137,7 +159,8 @@ local function engine_test_throttle_sequence {
     local tEnd to t + tDur. 
     local tSpool to 0.
 
-    from { local tval to 1.} until tval <= 0 step { set tval to tval - 0.025.} do {
+    from { local tval to 1.} until tval <= 0 step { set tval to tval - 0.025.} do 
+    {
         lock throttle to max(0, tSpool).
         set tSpool to 1 - max((tval / 1), 0).
         set tDur to time:seconds - t.
@@ -147,7 +170,8 @@ local function engine_test_throttle_sequence {
 
     lock throttle to 1.
 
-    until end_eng_test(p, tEnd) {
+    until end_eng_test(p, tEnd) 
+    {
         set tDur to time:seconds - t.
         disp_test_main(p, tDur).
         disp_eng_perf().
@@ -160,13 +184,16 @@ local function engine_test_throttle_sequence {
 }
 
 
-local function test_sci_list {
+local function test_sci_list 
+{
     local sciList to get_sci_mod_for_parts(ship:parts).
 
 
 
-    if sciList:length > 0 {
-        from { local x is 0. } until x = sciList:length step { set x to x + 1. } do {
+    if sciList:length > 0 
+    {
+        from { local x is 0. } until x = sciList:length step { set x to x + 1. } do 
+        {
             disp_test_main(sciList[x]:part, -1, x).
             sciList[x]:deploy().
             wait until sciList[x]:hasData.
@@ -175,16 +202,19 @@ local function test_sci_list {
     }
 }
 
-local function test_cd {
+local function test_cd 
+{
     parameter p.
 
-    if lightList:length > 0 {
+    if lightList:length > 0 
+    {
         for l in lightList tog_cherry_light(l).
     }
 
     wait 1.
 
-    from { local x to 5.} until x = 0 step { set x to x - 1.} do {
+    from { local x to 5.} until x = 0 step { set x to x - 1.} do 
+    {
         disp_test_main(p, -1, x).
         wait 1.
     }

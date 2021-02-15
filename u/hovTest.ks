@@ -15,7 +15,7 @@ local burnDur   to 0.
 
 local tPid      to setup_alt_pid(holdAlt).
 local tPidVal   to 0.
-local vsPid     to setup_vspeed_pid(50).
+local vsPid     to setup_speed_pid(50).
 local vsPidVal  to 0.
 
 local tVal      to 0.
@@ -37,12 +37,14 @@ log "time,throttle,alt,tpid_output,verticalSpeed,vspid_output" to desLog.
 
 // Set up a trigger to arm chute when fuel is low
 out_msg("Arming chutes").
-when ship:liquidfuel <= 0.1 then {
+when ship:liquidfuel <= 0.1 then 
+{
     arm_chutes().
 }
 
 // triggers to raise the landing legs
-when alt:radar >= 10 and verticalSpeed > 0 then {
+when alt:radar >= 10 and verticalSpeed > 0 then 
+{
     logStr("Raising landing legs").
     gear off.
 }
@@ -55,7 +57,8 @@ local startTime to time:seconds.
 // Get to altitude
 logStr("Rapid climbing to altitude: " + holdAlt).
 out_msg("Rapid climbing to altitude: " + holdAlt).
-until ship:altitude >= holdAlt * 0.90 {
+until ship:altitude >= holdAlt * 0.90 
+{
     set tPidVal     to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to min(tPidVal, vsPidVal).
@@ -70,7 +73,8 @@ logStr("Slow climbing to altitude: " + holdAlt).
 out_msg("Slow climbing to altitude: " + holdAlt).
 set vsPid:setpoint to min(10, (holdAlt * 0.9) / 10).
 vsPid:reset().
-until ship:altitude >= holdAlt - 10 {
+until ship:altitude >= holdAlt - 10 
+{
     set tPidVal         to tPid:update(time:seconds, ship:altitude).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to min(tPidVal, vsPidVal).
@@ -84,7 +88,8 @@ until ship:altitude >= holdAlt - 10 {
 // Reach hover state
 logStr("Hover loop").
 out_msg("Hover loop").
-until check_value(verticalSpeed, 0, 0.1) and check_value(ship:altitude, holdAlt, 1) {
+until check_value(verticalSpeed, 0, 0.1) and check_value(ship:altitude, holdAlt, 1) 
+{
 
     // Pidloop update
     set tPidVal     to tPid:update(time:seconds, ship:altitude).
@@ -104,7 +109,8 @@ set vsPid:setpoint to 0.
 vsPid:reset().
 
 logStr("Hovering").
-until time:seconds >= tStamp {
+until time:seconds >= tStamp 
+{
     out_msg("Hovering in place for " + round(tStamp - time:seconds) + "s  ").
     // Pidloop update
     set tPidVal     to tPid:update(time:seconds, ship:altitude).
@@ -125,7 +131,8 @@ tPid:reset().
 set tPid:setpoint to 0.
 
 // Trigger to lower landing gear when close to landing
-when alt:radar <= 250 and verticalSpeed < 0 then {
+when alt:radar <= 250 and verticalSpeed < 0 then 
+{
     logStr("Lowering landing legs").
     gear on.
 }
@@ -151,7 +158,8 @@ lock steering to ship:srfretrograde + r(0, 0, 180).
 logStr("Free fall").
 out_msg("Free fall").
 local tti to 999999.
-until burnDur > tti {
+until burnDur > tti 
+{
     set tti to time_to_impact(50).
     set burnDur to get_burn_dur(verticalSpeed).
 
@@ -165,14 +173,15 @@ logStr("Ignition").
 
 logStr("Entering powered descent at radar alt: " + round(alt:radar)).
 out_msg("Entering powered descent phase at alt: " + round(alt:radar)).
-until alt:radar <= 50 {
+until alt:radar <= 50 
+{
     set tPidVal     to tPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to max(vsPidVal, tPidVal).
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal  to desLog.
 
-    set tti to time_to_impact(50).
+    set tti to time_to_impact(0).
     logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
 
     pid_display().
@@ -186,14 +195,15 @@ logStr("Slowing rate of descent").
 out_msg("Slowing rate of descent").
 set vsPid:setpoint to -2.5.
 vsPid:reset().
-until status = "landed" {
+until status = "landed" 
+{
     set tPidVal     to tPid:update(time:seconds, alt:radar).
     set vsPidVal    to vsPid:update(time:seconds, verticalSpeed).
     set tVal        to max(vsPidVal, tPidVal).
 
     log (time:seconds - startTime) + "," + throttle + "," + alt:radar + "," + tPidVal + "," + verticalSpeed + "," + vsPidVal to desLog.
 
-    set tti to time_to_impact(50).
+    set tti to time_to_impact(0).
     logStr("Time to impact (0m buffer): " + round(tti, 3) + "s").
 
     pid_display().

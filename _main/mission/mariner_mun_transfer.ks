@@ -2,10 +2,10 @@
 
 parameter tgtBody   is "Mun",
           tgtInc    is 88,
-          tgtLan    is ship:orbit:longitudeofascendingnode,
-          trnsfrAlt is 250000,
-          tgtAp1    is 100000,
-          tgtPe1    is 100000.
+          tgtLan    is 120,
+          trnsfrAlt is 500000,
+          tgtAp1    is 15000,
+          tgtPe1    is 15000.
           
 //
 

@@ -3,7 +3,8 @@
 
 //shrouded decoupler
     //-- jettison shroud without decoupling
-    global function jettison_decoupler_shroud {
+    global function jettison_decoupler_shroud 
+    {
         parameter p.
 
         local m is p:getModule("ModuleDecouplerShroud").

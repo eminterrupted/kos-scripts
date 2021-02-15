@@ -20,7 +20,8 @@ local rVal      to 0.                   // Orientation of vessel for the duratio
                                         // 0 for probes, 180 for manned vessels cuz there are windows :) 
 
 // Load the above from the cache
-if exists(kscCache) {
+if exists(kscCache) 
+{
         set cache to readJson(kscCache).
 
         if cache:hasKey("ls0")          set launchS1    to cache["ls0"]:toString.
@@ -126,13 +127,15 @@ set s2:onchange to { parameter mChoice. set missionS2 to mChoice:toString:replac
 
 local close to gui:addButton("Close").
 
-when True then {
+when true then 
+{
         from { local x to 0.} until x >= tabWidget_alltabs:length step { set x to x+1.} do
         {
                 // Earlier, we were careful to hide the panels that were not the current
                 // one when they were added, so we can test if the panel to VISIBLE
                 // to avoid the more expensive call to SHOWONLY every frame.
-                if tabWidget_allTabs[x]:pressed and not (tabWidget_allPanels[x]:VISIBLE) {
+                if tabWidget_allTabs[x]:pressed and not (tabWidget_allPanels[x]:VISIBLE) 
+                {
                         tabWidget_allPanels[x]:parent:showonly(tabWidget_allPanels[x]).
                 }
         }
@@ -144,7 +147,8 @@ local tStamp to time:seconds + 60.
 local closeGui to false.
 core:doAction("open terminal",true).
 
-until closeGui = true {
+until closeGui = true 
+{
         wait(0).
 
         print "remaining time: " + round(tStamp - time:seconds) + "    " at (2,2).

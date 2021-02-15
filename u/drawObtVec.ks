@@ -12,7 +12,8 @@ clearScreen.
 
 terminal:input:clear().
 
-until terminal:input:haschar {
+until terminal:input:haschar 
+{
     print "Body Position Vector: " + body:position at (2, 5).
     print "Obt Velocity Vector:  " + ship:obt:velocity:orbit at (2, 6).
     print "Normal Vector:        " + vCrs(body:position, ship:obt:velocity:orbit) at (2, 7).
