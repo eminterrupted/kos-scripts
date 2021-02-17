@@ -4,7 +4,7 @@ runOncePath("0:/lib/lib_log").
 
 global function warp_to_timestamp 
 {
-    parameter _ts.
+    parameter _ts, _buffer is 30.
     
     if verbose 
     {
@@ -24,9 +24,9 @@ global function warp_to_timestamp
     }
     print "                    " at (2, 35).
 
-    until time:seconds >= _ts - 30 
+    until time:seconds >= _ts - _buffer 
     {
-        if warp = 0 warpTo(_ts - 30).
+        if warp = 0 warpTo(_ts - _buffer).
         update_display().
     }
 

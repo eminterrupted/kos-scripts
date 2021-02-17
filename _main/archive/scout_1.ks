@@ -13,7 +13,7 @@ runOncePath("0:/lib/lib_display").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_core").
 runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/lib_dmag_sci").
+
 runOncePath("0:/lib/lib_misc_parts").
 runOncePath("0:/lib/lib_engine").
 

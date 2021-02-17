@@ -278,6 +278,8 @@ global function get_transfer_phase_angle
     //Semi-major axis calcs
     local curSMA is _startAlt + _startBody:radius.      // SMA we are starting from
     local tgtSMA is target:altitude + _startBody:radius.// SMA we want at the target
+    //local curSMA to ship:orbit:semimajoraxis.
+    //local tgtSMA to target:orbit:semimajoraxis.
     local hohSMA to (curSMA + tgtSMA) / 2.              // The halfway point for hohmann transfer
 
     // Transfer phase angle

@@ -1,61 +1,3 @@
-// Returns the expected altitude for an orbit at a given true anomaly
-global function orbit_altitude_at_ta 
-{
-    parameter _obtIn,   // Orbit to check
-              _ta.      // True anomaly in degrees
-
-    local sma is _obtIn:semiMajorAxis.
-    local ecc is _obtIn:eccentricity.
-    local r is sma * (1 - ecc^2) / (1 + ecc * cos(_ta)).
-
-    return r - _obtIn:body:radius.
-}
-
-// Get the true anomaly of _obt0 where it crosses _obt1's altitude
-// using a warmer / cooler algorithm. Specify the intended min/max
-// epsilon of accuracy, as this is expensive. Returns -1 as flag to 
-// indicate no crossing point.
-global function orbit_cross_ta 
-{
-    parameter _obt0,        // Current orbit
-              _obt1,        // Orbit to find intersect with
-              _maxEpsilon,  // how coarse to search at first
-              _minEpsilon.  // how fine to search before accepting answer
-
-    local pe_ta_off is ta_offset( _obt0, _obt1).
-
-    local incr is _maxEpsilon.
-    local prev_diff is 0.
-    local start_ta is _obt0:trueanomaly. // Start the search where the ship is
-    local ta is start_ta.
-
-    until ta > start_ta + 360 or abs(incr) < _minEpsilon 
-    {
-        local diff is orbit_altitude_at_ta(_obt0, ta) - orbit_altitude_at_ta(_obt1, pe_ta_off + ta).
-
-        // if pos / neg signs of diff and prev_diff differ and neither are zero:
-        if diff * prev_diff < 0 
-        {
-            // Then this is a hit, so we reverse direction and go slower
-            set incr to - incr / 10.
-        }
-
-        set prev_diff to diff.
-
-        set ta to ta + incr.
-    }
-
-    if ta > start_ta + 360 
-    {
-        return -1.  // We've checked the entire orbit with no hits
-    } 
-    else 
-    {
-        return mod(ta, 360).
-    }
-}
-
-
 // How far ahead is _obt0's true anomaly measured from _obt1's in degrees?
 global function ta_offset 
 {
@@ -103,4 +45,68 @@ global function target_angle
         - lng_to_degrees(ship:longitude) + 360,
         360
     ).
+}
+
+// Below from CheersKevin Ep 25 (https://www.youtube.com/watch?v=YdwEILVc5Ec&list=PLb6UbFXBdbCrvdXVgY_3jp5swtvW24fYv&index=26)
+// Steers towards the vector
+
+
+// Approaching
+global function rdv_approach
+{
+    parameter rdvTgt is target,
+              speed is 1.
+
+    lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    lock steering to lookDirUp(rdvTgt:position, sun:position).
+    wait until shipFacing().
+
+    lock maxAccel to ship:maxThrust / ship:mass.
+    lock throttle to min(1, abs(speed - relativeVelocity:mag) / maxAccel).
+
+    until relativeVelocity:mag > speed - 0.1
+    {
+        update_display().
+    }
+    lock throttle to 0.
+    lock steering to relativeVelocity.
+}
+
+// Cancel out relative velocity
+global function rdv_cancel_vel 
+{
+    parameter rdvTgt is target.
+
+    lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    lock steering to lookDirUp(relativeVelocity, sun:position).
+    wait until shipFacing().
+    
+    lock maxAccel to ship:maxThrust / ship:mass.
+    lock throttle to min(1, relativeVelocity:mag / maxAccel).
+    until relativeVelocity:mag < 0.025
+    {
+        update_display().
+        disp_rendezvous(rdvTgt).
+    }
+    lock throttle to 0.
+}
+
+// Wait until nearest approach
+global function rdv_await_nearest
+{
+    parameter rdvTgt is target,
+              minDistance is 250.
+
+    local lastDistance to 999999.
+    until false 
+    {
+        set lastDistance to rdvTgt:distance.
+        update_display().
+        disp_rendezvous(rdvTgt).
+        wait 0.1.
+        if rdvTgt:distance >= lastDistance or rdvTgt:distance <= minDistance 
+        {
+            break.
+        }
+    }
 }

@@ -177,22 +177,26 @@ global info is lex(
         logStr("Staging").
 
         until false {
-            until stage:ready {   
+            until stage:ready 
+            {   
                 wait 0.01.
             }
 
-            if stage:ready {
+            if stage:ready 
+            {
                 stage.
                 wait 0.5.
                 break.
             }
         }
 
-        if stage:resourcesLex:lqdHydrogen:amount > 0 {
+        if stage:resourcesLex:lqdHydrogen:amount > 0 
+        {
             wait 5.
         }
 
-        if ship:partsTaggedPattern("sep.*.stgId:" + stage:number):length > 0 {
+        if ship:partsTaggedPattern("sep.*.stgId:" + stage:number):length > 0 
+        {
             wait 0.5. 
             stage.
         }
@@ -206,17 +210,21 @@ global info is lex(
 
 
     // Staging triggers
-    global function staging_triggers {
+    global function staging_triggers 
+    {
 
         //One time trigger for solid fuel launch boosters
-        if ship:partsTaggedPattern("eng.solid"):length > 0 {
-            when stage:solidfuel < 0.1 and throttle > 0 then {
+        if ship:partsTaggedPattern("eng.solid"):length > 0 
+        {
+            when stage:solidfuel < 0.1 and throttle > 0 then 
+            {
                 safe_stage().
             }
         }
 
         // For liquid fueled engines.
-        when ship:availableThrust < 0.1 and throttle > 0 then {
+        when ship:availableThrust < 0.1 and throttle > 0 then 
+        {
             safe_stage().
             preserve.
         }
@@ -225,10 +233,29 @@ global info is lex(
 
 // Vessel state
 
+    // Checks if the ship is facing within 0.1 degrees of the target vector direction
+    global function shipFacing 
+    {
+        local _acc to 1.
+        if vAng(ship:facing:forevector, steering:vector) <= _acc 
+        {
+            print "                 " at (2, terminal:height - 10).
+            return true.
+        }
+        else 
+        {
+            print "shipFacing: false" at (2, terminal:height - 10).
+            return false.
+        }
+    }
+
     // Checks if the ship is settled with respect to it's intended orientation
-    global function shipSettled {
-        if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 {
-            if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 {
+    global function shipSettled 
+    {
+        if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 
+        {
+            if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 
+            {
                 return true.
             }
         }
@@ -239,7 +266,8 @@ global info is lex(
 
     // Gets the time until impact with the ground, with optional margin
     // From CheersKevin - https://www.youtube.com/watch?v=-goK27y6Xd4&list=PLb6UbFXBdbCrvdXVgY_3jp5swtvW24fYv&index=16
-    global function time_to_impact {
+    global function time_to_impact 
+    {
         parameter margin is 0.
 
         local d is alt:radar - margin.

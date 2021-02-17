@@ -362,7 +362,36 @@ global function disp_pid_data
     print "OUTPUT VALUE:  " + round(pPid:output, 5) + "          "    at (h1,cr).
 }
 
-//Rendezvous
+
+//Rendezvous new
+global function disp_rendezvous
+{
+    parameter rdvTgt is target.
+
+    local pos is "assign".
+    if dispObj:haskey("rdv") 
+    {
+        set pos to disp_get_pos_obj( dispObj["rdv"]).
+    }
+    else 
+    {
+        set pos to disp_get_pos_obj(pos).
+        set dispObj["rdv"] to pos["id"].
+    }
+
+    set ln to pos["v"].
+    set h1 to pos["h1"].
+    set h2 to pos["h2"].
+
+    print "RENDEZVOUS" at (h1,ln).
+    print "----------" at (h1,cr).
+    print "TARGET:        " + rdvTgt:name at (h1,cr).
+    print "TARGET DIST:   " + round(rdvTgt:distance) + "    " at (h1,cr).
+    print "TARGET BRNG:   " + round(rdvTgt:bearing) + "    " at (h1, cr).
+}
+
+
+//Rendezvous old
 global function disp_rendezvous_data 
 {
     parameter pData.
