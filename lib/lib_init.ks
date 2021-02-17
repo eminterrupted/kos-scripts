@@ -113,10 +113,8 @@ global function init_state_obj
 }
 
 global function init_rm 
-{
-    parameter rmPrimer.
-    
-    local runmode to choose rmPrimer if stateObj["runmode"] = 99 else stateObj["runmode"].
+{    
+    local runmode to choose 0 if stateObj["runmode"] = 99 else stateObj["runmode"].
     return runmode.
 }
 

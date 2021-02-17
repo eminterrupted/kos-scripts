@@ -36,7 +36,7 @@ if not exists(obtScript) {
     compile(kscObtScript) to obtScript.
 }
 
-local runmode to init_rm(0).
+local runmode to init_rm().
 local sciList is get_sci_mod_for_parts(ship:parts).
 local tgtAp is 0.
 local tgtPe is info:altForSci[ship:body:name] - 5000.

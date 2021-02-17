@@ -16,7 +16,7 @@ local rdvScript to "0:/a/rendezvous_next".
 
 local mnvNode to node(0, 0, 0, 0).
 local mnvObj to lex().
-local runmode to stateObj["runmode"].
+local runmode to init_rm().
 
 local sVal to lookDirUp(ship:prograde:vector, sun:position).
 local tVal to 0.
@@ -34,10 +34,10 @@ if runmode = 0
     {
         remove m.
     }
-    set runmode to rm(1).
+    set runmode to rm(5).
 }
 
-if runmode = 1 
+if runmode = 5 
 {
     out_msg("Checking inclination").
     if ship:orbit:inclination < target:orbit:inclination - 0.1 or ship:orbit:inclination > target:orbit:inclination + 0.1 
@@ -45,32 +45,26 @@ if runmode = 1
         out_msg("Inclination not within range: Current [" + ship:obt:inclination + "] / Target [" + target:obt:inclination + "]").
         runpath(incChangeScript, target:orbit:inclination, target:orbit:lan).
     }
-    set runmode to rm(5).
+    else
+    {
+        out_msg("Inclination within range").
+    }
+    set runmode to rm(10).
 }
 
-if runmode = 5 
+if runmode = 10
 {
     out_msg("Getting transfer object and adding node").
     set mnvObj to get_transfer_obj().
     set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
     add mnvNode. 
-
     set mnvNode to optimize_rendezvous_node(mnvNode).
-    set runmode to rm(10).
-}
+    set mnvObj to get_burn_obj_from_node(nextNode).
 
-if runmode = 10 
-{
-    if not hasNode 
-    {
-        set runmode to rm(5).
-    } else 
-    {
-        lock steering to mnvNode:burnVector. 
-        wait until shipFacing().
-        set mnvObj to get_burn_obj_from_node(nextNode).
-        set runmode to rm(15).
-    }
+    lock steering to mnvNode:burnVector. 
+    wait until shipFacing().
+    
+    set runmode to rm(15).
     breakpoint().
 }
 

@@ -237,7 +237,7 @@ global info is lex(
     global function shipFacing 
     {
         local _acc to 1.
-        if vAng(ship:facing:forevector, steering:vector) <= _acc 
+        if vAng(ship:facing:forevector, steeringManager:target:forevector) <= _acc 
         {
             print "                 " at (2, terminal:height - 10).
             return true.

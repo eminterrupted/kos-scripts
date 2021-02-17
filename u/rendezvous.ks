@@ -22,7 +22,7 @@ local incChangeScript to "local:/incChange".
 copyPath("0:/_main/adhoc/simple_inclination_change", incChangeScript).
 
 //local stateObj to init_state_obj().
-local runmode to init_rm(0).
+local runmode to init_rm().
 
 disp_main().
 

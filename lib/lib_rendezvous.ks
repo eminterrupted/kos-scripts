@@ -72,6 +72,26 @@ global function rdv_approach
     lock steering to relativeVelocity.
 }
 
+// Wait until nearest approach
+global function rdv_await_nearest_approach
+{
+    parameter rdvTgt is target,
+              minDistance is 250.
+
+    local lastDistance to 999999.
+    until false 
+    {
+        set lastDistance to rdvTgt:distance.
+        update_display().
+        disp_rendezvous(rdvTgt).
+        wait 0.1.
+        if rdvTgt:distance >= lastDistance or rdvTgt:distance <= minDistance 
+        {
+            break.
+        }
+    }
+}
+
 // Cancel out relative velocity
 global function rdv_cancel_vel 
 {
@@ -89,24 +109,4 @@ global function rdv_cancel_vel
         disp_rendezvous(rdvTgt).
     }
     lock throttle to 0.
-}
-
-// Wait until nearest approach
-global function rdv_await_nearest
-{
-    parameter rdvTgt is target,
-              minDistance is 250.
-
-    local lastDistance to 999999.
-    until false 
-    {
-        set lastDistance to rdvTgt:distance.
-        update_display().
-        disp_rendezvous(rdvTgt).
-        wait 0.1.
-        if rdvTgt:distance >= lastDistance or rdvTgt:distance <= minDistance 
-        {
-            break.
-        }
-    }
 }
