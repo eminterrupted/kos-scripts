@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter _tgtAp    is 200000,
-          _tgtPe    is 200000,
+parameter _tgtAp    is 125000,
+          _tgtPe    is 125000,
           _tgtInc   is 0,
           _tgtLAN   is 0,
           _tgtArgPe is 0,
@@ -18,7 +18,7 @@ local incPath is "local:/inc_change".
 copyPath("0:/a/simple_inclination_change", incPath).
 
 local obtPath is "local:/obt_change".
-copyPath("0:/a/simple_orbit_change", obtPath).
+copyPath("0:/a/orbit_change", obtPath).
 
 when stage:number <= 0 then {
     panels on.
@@ -41,7 +41,8 @@ if not check_value(ship:orbit:inclination, _tgtInc, 2.5) or not check_value(ship
 // Run the orbit boost script
 out_msg("Executing orbit change at desired argPe").
 out_info("tgtAp: " + _tgtAp + "   tgtPe: " + _tgtPe + "   tgtArgPe: " + _tgtArgPe).
-runpath(obtPath, _tgtAp, _tgtPe, _tgtArgPe, _mnvAcc).
+local phase to choose false if _tgtAp > ship:periapsis else true.
+runpath(obtPath, _tgtAp, _tgtPe, _mnvAcc, phase).
 
 out_msg("change_orbit.ks complete!").
 out_info().

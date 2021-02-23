@@ -104,7 +104,7 @@ global function warp_to_alt
                 sr(5).
             }
         }
-        else if ship:altitude > pAlt 
+        else
         {
             if warp > 0 kuniverse:timewarp:cancelwarp().
             wait until kuniverse:timewarp:issettled.

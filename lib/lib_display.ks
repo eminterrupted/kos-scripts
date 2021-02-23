@@ -105,8 +105,8 @@ global function disp_main
     else print clr at (h1, ln).
 
     // Uncomment below to monitor total loop time delta
-    print "delta-T: " + round(time:seconds - ts, 5) + "   " at (25, terminal:height - 5).
-    set ts to time:seconds.
+    // print "delta-T: " + round(time:seconds - ts, 5) + "               " at (25, terminal:height - 5).
+    // set ts to time:seconds.
 }
 
 global function disp_test_main 

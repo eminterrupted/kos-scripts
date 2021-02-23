@@ -236,15 +236,13 @@ global info is lex(
     // Checks if the ship is facing within 0.1 degrees of the target vector direction
     global function shipFacing 
     {
-        local _acc to 1.
-        if vAng(ship:facing:forevector, steeringManager:target:forevector) <= _acc 
+        local _acc to 0.1.
+        if abs(steeringManager:angleerror) <= _acc
         {
-            print "                 " at (2, terminal:height - 10).
             return true.
         }
         else 
         {
-            print "shipFacing: false" at (2, terminal:height - 10).
             return false.
         }
     }
@@ -252,14 +250,13 @@ global info is lex(
     // Checks if the ship is settled with respect to it's intended orientation
     global function shipSettled 
     {
-        if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 
+        if steeringmanager:angleerror >= -0.01 and steeringmanager:angleerror <= 0.01 
         {
-            if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 
+            if steeringmanager:rollerror >= -0.01 and steeringmanager:rollerror <= 0.01
             {
                 return true.
             }
         }
-
         return false.
     }
 

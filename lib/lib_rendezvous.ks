@@ -52,7 +52,7 @@ global function target_angle
 
 
 // Approaching
-global function rdv_approach
+global function rdv_approach_target
 {
     parameter rdvTgt is target,
               speed is 1.
@@ -67,6 +67,7 @@ global function rdv_approach
     until relativeVelocity:mag > speed - 0.1
     {
         update_display().
+        disp_rendezvous(rdvTgt).
     }
     lock throttle to 0.
     lock steering to relativeVelocity.
@@ -93,7 +94,7 @@ global function rdv_await_nearest_approach
 }
 
 // Cancel out relative velocity
-global function rdv_cancel_vel 
+global function rdv_cancel_velocity 
 {
     parameter rdvTgt is target.
 
@@ -102,8 +103,8 @@ global function rdv_cancel_vel
     wait until shipFacing().
     
     lock maxAccel to ship:maxThrust / ship:mass.
-    lock throttle to min(1, relativeVelocity:mag / maxAccel).
-    until relativeVelocity:mag < 0.025
+    lock throttle to max(0.05, min(1, relativeVelocity:mag / maxAccel)).
+    until relativeVelocity:mag < 0.1
     {
         update_display().
         disp_rendezvous(rdvTgt).

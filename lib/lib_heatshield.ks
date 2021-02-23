@@ -7,7 +7,7 @@ global function jettison_heatshield
     local m is "ModuleDecouple".
     if hs:hasModule(m) 
     {
-        return do_event(m, "jettison heat shield").
+        return do_event(hs:getModule(m), "jettison heat shield").
     }
     else return false.
 }

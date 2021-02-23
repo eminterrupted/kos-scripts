@@ -545,35 +545,49 @@ global function optimize_rendezvous_node
     parameter _mnvNode,
               _tgt is target.
 
-    local acc       to 0.01.
-    local mnvParam  to list(_mnvNode:eta + time:seconds, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
-    local myPos     to positionAt(ship, _mnvNode:time + (_mnvNode:orbit:period / 2)).
-    local tgtPos    to positionAt(_tgt, _mnvNode:time + (_mnvNode:orbit:period / 2)).
+    local mnvParam  to list(_mnvNode:time, _mnvNode:radialOut, _mnvNode:normal, _mnvNode:prograde).
+    local myPos     to positionAt(ship, _mnvNode:time + (_mnvNode:orbit:period / 2)) - ship:body:position.
+    local tgtPos    to positionAt(_tgt, _mnvNode:time + (_mnvNode:orbit:period / 2)) - _tgt:body:position.
     lock  posAng    to vAng(myPos, tgtPos).
     
     local function ang_factor  
     {
-        if posAng >= 100 return 100.
-        else if posAng >= 25 return 25.
-        else if posAng >= 5  return 5.
+        if posAng >= 100 return 50.
+        else if posAng >= 25 return 10.
+        else if posAng >= 5  return 2.5.
         else return 1.
     }
 
-    until false
+    local done to false.
+    until done
     {
-        local lastPosAng to posAng.
-        remove _mnvNode.
-        set mnvParam to list(mnvParam[0] + ang_factor(), mnvParam[1], mnvParam[2], mnvParam[3]).
-        set _mnvNode to node(mnvParam[0], mnvParam[1], mnvParam[2], mnvParam[3]).
-        add _mnvNode.
-
-        set myPos   to positionAt(ship, _mnvNode:time + (_mnvNode:orbit:period / 2)).
-        set tgtPos  to positionAt(_tgt, _mnvNode:time + (_mnvNode:orbit:period / 2)).
-        out_info("Current position angle diff: " + round(posAng, 5)).
-        wait 0.01.
-        if posAng <= 0.25
+        local candidates to list(
+            list(mnvParam[0] + ang_factor(), mnvParam[1], mnvParam[2], mnvParam[3])
+            //,list(mnvParam[0] - 1, mnvParam[1], mnvParam[2], mnvParam[3])
+        ).
+        
+        for c in candidates
         {
-            if posAng >= lastPosAng break. 
+            local lastPosAng to posAng.
+            remove _mnvNode.
+            set mnvParam to c.
+            set _mnvNode to node(mnvParam[0], mnvParam[1], mnvParam[2], mnvParam[3]).
+            add _mnvNode.
+
+            set myPos   to positionAt(ship, _mnvNode:time + (_mnvNode:orbit:period / 2)).
+            set tgtPos  to positionAt(_tgt, _mnvNode:time + (_mnvNode:orbit:period / 2)).
+            out_info("Current position angle diff: " + round(posAng, 5)).
+            wait 0.01.
+            if posAng <= 0.25
+            {
+                if posAng >= lastPosAng 
+                {
+                    out_info("Final position angle diff: " + round(posAng, 5)).
+                    wait 1.
+                    out_info().
+                    set done to true.
+                }
+            }
         }
     }
 

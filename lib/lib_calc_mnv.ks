@@ -51,13 +51,10 @@ global function get_burn_dur_next
 
     for key in stgDvObj:keys 
     {
-        local stgDur to get_burn_dur_by_stage(stgDvObj[key], key - 1).
-        set allDur to allDur + stgDur.
-        
-        // local dvObj  to ship:stageDeltaV(key).
-        // local stgDur to dvObj:duration.
-        // local dvDur  to stgDvObj[key] / (dvObj:current / stgDur).
-        // set allDur   to allDur + dvDur.
+        local dvObj  to ship:stageDeltaV(key).
+        local stgDur to dvObj:duration.
+        local dvDur  to stgDvObj[key] / (dvObj:current / stgDur).
+        set allDur   to allDur + dvDur.
     }
 
     if verbose logStr("[get_burn_dur_next]-> return " + allDur).

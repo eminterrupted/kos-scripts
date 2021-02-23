@@ -5,8 +5,7 @@ init_log().
 local uplinkObj to init_uplink().
 
 //tee - set to 1 to echo log lines to console
-local tee is 0.
-
+local tee is false.
 
 //-- local functions --//
 
@@ -83,7 +82,7 @@ global function logStr
     
     local lvlStr is "[INFO] ".
     if logLvl = 1 set lvlStr to "[WARN] ".
-    if logLvl = 2 set lvlStr to "[*ERR] ".
+    else if logLvl = 2 set lvlStr to "[*ERR] ".
 
     local timestamp is 0.
     if missionTime = 0 and defined cd 
@@ -95,23 +94,15 @@ global function logStr
         set timestamp to missionTime.
     }
 
-    if logLvl >= 0 
-    {       
-        set str to "[MET:" + round(timestamp, 3) + "]" + lvlStr + str.
-
-        if tee = 0 
-        {
-            logFile:writeLn(str).
-        }
-        else if tee = 1 
-        {
-            print str.
-            logFile:writeLn(str). 
-        }
-        else if tee = 2 
-        {
-            print str.
-        }
+    set str to "[MET:" + round(timestamp, 3) + "]" + lvlStr + str.
+    if tee
+    {
+        print str.
+        logFile:writeLn(str).
+    }
+    else 
+    {
+        logFile:writeLn(str). 
     }
     
     if (path(localLog):volume):freeSpace < 1000 

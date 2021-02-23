@@ -59,13 +59,12 @@ if runmode = 10
     set mnvNode to node(mnvObj["nodeAt"], 0, 0, mnvObj["dv"]).
     add mnvNode. 
     set mnvNode to optimize_rendezvous_node(mnvNode).
-    set mnvObj to get_burn_obj_from_node(nextNode).
+    set mnvObj to get_burn_obj_from_node(mnvNode).
 
-    lock steering to mnvNode:burnVector. 
-    wait until shipFacing().
-    
-    set runmode to rm(15).
+    lock steering to lookDirUp(mnvNode:burnVector, sun:position). 
+    wait until shipSettled().
     breakpoint().
+    set runmode to rm(15).
 }
 
 //Warps to the burn node
@@ -73,6 +72,7 @@ if runmode = 15
 {
     out_msg("Warping to burn node").
     warp_to_timestamp(mnvObj["burnEta"]).
+    lock steering to lookDirUp(mnvNode:burnvector, sun:position).
     until time:seconds >= mnvObj["burnEta"]
     {
         update_display().
