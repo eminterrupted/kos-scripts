@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter part is p. 
+parameter part. 
 
 local line is 5.
 
