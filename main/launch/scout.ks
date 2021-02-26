@@ -1,6 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
+runOncePath("0:/lib/lib_sci").
+
 local sciFlag   is false.
 local therm     is ship:partsDubbedPattern("thermometer")[0]:getModule("ModuleScienceExperiment").
 local tel       is ship:rootPart:getmodule("ModuleScienceExperiment").
@@ -11,9 +13,8 @@ sci_deploy(tel).
 wait 1.
 sci_recover(therm).
 sci_recover(tel).
-wait 5.
 
-local ts to time:seconds + 5.
+local ts to time:seconds + 10.
 until time:seconds >= ts
 {
     print "Countdown: " + round(time:seconds - ts) + " " at (2, 2).
@@ -27,9 +28,19 @@ when ship:availablethrust <= 0.1 then
 
 until ship:altitude >= 18000
 {
+    if not sciFlag
+    {
+        sci_deploy(therm).
+        sci_deploy(tel).
+        sci_recover(therm).
+        sci_recover(tel).
+        set sciFlag to true.
+    }
     print_telemetry().
     wait 0.02.
 }
+
+set sciFlag to false.
 
 until false
 {
@@ -42,40 +53,10 @@ until false
         set sciFlag to true.
     }
     print_telemetry().
+    wait 0.02.
 }
 
 // Functions
-local function sci_deploy
-{
-    parameter m.
-
-    if not m:hasData
-    {
-        m:deploy().
-    }
-    else
-    {
-        sci_recover(m).
-    }
-}
-
-local function sci_recover
-{
-    parameter m.
-
-    if m:hasData
-    {
-        if m:data[0]:transmitValue > 0
-        {
-            m:transmit().
-        }
-        else
-        {
-            m:reset().
-        }
-    }
-}
-
 local function print_telemetry 
 {
     print "Mission Time: " + round(missionTime) + "   " at (2, 2).
