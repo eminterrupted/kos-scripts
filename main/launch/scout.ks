@@ -2,17 +2,17 @@
 clearScreen.
 
 runOncePath("0:/lib/lib_sci").
+runOncePath("0:/lib/lib_disp").
 
-local sciFlag   is false.
-local therm     is ship:partsDubbedPattern("thermometer")[0]:getModule("ModuleScienceExperiment").
-local tel       is ship:rootPart:getmodule("ModuleScienceExperiment").
+local sciFlag   to false.
+local sciList   to sci_modules(). 
+
+lock steering to up.
 
 // Main
-sci_deploy(therm).
-sci_deploy(tel).
+sci_deploy_list(sciList).
 wait 1.
-sci_recover(therm).
-sci_recover(tel).
+sci_recover_list(sciList).
 
 local ts to time:seconds + 10.
 until time:seconds >= ts
@@ -30,37 +30,29 @@ until ship:altitude >= 18000
 {
     if not sciFlag
     {
-        sci_deploy(therm).
-        sci_deploy(tel).
-        sci_recover(therm).
-        sci_recover(tel).
+        sci_deploy_list(sciList).
+        sci_recover_list(sciList).
         set sciFlag to true.
     }
-    print_telemetry().
-    wait 0.02.
+    disp_telemetry().
+    wait 0.05.
 }
 
 set sciFlag to false.
 
-until false
+until ship:altitude >= 70000
 {
     if not sciFlag 
     {
-        sci_deploy(therm).
-        sci_deploy(tel).
-        sci_recover(therm).
-        sci_recover(tel).
+        sci_deploy_list(sciList).
+        sci_recover_list(sciList).
         set sciFlag to true.
     }
-    print_telemetry().
-    wait 0.02.
+    disp_telemetry().
+    wait 0.05.
 }
 
-// Functions
-local function print_telemetry 
-{
-    print "Mission Time: " + round(missionTime) + "   " at (2, 2).
-    print "Altitude    : " + round(ship:altitude) + "    " at (2, 3).
-    print "AvailThrust : " + round(ship:availablethrust, 2) + "     " at (2, 4).
-    print "MaxThrust   : " + round(ship:maxthrust, 2) + "     " at (2, 5).
-}
+bays on.
+wait 5.
+sci_deploy_list(sciList).
+sci_recover_list(sciList).
