@@ -2,7 +2,8 @@
 
 // Functions used only during a launch
 
-//Set pitch by deviation from a reference pitch to ensure more gradual gravity turns and course corrections
+// Set pitch by deviation from a reference pitch to ensure gradual gravity turns and proper
+// pitch during maneuvers
 global function launch_ang_for_alt
 {
     parameter turnAlt,

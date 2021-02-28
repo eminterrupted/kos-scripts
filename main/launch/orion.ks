@@ -5,8 +5,9 @@ runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_vessel").
 
-parameter tgtAlt is 100000.
+parameter tgtAlt is 125000.
 
 local endPitch  to 1.
 local maxAcc    to 25.
@@ -54,7 +55,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
     if stage:number >= 1
     {
         disp_info("Staging").
-        util_stage().
+        ves_stage().
         disp_info().
         accPid:reset.
         preserve.
@@ -64,7 +65,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
 when ship:altitude > 72500 then
 {
     disp_info("Fairing jettison").
-    util_jettison_fairings().
+    ves_jettison_fairings().
 }
 
 //-- Main --//
@@ -93,7 +94,7 @@ set sVal to heading(90, 90, 0).
 disp_info("Roll program").
 until ship:altitude >= 1000 or ship:verticalspeed >= 100
 {
-    if util_roll_settled() disp_info().
+    if ves_roll_settled() disp_info().
     disp_telemetry().
     wait 0.01.
 }
@@ -173,8 +174,9 @@ until ship:altitude >= body:atm:height + 5000
 disp_info().
 
 set sVal to lookDirUp(ship:prograde:vector, sun:position).
-disp_msg("Preparing ship for orbit").
+disp_msg("Setting up circularization burn").
+runPath("0:/main/component/raise_orbit", ship:apoapsis, time:seconds + eta:apoapsis).
+disp_msg("Launch complete!").
 wait 5.
-disp_msg().
-
+clearScreen.
 //-- End Main --//

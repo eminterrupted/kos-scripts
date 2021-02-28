@@ -7,6 +7,7 @@ if ship:status = "PRELAUNCH"
         hudtext("Press 0 to initiate launch sequence", 1, 2, 20, yellow, false).
     }
     runPath("0:/main/launch/orion").
+    runPath("0:/main/mission/orbital_science").
 }
 else
 {
