@@ -140,7 +140,7 @@ until ship:apoapsis >= tgtAlt * 0.975
 disp_msg().
 
 disp_msg("Slow burn to apoapsis").
-until ship:apoapsis >= tgtAlt
+until ship:apoapsis >= tgtAlt * 1.005
 {
     set sVal to lookDirUp(ship:prograde:vector, sun:position).
     set tVal to max(0.16, min(0.33, 1 - (ship:apoapsis / tgtAlt))).

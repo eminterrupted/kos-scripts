@@ -3,6 +3,25 @@
 //-- Global Functions --//
 
 //-- Generic functions
+// Creates a breakpoint
+global function breakpoint
+{
+    print "*** Press 'Enter' to continue *** " at (10, 25).
+    until false {
+        if terminal:input:hasChar
+        {
+            if terminal:input:getChar = terminal:input:return
+            {
+                break.
+            }
+            else{
+                terminal:input:clear.
+            }
+        }
+        wait 0.1.
+    }
+}
+
 // Checks if a value is between a range
 global function util_check_value_range
 {
@@ -61,7 +80,7 @@ global function util_sort_list_by_stage
 
     local outList    to list().
     local startCount to choose -1 if sortDir = "asc" else stage:number.
-    local endCount   to choose stage:number if sortDir = "asc" else -1.
+    local endCount   to choose stage:number if sortDir = "asc" else -2.
 
     from { local c to startCount.} until c = endCount step { set c to list_step(c, sortDir). } do
     {

@@ -48,6 +48,7 @@ set burnEta to burnAt - halfDur.
 // Wait until burn ETA with 30s buffer
 until time:seconds >= burnEta - 30
 {
+    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     disp_msg("Burn ETA: " + round(time:seconds - burnEta, 1)).
     disp_telemetry().
     wait 0.01.
