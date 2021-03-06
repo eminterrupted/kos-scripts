@@ -1,8 +1,12 @@
 @lazyGlobal off.
 
+// Dependencies
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_test").
 runOncePath("0:/lib/lib_util").
+
+// Check for addon dependencies
+if addons:career:available runOncePath("0:/lib/lib_addon_career").
 
 // Main
 test_stand_gen(true).

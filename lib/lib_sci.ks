@@ -34,6 +34,10 @@ global function sci_modules
     {
         sciList:add(m).
     }
+    for m in ship:modulesNamed("DMModuleScienceAnimate")
+    {
+        sciList:add(m).
+    }
     return sciList.
 }
 
@@ -62,5 +66,33 @@ global function sci_recover_list
     for m in sciList
     {
         sci_recover(m).
+    }
+}
+
+global function sci_stow_experiments
+{
+    local sciBoxList to ship:modulesNamedPattern("ModuleScienceContainer").
+    local sciBox to 0.
+
+    if sciBoxList:length > 0
+    {
+        for m in sciBoxList
+        {
+            set sciBox to m.
+            if sciBox:part = ship:rootPart 
+            {
+                break.
+            }
+        }
+    }
+
+    sciBox:doAction("collect all", true).
+    if sciBox:hasEvent("container: transfer data") 
+    {
+        return true.
+    }
+    else 
+    {
+        return false.
     }
 }

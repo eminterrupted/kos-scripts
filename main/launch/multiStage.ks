@@ -1,20 +1,24 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
+parameter tgtAlt is 90000.
+
+// load dependencies
+runOncePath("0:/lib/lib_file").
 runOncePath("0:/lib/lib_launch").
-runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 
-parameter tgtAlt is 125000.
 
 local endPitch  to 1.
 local maxAcc    to 25.
 local maxQ      to 0.10.
 local stAlt     to 0.
+local stTurn    to 1000.
+local stSpeed   to 100.
 local sun       to body("sun").
-local turnAlt   to 57500.
+local turnAlt   to max(50000, min(65000, tgtAlt - 47500)).
+
 
 // lock control values
 local sVal      to heading(90, 90, -90).
@@ -39,23 +43,23 @@ when countdown >= -4 then
 }
 
 // Set throttle
-when countdown >= -2 then
+when countdown >= -2.5 then
 {
     set tVal to 1.
 }
 
 // Start engine
-when countdown >= -1 then
+when countdown >= - 1 then
 {
     stage.
 }
 
 when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
 {
-    if stage:number >= 1
+    if stage:number > 2
     {
         disp_info("Staging").
-        ves_stage().
+        ves_safe_stage().
         disp_info().
         accPid:reset.
         preserve.
@@ -76,13 +80,15 @@ lock throttle to tVal.
 until countdown >= 0
 {
     disp_msg("COUNTDOWN T" + round(countdown, 1)).
-    wait 0.1.
+    wait 0.05.
 }
 stage.  // Release launch clamps at T-0.
+ag8 on. // For kicking off a script on the second core.
+ag10 off.   // Reset ag10 (is true to initiate launch)
 unlock countdown.
 
 disp_msg("Vertical ascent").
-until ship:altitude >= 250
+until alt:radar >= 100
 {
     disp_telemetry().
     wait 0.01.
@@ -92,7 +98,7 @@ until ship:altitude >= 250
 set sVal to heading(90, 90, 0).
 
 disp_info("Roll program").
-until ship:altitude >= 1000 or ship:verticalspeed >= 100
+until ship:altitude >= stTurn or ship:verticalspeed >= stSpeed
 {
     if ves_roll_settled() disp_info().
     disp_telemetry().
@@ -112,12 +118,12 @@ lock curAcc to ship:maxThrust / ship:mass.
 disp_msg("Gravity turn").
 until ship:altitude >= turnAlt
 {
-    if ship:q >= maxQ {
-        set tVal to max(0.66, min(1, 1 + qPid:update(time:seconds, ship:q))).
-    }
-    else if curAcc >= maxAcc
-    {
-        set tVal to max(0.66, min(1, 1 + accPid:update(time:seconds, curAcc))).
+    qPid:update(time:seconds, ship:q).
+    accPid:update(time:seconds, curAcc).
+    if ship:q >= maxQ or curAcc >= maxAcc {
+        local qVal to max(0.66, min(1, 1 + qPid:update(time:seconds, ship:q))).
+        local aVal to max(0.66, min(1, 1 + accPid:update(time:seconds, curAcc))).
+        set tVal to min(qVal, aVal).
     }
     else
     {
@@ -130,9 +136,10 @@ until ship:altitude >= turnAlt
 }
 
 disp_msg("Post-turn burning to apoapsis").
+accPid:reset.
 until ship:apoapsis >= tgtAlt * 0.975
 {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    set sVal to ship:prograde.
     set tVal to max(0.16, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
@@ -140,10 +147,10 @@ until ship:apoapsis >= tgtAlt * 0.975
 disp_msg().
 
 disp_msg("Slow burn to apoapsis").
-until ship:apoapsis >= tgtAlt * 1.005
+until ship:apoapsis >= tgtAlt * 1.0005
 {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
-    set tVal to max(0.16, min(0.33, 1 - (ship:apoapsis / tgtAlt))).
+    set sVal to ship:prograde.
+    set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.
 }
@@ -156,14 +163,14 @@ disp_info().
 disp_msg("Coasting to space").
 until ship:altitude >= body:atm:height + 5000
 {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    set sVal to ship:prograde.
     // Correction burn if needed
     if ship:apoapsis <= tgtAlt * 0.995
     {
         disp_info("Correction burn").
-        until ship:apoapsis >= tgtAlt * 1.005
+        until ship:apoapsis >= tgtAlt * 1.0015
         {
-            set tVal to max(0.16, min(0.33, 1 - (ship:apoapsis / tgtAlt))).
+            set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
         }
         disp_info().
     }
@@ -174,9 +181,7 @@ until ship:altitude >= body:atm:height + 5000
 disp_info().
 
 set sVal to lookDirUp(ship:prograde:vector, sun:position).
-disp_msg("Setting up circularization burn").
-runPath("0:/main/component/raise_orbit", ship:apoapsis, time:seconds + eta:apoapsis).
-disp_msg("Launch complete!").
+disp_msg("Handing off to circ burn").
 wait 5.
 clearScreen.
 //-- End Main --//

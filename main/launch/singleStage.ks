@@ -21,11 +21,6 @@ until time:seconds >= ts
 }
 stage.
 
-when ship:availablethrust <= 0.1 then
-{
-    stage.
-}
-
 until ship:altitude >= 18000
 {
     if not sciFlag

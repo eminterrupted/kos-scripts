@@ -22,8 +22,8 @@ global function breakpoint
     }
 }
 
-// Checks if a value is between a range
-global function util_check_value_range
+// Checks if a value is between a range centered around 0.
+global function util_check_value
 {
     parameter val,
               valRange.
@@ -31,6 +31,44 @@ global function util_check_value_range
     if val >= -(valRange) and val <= valRange return true.
     else return false.
 }
+
+// Checks if a value is above the provided low range val and 
+// below the high range val
+global function util_check_range
+{
+    parameter val,
+              valRangeLow,
+              valRangeHigh.
+
+    if val >= valRangeLow and val <= valRangeHigh return true.
+    else return false.
+}
+
+//-- List functions
+// Sorts a list of parts by stage
+// Possible sortDir values: asc, desc
+global function util_sort_list_by_stage
+{
+    parameter inList,
+              sortDir is "desc".
+
+    local outList    to list().
+    local startCount to choose -1 if sortDir = "asc" else stage:number.
+    local endCount   to choose stage:number if sortDir = "asc" else -2.
+
+    from { local c to startCount.} until c = endCount step { set c to list_step(c, sortDir). } do
+    {
+        for p in inList 
+        {
+            if p:stage = c
+            {
+                outList:add(p).
+            }
+        }
+    }
+    return outList.
+}
+
 
 //-- Part modules
 // Given a module, action name, and action state (bool), 
@@ -70,32 +108,8 @@ global function util_do_event
     }
 }
 
-//-- List functions
-// Sorts a list of parts by stage
-// Possible sortDir values: asc, desc
-global function util_sort_list_by_stage
-{
-    parameter inList,
-              sortDir is "desc".
 
-    local outList    to list().
-    local startCount to choose -1 if sortDir = "asc" else stage:number.
-    local endCount   to choose stage:number if sortDir = "asc" else -2.
-
-    from { local c to startCount.} until c = endCount step { set c to list_step(c, sortDir). } do
-    {
-        for p in inList 
-        {
-            if p:stage = c
-            {
-                outList:add(p).
-            }
-        }
-    }
-    return outList.
-}
-
-//-- Local functions
+//-- Local functions --//
 // Helper function for from loop in list sorting. 
 local function list_step
 {
