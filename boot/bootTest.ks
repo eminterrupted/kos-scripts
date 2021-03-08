@@ -1,3 +1,4 @@
+@lazyGlobal off.
 runOncePath("0:/lib/lib_test").
 
 test_pad_gen(true).

@@ -8,13 +8,13 @@ runOncePath("0:/lib/lib_vessel").
 // dV calculations
 global function mnv_dv_hohmann
 {
-    parameter stAlt,
-              tgtAlt,
+    parameter tgtAlt,
+              stAlt,
               mnvBody is ship:body.
 
     // Calculate semi-major axis
-    local stSMA  to stAlt  + mnvBody:radius.
     local tgtSMA to tgtAlt + mnvBody:radius.
+    local stSMA  to stAlt  + mnvBody:radius.
 
     local dv1 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (tgtSMA + stSMA))).
     local dv2 to sqrt(mnvBody:mu / stSMA) * (sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1).
@@ -172,7 +172,7 @@ global function mnv_exec
 
     // Shutdown
     set tVal to 0.
-    disp_msg("Transfer maneuver complete!").
+    disp_msg("Maneuver complete!").
     wait 5.
     clearScreen.
 }

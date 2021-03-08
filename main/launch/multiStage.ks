@@ -1,24 +1,30 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtAlt is 90000.
+parameter tgtAlt is 125000,
+          tgtInc is 0.
 
 // load dependencies
 runOncePath("0:/lib/lib_file").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/kslib/lib_l_az_calc").
 
-
+// variables
+local azCalcObj to l_az_calc_init(tgtAlt, tgtInc).
 local endPitch  to 1.
-local maxAcc    to 25.
+local finalAlt  to 0.
+local maxAcc    to 30.
 local maxQ      to 0.10.
 local stAlt     to 0.
 local stTurn    to 1000.
 local stSpeed   to 100.
 local sun       to body("sun").
-local turnAlt   to max(50000, min(65000, tgtAlt - 47500)).
+local turnAlt   to max(55000, min(65000, tgtAlt * 0.2)).
 
+// Flags
+local hasFaring to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
 
 // lock control values
 local sVal      to heading(90, 90, -90).
@@ -32,7 +38,7 @@ local qPid      to pidLoop().
 local cdStamp   to time:seconds + 10.
 lock  countdown to time:seconds - cdStamp.
 
-// Set up the terminal
+// Set up the display
 disp_terminal().
 disp_main().
 
@@ -52,6 +58,7 @@ when countdown >= -2.5 then
 when countdown >= - 1 then
 {
     stage.
+    launch_pad_arms_retract().
 }
 
 when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
@@ -66,10 +73,13 @@ when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
     }
 }
 
-when ship:altitude > 72500 then
+if hasFairing 
 {
-    disp_info("Fairing jettison").
-    ves_jettison_fairings().
+    when ship:altitude > 70500 then
+    {
+        disp_info("Fairing jettison").
+        ves_jettison_fairings().
+    }
 }
 
 //-- Main --//
@@ -94,8 +104,8 @@ until alt:radar >= 100
     wait 0.01.
 }
 
-// Roll program at 250m - rotates from 90 degrees to 0.
-set sVal to heading(90, 90, 0).
+// Roll program at 250m - rotates from 270 degrees to 90.
+set sVal to heading(l_az_calc(azCalcObj), 90, 0).
 
 disp_info("Roll program").
 until ship:altitude >= stTurn or ship:verticalspeed >= stSpeed
@@ -130,7 +140,7 @@ until ship:altitude >= turnAlt
         set tVal to 1.
     }
 
-    set sVal to heading(90, launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
     disp_telemetry().
     wait 0.01.
 }
@@ -139,17 +149,19 @@ disp_msg("Post-turn burning to apoapsis").
 accPid:reset.
 until ship:apoapsis >= tgtAlt * 0.975
 {
-    set sVal to ship:prograde.
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
     set tVal to max(0.16, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
 }
 disp_msg().
 
+set finalAlt to choose tgtAlt * 1 if ship:altitude >= body:atm:height else tgtAlt * 1.00125.
+
 disp_msg("Slow burn to apoapsis").
-until ship:apoapsis >= tgtAlt * 1.0005
+until ship:apoapsis >= finalAlt
 {
-    set sVal to ship:prograde.
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
     set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.
@@ -161,7 +173,7 @@ wait 1.
 disp_info().
 
 disp_msg("Coasting to space").
-until ship:altitude >= body:atm:height + 5000
+until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
 {
     set sVal to ship:prograde.
     // Correction burn if needed

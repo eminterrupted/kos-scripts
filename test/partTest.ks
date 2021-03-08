@@ -13,6 +13,7 @@ test_stand_gen(true).
 test_lights(true).
 
 local msgLine   to 0.
+local tested    to list().
 local pList     to list().
 local sciList   to sci_modules().
 
@@ -22,7 +23,7 @@ core:doAction("open terminal", true).
 // Part testing
 for p in ship:parts
 {
-    if p:hasModule("ModuleTestSubject") or p:tag:contains("test")
+    if p:hasModule("ModuleTestSubject") or p:tag:contains("test") or p:typeName = "engine"
     {
         pList:add(p).
     }
@@ -30,19 +31,31 @@ for p in ship:parts
 
 set pList to util_sort_list_by_stage(pList, "desc").
 
-for p in pList
+for testPart in pList
 {
-    set msgLine to test_part_info(p).
-    local ts to time:seconds + 5.
-    until time:seconds >= ts
+    if not tested:contains(testPart) 
     {
-        print "Countdown to test: " + round(time:seconds - ts) + " " at (2, msgLine).
-        wait 1.
+        set msgLine to test_part_info(testPart).
+        local ts to time:seconds + 5.
+            until time:seconds >= ts
+            {
+                print "Countdown to test: " + round(time:seconds - ts) + " " at (2, msgLine).
+                wait 1.
+            }
+        print ("Test in progress..."):padRight(terminal:width) at (2, msgLine).
+        test_part(testPart). // activates the part
+        print ("Test complete"):padRight(terminal:width) at (2, msgLine).
+        wait 3.
     }
-    print ("Test in progress..."):padRight(terminal:width) at (2, msgLine).
-    test_part(p). // activates the part
-    print ("Test complete"):padRight(terminal:width) at (2, msgLine).
-    wait 3.
+    for p in ship:parts
+    {
+        if p:stage = stage:number
+        {
+            tested:add(p).
+            print tested at (2, 15).
+        }
+    }
+    if stage = 0 break.
 }
 
 // Science testing

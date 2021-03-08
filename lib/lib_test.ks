@@ -9,14 +9,28 @@ runOncePath("0:/lib/lib_util").
     global function test_engine 
     {
         parameter p, 
-                  dur is 15, 
+                  dur is 20, 
                   ln is 8.
 
-        local tVal to 0.01.
+        local engList to list().
+        local tVal to 0.25.
+
+        list engines in engList.
         lock throttle to tVal.
-        until dur <= 0 and p:thrust = 0 and tVal = 0
+
+        stage.
+        wait 1.
+        until dur <= 0 or p:thrust <= 0.1
         {
-            set tVal to choose min(1, tVal + 0.025) if dur > 0 else max(0, tVal - 0.05).
+            if dur > 0
+            {
+                set tVal to min(1, tVal + 0.025).
+            }
+            else
+            {
+                set tVal to max(0, tVal - 0.025).
+            }
+
             local durStr to choose "Time Reminaing: " + round(dur, 1) + "s" if dur >= 0 else "Waiting for engine shutdown...".
             print durStr:padRight(terminal:width)                                              at (2, ln).
             
@@ -32,9 +46,16 @@ runOncePath("0:/lib/lib_util").
             set dur to dur - 0.1.
             wait 0.1.
         }
-        wait 2.5.
-        p:shutdown.
-        wait 3.
+        wait 1.
+        for eng in engList
+        {
+            if eng:ignition 
+            {
+                eng:shutdown.
+            }
+        }
+        unlock throttle.
+        wait 2.
     }
 
 
@@ -98,8 +119,7 @@ runOncePath("0:/lib/lib_util").
 
         if p:typeName = "engine"
         {
-            stage.
-            test_engine(p, 15).
+            test_engine(p).
         }
         else if p:hasModule("ModuleTestSubject") 
         {

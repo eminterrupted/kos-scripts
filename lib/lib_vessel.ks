@@ -186,22 +186,19 @@ global function ves_staging_trigger
 }
 
 
-//-- Part actions
+//-- Part Module actions
 // Extend / retract antennas in a list
 // True extends, false retracts
 global function ves_activate_antenna
 {
-    parameter commList, state is true.
+    parameter commList is ship:modulesNamed("ModuleRTAntenna"),
+              state is true.
 
-    local event   to choose "activate" if state else "deactivate".
-    local commMod to "ModuleRTAntenna".
-
-    for p in commList
-    {
-        if p:hasModule(commMod)
-        {
-            util_do_event(p:getModule(commMod), event).
-        }
+    local event to choose "activate" if state else "deactivate".
+    
+    for m in commList
+    {       
+        util_do_event(m, event).
     }
 }
 
@@ -210,17 +207,14 @@ global function ves_activate_antenna
 // True extends, false retracts if available
 global function ves_activate_solar
 {
-    parameter solarList, state is true.
+    parameter solarList is ship:modulesNamed("ModuleDeployableSolarPanel"), 
+              state is true.
 
-    local event    to choose "extend solar panel" if state else "retract solar panel". 
-    local solarMod to "ModuleDeployableSolarPanel".
-
-    for p in solarList
+    local event to choose "extend solar panel" if state else "retract solar panel". 
+    
+    for m in solarList
     {
-        if p:hasModule(solarMod)
-        {
-            util_do_event(p:getModule(solarMod), event).
-        }
+        util_do_event(m, event).
     }
 }
 

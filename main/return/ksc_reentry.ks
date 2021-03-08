@@ -29,7 +29,7 @@ until shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5
     set shipLng to lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
     disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-    disp_info2("Current longitude: " + shipLng).
+    disp_info2("Current longitude: " + round(shipLng, 2)).
     disp_orbit().
     wait 0.01.
 }
@@ -40,7 +40,7 @@ until shipLng >= kscWindow[0] and shipLng <= kscWindow[1]
     set shipLng to lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
     disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-    disp_info2("Current longitude: " + shipLng).
+    disp_info2("Current longitude: " + round(shipLng, 2)).
     disp_orbit().
     wait 0.01.
 }
@@ -48,6 +48,7 @@ if warp > 0 set warp to 0.
 disp_info().
 disp_info2().
 
+disp_msg().
 disp_msg("Entering reentry window").
 for c in parachutes 
 {
@@ -55,6 +56,7 @@ for c in parachutes
 }
 
 set tVal to 1.
+disp_msg().
 disp_msg("Reentry burn").
 until ship:periapsis <= reentryAlt
 {
@@ -62,6 +64,7 @@ until ship:periapsis <= reentryAlt
     disp_telemetry().
 }
 set tVal to 0.
+disp_msg().
 disp_msg("Waiting until staging altitude: " + stagingAlt).
 
 until ship:altitude <= stagingAlt
@@ -70,7 +73,9 @@ until ship:altitude <= stagingAlt
     disp_telemetry().
 }
 if warp > 0 set warp to 0.
+wait 5.
 
+disp_msg().
 disp_msg("Staging").
 set sVal to lookDirUp(ship:prograde:vector + r(0, -90, 0), body("sun"):position).
 wait 5.
@@ -79,6 +84,7 @@ until stage:number = 1
     stage.
     wait 5.
 }
+disp_msg().
 disp_msg("Waiting until reentry interface").
 
 until ship:altitude <= body:atm:height
@@ -86,6 +92,7 @@ until ship:altitude <= body:atm:height
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
     disp_telemetry().
 }
+disp_msg().
 disp_msg("Reentry interface").
 
 until ship:groundspeed <= 1000
@@ -94,20 +101,23 @@ until ship:groundspeed <= 1000
     disp_telemetry().
 }
 unlock steering.
+disp_msg().
 disp_msg("Control released").
 
 until alt:radar <= 2500
 {
     disp_telemetry().
 }
-
+disp_msg().
 disp_msg("Chute deploy").
+
 until alt:radar <= 700
 {
     disp_telemetry().
 }
-
+disp_msg().
 disp_msg("Awaiting touchdown").
+
 until alt:radar <= 5
 {
     disp_telemetry().

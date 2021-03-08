@@ -1,7 +1,8 @@
-// This script does a hohmann transfer to a given altitude. 
-// Accepts a target altitude and a time to start the burn at.
 @lazyGlobal off.
 clearScreen.
+
+// This script does a hohmann transfer to a given altitude. 
+// Accepts a target altitude and a time to start the burn at.
 
 parameter tgtAlt,   // Altitude we wish to raise our orbit to
           burnAt is time:seconds + eta:apoapsis. // Default to burning at Pe
@@ -26,6 +27,7 @@ lock  throttle  to tVal.
 
 // Setup taging trigger
 ves_staging_trigger().
+
 
 disp_main().
 disp_msg("Calculating burn data").

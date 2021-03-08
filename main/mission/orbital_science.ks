@@ -3,17 +3,19 @@
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/lib_vessel").
 
-local recover to false.
-local stow    to true.
-local sciList to sci_modules().
+// Flags
+local recover to true.
+local stow    to false.
+local sciList   to sci_modules().
 
 lock steering to lookDirUp(ship:prograde:vector, body("sun"):position).
 
-for comm in ship:modulesNamed("ModuleRTAntenna")
-{
-    util_do_event(comm, "activate").
-}
+ves_activate_antenna().
+ves_activate_solar().
+
+
 
 sci_deploy_list(sciList).
 

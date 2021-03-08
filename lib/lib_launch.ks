@@ -41,3 +41,21 @@ global function launch_pad_gen
         }
     }
 }
+
+// Drops umbilicals and retracts swing arms randomly within 1s
+global function launch_pad_arms_retract
+{
+    local armList       to ship:partsDubbedPattern("mlp.*.umbilical").
+    local retractEvent  to "drop umbilical".
+
+    if armList:length > 0
+    {
+        for a in armList 
+        {
+            local m to a:getModule("ModuleAnimateGeneric").
+            local dropTime to random() / 6.
+            wait dropTime.
+            if m:hasEvent(retractEvent) m:doEvent(retractEvent).
+        }
+    }
+}

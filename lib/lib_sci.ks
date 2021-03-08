@@ -71,7 +71,7 @@ global function sci_recover_list
 
 global function sci_stow_experiments
 {
-    local sciBoxList to ship:modulesNamedPattern("ModuleScienceContainer").
+    local sciBoxList to ship:modulesNamed("ModuleScienceContainer").
     local sciBox to 0.
 
     if sciBoxList:length > 0

@@ -1,7 +1,8 @@
-// This script does a hohmann transfer to a given altitude. 
-// Accepts a target altitude and a time to start the burn at.
 @lazyGlobal off.
 clearScreen.
+
+// This script does a hohmann transfer to a given altitude. 
+// Accepts a target altitude and a time to start the burn at.
 
 parameter tgtAlt,   // Altitude we wish to raise our orbit to
           burnAt is time:seconds + eta:periapsis. // Default to burning at Pe
@@ -34,20 +35,13 @@ disp_msg("Calculating burn data").
 // Calculate the starting altitude. This is 180 degrees from the 
 // burnAt time. If we don't have the flight path prediction capability
 // unlocked, use Pe / Ap as predictions
-if career():canmakenodes
+if (eta:periapsis + time:seconds) - burnAt < (time:seconds + eta:apoapsis) - burnAt
 {
-    set stAlt to orbitAt(ship, burnAt + (ship:orbit:period / 2)):altitude.
+    set stAlt to ship:apoapsis.
 }
-else 
+else
 {
-    if (eta:periapsis + time:seconds) - burnAt < (time:seconds + eta:apoapsis) - burnAt
-    {
-        set stAlt to ship:apoapsis.
-    }
-    else
-    {
-        set stAlt to ship:periapsis.
-    }
+    set stAlt to ship:periapsis.
 }
 
 
@@ -67,5 +61,5 @@ mnv_exec(burnEta, burnDur, burnFacing).
 set burnDur to mnv_burn_dur(dvNeeded[1]).
 set halfDur to mnv_burn_dur(dvNeeded[1] / 2).
 disp_info("Burn duration: " + round(burnDur / 2)).
-set burnEta to (ship:orbit:period / 2) - halfDur.
+set burnEta to time:seconds + (ship:orbit:period / 2) - halfDur.
 mnv_exec(burnEta, burnDur, burnFacing).

@@ -1,17 +1,22 @@
+@lazyGlobal off.
 // Initialize (name) the disks
 init_disk().
 
 // Flags
-local deploySat to false.
-local return    to true.
+local deploySat  to true.
+local returnFlag to false.
+local suborbital to false.
+
+local tgtAlt to 275000.
+local tgtInc to 0.
 
 // Script paths
-local launchScript to path("0:/main/launch/multistage").
-local mnvScript    to path("0:/main/component/circ_burn").
-local missionScript to path("0:/main/mission/simple_orbit").
-local localMission to path("local:/" + missionScript:name). 
-local returnScript to path("0:/main/return/simple_reentry").
-local localReturn  to path("local:/" + returnScript:name).
+local launchScript  to path("0:/main/launch/multistage").
+local circScript    to path("0:/main/component/circ_burn").
+local missionScript to path("0:/main/mission/relay_orbit").
+local localMission  to path("local:/" + missionScript:name). 
+local returnScript  to path("0:/main/return/suborbital_reentry").
+local localReturn   to path("local:/" + returnScript:name).
 
 
 if ship:status = "PRELAUNCH"
@@ -20,21 +25,32 @@ if ship:status = "PRELAUNCH"
     launch_pad_gen(true).
         
     // Download the circ script to run locally in case we don't have a connection later
-    local localMnvScript to download(mnvScript).
-    set localMission to download(missionScript).
-
-    // Wait for the user to press '0' to launch
-    until ag10
+    
+    print "Press Enter to initiate launch sequence".
+    core:doAction("open terminal", true).
+    // Wait for the user to press enter to launch
+    until false
     {
-        hudtext("Press 0 to initiate launch sequence", 1, 2, 20, yellow, false).
+        hudtext("Press enter in terminal to initiate launch sequence", 1, 2, 20, yellow, false).
+        if terminal:input:hasChar 
+        {
+            if terminal:input:getChar() = terminal:input:return
+            {
+                break.
+            }
+        }
+        wait 0.1.
     }
 
     // Run the launch script and circ burn scripts. 
-    runPath(launchScript).
-    runPath(localMnvScript, ship:apoapsis, time:seconds + eta:apoapsis).
+    runPath(launchScript, tgtAlt, tgtInc).
+    if not suborbital 
+    {
+        local localCircScript to download(circScript).
+        runPath(localCircScript, ship:apoapsis, time:seconds + eta:apoapsis).
+        deletePath(localCircScript).
+    }
     ag9 on.
-    // Remove the downloaded scripts when finished
-    deletePath(localMnvScript).
 }
 
 wait 5.
@@ -47,15 +63,16 @@ if deploySat
     }
 }
 
-if ship:status = "ORBITING"
+if ship:status <> "PRELAUNCH"
 {
     // Download the mission script and run it.
+    set localMission to download(missionScript).
     runPath(localMission).
-
+    deletePath(localMission).
     wait 5.
 
     // If we have a return flag set, return the vessel
-    if return 
+    if returnFlag 
     {
         set localReturn to download(returnScript).
         runPath(localReturn).
@@ -87,7 +104,7 @@ local function download
 {
     parameter arcPath.
 
-    set locPath to path("local:/" + path(arcPath):name).
+    local locPath to path("local:/" + path(arcPath):name).
 
     Print "Checking for KSC Connection...".
     until addons:rt:hasKscConnection(ship)
@@ -98,12 +115,14 @@ local function download
     Print "KSC Connection established".
     if exists(locPath) {
         Print "Removing existing file at " + locPath.
+        wait 1.
         deletePath(locPath).
     }
     Print "Downloading " + arcPath.
     copyPath(arcPath, locPath).
     if exists(locPath) {
         print "Download complete!".
+        wait 1.
         return locPath.
     }
     else

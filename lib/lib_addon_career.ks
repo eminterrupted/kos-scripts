@@ -1,3 +1,4 @@
+@lazyGlobal off.
 // Functions related to the Career addon from here: https://github.com/JonnyOThan/kOS-Career
 // Uses the namespace of the function type vs. the library name as in other places
 
