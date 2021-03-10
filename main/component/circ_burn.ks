@@ -20,7 +20,8 @@ local halfDur   to 0.
 local stAlt     to 0.
 
 // Control locks
-local sVal      to lookDirUp(ship:prograde:vector, body("sun"):position).
+local rVal      to choose 180 if ship:crew():length > 0 else 0.
+local sVal      to ship:prograde + r(0, 0, rVal).
 local tVal      to 0.
 lock  steering  to sVal.
 lock  throttle  to tVal.

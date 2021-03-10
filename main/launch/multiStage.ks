@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtAlt is 125000,
-          tgtInc is 0.
+parameter tgtAlt,
+          tgtInc.
 
 // load dependencies
 runOncePath("0:/lib/lib_file").
@@ -15,7 +15,7 @@ runOncePath("0:/kslib/lib_l_az_calc").
 local azCalcObj to l_az_calc_init(tgtAlt, tgtInc).
 local endPitch  to 1.
 local finalAlt  to 0.
-local maxAcc    to 30.
+local maxAcc    to 25.
 local maxQ      to 0.10.
 local stAlt     to 0.
 local stTurn    to 1000.
@@ -24,9 +24,10 @@ local sun       to body("sun").
 local turnAlt   to max(55000, min(65000, tgtAlt * 0.2)).
 
 // Flags
-local hasFaring to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
+local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
 
-// lock control values
+// Control values
+local rVal      to choose 180 if ship:crew():length > 0 else 0.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
 
@@ -37,6 +38,7 @@ local qPid      to pidLoop().
 // Setup countdown
 local cdStamp   to time:seconds + 10.
 lock  countdown to time:seconds - cdStamp.
+ag8 off.
 
 // Set up the display
 disp_terminal().
@@ -93,7 +95,7 @@ until countdown >= 0
     wait 0.05.
 }
 stage.  // Release launch clamps at T-0.
-ag8 on. // For kicking off a script on the second core.
+ag8 on. // Action group cue for liftoff
 ag10 off.   // Reset ag10 (is true to initiate launch)
 unlock countdown.
 
@@ -104,8 +106,9 @@ until alt:radar >= 100
     wait 0.01.
 }
 
-// Roll program at 250m - rotates from 270 degrees to 90.
-set sVal to heading(l_az_calc(azCalcObj), 90, 0).
+// Roll program at 250m - rotates from 270 degrees to 0 or 180 based on
+// whether a crew member is present. 
+set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 
 disp_info("Roll program").
 until ship:altitude >= stTurn or ship:verticalspeed >= stSpeed
@@ -140,7 +143,7 @@ until ship:altitude >= turnAlt
         set tVal to 1.
     }
 
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     disp_telemetry().
     wait 0.01.
 }
@@ -149,7 +152,7 @@ disp_msg("Post-turn burning to apoapsis").
 accPid:reset.
 until ship:apoapsis >= tgtAlt * 0.975
 {
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(0.16, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
@@ -161,7 +164,7 @@ set finalAlt to choose tgtAlt * 1 if ship:altitude >= body:atm:height else tgtAl
 disp_msg("Slow burn to apoapsis").
 until ship:apoapsis >= finalAlt
 {
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), 0).
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.
@@ -192,7 +195,7 @@ until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
 }
 disp_info().
 
-set sVal to lookDirUp(ship:prograde:vector, sun:position).
+set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 disp_msg("Handing off to circ burn").
 wait 5.
 clearScreen.

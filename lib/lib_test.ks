@@ -13,14 +13,14 @@ runOncePath("0:/lib/lib_util").
                   ln is 8.
 
         local engList to list().
-        local tVal to 0.25.
+        local tVal to 0.50.
 
         list engines in engList.
         lock throttle to tVal.
 
         stage.
         wait 1.
-        until dur <= 0 or p:thrust <= 0.1
+        until dur <= 0 or p:thrust <= 0.1 or tVal < 0.50
         {
             if dur > 0
             {
@@ -46,7 +46,6 @@ runOncePath("0:/lib/lib_util").
             set dur to dur - 0.1.
             wait 0.1.
         }
-        wait 1.
         for eng in engList
         {
             if eng:ignition 
@@ -55,7 +54,7 @@ runOncePath("0:/lib/lib_util").
             }
         }
         unlock throttle.
-        wait 2.
+        wait 1.
     }
 
 

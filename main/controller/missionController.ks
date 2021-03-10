@@ -3,53 +3,45 @@
 init_disk().
 
 // Flags
-local deploySat  to true.
+local deploySat  to false.
 local returnFlag to false.
 local suborbital to false.
 
-local tgtAlt to 275000.
-local tgtInc to 0.
+local tgtAp to 1856043.
+local tgtPe to 1751765.
+local tgtInc to 8.4.
 
 // Script paths
-local launchScript  to path("0:/main/launch/multistage").
-local circScript    to path("0:/main/component/circ_burn").
-local missionScript to path("0:/main/mission/relay_orbit").
-local localMission  to path("local:/" + missionScript:name). 
-local returnScript  to path("0:/main/return/suborbital_reentry").
-local localReturn   to path("local:/" + returnScript:name).
+local launchScript to path("0:/main/launch/multistage").
+local circScript   to path("0:/main/component/circ_burn").
+local returnScript to choose path("0:/main/return/ksc_reentry") if not suborbital else path("0:/main/return/suborbital_reentry").
 
+local missionPlan  to list(
+    path("0:/main/mission/scansat")
+).
 
 if ship:status = "PRELAUNCH"
 {
     runOncePath("0:/lib/lib_launch").
     launch_pad_gen(true).
         
-    // Download the circ script to run locally in case we don't have a connection later
-    
-    print "Press Enter to initiate launch sequence".
-    core:doAction("open terminal", true).
-    // Wait for the user to press enter to launch
-    until false
+    print "Activate AG10 to initiate launch sequence".
+    until ag10
     {
-        hudtext("Press enter in terminal to initiate launch sequence", 1, 2, 20, yellow, false).
-        if terminal:input:hasChar 
-        {
-            if terminal:input:getChar() = terminal:input:return
-            {
-                break.
-            }
-        }
+        hudtext("Activate AG10 (Press 0) to initiate launch sequence", 1, 2, 20, yellow, false).
         wait 0.1.
     }
+    core:doAction("open terminal", true).
 
     // Run the launch script and circ burn scripts. 
-    runPath(launchScript, tgtAlt, tgtInc).
+    runPath(launchScript, tgtAp, tgtInc).
     if not suborbital 
     {
         local localCircScript to download(circScript).
-        runPath(localCircScript, ship:apoapsis, time:seconds + eta:apoapsis).
+        runPath(localCircScript, tgtPe, time:seconds + eta:apoapsis).
         deletePath(localCircScript).
     }
+    // Action group cue for orbital insertion
     ag9 on.
 }
 
@@ -63,20 +55,25 @@ if deploySat
     }
 }
 
-if ship:status <> "PRELAUNCH"
+if ship:status <> "PRELAUNCH" and  ship:status <> "LANDED"
 {
     // Download the mission script and run it.
-    set localMission to download(missionScript).
-    runPath(localMission).
-    deletePath(localMission).
-    wait 5.
-
-    // If we have a return flag set, return the vessel
-    if returnFlag 
+    for script in missionPlan
     {
-        set localReturn to download(returnScript).
-        runPath(localReturn).
+        print "Downloading: " + script.
+        local missionLocal to download(script).
+        hudtext("Running next script in mission plan: " + missionLocal, 1, 2, 20, magenta, false).
+        runPath(missionLocal).
+        deletePath(missionLocal).
+        wait 2.5.
     }
+}
+
+// If we have a return flag set, return the vessel
+if returnFlag 
+{
+    local returnLocal to download(returnScript).
+    runPath(returnLocal).
 }
 
 

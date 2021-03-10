@@ -10,7 +10,7 @@ runOncePath("0:/lib/lib_nav").
 
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(128.75, 131.25).
+local kscWindow  to list(135, 137.5).
 local reentryAlt to 35000.
 local shipLng    to 0.
 local stagingAlt to body:atm:height + 15000.

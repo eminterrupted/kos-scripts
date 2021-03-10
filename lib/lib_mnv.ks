@@ -16,8 +16,8 @@ global function mnv_dv_hohmann
     local tgtSMA to tgtAlt + mnvBody:radius.
     local stSMA  to stAlt  + mnvBody:radius.
 
-    local dv1 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (tgtSMA + stSMA))).
-    local dv2 to sqrt(mnvBody:mu / stSMA) * (sqrt((2 * tgtSMA) / (stSMA + tgtSMA)) - 1).
+    local dv1 to sqrt(mnvBody:mu / stSMA) * (sqrt((2 * tgtSMA) / (tgtSMA + stSMA)) - 1).
+    local dv2 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (stSMA + tgtSMA))).
     return list(dv1, dv2).
 }
 
@@ -125,9 +125,10 @@ global function mnv_exec
     // Calculate MECO
     local meco to burnEta + burnDuration.
     local burnPg to choose true if burnDirection = "prograde" else false.
-
     local burnDir to choose ship:prograde if burnPg else ship:retrograde.
-    local sVal to r(0, burnDir:yaw, 0).
+
+    local rVal to choose 180 if ship:crew():length > 0 else 0.
+    local sVal to burnDir + r(0, 0, rVal).
     local tVal to 0.
     
     lock steering to sVal.
@@ -144,7 +145,7 @@ global function mnv_exec
     until time:seconds >= burnEta - 30
     {
         set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to lookDirUp(heading(prograde:pitch + 90, 0, 0):vector, body("sun"):position).
+        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, burnDuration).
         wait 0.01.
     }
@@ -154,7 +155,7 @@ global function mnv_exec
     until time:seconds >= burnEta
     {
         set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to lookDirUp(heading(prograde:pitch + 90, 0, 0):vector, body("sun"):position).
+        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, burnDuration).
         wait 0.01.
     }
@@ -165,7 +166,7 @@ global function mnv_exec
     until time:seconds >= meco
     {
         set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to lookDirUp(heading(prograde:pitch + 90, 0, 0):vector, body("sun"):position).
+        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, meco - time:seconds).
         wait 0.01.
     }

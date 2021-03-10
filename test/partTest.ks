@@ -36,7 +36,7 @@ for testPart in pList
     if not tested:contains(testPart) 
     {
         set msgLine to test_part_info(testPart).
-        local ts to time:seconds + 5.
+        local ts to time:seconds + 3.
             until time:seconds >= ts
             {
                 print "Countdown to test: " + round(time:seconds - ts) + " " at (2, msgLine).
