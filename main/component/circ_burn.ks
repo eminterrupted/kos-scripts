@@ -49,3 +49,4 @@ set halfDur to mnv_burn_dur(dvNeeded[1] / 2).
 disp_info("Burn duration: " + round(burnDur)).
 set burnEta to burnAt - halfDur.
 mnv_exec(burnEta, burnDur, burnFacing).
+ag9 on.

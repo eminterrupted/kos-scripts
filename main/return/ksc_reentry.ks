@@ -7,7 +7,6 @@ clearScreen.
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_nav").
 
-
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
 local kscWindow  to list(135, 137.5).
@@ -21,10 +20,12 @@ local tVal       to 0.
 lock steering to sVal.
 lock throttle to tVal.
 
+ag10 off.
+
 // Main
 disp_main().
-disp_msg("Waiting for KSC reentry window").
-until shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5
+disp_msg("Waiting for KSC window or AG10 activation").
+until (shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5) or ag10
 {
     set shipLng to lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
@@ -34,8 +35,9 @@ until shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5
     wait 0.01.
 }
 if warp > 0 set warp to 0.
+wait until kuniverse:timewarp:issettled.
 
-until shipLng >= kscWindow[0] and shipLng <= kscWindow[1]
+until (shipLng >= kscWindow[0] and shipLng <= kscWindow[1]) or ag10
 {
     set shipLng to lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
@@ -45,14 +47,15 @@ until shipLng >= kscWindow[0] and shipLng <= kscWindow[1]
     wait 0.01.
 }
 if warp > 0 set warp to 0.
+wait until kuniverse:timewarp:issettled.
 disp_info().
 disp_info2().
 
 disp_msg().
-disp_msg("Entering reentry window").
+disp_msg("Beginning reetry procedure").
 for c in parachutes 
 {
-    c:doEvent("arm parachute").
+    if c:hasEvent("arm parachute") c:doEvent("arm parachute").
 }
 
 set tVal to 1.
@@ -77,7 +80,7 @@ wait 5.
 
 disp_msg().
 disp_msg("Staging").
-set sVal to lookDirUp(ship:prograde:vector + r(0, -90, 0), body("sun"):position).
+set sVal to ship:prograde:vector + r(0, -90, 0).
 wait 5.
 until stage:number = 1 
 {
@@ -89,7 +92,7 @@ disp_msg("Waiting until reentry interface").
 
 until ship:altitude <= body:atm:height
 {
-    set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
+    set sVal to ship:retrograde.
     disp_telemetry().
 }
 disp_msg().

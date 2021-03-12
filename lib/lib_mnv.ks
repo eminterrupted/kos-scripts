@@ -140,6 +140,7 @@ global function mnv_exec
     on ag10 
     {
         warpTo(burnEta - 30).
+        ag10 off.
     }
 
     until time:seconds >= burnEta - 30

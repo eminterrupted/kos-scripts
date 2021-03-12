@@ -153,7 +153,7 @@ accPid:reset.
 until ship:apoapsis >= tgtAlt * 0.975
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal to max(0.16, min(1, 1 + accPid:update(time:seconds, curAcc))).
+    set tVal to max(0.33, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
 }
@@ -165,7 +165,7 @@ disp_msg("Slow burn to apoapsis").
 until ship:apoapsis >= finalAlt
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
+    set tVal to max(0.33, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.
 }
@@ -185,7 +185,7 @@ until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
         disp_info("Correction burn").
         until ship:apoapsis >= tgtAlt * 1.0015
         {
-            set tVal to max(0.16, min(1, 1 - (ship:apoapsis / tgtAlt))).
+            set tVal to max(0.33, min(1, 1 - (ship:apoapsis / tgtAlt))).
         }
         disp_info().
     }

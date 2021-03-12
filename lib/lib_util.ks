@@ -108,6 +108,31 @@ global function util_do_event
     }
 }
 
+// Given a module and event name, checks for that event in
+// the module's events and actions list. Actions because they
+// usually turn into events when available
+global function util_event_from_module
+{
+    parameter m,
+              event.
+
+    for e in m:allEvents
+    {
+        if e:contains(event)
+        {
+            return e:replace("(callable) ", ""):replace(", is KSPEvent", "").
+        }
+    }
+
+    for a in m:allActions
+    {
+        if a:contains(event)
+        {
+            return a:replace("(callable) ", ""):replace(", is KSPEvent", "").
+        }
+    }
+}
+
 
 //-- Local functions --//
 // Helper function for from loop in list sorting. 

@@ -2,24 +2,23 @@
 // Initialize (name) the disks
 init_disk().
 
-// Mission Params
-local deploySat  to true.
-local returnFlag to false.
+// Flags
+local deploySat  to false.
+local returnFlag to true.
 local suborbital to false.
 
-local tgtAp to 2863334.
-local tgtPe to 2863334.
-local tgtInc to 0.
+local tgtAp to 125000.
+local tgtPe to 125000.
+local tgtInc to 87.5.
 
-local missionPlan  to list(
-    path("0:/main/mission/scansat")
-).
-
-// Standdard script paths
+// Script paths
 local launchScript to path("0:/main/launch/multistage").
 local circScript   to path("0:/main/component/circ_burn").
 local returnScript to choose path("0:/main/return/ksc_reentry") if not suborbital else path("0:/main/return/suborbital_reentry").
 
+local missionPlan  to list(
+    path("0:/main/mission/auto_sci_biome")
+).
 
 if ship:status = "PRELAUNCH"
 {
@@ -37,7 +36,6 @@ if ship:status = "PRELAUNCH"
 
     // Run the launch script and circ burn scripts. 
     runPath(launchScript, tgtAp, tgtInc).
-    panels on.
     if not suborbital 
     {
         local localCircScript to download(circScript).
@@ -48,7 +46,7 @@ if ship:status = "PRELAUNCH"
     ag9 on.
 }
 
-wait 10.
+wait 5.
 if deploySat
 {
     until stage:number = 0 
