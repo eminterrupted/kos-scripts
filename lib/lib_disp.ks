@@ -16,16 +16,30 @@ global function disp_clr
 // Print a string to the info line
 global function disp_info
 {
-    parameter str is " ".
-    if str <> " " set str to "INFO: " + str.
-    else disp_clr(6).
+    parameter str is "".
+    if str <> "" 
+    {
+        set str to "INFO : " + str + "          ".
+        print str at (0, 6).
+    }
+    else 
+    {
+        disp_clr(6).
+    }
 }
 
 global function disp_info2
 {
-    parameter str is " ".
-    if str <> " " set str to "INFO: " + str.
-    else disp_clr(7).
+    parameter str is "".
+    if str <> "" 
+    {
+        set str to "INFO : " + str + "          ".
+        print str at (0, 7).
+    }
+    else 
+    {
+        disp_clr(7).
+    }
 }
 
 // A display header for mission control
@@ -39,9 +53,16 @@ global function disp_main
 // Print a string to the msg line
 global function disp_msg
 {
-    parameter str is " ".
-    if str <> " " set str to "MSG : " + str.
-    else disp_clr(5).
+    parameter str is "".
+    if str <> "" 
+    {
+        set str to "MSG  : " + str + "          ".
+        print str at (0, 5).
+    }
+    else 
+    {
+        disp_clr(5).
+    }
 }
 
 // Sets up the terminal
@@ -74,6 +95,12 @@ global function disp_telemetry
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, 17).
 
     print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, 19).
-    print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
-    print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 21).
+    if ship:altitude >= 60000 
+    {
+        print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
+    }
+    else
+    {
+        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 20).
+    }
 }

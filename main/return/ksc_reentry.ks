@@ -9,7 +9,7 @@ runOncePath("0:/lib/lib_nav").
 
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(135, 137.5).
+local kscWindow  to list(145, 150).
 local reentryAlt to 35000.
 local shipLng    to 0.
 local stagingAlt to body:atm:height + 15000.
@@ -20,11 +20,11 @@ local tVal       to 0.
 lock steering to sVal.
 lock throttle to tVal.
 
-ag10 off.
 
 // Main
 disp_main().
 disp_msg("Waiting for KSC window or AG10 activation").
+ag10 off.
 until (shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5) or ag10
 {
     set shipLng to lng_to_degrees(ship:longitude).
@@ -50,6 +50,7 @@ if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 disp_info().
 disp_info2().
+ag10 off.
 
 disp_msg().
 disp_msg("Beginning reetry procedure").

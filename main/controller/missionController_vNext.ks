@@ -1,108 +1,74 @@
 @lazyGlobal off.
-// Initialize (name) the disks
-init_disk().
 
-// Flags
-local deploySat  to false.
-local returnFlag to true.
-local suborbital to false.
+local launchCache  to "local:/launchPlan.json".
+local missionCache to "local:/missionPlan.json".
 
-local tgtAp to 125000.
-local tgtPe to 125000.
-local tgtInc to 87.5.
-
-// Script paths
-local launchScript to path("0:/main/launch/multistage").
-local circScript   to path("0:/main/component/circ_burn").
-local returnScript to choose path("0:/main/return/ksc_reentry") if not suborbital else path("0:/main/return/suborbital_reentry").
-
-local missionPlan  to list(
-    path("0:/main/mission/auto_sci_biome")
-).
-
-if ship:status = "PRELAUNCH"
+// If the mission hasn't started yet, set up the mission plan
+if exists(launchCache)
 {
-    runOncePath("0:/lib/lib_launch").
-    launch_pad_gen(true).
-        
-    print "Activate AG10 to initiate launch sequence".
-    until ag10
+    local launchPlan to readJson(launchCache).
+    local launchQueue to launchPlan:queue.
+    until launchQueue:length = 0
     {
-        hudtext("Activate AG10 (Press 0) to initiate launch sequence", 1, 2, 20, yellow, false).
-        wait 0.1.
-    }
-    ag10 off.
-    core:doAction("open terminal", true).
-
-    // Run the launch script and circ burn scripts. 
-    runPath(launchScript, tgtAp, tgtInc).
-    if not suborbital 
-    {
-        local localCircScript to download(circScript).
-        runPath(localCircScript, tgtPe, time:seconds + eta:apoapsis).
-        deletePath(localCircScript).
-    }
-    // Action group cue for orbital insertion
-    ag9 on.
-}
-
-wait 5.
-if deploySat
-{
-    until stage:number = 0 
-    {
-        stage. 
-        wait 1.
-    }
-}
-
-if ship:status <> "PRELAUNCH" and  ship:status <> "LANDED"
-{
-    // Download the mission script and run it.
-    for script in missionPlan
-    {
-        print "Downloading: " + script.
-        local missionLocal to download(script).
-        hudtext("Running next script in mission plan: " + missionLocal, 1, 2, 20, magenta, false).
-        runPath(missionLocal).
-        deletePath(missionLocal).
-        wait 2.5.
-    }
-}
-
-// If we have a return flag set, return the vessel
-if returnFlag 
-{
-    local returnLocal to download(returnScript).
-    runPath(returnLocal).
-}
-
-
-// Init functions
-local function init_disk
-{
-    local cores     to ship:modulesNamed("kOSProcessor").
-    local idx       to 0.
-    
-    for c in cores
-    {
-        if c:part = ship:rootPart 
+        if ship:status = "PRELAUNCH"
         {
-            if c:volume:name <> "local" set c:volume:name to "local".
+            runOncePath("0:/lib/lib_launch").
+            launch_pad_gen(true).
+
+            print "Activate AG10 to initiate launch sequence".
+            print " ".
+            print "Launch Plan" .
+            print "Apoapsis    : " + launchPlan:tgtAp.
+            print "Periapsis   : " + launchPlan:tgtPe.
+            print "Inclination : " + launchPlan:tgtInc.
+            core:doAction("open terminal", true).
+            ag10 off.
+            until ag10
+            {
+                hudtext("Activate AG10 (Press 0) to initiate launch sequence", 1, 2, 20, yellow, false).
+                wait 0.01.
+            }
+            ag10 off.
+
+            runPath("0:/main" + launchQueue:pop(), launchPlan).
+            writeJson(launchPlan, launchCache).
         }
         else
         {
-            if c:volume:name = "" set c:volume:name to "data_" + idx.
-            set idx to idx + 1.
+            clearScreen.
+            local curScript to download(launchQueue:pop()).
+            runPath(curScript, launchPlan).
+            deletePath(curScript).
+            writeJson(launchPlan, launchCache).
         }
     }
+    hudtext("Launch plan complete, deleting launchCache", 5, 2, 20, green, false).
+    deletePath(launchCache).
 }
 
+if exists(missionCache)
+{
+    local missionPlan to readJson(missionCache).
+    until missionPlan:length = 0 
+    {
+        clearScreen.
+        local curScript to download(missionPlan:pop()).
+        hudtext("Running next script in mission plan: " + curScript, 10, 2, 20, green, false).
+        runPath(curScript).
+        hudtext("Mission script complete, removing: " + curScript, 10, 2, 20, green, false).
+        deletePath(curScript).
+    } 
+    deletePath(missionCache).
+}
+
+
+//-- Mission Controller Functions --//
 local function download
 {
     parameter arcPath.
 
-    local locPath to path("local:/" + path(arcPath):name).
+    set   arcPath   to path("0:/main" + arcPath).
+    local locPath   to path("local:/" + path(arcPath):name).
 
     Print "Checking for KSC Connection...".
     until addons:rt:hasKscConnection(ship)

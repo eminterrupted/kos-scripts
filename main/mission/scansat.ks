@@ -13,6 +13,7 @@ local scanner  to scanList[0].
 local sVal to ship:prograde.
 lock steering to sVal.
 
+panels on.
 scansat_activate(scanner, true).
 
 until false

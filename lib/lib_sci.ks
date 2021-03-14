@@ -1,75 +1,74 @@
 @lazyGlobal off.
 
+//-- Functions
 
-// Functions
-global function sci_deploy
-{
-    parameter m.
-
-    if not m:hasData
-    {
-        m:deploy().
-        wait until m:hasData.
-    }
-    else if m:data[0]:scienceValue = 0
-    {
-        m:reset().
-    }
-}
-
+// Takes a list and deploys each
 global function sci_deploy_list
 {
     parameter sciList.
 
     for m in sciList
     {
-        sci_deploy(m).
-    }
-}
-
-global function sci_modules
-{
-    local sciList to list().
-    for m in ship:modulesNamed("ModuleScienceExperiment")
-    {
-        sciList:add(m).
-    }
-    for m in ship:modulesNamed("DMModuleScienceAnimate")
-    {
-        sciList:add(m).
-    }
-    return sciList.
-}
-
-global function sci_recover
-{
-    parameter m.
-
-    if m:hasData
-    {
-        if m:data[0]:transmitValue > 0
+        if m:name:startsWith("US")
         {
-            m:transmit().
+            sci_deploy_us(m).
         }
         else
         {
-            m:reset().
+            sci_deploy(m).
         }
-        wait until not m:hasData.
     }
 }
 
+// Returns all science modules on the vessel
+global function sci_modules
+{
+    local sciList to list().
+    for m in ship:modulesNamed("ModuleScienceExperiment")   sciList:add(m).
+    for m in ship:modulesNamed("DMModuleScienceAnimate")    sciList:add(m).
+    for m in ship:modulesNamed("USSimpleScience")           sciList:add(m).
+    for m in ship:modulesNamed("USAdvancedScience")         sciList:add(m).
+    return sciList.
+}
+
+// Takes a list of modules and runs recovers each based on desired mode
 global function sci_recover_list
 {
-    parameter sciList.
+    parameter sciList,
+              mode.
 
     for m in sciList
     {
-        sci_recover(m).
+        if m:hasData
+        {
+            if mode = "transmit"
+            {
+                sci_transmit(m).
+            }
+            else if mode = "ideal"
+            {
+                if m:data[0]:transmitValue > 0 and m:data[0]:transmitValue = m:data[0]:scienceValue
+                {
+                    sci_transmit(m).
+                }
+                else if m:data[0]:scienceValue = 0
+                {
+                    sci_reset(m).
+                }
+            }
+        }
+    }
+    if mode = "collect" or mode = "ideal" {
+        sci_collect_experiments().
     }
 }
 
-global function sci_stow_experiments
+
+
+//-- Local functions --//
+
+// Collects experiments in a science container
+local function sci_collect_experiments
 {
     local sciBoxList to ship:modulesNamed("ModuleScienceContainer").
     local sciBox to 0.
@@ -95,4 +94,90 @@ global function sci_stow_experiments
     {
         return false.
     }
+}
+
+// Deploy stock or DMagic experiments
+local function sci_deploy
+{
+    parameter m.
+
+    local retractList to list("retract", "close").
+
+    if not m:hasData
+    {
+        m:deploy().
+        wait until m:hasData.
+        if addons:career:available addons:career:closeDialogs.
+    }
+    else if m:data[0]:scienceValue = 0
+    {
+        m:reset().
+    }
+
+    // Retract the experiment if possible
+    for action in m:allActions
+    {
+        for validAction in retractList
+        {
+            if action:contains(validAction)
+            {
+                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction"), true).
+            }
+        }
+    }
+}
+
+// Deploy USScience experiments
+local function sci_deploy_us
+{
+    parameter m.
+
+    local deployList  to list("log", "observe", "conduct").
+    local retractList to list("retract", "stow").
+
+    for action in m:allActions
+    {
+        for validAction in deployList
+        {
+            if action:contains(validAction) 
+            {
+                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction", ""), true).
+                wait until m:hasData.
+                if addons:career:available addons:career:closeDialogs.
+            }
+        }
+    }
+
+    // Retract the experiment if possible
+    if m:allEvents:length > 0 
+    {
+        for event in m:allEvents
+        {
+            for validEvent in retractList
+            {
+                if event:contains(validEvent)
+                {
+                    m:doEvent(event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
+                }
+            }
+        }
+    }
+}
+
+// Function for resetting an experiment
+local function sci_reset
+{
+    parameter m.
+
+    m:reset().
+    wait until not m:hasData.
+}
+
+// Function for transmitting data
+local function sci_transmit
+{
+    parameter m.
+
+    m:transmit().
+    wait until not m:hasData.
 }

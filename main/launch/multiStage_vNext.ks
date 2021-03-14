@@ -1,8 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtAlt,
-          tgtInc.
+parameter launchPlan.
 
 // load dependencies
 runOncePath("0:/lib/lib_file").
@@ -12,7 +11,9 @@ runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/kslib/lib_l_az_calc").
 
 // variables
-local azCalcObj to l_az_calc_init(tgtAlt, tgtInc).
+local azCalcObj to launchPlan:lazObj.
+local tgtAlt    to launchPlan:tgtAp.
+
 local endPitch  to 1.
 local finalAlt  to 0.
 local maxAcc    to 25.
@@ -20,7 +21,7 @@ local maxQ      to 0.10.
 local stAlt     to 0.
 local stTurn    to 1000.
 local stSpeed   to 100.
-local turnAlt   to max(47500, min(67500, tgtAlt * 0.2)).
+local turnAlt   to max(52500, min(67500, tgtAlt * 0.2)).
 
 // Flags
 local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
@@ -78,7 +79,7 @@ until countdown >= -4
 }
 launch_pad_gen(false).
 
-until countdown >= -2.25
+until countdown >= -1.5
 {
     disp_msg("COUNTDOWN T" + round(countdown, 1)).
     wait 0.05.
@@ -99,6 +100,7 @@ until countdown >= 0
     disp_msg("COUNTDOWN T" + round(countdown, 1)).
     wait 0.05.
 }
+launch_pad_holdowns_retract().
 stage.  // Release launch clamps at T-0.
 ag8 on. // Action group cue for liftoff
 ag10 off.   // Reset ag10 (is true to initiate launch)

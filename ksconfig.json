@@ -1,0 +1,21 @@
+{
+    "bodies": [
+        "Sun",
+        "Moho", 
+        "Eve",
+        "Kerbin", 
+        "Mun", 
+        "Minmus",
+        "Duna",
+        "Dres",
+        "Jool",
+        "Sarnus",
+        "Urlum",
+        "Neidon",
+        "Plock"
+    ],
+    "linting": 
+    {
+        "symbol-unused-locally": "hint"
+    }
+}

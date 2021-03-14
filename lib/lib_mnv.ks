@@ -69,7 +69,7 @@ global function mnv_burn_stages
 
     // If we need more dV than the vessel has, throw an exception.
     if dvNeeded > ship:deltaV:current {
-        hudText("Not enough deltaV on vessel!", 10, 2, 24, red, false).
+        hudText("dV Needed: " + dvNeeded + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
     }
 
@@ -120,60 +120,50 @@ global function mnv_exec
 {
     parameter burnEta, 
               burnDuration, 
-              burnDirection.
+              burnPro.
 
-    // Calculate MECO
     local meco to burnEta + burnDuration.
-    local burnPg to choose true if burnDirection = "prograde" else false.
-    local burnDir to choose ship:prograde if burnPg else ship:retrograde.
 
-    local rVal to choose 180 if ship:crew():length > 0 else 0.
-    local sVal to burnDir + r(0, 0, rVal).
-    local tVal to 0.
-    
-    lock steering to sVal.
-    lock throttle to tVal.
+    lock burnHeading to choose compass_for(ship, ship:prograde) if burnPro else compass_for(ship, ship:retrograde).
+    local rVal       to choose 180 if ship:crew():length > 0 else 0.
+    local tVal       to 0.
 
-    wait 5.
+    lock steering    to heading(burnHeading, 0, rVal).
+    lock throttle    to tVal.
 
-    hudtext("Press 0 to warp to burnEta - 30s", 10, 2, 20, yellow, false).
-    on ag10 
+    if time:seconds <= burnEta - 30 
     {
-        warpTo(burnEta - 30).
-        ag10 off.
+        hudtext("Press 0 to warp to burnEta - 30s", 10, 2, 20, yellow, false).
+        on ag10 
+        {
+            warpTo(burnEta - 30).
+            ag10 off.
+        }
     }
-
+    
     until time:seconds >= burnEta - 30
     {
-        set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, burnDuration).
         wait 0.01.
     }
-
     if warp > 0 set warp to 0.
+    wait until kuniverse:timewarp:issettled.
 
     until time:seconds >= burnEta
     {
-        set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, burnDuration).
         wait 0.01.
     }
-
-    // Execute burn
     set tVal to 1.
     disp_msg("Executing burn").
+
     until time:seconds >= meco
     {
-        set burnDir to choose ship:prograde if burnPg else ship:retrograde.
-        set sVal to burnDir + r(0, 0, rVal).
         mnv_burn_disp(burnEta, meco - time:seconds).
         wait 0.01.
     }
-
-    // Shutdown
     set tVal to 0.
+
     disp_msg("Maneuver complete!").
     wait 5.
     clearScreen.

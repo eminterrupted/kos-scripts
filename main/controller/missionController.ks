@@ -7,12 +7,12 @@ local deploySat  to true.
 local returnFlag to false.
 local suborbital to false.
 
-local tgtAp to 2863334.
-local tgtPe to 2863334.
-local tgtInc to 0.
+local tgtAp to 12178504.
+local tgtPe to 11344986.
+local tgtInc to -34.5.
 
-local missionPlan  to list(
-    path("0:/main/mission/scansat")
+local missionPlan to list(
+    path("0:/main/mission/simple_orbit")
 ).
 
 // Standdard script paths
@@ -20,24 +20,29 @@ local launchScript to path("0:/main/launch/multistage").
 local circScript   to path("0:/main/component/circ_burn").
 local returnScript to choose path("0:/main/return/ksc_reentry") if not suborbital else path("0:/main/return/suborbital_reentry").
 
-
 if ship:status = "PRELAUNCH"
 {
     runOncePath("0:/lib/lib_launch").
     launch_pad_gen(true).
         
     print "Activate AG10 to initiate launch sequence".
+    print " ".
+    print "Target Apoapsis    : "   + tgtAp.
+    print "Target Periapsis   : "   + tgtPe.
+    print "Target Inclination : "   + tgtInc.
+
+    core:doAction("open terminal", true).
+    ag10 off.
     until ag10
     {
-        hudtext("Activate AG10 (Press 0) to initiate launch sequence", 1, 2, 20, yellow, false).
-        wait 0.1.
+        hudtext("Activate AG10 to initiate launch sequence", 1, 2, 20, yellow, false).
+        wait 0.01.
     }
     ag10 off.
-    core:doAction("open terminal", true).
 
     // Run the launch script and circ burn scripts. 
     runPath(launchScript, tgtAp, tgtInc).
-    panels on.
+    if ship:apoapsis > 5000000 panels on.
     if not suborbital 
     {
         local localCircScript to download(circScript).
@@ -48,9 +53,13 @@ if ship:status = "PRELAUNCH"
     ag9 on.
 }
 
-wait 10.
 if deploySat
 {
+    local tStamp to time:seconds + 15.
+    until time:seconds >= tStamp 
+    {
+        print "Deploying satellite in T" + round(time:seconds - tStamp) + "  " at (0, 2).
+    }
     until stage:number = 0 
     {
         stage. 
@@ -61,13 +70,19 @@ if deploySat
 if ship:status <> "PRELAUNCH" and  ship:status <> "LANDED"
 {
     // Download the mission script and run it.
-    for script in missionPlan
+    print missionPlan.
+    local missionPlanLength to missionPlan:length.
+    print missionPlanLength + " total missions found in plan".
+    from { local idx to 0.} until idx >= missionPlanLength step { set idx to idx + 1.} do
     {
+        print "Executing mission: " + missionPlan[0].
+        local script to missionPlan[0].
         print "Downloading: " + script.
         local missionLocal to download(script).
-        hudtext("Running next script in mission plan: " + missionLocal, 1, 2, 20, magenta, false).
+        hudtext("Running next script in mission plan: " + missionLocal, 10, 2, 20, magenta, false).
         runPath(missionLocal).
         deletePath(missionLocal).
+        missionPlan:remove(0).
         wait 2.5.
     }
 }

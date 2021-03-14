@@ -45,7 +45,7 @@ for testPart in pList
         print ("Test in progress..."):padRight(terminal:width) at (2, msgLine).
         test_part(testPart). // activates the part
         print ("Test complete"):padRight(terminal:width) at (2, msgLine).
-        wait 3.
+        wait 1.
     }
     for p in ship:parts
     {
@@ -61,18 +61,12 @@ for testPart in pList
 // Science testing
 if sciList:length > 0 
 {
-    for m in sciList {
-        set msgLine to test_part_info(m:part).
-        print ("Running science experiments"):padRight(terminal:width) at (2, msgLine).
-        sci_deploy(m).
-        wait until m:hasData.
-        wait 3.
-    }
+    print ("Running science experiments"):padRight(terminal:width) at (2, msgLine).
+    sci_deploy_list(sciList).
 }
 
 test_lights(false).
 test_stand_gen(false).
-wait 1.
 clearScreen.
 print "All tests complete!".
 // End main

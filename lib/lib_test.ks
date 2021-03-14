@@ -9,7 +9,7 @@ runOncePath("0:/lib/lib_util").
     global function test_engine 
     {
         parameter p, 
-                  dur is 20, 
+                  dur is 15, 
                   ln is 8.
 
         local engList to list().

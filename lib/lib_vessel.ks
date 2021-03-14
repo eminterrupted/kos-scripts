@@ -4,7 +4,7 @@
 runOncePath("0:/lib/lib_util").
 
 //-- Variables --//
-local sepList to list("sepMotor1", "B9_Engine_T2_SRBS", "B9_Engine_T2A_SRBS").
+local sepList to list("sepMotor1", "B9_Engine_T2_SRBS", "B9_Engine_T2A_SRBS", "B9.Engine.T2.SRBS", "B9.Engine.T2A.SRBS").
 
 //-- Ship functions --//
 
@@ -168,7 +168,7 @@ global function ves_safe_stage
         
         if onlySep 
         {
-            wait 2.5.
+            wait 1.25.
             stage.
         }
     }
