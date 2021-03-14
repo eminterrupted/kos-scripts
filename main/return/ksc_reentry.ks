@@ -22,7 +22,7 @@ lock throttle to tVal.
 
 
 // Main
-disp_main().
+disp_main(scriptPath():name).
 disp_msg("Waiting for KSC window or AG10 activation").
 ag10 off.
 until (shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5) or ag10

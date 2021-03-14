@@ -1,10 +1,11 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_vessel").
-
 // Functions for orbital maneuvers
 
-// Calculations
+// Dependencies
+//#include "0:/lib/lib_vessel"
+
+//#region -- deltaV Calculations
 // dV calculations
 global function mnv_dv_hohmann
 {
@@ -20,42 +21,6 @@ global function mnv_dv_hohmann
     local dv2 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (stSMA + tgtSMA))).
     return list(dv1, dv2).
 }
-
-// Duration to burn dv. Takes in the total needed dv to burn, and returns the 
-// total burn duration across all stages as an object, with the "all" summed key
-global function mnv_burn_dur
-{
-    parameter dvNeeded.
-   
-    // Get the amount of dv in each stage
-    local dvStgObj  to mnv_burn_stages(dvNeeded).
-    local dvBurnObj to mnv_burn_dur_stage(dvStgObj).
-    return dvBurnObj["all"].
-}
-
-// Given an object containing a list of stages and dv to burn for each stage,
-// returns an object of burn duration by stage, plus an "all" key with the 
-// total duration of the burn across all stages
-global function mnv_burn_dur_stage
-{
-    parameter dvStgObj.
-
-    local dvBurnObj to lex().
-    set dvBurnObj["all"] to 0.
-
-    for key in dvStgObj:keys
-    {
-        local exhVel    to ves_stage_exh_vel(key).
-        local stgThr    to ves_stage_thrust(key).
-        local vesMass   to ves_mass_at_stage(key).
-
-        local stgBurDur     to ((vesMass * exhVel) / stgThr) * (1 - (constant:e ^ (-1 * (dvStgObj[key] / exhVel)))).
-        set dvBurnObj[key]  to stgBurDur.
-        set dvBurnObj["all"] to dvBurnObj["all"] + stgBurDur.
-    }
-    return dvBurnObj.
-}
-
 
 // Calculates stages used for a given dv burn. Assumes that the burn starts 
 // with the current stage. Returns a lexicon containing stage num and dv per 
@@ -93,30 +58,47 @@ global function mnv_burn_stages
     }
     return dvStgObj.
 }
+//#endregion
 
-
-// Set pitch by deviation from a reference pitch to ensure gradual gravity turns and proper
-// pitch during maneuvers
-global function mnv_pitch_ang
+//#region -- Duration (time to burn) calculations
+// Total duration to burn provided dv
+global function mnv_burn_dur
 {
-    parameter tgtAlt.
-    
-    // Calculates needed pitch angle to track towards target altitude
-    if verticalSpeed > 0 
-    {
-        return min(0, -(90 * (1 - (ship:altitude) / (tgtAlt)))).
-    }
-
-    else
-    {
-        return max(0, 90 * ( 1 - (ship:altitude) / (tgtAlt))).
-    }
+    parameter dvNeeded.
+   
+    // Get the amount of dv in each stage
+    local dvStgObj  to mnv_burn_stages(dvNeeded).
+    local dvBurnObj to mnv_burn_dur_stage(dvStgObj).
+    return dvBurnObj["all"].
 }
 
+// Given an object containing a list of stages and dv to burn for each stage,
+// returns an object of burn duration by stage, plus an "all" key with the 
+// total duration of the burn across all stages
+global function mnv_burn_dur_stage
+{
+    parameter dvStgObj.
 
-// Actions
-// Executing the burn
-global function mnv_exec
+    local dvBurnObj to lex().
+    set dvBurnObj["all"] to 0.
+
+    for key in dvStgObj:keys
+    {
+        local exhVel    to ves_stage_exh_vel(key).
+        local stgThr    to ves_stage_thrust(key).
+        local vesMass   to ves_mass_at_stage(key).
+
+        local stgBurDur     to ((vesMass * exhVel) / stgThr) * (1 - (constant:e ^ (-1 * (dvStgObj[key] / exhVel)))).
+        set dvBurnObj[key]  to stgBurDur.
+        set dvBurnObj["all"] to dvBurnObj["all"] + stgBurDur.
+    }
+    return dvBurnObj.
+}
+//#endregion
+
+//#region -- Actions (executing maneuvers)
+//Simple burn emnv_exec_circ_burn facing either prograde or retrograde
+global function mnv_exec_circ_burn
 {
     parameter burnEta, 
               burnDuration, 
@@ -137,23 +119,17 @@ global function mnv_exec
         on ag10 
         {
             warpTo(burnEta - 30).
+            wait until kuniverse:timewarp:issettled.
             ag10 off.
         }
     }
-    
-    until time:seconds >= burnEta - 30
-    {
-        mnv_burn_disp(burnEta, burnDuration).
-        wait 0.01.
-    }
-    if warp > 0 set warp to 0.
-    wait until kuniverse:timewarp:issettled.
-
+   
     until time:seconds >= burnEta
     {
         mnv_burn_disp(burnEta, burnDuration).
         wait 0.01.
     }
+
     set tVal to 1.
     disp_msg("Executing burn").
 
@@ -168,8 +144,9 @@ global function mnv_exec
     wait 5.
     clearScreen.
 }
+//#endregion
 
-// Burn display
+//#region -- Local helpers
 local function mnv_burn_disp
 {
     parameter burnEta, burnDur.
@@ -178,3 +155,4 @@ local function mnv_burn_disp
     disp_info2("Burn duration: " + round(burnDur, 1)). 
     disp_telemetry().
 }
+//#endregion

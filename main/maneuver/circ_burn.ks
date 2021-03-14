@@ -24,9 +24,13 @@ local halfDur       to 0.
 local stAlt         to 0.
 
 // Setup taging trigger
-ves_staging_trigger().
+when ship:maxThrust <= 0.1 and throttle > 0 then 
+{
+    ves_safe_stage().
+    preserve.
+}
 
-disp_main().
+disp_main(scriptPath():name).
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude.
@@ -43,5 +47,5 @@ disp_info("Burn duration: " + round(burnDur)).
 set burnEta to burnAt - halfDur.
 
 // Execute
-mnv_exec(burnEta, burnDur, burnPro).
+mnv_exec_circ_burn(burnEta, burnDur, burnPro).
 ag9 on.

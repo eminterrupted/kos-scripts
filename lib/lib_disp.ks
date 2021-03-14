@@ -6,6 +6,7 @@
 
 //-- Functions --//
 
+//#region -- Display Utilities
 // Clears a line assuming a 60 char display
 global function disp_clr
 {
@@ -20,11 +21,11 @@ global function disp_info
     if str <> "" 
     {
         set str to "INFO : " + str + "          ".
-        print str at (0, 6).
+        print str at (0, 7).
     }
     else 
     {
-        disp_clr(6).
+        disp_clr(7).
     }
 }
 
@@ -34,20 +35,12 @@ global function disp_info2
     if str <> "" 
     {
         set str to "INFO : " + str + "          ".
-        print str at (0, 7).
+        print str at (0, 8).
     }
     else 
     {
-        disp_clr(7).
+        disp_clr(8).
     }
-}
-
-// A display header for mission control
-global function disp_main
-{
-    print "Mission Controller v0.02b" at (0, 1).
-    print "=========================" at (0, 2).
-    print "MISSION : " + ship:name at (0, 3).
 }
 
 // Print a string to the msg line
@@ -57,13 +50,14 @@ global function disp_msg
     if str <> "" 
     {
         set str to "MSG  : " + str + "          ".
-        print str at (0, 5).
+        print str at (0, 6).
     }
     else 
     {
-        disp_clr(5).
+        disp_clr(6).
     }
 }
+
 
 // Sets up the terminal
 global function disp_terminal
@@ -71,6 +65,19 @@ global function disp_terminal
     set terminal:height to 40.
     set terminal:width to 60.
     core:doAction("open terminal", true).
+}
+//#endregion
+
+//#region -- Main Displays
+// A display header for mission control
+global function disp_main
+{
+    parameter plan is scriptPath():name.
+
+    print "Mission Controller v0.02b" at (0, 1).
+    print "=========================" at (0, 2).
+    print "MISSION : " + ship:name    at (0, 3).
+    print "PLAN    : " + plan         at (0, 4).
 }
 
 // Displays general telemetry for flight
@@ -104,3 +111,4 @@ global function disp_telemetry
         print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 20).
     }
 }
+//#endregion

@@ -9,7 +9,7 @@ runOncePath("0:/lib/lib_util").
 if addons:career:available runOncePath("0:/lib/lib_addon_career").
 
 // Main
-test_stand_gen(true).
+test_pad_gen(true).
 test_lights(true).
 
 local msgLine   to 0.
@@ -66,7 +66,7 @@ if sciList:length > 0
 }
 
 test_lights(false).
-test_stand_gen(false).
+test_pad_gen(false).
 clearScreen.
 print "All tests complete!".
 // End main

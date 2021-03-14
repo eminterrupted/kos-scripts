@@ -17,7 +17,7 @@ local missionPlan to list(
 
 // Standdard script paths
 local launchScript to path("0:/main/launch/multistage").
-local circScript   to path("0:/main/component/circ_burn").
+local circScript   to path("0:/main/maneuver/circ_burn").
 local returnScript to choose path("0:/main/return/ksc_reentry") if not suborbital else path("0:/main/return/suborbital_reentry").
 
 if ship:status = "PRELAUNCH"

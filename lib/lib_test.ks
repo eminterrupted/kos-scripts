@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 // Dependencies
-runOncePath("0:/lib/lib_util").
+//#include "0:/lib/lib_util"
 
 //-- Part testing functions --//
 
@@ -94,18 +94,15 @@ runOncePath("0:/lib/lib_util").
     {
         parameter powerOn.
 
-        local genList   to ship:modulesNamed("ModuleGenerator").
-        local genOn     to "activate generator".
-        local genOff    to "shutdown generator".
-        for g in genList
+        for g in ship:modulesNamed("ModuleGenerator")
         {
             if powerOn 
             {
-                if g:hasEvent(genOn) g:doEvent(genOn).
+                util_do_event(g, "activate generator").
             }
             else 
             {
-                if g:hasEvent(genOff) g:doEvent(genOff). 
+                util_do_event(g, "shutdown generator").
             }
         }
     }
@@ -123,11 +120,7 @@ runOncePath("0:/lib/lib_util").
         else if p:hasModule("ModuleTestSubject") 
         {
             local m to p:getModule("ModuleTestSubject").
-            if m:hasEvent("run test") 
-            {
-                m:doEvent("run test").
-            }
-            else
+            if not util_do_event(m, "run test") 
             {
                 stage.
             }
@@ -152,26 +145,4 @@ runOncePath("0:/lib/lib_util").
         print ("Part NameId: " + p:name):padRight(terminal:width) at (2, 6). 
         
         return 8.
-    }
-
-
-    // Toggles test stand generator
-    global function test_stand_gen
-    {
-        parameter powerOn.
-
-        local genList   to ship:modulesNamed("ModuleGenerator").
-        local genOn     to "activate generator".
-        local genOff    to "shutdown generator".
-        for g in genList
-        {
-            if powerOn 
-            {
-                if g:hasEvent(genOn) g:doEvent(genOn).
-            }
-            else 
-            {
-                if g:hasEvent(genOff) g:doEvent(genOff). 
-            }
-        }
     }

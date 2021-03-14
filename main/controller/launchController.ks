@@ -1,39 +1,41 @@
 @lazyGlobal off.
 
-// Flags
-local subOrbital  to false.
+//#include "0:/boot/bootLoader_vNext"
+runOncePath("0:/lib/lib_launch").
 
+local launchCache   to "local:/launchPlan.json".
+local launchPlan    to readJson(launchCache).
+local launchQueue   to launchPlan:queue.
 
-local tgtAp to 125000.
-local tgtPe to 125000.
-local tgtInc to 87.5.
-
-// Script paths
-local launchScript to path("0:/main/launch/multistage").
-local circScript   to path("0:/main/component/circ_burn").
-
-if ship:status = "PRELAUNCH"
+until launchQueue:length = 0
 {
-    runOncePath("0:/lib/lib_launch").
-    launch_pad_gen(true).
-        
-    print "Activate AG10 to initiate launch sequence".
-    until ag10
+    if ship:status = "PRELAUNCH"
     {
-        hudtext("Activate AG10 (Press 0) to initiate launch sequence", 1, 2, 20, yellow, false).
-        wait 0.1.
-    }
-    ag10 off.
-    core:doAction("open terminal", true).
+        launch_pad_gen(true).
 
-    // Run the launch script and circ burn scripts. 
-    runPath(launchScript, tgtAp, tgtInc).
-    if not suborbital 
-    {
-        runPath(circScript, tgtPe, time:seconds + eta:apoapsis).
+        print "Launch Plan" .
+        print "Apoapsis    : " + launchPlan:tgtAp.
+        print "Periapsis   : " + launchPlan:tgtPe.
+        print "Inclination : " + launchPlan:tgtInc.
+        core:doAction("open terminal", true).
+        ag10 off.
+        until ag10
+        {
+            hudtext("Activate AG10 to initiate launch sequence", 1, 2, 20, yellow, false).
+            wait 0.01.
+        }
+        ag10 off.
+
+        runPath("0:/main" + launchQueue:pop(), launchPlan).
+        writeJson(launchPlan, launchCache).
     }
-    // Action group cue for orbital insertion
-    ag9 on.
-    wait 1.
-    ag9 off.
+    else
+    {
+        local curScript to download(launchQueue:pop()).
+        runPath(curScript, launchPlan).
+        deletePath(curScript).
+        writeJson(launchPlan, launchCache).
+    }
 }
+hudtext("Launch plan complete, deleting launchCache", 5, 2, 20, green, false).
+deletePath(launchCache).

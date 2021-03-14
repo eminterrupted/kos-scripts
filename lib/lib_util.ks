@@ -2,49 +2,29 @@
 
 //-- Global Functions --//
 
-//-- Generic functions
+//#region -- Generic functions
 // Creates a breakpoint
 global function breakpoint
 {
-    print "*** Press 'Enter' to continue *** " at (10, 25).
-    until false {
+    print "* Press 'Enter' to continue *" at (10, 25).
+    until false 
+    {
         if terminal:input:hasChar
         {
             if terminal:input:getChar = terminal:input:return
             {
                 break.
             }
-            else{
+            else
+            {
                 terminal:input:clear.
             }
         }
-        wait 0.1.
     }
 }
+//#endregion
 
-// Checks if a value is between a range centered around 0.
-global function util_check_value
-{
-    parameter val,
-              valRange.
-
-    if val >= -(valRange) and val <= valRange return true.
-    else return false.
-}
-
-// Checks if a value is above the provided low range val and 
-// below the high range val
-global function util_check_range
-{
-    parameter val,
-              valRangeLow,
-              valRangeHigh.
-
-    if val >= valRangeLow and val <= valRangeHigh return true.
-    else return false.
-}
-
-//-- List functions
+//#region -- List functions
 // Sorts a list of parts by stage
 // Possible sortDir values: asc, desc
 global function util_sort_list_by_stage
@@ -68,45 +48,33 @@ global function util_sort_list_by_stage
     }
     return outList.
 }
+//#endregion
 
-
-///-- Math functions --//
-// Calculates the eccentricity of given ap, pe, and planet
-global function util_calc_ecc 
+//#region -- Check functions
+// Checks if a value is between a range centered around 0.
+global function util_check_value
 {
-    parameter ap,
-              pe,
-              tgtBody is ship:body.
+    parameter val,
+              valRange.
 
-    return ((ap + tgtBody:radius) - (pe + tgtBody:radius)) / (ap + pe + (tgtBody:radius * 2)).
+    if val >= -(valRange) and val <= valRange return true.
+    else return false.
 }
 
-
-// Returns the desired apoapsis given a known periapsis and eccentricity
-global function util_ap_for_pe_ecc 
+// Checks if a value is above/below the range bounds given
+global function util_check_range
 {
-    parameter pe,
-              ecc,
-              tgtBody is ship:body.
+    parameter val,
+              valRangeLow,
+              valRangeHigh.
 
-    return (((pe + tgtBody:radius) / (1 - ecc)) * (1 + ecc)) - tgtBody:radius.
+    if val >= valRangeLow and val <= valRangeHigh return true.
+    else return false.
 }
+//#endregion
 
-
-// Returns the desired periapsis given a known apoapsis and eccentricity
-global function util_pe_for_ap_ecc 
-{
-    parameter ap,
-              ecc,
-              tgtBody is ship:body.
-
-    return (((ap + tgtBody:radius) / (1 + ecc)) * (1 - ecc)) - tgtBody:radius.
-}
-
-
-//-- Part modules
-// Given a module, action name, and action state (bool), 
-// checks for the action and executes if found
+//#region -- Part modules
+// Checks for an action and executes if found
 global function util_do_action
 {
     parameter m, 
@@ -124,8 +92,7 @@ global function util_do_action
     }
 }
 
-// Given a module and event name, checks for that event and 
-// executes if found
+// Checks for an event and executes if found
 global function util_do_event
 {
     parameter m, 
@@ -142,13 +109,12 @@ global function util_do_event
     }
 }
 
-// Given a module and event name, checks for that event in
-// the module's events and actions list. Actions because they
-// usually turn into events when available
+// Searches a module for events / actions
 global function util_event_from_module
 {
     parameter m,
-              event.
+              event,
+              searchActions to true.
 
     for e in m:allEvents
     {
@@ -158,17 +124,21 @@ global function util_event_from_module
         }
     }
 
-    for a in m:allActions
+    if searchActions
     {
-        if a:contains(event)
+        for a in m:allActions
         {
-            return a:replace("(callable) ", ""):replace(", is KSPEvent", "").
+            if a:contains(event)
+            {
+                return a:replace("(callable) ", ""):replace(", is KSPEvent", "").
+            }
         }
     }
+    return "".
 }
+//#endregion
 
-
-//-- Local functions --//
+//#region -- Local functions
 // Helper function for from loop in list sorting. 
 local function list_step
 {
@@ -178,3 +148,4 @@ local function list_step
     if sortDir = "desc" return c - 1.
     else return c + 1.
 }
+//#endregion

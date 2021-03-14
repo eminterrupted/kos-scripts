@@ -41,7 +41,7 @@ ag8 off.
 
 // Set up the display
 disp_terminal().
-disp_main().
+disp_main(scriptPath():name).
 
 // Staging trigger
 when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
@@ -61,7 +61,6 @@ if hasFairing
 {
     when ship:altitude > 70500 then
     {
-        disp_info("Fairing jettison").
         ves_jettison_fairings().
     }
 }
@@ -119,14 +118,12 @@ until alt:radar >= 100
 // whether a crew member is present. 
 set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 
-disp_info("Roll program").
 until ship:altitude >= stTurn or ship:verticalspeed >= stSpeed
 {
     if ves_roll_settled() disp_info().
     disp_telemetry().
     wait 0.01.
 }
-disp_info().
 // Store the altitude at which we reached the turn threshold
 set stAlt to ship:altitude.
 

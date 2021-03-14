@@ -12,7 +12,7 @@ lock steering to sVal.
 ves_activate_solar().
 ves_activate_antenna().
 
-disp_main().
+disp_main(scriptPath():name).
 ag10 off.
 
 hudtext("Activate AG10 to end Simple Orbit sequence", 1, 2, 20, green, false).

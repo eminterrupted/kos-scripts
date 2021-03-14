@@ -18,7 +18,7 @@ lock steering to sVal.
 lock throttle to tVal.
 
 // Main
-disp_main().
+disp_main(scriptPath():name).
 for c in parachutes 
 {
     c:doEvent("arm parachute").

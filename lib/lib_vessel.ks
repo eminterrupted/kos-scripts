@@ -1,14 +1,20 @@
 @lazyGlobal off.
 
 //-- Dependencies --//
-runOncePath("0:/lib/lib_util").
+//#include "0:/lib/lib_util"
 
 //-- Variables --//
-local sepList to list("sepMotor1", "B9_Engine_T2_SRBS", "B9_Engine_T2A_SRBS", "B9.Engine.T2.SRBS", "B9.Engine.T2A.SRBS").
+local sepList to list(
+    "sepMotor1", 
+    "B9_Engine_T2_SRBS",
+    "B9_Engine_T2A_SRBS",
+    "B9.Engine.T2.SRBS",
+    "B9.Engine.T2A.SRBS"
+).
 
-//-- Ship functions --//
+//-- Functions --//
 
-//-- Engines
+//#region -- Engines
 // Returns a list of active engines
 global function ves_active_engines
 {
@@ -25,8 +31,7 @@ global function ves_active_engines
     return activeList.
 }
 
-// Returns summed thrust for active engines in the provided
-// list, at the current throttle setting. 
+// Returns summed thrust for provided engines at the current throttle 
 global function ves_active_thrust
 {
     parameter engList.
@@ -92,10 +97,9 @@ global function ves_stage_thrust
     }
     return stgThr.
 }
+//#endregion
 
-
-
-//-- Mass
+//#region -- Mass
 // ToDo: Return fuel mass for a given stage
 global function ves_stage_fuel_mass
 {
@@ -119,10 +123,9 @@ global function ves_mass_at_stage
     }
     return curMass.
 }
+//#endregion
 
-
-
-//-- Steering
+//#region -- Steering
 // Checks whether the ship's roll error is marginal
 global function ves_roll_settled
 {
@@ -134,10 +137,9 @@ global function ves_settled
 {
     return util_check_value(steeringManager:angleError, 0.1).
 }
+//#endregion
 
-
-
-//-- Staging
+//#region -- Staging
 // Safe staging
 global function ves_safe_stage
 {
@@ -151,18 +153,16 @@ global function ves_safe_stage
         stage.
         break.
     }
-    // Check to see if the current active engines firing are only
-    // separation motors. If so, wait for the separation to occur, 
-    // then stage the main engine
+    // Stage again if currents engines are sep motors
     if ship:availablethrust > 0 
     {
-        local eList to ves_active_engines().
         local onlySep to true.
-        for e in eList 
+        for e in ves_active_engines() 
         {
             if not sepList:contains(e:name)
             {
                 set onlySep to false.
+                break.
             }
         }
         
@@ -174,21 +174,24 @@ global function ves_safe_stage
     }
     wait 0.5.
 }
+//#endregion
 
-// Setup a persistent staging trigger
-global function ves_staging_trigger
+//#region -- Translation
+// Takes a vector and translates towards it
+global function ves_translate
 {
-    when ship:maxThrust <= 0.1 and throttle > 0 then 
-    {
-        ves_safe_stage().
-        preserve.
-    }
+    parameter vec is v(0, 0, 0).
+
+    if vec:mag > 1 set vec to vec:normalized. 
+
+    set ship:control:fore       to vDot(vec, ship:facing:forevector).
+    set ship:control:starboard  to vDot(vec, ship:facing:starvector).
+    set ship:control:top        to vDot(vec, ship:facing:topvector).
 }
+//#endregion
 
-
-//-- Part Module actions
+//#region -- Part Module Actions
 // Extend / retract antennas in a list
-// True extends, false retracts
 global function ves_activate_antenna
 {
     parameter commList is ship:modulesNamed("ModuleRTAntenna"),
@@ -202,9 +205,7 @@ global function ves_activate_antenna
     }
 }
 
-
 // Extend / retract solar panels in a list. 
-// True extends, false retracts if available
 global function ves_activate_solar
 {
     parameter solarList is ship:modulesNamed("ModuleDeployableSolarPanel"), 
@@ -240,5 +241,6 @@ global function ves_jettison_fairings
         {
             util_do_event(m, stEvent).
         }
-    }    
+    }
 }
+//#endregion

@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_util").
+//-- Dependencies --//
+//#include "0:/lib/lib_util"
 
 local scanDelegates to scansat_field_delegates().
 

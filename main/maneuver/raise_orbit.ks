@@ -18,7 +18,6 @@ local burnFacing to choose "prograde" if tgtAlt > ship:altitude else "retrograde
 local dvNeeded  to list().
 local halfDur   to 0.
 local stAlt     to 0.
-local sun       to body("sun").
 
 // Control locks
 local sVal      to lookDirUp(ship:prograde:vector, sun:position).
@@ -27,9 +26,13 @@ lock  steering  to sVal.
 lock  throttle  to tVal.
 
 // Setup taging trigger
-ves_staging_trigger().
+when ship:maxThrust <= 0.1 and throttle > 0 then 
+{
+    ves_safe_stage().
+    preserve.
+}
 
-disp_main().
+disp_main(scriptPath():name).
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude. This is 180 degrees from the 
@@ -54,7 +57,7 @@ set burnDur to mnv_burn_dur(dvNeeded[0]).
 set halfDur to mnv_burn_dur(dvNeeded[0] / 2).
 disp_info("Burn duration: " + round(burnDur, 1)).
 set burnEta to burnAt - halfDur.
-mnv_exec(burnEta, burnDur, burnFacing).
+mnv_exec_circ_burn(burnEta, burnDur, burnFacing).
 
 // Circularization burn
 // Calculate our burnEta for the circ burn
@@ -62,4 +65,4 @@ set burnDur to mnv_burn_dur(dvNeeded[1]).
 set halfDur to mnv_burn_dur(dvNeeded[1] / 2).
 disp_info("Burn duration: " + round(burnDur / 2)).
 set burnEta to time:seconds + (ship:orbit:period / 2) - halfDur.
-mnv_exec(burnEta, burnDur, burnFacing).
+mnv_exec_circ_burn(burnEta, burnDur, burnFacing).

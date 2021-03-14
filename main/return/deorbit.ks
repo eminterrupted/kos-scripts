@@ -4,7 +4,7 @@ clearScreen.
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 
-disp_main().
+disp_main(scriptPath():name).
 disp_msg("Executing deorbit burn").
 lock steering to ship:retrograde.
 until ves_settled()

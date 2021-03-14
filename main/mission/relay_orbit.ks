@@ -20,7 +20,7 @@ lock steering to sVal.
 ves_activate_antenna(commList).
 ves_activate_solar(solarList).
 
-disp_main().
+disp_main(scriptPath():name).
 until false
 {
     set sVal to lookDirUp(ship:prograde:vector, body("sun"):position) + r(0, 90, 0).

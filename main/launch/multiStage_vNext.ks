@@ -4,9 +4,9 @@ clearScreen.
 parameter launchPlan.
 
 // load dependencies
-runOncePath("0:/lib/lib_file").
-runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/kslib/lib_l_az_calc").
 
@@ -30,6 +30,7 @@ local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler
 local rVal      to choose 180 if ship:crew():length > 0 else 0.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
+local tValLoLim to 0.33.
 
 // throttle pid controllers
 local accPid    to pidLoop().
@@ -42,7 +43,7 @@ ag8 off.
 
 // Set up the display
 disp_terminal().
-disp_main().
+disp_main(scriptPath():name).
 
 // Staging trigger
 when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
@@ -62,7 +63,6 @@ if hasFairing
 {
     when ship:altitude > 70500 then
     {
-        disp_info("Fairing jettison").
         ves_jettison_fairings().
     }
 }
@@ -140,11 +140,12 @@ set accPid:setpoint to maxAcc.
 lock curAcc to ship:maxThrust / ship:mass.
 
 disp_msg("Gravity turn").
-until ship:altitude >= turnAlt
+until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
 {
     qPid:update(time:seconds, ship:q).
     accPid:update(time:seconds, curAcc).
-    if ship:q >= maxQ or curAcc >= maxAcc {
+    if ship:q >= maxQ or curAcc >= maxAcc 
+    {
         local qVal to max(0.33, min(1, 1 + qPid:update(time:seconds, ship:q))).
         local aVal to max(0.33, min(1, 1 + accPid:update(time:seconds, curAcc))).
         set tVal to min(qVal, aVal).
@@ -160,11 +161,10 @@ until ship:altitude >= turnAlt
 }
 
 disp_msg("Post-turn burning to apoapsis").
-accPid:reset.
 until ship:apoapsis >= tgtAlt * 0.975
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal to max(0.33, min(1, 1 + accPid:update(time:seconds, curAcc))).
+    set tVal to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
 }
@@ -176,7 +176,7 @@ disp_msg("Slow burn to apoapsis").
 until ship:apoapsis >= finalAlt
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal to max(0.33, min(1, 1 - (ship:apoapsis / tgtAlt))).
+    set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.
 }
@@ -196,7 +196,7 @@ until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
         disp_info("Correction burn").
         until ship:apoapsis >= tgtAlt * 1.0015
         {
-            set tVal to max(0.33, min(1, 1 - (ship:apoapsis / tgtAlt))).
+            set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAlt))).
         }
         disp_info().
     }
@@ -204,7 +204,6 @@ until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
     disp_telemetry().
     wait 0.01.
 }
-disp_info().
 
 disp_msg("Handing off to circ burn").
 wait 2.5.

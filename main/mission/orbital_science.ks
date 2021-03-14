@@ -15,7 +15,7 @@ local sciList       to sci_modules().
 
 lock steering to lookDirUp(ship:prograde:vector, body("sun"):position).
 
-disp_main().
+disp_main(scriptPath():name).
 disp_orbit().
 
 ves_activate_antenna().

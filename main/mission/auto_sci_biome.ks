@@ -16,7 +16,7 @@ lock steering to sVal.
 
 ag10 off.
 ves_activate_solar().
-disp_main().
+disp_main(scriptPath():name).
 
 if addons:scansat:available
 {

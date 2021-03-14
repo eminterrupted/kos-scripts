@@ -2,7 +2,7 @@
 
 runOncePath("0:/lib/lib_disp").
 
-disp_main().
+disp_main(scriptPath():name).
 disp_msg("Sub-orbital hop, no mission script").
 wait 2.5.
 

@@ -36,7 +36,7 @@ global function translate
 {
     parameter vec is v(0, 0, 0).
 
-    set vec to vec:normalized. 
+    if vec:mag > 1 set vec to vec:normalized. 
 
     set ship:control:fore       to vDot(vec, ship:facing:forevector).
     set ship:control:starboard  to vDot(vec, ship:facing:starvector).

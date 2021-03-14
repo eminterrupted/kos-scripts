@@ -1,3 +1,4 @@
+runOncePath("0:/kslib/lib_l_az_calc").
 runOncePath("0:/lib/lib_launch").
 
 // Mission Params
@@ -56,5 +57,3 @@ else
     missionQueue:push("/return/no_return").
 }
 writeJson(missionQueue, missionCache).
-
-compile("0:/main/controller/missionController_vNext") to "local:/missionController.ksm".

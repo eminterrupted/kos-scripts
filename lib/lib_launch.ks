@@ -1,12 +1,12 @@
 @lazyGlobal off.
 
-//-- Dependency for azimuth calc
-runOncePath("0:/kslib/lib_l_az_calc").
+//-- Dependencies
 
-// Functions used only during a launch
 
-// Set pitch by deviation from a reference pitch to ensure gradual gravity turns and proper
-// pitch during maneuvers
+//-- Functions
+
+//#region -- Ascent functions
+// Set pitch by deviation from a reference pitch
 global function launch_ang_for_alt
 {
     parameter turnAlt,
@@ -23,7 +23,10 @@ global function launch_ang_for_alt
     local effPitch  to max(pgPitch - 2.5, min(pitch, pgPitch + 2.5)).
     return effPitch.
 }.
+//#endregion
 
+//#region -- Countdown and Launch pad functions
+// Engine startup sequence
 global function launch_engine_start
 {
     parameter cdEngStart.
@@ -106,3 +109,4 @@ global function launch_pad_holdowns_retract
         }
     }
 }
+//#endregion
