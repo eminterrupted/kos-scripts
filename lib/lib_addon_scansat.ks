@@ -2,9 +2,11 @@
 
 //-- Dependencies --//
 //#include "0:/lib/lib_util"
+runOncePath("0:/lib/lib_util").
 
 local scanDelegates to scansat_field_delegates().
 
+//#region -- Actions
 // Functions for the SCANsat addon from here: https://github.com/JonnyOThan/Kos-Scansat
 global function scansat_activate
 {
@@ -17,39 +19,19 @@ global function scansat_activate
     return util_do_event(scanModule, scanAction).
 }
 
-
-// A display for scansat scripts
-global function scansat_disp
+// Retrieves science from a scansat
+global function scansat_science
 {
     parameter scanner.
-    
-    local covLine to 18.
-    local scanCov to scansat_coverage(scanner).
 
-    print "SCANSAT"                                                       at (0, 2).
-    print "-------"                                                       at (0, 3).
-    print "VESSEL     : " + ship:name                                     at (0, 4).
-    print " "                                                             at (0, 5).
-    print "SCANNER    : " + scanner:Title                                 at (0, 6).
-    print "SCAN TYPE  : " + scanDelegates:scanType(scanner)               at (0, 7).
-    print "ALT RANGE  : " + scanDelegates:scanAlt(scanner)                at (0, 8).
-    print " "                                                             at (0, 9).
-    print "STATUS     : " + scanDelegates:scanStatus(scanner)   + "     " at (0, 10).
-    print "SCAN FOV   : " + scanDelegates:scanFov(scanner)      + "     " at (0, 11). 
-    print "SCAN POWER : " + scanDelegates:scanPower(scanner)    + "     " at (0, 12).
-    print "DAYLIGHT   : " + scanDelegates:scanDaylight(scanner) + "     " at (0, 13).
-    print " "                                                             at (0, 14).
-    print " "                                                             at (0, 15).
-    print "COVERAGE"                                                      at (0, 16).
-    print "--------"                                                      at (0, 17).
-    for key in scanCov:keys
-    {
-        print key:trim + " : " + round(scanCov[key], 2)                        at (0, covLine).
-        set covLine to covLine + 1.
-    }
+    local sciModule  to scanner:getModule("SCANexperiment").
+    local sciAnalyze to util_event_from_module(sciModule, "analyze data:").
+
+    return util_do_event(sciModule, sciAnalyze).
 }
+//#endregion
 
-
+//#region -- Utils
 // Returns coverage for all scan types a scanner is capable of
 global function scansat_coverage
 {
@@ -74,6 +56,36 @@ global function scansat_coverage
     return scanObj.
 }
 
+// A display for scansat scripts
+global function scansat_disp
+{
+    parameter scanner.
+    
+    local covLine to 18.
+    local scanCov to scansat_coverage(scanner).
+
+    print "SCANSAT"                                                       at (0, 2).
+    print "-------"                                                       at (0, 3).
+    print "VESSEL     : " + ship:name                                     at (0, 4).
+
+    print "SCANNER    : " + scanner:Title                                 at (0, 6).
+    print "SCAN TYPE  : " + scanDelegates:scanType(scanner)               at (0, 7).
+    print "ALT RANGE  : " + scanDelegates:scanAlt(scanner)                at (0, 8).
+
+    print "STATUS     : " + scanDelegates:scanStatus(scanner)   + "     " at (0, 10).
+    print "SCAN FOV   : " + scanDelegates:scanFov(scanner)      + "     " at (0, 11). 
+    print "SCAN POWER : " + scanDelegates:scanPower(scanner)    + "     " at (0, 12).
+    print "DAYLIGHT   : " + scanDelegates:scanDaylight(scanner) + "     " at (0, 13).
+
+
+    print "COVERAGE"                                                      at (0, 16).
+    print "--------"                                                      at (0, 17).
+    for key in scanCov:keys
+    {
+        print key:trim + " : " + round(scanCov[key], 2)                        at (0, covLine).
+        set covLine to covLine + 1.
+    }
+}
 
 // Return a list of scansat delegates for use in display
 global function scansat_field_delegates
@@ -93,15 +105,4 @@ global function scansat_field_delegates
                    "scanType",     scanType@
                    ).
 }
-
-
-// Retrieves science from a scansat
-global function scansat_science
-{
-    parameter scanner.
-
-    local sciModule  to scanner:getModule("SCANexperiment").
-    local sciAnalyze to util_event_from_module(sciModule, "analyze data:").
-
-    return util_do_event(sciModule, sciAnalyze).
-}
+//#endregion

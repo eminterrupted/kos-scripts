@@ -12,7 +12,7 @@ until ves_settled()
     disp_orbit().
 }
 
-wait 1.
+wait until ves_settled().
 
 lock throttle to 1.
 until ship:periapsis < 0 

@@ -2,10 +2,10 @@ runOncePath("0:/kslib/lib_l_az_calc").
 runOncePath("0:/lib/lib_launch").
 
 // Mission Params
-local tgtAp        to 125000.
-local tgtPe        to 125000.
+local tgtAp        to 150000.
+local tgtPe        to 150000.
 local tgtInc       to 0.
-local returnFlag   to true.
+local returnFlag   to false.
 
 local missionList  to list(
     "/mission/simple_orbit"

@@ -6,21 +6,9 @@
 // Creates a breakpoint
 global function breakpoint
 {
-    print "* Press 'Enter' to continue *" at (10, 25).
-    until false 
-    {
-        if terminal:input:hasChar
-        {
-            if terminal:input:getChar = terminal:input:return
-            {
-                break.
-            }
-            else
-            {
-                terminal:input:clear.
-            }
-        }
-    }
+    print "* Press any key to continue *" at (10, 25).
+    terminal:input:getChar().
+    print "                             " at (10, 25).
 }
 //#endregion
 
@@ -65,10 +53,10 @@ global function util_check_value
 global function util_check_range
 {
     parameter val,
-              valRangeLow,
-              valRangeHigh.
+              rangeLo,
+              rangeHi.
 
-    if val >= valRangeLow and val <= valRangeHigh return true.
+    if val >= rangeLo and val <= rangeHi return true.
     else return false.
 }
 //#endregion
