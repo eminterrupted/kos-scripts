@@ -27,7 +27,7 @@ disp_msg("Waiting for KSC window or AG10 activation").
 ag10 off.
 until (shipLng >= kscWindow[0] - 5 and shipLng <= kscWindow[1] + 5) or ag10
 {
-    set shipLng to lng_to_degrees(ship:longitude).
+    set shipLng to nav_lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
     disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
     disp_info2("Current longitude: " + round(shipLng, 2)).
@@ -39,7 +39,7 @@ wait until kuniverse:timewarp:issettled.
 
 until (shipLng >= kscWindow[0] and shipLng <= kscWindow[1]) or ag10
 {
-    set shipLng to lng_to_degrees(ship:longitude).
+    set shipLng to nav_lng_to_degrees(ship:longitude).
     set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
     disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
     disp_info2("Current longitude: " + round(shipLng, 2)).

@@ -126,6 +126,23 @@ global function util_event_from_module
 }
 //#endregion
 
+//#region -- Warp functions
+global function util_warp_trigger
+{
+    parameter tStamp, str is "timestamp".
+
+    if time:seconds <= tStamp
+    {
+        hudtext("Press 0 to warp to " + str, 15, 2, 20, green, false).
+        on ag10 
+        {
+            warpTo(tStamp).
+            wait until kuniverse:timewarp:issettled.
+            ag10 off.
+        }
+    }
+}
+
 //#region -- Local functions
 // Helper function for from loop in list sorting. 
 local function list_step

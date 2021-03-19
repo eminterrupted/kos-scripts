@@ -4,12 +4,13 @@ clearScreen.
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/lib/lib_util").
 
 local scanCov to false.
 local sciList to sci_modules().
 local tStamp  to time:seconds + 21600.
 
-local rVal to choose 180 if ship:crew():length > 0 else 0.
+local rVal to 0.
 local sVal to ship:prograde + r(0, 0, rVal).
 lock steering to sVal.
 
@@ -56,7 +57,7 @@ local function manual_crew_report
         if warp > 0 set warp to 0.
         disp_msg("Collecting crew report").
         sci_deploy_list(sciList).
-        sci_recover_list(sciList).
+        sci_recover_list(sciList, "ideal").
         if terminal:input:hasChar
         {
             if terminal:input:getChar() = terminal:input:return 
@@ -81,7 +82,7 @@ local function scanned_biome_crew_report
         {
             disp_info("Collecting science: " + curBiome).
             sci_deploy_list(sciList).
-            sci_recover_list(sciList).
+            sci_recover_list(sciList, "ideal").
             biomeList:add(curBiome).
         }
         else

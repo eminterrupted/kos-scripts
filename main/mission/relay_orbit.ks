@@ -1,15 +1,9 @@
 @lazyGlobal off.
 clearScreen.
 
-print "Waiting for KSC connection to load dependencies".
-until addons:rt:hasKscConnection(ship)
-{
-    wait 30.
-}
-print "Connection established".
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
-clearScreen.
+
 
 local commList to ship:modulesNamed("ModuleRTAntenna").
 local solarList to ship:modulesNamed("ModuleDeployableSolarPanel").

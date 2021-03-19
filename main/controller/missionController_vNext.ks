@@ -16,6 +16,7 @@ if exists(missionCache)
         runPath(curScript).
         hudtext("Mission script complete, removing: " + curScript, 10, 2, 20, green, false).
         deletePath(curScript).
+        writeJson(missionPlan, missionCache).
     } 
     deletePath(missionCache).
 }

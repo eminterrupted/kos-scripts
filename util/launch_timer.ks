@@ -25,7 +25,7 @@ until ag8
 } 
 ag8 off.
 local launchTime    to time:seconds.
-local myLaunchLng   to lng_to_degrees(ship:longitude).
+local myLaunchLng   to nav_lng_to_degrees(ship:longitude).
 
 clearScreen.
 
@@ -43,7 +43,7 @@ until ag9
 ag9 off.
 
 local arrivalTime   to time:seconds.
-local myArrivalLng  to lng_to_degrees(ship:longitude).
+local myArrivalLng  to nav_lng_to_degrees(ship:longitude).
 local myLngDiff     to myArrivalLng - myLaunchLng.
 
 print "Arrival on orbit at " + time:full.

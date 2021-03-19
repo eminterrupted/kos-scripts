@@ -4,16 +4,16 @@
 @lazyGlobal off.
 clearScreen.
 
+runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_nav").
 
+local upload to false.
+local launchPhase to 74.416.
+
 local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 2, 2).
-local launchPhase to 86.45.
-
-
 local arcLog to "0:/log/relay_planner_" + shipNameTrimmed + ".log".
 local logPath to "1:/log/relay_planner_" + shipNameTrimmed + ".log".
 if exists(logPath) deletePath(logPath).
-
 
 log "Relay Type: " + shipNameTrimmed to logPath.
 log " " to logPath.
@@ -21,39 +21,41 @@ log " " to logPath.
 print "Waiting for target vessel selection".
 until hasTarget
 {
-    wait 1.
+    wait 0.1.
 }
 print "Target selected: " + target.
 
 print "Waiting for launch".
 print " ".
 
-lock tgtPhase to phase_angle(target).
+lock tgtPhase to nav_phase_angle(target).
 print "Desired phase angle at launch: " + launchPhase at (0, 8).
-until tgtPhase >= launchPhase - 7.5
+until tgtPhase >= launchPhase - 7.5 and tgtPhase <= launchPhase + 7.5
 {
-    print "Target phase angle: " + round(tgtPhase, 2) + "   " at (0, 9).
+    print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
     wait 0.01.
 }
 
-set warp to 0.
+if warp > 0 set warp to 0.
 
-until tgtPhase >= launchPhase - 0.85 and tgtPhase <= launchPhase - 0.75
+until false
 {
-    print "Target phase angle: " + round(tgtPhase, 2) + "   " at (0, 9).
+    if tgtPhase >= launchPhase - 0.30 and tgtPhase <= launchPhase break.
+    print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
     wait 0.01.
 }
 ag10 on.
+if warp > 0 set warp to 0.
 print "Initiating launch sequence" at (0, 6).
 until ag8
 {
-  print "Target phase angle: " + round(tgtPhase, 2) + "   " at (0, 9).
+  print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
   wait 0.01.
 }
 
 local launchTime    to time:seconds.
-local myLaunchLng   to lng_to_degrees(ship:longitude).
-local tgtLaunchLng  to lng_to_degrees(target:longitude).
+local myLaunchLng   to nav_lng_to_degrees(ship:longitude).
+local tgtLaunchLng  to nav_lng_to_degrees(target:longitude).
 local phaseAtLiftoff to mod(tgtLaunchLng - myLaunchLng + 360, 360).
 
 clearScreen.
@@ -76,8 +78,8 @@ until ag9
 }
 
 local arrivalTime   to time:seconds.
-local myArrivalLng  to lng_to_degrees(ship:longitude).
-local tgtArrivalLng to lng_to_degrees(target:longitude).
+local myArrivalLng  to nav_lng_to_degrees(ship:longitude).
+local tgtArrivalLng to nav_lng_to_degrees(target:longitude).
 local myLngDiff     to myArrivalLng - myLaunchLng.
 local tgtLngDiff    to tgtArrivalLng - tgtLaunchLng.
 local phaseAtArrival to mod(tgtArrivalLng - myArrivalLng + 360, 360).
@@ -107,16 +109,19 @@ print "Results logged to: " + logPath.
 
 print " ".
 
-print "Waiting for KSC connection to upload log...".
-wait until addons:rt:hasKscConnection(ship).
-print "Connection established".
+if upload 
+{
+    print "Waiting for KSC connection to upload log...".
+    wait until addons:rt:hasKscConnection(ship).
+    print "Connection established".
 
-copyPath(logPath, arcLog).
-if exists(arcLog) 
-{
-    print "Log upload complete".
-}
-else 
-{
-    print "Log upload failed! Please try manually".
+    copyPath(logPath, arcLog).
+    if exists(arcLog) 
+    {
+        print "Log upload complete".
+    }
+    else 
+    {
+        print "Log upload failed! Please try manually".
+    }
 }

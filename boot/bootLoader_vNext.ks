@@ -3,6 +3,8 @@ clearScreen.
 
 init_disk().
 
+if addons:rt:hasKscConnection(ship) runOncePath("0:/lib/lib_vessel").
+
 if missionTime = 0
 {
     runPath("0:/main/controller/setupPlan").
@@ -14,6 +16,9 @@ if exists("local:/launchPlan.json")
     runPath(lc).
     deletePath(lc).
 }
+
+panels on.
+ves_activate_antenna(ship:modulesNamed("ModuleRTAntenna")).
 
 if exists("local:/missionPlan.json")
 {

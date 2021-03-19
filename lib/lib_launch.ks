@@ -40,7 +40,7 @@ global function launch_engine_start
         disp_msg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
         disp_info("Engine Start Sequence").
         disp_info2("Throttle: " + round(tVal * 100) + "% ").
-        set tVal to tVal + 0.025.
+        set tVal to tVal + 0.0275.
         wait 0.025.
     }
 }

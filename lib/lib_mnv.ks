@@ -3,9 +3,25 @@
 // Functions for orbital maneuvers
 
 // Dependencies
-//#include "0:/lib/lib_vessel"
+runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_util").
+runOncePath("0:/kslib/lib_navball").
+runOncePath("0:/kslib/lib_navigation").
 
-//#region -- deltaV Calculations
+//#region -- Burn Calculations
+// Returns an object of burn duration calculations based on dv 
+// and mnvTimestamp input
+global function mnv_burn_times
+{
+    parameter dvNeeded,
+              mnvTime.
+
+    local burnDur to mnv_burn_dur(dvNeeded).
+    local burnEta to mnvTime - mnv_burn_dur(dvNeeded / 2).
+    return list(burnEta, burnDur).
+}
+
 // dV calculations
 global function mnv_dv_hohmann
 {
@@ -20,6 +36,41 @@ global function mnv_dv_hohmann
     local dv1 to sqrt(mnvBody:mu / stSMA) * (sqrt((2 * tgtSMA) / (tgtSMA + stSMA)) - 1).
     local dv2 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (stSMA + tgtSMA))).
     return list(dv1, dv2).
+}
+
+// New way of calculating dv for a hohmann transfer maneuver
+global function mnv_dv_hohmann_vnext
+{
+    parameter stAp,
+              stPe,
+              tgtAp,
+              tgtPe,
+              mnvBody is ship:body.
+
+    local smaPark   to nav_sma(stPe, stAp, mnvBody).
+    local smaTrnsfr to nav_sma(stPe, tgtAp, mnvBody).
+    local smaTgt    to nav_sma(tgtPe, tgtAp, mnvBody).
+
+    local vPark     to mnv_velocity(smaPark, smaPark, mnvBody).
+    local vTrnsfr   to mnv_velocity(smaPark, smaTrnsfr, mnvBody).
+    local vTgt      to mnv_velocity(smaTgt, smaTgt, mnvBody).
+
+    print "vPark   : " + vPark at (2, 25).
+    print "vTrnsfr : " + vTrnsfr at (2, 26).
+    print "vTgt    : " + vTgt at (2, 27).
+
+    // [0]: transfer dV, [1] circ dV
+    local dv to list(vPark - vTrnsfr, vTgt - vTrnsfr).
+    return dv.
+}
+
+global function mnv_velocity
+{
+    parameter stSma,
+              tgtSma,
+              mnvBody is ship:body.
+
+    return sqrt((constant:g * mnvBody:mass) * ((2 / tgtSma) - (1 / stSma))).
 }
 
 // Calculates stages used for a given dv burn. Assumes that the burn starts 
@@ -58,9 +109,7 @@ global function mnv_burn_stages
     }
     return dvStgObj.
 }
-//#endregion
 
-//#region -- Duration (time to burn) calculations
 // Total duration to burn provided dv
 global function mnv_burn_dur
 {
@@ -94,65 +143,173 @@ global function mnv_burn_dur_stage
     }
     return dvBurnObj.
 }
+
+// Return an object containing all parameters needed for a maneuver
+// to change inclination from orbit 0 to orbit 1. Returns a list:
+// - [0] (nodeAt)     - center of burn node
+// - [1] (burnVector) - dV vector including direction and mag
+// - [2] (nodeStruc)  - A maneuver node structure for this burn
+global function mnv_inc_match_burn 
+{
+    parameter burnVes,  // Vessel that will perform the burn
+              tgtObt. // target orbit to match
+
+    // Normals
+    local ves_nrm is ksnav_obt_normal(burnVes:obt).
+    local tgt_nrm is ksnav_obt_normal(tgtObt).
+
+    // Total inclination change
+    local d_inc is vang(ves_nrm, tgt_nrm).
+
+    // True anomaly of ascending node
+    local node_ta is nav_asc_node_ta(burnVes:obt, tgtObt).
+
+
+    // Pick whichever node of AN or DN is higher in altitude,
+    // and thus more efficient. node_ta is AN, so if it's 
+    // closest to Pe, then use DN 
+    if node_ta < 90 or node_ta > 270 
+    {
+        set node_ta to mod(node_ta + 180, 360).
+    }
+
+    // Get the burn eta
+    local burn_eta is nav_eta_to_ta(burnVes:obt, node_ta).
+    local burn_utc is time:seconds + burn_eta.
+
+    // Get the burn unit direction (burnvector direction)
+    local burn_unit is (ves_nrm + tgt_nrm):normalized.
+
+    // Get deltav / burnvector magnitude
+    local vel_at_eta is velocityAt(burnVes, burn_utc):orbit.
+    local burn_mag is -2 * vel_at_eta:mag * cos(vang(vel_at_eta, burn_unit)).
+    
+    // // Get the dV components for creating the node structure
+    // local burn_nrm to burn_mag * cos(d_inc / 2).
+    // local burn_pro to 0 - abs(burn_mag * sin( d_inc / 2)).
+
+    // // Create the node struct
+    // local mnv_node to node(burn_utc, 0, burn_nrm, burn_pro).
+
+    //return list(burn_utc, burn_mag * burn_unit, mnv_node, burn_mag, burn_unit).
+    return list(burn_utc, burn_mag * burn_unit).
+}
 //#endregion
 
-//#region -- Actions (executing maneuvers)
+//-- Actions (executing maneuvers)
 //Simple burn emnv_exec_circ_burn facing either prograde or retrograde
 global function mnv_exec_circ_burn
 {
-    parameter burnEta, 
-              burnDuration, 
-              burnPro.
+    parameter dv,
+              mnvTime,
+              burnEta.
 
-    local meco to burnEta + burnDuration.
+    local burnDuration to (mnvTime - burnEta) * 2.
+    local mecoTS      to burnEta + burnDuration.
+    local dvRemaining to 0.
+    local tgtVelocity to velocityAt(ship, mnvTime):orbit:mag + dv.
+    lock  dvRemaining to abs(tgtVelocity - ship:velocity:orbit:mag).
+    
+    local burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
+    local sVal    to ship:prograde.
+    local tVal    to 0.
+    lock steering to sVal.
+    lock throttle to tVal.
 
-    lock burnHeading to choose compass_for(ship, ship:prograde) if burnPro else compass_for(ship, ship:retrograde).
-    local rVal       to choose 180 if ship:crew():length > 0 else 0.
-    local tVal       to 0.
+    util_warp_trigger(burnEta - 30).
 
-    lock steering    to heading(burnHeading, 0, rVal).
-    lock throttle    to tVal.
-
-    if time:seconds <= burnEta - 30 
-    {
-        hudtext("Press 0 to warp to burnEta - 30s", 10, 2, 20, yellow, false).
-        on ag10 
-        {
-            warpTo(burnEta - 30).
-            wait until kuniverse:timewarp:issettled.
-            ag10 off.
-        }
-    }
-   
     until time:seconds >= burnEta
     {
-        mnv_burn_disp(burnEta, burnDuration).
+        set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
+        set sVal to heading(burnDir, 0, 0).
+        mnv_burn_disp(burnEta, dvRemaining, burnDuration).
+    }
+
+    set tVal to 1.
+    disp_msg("Executing burn").
+    until dvRemaining <= 10
+    {
+        set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
+        set sVal to heading(burnDir, 0, 0).
+        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+    }
+
+    until dvRemaining <= 0.1
+    {
+        set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
+        set sVal to heading(burnDir, 0, 0).
+        set tVal to dvRemaining / 10.
+        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+    }
+    set tVal to 0.
+
+    disp_msg("Maneuver complete!").
+    disp_info().
+    disp_info2().
+    wait 1.
+    disp_msg().
+}
+
+//Performs a burn given a time and vector
+global function mnv_exec_vec_burn
+{
+    parameter mnvVec,
+              mnvTime,
+              burnEta.
+
+    local burnDuration to (mnvTime - burnEta) * 2.
+    local mecoTS       to burnEta + burnDuration.
+    lock  dvRemaining  to mnvVec:mag.
+        
+    local sVal    to mnvVec.
+    local tVal    to 0.
+    lock steering to sVal.
+    lock throttle to tVal.
+
+    util_warp_trigger(burnEta - 30).
+
+    until time:seconds >= burnEta
+    {
+        set sVal to mnvVec.
+        mnv_burn_disp(burnEta, dvRemaining, burnDuration).
         wait 0.01.
     }
 
     set tVal to 1.
     disp_msg("Executing burn").
-
-    until time:seconds >= meco
+    until mnvVec:mag <= 10
     {
-        mnv_burn_disp(burnEta, meco - time:seconds).
-        wait 0.01.
+        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+    }
+
+    until dvRemaining <= 0.1
+    {
+        set tVal to dvRemaining / 10.
+        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+        //wait 0.01.
     }
     set tVal to 0.
 
     disp_msg("Maneuver complete!").
-    wait 5.
-    clearScreen.
+    disp_info().
+    disp_info2().
+    wait 1.
+    disp_msg().
 }
-//#endregion
 
-//#region -- Local helpers
+
+//-- Local helpers
 local function mnv_burn_disp
 {
-    parameter burnEta, burnDur.
+    parameter burnEta, dvToGo is 0, burnDuration is 0.
 
-    disp_info("Burn ETA: " + round(time:seconds - burnEta, 1)).
-    disp_info2("Burn duration: " + round(burnDur, 1)). 
-    disp_telemetry().
+    if time:seconds - burnEta < 0 
+    {
+        disp_info("Burn ETA: " + round(time:seconds - burnEta, 1)).
+    }
+    else if dvToGo <> 0 
+    {
+        disp_info("DeltaV Remaining: " + round(dvToGo, 1)). 
+    }
+    disp_info2("Burn Duration: " + round(burnDuration, 1)).
 }
-//#endregion

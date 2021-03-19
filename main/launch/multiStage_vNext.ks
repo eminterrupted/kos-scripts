@@ -8,10 +8,12 @@ runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_launch").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
-runOncePath("0:/kslib/lib_l_az_calc").
+//runOncePath("0:/kslib/lib_l_az_calc").
+runOncePath("0:/kslib/lib_navigation").
 
 // variables
-local azCalcObj to launchPlan:lazObj.
+//local azCalcObj to launchPlan:lazObj.
+local tgtInc    to launchPlan:tgtInc. 
 local tgtAlt    to launchPlan:tgtAp.
 
 local endPitch  to 1.
@@ -21,13 +23,13 @@ local maxQ      to 0.10.
 local stAlt     to 0.
 local stTurn    to 1000.
 local stSpeed   to 100.
-local turnAlt   to max(52500, min(67500, tgtAlt * 0.2)).
+local turnAlt   to max(50000, min(65000, tgtAlt * 0.2)).
 
 // Flags
 local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
 
 // Control values
-local rVal      to choose 180 if ship:crew():length > 0 else 0.
+local rVal      to 0.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
 local tValLoLim to 0.33.
@@ -119,7 +121,8 @@ until alt:radar >= 100
 
 // Roll program at 250m - rotates from 270 degrees to 0 or 180 based on
 // whether a crew member is present. 
-set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
+//set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
+set sVal to heading(ksnav_azimuth(tgtInc, tgtAlt), 90, rVal).
 
 disp_info("Roll program").
 until ship:altitude >= stTurn or ship:verticalspeed >= stSpeed
@@ -155,7 +158,8 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
         set tVal to 1.
     }
 
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    //set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    set sVal to heading(ksnav_azimuth(tgtInc, tgtAlt), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     disp_telemetry().
     wait 0.01.
 }
@@ -163,7 +167,8 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
 disp_msg("Post-turn burning to apoapsis").
 until ship:apoapsis >= tgtAlt * 0.975
 {
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    //set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    set sVal to heading(ksnav_azimuth(tgtInc, tgtAlt), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
     wait 0.01.
@@ -175,7 +180,8 @@ set finalAlt to choose tgtAlt * 1 if ship:altitude >= body:atm:height else tgtAl
 disp_msg("Slow burn to apoapsis").
 until ship:apoapsis >= finalAlt
 {
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    //set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    set sVal to heading(ksnav_azimuth(tgtInc, tgtAlt), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAlt))).
     disp_telemetry().
     wait 0.01.

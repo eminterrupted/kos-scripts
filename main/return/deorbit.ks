@@ -3,6 +3,7 @@ clearScreen.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/lib/lib_util").
 
 disp_main(scriptPath():name).
 disp_msg("Executing deorbit burn").

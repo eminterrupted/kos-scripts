@@ -1,27 +1,22 @@
 @lazyGlobal off.
 clearScreen.
 
-// This script does a hohmann transfer to a given altitude. 
-// Accepts a target altitude and a time to start the burn at.
+// This script circularizes a launch to the desired Pe
+// Accepts either a scalar or a lex with a tgtPe key
 
 parameter launchPlan.
 
-runOncePath("0:/lib/lib_file").
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/kslib/lib_navball").
 
 // Variables
-local tgtAlt    to launchPlan:tgtPe.
-
-local burnAt    to time:seconds + eta:apoapsis.
-local burnDur   to 0.
-local burnEta   to 0.
-local burnPro   to choose true if tgtAlt >= ship:altitude else false.
+local burnTime  to list().
 local dvNeeded  to list().
-local halfDur   to 0.
+local mnvTime   to time:seconds + eta:apoapsis.
 local stAlt     to 0.
+local tgtAlt    to choose launchPlan if launchPlan:typeName = "scalar" else launchPlan:tgtPe.
 
 // Setup taging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -33,6 +28,7 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     }
 }
 
+disp_terminal().
 disp_main(scriptPath():name).
 disp_msg("Calculating burn data").
 
@@ -40,15 +36,13 @@ disp_msg("Calculating burn data").
 set stAlt to ship:periapsis.
 
 // Get the amount of dv needed to raise from current to desired
-set dvNeeded to mnv_dv_hohmann(tgtAlt, stAlt, ship:body).
-disp_msg("dv1: " + round(dvNeeded[1], 2)).
+set dvNeeded to mnv_dv_hohmann_vnext(stAlt, tgtAlt, tgtAlt, tgtAlt, ship:body)[1].
+disp_msg("dv1: " + round(dvNeeded, 2)).
 
-// Calculate our burnEta for the circ burn
-set burnDur to mnv_burn_dur(dvNeeded[1]).
-set halfDur to mnv_burn_dur(dvNeeded[1] / 2).
-disp_info("Burn duration: " + round(burnDur)).
-set burnEta to burnAt - halfDur.
+// Burn timing
+set burnTime to mnv_burn_times(dvNeeded, mnvTime).
+disp_info("Burn duration: " + round(burnTime[1])).
 
 // Execute
-mnv_exec_circ_burn(burnEta, burnDur, burnPro).
+mnv_exec_circ_burn(dvNeeded, mnvTime, burnTime[0]).
 ag9 on.

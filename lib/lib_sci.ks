@@ -1,5 +1,8 @@
 @lazyGlobal off.
 
+//-- Dependencies
+runOncePath("0:/lib/lib_util").
+
 //-- Functions
 
 // Takes a list and deploys each
@@ -51,15 +54,20 @@ global function sci_recover_list
                 {
                     sci_transmit(m).
                 }
-                else if m:data[0]:scienceValue = 0
+                else if m:data[0]:scienceValue > 0
+                {
+                    sci_collect_experiments().
+                }
+                else 
                 {
                     sci_reset(m).
                 }
             }
+            else if mode = "collect"
+            {
+                sci_collect_experiments().
+            }
         }
-    }
-    if mode = "collect" or mode = "ideal" {
-        sci_collect_experiments().
     }
 }
 
