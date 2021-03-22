@@ -62,8 +62,8 @@ global function disp_msg
 // Sets up the terminal
 global function disp_terminal
 {
-    set terminal:height to 40.
-    set terminal:width to 60.
+    set terminal:height to 50.
+    set terminal:width to 65.
     core:doAction("open terminal", true).
 }
 //#endregion
@@ -72,6 +72,7 @@ global function disp_terminal
 // A display header for mission control
 global function disp_main
 {
+    disp_terminal().
     parameter plan is scriptPath():name.
 
     print "Mission Controller v0.02b" at (0, 1).

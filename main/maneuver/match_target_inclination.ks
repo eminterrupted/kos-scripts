@@ -1,7 +1,6 @@
 @lazyGlobal off.
 
-parameter _tgtInclination is 88,
-          _tgtLongitudeAscendingNode is ship:orbit:lan.
+parameter tgt.
 
 clearscreen.
 clearVecDraws().
@@ -14,16 +13,18 @@ runOncePath("0:/lib/lib_vessel").
 
 disp_main(scriptPath()).
 
-// Creating the new orbit
-local targetObt is createOrbit(
-    _tgtInclination, 
-    ship:orbit:eccentricity, 
-    ship:orbit:semiMajorAxis, 
-    _tgtLongitudeAscendingNode,
-    ship:orbit:argumentOfPeriapsis,
-    ship:orbit:meanAnomalyAtEpoch,
-    ship:orbit:epoch,
-    ship:body).
+if not hasTarget 
+{
+    if tgt:typename = "string" set tgt to nav_orbitable(tgt).
+    set target to nav_orbitable(tgt).
+}
+else
+{
+    set tgt to target.
+}
+
+// Getting the target orbit
+local targetObt is tgt:orbit.
 
 // Inclination match burn data
 local burnData  to "".
@@ -48,7 +49,7 @@ when ship:availableThrust < 0.1 and tVal > 0 then
 }
 
 // Main
-disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + _tgtInclination).
+disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + targetObt:inclination).
 
 //Setup burn
 set burnData    to mnv_inc_match_burn(ship, targetObt).
@@ -74,6 +75,7 @@ if drawVec
         0.1
     ).
     print burnVD.
+
     // Keep the draw updating the start position until the burn is done.
     set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
 }

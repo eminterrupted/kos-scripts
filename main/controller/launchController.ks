@@ -7,6 +7,7 @@ local launchCache   to "local:/launchPlan.json".
 local launchPlan    to readJson(launchCache).
 local launchQueue   to launchPlan:queue.
 
+ag9 off.
 until launchQueue:length = 0
 {
     if ship:status = "PRELAUNCH"
@@ -37,5 +38,7 @@ until launchQueue:length = 0
         writeJson(launchPlan, launchCache).
     }
 }
+ag9 on.
 hudtext("Launch plan complete, deleting launchCache", 5, 2, 20, green, false).
 deletePath(launchCache).
+ag9 off.

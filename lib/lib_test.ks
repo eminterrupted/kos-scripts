@@ -19,8 +19,7 @@
         lock throttle to tVal.
 
         stage.
-        wait 1.
-        until dur <= 0 or p:thrust <= 0.1 or tVal < 0.50
+        until dur <= 0 or (p:thrust <= 0.1 and dur <= 5) or tVal < 0.50
         {
             if dur > 0
             {

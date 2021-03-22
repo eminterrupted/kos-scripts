@@ -6,9 +6,9 @@
 // Creates a breakpoint
 global function breakpoint
 {
-    print "* Press any key to continue *" at (10, 25).
+    print "* Press any key to continue *" at (10, terminal:height - 2).
     terminal:input:getChar().
-    print "                             " at (10, 25).
+    print "                             " at (10, terminal:height - 2).
 }
 //#endregion
 
@@ -132,7 +132,8 @@ global function util_warp_trigger
     parameter tStamp, str is "timestamp".
 
     if time:seconds <= tStamp
-    {
+    {   
+        ag10 off.
         hudtext("Press 0 to warp to " + str, 15, 2, 20, green, false).
         on ag10 
         {

@@ -2,7 +2,7 @@
 @LAZYGLOBAL OFF.
 
 // Same as orbital prograde vector for ves
-function ksnav_obt_tangent {
+function kslib_nav_obt_tangent {
     parameter ves is ship.
 
     return ves:velocity:orbit:normalized.
@@ -10,29 +10,29 @@ function ksnav_obt_tangent {
 
 // In the direction of orbital angular momentum of ves
 // Typically same as Normal
-function ksnav_obt_binormal {
+function kslib_nav_obt_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, ksnav_obt_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:body:position):normalized, kslib_nav_obt_tangent(ves)):normalized.
 }
 
 // Perpendicular to both tangent and binormal
 // Typically same as Radial In
-function ksnav_obt_normal {
+function kslib_nav_obt_normal {
     parameter ves is ship.
 
-    return vcrs(ksnav_obt_binormal(ves), ksnav_obt_tangent(ves)):normalized.
+    return vcrs(kslib_nav_obt_binormal(ves), kslib_nav_obt_tangent(ves)):normalized.
 }
 
 // Vector pointing in the direction of longitude of ascending node
-function ksnav_obt_lan {
+function kslib_nav_obt_lan {
     parameter ves is ship.
 
     return angleAxis(ves:orbit:LAN, ves:body:angularVel:normalized) * solarPrimeVector.
 }
 
 // Same as surface prograde vector for ves
-function ksnav_srf_tangent {
+function kslib_nav_srf_tangent {
     parameter ves is ship.
 
     return ves:velocity:surface:normalized.
@@ -40,46 +40,46 @@ function ksnav_srf_tangent {
 
 // In the direction of surface angular momentum of ves
 // Typically same as Normal
-function ksnav_srf_binormal {
+function kslib_nav_srf_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, ksnav_srf_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:body:position):normalized, kslib_nav_srf_tangent(ves)):normalized.
 }
 
 // Perpendicular to  both tangent and binormal
 // Typically same as Radial In
-function ksnav_srf_normal {
+function kslib_nav_srf_normal {
     parameter ves is ship.
 
-    return vcrs(ksnav_srf_binormal(ves), ksnav_srf_tangent(ves)):normalized.
+    return vcrs(kslib_nav_srf_binormal(ves), kslib_nav_srf_tangent(ves)):normalized.
 }
 
 // Vector pointing in the direction of longitude of ascending node
-function ksnav_srf_lan {
+function kslib_nav_srf_lan {
     parameter ves is ship.
 
     return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel:normalized) * solarPrimeVector.
 }
 
 // Vector directly away from the body at ves' position
-function ksnav_local_up {
+function kslib_nav_local_up {
     parameter ves is ship.
 
     return ves:up:vector.
 }
 
 // Angle to ascending node with respect to ves' body's equator
-function ksnav_ang_to_body_asc_node {
+function kslib_nav_ang_to_body_asc_node {
     parameter ves is ship.
 
-    local joinVector is ksnav_obt_lan(ves).
+    local joinVector is kslib_nav_obt_lan(ves).
     local angle is vang((ves:position - ves:body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
     else {
         local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(ksnav_obt_binormal(ves), signVector).
+        local sign is vdot(kslib_nav_obt_binormal(ves), signVector).
         if sign < 0 {
             set angle to angle * -1.
         }
@@ -88,17 +88,17 @@ function ksnav_ang_to_body_asc_node {
 }
 
 // Angle to descending node with respect to ves' body's equator
-function ksnav_ang_to_body_desc_node {
+function kslib_nav_ang_to_body_desc_node {
     parameter ves is ship.
 
-    local joinVector is -ksnav_obt_lan(ves).
+    local joinVector is -kslib_nav_obt_lan(ves).
     local angle is vang((ves:position - ves:body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
     else {
         local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(ksnav_obt_binormal(ves), signVector).
+        local sign is vdot(kslib_nav_obt_binormal(ves), signVector).
         if sign < 0 {
             set angle to angle * -1.
         }
@@ -107,7 +107,7 @@ function ksnav_ang_to_body_desc_node {
 }
 
 // Vector directed from the relative descending node to the ascending node
-function ksnav_rel_nodal_vec {
+function kslib_nav_rel_nodal_vec {
     parameter orbitBinormal.
     parameter targetBinormal.
 
@@ -115,11 +115,11 @@ function ksnav_rel_nodal_vec {
 }
 
 // Angle to relative ascending node determined from args
-function ksnav_ang_to_rel_asc_node {
+function kslib_nav_ang_to_rel_asc_node {
     parameter orbitBinormal.
     parameter targetBinormal.
 
-    local joinVector is ksnav_rel_nodal_vec(orbitBinormal, targetBinormal).
+    local joinVector is kslib_nav_rel_nodal_vec(orbitBinormal, targetBinormal).
     local angle is vang(-body:position:normalized, joinVector).
     local signVector is vcrs(-body:position, joinVector).
     local sign is vdot(orbitBinormal, signVector).
@@ -130,11 +130,11 @@ function ksnav_ang_to_rel_asc_node {
 }
 
 // Angle to relative descending node determined from args
-function ksnav_ang_to_rel_desc_node {
+function kslib_nav_ang_to_rel_desc_node {
     parameter orbitBinormal.
     parameter targetBinormal.
 
-    local joinVector is -ksnav_rel_nodal_vec(orbitBinormal, targetBinormal).
+    local joinVector is -kslib_nav_rel_nodal_vec(orbitBinormal, targetBinormal).
     local angle is vang(-body:position:normalized, joinVector).
     local signVector is vcrs(-body:position, joinVector).
     local sign is vdot(orbitBinormal, signVector).
@@ -146,7 +146,7 @@ function ksnav_ang_to_rel_desc_node {
 
 // Orbital phase angle with assumed target
 // Positive when you are behind the target, negative when ahead
-function ksnav_phase_angle {
+function kslib_nav_phase_angle {
     local common_ancestor is 0.
     local my_ancestors is list().
     local your_ancestors is list().
@@ -192,7 +192,7 @@ function ksnav_phase_angle {
     ).
     local sign is vdot(binormal, signVector).
     if sign < 0 {
-        return -phase.
+        return 360 - phase.
     }
     else {
         return phase.
@@ -200,7 +200,7 @@ function ksnav_phase_angle {
 }
 
 // Average Isp calculation
-function ksnav_avg_isp {
+function kslib_nav_avg_isp {
     local burnEngines is list().
     list engines in burnEngines.
     local massBurnRate is 0.
@@ -217,7 +217,7 @@ function ksnav_avg_isp {
 }
 
 // Burn time from rocket equation given a single stage
-function ksnav_burn_time {
+function kslib_nav_burn_time {
     parameter deltaV.
     parameter isp is 0.
     
@@ -225,7 +225,7 @@ function ksnav_burn_time {
         set deltaV to deltaV:mag.
     }
     if isp = 0 {
-        set isp to ksnav_avg_isp().
+        set isp to kslib_nav_avg_isp().
     }
     
     local burnTime is -1.
@@ -236,7 +236,7 @@ function ksnav_burn_time {
 }
 
 // Instantaneous azimuth
-function ksnav_azimuth {
+function kslib_nav_azimuth {
     parameter inclination.
     parameter orbit_alt.
     parameter auto_switch is false.
@@ -248,7 +248,7 @@ function ksnav_azimuth {
 
     local head is arcsin(cos(inclination) / cos(shipLat)).
     if auto_switch {
-        if ksnav_ang_to_body_desc_node(ship) < ksnav_ang_to_body_asc_node(ship) {
+        if kslib_nav_ang_to_body_desc_node(ship) < kslib_nav_ang_to_body_asc_node(ship) {
             set head to 180 - head.
         }
     }

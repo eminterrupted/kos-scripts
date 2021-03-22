@@ -1,7 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgt is "Agena-TD JR".
+parameter tgt is "Agena-TD JR",
+          altPadding to 1000.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -9,59 +10,55 @@ runOncePath("0:/lib/lib_nav").
 runOncePath("0:/lib/lib_rendezvous").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
-runOncePath("0:/kslib/lib_navigation").
+//runOncePath("0:/kslib/lib_navigation").
+
+disp_main(scriptPath()).
 
 local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
-if tgt:typename = "string" set tgt to nav_orbitable(tgt).
-if not hasTarget set target to nav_orbitable(tgt).
+if not hasTarget 
+{
+    if tgt:typename = "string" set tgt to nav_orbitable(tgt).
+    set target to nav_orbitable(tgt).
+}
+else
+{
+    set tgt to target.
+}
 
+local tgtAlt to target:altitude + altPadding.
 local currentPhase to 0.
 //lock  currentPhase to calc_simple_phase_angle(target).
-lock  currentPhase to ksnav_phase_angle().
+lock  currentPhase to mod(360 + ksnav_phase_angle(), 360).
 
 // Calculate the ideal phase angle for transfer
 local transferPhase to mod(nav_transfer_phase_angle(target, ship:apoapsis + ship:periapsis / 2) + 360, 360).
 
-disp_main().
 disp_msg("Transfer angle to target: " + round(transferPhase, 2) + "   ").
 // Calculate the time we should make the transfer at
 // Sample the phase change per second
 disp_info("Sampling phase change per second").
 local p0 to currentPhase.
-wait 5.
+wait 1.
 local phaseRate  to abs(abs(currentPhase) - abs(p0)).
-set   phaseRate  to phaseRate / 5.
+set   phaseRate  to phaseRate.
 
 // Calulate the transfer timestamp
-local degreesToTravel to choose currentPhase - transferPhase if currentPhase > transferPhase else (currentPhase + 360) - transferPhase.
-local transferEta     to degreesToTravel / phaseRate.
+local degreesToTravel to choose transferPhase - currentPhase if transferPhase <= currentPhase else currentPhase + (360 - transferPhase).
+local transferEta     to abs(degreesToTravel / phaseRate).
 local burnAt          to transferEta + time:seconds.
 
-print "Degrees to travel: " + degreesToTravel at (2, 24).
-print "Phase Rate       : " + phaseRate at (2, 25).
-print "Time to transfer : " + transferEta at (2, 26).
-print "BurnAt           : " + burnAt at (2, 27).
-
-wait 5.
+print "Degrees to travel: " + round(degreesToTravel, 5) at (2, 24).
+print "Phase Rate       : " + round(phaseRate, 5) at (2, 25).
+print "Time to transfer : " + round(transferEta) at (2, 26).
+print "BurnAt           : " + round(burnAt) at (2, 27).
 
 disp_msg().
 disp_info().
 
-util_warp_trigger(burnAt - 30, "burn window").
-
-disp_msg("Phase transfer window: " + round(transferPhase, 3)).
-until time:seconds >= burnAt - 30
-{
-    set sVal to ship:prograde.
-    disp_info("Current Phase: " + round(currentPhase, 3)).
-    disp_info2("Impulse ETA: " + round(burnAt - time:seconds, 1)).
-}
-if kuniverse:timewarp:warp > 0 kuniverse:timewarp:cancelWarp().
-
 // Get the amount of dv needed to get to the target
-local dvNeeded to mnv_dv_hohmann(target:altitude, ship:altitude, ship:body).
+local dvNeeded to mnv_dv_hohmann(ship:altitude, tgtAlt, ship:body).
 disp_msg("dv0: " + round(dvNeeded[0], 2) + " | dv1: " + round(dvNeeded[1], 2)).
 
 // Transfer burn

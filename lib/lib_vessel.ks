@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 //-- Dependencies --//
-//#include "0:/lib/lib_util"
+runOncePath("0:/lib/lib_util").
 
 //-- Variables --//
 local sepList to list(

@@ -15,4 +15,5 @@ disp_info("Burn duration: " + round(burnDur)).
 
 // Execute
 lock steering to nextNode:burnvector.
-mnv_exec_circ_burn(burnEta, burnAt, burnEta).
+mnv_exec_node_burn(nextNode, burnAt, burnEta).
+remove nextNode.

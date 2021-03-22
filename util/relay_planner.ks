@@ -28,7 +28,7 @@ print "Target selected: " + target.
 print "Waiting for launch".
 print " ".
 
-lock tgtPhase to nav_phase_angle(target).
+lock tgtPhase to nav_lng_phase_angle(target).
 print "Desired phase angle at launch: " + launchPhase at (0, 8).
 until tgtPhase >= launchPhase - 7.5 and tgtPhase <= launchPhase + 7.5
 {

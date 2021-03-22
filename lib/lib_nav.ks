@@ -47,8 +47,62 @@ global function nav_orbitable
     return body(tgtStr).
 }
 
-// Gets the phase angle to a target orbitable around a parent body
-global function nav_phase_angle
+// From KSLib - Gets the phase angle relative to LAN 
+function ksnav_phase_angle {
+    local common_ancestor is 0.
+    local my_ancestors is list().
+    local your_ancestors is list().
+
+    my_ancestors:add(ship:body).
+    until not(my_ancestors[my_ancestors:length-1]:hasBody) {
+        my_ancestors:add(my_ancestors[my_ancestors:length-1]:body).
+    }
+    your_ancestors:add(target:body).
+    until not(your_ancestors[your_ancestors:length-1]:hasBody) {
+        your_ancestors:add(your_ancestors[your_ancestors:length-1]:body).
+    }
+
+    for my_ancestor in my_ancestors {
+        local found is false.
+        for your_ancestor in your_ancestors {
+            if my_ancestor = your_ancestor {
+                set common_ancestor to my_ancestor.
+                set found to true.
+                break.
+            }
+        }
+        if found {
+            break.
+        }
+    }
+
+    local vel is ship:velocity:orbit.
+    local my_ancestor is my_ancestors[0].
+    until my_ancestor = common_ancestor {
+        set vel to vel + my_ancestor:velocity:orbit.
+        set my_ancestor to my_ancestor:body.
+    }
+    local binormal is vcrs(-common_ancestor:position:normalized, vel:normalized):normalized.
+
+    local phase is vang(
+        -common_ancestor:position:normalized,
+        vxcl(binormal, target:position - common_ancestor:position):normalized
+    ).
+    local signVector is vcrs(
+        -common_ancestor:position:normalized,
+        (target:position - common_ancestor:position):normalized
+    ).
+    local sign is vdot(binormal, signVector).
+    if sign < 0 {
+        return -phase.
+    }
+    else {
+        return phase.
+    }
+}
+
+// Phase angle relative to longitude
+global function nav_lng_phase_angle
 {
     parameter tgt.
 
@@ -101,10 +155,20 @@ global function nav_pe_from_ap_ecc
 // Period of hohmann transfer
 global function nav_hoh_period
 {
-    parameter hohSMA, tgtBody.
+    parameter hohSMA, 
+              tgtBody is ship:body.
 
     local hohPeriod to 2 * constant:pi * sqrt(hohSMA^3 / tgtBody:mu).
     return hohPeriod.
+}
+
+// Semimajoraxis from orbital period
+global function nav_sma_from_period
+{
+    parameter period, 
+              tgtBody is ship:body.
+
+    return ((tgtBody:mu * period^2) / (4 * constant:pi^2))^(1/3).
 }
 
 // Semimajoraxis from apoapsis, periapsis, and body
@@ -116,8 +180,9 @@ global function nav_sma
 
     return (pe + ap + (smaBody:radius * 2)) / 2.
 }
+//#endregion
 
-//-- TA and Normal Calculations
+//#region -- Calculations of True Anomaly
 //From dunbaratu's kos tutorial (youtube.com/watch?v=NctfWrgreRI&list=PLdXwd2JlyAvowkTmfRXZrqVdRycxUIxpX)
 //ETA to a future true anomaly point in a given orbit
 global function nav_eta_to_ta 
@@ -128,15 +193,15 @@ global function nav_eta_to_ta
     local targetTime is nav_time_pe_to_ta(obtIn, taDeg).
     local curTime is nav_time_pe_to_ta(obtIn, obtIn:trueanomaly).
 
-    local ta is targetTime - curTime.
-
+    local utimeAtTA is time:seconds + targetTime - curTime.
+    
     //If negative, we've passed it so return the next orbit
-    if ta < 0 
+    if utimeAtTA < time:seconds
     { 
-        set ta to ta + obtIn:period. 
+        set utimeAtTA to utimeAtTA + obtIn:period. 
     }
 
-    return ta.
+    return utimeAtTA.
 }
 
 
@@ -165,8 +230,8 @@ global function nav_asc_node_ta
               obt1. // This should be the target orbit
 
     //Normals of the orbits
-    local nrm_0 to ksnav_obt_normal(obt0).
-    local nrm_1 to ksnav_obt_normal(obt1).
+    local nrm_0 to nav_obt_normal(obt0).
+    local nrm_1 to nav_obt_normal(obt1).
 
     // Unit vector pointing from body's center towards the node
     local vec_body_to_node is vcrs(nrm_0, nrm_1).
@@ -207,5 +272,204 @@ global function nav_obt_alt_at_ta
 
     // Subtract the body radius from the resulting SMA to get alt
     return r - obtIn:body:radius.
+}
+//#endregion
+
+//#region -- Nav vectors
+// In the direction of orbital angular momentum of ves
+// Typically same as Normal
+global function nav_obt_binormal 
+{
+    parameter obtIn.
+    return vcrs((obtIn:position - obtIn:body:position):normalized, nav_obt_tangent(obtIn)):normalized.
+}
+
+//Normal of the given orbit
+global function nav_obt_normal 
+{
+    parameter obtIn.
+    return vcrs( obtIn:body:position - obtIn:position, obtIn:velocity:orbit):normalized.
+}
+
+//Position of the given orbit
+global function nav_obt_pos 
+{
+    parameter obtIn.
+    return (obtIn:body:position - obtIn:position).
+}
+
+//Tangent (velocity) of the given orbit
+global function nav_obt_tangent 
+{
+    parameter obtIn.
+    return obtIn:velocity:orbit:normalized.
+}
+//#endregion
+
+//#region -- ksLib nav vectors
+// Same as orbital prograde vector for ves
+global function nav_ves_tangent 
+{
+    parameter ves is ship.
+    return ves:velocity:orbit:normalized.
+}
+
+// In the direction of orbital angular momentum of ves
+// Typically same as Normal
+global function nav_ves_binormal 
+{
+    parameter ves is ship.
+    return vcrs((ves:position - ves:body:position):normalized, nav_ves_tangent(ves)):normalized.
+}
+
+// Perpendicular to both tangent and binormal
+// Typically same as Radial In
+global function nav_ves_normal 
+{
+    parameter ves is ship.
+    return vcrs(nav_ves_binormal(ves), nav_ves_tangent(ves)):normalized.
+}
+
+// Vector pointing in the direction of longitude of ascending node
+global function nav_ves_lan 
+{
+    parameter ves is ship.
+    return angleAxis(ves:orbit:LAN, ves:body:angularVel:normalized) * solarPrimeVector.
+}
+
+// Same as surface prograde vector for ves
+global function nav_ves_srf_tangent 
+{
+    parameter ves is ship.
+    return ves:velocity:surface:normalized.
+}
+
+// In the direction of surface angular momentum of ves
+// Typically same as Normal
+global function nav_ves_srf_binormal 
+{
+    parameter ves is ship.
+    return vcrs((ves:position - ves:body:position):normalized, nav_ves_srf_tangent(ves)):normalized.
+}
+
+// Perpendicular to both tangent and binormal
+// Typically same as Radial In
+global function nav_ves_srf_normal 
+{
+    parameter ves is ship.
+    return vcrs(nav_ves_srf_binormal(ves), nav_ves_srf_tangent(ves)):normalized.
+}
+
+// Vector pointing in the direction of longitude of ascending node
+global function nav_ves_srf_lan 
+{
+    parameter ves is ship.
+    return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel:normalized) * solarPrimeVector.
+}
+
+// Vector directly away from the body at ves' position
+global function nav_ves_local_vertical 
+{
+    parameter ves is ship.
+    return ves:up:vector.
+}
+
+// Angle to ascending node with respect to ves' body's equator
+function nav_ang_to_body_asc_node {
+    parameter ves is ship.
+
+    local joinVector is nav_ves_lan(ves).
+    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
+    if ves:status = "LANDED" {
+        set angle to angle - 90.
+    }
+    else {
+        local signVector is vcrs(-body:position, joinVector).
+        local sign is vdot(nav_ves_binormal(ves), signVector).
+        if sign < 0 {
+            set angle to angle * -1.
+        }
+    }
+    return angle.
+}
+
+// Angle to descending node with respect to ves' body's equator
+function nav_ang_to_body_desc_node {
+    parameter ves is ship.
+
+    local joinVector is -nav_ves_lan(ves).
+    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
+    if ves:status = "LANDED" {
+        set angle to angle - 90.
+    }
+    else {
+        local signVector is vcrs(-body:position, joinVector).
+        local sign is vdot(nav_ves_binormal(ves), signVector).
+        if sign < 0 {
+            set angle to angle * -1.
+        }
+    }
+    return angle.
+}
+
+// Vector directed from the relative descending node to the ascending node
+function nav_rel_nodal_vec {
+    parameter orbitBinormal.
+    parameter targetBinormal.
+
+    return vcrs(orbitBinormal, targetBinormal):normalized.
+}
+
+// Angle to relative ascending node determined from args
+function nav_ang_to_rel_asc_node {
+    parameter orbitBinormal.
+    parameter targetBinormal.
+
+    local joinVector is nav_rel_nodal_vec(orbitBinormal, targetBinormal).
+    local angle is vang(-body:position:normalized, joinVector).
+    local signVector is vcrs(-body:position, joinVector).
+    local sign is vdot(orbitBinormal, signVector).
+    if sign < 0 {
+        set angle to angle * -1.
+    }
+    return angle.
+}
+
+// Angle to relative descending node determined from args
+function nav_ang_to_rel_desc_node {
+    parameter orbitBinormal.
+    parameter targetBinormal.
+
+    local joinVector is -nav_rel_nodal_vec(orbitBinormal, targetBinormal).
+    local angle is vang(-body:position:normalized, joinVector).
+    local signVector is vcrs(-body:position, joinVector).
+    local sign is vdot(orbitBinormal, signVector).
+    if sign < 0 {
+        set angle to angle * -1.
+    }
+    return angle.
+}
+//#endregion
+
+//#region -- Velocity calculations
+// Transfer velocity from start and end semimajoraxis
+global function nav_transfer_velocity
+{
+    parameter stSMA,
+              endSMA,
+              mnvBody is ship:body.
+
+    return sqrt(mnvBody:mu * ((2 / stSMA) - (1 / endSMA))).
+}
+
+// Velocity given a true anomaly
+global function nav_velocity_at_ta
+{
+    parameter ves,
+              orbitIn,
+              anomaly.
+
+    local etaToAnomaly to nav_eta_to_ta(orbitIn, anomaly).
+    return velocityAt(ves, etaToAnomaly):orbit:mag.
 }
 //#endregion

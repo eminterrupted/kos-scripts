@@ -19,7 +19,7 @@ if not hasTarget
 local lastDist  to 999999.
 lock  relVel to target:velocity:orbit - ship:velocity:orbit.
 local safeDist  to 100.
-local startDist to 1000.
+local startDist to 500.
 
 lock steering to lookdirup(relVel, sun:position).
 disp_msg("Awaiting ideal startDist: " + startDist).

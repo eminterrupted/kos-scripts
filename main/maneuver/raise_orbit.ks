@@ -34,7 +34,7 @@ disp_main(scriptPath():name).
 disp_msg("Calculating burn data").
 
 // Get the amount of dv needed to raise from current to desired
-set dvNeeded to mnv_dv_hohmann_vnext(ship:apoapsis, ship:periapsis, tgtAp, tgtPe, ship:body).
+set dvNeeded to mnv_dv_hohmann_velocity(ship:apoapsis, ship:periapsis, tgtAp, tgtPe, ship:body).
 disp_msg("dv0: " + round(dvNeeded[0], 2) + " | dv1: " + round(dvNeeded[1], 2)).
 
 // Transfer burn

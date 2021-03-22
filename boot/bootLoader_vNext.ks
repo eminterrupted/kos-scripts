@@ -17,9 +17,6 @@ if exists("local:/launchPlan.json")
     deletePath(lc).
 }
 
-panels on.
-ves_activate_antenna(ship:modulesNamed("ModuleRTAntenna")).
-
 if exists("local:/missionPlan.json")
 {
     local mc to download("/controller/missionController_vNext").
