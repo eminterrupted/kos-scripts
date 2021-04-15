@@ -22,19 +22,20 @@ until launchQueue:length = 0
         ag10 off.
         until ag10
         {
-            hudtext("Activate AG10 to initiate launch sequence", 1, 2, 20, yellow, false).
+            hudtext("Activate AG10 to initiate launch", 1, 2, 20, yellow, false).
             wait 0.01.
         }
         ag10 off.
 
-        runPath("0:/main" + launchQueue:pop(), launchPlan).
+        runPath("0:/main/launch/" + launchQueue:pop(), launchPlan).
         writeJson(launchPlan, launchCache).
     }
     else
     {
-        local curScript to download(launchQueue:pop()).
+        //local curScript to download("/launch/" + launchQueue:pop()).
+        local curScript to "0:/main/launch/" + launchQueue:pop().
         runPath(curScript, launchPlan).
-        deletePath(curScript).
+        //deletePath(curScript).
         writeJson(launchPlan, launchCache).
     }
 }

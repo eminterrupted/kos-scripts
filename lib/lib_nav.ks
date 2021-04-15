@@ -455,11 +455,11 @@ function nav_ang_to_rel_desc_node {
 // Transfer velocity from start and end semimajoraxis
 global function nav_transfer_velocity
 {
-    parameter stSMA,
+    parameter stAlt,
               endSMA,
               mnvBody is ship:body.
 
-    return sqrt(mnvBody:mu * ((2 / stSMA) - (1 / endSMA))).
+    return sqrt(mnvBody:mu * ((2 / stAlt) - (1 / endSMA))).
 }
 
 // Velocity given a true anomaly

@@ -36,7 +36,7 @@ disp_msg("Calculating burn data").
 set stAlt to ship:periapsis.
 
 // Get the amount of dv needed to raise from current to desired
-set dvNeeded to mnv_dv_hohmann_velocity(stAlt, tgtAlt, tgtAlt, tgtAlt, ship:body)[1].
+set dvNeeded to mnv_dv_hohmann_velocity(stAlt, tgtAlt, tgtAlt, ship:body)[1].
 disp_msg("dv1: " + round(dvNeeded, 2)).
 
 // Burn timing

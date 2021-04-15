@@ -45,7 +45,7 @@ print "resonantAP    : " + round(resonantAp, 1) at (2, 25).
 print "resonantSMA   : " + round(nav_sma(ship:periapsis, resonantAp)) at (2, 26).
 
 // Calculate the burn params
-local dvTransfer    to mnv_dv_hohmann_velocity(ship:apoapsis, ship:periapsis, resonantAp, resonantAp)[0].
+local dvTransfer    to mnv_dv_hohmann_velocity(ship:periapsis, ship:apoapsis, resonantAp)[0].
 local transferTime  to time:seconds + eta:periapsis.
 local burnDur to mnv_burn_dur(dvTransfer).
 local halfDur to mnv_burn_dur(dvTransfer / 2).
@@ -56,7 +56,7 @@ disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
 mnv_exec_circ_burn(dvTransfer, transferTime, burnEta).
 
 // Re-circularize
-local dvCirc    to mnv_dv_hohmann_velocity(resonantAp, resonantAp, ship:periapsis, ship:periapsis)[1].
+local dvCirc    to mnv_dv_hohmann_velocity(resonantAp, ship:periapsis, ship:periapsis)[1].
 local circTime  to time:seconds + eta:periapsis + (ship:orbit:period * (numOrbits - 1)).
 set burnDur     to mnv_burn_dur(dvTransfer).
 set halfDur     to mnv_burn_dur(dvTransfer / 2).

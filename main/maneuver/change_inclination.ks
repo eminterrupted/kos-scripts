@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter _tgtInclination is 88,
-          _tgtLongitudeAscendingNode is ship:orbit:lan.
+parameter tgtInc is 63.4,
+          tgtLAN is 220.7.
 
 clearscreen.
 clearVecDraws().
@@ -16,10 +16,10 @@ disp_main(scriptPath()).
 
 // Creating the new orbit
 local targetObt is createOrbit(
-    _tgtInclination, 
+    tgtInc, 
     ship:orbit:eccentricity, 
     ship:orbit:semiMajorAxis, 
-    _tgtLongitudeAscendingNode,
+    tgtLAN,
     ship:orbit:argumentOfPeriapsis,
     ship:orbit:meanAnomalyAtEpoch,
     ship:orbit:epoch,
@@ -29,8 +29,10 @@ local targetObt is createOrbit(
 local burnData  to "".
 local burnDur   to 0.
 local burnETA   to 0.
+local burnMag   to 0.
 local burnVec   to v(0, 0, 0).
-local drawVec   to true.
+local drawVec   to false.
+local mnvNode   to node(0, 0, 0, 0).
 local mnvTime   to 0.
 
 //Steering
@@ -48,16 +50,19 @@ when ship:availableThrust < 0.1 and tVal > 0 then
 }
 
 // Main
-disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + _tgtInclination).
+disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + tgtInc).
 
 //Setup burn
 set burnData    to mnv_inc_match_burn(ship, targetObt).
 set mnvTime     to burnData[0].
+set burnMag     to burnData[3].
 set burnVec     to burnData[1].
+set mnvNode     to burnData[2].
+add mnvNode. 
 
-set burnDur     to mnv_burn_dur(burnVec:mag).
-set burnETA     to mnvTime - mnv_burn_dur(burnVec:mag / 2).
-disp_info("DeltaV remaining: " + round(burnVec:mag, 1)).
+set burnDur     to mnv_burn_dur(burnMag).
+set burnETA     to mnvTime - mnv_burn_dur(burnMag / 2).
+disp_info("DeltaV remaining: " + round(burnMag, 1)).
 
 
 // Vecdraw
@@ -68,7 +73,7 @@ if drawVec
         burnVDTail,
         1000 * burnVec,
         magenta,
-        "dV:" + round(burnVec:mag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
+        "dV:" + round(burnMag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
         1,
         true,
         0.1
@@ -78,10 +83,14 @@ if drawVec
     set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
 }
 
+// Set up the inclination check delegate
 set sVal to lookDirUp(burnVec, sun:position).
 lock steering to sVal.
 wait until ves_settled().
 
 // Perform the maneuver
-mnv_exec_vec_burn(burnVec, mnvTime, burnETA).
+mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+set sVal to lookDirUp(ship:prograde:vector, sun:position).
+lock steering to sVal.
+remove mnvNode.
 clearVecDraws().

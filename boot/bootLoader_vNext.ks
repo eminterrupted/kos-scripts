@@ -8,13 +8,14 @@ if addons:rt:hasKscConnection(ship) runOncePath("0:/lib/lib_vessel").
 if missionTime = 0
 {
     runPath("0:/main/controller/setupPlan").
-}
 
-if exists("local:/launchPlan.json") 
-{
-    local lc to download("/controller/launchController").
-    runPath(lc).
-    deletePath(lc).
+    if exists("local:/launchPlan.json") 
+    {
+        local lc to download("/controller/launchController").
+        runPath(lc).
+        deletePath(lc).
+        download("/cache/missionPlan.json").
+    }
 }
 
 if exists("local:/missionPlan.json")
@@ -27,11 +28,10 @@ if exists("local:/missionPlan.json")
 //-- Functions
 local function init_disk
 {
-    local cores to ship:modulesNamed("kOSProcessor").
     local idx   to 0.
-    
+
     set core:volume:name to "local".
-    for c in cores
+    for c in ship:modulesNamed("kOSProcessor")
     {
         if c:volume:name = "" 
         {
@@ -50,24 +50,21 @@ global function download
 
     until addons:rt:hasKscConnection(ship)
     {
-        Print "Waiting for KSC Connection...".
+        print "Waiting for KSC Connection".
         wait 5.
     }
 
     if exists(locPath) {
-        Print "Removing existing file at " + locPath.
         deletePath(locPath).
     }
-
-    Print "Downloading " + arcPath.
     copyPath(arcPath, locPath).
-    
+
     if exists(locPath) {
         return locPath.
     }
     else
     {
-        print "Download failed! Check disk size or original path and try again".
+        print "Download failed!".
         return 1 / 0.
     }
 }

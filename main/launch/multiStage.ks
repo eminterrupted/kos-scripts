@@ -17,12 +17,12 @@ local azCalcObj to launchPlan:lazObj.
 
 local endPitch  to 0.
 local finalAlt  to 0.
-local maxAcc    to 25.
-local maxQ      to 0.10.
+local maxAcc    to 35.
+local maxQ      to 0.145.
 local stAlt     to 0.
-local stTurn    to 750.
-local stSpeed   to 75.
-local turnAlt   to max(45000, min(65000, tgtAlt * 0.2)).
+local stTurn    to 2500.
+local stSpeed   to 150.
+local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
 
 // Flags
 local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
@@ -46,23 +46,11 @@ ag8 off.
 disp_terminal().
 disp_main(scriptPath():name).
 
-// Staging trigger
-when ship:availablethrust <= 0.1 and tVal > 0 and missionTime > 1 then
-{
-    if stage:number > 2
-    {
-        disp_info("Staging").
-        ves_safe_stage().
-        disp_info().
-        accPid:reset.
-        preserve.
-    }
-}
 
 // Fairing trigger
 if hasFairing 
 {
-    when ship:altitude > 70500 then
+    when ship:altitude > body:atm:height + 250 then
     {
         ves_jettison_fairings().
     }
@@ -102,7 +90,7 @@ until countdown >= 0
     wait 0.05.
 }
 launch_pad_holdowns_retract().
-stage.  // Release launch clamps at T-0.
+if missionTime <= 0.01 stage.  // Release launch clamps at T-0.
 ag8 on. // Action group cue for liftoff
 ag10 off.   // Reset ag10 (is true to initiate launch)
 unlock countdown.
@@ -110,6 +98,15 @@ disp_info().
 disp_info2().
 // End countdown
 
+// Staging trigger
+when ship:availablethrust <= 0.1 and tVal > 0 then
+{
+        disp_info("Staging").
+        ves_safe_stage().
+        disp_info().
+        accPid:reset.
+        preserve.
+}
 
 disp_msg("Vertical ascent").
 until alt:radar >= 100
@@ -188,7 +185,7 @@ wait 1.
 disp_info().
 
 disp_msg("Coasting to space").
-until ship:altitude >= body:atm:height + 2500 or ship:verticalspeed < 0
+until ship:altitude >= body:atm:height or ship:verticalspeed < 0
 {
     set sVal to ship:prograde.
     // Correction burn if needed

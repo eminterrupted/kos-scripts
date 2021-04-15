@@ -38,7 +38,7 @@ global function sci_modules
 global function sci_recover_list
 {
     parameter sciList,
-              mode.
+              mode is "ideal".
 
     for m in sciList
     {
@@ -80,8 +80,9 @@ local function sci_collect_experiments
 {
     local sciBoxList to ship:modulesNamed("ModuleScienceContainer").
     local sciBox to 0.
-
-    if sciBoxList:length > 0
+    local sciBoxPresent to choose true if sciBoxList:length > 0 else false.
+    
+    if sciBoxPresent
     {
         for m in sciBoxList
         {
@@ -93,15 +94,19 @@ local function sci_collect_experiments
         }
     }
 
-    sciBox:doAction("collect all", true).
-    if sciBox:hasEvent("container: transfer data") 
+    if sciBoxPresent
     {
-        return true.
+        sciBox:doAction("collect all", true).
+        if sciBox:hasEvent("container: transfer data") 
+        {
+            return true.
+        }
+        else 
+        {
+            return false.
+        }
     }
-    else 
-    {
-        return false.
-    }
+    return false.
 }
 
 // Deploy stock or DMagic experiments

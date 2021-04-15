@@ -74,4 +74,13 @@ if ship:orbit:hasnextpatch
 {
     disp_msg("Transfer complete!").
     disp_info("Pe at target: " + round(ship:orbit:nextPatch:periapsis)).
+
+    until ship:body = tgt
+    {
+        disp_info2("Time to SOI change: " + ship:orbit:nextpatcheta).
+        disp_orbit().
+    }
+
+    disp_info2().
+    disp_info2("Arrived at " + tgt:name + " SOI").
 }

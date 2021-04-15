@@ -1,21 +1,20 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter launchPlan is lex().
-
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/lib_util").
 
 local sciFlag   to false.
 local sciList   to sci_modules(). 
+local sVal      to up.
 
-lock steering to up.
+lock steering to sVal.
 
 // Main
 sci_deploy_list(sciList).
 wait 1.
-sci_recover_list(sciList, "ignore").
-
+sci_recover_list(sciList, "ideal").
 
 local ts to time:seconds + 10.
 until time:seconds >= ts
@@ -24,13 +23,19 @@ until time:seconds >= ts
 }
 stage.
 
-when ship:maxthrust <= 0.1 and stage:number > 1 then
+when ship:maxthrust <= 0.1 then
 {
     wait 0.05.
     stage.
+    if stage:number > 2 preserve.
 }
 
-lock steering to heading(90, 80, 0).
+until ship:altitude >= 250 
+{
+    set sVal to up.
+}
+
+set sVal to heading(90, 85, -90).
 
 until ship:altitude >= 18000
 {
@@ -44,10 +49,10 @@ until ship:altitude >= 18000
     wait 0.05.
 }
 
+set sVal to ship:prograde.
 set sciFlag to false.
-lock steering to ship:prograde.
 
-until ship:altitude >= 85000
+until ship:altitude >= body:atm:height
 {
     if not sciFlag 
     {
@@ -57,45 +62,25 @@ until ship:altitude >= 85000
     }
     disp_telemetry().
     wait 0.05.
-}
-
-bays on.
-wait 5.
-
-until ship:altitude >= 250000
-{
-    if ship:verticalspeed <= 5 
-    {
-        break.
-    }
-    
-    if not sciFlag 
-    {
-        sci_deploy_list(sciList).
-        sci_recover_list(sciList, "ideal").
-        set sciFlag to true.
-    }
-    disp_telemetry().
-    wait 0.05.
-}
-
-sci_deploy_list(sciList).
-sci_recover_list(sciList, "ideal").
-
-local sVal to ship:prograde.
-lock tApo to time:seconds + eta:apoapsis.
-lock steering to sVal.
-
-until time:seconds >= tApo
-{
-    set sVal to ship:prograde.
 }
 
 stage.
 
-set sciList to sci_modules(). 
+bays on.
+wait 5.
+sci_deploy_list(sciList).
+sci_recover_list(sciList, "ideal").
 
-until false 
+for m in ship:modulesNamed("RealChuteModule")
+{
+    util_do_event(m, "arm parachute").
+}
+
+bays off.
+
+until ship:altitude <= body:atm:height 
 {
     set sVal to ship:retrograde.
 }
+
+unlock steering.

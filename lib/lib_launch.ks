@@ -17,11 +17,11 @@ global function launch_ang_for_alt
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
 
-    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) > 0.0025 else ship:prograde:vector.
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0001 else ship:prograde:vector.
     local pgPitch   to 90 - vang(ship:up:vector, pg).
 
     // Calculate the effective pitch with a 5 degree limiter
-    local effPitch  to max(pgPitch - 5, min(pitch, pgPitch + 5)).
+    local effPitch  to max(pgPitch - 2.5, min(pitch, pgPitch + 2.5)).
     return effPitch.
 }.
 //#endregion

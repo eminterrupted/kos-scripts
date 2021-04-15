@@ -102,15 +102,19 @@ global function disp_telemetry
     print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, 16).
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, 17).
 
-    if ship:altitude <= 60000 
+    if ship:altitude <= 85000
     {
         print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, 19).
         print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
+        print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, 21).
+        print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, 22).
     }
     else
     {
         print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 19).
         print "                                               " at (0, 20).
+        print "                                               " at (0, 21).
+        print "                                               " at (0, 22).
     }
 }
 //#endregion

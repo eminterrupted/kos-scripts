@@ -1,0 +1,17 @@
+{
+    "items": [
+        {
+            "value": "/mission/simple_orbit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "/mission/relay_orbit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "/return/ksc_reentry",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.QueueValue"
+}

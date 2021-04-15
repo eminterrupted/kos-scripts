@@ -1,5 +1,8 @@
 @lazyGlobal off.
 
+//-- Variables --//
+local rmFile to "local:/runmode.json".
+
 //-- Global Functions --//
 
 //#region -- Generic functions
@@ -9,6 +12,24 @@ global function breakpoint
     print "* Press any key to continue *" at (10, terminal:height - 2).
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
+}
+//#endregion
+
+//#region -- Runmode functions
+// Gets the runmode from disk if exists, else returns 0
+global function util_runmode
+{
+    if exists(rmFile) return readJson(rmFile)["runmode"].
+    else return 0.
+}
+
+// Writes the runmode to disk
+global function util_set_runmode
+{
+    parameter runmode is 0.
+
+    if runmode <> 0 writeJson(lex("runmode", runmode), rmFile).
+    else if exists(rmFile) deletePath(rmFile).
 }
 //#endregion
 
@@ -39,6 +60,23 @@ global function util_sort_list_by_stage
 //#endregion
 
 //#region -- Check functions
+// Function for use in maneuver delegates
+global function util_check_del 
+{
+    parameter checkType,
+              rangeLo,
+              rangeHi.
+    
+    local val to 0.
+
+    if checkType = "ap"         set val to ship:apoapsis.
+    else if checkType = "pe"    set val to ship:periapsis.
+    else if checkType = "inc"   set val to ship:orbit:inclination.
+
+    if val >= rangeLo and val <= rangeHi return true.
+    else return false.
+}
+
 // Checks if a value is between a range centered around 0.
 global function util_check_value
 {
