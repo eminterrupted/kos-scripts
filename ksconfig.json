@@ -16,6 +16,7 @@
     ],
     "linting": 
     {
-        "symbol-unused-locally": "hint"
+        "symbol-unused-locally": "hint",
+        "type-no-indexer": "hint"
     }
 }

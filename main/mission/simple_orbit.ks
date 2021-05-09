@@ -6,7 +6,7 @@ runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_util").
 
-local sVal to lookDirUp(ship:prograde:vector, body("sun"):position).
+local sVal to lookDirUp(ship:prograde:vector, sun:position).
 
 lock steering to sVal.
 
@@ -19,7 +19,7 @@ ag10 off.
 hudtext("Activate AG10 to end Simple Orbit sequence", 25, 2, 20, green, false).
 until ag10
 {
-    set sVal to lookDirUp(ship:prograde:vector, body("sun"):position).
+    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     disp_orbit().
 }
 ag10 off.

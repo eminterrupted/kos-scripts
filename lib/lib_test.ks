@@ -19,7 +19,7 @@
         lock throttle to tVal.
 
         stage.
-        until dur <= 0 or (p:thrust <= 0.1 and dur <= 5) or tVal < 0.50
+        until dur <= 0 or (p:thrust <= 0.1 and dur <= 10) or tVal < 0.50
         {
             if dur > 0
             {
@@ -83,6 +83,25 @@
                 local m to p:getModule("ModuleLight").
                 if state util_do_event(m, "lights on").
                 else     util_do_event(m, "lights off").
+            }
+        }
+    }
+
+
+    // Toggles launchpad refueling
+    global function test_pad_fuel
+    {
+        parameter powerOn.
+
+        for g in ship:modulesNamed("ModuleGenerator")
+        {
+            if powerOn 
+            {
+                util_do_event(g, "start fueling").
+            }
+            else 
+            {
+                util_do_event(g, "stop fueling").
             }
         }
     }

@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
-//#include "0:/boot/bootLoader_vNext"
+//#include "0:/boot/bootLoader"
 runOncePath("0:/lib/lib_launch").
 
-local launchCache   to "local:/launchPlan.json".
+local launchCache   to dataDisk + "launchPlan.json".
 local launchPlan    to readJson(launchCache).
 local launchQueue   to launchPlan:queue.
 
@@ -18,6 +18,7 @@ until launchQueue:length = 0
         print "Apoapsis    : " + launchPlan:tgtAp.
         print "Periapsis   : " + launchPlan:tgtPe.
         print "Inclination : " + launchPlan:tgtInc.
+        print "Roll Program: " + launchPlan:tgtRoll.
         core:doAction("open terminal", true).
         ag10 off.
         until ag10
@@ -32,14 +33,12 @@ until launchQueue:length = 0
     }
     else
     {
-        //local curScript to download("/launch/" + launchQueue:pop()).
         local curScript to "0:/main/launch/" + launchQueue:pop().
         runPath(curScript, launchPlan).
-        //deletePath(curScript).
         writeJson(launchPlan, launchCache).
     }
 }
+ag9 off.
 ag9 on.
-hudtext("Launch plan complete, deleting launchCache", 5, 2, 20, green, false).
 deletePath(launchCache).
 ag9 off.

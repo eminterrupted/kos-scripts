@@ -4,7 +4,7 @@ clearScreen.
 // This script circularizes a launch to the desired Pe
 // Accepts either a scalar or a lex with a tgtPe key
 
-parameter tgtAlt is ship:periapsis - ship:body:radius / 1.25.
+parameter tgtAlt is ship:periapsis + 500.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -15,10 +15,7 @@ disp_terminal().
 disp_main(scriptPath():name).
 
 // Variables
-local burnTime  to list().
-local dvNeeded  to list().
-local mnvTime   to time:seconds + eta:periapsis.
-local stAlt     to 0.
+local mnvNode   to node(0, 0, 0, 0).
 
 // Setup taging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -33,15 +30,26 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude.
-set stAlt to abs(ship:apoapsis).
+set mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
+add mnvNode.
 
-// Get the amount of dv needed to raise from current to desired
-set dvNeeded to mnv_dv_hohmann(stAlt, tgtAlt, ship:body)[1].
-disp_msg("dv1: " + round(dvNeeded, 2)).
+until false
+{
+    if mnvNode:orbit:hasnextpatch
+    {
+        remove mnvNode.
+        set mnvNode to node(mnvNode:time, 0, 0, mnvNode:prograde - 10).
+        add mnvNode.
+    }
+    else
+    {
+        break.
+    }
+}
+remove mnvNode.
+set mnvNode to mnv_opt_simple_node(mnvNode, tgtAlt, "ap").
+add mnvNode.
 
-// Burn timing
-set burnTime to mnv_burn_times(dvNeeded, mnvTime).
-disp_info("Burn duration: " + round(burnTime[1])).
+mnv_exec_node_burn(mnvNode).
 
-// Execute
-mnv_exec_circ_burn(dvNeeded, mnvTime, burnTime[0]).
+unlock steering.

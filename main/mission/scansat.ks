@@ -10,7 +10,7 @@ core:doAction("open terminal", true).
 local scanList to ship:partsDubbedPattern("scansat").
 local scanner  to scanList[0].
 
-local sVal to ship:prograde.
+local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
 panels on.

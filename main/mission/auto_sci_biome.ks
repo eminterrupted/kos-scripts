@@ -45,7 +45,7 @@ local function manual_crew_report
 {
     until time:seconds >= tStamp or ag10
     {
-        set sVal to lookDirUp(ship:prograde:vector, body("sun"):position) + r(0, 0, rVal).
+        set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         local sciInterval to time:seconds + 15.
         until time:seconds >= sciInterval 
         {   
@@ -76,7 +76,7 @@ local function scanned_biome_crew_report
     until time:seconds >= tStamp or ag10
     {
         set curBiome to addons:scansat:getBiome(ship:body, ship:geoposition).
-        set sVal to lookDirUp(ship:prograde:vector, body("sun"):position) + r(0, 0, rVal).
+        set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         disp_msg("Scanning for unresearched biomes").
         if not biomeList:contains(curBiome)
         {

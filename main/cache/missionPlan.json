@@ -5,7 +5,15 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "/mission/relay_orbit",
+            "value": "/maneuver/transfer_to_mun",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "/maneuver/capture_burn",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "/mission/orbital_science",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {

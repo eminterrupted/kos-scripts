@@ -23,13 +23,13 @@ core:doAction("open terminal", true).
 // Part testing
 for p in ship:parts
 {
-    if p:hasModule("ModuleTestSubject") or p:tag:contains("test") or p:typeName = "engine"
+    if p:hasModule("ModuleTestSubject") or p:tag = "test" or p:typeName = "engine"
     {
         pList:add(p).
     }
 }
 
-set pList to util_sort_list_by_stage(pList, "desc").
+set pList to util_order_list_by_stage(pList, "desc").
 
 for testPart in pList
 {

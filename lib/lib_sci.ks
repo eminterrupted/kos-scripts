@@ -134,7 +134,7 @@ local function sci_deploy
         {
             if action:contains(validAction)
             {
-                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction"), true).
+                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction",""), true).
             }
         }
     }

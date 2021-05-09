@@ -13,7 +13,7 @@ local recover       to true.
 local validModes  to list("transmit", "ideal", "collect").
 local sciList       to sci_modules().
 
-lock steering to lookDirUp(ship:prograde:vector, body("sun"):position).
+lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
 disp_main(scriptPath():name).
 disp_orbit().

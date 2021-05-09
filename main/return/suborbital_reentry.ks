@@ -10,7 +10,7 @@ runOncePath("0:/lib/lib_nav").
 
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
-local sVal       to lookDirUp(ship:retrograde:vector, body("sun"):position) + r(0, 0, 180).
+local sVal       to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, 180).
 local tVal       to 0.
 
 // Locks
@@ -26,7 +26,7 @@ for c in parachutes
 
 disp_msg().
 disp_msg("Staging").
-set sVal to lookDirUp(ship:prograde:vector + r(0, -90, 0), body("sun"):position).
+set sVal to lookDirUp(ship:prograde:vector + r(0, -90, 0), sun:position).
 wait 5.
 until stage:number = 1 
 {
@@ -38,7 +38,7 @@ disp_msg("Waiting until reentry interface").
 
 until ship:altitude <= body:atm:height
 {
-    set sVal to lookDirUp(ship:retrograde:vector, body("sun"):position).
+    set sVal to lookDirUp(ship:retrograde:vector, sun:position).
     disp_telemetry().
 }
 disp_msg().

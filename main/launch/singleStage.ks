@@ -1,20 +1,21 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter launchPlan is lex().
+parameter launchPlan is lex("tgtAp", 18000).
 
 runOncePath("0:/lib/lib_sci").
 runOncePath("0:/lib/lib_disp").
 
 local sciFlag   to false.
 local sciList   to sci_modules(). 
+local tgtAp     to launchPlan["tgtAp"].
 
 lock steering to up.
 
 // Main
 sci_deploy_list(sciList).
 wait 1.
-sci_recover_list(sciList, "ignore").
+sci_recover_list(sciList, "ideal").
 
 
 local ts to time:seconds + 10.
@@ -32,7 +33,7 @@ when ship:maxthrust <= 0.1 and stage:number > 1 then
 
 lock steering to heading(90, 80, 0).
 
-until ship:altitude >= 18000
+until ship:altitude >= tgtAp
 {
     if not sciFlag
     {
@@ -47,7 +48,7 @@ until ship:altitude >= 18000
 set sciFlag to false.
 lock steering to ship:prograde.
 
-until ship:altitude >= 85000
+until ship:altitude >= body:atm:height
 {
     if not sciFlag 
     {
@@ -83,10 +84,10 @@ sci_deploy_list(sciList).
 sci_recover_list(sciList, "ideal").
 
 local sVal to ship:prograde.
-lock tApo to time:seconds + eta:apoapsis.
+lock tsAp to time:seconds + eta:apoapsis.
 lock steering to sVal.
 
-until time:seconds >= tApo
+until time:seconds >= tsAp
 {
     set sVal to ship:prograde.
 }

@@ -7,8 +7,8 @@ clearScreen.
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_nav").
 
-local upload to false.
-local launchPhase to 74.416.
+local upload to true.
+local launchPhase to 87.172.
 
 local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 2, 2).
 local arcLog to "0:/log/relay_planner_" + shipNameTrimmed + ".log".
@@ -30,17 +30,20 @@ print " ".
 
 lock tgtPhase to nav_lng_phase_angle(target).
 print "Desired phase angle at launch: " + launchPhase at (0, 8).
-until tgtPhase >= launchPhase - 7.5 and tgtPhase <= launchPhase + 7.5
+until tgtPhase >= mod((launchPhase + 360) - 2.5, 360) and tgtPhase < launchPhase 
 {
     print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
+    print "In the first loop" at (0, 11).
     wait 0.01.
 }
 
 if warp > 0 set warp to 0.
+print "                          " at (0, 11).
+print "Approaching launch phase" at (0, 6).
 
 until false
 {
-    if tgtPhase >= launchPhase - 0.30 and tgtPhase <= launchPhase break.
+    if tgtPhase >= launchPhase - 0.35 break.
     print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
     wait 0.01.
 }

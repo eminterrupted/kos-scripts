@@ -21,7 +21,7 @@ global function launch_ang_for_alt
     local pgPitch   to 90 - vang(ship:up:vector, pg).
 
     // Calculate the effective pitch with a 5 degree limiter
-    local effPitch  to max(pgPitch - 2.5, min(pitch, pgPitch + 2.5)).
+    local effPitch  to max(pgPitch - 5, min(pitch, pgPitch + 5)).
     return effPitch.
 }.
 //#endregion

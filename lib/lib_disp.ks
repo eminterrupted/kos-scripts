@@ -3,15 +3,83 @@
 //-- Dependencies --//
 
 //-- Variables --//
+local line to 0.
 
 //-- Functions --//
 
-//#region -- Display Utilities
+//-- Display Utilities
 // Clears a line assuming a 60 char display
-global function disp_clr
+global function clr
 {
-    parameter line.
-    print "                                                            " at (0, line).
+    parameter clrLine.
+    print "                                                            " at (0, clrLine).
+}
+
+global function clr_disp
+{
+    set line to 10.
+    clr(line).
+    until line >= terminal:height
+    {
+        clr(cr()).
+    }
+}
+
+// Local function for incrementing ln
+local function cr
+{
+    set line to line + 1.
+    return line.
+}
+
+// Formats a timestamp into one of a few format strings
+global function disp_format_timestamp
+{
+    parameter ts,
+              format is "t".
+
+    local y  to 0.
+    local d  to 0.
+    local h  to 0.
+    local m  to 0.
+    local s  to 0.
+    
+    local secPerDay  to kuniverse:hoursperday * 3600.
+    local secPerYear to kerbin:orbit:period.
+
+    if ts >= secPerYear
+    {
+        set y to round(ts / secPerYear).
+        set ts to mod(ts, secPerYear).
+    }
+    if ts >= secPerDay
+    {
+        set d to round(ts / secPerDay).
+        set ts to mod(ts, secPerDay).
+    }
+    if ts >= 3600
+    {
+        set h to round(ts / 3600).
+        set ts to mod(ts, 3600).
+    }
+    if ts >= 60
+    {
+        set m to round(ts / 60).
+        set ts to mod(ts, 60).
+    }
+    if ts >= 1 
+    {
+        set s to round(ts).
+    }
+
+    if format = "t"
+    {
+        return "y" + y + " d" + d + " " + h + "h" + m + "m" + s + "s".
+    }
+    else if format = "utc"
+    {
+        return "y" + (y + 1) + " d" + (d + 1) + " " + h + ":" + (m - 1) + ":" + s.
+    }
 }
 
 // Print a string to the info line
@@ -25,7 +93,7 @@ global function disp_info
     }
     else 
     {
-        disp_clr(7).
+        clr(7).
     }
 }
 
@@ -39,7 +107,7 @@ global function disp_info2
     }
     else 
     {
-        disp_clr(8).
+        clr(8).
     }
 }
 
@@ -47,41 +115,78 @@ global function disp_info2
 global function disp_msg
 {
     parameter str is "".
+    clr(6).    
     if str <> "" 
     {
         set str to "MSG  : " + str + "          ".
         print str at (0, 6).
     }
-    else 
-    {
-        disp_clr(6).
-    }
 }
-
 
 // Sets up the terminal
 global function disp_terminal
 {
     set terminal:height to 50.
-    set terminal:width to 65.
+    set terminal:width to 60.
     core:doAction("open terminal", true).
 }
-//#endregion
 
-//#region -- Main Displays
+//-- Main Displays
+// A display for airplane flights
+global function disp_avionics
+{
+    set line to 10.
+    
+    print "AVIONICS" at (0, line).
+    print "---------" at (0, cr()).
+    print "ALTITUDE         : " + round(ship:altitude)              + "m      " at (0, cr()).
+    cr().
+    print "AIRSPEED         : " + round(ship:airspeed, 1)              + "m/s    " at (0, cr()).
+    print "VERT SPEED       : " + round(ship:verticalspeed, 1)         + "m/s    " at (0, cr()).
+    print "GROUND SPEED     : " + round(ship:groundspeed, 1)           + "m/s    " at (0, cr()).
+    cr().
+    print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, cr()).
+    print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
+    cr().
+    print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 5) + "   " at (0, cr()).
+}
+
+
 // A display header for mission control
 global function disp_main
 {
     disp_terminal().
+    set line to 1.
     parameter plan is scriptPath():name.
 
-    print "Mission Controller v0.02b" at (0, 1).
-    print "=========================" at (0, 2).
+    print "Mission Controller v0.02b" at (0, line).
+    print "=========================" at (0, cr()).
     print "MISSION : " + ship:name    at (0, 3).
     print "PLAN    : " + plan         at (0, 4).
 }
 
-// Displays general telemetry for flight
+// Results of a maneuver optimization
+global function disp_mnv_score 
+{
+    parameter tgtVal,
+              tgtBody,
+              intercept,
+              result,
+              score.
+
+    set line to 10.
+    
+    print "NODE OPTIMIZATION"                   at (0, line).
+    print "-----------------"                   at (0, cr()).
+    print "TARGET BODY   : " + tgtBody          at (0, cr()).
+    print "TARGET VAL    : " + tgtVal           at (0, cr()).
+    print "RESULT VAL    : " + round(result, 5) at (0, cr()).
+    cr().
+    print "SCORE         : " + round(score, 5)  at (0, cr()).
+    print "INTERCEPT     : " + intercept        at (0, cr()).
+}
+
+// Simple orbital telemetry
 global function disp_orbit
 {
     print "ORBIT" at (0, 10).
@@ -91,6 +196,8 @@ global function disp_orbit
     print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, 14).
 }
 
+
+// General telemetry for flight
 global function disp_telemetry
 {
     print "TELEMETRY" at (0, 10).
@@ -117,4 +224,3 @@ global function disp_telemetry
         print "                                               " at (0, 22).
     }
 }
-//#endregion

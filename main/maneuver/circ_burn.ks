@@ -46,5 +46,5 @@ disp_info("Burn duration: " + round(burnDur)).
 set burnEta to burnAt - halfDur.
 
 // Execute
-mnv_exec_circ_burn(dvNeeded[1], burnAt, burnEta).
+mnv_exec_circ_burn(dvNeeded[1], burnAt, burnEta, burnDur).
 ag9 on.

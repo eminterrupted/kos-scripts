@@ -14,13 +14,15 @@ global function nav_lng_to_degrees
 }
 
 //#region -- Target Functions
-// Angular velocity of a target
+// Angular velocity of a target in radians
 global function nav_ang_velocity 
 {
-    parameter tgt.
+    parameter tgt,
+              mnvBody is ship:body.
 
     if tgt:typename = "string" set tgt to nav_orbitable(tgt).
-    local angVel to (360 / (2 * constant:pi)) * sqrt(tgt:body:mu / tgt:orbit:semiMajorAxis ^ 3).
+    // local angVel to (360 / (2 * constant:pi)) * sqrt(tgt:body:mu / tgt:orbit:semiMajorAxis ^ 3).
+    local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
     return angVel.
 }
 
@@ -49,6 +51,8 @@ global function nav_orbitable
 
 // From KSLib - Gets the phase angle relative to LAN 
 function ksnav_phase_angle {
+    parameter tgt is target.
+    
     local common_ancestor is 0.
     local my_ancestors is list().
     local your_ancestors is list().
@@ -57,7 +61,7 @@ function ksnav_phase_angle {
     until not(my_ancestors[my_ancestors:length-1]:hasBody) {
         my_ancestors:add(my_ancestors[my_ancestors:length-1]:body).
     }
-    your_ancestors:add(target:body).
+    your_ancestors:add(tgt:body).
     until not(your_ancestors[your_ancestors:length-1]:hasBody) {
         your_ancestors:add(your_ancestors[your_ancestors:length-1]:body).
     }
@@ -86,11 +90,11 @@ function ksnav_phase_angle {
 
     local phase is vang(
         -common_ancestor:position:normalized,
-        vxcl(binormal, target:position - common_ancestor:position):normalized
+        vxcl(binormal, tgt:position - common_ancestor:position):normalized
     ).
     local signVector is vcrs(
         -common_ancestor:position:normalized,
-        (target:position - common_ancestor:position):normalized
+        (tgt:position - common_ancestor:position):normalized
     ).
     local sign is vdot(binormal, signVector).
     if sign < 0 {
@@ -117,7 +121,8 @@ global function nav_transfer_phase_angle
     
     if tgt:typename = "string" set tgt to nav_orbitable(tgt).
     local hohSMA to nav_sma(stAlt, tgt:altitude, ship:body).
-    return 180 - (0.5 * nav_hoh_period(hohSMA, ship:body)) * nav_ang_velocity(tgt).
+    //return 180 - (0.5 * nav_transfer_period(hohSMA, ship:body) * (nav_ang_velocity(tgt) * constant:radToDeg)).
+    return 2 * constant:radToDeg * (constant:pi - (nav_ang_velocity(tgt, ship:body) * nav_transfer_period(hohSMA, ship:body))).
 }
 //#endregion
 
@@ -142,6 +147,18 @@ global function nav_ecc
     return ((ap + tgtBody:radius) - (pe + tgtBody:radius)) / (ap + pe + (tgtBody:radius * 2)).
 }
 
+// Apoapsis and Periapsis from sma and ecc
+global function nav_pe_ap_from_sma_ecc
+{
+    parameter sma,
+              ecc.
+
+    local pe to sma * (1 - ecc).
+    local ap to sma * (1 + ecc).
+
+    return list (pe, ap).
+}
+
 // Periapsis from apoapsis and eccentricity
 global function nav_pe_from_ap_ecc 
 {
@@ -153,13 +170,12 @@ global function nav_pe_from_ap_ecc
 }
 
 // Period of hohmann transfer
-global function nav_hoh_period
+global function nav_period_from_sma
 {
-    parameter hohSMA, 
+    parameter tgtSMA, 
               tgtBody is ship:body.
 
-    local hohPeriod to 2 * constant:pi * sqrt(hohSMA^3 / tgtBody:mu).
-    return hohPeriod.
+    return 0.5 * sqrt((4 * constant:pi^2 * tgtSMA^3) / tgtBody:mu).
 }
 
 // Semimajoraxis from orbital period
@@ -180,6 +196,14 @@ global function nav_sma
 
     return (pe + ap + (smaBody:radius * 2)) / 2.
 }
+
+global function nav_transfer_period
+{
+    parameter xfrSMA,
+              tgtBody is ship:body.
+
+    return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
+}
 //#endregion
 
 //#region -- Calculations of True Anomaly
@@ -193,10 +217,10 @@ global function nav_eta_to_ta
     local targetTime is nav_time_pe_to_ta(obtIn, taDeg).
     local curTime is nav_time_pe_to_ta(obtIn, obtIn:trueanomaly).
 
-    local utimeAtTA is time:seconds + targetTime - curTime.
+    local utimeAtTA is targetTime - curTime.
     
     //If negative, we've passed it so return the next orbit
-    if utimeAtTA < time:seconds
+    if utimeAtTA < 0
     { 
         set utimeAtTA to utimeAtTA + obtIn:period. 
     }
@@ -455,11 +479,11 @@ function nav_ang_to_rel_desc_node {
 // Transfer velocity from start and end semimajoraxis
 global function nav_transfer_velocity
 {
-    parameter stAlt,
+    parameter rStart,
               endSMA,
               mnvBody is ship:body.
-
-    return sqrt(mnvBody:mu * ((2 / stAlt) - (1 / endSMA))).
+    
+    return sqrt(mnvBody:mu * ((2 / (rStart)) - (1 / endSMA))).
 }
 
 // Velocity given a true anomaly
@@ -469,7 +493,7 @@ global function nav_velocity_at_ta
               orbitIn,
               anomaly.
 
-    local etaToAnomaly to nav_eta_to_ta(orbitIn, anomaly).
+    local etaToAnomaly to time:seconds + nav_eta_to_ta(orbitIn, anomaly).
     return velocityAt(ves, etaToAnomaly):orbit:mag.
 }
 //#endregion

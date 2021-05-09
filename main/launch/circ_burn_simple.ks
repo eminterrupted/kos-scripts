@@ -41,7 +41,7 @@ when ship:maxThrust <= 0.1 and throttle > 0 then {
     disp_info("Staging").
     ves_safe_stage().
     disp_info().
-    if stage:number > 2 preserve.
+    if stage:number > 0 preserve.
 }
 
 util_warp_trigger(burnETA - 30).

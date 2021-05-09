@@ -1,11 +1,14 @@
 @lazyGlobal off.
 
+//#include "0:/boot/bootloader"
+
 //-- Variables --//
-local rmFile to "local:/runmode.json".
+local stateFile to dataDisk + "state.json".
 
 //-- Global Functions --//
 
-//#region -- Generic functions
+// -- Generic functions -- //
+//
 // Creates a breakpoint
 global function breakpoint
 {
@@ -13,14 +16,107 @@ global function breakpoint
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
 }
-//#endregion
 
-//#region -- Runmode functions
-// Gets the runmode from disk if exists, else returns 0
-global function util_runmode
+global function util_play_sfx 
 {
-    if exists(rmFile) return readJson(rmFile)["runmode"].
-    else return 0.
+    parameter sfxId to 0.
+
+    if sfxId = 0 set sfxId to readJson("0:/sfx/ZeldaUnlock.json").
+    local v0 to getVoice(0).
+    from { local idx to 0.} until idx = sfxId:length step { set idx to idx + 1.} do
+    {
+        v0:play(sfxId[idx]).
+        wait 0.05.
+    }
+}
+
+
+
+// -- Vessel State functions -- //
+//
+// State cache
+// Caches an arbitrary bit of data in the state file
+global function util_cache_state
+{
+    parameter lexKey,
+              lexVal.
+
+    local stateObj to lex().
+    if exists(stateFile) 
+    {
+        set stateObj to readJson(stateFile).
+    }
+    set stateObj[lexKey] to lexVal.
+    writeJson(stateObj, stateFile).
+    return stateObj[lexKey].
+}
+
+global function util_peek_cache
+{
+    parameter lexKey.
+
+    local stateObj to lex().
+    if exists(stateFile)
+    {
+        set stateObj to readJson(stateFile).
+    }
+    if stateObj:hasKey(lexKey)
+    {
+        return true.
+    }
+    else 
+    {
+        return false.
+    }
+}
+
+global function util_read_cache
+{
+    parameter lexKey.
+
+    if exists(stateFile)
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey(lexKey) return stateObj[lexKey].
+    }
+    return false.
+}
+
+// Clears a value from the state file
+global function util_clear_cache_key
+{
+    parameter lexKey.
+
+    if exists(stateFile) 
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey(lexKey)
+        {
+            stateObj:remove(lexKey).
+            writeJson(stateObj, stateFile).
+        }
+    }
+}
+
+// Resets the entire state file
+global function util_reset_state
+{
+    writeJson(lex(), stateFile).
+}
+
+// Runmode
+// Gets the runmode from disk if exists, else returns 0
+global function util_init_runmode
+{
+    if exists(stateFile) 
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey("runmode")
+        {
+            return stateObj["runmode"].
+        }
+    }
+    return 0.
 }
 
 // Writes the runmode to disk
@@ -28,15 +124,18 @@ global function util_set_runmode
 {
     parameter runmode is 0.
 
-    if runmode <> 0 writeJson(lex("runmode", runmode), rmFile).
-    else if exists(rmFile) deletePath(rmFile).
-}
-//#endregion
+    if runmode <> 0 writeJson(lex("runmode", runmode), stateFile).
+    else if exists(stateFile) deletePath(stateFile).
 
-//#region -- List functions
+    return runmode.
+}
+
+
+// -- List functions -- //
+//
 // Sorts a list of parts by stage
 // Possible sortDir values: asc, desc
-global function util_sort_list_by_stage
+global function util_order_list_by_stage
 {
     parameter inList,
               sortDir is "desc".
@@ -57,9 +156,10 @@ global function util_sort_list_by_stage
     }
     return outList.
 }
-//#endregion
 
-//#region -- Check functions
+
+// -- Check functions -- //
+//
 // Function for use in maneuver delegates
 global function util_check_del 
 {
@@ -77,14 +177,24 @@ global function util_check_del
     else return false.
 }
 
-// Checks if a value is between a range centered around 0.
-global function util_check_value
+// Checks if ship EC is high enough
+global function util_check_power
 {
-    parameter val,
-              valRange.
+    parameter checkType is "sample".
 
-    if val >= -(valRange) and val <= valRange return true.
-    else return false.
+    local charge to 0.
+    local draw   to 0.
+
+    if checkType = "sample" 
+    {
+        set charge to ship:resources:ec.
+        wait 0.25.
+        set draw to charge - ship:resources:ec / 0.25.
+    }
+
+    print draw.
+
+    return false.
 }
 
 // Checks if a value is above/below the range bounds given
@@ -97,9 +207,20 @@ global function util_check_range
     if val >= rangeLo and val <= rangeHi return true.
     else return false.
 }
-//#endregion
 
-//#region -- Part modules
+// Checks if a value is between a range centered around 0.
+global function util_check_value
+{
+    parameter val,
+              valRange.
+
+    if val >= -(valRange) and val <= valRange return true.
+    else return false.
+}
+
+
+// -- Part modules -- //
+//
 // Checks for an action and executes if found
 global function util_do_action
 {
@@ -162,13 +283,62 @@ global function util_event_from_module
     }
     return "".
 }
-//#endregion
 
-//#region -- Warp functions
+// Deploys US Bay Doors
+global function util_us_bay_toggle
+{
+    parameter bay,
+              doors is "all".
+
+    local aniMod to "USAnimateGeneric".
+    local pEvent to "deploy primary bays".
+    local sEvent to "deploy secondary bays".
+
+    if doors = "all" or doors = "primary"
+    {
+        util_do_event(bay:getModule(aniMod), pEvent).
+    }
+    if doors = "all" or doors = "secondary"
+    {
+        util_do_event(bay:getModule(aniMod), sEvent).
+    }
+}
+
+global function util_capacitor_discharge_trigger
+{
+    local ecMon to 0.
+    local resList to list().
+    list resources in resList.
+    for res in resList
+    {
+        if res:name = "ElectricCharge" lock ecMon to res:amount / res:capacity.
+    }
+
+    when ecMon <= 0.05 then
+    {
+        for cap in ship:partsDubbedPattern("capacitor")
+        {
+            local m to cap:getModule("DischargeCapacitor").
+            util_do_event(m, "disable recharge").
+            util_do_event(m, "discharge capacitor").
+            until ecMon >= 0.99 or cap:resources[0]:amount <= 0.1
+            {
+                wait 0.01.
+            }
+        }
+    }
+}
+
+
+
+// -- Warp functions -- //
+//
+// Creates a trigger to warp to a timestamp using AG10
 global function util_warp_trigger
 {
     parameter tStamp, str is "timestamp".
 
+    set tStamp to tStamp - 15.
     if time:seconds <= tStamp
     {   
         ag10 off.
@@ -182,7 +352,22 @@ global function util_warp_trigger
     }
 }
 
-//#region -- Local functions
+// Warps to a given altitude
+global function util_warp_altitude
+{
+    parameter tgtAlt.
+
+    local dAlt to ship:altitude.
+    wait 2.5.
+    local s to (tgtAlt - ship:altitude) / ((ship:altitude - dAlt) / 2).
+        
+    local ts to time:seconds + abs(s).
+    util_warp_trigger(ts).
+}
+
+
+// -- Local functions -- //
+//
 // Helper function for from loop in list sorting. 
 local function list_step
 {
@@ -192,4 +377,3 @@ local function list_step
     if sortDir = "desc" return c - 1.
     else return c + 1.
 }
-//#endregion

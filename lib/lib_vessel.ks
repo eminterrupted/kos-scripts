@@ -6,10 +6,15 @@ runOncePath("0:/lib/lib_util").
 //-- Variables --//
 local sepList to list(
     "sepMotor1", 
+    "sepMotorJr",
     "B9_Engine_T2_SRBS",
     "B9_Engine_T2A_SRBS",
+    "B9_Engine_T2_SRBS_Jr",
+    "B9_Engine_T2A_SRBS_Jr",
     "B9.Engine.T2.SRBS",
-    "B9.Engine.T2A.SRBS"
+    "B9.Engine.T2A.SRBS",
+    "B9.Engine.T2.SRBS.Jr",
+    "B9.Engine.T2A.SRBS.Jr"
 ).
 
 //-- Functions --//
@@ -47,6 +52,23 @@ global function ves_active_thrust
     return curThrust.
 }
 
+// Returns a list of engines that are in the currently activated stage
+global function ves_stage_engines
+{
+    local engList to list().
+    local stgList to list().
+    list engines in engList.
+
+    for e in engList 
+    {
+        if e:stage >= stage:number 
+        {
+            stgList:add(e).
+        }
+    }
+    return stgList.
+}
+
 // Returns the aggregate exhaust velocity for a given stage
 global function ves_stage_exh_vel
 {
@@ -72,10 +94,18 @@ global function ves_stage_isp
         if e:stage = stg and not sepList:contains(e:name)
         {
             set stgThr to stgThr + e:possibleThrust.
-            set relThr to relThr + (stgThr / e:visp).
+            set relThr to relThr + (e:possibleThrust / e:visp).
         }
     }
-    return stgThr / relThr.
+    
+    if stgThr = 0 
+    {
+        return 0.
+    }
+    else
+    {
+        return stgThr / relThr.
+    }
 }
 
 // Returns the possible aggregate thrust for a given stage
@@ -104,7 +134,30 @@ global function ves_stage_thrust
 global function ves_stage_fuel_mass
 {
     parameter stg.
-    return stg.
+
+    local stgFuelObj to lex().
+
+    for p in ship:parts
+    {
+        if p:decoupledIn = stg - 1
+        {
+            if p:resources:length > 0
+            {
+                for r in p:resources
+                {
+                    if stgFuelObj:hasKey(r:name) 
+                    {
+                        set stgFuelObj[r:name] to stgFuelObj[r:name] + (r:amount * r:density).
+                    }
+                    else
+                    {
+                        set stgFuelObj[r:name] to r:amount * r:density.
+                    }
+                }
+            }
+        }
+    }
+    return stgFuelObj.
 }
 
 // Returns the current vessel mass if the vessel was on the 
@@ -123,19 +176,46 @@ global function ves_mass_at_stage
     }
     return curMass.
 }
+
+// Returns the current and dry mass for a given stage for DV calcs
+// Uses stg - 1 because engines are always a stage ahead of part stage
+// numbers
+global function ves_mass_for_stage 
+{
+    parameter stg.
+
+    local curMass to 0.
+    local dryMass to 0.
+
+    for p in ship:parts
+    {
+        if p:decoupledIn = stg - 1
+        {
+            set curMass to curMass + p:mass.
+            set dryMass to dryMass + p:dryMass.
+        }
+        else if p:typename = "decoupler" and p:stage = stg - 1
+        {
+            set curMass to curMass + p:mass.
+            set dryMass to dryMass + p:dryMass.
+        }
+    }
+
+    return list(curMass, dryMass).
+}
 //#endregion
 
 //#region -- Steering
 // Checks whether the ship's roll error is marginal
 global function ves_roll_settled
 {
-    return util_check_value(steeringManager:rollError, 0.1).
+    return util_check_value(steeringManager:rollError, 0.125).
 }
 
 // Checks whether the steering manager has settled on target
 global function ves_settled
 {
-    return util_check_value(steeringManager:angleError, 0.1).
+    return util_check_value(steeringManager:angleError, 0.125).
 }
 //#endregion
 
@@ -153,11 +233,12 @@ global function ves_safe_stage
         stage.
         break.
     }
+    
     // Stage again if currents engines are sep motors
     if ship:availablethrust > 0 
     {
         local onlySep to true.
-        for e in ves_active_engines() 
+        for e in ves_stage_engines()
         {
             if not sepList:contains(e:name)
             {
@@ -168,11 +249,24 @@ global function ves_safe_stage
         
         if onlySep 
         {
-            wait 1.25.
+            wait 1.
             stage.
         }
     }
+    
+    for e in ves_stage_engines()
+    {
+        if e:hasModule("ModuleDeployableEngine") 
+        {
+            disp_info2("Engine with ModuleDeployableEngine found").
+            wait until e:thrust > 0.
+            break.
+        }
+    }
+    
+    //General wait for once staging is complete
     wait 0.5.
+    disp_info2().
 }
 //#endregion
 
@@ -226,6 +320,7 @@ global function ves_jettison_fairings
     local procFairing   to "ProceduralFairingDecoupler".
 
     local stEvent       to "deploy".
+    local safFairing    to "ModuleSimpleAdjustableFairing".
     local stFairing     to "ModuleProceduralFairing".
 
     if ship:modulesNamed(procFairing):length > 0
@@ -235,9 +330,16 @@ global function ves_jettison_fairings
             util_do_event(m, procEvent).
         }
     }
-    else if ship:modulesNamed(stFairing):length > 0
+    if ship:modulesNamed(stFairing):length > 0
     {
         for m in ship:modulesNamed(stFairing)
+        {
+            util_do_event(m, stEvent).
+        }
+    }
+    if ship:modulesNamed(safFairing):length > 0
+    {
+        for m in ship:modulesNamed(safFairing)
         {
             util_do_event(m, stEvent).
         }

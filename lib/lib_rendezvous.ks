@@ -13,6 +13,7 @@ global function rdv_approach_target
     parameter rdvTgt is target,
               speed is 1.
 
+    local relativeVelocity to 0.
     lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
     lock steering to lookDirUp(rdvTgt:position, sun:position).
     wait until ves_settled().
@@ -37,6 +38,9 @@ global function rdv_await_nearest_approach
               minDistance is 250.
 
     local lastDistance to 999999.
+    lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    lock steering to lookDirUp(-(rdvTgt:position), sun:position).
+    
     until false 
     {
         set lastDistance to rdvTgt:distance.

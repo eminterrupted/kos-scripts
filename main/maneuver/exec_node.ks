@@ -7,7 +7,7 @@ runOncePath("0:/lib/lib_mnv").
 disp_main(scriptPath()).
 
 local dvNeeded to nextNode:burnvector:mag.
-local burnAt   to nextNode:time.
+local burnAt   to nextNode:eta + time:seconds.
 local burnDur to mnv_burn_dur(dvNeeded).
 local halfDur to mnv_burn_dur(dvNeeded / 2).
 local burnEta to burnAt - halfDur.
@@ -16,4 +16,3 @@ disp_info("Burn duration: " + round(burnDur)).
 // Execute
 lock steering to nextNode:burnvector.
 mnv_exec_node_burn(nextNode, burnAt, burnEta).
-remove nextNode.

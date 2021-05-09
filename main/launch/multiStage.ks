@@ -20,18 +20,23 @@ local finalAlt  to 0.
 local maxAcc    to 35.
 local maxQ      to 0.145.
 local stAlt     to 0.
-local stTurn    to 2500.
-local stSpeed   to 150.
-local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
+local stTurn    to 1500.
+local stSpeed   to 125.
+//local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
+//local turnAlt   to max(125000, min(body:atm:height, tgtAlt * 0.2)).
+local turnAlt to 90000.
 
 // Flags
-local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 or ship:modulesNamed("ModuleProceduralFairing"):length > 0 else false.
+local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 
+    or ship:modulesNamed("ModuleProceduralFairing"):length > 0 
+    or ship:modulesNamed("ModuleSimpleAdjustableFairing"):length > 0 
+else false.
 
 // Control values
-local rVal      to 0.
+local rVal      to launchPlan:tgtRoll.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
-local tValLoLim to 0.33.
+local tValLoLim to 0.67.
 
 // throttle pid controllers
 local accPid    to pidLoop().
@@ -105,7 +110,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
         ves_safe_stage().
         disp_info().
         accPid:reset.
-        preserve.
+        if stage:number > 0 preserve.
 }
 
 disp_msg("Vertical ascent").
@@ -159,7 +164,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
 }
 
 disp_msg("Post-turn burning to apoapsis").
-until ship:apoapsis >= tgtAlt * 0.975
+until ship:apoapsis >= tgtAlt * 0.995
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
@@ -187,7 +192,7 @@ disp_info().
 disp_msg("Coasting to space").
 until ship:altitude >= body:atm:height or ship:verticalspeed < 0
 {
-    set sVal to ship:prograde.
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     // Correction burn if needed
     if ship:apoapsis <= tgtAlt * 0.995
     {

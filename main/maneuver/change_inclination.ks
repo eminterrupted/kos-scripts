@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter tgtInc is 63.4,
-          tgtLAN is 220.7.
+parameter tgtInc is 88.5,
+          tgtLAN is ship:orbit:longitudeofascendingnode.
 
 clearscreen.
 clearVecDraws().
@@ -86,7 +86,9 @@ if drawVec
 // Set up the inclination check delegate
 set sVal to lookDirUp(burnVec, sun:position).
 lock steering to sVal.
+disp_info2("Waiting until vessel is settled").
 wait until ves_settled().
+disp_info2().
 
 // Perform the maneuver
 mnv_exec_node_burn(mnvNode, burnETA, burnDur).
