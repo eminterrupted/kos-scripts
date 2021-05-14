@@ -115,7 +115,7 @@ global function disp_info2
 global function disp_msg
 {
     parameter str is "".
-    clr(6).    
+    //clr(6).    
     if str <> "" 
     {
         set str to "MSG  : " + str + "          ".

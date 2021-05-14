@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-//#include "0:/boot/bootLoader"
-runOncePath("0:/lib/lib_launch").
+//#include "0:/boot/bootLoader.ks"
 
+runOncePath("0:/lib/lib_launch").
 local launchCache   to dataDisk + "launchPlan.json".
 local launchPlan    to readJson(launchCache).
 local launchQueue   to launchPlan:queue.

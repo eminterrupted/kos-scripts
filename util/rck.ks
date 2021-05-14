@@ -2,7 +2,11 @@
 
 parameter key.
 
-local dataDisk      to choose "data_0:/" if exists(volume("data_0")) else "local:/".
+local dataDisk    to "local:/".
+for c in ship:modulesNamed("kosProcessor")
+{
+    if c:volume:name = "data_0" set dataDisk to "data_0:/".
+}
 local stateFile     to dataDisk + "state.json".
 local state         to readJson(stateFile).
 

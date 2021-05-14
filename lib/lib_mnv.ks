@@ -380,7 +380,7 @@ global function mnv_exec_circ_burn
 
     local mecoTS      to burnEta + burnDur.
     local tgtVelocity to velocityAt(ship, mnvTime):orbit:mag + dv.
-    lock  dvRemaining to abs(tgtVelocity - ship:velocity:orbit:mag).
+    local lock  dvRemaining to abs(tgtVelocity - ship:velocity:orbit:mag).
     
     local burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
     local sVal    to ship:prograde.
@@ -472,10 +472,11 @@ global function mnv_exec_node_burn
     local halfDur to mnv_burn_dur(mnvNode:deltaV:mag / 2).
     set burnEta to mnvNode:time - halfDur.
     local mecoTS       to burnEta + burnDur.
-    lock dvRemaining   to abs(mnvNode:burnVector:mag).
+    local lock dvRemaining   to abs(mnvNode:burnVector:mag).
     
+    local sVal    to lookDirUp(mnvNode:burnVector, sun:position).
     local tVal    to 0.
-    lock steering to lookDirUp(mnvNode:burnVector, sun:position).
+    lock steering to sVal.
     lock throttle to tVal.
 
     disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
@@ -487,13 +488,15 @@ global function mnv_exec_node_burn
     {
         set burnEta to nextNode:time - halfDur.
         mnv_burn_disp(burnEta, dvRemaining, burnDur).
+        wait 0.01.
     }
 
     local dv0 to mnvNode:deltav.
-    lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
+    local lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
 
     disp_msg("Executing burn").
     set tVal to 1.
+    set sVal to lookDirUp(mnvNode:burnVector, sun:position).
     until false
     {
         if vdot(dv0, mnvNode:deltaV) <= 0.01
@@ -503,7 +506,7 @@ global function mnv_exec_node_burn
         }
         else
         {
-            set tVal to max(0, min(mnvNode:deltaV:mag / maxAcc, 1)).
+            set tVal to max(0.08, min(mnvNode:deltaV:mag / maxAcc, 1)).
         }
         mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
     }
@@ -528,7 +531,7 @@ global function mnv_burn_disp
     {
         disp_info("Burn ETA: " + round(time:seconds - burnEta, 2)).
     }
-    else if dvToGo <> 0 
+    else
     {
         disp_info("DeltaV Remaining: " + round(dvToGo, 2)). 
     }
@@ -796,6 +799,9 @@ global function mnv_opt_simple_node
               compMode,
               tgtBody is ship:body.
 
+
+    print "tgtVal: " + tgtVal at (2, 25).
+    print "compMode: " + compMode at (2, 26).
     local data to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).
     set data to mnv_optimize_node_data(data, tgtVal, tgtBody, compMode).
     return node(data[0], data[1], data[2], data[3]).

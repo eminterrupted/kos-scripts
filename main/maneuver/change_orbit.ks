@@ -60,56 +60,99 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 
 // Main
 disp_msg("Calculating burn data").
-
-if not util_peek_cache("dvNeeded")
+if raiseAp and raisePe 
 {
-    if raiseAp and raisePe 
+    print "yes rAp and yes rPe" at (2, 25).
+    set tgtVal_0 to tgtAp.
+    set tgtVal_1 to tgtPe.
+    set compMode to "ap".
+    if not util_peek_cache("dvNeeded") 
     {
-        print "yes rAp and yes rPe" at (2, 25).
         set xfrAp    to tgtAp.
-        set compMode to "ap".
-        set tgtVal_0 to tgtAp.
-        set tgtVal_1 to tgtPe.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        set mnvTA to 0.
+        util_cache_state("dvNeeded", dvNeeded).
     }
-    else if raiseAp and not raisePe 
+    else set dvNeeded to util_read_cache("dvNeeded").
+    if not util_peek_cache("mnvTA")
     {
-        print "yes rAp and not rPe" at (2, 25).
+        set mnvTA to 0 + tgtArgPe - ship:orbit:argumentofperiapsis.
+    }
+    else 
+    {
+        set mnvTA to util_read_cache("mnvTA").
+    }
+}
+else if raiseAp and not raisePe 
+{
+    print "yes rAp and not rPe" at (2, 25).
+    set tgtVal_0 to tgtAp.
+    set tgtVal_1 to tgtPe.
+    set compMode to "ap".
+    if not util_peek_cache("dvNeeded") 
+    {
         set xfrAp    to tgtAp.
-        set compMode to "ap".
-        set tgtVal_0 to tgtAp.
-        set tgtVal_1 to tgtPe.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        set mnvTA to 0.
+        util_cache_state("dvNeeded", dvNeeded).
     }
-    else if not raiseAp and raisePe
+    else set dvNeeded to util_read_cache("dvNeeded").
+    if not util_peek_cache("mnvTA")
     {
-        print "not rAp and yes rPe" at (2, 25).
+        set mnvTA to 0 + tgtArgPe - ship:orbit:argumentofperiapsis.
+    }
+    else 
+    {
+        set mnvTA to util_read_cache("mnvTA").
+    }
+}
+else if not raiseAp and raisePe
+{
+    print "not rAp and yes rPe" at (2, 25).
+    set tgtVal_0 to tgtPe.
+    set tgtVal_1 to tgtAp.
+    set compMode to "pe".
+    if not util_peek_cache("dvNeeded") 
+    {
         set xfrAp    to stAp.
-        set compMode to "pe".
-        set tgtVal_0 to tgtPe.
-        set tgtVal_1 to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(-dvNeeded[2], dvNeeded[1]).
-        set mnvTA to 180.
+        util_cache_state("dvNeeded", dvNeeded).
     }
-    else if not raiseAp and not raisePe
+    else set dvNeeded to util_read_cache("dvNeeded").
+    if not util_peek_cache("mnvTA")
     {
-        print "not rAp and not rPe" at (2, 25).
+        set mnvTA to 180 + tgtArgPe - ship:orbit:argumentofperiapsis.
+    }
+    else 
+    {
+        set mnvTA to util_read_cache("mnvTA").
+    }
+}
+else if not raiseAp and not raisePe
+{
+    print "not rAp and not rPe" at (2, 25).
+    set tgtVal_0 to tgtPe.
+    set tgtVal_1 to tgtAp.
+    set compMode to "pe".
+    if not util_peek_cache("dvNeeded") 
+    {
         set xfrAp    to stAp.
-        set compMode to "pe".
-        set tgtVal_0 to tgtPe.
-        set tgtVal_1 to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[1], -dvNeeded[2]).
-        set mnvTA to 180.
+        util_cache_state("dvNeeded", dvNeeded).
     }
-    util_cache_state("dvNeeded", dvNeeded).
+    else set dvNeeded to util_read_cache("dvNeeded").
+    if not util_peek_cache("mnvTA")
+    {
+        set mnvTA to 180 + tgtArgPe - ship:orbit:argumentofperiapsis.
+    }
+    else 
+    {
+        set mnvTA to util_read_cache("mnvTA").
+    }
 }
-else set dvNeeded to util_read_cache("dvNeeded").
+
 
 disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
 wait 5.
@@ -143,7 +186,7 @@ if util_init_runmode() = 1
     set mnvEta      to nav_eta_to_ta(ship:orbit, mnvTA).
     set mnvTime     to time:seconds + mnvEta.
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
-    set mnvNode to mnv_opt_simple_node(mnvNode, tgtVal_1, compMode).
+    set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
     add mnvNode.
     mnv_exec_node_burn(mnvNode).
     util_set_runmode().

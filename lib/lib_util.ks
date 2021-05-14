@@ -3,6 +3,7 @@
 //#include "0:/boot/bootloader"
 
 //-- Variables --//
+local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 local stateFile to dataDisk + "state.json".
 
 //-- Global Functions --//

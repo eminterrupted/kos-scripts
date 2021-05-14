@@ -9,9 +9,10 @@
     global function test_engine 
     {
         parameter p, 
-                  dur is 15, 
+                  dur is 10, 
                   ln is 8.
 
+        local durLim   to dur - 1.5.
         local engList to list().
         local tVal to 0.50.
 
@@ -19,7 +20,7 @@
         lock throttle to tVal.
 
         stage.
-        until dur <= 0 or (p:thrust <= 0.1 and dur <= 10) or tVal < 0.50
+        until dur <= 0 or (p:thrust <= 0.1 and dur <= durLim) or tVal < 0.50
         {
             if dur > 0
             {
@@ -52,6 +53,7 @@
                 eng:shutdown.
             }
         }
+        set tVal to 0.
         unlock throttle.
         wait 1.
     }
@@ -159,6 +161,10 @@
         print "Test Controller v0.01b" at (2, 2).
         print "----------------------" at (2, 3).
         
+        // print "Part Title : " + p:title at (2, 15).
+        // wait 1.
+        // print "Part NameId: " + p:name  at (2, 16).
+        // wait 1.
         print ("Test Part  : " + p:title):padRight(terminal:width) at (2, 5).
         print ("Part NameId: " + p:name):padRight(terminal:width) at (2, 6). 
         

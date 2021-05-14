@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-//#include "0:/boot/bootLoader"
-local missionPlan to "".
-local planPath to path(dataDisk + "missionPlan.json").
+//#include "0:/boot/bootLoader.ks"
+local missionPlan   to "".
+local planPath      to path(dataDisk + "missionPlan.json").
 
 // 
 if exists(planPath)

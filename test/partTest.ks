@@ -12,13 +12,20 @@ if addons:career:available runOncePath("0:/lib/lib_addon_career").
 test_pad_gen(true).
 test_lights(true).
 
+local core_1    to "".
+local cores     to ship:modulesNamed("kOSProcessor").
 local msgLine   to 0.
-local tested    to list().
 local pList     to list().
 local sciList   to sci_modules().
+local tested    to list().
 
-set terminal:width to 60.
 core:doAction("open terminal", true).
+set terminal:width to 70.
+set terminal:height to 35.
+for c in cores
+{
+    if c:part:tag <> "testStand" set core_1 to c.
+}
 
 // Part testing
 for p in ship:parts
@@ -30,6 +37,7 @@ for p in ship:parts
 }
 
 set pList to util_order_list_by_stage(pList, "desc").
+if core_1:typeName = "kOSProcessor" core_1:connection:sendmessage(pList).
 
 for testPart in pList
 {
@@ -45,14 +53,12 @@ for testPart in pList
         print ("Test in progress..."):padRight(terminal:width) at (2, msgLine).
         test_part(testPart). // activates the part
         print ("Test complete"):padRight(terminal:width) at (2, msgLine).
-        wait 1.
     }
     for p in ship:parts
     {
         if p:stage = stage:number
         {
             tested:add(p).
-            print tested at (2, 15).
         }
     }
     if stage = 0 break.

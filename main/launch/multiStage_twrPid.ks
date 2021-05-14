@@ -15,23 +15,18 @@ runOncePath("0:/kslib/lib_navigation").
 local tgtAlt    to launchPlan:tgtAp.
 local azCalcObj to launchPlan:lazObj.
 
-// local activeEng to list().
-// local curThr    to 0.
-local curTwr    to 0.
+local activeEng to list().
 local endPitch  to 0.
 local finalAlt  to 0.
 local maxAcc    to 35.
 local maxQ      to 0.145.
-local maxTwr    to 2.
+local maxTwr    to 2.25.
 local stAlt     to 0.
 local stTurn    to 750.
 local stSpeed   to 100.
-local twr_kP    to 0.25.
-local twr_kI    to 0.005.
-local twr_kD    to 0.00.
 //local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
 //local turnAlt   to max(125000, min(body:atm:height, tgtAlt * 0.2)).
-local turnAlt to 60000.
+local turnAlt   to 65000.
 
 lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitude)^2.
 
@@ -113,12 +108,14 @@ disp_info().
 disp_info2().
 // End countdown
 
+set activeEng to ves_active_engines().
+
 // Staging trigger
 when ship:availablethrust <= 0.1 and tVal > 0 then
 {
         disp_info("Staging").
         ves_safe_stage().
-        //set activeEng to ves_active_engines().
+        set activeEng to ves_active_engines().
         disp_info().
         accPid:reset.
         if stage:number > 0 preserve.
@@ -147,47 +144,63 @@ disp_info().
 set stAlt to ship:altitude.
 
 // Set up gravity turn pids
-set qPid to pidLoop(10, 0, 0, -1, 1).
+set qPid to pidLoop(5, 0, 0, -1, 1).
 set qPid:setpoint to maxQ.
 
 set accPid to pidLoop(0.02, 0, 0, -1, 1).
 set accPid:setpoint to maxAcc.
 
-set twrPid to pidLoop(twr_kP, twr_kI, twr_kD, -1, 1).
+set twrPid to pidLoop(0.1, .01, 0.001, -1, 1).
 set twrPid:setpoint to maxTwr.
 
-//set activeEng to ves_active_engines().
-//local activeThr to { parameter engList. local thr to 0. for e in engList { set thr to thr + e:thrust.} return thr.}.
+lock curTwr to ves_active_thrust(activeEng) / (ship:mass * kGrav).
 lock curAcc to ship:availableThrust / ship:mass.
+
+local qVal      to 0.
+local twrVal    to 0.
+local accVal    to 0.
 
 disp_msg("Gravity turn").
 until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
 {
-    // qPid:update(time:seconds, ship:q).
-    // accPid:update(time:seconds, curAcc).
-    set curTwr to ship:availablethrust / (ship:mass * kGrav).
+    //qPid:update(time:seconds, ship:q).
+    //accPid:update(time:seconds, curAcc).
     //twrPid:update(time:seconds, curTwr).
+    if ship:q >= maxQ
+    {
+        set qVal to max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q))).
+        
+        print "q     : " + round(ship:q, 5) + "     " at (0, 25).
+        
+        print "qP    : " + qPid:pterm + "     " at (0, 30).
+        print "qI    : " + qPid:iterm + "     " at (0, 31).
+        print "qD    : " + qPid:dterm + "     " at (0, 32).
+    }
+    if curTwr >= maxTwr
+    {
+        set twrVal to max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr))).
 
-    local qVal      to choose max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q)))     if ship:q >= maxQ   else 1.
-    local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc else 1.
-    local twrVal    to max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr))).
-    local tValTemp  to min(qVal, aVal).
-    set tVal to min(tValTemp, twrVal).
+        print "curTwr: " + round(curTwr, 2) + "          " at (0, 26).
+        
+        print "twrP  : " + twrPid:pterm + "     " at (0, 34).
+        print "twrI  : " + twrPid:iterm + "     " at (0, 35).
+        print "twrD  : " + twrPid:dterm + "     " at (0, 36).
+    }
+    if curAcc >= maxAcc 
+    {
+        set accVal to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
 
-    print "q     : " + round(ship:q, 5) + "     " at (0, 25).
-    print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
+        print "curAcc: " + round(curAcc, 2) + "          " at (0, 27).
 
-    print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
-    print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
+        print "accP  : " + accPid:pterm + "     " at (0, 38).
+        print "accI  : " + accPid:iterm + "     " at (0, 39).
+        print "accD  : " + accPid:dterm + "     " at (0, 40).
+    }
 
-    print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
-    print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
-    
-    print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
+    local tValTemp to min(qVal, twrVal).
+    set tVal to min(tValTemp, accVal).
 
-    print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
-    print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
-    print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
+    print "tVal  : " + round(tVal, 2) + "     " at (0, 23). 
 
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     disp_telemetry().
@@ -199,28 +212,12 @@ clr_disp().
 disp_msg("Post-turn burning to apoapsis").
 until ship:apoapsis >= tgtAlt * 0.995
 {
-    //set curThr   to activeThr(activeEng).
-    set curTwr   to ship:availablethrust / (ship:mass * kGrav).
-
-    local aVal   to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))) if curAcc >= maxAcc else 1.
-    local twrVal to choose max(tValLoLim, min(1, 1 + twrPid:update(time:seconds, curTwr))) if curTwr >= maxTwr else 1.
-
-    set sVal     to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal     to min(aVal, twrVal).
+    local aVal      to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
+    set twrVal    to max(tValLoLim, min(1, 1 + twrPid:update(time:seconds, curTwr))).
+    set sVal        to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
+    set tVal        to min(aVal, twrVal).
+    //set tVal to max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))).
     disp_telemetry().
-
-    print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
-    print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
-
-    print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
-    print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
-    
-    print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
-
-    print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
-    print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
-    print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
-
     wait 0.01.
 }
 disp_msg().

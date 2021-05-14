@@ -299,6 +299,36 @@ global function ves_activate_antenna
     }
 }
 
+// Activate / Deactivate a fuel cell
+global function ves_activate_fuel_cell
+{
+    parameter fuelCell,
+              mode is true. // on = true, off = false
+
+    local fcMod     to fuelCell:getModule("ModuleResourceConverter").
+
+    if mode
+    {
+        local onEvent to choose "start turbine" if fuelCell:name:contains("apu-radial") else "start fuel cell".
+        util_do_event(fcMod, onEvent).
+        
+    }
+    else if not mode
+    {
+        local offEvent to choose "stop turbine" if fuelCell:name:contains("apu-radial") else "stop fuel cell".
+        util_do_event(fcMod, offEvent).
+    }
+}
+
+global function ves_auto_activate_fuel_cell
+{
+    parameter fuelCell.
+
+    local fcMod to fuelCell:getModule("ModuleResourceConverter").
+    if ecPct >= 0.99 and fcMod:getField("fuel cell") <> "Inactive" ves_activate_fuel_cell(fuelCell, false).
+    else if ecPct < 0.5 and fcMod:getField("fuel cell") = "Inactive" ves_activate_fuel_cell(fuelCell, true).
+}
+
 // Extend / retract solar panels in a list. 
 global function ves_activate_solar
 {

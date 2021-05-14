@@ -80,7 +80,7 @@ if testPatch:periapsis > Kerbin:atm:height
     set tVal to 0.
 }
 
-local startAlt to kerbin:atm:height + 25000.
+local startAlt to kerbin:atm:height + 17500.
 disp_msg("Waiting until altitude <= " + startAlt).
 //util_warp_altitude(startAlt).
 until ship:altitude <= startAlt

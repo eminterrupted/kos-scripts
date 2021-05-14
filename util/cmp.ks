@@ -9,7 +9,7 @@ for c in ship:modulesNamed("kosProcessor")
     if c:volume:name = "data_0" set dataDisk to "data_0:/".
 }
 local localFile     to dataDisk + "missionPlan.json".
-local archiveFile   to "0:/main/cache/missionPlan_" + ship:name:replace(" ", "_") + ".json".
+local archiveFile   to "0:/data/mp/missionPlan_" + ship:name:replace(" ", "_") + ".json".
 
 if op = "write" 
 {

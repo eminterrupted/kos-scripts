@@ -18,7 +18,7 @@ global function rdv_approach_target
     lock steering to lookDirUp(rdvTgt:position, sun:position).
     wait until ves_settled().
 
-    lock maxAccel to ship:maxThrust / ship:mass.
+    local lock maxAccel to ship:maxThrust / ship:mass.
     lock throttle to min(1, abs(speed - relativeVelocity:mag) / maxAccel).
 
     until relativeVelocity:mag > speed - 0.1
@@ -38,7 +38,7 @@ global function rdv_await_nearest_approach
               minDistance is 250.
 
     local lastDistance to 999999.
-    lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    local lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
     lock steering to lookDirUp(-(rdvTgt:position), sun:position).
     
     until false 
@@ -60,11 +60,11 @@ global function rdv_cancel_velocity
 {
     parameter rdvTgt is target.
 
-    lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    local lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
     lock steering to lookDirUp(relativeVelocity, sun:position).
     wait until ves_settled().
     
-    lock maxAccel to ship:maxThrust / ship:mass.
+    local lock maxAccel to ship:maxThrust / ship:mass.
     lock throttle to max(0.05, min(1, relativeVelocity:mag / maxAccel)).
     until relativeVelocity:mag < 0.1
     {

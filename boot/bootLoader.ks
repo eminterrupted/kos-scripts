@@ -97,9 +97,7 @@ global function download
         wait 1.
     }
 
-    //print "compiling " + aPath + " to " + lPath.
     copyPath(aPath, lPath).
-    //compile(aPath) to lPath + ".ksm".
     
     if exists(lPath) {
         return lPath.
