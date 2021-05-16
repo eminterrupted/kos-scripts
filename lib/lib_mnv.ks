@@ -394,7 +394,7 @@ global function mnv_exec_circ_burn
     {
         set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
         set sVal to heading(burnDir, 0, 0).
-        mnv_burn_disp(burnEta, dvRemaining, burnDur).
+        mnv_burn_disp(burnEta, dvRemaining).
     }
 
     set tVal to 1.
@@ -403,7 +403,7 @@ global function mnv_exec_circ_burn
     {
         set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
         set sVal to heading(burnDir, 0, 0).
-        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+        mnv_burn_disp(burnEta, dvRemaining).
     }
 
     set tVal to 0.
@@ -436,7 +436,7 @@ global function mnv_exec_vec_burn
     until time:seconds >= mnvETA
     {
         set sVal to mnvVec.
-        mnv_burn_disp(mnvETA, dvToGo, burnDuration).
+        mnv_burn_disp(mnvETA, dvToGo).
         wait 0.01.
     }
 
@@ -453,7 +453,7 @@ global function mnv_exec_vec_burn
         { 
             set tVal to max(0, min(1, dvToGo / 10)). 
         } 
-        mnv_burn_disp(mnvETA, dvToGo, mecoTS - time:seconds).
+        mnv_burn_disp(mnvETA, dvToGo).
         wait 0.01.
     }
     set tVal to 0.
@@ -468,16 +468,15 @@ global function mnv_exec_node_burn
               burnEta is 0,
               burnDur is 0.
 
-    set burnDur to mnv_burn_dur(mnvNode:deltaV:mag).
-    local halfDur to mnv_burn_dur(mnvNode:deltaV:mag / 2).
-    set burnEta to mnvNode:time - halfDur.
-    local mecoTS       to burnEta + burnDur.
-    local lock dvRemaining   to abs(mnvNode:burnVector:mag).
+    set burnDur      to mnv_burn_dur(mnvNode:deltaV:mag).
+    local halfDur    to mnv_burn_dur(mnvNode:deltaV:mag / 2).
+    set burnEta      to mnvNode:time - halfDur.
+    lock dvRemaining to abs(mnvNode:burnVector:mag).
     
-    local sVal    to lookDirUp(mnvNode:burnVector, sun:position).
-    local tVal    to 0.
-    lock steering to sVal.
-    lock throttle to tVal.
+    local sVal       to lookDirUp(mnvNode:burnVector, sun:position).
+    local tVal       to 0.
+    lock steering    to sVal.
+    lock throttle    to tVal.
 
     disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
     disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
@@ -486,13 +485,12 @@ global function mnv_exec_node_burn
 
     until time:seconds >= burnEta
     {
-        set burnEta to nextNode:time - halfDur.
-        mnv_burn_disp(burnEta, dvRemaining, burnDur).
+        mnv_burn_disp(burnEta, dvRemaining).
         wait 0.01.
     }
 
     local dv0 to mnvNode:deltav.
-    local lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
+    lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
 
     disp_msg("Executing burn").
     set tVal to 1.
@@ -508,14 +506,13 @@ global function mnv_exec_node_burn
         {
             set tVal to max(0.08, min(mnvNode:deltaV:mag / maxAcc, 1)).
         }
-        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+        mnv_burn_disp(burnEta, dvRemaining).
+        wait 0.01.
     }
 
     disp_msg("Maneuver complete!").
     wait 1.
     mnv_clr_disp().
-    disp_info().
-    disp_info2().
     unlock steering.
     remove mnvNode.
 }
@@ -525,17 +522,10 @@ global function mnv_exec_node_burn
 //#region
 global function mnv_burn_disp
 {
-    parameter burnEta, dvToGo is 0, burnDuration is 0.
+    parameter burnEta, dvToGo is 0.
 
-    if time:seconds - burnEta < 0 
-    {
-        disp_info("Burn ETA: " + round(time:seconds - burnEta, 2)).
-    }
-    else
-    {
-        disp_info("DeltaV Remaining: " + round(dvToGo, 2)). 
-    }
-    disp_info2("Duration Remaining: " + round(burnDuration, 2)).
+    disp_info("Burn ETA: " + round(time:seconds - burnEta, 2)).
+    disp_info2("DeltaV Remaining: " + round(dvToGo, 2)). 
 }
 
 local function mnv_clr_disp

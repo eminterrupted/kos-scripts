@@ -43,6 +43,7 @@ wait 2.5.
 // Manually runs a crew report every 15 seconds
 local function manual_crew_report 
 {
+    ag10 off.
     until time:seconds >= tStamp or ag10
     {
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).

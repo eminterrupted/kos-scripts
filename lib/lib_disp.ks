@@ -18,10 +18,10 @@ global function clr
 global function clr_disp
 {
     set line to 10.
-    clr(line).
-    until line >= terminal:height
+    until line = terminal:height - 1
     {
-        clr(cr()).
+        clr(line).
+        set line to line + 1.
     }
 }
 

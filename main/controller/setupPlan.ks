@@ -6,9 +6,9 @@ runOncePath("0:/lib/lib_launch").
 // Global variables
 
 // Mission Params
-local tgtAp     to 150000.
-local tgtPe     to 150000.
-local tgtInc    to -90.
+local tgtAp     to 375000.
+local tgtPe     to 375000.
+local tgtInc    to 0.
 //local tgtRoll   to choose 180 if ship:crewcapacity > 0 else 0.
 local tgtRoll   to 0.
 local lazObj    to l_az_calc_init(tgtAp, tgtInc).
@@ -17,11 +17,12 @@ local doReturn  to true.
 local missionList  to list(
     "mission/simple_orbit"
     //,"mission/auto_sci_biome"
-    //,"maneuver/transfer_to_mun"
-    //,"maneuver/wait_for_soi_change"
-    //,"maneuver/capture_burn"
-    //,"maneuver/change_inclination"
-    //,"maneuver/change_orbit"
+    ,"maneuver/transfer_to_mun"
+    ,"maneuver/wait_for_soi_change"
+    ,"maneuver/capture_burn"
+    ,"maneuver/change_inclination"
+    ,"maneuver/change_orbit"
+    ,"mission/mag_study"
     //,"mission/orbital_science"
     //,"mission/simple_orbit"
     //,"return/return_from_mun"

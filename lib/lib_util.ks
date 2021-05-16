@@ -3,8 +3,20 @@
 //#include "0:/boot/bootloader"
 
 //-- Variables --//
+
+// Global
+global info is lex(
+    "altForSci", lex(
+        "Kerbin", 250000,
+        "Mun", 60000,
+        "Minmus", 30000
+    )
+).
+
+// Local
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 local stateFile to dataDisk + "state.json".
+
 
 //-- Global Functions --//
 
@@ -30,8 +42,6 @@ global function util_play_sfx
         wait 0.05.
     }
 }
-
-
 
 // -- Vessel State functions -- //
 //

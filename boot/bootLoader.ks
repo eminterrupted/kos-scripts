@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-wait until ship:unpacked.
+wait until ship:loaded and ship:unpacked.
 clearScreen.
 
 init_disk().
@@ -12,8 +12,6 @@ local mpPath    to path(dataDisk + "missionPlan.json").
 local mpCache   to path("0:/data/mp/missionPlan_" + ship:name:replace(" ","_") + ".json").
 local pwrComms  to path("local:/power_comms_enable").
 local vFile     to path(dataDisk + "vessel.json").
-
-if ksc_comm runOncePath("0:/lib/lib_vessel").
 
 if missionTime = 0
 {
@@ -104,8 +102,8 @@ global function download
     }
     else
     {
-        print "Download failed!".
-        return 1 / 0.
+        print "Download failed, using archive path".
+        return aPath.
     }
 }
 

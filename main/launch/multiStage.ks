@@ -12,8 +12,9 @@ runOncePath("0:/kslib/lib_l_az_calc").
 runOncePath("0:/kslib/lib_navigation").
 
 // variables
-local tgtAlt    to launchPlan:tgtAp.
-local azCalcObj to launchPlan:lazObj.
+local tgtAp    to launchPlan:tgtAp.
+local tgtInc   to launchPlan:tgtInc.
+local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 
 // local activeEng to list().
 // local curThr    to 0.
@@ -31,7 +32,7 @@ local twr_kI    to 0.005.
 local twr_kD    to 0.00.
 //local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
 //local turnAlt   to max(125000, min(body:atm:height, tgtAlt * 0.2)).
-local turnAlt to 60000.
+local turnAlt to 70000.
 
 lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitude)^2.
 
@@ -45,7 +46,7 @@ else false.
 local rVal      to launchPlan:tgtRoll.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
-local tValLoLim to 0.55.
+local tValLoLim to 0.60.
 
 // throttle pid controllers
 local accPid    to pidLoop().
@@ -121,6 +122,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
         //set activeEng to ves_active_engines().
         disp_info().
         accPid:reset.
+        twrPid:reset.
         if stage:number > 0 preserve.
 }
 
@@ -161,7 +163,7 @@ set twrPid:setpoint to maxTwr.
 lock curAcc to ship:availableThrust / ship:mass.
 
 disp_msg("Gravity turn").
-until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
+until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 {
     // qPid:update(time:seconds, ship:q).
     // accPid:update(time:seconds, curAcc).
@@ -194,10 +196,8 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAlt * 0.975
     wait 0.01.
 }
 
-clr_disp().
-
 disp_msg("Post-turn burning to apoapsis").
-until ship:apoapsis >= tgtAlt * 0.995
+until ship:apoapsis >= tgtAp * 0.995
 {
     //set curThr   to activeThr(activeEng).
     set curTwr   to ship:availablethrust / (ship:mass * kGrav).
@@ -225,13 +225,13 @@ until ship:apoapsis >= tgtAlt * 0.995
 }
 disp_msg().
 
-set finalAlt to choose tgtAlt * 1 if ship:altitude >= body:atm:height else tgtAlt * 1.00125.
+set finalAlt to choose tgtAp * 1 if ship:altitude >= body:atm:height else tgtAp * 1.00125.
 
 disp_msg("Slow burn to apoapsis").
 until ship:apoapsis >= finalAlt
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-    set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAlt))).
+    set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAp))).
     disp_telemetry().
     wait 0.01.
 }
@@ -246,12 +246,12 @@ until ship:altitude >= body:atm:height or ship:verticalspeed < 0
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     // Correction burn if needed
-    if ship:apoapsis <= tgtAlt * 0.995
+    if ship:apoapsis <= tgtAp * 0.995
     {
         disp_info("Correction burn").
-        until ship:apoapsis >= tgtAlt * 1.0015
+        until ship:apoapsis >= tgtAp * 1.0015
         {
-            set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAlt))).
+            set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAp))).
         }
         disp_info().
     }

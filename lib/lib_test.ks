@@ -12,7 +12,7 @@
                   dur is 10, 
                   ln is 8.
 
-        local durLim   to dur - 1.5.
+        local durLim   to dur - 3.
         local engList to list().
         local tVal to 0.50.
 
@@ -20,7 +20,7 @@
         lock throttle to tVal.
 
         stage.
-        until dur <= 0 or (p:thrust <= 0.1 and dur <= durLim) or tVal < 0.50
+        until dur <= 0 or (p:thrust <= 0.1 and dur <= durLim) or tVal < 0.45
         {
             if dur > 0
             {

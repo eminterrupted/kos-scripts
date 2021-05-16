@@ -71,8 +71,6 @@ global function sci_recover_list
     }
 }
 
-
-
 //-- Local functions --//
 
 // Collects experiments in a science container
@@ -114,29 +112,11 @@ local function sci_deploy
 {
     parameter m.
 
-    local retractList to list("retract", "close").
-
     if not m:hasData
     {
         m:deploy().
         wait until m:hasData.
         if addons:career:available addons:career:closeDialogs.
-    }
-    else if m:data[0]:scienceValue = 0
-    {
-        m:reset().
-    }
-
-    // Retract the experiment if possible
-    for action in m:allActions
-    {
-        for validAction in retractList
-        {
-            if action:contains(validAction)
-            {
-                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction",""), true).
-            }
-        }
     }
 }
 
@@ -146,7 +126,6 @@ local function sci_deploy_us
     parameter m.
 
     local deployList  to list("log", "observe", "conduct").
-    local retractList to list("retract", "stow").
 
     for action in m:allActions
     {
@@ -160,30 +139,35 @@ local function sci_deploy_us
             }
         }
     }
-
-    // Retract the experiment if possible
-    if m:allEvents:length > 0 
-    {
-        for event in m:allEvents
-        {
-            for validEvent in retractList
-            {
-                if event:contains(validEvent)
-                {
-                    m:doEvent(event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
-                }
-            }
-        }
-    }
 }
 
 // Function for resetting an experiment
 local function sci_reset
 {
     parameter m.
-
+    
     m:reset().
     wait until not m:hasData.
+    sci_retract(m).
+}
+
+// Retract the experiment if possible
+local function sci_retract
+{
+    parameter m.
+
+    local retractList to list("close", "retract", "stow").
+
+    for action in m:allActions
+    {
+        for validAction in retractList
+        {
+            if action:contains(validAction)
+            {
+                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction",""), true).
+            }
+        }
+    }
 }
 
 // Function for transmitting data

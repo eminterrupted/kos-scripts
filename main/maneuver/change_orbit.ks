@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 2500000,
-          tgtAp is 2500000,
-          tgtArgPe is ship:orbit:argumentofperiapsis.
+parameter tgtPe is 30000,
+          tgtAp is 120000,
+          tgtArgPe is 90.
 
 // runPath("0:/util/rck", "dvNeeded").
 // runPath("0:/util/rck", "mnvTA").
@@ -62,7 +62,7 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 disp_msg("Calculating burn data").
 if raiseAp and raisePe 
 {
-    print "yes rAp and yes rPe" at (2, 25).
+    print "raise rAp and raise rPe" at (2, 25).
     set tgtVal_0 to tgtAp.
     set tgtVal_1 to tgtPe.
     set compMode to "ap".
@@ -76,7 +76,7 @@ if raiseAp and raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to 0 + tgtArgPe - ship:orbit:argumentofperiapsis.
+        set mnvTA to mod(360 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
     else 
     {
@@ -85,7 +85,7 @@ if raiseAp and raisePe
 }
 else if raiseAp and not raisePe 
 {
-    print "yes rAp and not rPe" at (2, 25).
+    print "raise rAp and lower rPe" at (2, 25).
     set tgtVal_0 to tgtAp.
     set tgtVal_1 to tgtPe.
     set compMode to "ap".
@@ -99,7 +99,7 @@ else if raiseAp and not raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to 0 + tgtArgPe - ship:orbit:argumentofperiapsis.
+        set mnvTA to mod(360 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
     else 
     {
@@ -108,7 +108,7 @@ else if raiseAp and not raisePe
 }
 else if not raiseAp and raisePe
 {
-    print "not rAp and yes rPe" at (2, 25).
+    print "lower rAp and raise rPe" at (2, 25).
     set tgtVal_0 to tgtPe.
     set tgtVal_1 to tgtAp.
     set compMode to "pe".
@@ -122,7 +122,7 @@ else if not raiseAp and raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to 180 + tgtArgPe - ship:orbit:argumentofperiapsis.
+        set mnvTA to mod(180 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
     else 
     {
@@ -131,7 +131,7 @@ else if not raiseAp and raisePe
 }
 else if not raiseAp and not raisePe
 {
-    print "not rAp and not rPe" at (2, 25).
+    print "lower rAp and lower rPe" at (2, 25).
     set tgtVal_0 to tgtPe.
     set tgtVal_1 to tgtAp.
     set compMode to "pe".
@@ -145,7 +145,7 @@ else if not raiseAp and not raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to 180 + tgtArgPe - ship:orbit:argumentofperiapsis.
+        set mnvTA to mod(180 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
     else 
     {
@@ -153,9 +153,8 @@ else if not raiseAp and not raisePe
     }
 }
 
-
 disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
-wait 5.
+wait 1.
 disp_msg().
 
 if util_init_runmode() = 0 
@@ -166,8 +165,14 @@ if util_init_runmode() = 0
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
     set mnvNode to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
     add mnvNode.
-
-    mnv_exec_node_burn(mnvNode).
+    if mnvNode:prograde > 0.1 
+    {
+        mnv_exec_node_burn(mnvNode).
+    }
+    else
+    {
+        remove mnvNode.
+    }
     util_set_runmode(1).
     util_cache_state("mnvTA", mod(mnvTA + 180, 360)).
 }
@@ -188,7 +193,14 @@ if util_init_runmode() = 1
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
     set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
     add mnvNode.
-    mnv_exec_node_burn(mnvNode).
+    if mnvNode:prograde > 0.1
+    {
+        mnv_exec_node_burn(mnvNode).
+    }
+    else
+    {
+        remove mnvNode.
+    }
     util_set_runmode().
 }
 
