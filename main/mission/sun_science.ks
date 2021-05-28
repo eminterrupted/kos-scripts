@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter recoveryMode is "ideal".
+parameter recoveryMode is "transmit".
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_sci").

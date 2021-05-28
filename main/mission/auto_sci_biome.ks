@@ -26,11 +26,11 @@ if addons:scansat:available
 
 if scanCov 
 {
-    scanned_biome_crew_report().
+    scanned_biome_sci_report().
 }
 else
 {
-    manual_crew_report().
+    manual_sci_report().
 }
 
 ag10 off.
@@ -41,7 +41,7 @@ wait 2.5.
 
 //-- Functions --//
 // Manually runs a crew report every 15 seconds
-local function manual_crew_report 
+local function manual_sci_report 
 {
     ag10 off.
     until time:seconds >= tStamp or ag10
@@ -56,7 +56,7 @@ local function manual_crew_report
             wait 0.1.
         }
         if warp > 0 set warp to 0.
-        disp_msg("Collecting crew report").
+        disp_msg("Collecting science report").
         sci_deploy_list(sciList).
         sci_recover_list(sciList, "ideal").
         if terminal:input:hasChar
@@ -69,7 +69,7 @@ local function manual_crew_report
     }
 }
 
-local function scanned_biome_crew_report 
+local function scanned_biome_sci_report 
 {
     local biomeList to list().
     local curBiome  to "".

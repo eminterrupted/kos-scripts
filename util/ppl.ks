@@ -5,7 +5,7 @@ parameter inObj.
 local dCol to 2. 
 local dLine to 20.
 
-if inObj:typename = "List" 
+if inObj:typename = "ListValue`1" 
 {
     print_list().
 } 

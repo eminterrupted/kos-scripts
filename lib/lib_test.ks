@@ -9,10 +9,10 @@
     global function test_engine 
     {
         parameter p, 
-                  dur is 10, 
+                  dur is 15, 
                   ln is 8.
 
-        local durLim   to dur - 3.
+        local durLim   to dur - 5.
         local engList to list().
         local tVal to 0.50.
 

@@ -8,6 +8,7 @@ runOncePath("0:/lib/lib_util").
 disp_main(scriptPath():name).
 disp_msg("Executing deorbit burn").
 lock steering to ship:retrograde.
+wait 1.
 until ves_settled()
 {   
     disp_orbit().

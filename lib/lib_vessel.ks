@@ -52,6 +52,33 @@ global function ves_active_thrust
     return curThrust.
 }
 
+// Returns any boosters via tag "boosters.[loopId]"
+global function ves_get_boosters
+{
+    local dcList    to lex().
+    local tList     to lex().
+    
+    for t in ship:partsTaggedPattern("booster") 
+    {
+        local loopId to t:tag:split(".")[1]:toNumber.
+        
+        if t:typeName = "decoupler" 
+        {
+            if not dcList:hasKey(loopId)
+            {
+                set dcList[loopId] to list(t).
+            }
+            else
+            {
+                dcList[loopId]:add(t).
+            }
+
+            set tList[loopId] to t:children[0].
+        }
+    }
+    return list(dcList, tList).
+}
+
 // Returns a list of engines that are in the currently activated stage
 global function ves_stage_engines
 {
@@ -284,6 +311,19 @@ global function ves_translate
 }
 //#endregion
 
+//#region -- Ship Resources
+// Return a given resource type from ship:resources
+global function ves_get_resource
+{
+    parameter resource.
+
+    for r in ship:resources
+    {
+        if r:name = resource return r.
+    }
+    return false.
+}
+
 //#region -- Part Module Actions
 // Extend / retract antennas in a list
 global function ves_activate_antenna
@@ -299,6 +339,7 @@ global function ves_activate_antenna
     }
 }
 
+// Fuel cells
 // Activate / Deactivate a fuel cell
 global function ves_activate_fuel_cell
 {
@@ -320,7 +361,7 @@ global function ves_activate_fuel_cell
     }
 }
 
-global function ves_auto_activate_fuel_cell
+global function ves_auto_fuel_cell
 {
     parameter fuelCell.
 
@@ -329,6 +370,23 @@ global function ves_auto_activate_fuel_cell
     else if ecPct < 0.5 and fcMod:getField("fuel cell") = "Inactive" ves_activate_fuel_cell(fuelCell, true).
 }
 
+// Radiators
+// Extend / retract radiators
+global function ves_activate_radiator
+{
+    parameter radList is ship:modulesNamed("ModuleSystemHeatRadiator"),
+              state is true.
+
+    if radList:length = 0 set radList to ship:modulesNamed("ModuleDeployableRadiator").
+    local event to choose "extend radiator" if state else "retract radiator".
+
+    for m in radList 
+    {
+        util_do_event(m, event).
+    }
+}
+
+// Solar panels
 // Extend / retract solar panels in a list. 
 global function ves_activate_solar
 {
@@ -343,7 +401,8 @@ global function ves_activate_solar
     }
 }
 
-// Jettison fairings
+// Fairings
+// Jettison
 global function ves_jettison_fairings
 {
     local procEvent     to "jettison fairing".
@@ -375,4 +434,73 @@ global function ves_jettison_fairings
         }
     }
 }
+
+// Capacitors
+// Automatically controls capacitor charge / recharge.
+global function ves_auto_capacitor
+{
+    local ec           to ves_get_resource("ElectricCharge").
+    local storedCharge to ves_get_resource("StoredCharge").
+
+    print "Auto capacitors".
+    // Auto-triggers.
+    when ec:amount / ec:capacity <= 0.25 and storedCharge:amount > 0 then
+    {
+        print "Discharging at " + round(missionTime).
+        ves_discharge_capacitor().    
+        preserve.
+    }
+
+    when storedCharge:amount = 0 and ec:amount / ec:capacity >= 0.995 then
+    {
+        print "Recharging at " + round(missionTime).
+        ves_recharge_capacitor().
+        when storedCharge:amount / storedCharge:capacity = 1 or ec:amount / ec:capacity < 0.50 then
+        {
+            print "Disabling recharge at " + round(missionTime).
+            ves_recharge_capacitor(ship:modulesNamed("DischargeCapacitor"), false).
+        }
+    preserve.
+    }
+}
+
+global function ves_discharge_capacitor
+{
+    parameter capList to ship:modulesNamed("DischargeCapacitor").
+
+    local ec to ves_get_resource("ElectricCharge").
+    
+    if ec:amount = ec:capacity return false.
+    for m in capList
+    {
+        if m:getField("Status") = "Ready"
+        {
+            util_do_event(m, "discharge capacitor").
+        }
+    }
+    return true.
+}
+
+global function ves_recharge_capacitor
+{
+    parameter capList to ship:modulesNamed("DischargeCapacitor"),
+              state is true.
+
+    for m in capList 
+    {
+        if state 
+        {
+            if m:getField("Status") = "Discharged"
+            {
+                util_do_event(m, "enable recharge").
+            }
+        }
+        else 
+        {
+            util_do_event(m, "disable recharge").
+        }
+    }
+    return true.
+}
+
 //#endregion

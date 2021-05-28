@@ -2,7 +2,7 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 120000,
+          tgtAlt is 750000,
           altPadding to 0.
 
 runOncePath("0:/lib/lib_disp").
@@ -48,7 +48,7 @@ local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
 // Staging trigger
-when ship:maxThrust <= 0.1 and throttle > 0 then 
+when ship:availableThrust <= 0.1 and throttle > 0 then 
 {
     ves_safe_stage().
     preserve.

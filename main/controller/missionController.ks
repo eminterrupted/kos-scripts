@@ -25,9 +25,9 @@ until missionPlan:length = 0
         set curScript to download(missionPlan:pop()).
         if missionPlan:length > 1 download(missionPlan:peek()).
     }
-    else if exists("local:/" + missionPlan:peek():split("/")[1] + ".ks")
+    else if exists("local:/" + missionPlan:peek():split("/")[1])
     {
-        set curScript to path("local:/" + missionPlan:pop():split("/")[1] + ".ks").
+        set curScript to path("local:/" + missionPlan:pop():split("/")[1]).
     }
     else 
     {
@@ -37,7 +37,7 @@ until missionPlan:length = 0
     hudtext("Running next script in mission plan: " + curScript, 10, 2, 20, green, false).
     runPath(curScript).
     hudtext("Mission script complete, removing: " + curScript, 10, 2, 20, green, false).
-    deletePath(curScript).
+    if curScript:root = "local:/" deletePath(curScript).
     writeJson(missionPlan, planPath).
 }
 deletePath(planPath).

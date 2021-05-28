@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 30000,
-          tgtAp is 120000,
-          tgtArgPe is 90.
+parameter tgtPe is 750000,
+          tgtAp is 750000,
+          tgtArgPe is ship:orbit:argumentofperiapsis.
 
 // runPath("0:/util/rck", "dvNeeded").
 // runPath("0:/util/rck", "mnvTA").
@@ -76,7 +76,7 @@ if raiseAp and raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to mod(360 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
+        set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
     else 
     {
@@ -99,7 +99,7 @@ else if raiseAp and not raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to mod(360 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
+        set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
     else 
     {
@@ -122,7 +122,7 @@ else if not raiseAp and raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to mod(180 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
     else 
     {
@@ -145,7 +145,7 @@ else if not raiseAp and not raisePe
     else set dvNeeded to util_read_cache("dvNeeded").
     if not util_peek_cache("mnvTA")
     {
-        set mnvTA to mod(180 + ship:orbit:lan + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
     else 
     {
@@ -165,7 +165,7 @@ if util_init_runmode() = 0
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
     set mnvNode to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
     add mnvNode.
-    if mnvNode:prograde > 0.1 
+    if mnvNode:burnvector:mag > 0.1 
     {
         mnv_exec_node_burn(mnvNode).
     }
@@ -193,7 +193,7 @@ if util_init_runmode() = 1
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
     set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
     add mnvNode.
-    if mnvNode:prograde > 0.1
+    if mnvNode:burnVector:mag > 0.1
     {
         mnv_exec_node_burn(mnvNode).
     }

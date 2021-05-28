@@ -150,7 +150,7 @@ if runmode = 30
     until false 
     {
         // Approach the target
-        rdv_await_nearest_approach(target, 500).
+        rdv_await_nearest_approach(target, 1250).
         rdv_approach_target(target, 1).
         rdv_cancel_velocity(target).
         if target:distance < 50 break.

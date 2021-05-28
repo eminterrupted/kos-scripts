@@ -86,41 +86,26 @@ global function disp_format_timestamp
 global function disp_info
 {
     parameter str is "".
-    if str <> "" 
-    {
-        set str to "INFO : " + str + "          ".
-        print str at (0, 7).
-    }
-    else 
-    {
-        clr(7).
-    }
+    //print "INFO : " + str + "          " at (0, 7).
+    clr(7).
+    print str at (0, 7).
 }
 
 global function disp_info2
 {
     parameter str is "".
-    if str <> "" 
-    {
-        set str to "INFO : " + str + "          ".
-        print str at (0, 8).
-    }
-    else 
-    {
-        clr(8).
-    }
+    //print "INFO : " + str + "          " at (0, 8).
+    clr(8).
+    print str at (0, 8).
 }
 
 // Print a string to the msg line
 global function disp_msg
 {
     parameter str is "".
-    //clr(6).    
-    if str <> "" 
-    {
-        set str to "MSG  : " + str + "          ".
-        print str at (0, 6).
-    }
+    //print "MSG  : " + str + "          " at (0, 6).
+    clr(6).    
+    print str at (0, 6).
 }
 
 // Sets up the terminal
@@ -155,9 +140,10 @@ global function disp_avionics
 // A display header for mission control
 global function disp_main
 {
-    disp_terminal().
+    parameter plan is scriptPath():name,
+              showTerminal is true.
     set line to 1.
-    parameter plan is scriptPath():name.
+    if showTerminal disp_terminal().
 
     print "Mission Controller v0.02b" at (0, line).
     print "=========================" at (0, cr()).

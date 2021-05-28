@@ -18,22 +18,18 @@ local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 
 // local activeEng to list().
 // local curThr    to 0.
-local boosters      to list().
-local boostersDC    to lex().
-local boostersTank  to lex().
-local curTwr        to 0.
-local endPitch      to 0.
-local finalAlt      to 0.
-local hasBoosters   to false.
-local maxAcc        to 35.
-local maxQ          to 0.145.
-local maxTwr        to 2.
-local stAlt         to 0.
-local stTurn        to 750.
-local stSpeed       to 100.
-local twr_kP        to 0.225.
-local twr_kI        to 0.004.
-local twr_kD        to 0.00.
+local curTwr    to 0.
+local endPitch  to 0.
+local finalAlt  to 0.
+local maxAcc    to 35.
+local maxQ      to 0.145.
+local maxTwr    to 2.
+local stAlt     to 0.
+local stTurn    to 750.
+local stSpeed   to 100.
+local twr_kP    to 0.225.
+local twr_kI    to 0.004.
+local twr_kD    to 0.00.
 //local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
 //local turnAlt   to max(125000, min(body:atm:height, tgtAlt * 0.2)).
 local turnAlt to 70000.
@@ -42,9 +38,9 @@ lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitud
 
 // Flags
 local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 
-        or ship:modulesNamed("ModuleProceduralFairing"):length > 0 
-        or ship:modulesNamed("ModuleSimpleAdjustableFairing"):length > 0 
-    else false.
+    or ship:modulesNamed("ModuleProceduralFairing"):length > 0 
+    or ship:modulesNamed("ModuleSimpleAdjustableFairing"):length > 0 
+else false.
 
 // Control values
 local rVal      to launchPlan:tgtRoll.
@@ -66,14 +62,6 @@ ag8 off.
 disp_terminal().
 disp_main(scriptPath():name).
 
-// Boosters check / enumeration
-if ship:partsTaggedPattern("booster"):length > 0 
-{
-    set hasBoosters to true.
-    set boosters    to ves_get_boosters().
-    set boostersDC  to boosters[0].
-    set boostersTank to boosters[1].
-}
 
 // Fairing trigger
 if hasFairing 
@@ -83,7 +71,6 @@ if hasFairing
         ves_jettison_fairings().
     }
 }
-
 
 //-- Main --//
 lock steering to sVal.
@@ -178,22 +165,33 @@ lock curAcc to ship:availableThrust / ship:mass.
 disp_msg("Gravity turn").
 until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 {
-    // Steering update
-    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
-
-    // Throttle update
+    // qPid:update(time:seconds, ship:q).
+    // accPid:update(time:seconds, curAcc).
     set curTwr to ship:availablethrust / (ship:mass * kGrav).
-    
+    //twrPid:update(time:seconds, curTwr).
+
     local qVal      to choose max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q)))     if ship:q >= maxQ   else 1.
     local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc else 1.
     local twrVal    to max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr))).
     local tValTemp  to min(qVal, aVal).
     set tVal to min(tValTemp, twrVal).
-    //pid_readout().
 
-    // Booster update
-    if hasBoosters set hasBoosters to update_booster().
+    // print "q     : " + round(ship:q, 5) + "     " at (0, 25).
+    // print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
 
+    // print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
+    // print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
+
+    // print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
+    // print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
+    
+    // print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
+
+    // print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
+    // print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
+    // print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
+
+    set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     disp_telemetry().
     wait 0.01.
 }
@@ -209,12 +207,20 @@ until ship:apoapsis >= tgtAp * 0.995
 
     set sVal     to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal     to min(aVal, twrVal).
-    // pid_readout().
-
-    // Booster update
-    if hasBoosters set hasBoosters to update_booster().
-
     disp_telemetry().
+
+    // print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
+    // print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
+
+    // print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
+    // print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
+    
+    // print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
+
+    // print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
+    // print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
+    // print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
+
     wait 0.01.
 }
 disp_msg().
@@ -226,10 +232,6 @@ until ship:apoapsis >= finalAlt
 {
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal to max(tValLoLim, min(1, 1 - (ship:apoapsis / tgtAp))).
-
-    // Booster update
-    if hasBoosters set hasBoosters to update_booster().
-
     disp_telemetry().
     wait 0.01.
 }
@@ -262,61 +264,3 @@ disp_msg("Launch complete").
 wait 2.5.
 clearScreen.
 //-- End Main --//
-
-// Local functions
-local function pid_readout
-{
-    print "q     : " + round(ship:q, 5) + "     " at (0, 25).
-    print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
-
-    print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
-    print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
-
-    print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
-    print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
-    
-    print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
-
-    print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
-    print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
-    print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
-}
-
-// Checks booster resources and stages when booster res falls below threshold
-local function update_booster
-{
-    // parameter boostersObj.
-
-    // set boostersDC to boostersObj[0].
-    // set boostersTank to boostersObj[1].
-    if boostersDC:length > 0
-    {
-        local boosterId     to boostersDC:length - 1.
-        local boosterRes    to boostersTank[boosterId]:resources[0].
-        if boosterRes:amount < 0.001
-        {
-            for dc in boostersDC[boosterId]
-            {
-                if dc:children:length > 0 
-                {
-                    util_do_event(dc:getModule("ModuleAnchoredDecoupler"), "decouple").
-                    disp_info("External Booster Loop ID [" + boosterId + "] dropped").
-                    boostersDC:remove(boosterId).
-                    boostersTank:remove(boosterId).
-                }
-            }
-        }
-        if boostersDC:length > 0 
-        {
-            return true.
-        }
-        else 
-        {
-            return false.
-        }
-    }
-    else 
-    {
-        return false.
-    }
-}

@@ -29,6 +29,7 @@ global function sci_modules
     local sciList to list().
     for m in ship:modulesNamed("ModuleScienceExperiment")   sciList:add(m).
     for m in ship:modulesNamed("DMModuleScienceAnimate")    sciList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageScience") sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")           sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")         sciList:add(m).
     return sciList.
@@ -115,7 +116,8 @@ local function sci_deploy
     if not m:hasData
     {
         m:deploy().
-        wait until m:hasData.
+        local ts to time:seconds + 5.
+        wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
     }
 }
@@ -134,7 +136,8 @@ local function sci_deploy_us
             if action:contains(validAction) 
             {
                 m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction", ""), true).
-                wait until m:hasData.
+                local ts to time:seconds + 5.
+                wait until m:hasData or time:seconds >= ts .
                 if addons:career:available addons:career:closeDialogs.
             }
         }

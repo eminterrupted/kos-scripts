@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter tgt.
+parameter tgt is "Minmus".
 
 clearscreen.
 clearVecDraws().
@@ -11,15 +11,22 @@ runOncePath("0:/lib/lib_nav").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
 
-if tgt:typename = "list" 
+if not hasTarget 
 {
-    set tgt to tgt[0].
+    if tgt:typename = "list" 
+    {
+        set tgt to tgt[0].
+    }
+    else if tgt:typename = "string"
+    {
+        set tgt to nav_orbitable(tgt).
+    }
+    set target to tgt.
 }
-else if tgt:typename = "string"
+else
 {
-    set tgt to nav_orbitable(tgt).
+    set tgt to target.
 }
-set target to tgt.
 
 disp_main(scriptPath()).
 
@@ -42,7 +49,7 @@ local tVal is 0.
 lock throttle to tVal.
 
 //Staging trigger
-when ship:availableThrust < 0.1 and tVal > 0 then 
+when ship:availablethrust <= 0.1 and tVal > 0 then
 {
     ves_safe_stage().
     preserve.

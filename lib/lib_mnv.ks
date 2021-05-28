@@ -218,14 +218,16 @@ global function mnv_burn_stages
     set dvNeeded to abs(dvNeeded).
 
     // If we need more dV than the vessel has, throw an exception.
+    ship:deltaV:forcecalc.
     if dvNeeded > ship:deltaV:current {
-        hudText("dV Needed: " + dvNeeded + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
+        hudText("dV Needed: " + round(dvNeeded, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
     }
 
     // Iterate over stages until dv is covered
     from { local stg to stage:number.} until dvNeeded <= 0 step { set stg to stg - 1.} do
     {
+        
         //local dvStg to ship:stageDeltaV(stg):current.
         local dvStg to mnv_stage_dv(stg).
 
@@ -471,6 +473,7 @@ global function mnv_exec_node_burn
     set burnDur      to mnv_burn_dur(mnvNode:deltaV:mag).
     local halfDur    to mnv_burn_dur(mnvNode:deltaV:mag / 2).
     set burnEta      to mnvNode:time - halfDur.
+    local mecoTS     to burnEta + burnDur.
     lock dvRemaining to abs(mnvNode:burnVector:mag).
     
     local sVal       to lookDirUp(mnvNode:burnVector, sun:position).
@@ -478,14 +481,14 @@ global function mnv_exec_node_burn
     lock steering    to sVal.
     lock throttle    to tVal.
 
-    disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
-    disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
+    disp_info("Burn ETA : " + round(burnEta, 2) + "          ").
+    disp_info2("Burn duration: " + round(burnDur, 2) + "          ").
 
     util_warp_trigger(burnEta).
 
     until time:seconds >= burnEta
     {
-        mnv_burn_disp(burnEta, dvRemaining).
+        mnv_burn_disp(time:seconds - burnEta, dvRemaining, burnDur).
         wait 0.01.
     }
 
@@ -493,6 +496,7 @@ global function mnv_exec_node_burn
     lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
 
     disp_msg("Executing burn").
+    disp_info2().
     set tVal to 1.
     set sVal to lookDirUp(mnvNode:burnVector, sun:position).
     until false
@@ -504,9 +508,9 @@ global function mnv_exec_node_burn
         }
         else
         {
-            set tVal to max(0.08, min(mnvNode:deltaV:mag / maxAcc, 1)).
+            set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
         }
-        mnv_burn_disp(burnEta, dvRemaining).
+        mnv_burn_disp(time:seconds - burnEta, dvRemaining, mecoTS - time:seconds).
         wait 0.01.
     }
 
@@ -522,10 +526,19 @@ global function mnv_exec_node_burn
 //#region
 global function mnv_burn_disp
 {
-    parameter burnEta, dvToGo is 0.
+    parameter burnEta, dvToGo is 0, burnDur is 0.
 
-    disp_info("Burn ETA: " + round(time:seconds - burnEta, 2)).
-    disp_info2("DeltaV Remaining: " + round(dvToGo, 2)). 
+    disp_msg("DeltaV Remaining: " + round(dvToGo, 2)). 
+    if burnEta <= 0 
+    {
+        disp_info("Burn ETA: " + round(burnEta, 2)).
+        disp_info2("Burn duration: " + round(burnDur, 2)).
+    }
+    else
+    {
+        disp_info("Burn duration: " + round(burnDur, 2)).
+        disp_info2().
+    }
 }
 
 local function mnv_clr_disp
@@ -607,7 +620,7 @@ local function mnv_improve_node
     else if curScore:score > -10 * limLo and curScore:score < limHi * 11            set mnvFactor to 2      * mnvFactor. 
     else                                                                            set mnvFactor to 5      * mnvFactor.
     
-    disp_msg("Optimizing node.").
+    disp_info("Optimizing node.").
 
     set mnvCandidates to list(
         list(data[0] + mnvFactor, data[1], data[2], data[3])  //Time
@@ -733,7 +746,7 @@ global function mnv_optimize_node_data
               compMode,
               changeModes is "1111".
 
-    disp_msg("Optimizing node.").
+    disp_info("Optimizing node.").
 
     local iteration     to 0.
     local improvedData  to lex().
@@ -761,8 +774,7 @@ global function mnv_optimize_node_data
         wait 0.01.
     }
     print "                        " at (2, 25).
-    disp_info().
-    disp_msg("Optimized maneuver found (score: " + round(nodeScore, 5) + ")").
+    disp_info("Optimized maneuver found (score: " + round(nodeScore, 5) + ")").
     clr_disp(). 
     return data.
 }

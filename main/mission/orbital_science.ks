@@ -31,9 +31,28 @@ if not validModes:contains(recoveryMode)
 
 sci_deploy_list(sciList).
 
-if recover {
+if recover 
+{
     sci_recover_list(sciList, recoveryMode).
 }
 
 disp_msg("Orbital science complete!").
-wait 5.
+wait 1.
+disp_msg("Manual science mode, press 0 to collect data").
+
+ag10 off.
+when ag10 then 
+{
+    disp_msg("Manual data collection in progress").
+    sci_deploy_list(sciList).
+    sci_recover_list(sciList, recoveryMode).
+    disp_msg("Manual science mode, press 0 to collect data").
+    ag10 off.
+    preserve.
+}
+
+until false 
+{
+    disp_orbit().
+    wait 0.01.
+}

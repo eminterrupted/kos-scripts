@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter tgtInc is 22.5,
-          tgtLAN is 0.
+parameter tgtInc is 0,
+          tgtLAN is 90.
 
 clearscreen.
 clearVecDraws().
@@ -43,7 +43,7 @@ local tVal is 0.
 lock throttle to tVal.
 
 //Staging trigger
-when ship:availableThrust < 0.1 and tVal > 0 then 
+when ship:availablethrust <= 0.1 and tVal > 0 then
 {
     ves_safe_stage().
     preserve.
