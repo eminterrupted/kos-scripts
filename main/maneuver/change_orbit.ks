@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 750000,
-          tgtAp is 750000,
-          tgtArgPe is ship:orbit:argumentofperiapsis.
+parameter tgtPe is 50000,
+          tgtAp is 1500000,
+          tgtArgPe is 270.
 
 // runPath("0:/util/rck", "dvNeeded").
 // runPath("0:/util/rck", "mnvTA").
@@ -153,6 +153,16 @@ else if not raiseAp and not raisePe
     }
 }
 
+// Write to cache
+if util_peek_cache("compMode")
+{
+    set compMode to util_read_cache("compMode").
+}
+else
+{
+    util_cache_state("compMode", compMode).
+}
+
 disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
 wait 1.
 disp_msg().
@@ -191,6 +201,7 @@ if util_init_runmode() = 1
     set mnvEta      to nav_eta_to_ta(ship:orbit, mnvTA).
     set mnvTime     to time:seconds + mnvEta.
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
+    wait 1.
     set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
     add mnvNode.
     if mnvNode:burnVector:mag > 0.1

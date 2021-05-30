@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter tgtInc is 0,
+parameter tgtInc is 90,
           tgtLAN is 90.
 
 clearscreen.

@@ -1,11 +1,13 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is ship:orbit:nextPatch:body.
+parameter tgtParam is choose target if hasTarget else ship:orbit:nextpatch:body.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_nav").
+
+disp_main(scriptPath()).
 
 local tgtBody to tgtParam.
 
@@ -18,13 +20,22 @@ else if tgtParam:typeName = "string"
     set tgtBody to nav_orbitable(tgtParam).
 }
 
-disp_main(scriptPath()).
+if util_peek_cache("soiDestination")
+{
+    set tgtBody to util_read_cache("soiDestination").
+}
+else
+{
+    util_cache_state("soiDestination", tgtBody).
+}
 
 local rVal to 0.
-
 lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 
-util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
+if ship:body:name <> tgtBody:name 
+{
+    util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
+}
 
 until ship:body:name = tgtBody:name
 {
@@ -35,3 +46,4 @@ until ship:body:name = tgtBody:name
 
 disp_info2().
 disp_info2("Arrived at " + tgtBody:name + " SOI").
+util_clear_cache_key("soiDestination").
