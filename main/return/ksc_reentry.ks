@@ -37,6 +37,12 @@ until false
     }
 }
 
+until ship:body:name = "Kerbin"
+{
+    disp_orbit().
+    wait 0.01.
+}
+
 if testPatch:periapsis > Kerbin:atm:height
 {
     disp_main(scriptPath():name).
@@ -75,7 +81,7 @@ if testPatch:periapsis > Kerbin:atm:height
     until ship:periapsis <= reentryAlt
     {
         set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_telemetry().
+        disp_orbit().
     }
     set tVal to 0.
 }

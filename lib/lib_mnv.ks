@@ -9,6 +9,9 @@ runOncePath("0:/lib/lib_util").
 runOncePath("0:/kslib/lib_navball").
 //runOncePath("0:/kslib/lib_navigation").
 
+// Variables
+local verbose to false.
+
 // -- Misc
 //#region
 // Returns the last patch for a given node
@@ -218,7 +221,15 @@ global function mnv_burn_stages
     set dvNeeded to abs(dvNeeded).
 
     // If we need more dV than the vessel has, throw an exception.
-    ship:deltaV:forcecalc.
+    if ship:deltaV:current < dvNeeded 
+    {
+        ship:deltaV:forcecalc.
+        wait 1.
+    }
+    if verbose
+    {
+        print "ship:deltaV:current: " + ship:deltaV:current at (2, 35).
+    }
     if dvNeeded > ship:deltaV:current {
         hudText("dV Needed: " + round(dvNeeded, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
@@ -311,7 +322,7 @@ global function mnv_argpe_match_burn
               tgtObt.
 
     local tgtTA to tgtObt:argumentOfPeriapsis + tgtObt:lan.
-    print tgtTA at (2, 25).
+    if verbose print "tgtTA: " + round(tgtTA, 2) at (2, 25).
 
     local tgtEta to nav_eta_to_ta(burnVes:obt, tgtTA).
     local taOpAlt to nav_obt_alt_at_ta(burnVes:obt, tgtTA + 180).
@@ -396,7 +407,7 @@ global function mnv_exec_circ_burn
     {
         set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
         set sVal to heading(burnDir, 0, 0).
-        mnv_burn_disp(burnEta, dvRemaining).
+        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
     }
 
     set tVal to 1.
@@ -438,7 +449,7 @@ global function mnv_exec_vec_burn
     until time:seconds >= mnvETA
     {
         set sVal to mnvVec.
-        mnv_burn_disp(mnvETA, dvToGo).
+        mnv_burn_disp(mnvETA, dvToGo, mecoTS - time:seconds).
         wait 0.01.
     }
 

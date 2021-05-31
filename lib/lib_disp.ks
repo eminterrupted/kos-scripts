@@ -177,9 +177,10 @@ global function disp_orbit
 {
     print "ORBIT" at (0, 10).
     print "---------" at (0, 11).
-    print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, 12).
-    print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, 13).
-    print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, 14).
+    print "BODY         : " + ship:body:name        + "       " at (0, 12).
+    print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, 13).
+    print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, 14).
+    print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, 15).
 }
 
 

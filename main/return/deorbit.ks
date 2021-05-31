@@ -1,6 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
+parameter pe is 0.
+
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_util").
@@ -17,7 +19,7 @@ until ves_settled()
 wait until ves_settled().
 
 lock throttle to 1.
-until ship:periapsis < 0 
+until ship:periapsis < pe
 {
     disp_orbit().
 }

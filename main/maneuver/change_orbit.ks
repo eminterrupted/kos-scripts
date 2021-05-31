@@ -1,13 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 50000,
-          tgtAp is 1500000,
+parameter tgtPe is 15000,
+          tgtAp is 45000,
           tgtArgPe is 270.
-
-// runPath("0:/util/rck", "dvNeeded").
-// runPath("0:/util/rck", "mnvTA").
-// runPath("0:/util/rck", "runmode").
 
 clearScreen.
 
@@ -58,6 +54,11 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     preserve.
 }
 
+if util_init_runmode() = 0 
+{
+    if exists("data_0:/state.json") deletePath("data_0:/state.json").
+}
+
 // Main
 disp_msg("Calculating burn data").
 if raiseAp and raisePe 
@@ -78,7 +79,7 @@ if raiseAp and raisePe
     {
         set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
-    else 
+    else
     {
         set mnvTA to util_read_cache("mnvTA").
     }
@@ -184,7 +185,14 @@ if util_init_runmode() = 0
         remove mnvNode.
     }
     util_set_runmode(1).
-    util_cache_state("mnvTA", mod(mnvTA + 180, 360)).
+    if compMode = "ap" 
+    {
+        util_cache_state("mnvTA", 180).
+    }
+    else
+    {
+        util_cache_state("mnvTA", 0).
+    }
 }
 
 if util_init_runmode() = 1

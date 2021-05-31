@@ -20,6 +20,7 @@ log " " to logPath.
 print "Waiting for launch".
 print " ".
 
+ag8 off.
 until ag8
 {
     print "Current longitude: " + round(nav_lng_to_degrees(ship:longitude), 3) + "   " at (0, 9).
@@ -39,6 +40,7 @@ print "Liftoff at " + time:full.
 print "Vessel longitude at liftoff : " + myLaunchLng.
 print " ".
 
+ag9 off.
 until ag9
 {
     wait 0.01.

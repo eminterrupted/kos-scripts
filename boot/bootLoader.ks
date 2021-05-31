@@ -69,13 +69,21 @@ global function data_disk
 
 local function init_disk
 {
-    local idx   to 0.
+    local idx to 0.
 
     set core:volume:name to "local".
     for c in ship:modulesNamed("kOSProcessor")
     {
-        if c:volume:name = "" 
+        if c:volume:name = ""
         {
+            local vols to list().
+            list volumes in vols.
+            for v in vols
+            {
+                if v:name = "data_" + idx {
+                    set idx to idx + 1.
+                }
+            }
             set c:volume:name to "data_" + idx.
             set idx to idx + 1.
         }

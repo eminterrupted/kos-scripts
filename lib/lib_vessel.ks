@@ -361,6 +361,51 @@ global function ves_activate_fuel_cell
     }
 }
 
+// Returns the range of a given RTAntenna module
+global function ves_antenna_range
+{
+    parameter m.
+
+    local isDish to false.
+
+    for field in m:allFields
+    {
+        if field:contains("dish")
+        {
+            set isDish to true.
+        }
+    }
+
+    local commRange to choose m:getField("dish range") if isDish else m:getField("omni range").
+    local rangeMulti to commRange[commRange:length - 2].
+    set commRange to commRange:remove(commRange:length - 2, 2):toNumber.
+    if      rangeMulti = "K" set commRange to commRange * 1000.
+    else if rangeMulti = "M" set commRange to commRange * 1000000.
+    else if rangeMulti = "G" set commRange to commRange * 1000000000.
+
+    return commRange.
+}
+
+// Returns the highest gain antenna on the vessel
+global function ves_antenna_top_gain
+{
+    parameter commList.
+
+    local topGain to "".
+    local dishIdx to 0.
+    
+    for m in commList
+    {
+        if dishIdx = 0 set topGain to m.
+        else 
+        {
+            if ves_antenna_range(m) > ves_antenna_range(topGain) set topGain to m.
+        }
+        set dishIdx to dishIdx + 1.
+    }
+    return topGain.
+}
+
 global function ves_auto_fuel_cell
 {
     parameter fuelCell.

@@ -12,7 +12,8 @@ local repairCount to 0.
 local failCount to 0.
 
 local repairLog to path("0:/data/partRepairLog.log").
-log "Result,UID,Name,Title" to repairLog.
+if exists(repairLog) deletePath(repairLog).
+log "Vessel,Result,UID,Name,Title" to repairLog.
 
 print "Scanning vessel for failures...".
 print " ".
@@ -28,13 +29,13 @@ for m in ship:modulesNamed("ModuleUPFMEvents")
         {
             set failCount to failCount + 1.
             print "Repair failed!".
-            log "FAILED," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
+            log ship:name + ",FAILED," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
         }
         else 
         {
             set repairCount to repairCount + 1.
             print "Repair successful!".
-            log "SUCCESS," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
+            log ship:name + ",SUCCESS," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
         }
         print " ".
     }

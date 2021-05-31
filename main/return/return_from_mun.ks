@@ -18,66 +18,76 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 }
 
 if hasNode until not hasNode remove nextNode.
-
-// Add node at Pe
-disp_msg("Adding node at Pe").
-local mnvTime to time:seconds + eta:periapsis.
-local mnvNode to node(mnvTime, 0, 0, 10).
-add mnvNode.
-
-wait 1.
-
-// Given it dv to escape
-disp_msg("Adding escape dv").
-until false
-{
-    if mnvNode:orbit:hasnextpatch
+if not ship:orbit:hasnextpatch
     {
-        if mnvNode:orbit:nextPatch:body = returnBody
+    // Add node at Pe
+    disp_msg("Adding node at Pe").
+    local mnvTime to time:seconds + eta:periapsis.
+    local mnvNode to node(mnvTime, 0, 0, 10).
+    add mnvNode.
+
+    wait 1.
+
+    // Given it dv to escape
+    disp_msg("Adding escape dv").
+    until false
+    {
+        if mnvNode:orbit:hasnextpatch
+        {
+            if mnvNode:orbit:nextPatch:body = returnBody
+            {
+                break.
+            }   
+        }
+        remove mnvNode.
+        set mnvNode to change_node_value(mnvNode, "prograde", 25).
+        add mnvNode.
+        wait 0.01.
+        //disp_info("Patch Body: " + ship:orbit:nextPatch:body).
+    }
+    disp_info().
+    wait 1.
+
+    // Sweep timing to lowest Pe
+    disp_msg("Sweeping timing for lowest Pe").
+    local lastPe to mnvNode:orbit:nextPatch:periapsis.
+    until false
+    {
+        disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
+        disp_info2("LastPe    : " + lastPe).
+        if lastPe < mnvNode:orbit:nextPatch:periapsis
         {
             break.
-        }   
+        }
+        
+        set lastPe to mnvNode:orbit:nextPatch:periapsis. 
+        remove mnvNode.
+        set mnvNode to change_node_value(mnvNode, "time", 10).
+        add mnvNode.
     }
-    remove mnvNode.
-    set mnvNode to change_node_value(mnvNode, "prograde", 25).
-    add mnvNode.
-    wait 0.01.
-    //disp_info("Patch Body: " + ship:orbit:nextPatch:body).
-}
-disp_info().
-wait 1.
+    disp_info().
+    disp_info2().
 
-// Sweep timing to lowest Pe
-disp_msg("Sweeping timing for lowest Pe").
-local lastPe to mnvNode:orbit:nextPatch:periapsis.
-until false
+    wait 1.
+
+    // Optimize dV for free return
+    disp_msg("Optimizing for free return trajectory").
+    remove mnvNode.
+    set mnvNode to mnv_opt_return_node(mnvNode, returnBody, returnAlt).
+    add mnvNode.
+
+    disp_msg("Optimized maneuver created").
+
+    mnv_exec_node_burn(mnvNode).
+}
+
+lock steering to lookDirUp(ship:prograde:vector, sun:position).
+
+until ship:orbit:body:name = "Kerbin"
 {
-    disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
-    disp_info2("LastPe    : " + lastPe).
-    if lastPe < mnvNode:orbit:nextPatch:periapsis
-    {
-        break.
-    }
-    
-    set lastPe to mnvNode:orbit:nextPatch:periapsis. 
-    remove mnvNode.
-    set mnvNode to change_node_value(mnvNode, "time", 10).
-    add mnvNode.
+    disp_orbit().
+    wait 0.01.
 }
-disp_info().
-disp_info2().
-
-wait 1.
-
-// Optimize dV for free return
-disp_msg("Optimizing for free return trajectory").
-remove mnvNode.
-set mnvNode to mnv_opt_return_node(mnvNode, returnBody, returnAlt).
-add mnvNode.
-
-disp_msg("Optimized maneuver created").
-
-mnv_exec_node_burn(mnvNode).
 
 // Functions
 local function change_node_value

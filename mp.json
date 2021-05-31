@@ -1,19 +1,15 @@
 {
     "items": [
         {
-            "value": "maneuver/wait_for_soi_change",
+            "value": "mission/simple_orbit",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "maneuver/capture_burn",
+            "value": "maneuver/match_inclination",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
             "value": "maneuver/change_orbit",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": "maneuver/change_inclination",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {

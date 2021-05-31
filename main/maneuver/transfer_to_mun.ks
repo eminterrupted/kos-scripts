@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is "Mun",
-          tgtAlt is 750000,
+parameter tgtParam is "Minmus",
+          tgtAlt is 100000,
           altPadding to 0.
 
 runOncePath("0:/lib/lib_disp").
@@ -44,7 +44,7 @@ else
     }
 }
 
-local sVal to lookDirUp(ship:prograde:vector, sun:position).
+local sVal to lookDirUp(ship:facing:forevector, sun:position).
 lock steering to sVal.
 
 // Staging trigger

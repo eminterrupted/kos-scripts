@@ -193,6 +193,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
+    print hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
@@ -213,6 +214,7 @@ until ship:apoapsis >= tgtAp * 0.995
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
+    print hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
@@ -229,7 +231,8 @@ until ship:apoapsis >= finalAlt
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-
+    print hasBoosters at (2, 35).
+    
     disp_telemetry().
     wait 0.01.
 }
@@ -264,23 +267,23 @@ clearScreen.
 //-- End Main --//
 
 // Local functions
-local function pid_readout
-{
-    print "q     : " + round(ship:q, 5) + "     " at (0, 25).
-    print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
+// local function pid_readout
+// {
+//     print "q     : " + round(ship:q, 5) + "     " at (0, 25).
+//     print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
 
-    print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
-    print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
+//     print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
+//     print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
 
-    print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
-    print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
+//     print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
+//     print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
     
-    print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
+//     print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
 
-    print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
-    print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
-    print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
-}
+//     print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
+//     print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
+//     print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
+// }
 
 // Checks booster resources and stages when booster res falls below threshold
 local function update_booster
@@ -292,7 +295,7 @@ local function update_booster
     if boostersDC:length > 0
     {
         local boosterId     to boostersDC:length - 1.
-        local boosterRes    to boostersTank[boosterId]:resources[0].
+        local boosterRes    to choose boostersTank[boosterId]:resources[1] if boostersTank[boosterId]:name = "Size1p5_Tank_05" else boostersTank[boosterId]:resources[0].
         if boosterRes:amount < 0.001
         {
             for dc in boostersDC[boosterId]

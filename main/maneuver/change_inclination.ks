@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 parameter tgtInc is 90,
-          tgtLAN is 90.
+          tgtLAN is 0.
 
 clearscreen.
 clearVecDraws().

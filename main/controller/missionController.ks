@@ -38,6 +38,6 @@ until missionPlan:length = 0
     runPath(curScript).
     hudtext("Mission script complete, removing: " + curScript, 10, 2, 20, green, false).
     if curScript:root = "local:/" deletePath(curScript).
-    writeJson(missionPlan, planPath).
+    if missionPlan:length > 0 writeJson(missionPlan, planPath).
 }
-deletePath(planPath).
+if exists(planPath) deletePath(planPath).
