@@ -2,7 +2,7 @@
 
 clearscreen.
 
-parameter returnBody is ship:body:body,
+parameter returnBody is body("Kerbin"),
           returnAlt  is 45000.
 
 runOncePath("0:/lib/lib_disp").

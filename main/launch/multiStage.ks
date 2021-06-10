@@ -25,6 +25,7 @@ local curTwr        to 0.
 local endPitch      to 0.
 local finalAlt      to 0.
 local hasBoosters   to false.
+local lesTower      to "".
 local maxAcc        to 35.
 local maxQ          to 0.145.
 local maxTwr        to 2.
@@ -46,11 +47,14 @@ local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler
         or ship:modulesNamed("ModuleSimpleAdjustableFairing"):length > 0 
     else false.
 
+local hasLES to choose true if ship:partsDubbedPattern("Escape"):length > 0 else false.
+if hasLES set lesTower to ship:partsdubbedpattern("Escape")[0].
+
 // Control values
 local rVal      to launchPlan:tgtRoll.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
-local tValLoLim to 0.60.
+local tValLoLim to 0.63.
 
 // throttle pid controllers
 local accPid    to pidLoop().
@@ -193,10 +197,17 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print hasBoosters at (2, 35).
+    print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
+}
+
+// LES Tower jet
+if hasLES 
+{
+    lesTower:getModule("ModuleEnginesFX"):doEvent("activate engine").
+    lesTower:getModule("ModuleDecouple"):doEvent("decouple").
 }
 
 disp_msg("Post-turn burning to apoapsis").
@@ -214,7 +225,7 @@ until ship:apoapsis >= tgtAp * 0.995
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print hasBoosters at (2, 35).
+    print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
@@ -231,7 +242,7 @@ until ship:apoapsis >= finalAlt
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print hasBoosters at (2, 35).
+    print "Boosters: " + hasBoosters at (2, 35).
     
     disp_telemetry().
     wait 0.01.
@@ -295,19 +306,21 @@ local function update_booster
     if boostersDC:length > 0
     {
         local boosterId     to boostersDC:length - 1.
-        local boosterRes    to choose boostersTank[boosterId]:resources[1] if boostersTank[boosterId]:name = "Size1p5_Tank_05" else boostersTank[boosterId]:resources[0].
+        local boosterRes    to choose boostersTank[boosterId]:resources[1] if boostersTank[boosterId]:name:matchesPattern("Size1p5.Tank.05") else boostersTank[boosterId]:resources[0].
         if boosterRes:amount < 0.001
         {
             for dc in boostersDC[boosterId]
             {
                 if dc:children:length > 0 
                 {
-                    util_do_event(dc:getModule("ModuleAnchoredDecoupler"), "decouple").
-                    disp_info("External Booster Loop ID [" + boosterId + "] dropped").
+                    //util_do_event(dc:getModule("ModuleAnchoredDecoupler"), "decouple").
+                    disp_info("Separation Event: External Booster Loop ID [" + boosterId + "]").
                     boostersDC:remove(boosterId).
                     boostersTank:remove(boosterId).
                 }
             }
+            ves_safe_stage("booster").
+            disp_info().
         }
         if boostersDC:length > 0 
         {

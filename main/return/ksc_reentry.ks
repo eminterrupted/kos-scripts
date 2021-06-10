@@ -106,14 +106,14 @@ for c in parachutes
 disp_msg("Waiting until staging altitude").
 until ship:altitude <= Kerbin:atm:height + 10000
 {
-    set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+    set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 90, 0).
     disp_telemetry().
 }
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 
 disp_msg("Staging").
-set sVal to ship:prograde:vector + r(0, -90, 0).
+//set sVal to ship:prograde:vector + r(0, -90, 0).
 wait 5.
 until stage:number = 1 
 {

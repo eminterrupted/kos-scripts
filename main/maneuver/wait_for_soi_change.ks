@@ -41,7 +41,7 @@ until ship:body:name = tgtBody:name
 {
     disp_info2("Time to SOI change: " + round(ship:orbit:nextpatcheta)).
     disp_orbit().
-    wait 0.1.
+    wait 0.01.
 }
 
 disp_info2().

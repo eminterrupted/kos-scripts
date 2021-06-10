@@ -250,6 +250,8 @@ global function ves_settled
 // Safe staging
 global function ves_safe_stage
 {
+    parameter mode is "".
+
     wait 0.5.
     until false 
     {
@@ -261,38 +263,42 @@ global function ves_safe_stage
         break.
     }
     
-    // Stage again if currents engines are sep motors
-    if ship:availablethrust > 0 
+    // If we are not in booster separation mode, run sep motor and deployable engine check
+    if mode = "" 
     {
-        local onlySep to true.
-        for e in ves_stage_engines()
+        // Stage again if currents engines are sep motors
+        if ship:availablethrust > 0 
         {
-            if not sepList:contains(e:name)
+            local onlySep to true.
+            for e in ves_stage_engines()
             {
-                set onlySep to false.
-                break.
+                if not sepList:contains(e:name)
+                {
+                    set onlySep to false.
+                    break.
+                }
+            }
+            
+            if onlySep 
+            {
+                wait 1.
+                stage.
             }
         }
         
-        if onlySep 
+        for e in ves_stage_engines()
         {
-            wait 1.
-            stage.
+            if e:hasModule("ModuleDeployableEngine") 
+            {
+                disp_info2("Engine with ModuleDeployableEngine found").
+                wait until e:thrust > 0.
+                break.
+            }
         }
+        //General wait for once staging is complete
+        wait 0.5.
     }
     
-    for e in ves_stage_engines()
-    {
-        if e:hasModule("ModuleDeployableEngine") 
-        {
-            disp_info2("Engine with ModuleDeployableEngine found").
-            wait until e:thrust > 0.
-            break.
-        }
-    }
-    
-    //General wait for once staging is complete
-    wait 0.5.
     disp_info2().
 }
 //#endregion
@@ -406,14 +412,14 @@ global function ves_antenna_top_gain
     return topGain.
 }
 
-global function ves_auto_fuel_cell
-{
-    parameter fuelCell.
+// global function ves_auto_fuel_cell
+// {
+//     parameter fuelCell.
 
-    local fcMod to fuelCell:getModule("ModuleResourceConverter").
-    if ecPct >= 0.99 and fcMod:getField("fuel cell") <> "Inactive" ves_activate_fuel_cell(fuelCell, false).
-    else if ecPct < 0.5 and fcMod:getField("fuel cell") = "Inactive" ves_activate_fuel_cell(fuelCell, true).
-}
+//     local fcMod to fuelCell:getModule("ModuleResourceConverter").
+//     if ecPct >= 0.99 and fcMod:getField("fuel cell") <> "Inactive" ves_activate_fuel_cell(fuelCell, false).
+//     else if ecPct < 0.5 and fcMod:getField("fuel cell") = "Inactive" ves_activate_fuel_cell(fuelCell, true).
+// }
 
 // Radiators
 // Extend / retract radiators

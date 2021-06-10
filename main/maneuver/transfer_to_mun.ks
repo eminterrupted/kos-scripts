@@ -2,7 +2,7 @@
 clearScreen.
 
 parameter tgtParam is "Minmus",
-          tgtAlt is 100000,
+          tgtAlt is 500000,
           altPadding to 0.
 
 runOncePath("0:/lib/lib_disp").
@@ -93,8 +93,8 @@ if not hasNode {
     //local dvNeeded to mnv_dv_hohmann(ship:altitude, tgtAlt, ship:body).
     set degreesToTravel to choose transferPhase - currentPhase if transferPhase <= currentPhase else currentPhase + (360 - transferPhase).
     set transferEta     to abs(degreesToTravel / phaseRate).
-    //local tgtAlt to target:altitude - target:soiradius + altPadding.
-    set tgtBodyAlt to target:altitude + ship:body:radius + altPadding.
+    set tgtBodyAlt to target:altitude - target:soiradius + altPadding.
+    //set tgtBodyAlt to target:altitude + ship:body:radius + altPadding.
     set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
     disp_msg("dv0: " + round(dvNeeded[0], 2) + " | dv1: " + round(dvNeeded[1], 2)).
 
