@@ -43,8 +43,8 @@ disp_msg("dvNeeded: " + round(dvNeeded, 2) + "   ").
 wait 1.
 
 // Transfer burn
-set burnDur     to mnv_burn_dur(dvNeeded).
-set burnETA     to mnvTime - mnv_burn_dur(dvNeeded / 2).
+set burnDur     to mnv_staged_burn_dur(dvNeeded).
+set burnETA     to mnvTime - mnv_staged_burn_dur(dvNeeded / 2).
 local mnvNode   to node(mnvTime, 0, 0, dvNeeded).
 mnv_opt_simple_node(mnvNode, tgtAlt, compMode).
 add mnvNode.

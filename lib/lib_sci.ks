@@ -72,6 +72,17 @@ global function sci_recover_list
     }
 }
 
+// Reset a list of science modules
+global function sci_reset_list
+{
+    parameter sciList.
+
+    for m in sciList 
+    {
+        sci_reset(m).
+    }
+}
+
 //-- Local functions --//
 
 // Collects experiments in a science container

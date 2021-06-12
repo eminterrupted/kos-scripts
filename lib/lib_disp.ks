@@ -82,6 +82,19 @@ global function disp_format_timestamp
     }
 }
 
+// Print a string to the hud with errorLevel
+global function disp_hud 
+{
+    parameter str,
+              errLvl is 0.
+
+    local color to green.
+    if errLvl = 1 set color to yellow.
+    if errLvl = 2 set color to red.
+
+    hudtext(str, 10, 2, 20, color, false).          
+}
+
 // Print a string to the info line
 global function disp_info
 {
@@ -181,6 +194,24 @@ global function disp_orbit
     print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, 13).
     print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, 14).
     print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, 15).
+}
+
+// Simple landing telemetry
+global function disp_landing
+{
+    parameter tti is 0, 
+              burnDur is 0.
+
+    print "LANDING TELEMETRY" at (0, 10).
+    print "-----------------" at (0, 11).
+    print "BODY          : " + ship:body:name   + "      " at (0, 12).
+    print "ALTITUDE      : " + round(ship:altitude)    + "m     " at (0, 13).
+    print "RADAR ALT     : " + round(alt:radar)        + "m     " at (0, 14).
+    print "SURFACE SPD   : " + round(ship:groundspeed, 2) + "m/s   " at (0, 15).
+    print "VERTICAL SPD  : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 16).
+    print "" at (0, 17).
+    print "TIME TO IMPACT: " + round(tti, 2)              + "s     " at (0, 18).
+    print "BURN DURATION : " + round(burnDur, 2)          + "s     " at (0, 19).
 }
 
 

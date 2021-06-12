@@ -197,7 +197,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print "Boosters: " + hasBoosters at (2, 35).
+    //print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
@@ -225,7 +225,7 @@ until ship:apoapsis >= tgtAp * 0.995
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print "Boosters: " + hasBoosters at (2, 35).
+    //print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
     wait 0.01.
@@ -242,7 +242,7 @@ until ship:apoapsis >= finalAlt
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
-    print "Boosters: " + hasBoosters at (2, 35).
+    //print "Boosters: " + hasBoosters at (2, 35).
     
     disp_telemetry().
     wait 0.01.
@@ -320,6 +320,8 @@ local function update_booster
                 }
             }
             ves_safe_stage("booster").
+            accPid:reset.
+            twrPid:reset.
             disp_info().
         }
         if boostersDC:length > 0 

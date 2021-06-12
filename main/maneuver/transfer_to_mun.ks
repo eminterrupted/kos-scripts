@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is "Minmus",
-          tgtAlt is 500000,
+parameter tgtParam is "Mun",
+          tgtAlt is 50000,
           altPadding to 0.
 
 runOncePath("0:/lib/lib_disp").
@@ -106,9 +106,9 @@ if not hasNode {
 if hasNode
 {
     // Transfer burn
-    set burnAt  to mnv:time.
-    set burnDur to mnv_burn_dur(dvNeeded[0]).
-    set halfDur to mnv_burn_dur(dvNeeded[0] / 2).
+    set burnAt  to nextNode:time.
+    set burnDur to mnv_staged_burn_dur(nextNode:deltav:mag).
+    set halfDur to mnv_staged_burn_dur(nextNode:deltav:mag / 2).
     set burnEta to burnAt - halfDur.
     disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
     disp_info2("Burn duration: " + round(burnDur, 1) + "          ").

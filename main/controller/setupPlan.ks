@@ -12,17 +12,19 @@ local tgtInc    to 0.
 //local tgtRoll   to choose 180 if ship:crewcapacity > 0 else 0.
 local tgtRoll   to 0.
 local lazObj    to l_az_calc_init(tgtAp, tgtInc).
-local doReturn  to true.
+local doReturn  to false.
 
 local missionList  to list(
     "mission/simple_orbit"
     //,"mission/auto_sci_biome"
     //,"maneuver/match_inclination"
-    //,"maneuver/transfer_to_mun"
-    //,"maneuver/wait_for_soi_change"
-    //,"maneuver/capture_burn"
+    ,"maneuver/transfer_to_mun"
+    ,"maneuver/wait_for_soi_change"
+    ,"maneuver/capture_burn"
     //,"maneuver/change_inclination"
-    //,"maneuver/change_orbit"
+    ,"maneuver/change_orbit"
+    ,"land/land_on_mun"
+    ,"mission/land_sci"
     //,"mission/scansat"
     //,"mission/simple_orbit"
     //,"return/return_from_mun"

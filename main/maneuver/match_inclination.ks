@@ -66,8 +66,8 @@ set burnVec     to burnData[1].
 set mnvNode     to burnData[2].
 add mnvNode. 
 
-set burnDur     to mnv_burn_dur(burnMag).
-set burnETA     to mnvTime - mnv_burn_dur(burnMag / 2).
+set burnDur     to mnv_staged_burn_dur(burnMag).
+set burnETA     to mnvTime - mnv_staged_burn_dur(burnMag / 2).
 disp_info("DeltaV remaining: " + round(burnMag, 1)).
 
 

@@ -1,22 +1,10 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/lib/lib_land").
 
-// ves_auto_capacitor().
-// until false 
-// {
-//     wait 0.01.
-// }
-
-local commList to ship:modulesNamed("ModuleRTAntenna").
-local dishTgt to kerbin:position.
-
-set dishTgt to ves_antenna_top_gain(commList):getField("target").
-print dishTgt.
-unlock steering.
-lock steering to lookDirUp(dishTgt:position, sun:position).
-until false 
+until false
 {
-    wait 1.
+    print round(land_time_to_impact(ship:verticalspeed, alt:radar), 3) at (2, 10).
+    wait 0.
 }

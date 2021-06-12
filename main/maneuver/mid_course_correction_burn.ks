@@ -50,8 +50,8 @@ local function correction_burn
 
     // Transfer burn
     set burnAt  to mnvNode:time.
-    set burnDur to mnv_burn_dur(mnvNode:burnVector:mag).
-    set halfDur to mnv_burn_dur(mnvNode:burnVector:mag / 2).
+    set burnDur to mnv_staged_burn_dur(mnvNode:burnVector:mag).
+    set halfDur to mnv_staged_burn_dur(mnvNode:burnVector:mag / 2).
     set burnEta to burnAt - halfDur.
     disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
     disp_info2("Burn duration: " + round(burnDur, 1) + "          ").

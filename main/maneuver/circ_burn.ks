@@ -40,8 +40,8 @@ set dvNeeded to mnv_dv_hohmann(tgtAlt, stAlt, ship:body).
 disp_msg("dv1: " + round(dvNeeded[1], 2)).
 
 // Calculate our burnEta for the circ burn
-set burnDur to mnv_burn_dur(dvNeeded[1]).
-set halfDur to mnv_burn_dur(dvNeeded[1] / 2).
+set burnDur to mnv_staged_burn_dur(dvNeeded[1]).
+set halfDur to mnv_staged_burn_dur(dvNeeded[1] / 2).
 disp_info("Burn duration: " + round(burnDur)).
 set burnEta to burnAt - halfDur.
 

@@ -50,9 +50,10 @@ until false
     {
         for dc in stgDecoupler[key]
         {
+            local dcModule to choose "ModuleAnchoredDecoupler" if dc:hasModule("ModuleAnchoredDecoupler") else "ModuleDecouple".
             if dc:children:length > 0 
             {
-                util_do_event(dc:getModule("ModuleAnchoredDecoupler"), "decouple").
+                util_do_event(dc:getModule(dcModule), "decouple").
                 disp_info("External Tank Loop ID[" + key + "] dropped").
             }
         }
@@ -62,15 +63,6 @@ until false
         print "FuelTank: " + stgTanks[key]:tag at (2, 29).
         print "resAmount: " + res:amount at (2, 30).
         print "resCapacity: " + res:capacity at (2, 31).
-        if res:amount < res:capacity
-        {
-            local resFuel to res:amount.
-            set flowRate  to (resFuel - prevFuel) / dClock.
-            set prevFuel  to resFuel.
-            
-            disp_info("Current tank flow rate    : " + round(flowRate, 2) + "u/s     ").
-            disp_info2("Time to next tank jettison: " + round(resFuel / flowRate, 1) + "s     ").
-        }
     }
     disp_avionics().
 }

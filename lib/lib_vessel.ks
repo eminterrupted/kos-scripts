@@ -28,12 +28,42 @@ global function ves_active_engines
     list engines in engineList.
     for e in engineList
     {
-        if e:ignition
+        if e:ignition and not e:flameout
         {
             activeList:add(e).
         }
     }
     return activeList.
+}
+
+// Returns list containing a list of active engines, overall thrust, average isp
+global function ves_active_engines_stats
+{
+    local activeEngs    to list().
+    local engList       to list().
+    local activeIsp     to 0.
+    local activeThrust  to 0.
+    local relThrust     to 0.
+
+    list engines in engList. 
+    for e in engList 
+    {
+        if e:ignition and not e:flameout
+        {
+            activeEngs:add(e).
+            set activeThrust to activeThrust + e:availableThrust.
+            set relThrust to relThrust + (e:availableThrust / e:visp).
+        }
+    }
+    if activeThrust = 0 
+    {
+        return list(list(), 0, 0).
+    }
+    else 
+    {
+        set activeIsp to activeThrust / relThrust.
+        return list(activeEngs, activeThrust, activeIsp).
+    }
 }
 
 // Returns summed thrust for provided engines at the current throttle 
@@ -329,8 +359,11 @@ global function ves_get_resource
     }
     return false.
 }
+//#endregion
 
-//#region -- Part Module Actions
+//#region -- Part Module Actions / Events
+
+//#region -- Antenna / Comm actions
 // Extend / retract antennas in a list
 global function ves_activate_antenna
 {
@@ -342,28 +375,6 @@ global function ves_activate_antenna
     for m in commList
     {       
         util_do_event(m, event).
-    }
-}
-
-// Fuel cells
-// Activate / Deactivate a fuel cell
-global function ves_activate_fuel_cell
-{
-    parameter fuelCell,
-              mode is true. // on = true, off = false
-
-    local fcMod     to fuelCell:getModule("ModuleResourceConverter").
-
-    if mode
-    {
-        local onEvent to choose "start turbine" if fuelCell:name:contains("apu-radial") else "start fuel cell".
-        util_do_event(fcMod, onEvent).
-        
-    }
-    else if not mode
-    {
-        local offEvent to choose "stop turbine" if fuelCell:name:contains("apu-radial") else "stop fuel cell".
-        util_do_event(fcMod, offEvent).
     }
 }
 
@@ -411,17 +422,52 @@ global function ves_antenna_top_gain
     }
     return topGain.
 }
+//#endregion
 
-// global function ves_auto_fuel_cell
-// {
-//     parameter fuelCell.
+//#region -- Fuel cell actions
+// Activate / Deactivate a fuel cell
+global function ves_activate_fuel_cell
+{
+    parameter fuelCell,
+              mode is true. // on = true, off = false
 
-//     local fcMod to fuelCell:getModule("ModuleResourceConverter").
-//     if ecPct >= 0.99 and fcMod:getField("fuel cell") <> "Inactive" ves_activate_fuel_cell(fuelCell, false).
-//     else if ecPct < 0.5 and fcMod:getField("fuel cell") = "Inactive" ves_activate_fuel_cell(fuelCell, true).
-// }
+    local fcMod to fuelCell:getModule("ModuleResourceConverter").
 
-// Radiators
+    if mode
+    {
+        local onEvent to choose "start turbine" if fuelCell:name:contains("apu-radial") else "start fuel cell".
+        util_do_event(fcMod, onEvent).
+        
+    }
+    else if not mode
+    {
+        local offEvent to choose "stop turbine" if fuelCell:name:contains("apu-radial") else "stop fuel cell".
+        util_do_event(fcMod, offEvent).
+    }
+}
+//#endregion
+
+//#region -- Lights actions
+global function ves_activate_lights
+{
+    parameter lightList is ship:modulesNamed("ModuleLight"),
+              state is true.
+
+    local event to choose "lights on" if state else "lights off".
+    local action to choose "turn light on" if state else "turn light off".
+
+    for m in lightList 
+    {
+        print m at (2, 25).
+        if not util_do_event(m, event) 
+        {
+            util_do_action(m, action).
+        }
+    }
+}
+//#endregion
+
+//#region --Radiators
 // Extend / retract radiators
 global function ves_activate_radiator
 {
@@ -436,8 +482,9 @@ global function ves_activate_radiator
         util_do_event(m, event).
     }
 }
-
-// Solar panels
+//#endregion
+ 
+//#region -- Solar panels
 // Extend / retract solar panels in a list. 
 global function ves_activate_solar
 {
@@ -451,9 +498,30 @@ global function ves_activate_solar
         util_do_event(m, event).
     }
 }
+//#endregion
 
-// Fairings
-// Jettison
+//#region -- Bays
+// Open bay doors
+global function ves_open_bays
+{
+    parameter bayList,
+              door is "all".
+
+    for bay in bayList 
+    {
+        if door = "all" or door = "primary"
+        {
+            util_do_event(bay, "deploy primary bays").
+        }
+        if door = "all" or door = "secondary"
+        {
+            util_do_event(bay, "deploy secondary bays").
+        }
+    }
+}
+
+//#region -- Fairings
+// Jettison 
 global function ves_jettison_fairings
 {
     local procEvent     to "jettison fairing".
@@ -485,8 +553,9 @@ global function ves_jettison_fairings
         }
     }
 }
+//#endregion
 
-// Capacitors
+//#region -- Capacitors
 // Automatically controls capacitor charge / recharge.
 global function ves_auto_capacitor
 {
@@ -553,5 +622,6 @@ global function ves_recharge_capacitor
     }
     return true.
 }
-
 //#endregion
+
+//#endregion -- Part module actions / events

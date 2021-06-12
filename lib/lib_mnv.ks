@@ -174,13 +174,30 @@ global function mnv_dv_hohmann_orbit_velocity
 
 // -- Burn times and stage calc
 //#region
-// Total duration to burn provided dv
-global function mnv_burn_dur
+// Burn duration for the active stage. Used for landing
+global function mnv_active_burn_dur
 {
-    parameter dvNeeded.
+    parameter dv.
+
+    local engStats to ves_active_engines_stats(). 
+    
+    local f to engStats[1] * 1000.  // Thrust in newtons
+    local m to ship:mass * 1000.    // Vessel mass
+    local e to constant():e.        // 
+    local p to engStats[2].         // Average ISP
+    local g to ((ship:body:mu * (ship:mass * 1000)) / (ship:body:radius + ship:altitude)^2) /  (ship:mass * 1000). // Local gravity
+
+    return abs(g * m * p * (1 - e^(-dv / (g * p))) / f).
+}
+
+// Burn duration over multiple stages. Used for maneuver calculations
+global function mnv_staged_burn_dur
+{
+    parameter dv.
    
     // Get the amount of dv in each stage
-    local dvStgObj  to mnv_burn_stages(dvNeeded).
+    local dvStgObj  to mnv_burn_stages(dv).
+    // Get the duration of each stage burn to fulfill dv.
     local dvBurnObj to mnv_burn_dur_stage(dvStgObj).
     return dvBurnObj["all"].
 }
@@ -215,13 +232,13 @@ global function mnv_burn_dur_stage
 // stage. Used with the mnv_burn_dur function
 global function mnv_burn_stages
 {
-    parameter dvNeeded.
+    parameter dv.
 
     local dvStgObj to lex().
-    set dvNeeded to abs(dvNeeded).
+    set dv to abs(dv).
 
     // If we need more dV than the vessel has, throw an exception.
-    if ship:deltaV:current < dvNeeded 
+    if ship:deltaV:current < dv 
     {
         ship:deltaV:forcecalc.
         wait 1.
@@ -230,13 +247,13 @@ global function mnv_burn_stages
     {
         print "ship:deltaV:current: " + ship:deltaV:current at (2, 35).
     }
-    if dvNeeded > ship:deltaV:current {
-        hudText("dV Needed: " + round(dvNeeded, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
+    if dv > ship:deltaV:current {
+        hudText("dV Needed: " + round(dv, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
     }
 
     // Iterate over stages until dv is covered
-    from { local stg to stage:number.} until dvNeeded <= 0 step { set stg to stg - 1.} do
+    from { local stg to stage:number.} until dv <= 0 step { set stg to stg - 1.} do
     {
         
         //local dvStg to ship:stageDeltaV(stg):current.
@@ -244,15 +261,15 @@ global function mnv_burn_stages
 
         if dvStg > 0 
         {
-            if dvNeeded <= dvStg
+            if dv <= dvStg
             {
-                set dvStgObj[stg] to dvNeeded.
+                set dvStgObj[stg] to dv.
                 break.
             }
             else 
             {
                 set dvStgObj[stg] to dvStg.
-                set dvNeeded to dvNeeded - dvStg.
+                set dv to dv - dvStg.
             }
         }
     }
@@ -262,11 +279,11 @@ global function mnv_burn_stages
 // Returns a list of burn eta / duration
 global function mnv_burn_times
 {
-    parameter dvNeeded,
+    parameter dv,
               mnvTime.
 
-    local burnDur to mnv_burn_dur(dvNeeded).
-    local burnEta to mnvTime - mnv_burn_dur(dvNeeded / 2).
+    local burnDur to mnv_staged_burn_dur(dv).
+    local burnEta to mnvTime - mnv_staged_burn_dur(dv / 2).
     return list(burnEta, burnDur).
 }
 
@@ -481,8 +498,8 @@ global function mnv_exec_node_burn
               burnEta is 0,
               burnDur is 0.
 
-    set burnDur      to mnv_burn_dur(mnvNode:deltaV:mag).
-    local halfDur    to mnv_burn_dur(mnvNode:deltaV:mag / 2).
+    set burnDur      to mnv_staged_burn_dur(mnvNode:deltaV:mag).
+    local halfDur    to mnv_staged_burn_dur(mnvNode:deltaV:mag / 2).
     set burnEta      to mnvNode:time - halfDur.
     local mecoTS     to burnEta + burnDur.
     lock dvRemaining to abs(mnvNode:burnVector:mag).
