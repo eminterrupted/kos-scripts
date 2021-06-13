@@ -125,8 +125,7 @@ until alt:radar <= 100
 set vsPid:setpoint to -5.
 until alt:radar <= tgtRadarAlt
 {
-    vsPid:update(time:seconds, ship:verticalspeed).
-    set tVal to altPid:update(time:seconds, alt:radar).
+    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
     set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
     disp_landing(tti, burnDur).
@@ -147,3 +146,4 @@ disp_info().
 set tVal to 0.
 
 ves_activate_solar(panelList).
+if ship:modulesNamed("ModuleNeptuneCamera"):length > 0 ves_neptune_image().

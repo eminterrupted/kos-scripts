@@ -424,6 +424,38 @@ global function ves_antenna_top_gain
 }
 //#endregion
 
+//#region -- NeptuneCams
+// Take given image type from neptune cameras on board
+global function ves_neptune_image
+{
+    parameter type is "all". // Values: "greyscale", "color", "ir" (infrared), "uv" (ultraviolet), "all"
+
+    local camList is ship:modulesNamed("ModuleNeptuneCamera").
+    for cam in camList
+    {
+        for event in cam:allEvents
+        {
+            if event:contains("greyscale image") 
+            {
+                if type = "greyscale" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
+            }
+            else if event:contains("full colour")
+            {
+                if type = "color" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")). 
+            }
+            else if event:contains("infrared")
+            {
+                if type = "ir" or type = "all"  util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
+            }
+            else if event:contains("ultraviolet")
+            {
+                if type = "uv" or type = "all"  util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
+            }
+        }
+    }
+}
+//#endregion
+
 //#region -- Fuel cell actions
 // Activate / Deactivate a fuel cell
 global function ves_activate_fuel_cell
@@ -458,7 +490,6 @@ global function ves_activate_lights
 
     for m in lightList 
     {
-        print m at (2, 25).
         if not util_do_event(m, event) 
         {
             util_do_action(m, action).

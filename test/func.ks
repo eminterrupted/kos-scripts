@@ -1,10 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_land").
+parameter type.
 
-until false
-{
-    print round(land_time_to_impact(ship:verticalspeed, alt:radar), 3) at (2, 10).
-    wait 0.
-}
+runOncePath("0:/lib/lib_vessel").
+
+ves_neptune_image(type).

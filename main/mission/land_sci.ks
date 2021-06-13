@@ -15,7 +15,6 @@ local bayLights to list().
 for light in ship:modulesNamed("ModuleLight")
 {
     if light:part:tag = "bay" bayLights:add(light).
-    print bayLights at (2, 15).
 }
 
 for bay in ship:modulesNamed("USAnimateGeneric")
