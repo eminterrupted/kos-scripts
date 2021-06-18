@@ -8,8 +8,8 @@ lock steering to sVal.
 
 disp_main(scriptPath():name).
 disp_msg("All mission scripts completed").
+sas on.
 until false
 {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
     disp_orbit().
 }

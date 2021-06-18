@@ -14,7 +14,7 @@ local bayLights to list().
 
 for light in ship:modulesNamed("ModuleLight")
 {
-    if light:part:tag = "bay" bayLights:add(light).
+    if light:part:tag = "bayLight" bayLights:add(light).
 }
 
 for bay in ship:modulesNamed("USAnimateGeneric")
@@ -22,22 +22,46 @@ for bay in ship:modulesNamed("USAnimateGeneric")
     if bay:hasEvent("deploy primary bays") bayList:add(bay).
 }
 
-disp_msg("Opening bay doors").
-ves_open_bays(bayList).
-wait 1.
-ves_activate_lights(bayLights).
-wait 1.
+if bayList:length > 0 
+{
+    disp_msg("Opening bay doors").
+    ves_open_bays(bayList).
+    wait 1.
+    ves_activate_lights(bayLights).
+    wait 1.
+}
+
+unlock steering.
+sas on.
 
 disp_msg("Collecting science").
 sci_deploy_list(sciMod).
 
-wait 1.
-disp_msg("Recovering science").
-sci_recover_list(sciMod).
+if ship:crew():length = 0
+{
+    wait 1.
+    disp_msg("Recovering science").
+    sci_recover_list(sciMod).
+}
+else
+{
+    wait 1.
+    disp_msg("Collecting science").
+    sci_recover_list(sciMod, "collect").
+}
 
-disp_msg("Experiments completed").
-
+ag9 off.
+ag10 off.
+disp_hud("Press 9 to capture Neptune images, 0 to continue").
 until false
 {
-    wait 0.
+    if ag9 
+    {
+        ves_neptune_image().
+        ag9 off.
+    }
+    if ag10 break.
 }
+ag10 off.
+
+disp_msg("Experiments completed").

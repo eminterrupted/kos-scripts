@@ -29,7 +29,7 @@ for p in ship:partsTaggedPattern("groundPanel")
     panelList:add(p:getModule("ModuleDeployableSolarPanel")).
 }
 
-local altPid    to pidLoop(0.05, 0.01, .01, 0, 1).
+local ttiPid    to pidLoop(0.5, 0.001, 0.01, 0, 1).
 local vsPid     to pidLoop(0.5, 0.001, 0.01, 0, 1).
 
 local tVal to 0.
@@ -63,10 +63,20 @@ until ship:groundspeed <= tgtHSpd
 set tVal to 0.
 wait 1.
 
-until stage:number = 0
+ag9 off.
+ag10 off.
+if stage:number > 0 
 {
-    stage.
-    wait 0.1.
+    disp_hud("Press 9 for non-return landings to stage, or 0 for return landings").
+    wait until ag9 or ag10.
+    if ag9
+    {
+        until stage:number = 0
+        {
+            stage.
+            wait 0.1.
+        }
+    }
 }
 
 lock steering to lookDirUp(land_srfretro_or_up():vector, sun:position). 
@@ -83,46 +93,32 @@ set vsPid:setpoint to -25.
 disp_info("Unpowered descent to burn altitude").
 until tti < burnDur 
 {
-    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
+    //set tVal to vsPid:update(time:seconds, ship:verticalspeed).
+    vsPid:update(time:seconds, ship:verticalspeed).
     set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
     disp_landing(tti, burnDur).
+}
+
+when alt:radar <= 150 then 
+{
+    disp_info("Extending landing legs").
+    gear on.
+    ves_activate_lights(lightList).
 }
 
 disp_info("Powered descent, slowing to -10m/s Vertical Speed").
 set tVal to 1.
-until ship:verticalspeed >= -25 and tti > burnDur
+set ttiPid:setpoint to 1.
+until alt:radar <= 100 
 {
-    vsPid:update(time:seconds, ship:verticalspeed).
-    //set tVal to altPid:update(time:seconds, alt:radar).
     set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+    set tVal to ttiPid:update(time:seconds, (tti - burnDur)).
     disp_landing(tti, burnDur).
 }
 
-disp_info("Powered descent to " + tgtRadarAlt + "m radar altitude").
-until alt:radar <= 500 or tti <= burnDur
-{
-    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
-    set burnDur to mnv_active_burn_dur(ship:verticalspeed).
-    disp_landing(tti, burnDur).
-}
-
-disp_info("Extending landing legs").
-gear on.
-ves_activate_lights(lightList).
-
-set vsPid:setpoint to -10.
-until alt:radar <= 100
-{
-    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
-    set burnDur to mnv_active_burn_dur(ship:verticalspeed).
-    disp_landing(tti, burnDur).
-}
-
-set vsPid:setpoint to -5.
+set vsPid:setpoint to tgtDescentSpd.
 until alt:radar <= tgtRadarAlt
 {
     set tVal to vsPid:update(time:seconds, ship:verticalspeed).
@@ -131,10 +127,10 @@ until alt:radar <= tgtRadarAlt
     disp_landing(tti, burnDur).
 }
 
-disp_info("Final descent at " + (tgtDescentSpd - 1) + "m/s").
-set vsPid:setpoint to tgtDescentSpd - 1.
+disp_info("Final descent at " + (tgtDescentSpd / 2) + "m/s").
+set vsPid:setpoint to tgtDescentSpd / 2.
 lock steering to lookDirUp(up:vector, sun:position).
-until alt:radar <= 2.5
+until ship:status = "LANDED"
 {
     set tVal to vsPid:update(time:seconds, ship:verticalspeed).
     set tti to land_time_to_impact(time:seconds, alt:radar).
@@ -145,5 +141,8 @@ disp_msg("Touchdown").
 disp_info().
 set tVal to 0.
 
+for e in ves_active_engines() {
+    e:shutdown.
+}
+
 ves_activate_solar(panelList).
-if ship:modulesNamed("ModuleNeptuneCamera"):length > 0 ves_neptune_image().

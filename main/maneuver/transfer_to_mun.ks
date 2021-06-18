@@ -2,8 +2,8 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 50000,
-          altPadding to 25000.
+          tgtAlt is 500000,
+          altPadding to 500000.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -57,7 +57,11 @@ when ship:availableThrust <= 0.1 and throttle > 0 then
 // Main
 //
 //lock  currentPhase to calc_simple_phase_angle(target).
-if not hasNode {
+
+if hasNode and not ship:orbit:hasnextpatch remove nextNode.
+wait 1.
+if not hasNode
+{
     lock currentPhase to mod(360 + ksnav_phase_angle(), 360).
 
     // Calculate the ideal phase angle for transfer
@@ -106,6 +110,7 @@ if not hasNode {
 if hasNode
 {
     // Transfer burn
+    set mnv to nextNode.
     set burnAt  to nextNode:time.
     set burnDur to mnv_staged_burn_dur(nextNode:deltav:mag).
     set halfDur to mnv_staged_burn_dur(nextNode:deltav:mag / 2).

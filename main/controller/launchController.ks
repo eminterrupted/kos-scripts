@@ -10,7 +10,7 @@ local launchQueue   to launchPlan:queue.
 ag9 off.
 until launchQueue:length = 0
 {
-    if ship:status = "PRELAUNCH"
+    if ship:status = "PRELAUNCH" or ship:status = "LANDED"
     {
         launch_pad_gen(true).
 

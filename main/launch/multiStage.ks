@@ -37,7 +37,7 @@ local twr_kI        to 0.004.
 local twr_kD        to 0.00.
 //local turnAlt   to max(body:atm:height - 10000, min(body:atm:height, tgtAlt * 0.2)).
 //local turnAlt   to max(125000, min(body:atm:height, tgtAlt * 0.2)).
-local turnAlt to 70000.
+local turnAlt to choose 70000 if ship:body = body("kerbin") else 10000.
 
 lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitude)^2.
 
@@ -90,6 +90,7 @@ if hasFairing
 
 
 //-- Main --//
+sas off.
 lock steering to sVal.
 lock throttle to tVal.
 
@@ -106,7 +107,7 @@ until countdown >= -1.5
     disp_msg("COUNTDOWN T" + round(countdown, 1)).
     wait 0.05.
 }
-launch_engine_start(cdStamp).
+if ship:status = "PRELAUNCH" launch_engine_start(cdStamp).
 set tVal to 1.
 lock throttle to tVal.
 
@@ -322,6 +323,7 @@ local function update_booster
             ves_safe_stage("booster").
             accPid:reset.
             twrPid:reset.
+            qPid:reset.
             disp_info().
         }
         if boostersDC:length > 0 

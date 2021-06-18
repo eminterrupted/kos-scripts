@@ -428,7 +428,7 @@ global function ves_antenna_top_gain
 // Take given image type from neptune cameras on board
 global function ves_neptune_image
 {
-    parameter type is "all". // Values: "greyscale", "color", "ir" (infrared), "uv" (ultraviolet), "all"
+    parameter type is "all". // Values: "greyscale", "color", "rgb", "red", "green", "blue", "ir" (infrared), "uv" (ultraviolet), "all"
 
     local camList is ship:modulesNamed("ModuleNeptuneCamera").
     for cam in camList
@@ -439,15 +439,27 @@ global function ves_neptune_image
             {
                 if type = "greyscale" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
             }
-            else if event:contains("full colour")
+            else if event:contains("full colour image")
             {
                 if type = "color" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")). 
             }
-            else if event:contains("infrared")
+            else if event:contains("red image")
+            {
+                if type = "rgb" or type = "red" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")). 
+            }
+            else if event:contains("green image")
+            {
+                if type = "rgb" or type = "green" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")). 
+            }
+            else if event:contains("blue image")
+            {
+                if type = "rgb" or type = "blue" or type = "all" util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")). 
+            }
+            else if event:contains("infrared image")
             {
                 if type = "ir" or type = "all"  util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
             }
-            else if event:contains("ultraviolet")
+            else if event:contains("ultraviolet image")
             {
                 if type = "uv" or type = "all"  util_do_event(cam, event:replace("(callable) ", ""):replace(", is KSPEvent", "")).
             }

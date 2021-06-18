@@ -92,7 +92,7 @@ global function disp_hud
     if errLvl = 1 set color to yellow.
     if errLvl = 2 set color to red.
 
-    hudtext(str, 10, 2, 20, color, false).          
+    hudtext(str, 15, 2, 20, color, false).          
 }
 
 // Print a string to the info line

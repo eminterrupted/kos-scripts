@@ -29,6 +29,8 @@ global function sci_modules
     local sciList to list().
     for m in ship:modulesNamed("ModuleScienceExperiment")   sciList:add(m).
     for m in ship:modulesNamed("DMModuleScienceAnimate")    sciList:add(m).
+    for m in ship:modulesNamed("DMXrayDiffract")            sciList:add(m).
+    for m in ship:modulesNamed("DMRoverGooMat")             sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience") sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")           sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")         sciList:add(m).
@@ -127,7 +129,7 @@ local function sci_deploy
     if not m:hasData
     {
         m:deploy().
-        local ts to time:seconds + 5.
+        local ts to time:seconds + 10.
         wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
     }

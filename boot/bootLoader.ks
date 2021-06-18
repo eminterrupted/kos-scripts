@@ -13,7 +13,7 @@ local mpCache   to path("0:/data/mp/missionPlan_" + ship:name:replace(" ","_") +
 local pwrComms  to path("local:/power_comms_enable").
 local vFile     to path(dataDisk + "vessel.json").
 
-if missionTime = 0
+if missionTime = 0 or ship:status = "PRELAUNCH"
 {
     runPath("0:/main/controller/setupPlan").
     set mc to download(mc).
