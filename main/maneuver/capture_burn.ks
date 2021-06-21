@@ -30,7 +30,8 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude.
-set mnvNode to node(time:seconds + eta:periapsis, 0, 0, 0).
+local dvNeeded to mnv_dv_hohmann(ship:body:soiradius - ship:apoapsis, tgtAlt)[1].
+set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dvNeeded).
 add mnvNode.
 
 until false

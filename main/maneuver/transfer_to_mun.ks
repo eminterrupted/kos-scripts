@@ -3,7 +3,7 @@ clearScreen.
 
 parameter tgtParam is "Mun",
           tgtAlt is 500000,
-          altPadding to 500000.
+          altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -72,12 +72,12 @@ if not hasNode
     // Sample the phase change per second
     disp_info("Sampling phase change per second").
     local p0 to currentPhase.
-    local ts to time:seconds + 3.
+    local ts to time:seconds + 5.
     until time:seconds >= ts
     {
         disp_info2("Sample time remaining: " + round(ts - time:seconds)).
     }
-    set phaseRate  to abs(abs(currentPhase) - abs(p0)) / 3.
+    set phaseRate  to abs(abs(currentPhase) - abs(p0)) / 5.
     disp_info2().
 
     // Calulate the transfer timestamp
@@ -85,6 +85,7 @@ if not hasNode
     set transferEta     to abs(degreesToTravel / phaseRate).
     set burnAt          to transferEta + time:seconds.
 
+    print "Target           : " + target + "   " at (2, 23).
     print "Degrees to travel: " + round(degreesToTravel, 5) at (2, 24).
     print "Phase Rate       : " + round(phaseRate, 5) at (2, 25).
     print "Time to transfer : " + round(transferEta) at (2, 26).
@@ -97,8 +98,8 @@ if not hasNode
     //local dvNeeded to mnv_dv_hohmann(ship:altitude, tgtAlt, ship:body).
     set degreesToTravel to choose transferPhase - currentPhase if transferPhase <= currentPhase else currentPhase + (360 - transferPhase).
     set transferEta     to abs(degreesToTravel / phaseRate).
-    set tgtBodyAlt to target:altitude - target:soiradius + altPadding.
-    //set tgtBodyAlt to target:altitude + ship:body:radius + altPadding.
+    //set tgtBodyAlt to target:altitude.
+    set tgtBodyAlt to target:altitude - ship:body:radius + altPadding.
     set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
     disp_msg("dv0: " + round(dvNeeded[0], 2) + " | dv1: " + round(dvNeeded[1], 2)).
 

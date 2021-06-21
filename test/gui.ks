@@ -14,16 +14,32 @@ local lazObj    to list().
 local doReturn  to true.
 
 // General pattern:
-// -- Current queue on left, selector in middle, params on right
-// -- Build lists, then read those into queues
-// -- Script button in selector - add. Script button in queue - remove
-// -- To identify params, build a lex that contains script names to lex of params
-// -- Store param lex somewhere (archive until script is downloaded), then when running the script, use it as the parameter
+// -- Launch Card
+// -- Mission Selector
+// -- (Mission) Parameter Editor
 
-// Tab 0 - Mission profile
+
+// Page 0 - Launch parameters
 // Suborbital
 // Orbital
 // Mun transfer
+
+global function gui_add
+{
+    parameter gHeight is 440,
+              gWidth is 1000.
+
+    return gui(1000).
+}
+
+
+global function gui_add_widget
+{
+    parameter wHeight is 440,
+              wWidth is 1000.
+
+    
+}
 
 // Tab 1 - Launch queue
 // Enumerate launch scripts

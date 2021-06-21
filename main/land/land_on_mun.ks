@@ -55,10 +55,13 @@ until ag10
 disp_msg("Landing sequence").
 disp_info("Cancelling horizontal velocity to " + tgtHSpd + "m/s").
 set tVal to 1.
-until ship:groundspeed <= tgtHSpd
+ag10 off.
+until ship:groundspeed <= tgtHSpd or ag10
 {
     disp_orbit().
+    if ag10 break.
 }
+ag10 off.
 
 set tVal to 0.
 wait 1.
@@ -71,11 +74,9 @@ if stage:number > 0
     wait until ag9 or ag10.
     if ag9
     {
-        until stage:number = 0
-        {
-            stage.
-            wait 0.1.
-        }
+        stage.
+        wait 1.
+        stage.
     }
 }
 

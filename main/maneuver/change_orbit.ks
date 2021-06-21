@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 50000,
-          tgtAp is 50000,
+parameter tgtPe is 30000,
+          tgtAp is 30000,
           tgtArgPe is ship:orbit:argumentofperiapsis.
 
 clearScreen.
@@ -13,6 +13,8 @@ runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_nav").
 
 disp_main(scriptPath():name).
+
+local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 
 // Check for the first argument to be a lex
 if tgtPe:typename = "list"
@@ -56,7 +58,7 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 
 if util_init_runmode() = 0 
 {
-    if exists("data_0:/state.json") deletePath("data_0:/state.json").
+    if exists(path(dataDisk + "state.json")) deletePath(path(dataDisk + "state.json")).
 }
 
 // Main
