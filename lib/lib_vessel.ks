@@ -359,6 +359,33 @@ global function ves_get_resource
     }
     return false.
 }
+
+// Returns all drop tanks (decouplers tagged with dropTank.<n>) and their child tanks for monitoring
+global function ves_get_drop_tanks
+{
+    local dcList    to lex().
+    local tList     to lex().
+    
+    for t in ship:partsTaggedPattern("dropTank") 
+    {
+        local loopId to t:tag:split(".")[1]:toNumber.
+        
+        if t:typeName = "decoupler" 
+        {
+            if not dcList:hasKey(loopId)
+            {
+                set dcList[loopId] to list(t).
+            }
+            else
+            {
+                dcList[loopId]:add(t).
+            }
+
+            set tList[loopId] to t:children[0].
+        }
+    }
+    return list(dcList, tList).
+}
 //#endregion
 
 //#region -- Part Module Actions / Events

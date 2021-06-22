@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is "Mun",
-          tgtAlt is 500000,
+parameter tgtParam is "Minmus",
+          tgtAlt is -15000,
           altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").
@@ -19,15 +19,11 @@ local burnAt            to 0.
 local burnDur           to 0.
 local burnEta           to 0.
 local currentPhase      to 0.
-local degreesToTravel   to 0.
 local dvNeeded          to list().
 local halfDur           to 0.
 local mnv               to node(0, 0, 0, 0).
-local phaseRate         to 0.
 local tgtBodyAlt        to 0.
-local transferEta       to 0.
 local transferPhase     to 0.
-
 
 // Param validation
 if tgtParam:typeName = "list"
@@ -55,9 +51,6 @@ when ship:availableThrust <= 0.1 and throttle > 0 then
 }
 
 // Main
-//
-//lock  currentPhase to calc_simple_phase_angle(target).
-
 if hasNode and not ship:orbit:hasnextpatch remove nextNode.
 wait 1.
 if not hasNode
@@ -65,43 +58,31 @@ if not hasNode
     lock currentPhase to mod(360 + ksnav_phase_angle(), 360).
 
     // Calculate the ideal phase angle for transfer
-    set transferPhase to mod(nav_transfer_phase_angle(target, ship:apoapsis + ship:periapsis / 2) + 360, 360).
+    set transferPhase to nav_transfer_phase_angle(target, ship:orbit:semimajoraxis - ship:body:radius).
 
     disp_msg("Transfer angle to target: " + round(transferPhase, 2) + "   ").
-    // Calculate the time we should make the transfer at
-    // Sample the phase change per second
-    disp_info("Sampling phase change per second").
-    local p0 to currentPhase.
-    local ts to time:seconds + 5.
-    until time:seconds >= ts
-    {
-        disp_info2("Sample time remaining: " + round(ts - time:seconds)).
-    }
-    set phaseRate  to abs(abs(currentPhase) - abs(p0)) / 5.
-    disp_info2().
 
     // Calulate the transfer timestamp
-    set degreesToTravel to choose transferPhase - currentPhase if transferPhase <= currentPhase else currentPhase + (360 - transferPhase).
-    set transferEta     to abs(degreesToTravel / phaseRate).
-    set burnAt          to transferEta + time:seconds.
+    local angVelSt      to nav_ang_velocity(ship, target:body).
+    local angVelTgt     to nav_ang_velocity(target, target:body).
+    local angVelPhase   to angVelSt - angVelTgt.
+    set burnEta         to (currentPhase - transferPhase) / angVelPhase.
+    set burnAt          to choose burnEta + time:seconds if burnEta > 0 else burnEta + time:seconds + ship:orbit:period.
 
     print "Target           : " + target + "   " at (2, 23).
-    print "Degrees to travel: " + round(degreesToTravel, 5) at (2, 24).
-    print "Phase Rate       : " + round(phaseRate, 5) at (2, 25).
-    print "Time to transfer : " + round(transferEta) at (2, 26).
-    print "BurnAt           : " + round(burnAt) at (2, 27).
+    
+    print "Degrees to travel: " + round(mod((360 + currentPhase) - transferPhase, 360), 5) at (2, 24).
+    print "Time to transfer : " + round(burnEta) at (2, 25).
+    print "BurnAt           : " + round(burnAt) at (2, 26).
 
     disp_msg().
     disp_info().
 
     // Get the amount of dv needed to get to the target
-    //local dvNeeded to mnv_dv_hohmann(ship:altitude, tgtAlt, ship:body).
-    set degreesToTravel to choose transferPhase - currentPhase if transferPhase <= currentPhase else currentPhase + (360 - transferPhase).
-    set transferEta     to abs(degreesToTravel / phaseRate).
-    //set tgtBodyAlt to target:altitude.
     set tgtBodyAlt to target:altitude - ship:body:radius + altPadding.
     set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
-    disp_msg("dv0: " + round(dvNeeded[0], 2) + " | dv1: " + round(dvNeeded[1], 2)).
+    print "Transfer dV      : " + round(dvNeeded[0], 2) + "m/s     " at (2, 27).
+    print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 
     // Add the maneuver node
     set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, 1).

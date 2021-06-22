@@ -6,12 +6,30 @@ parameter ascentAlt is 25000,
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/kslib/lib_l_az_calc").
 
 // Variables
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 local launchPlanCache to dataDisk + "launchPlan.json".
 local launchQueue to queue().
+local engList to list().
+
+list engines in engList.
+for e in engList 
+{
+    if e:stage = stage:number e:activate.
+}
+
+for s in ship:modulesNamed("ModuleDeployableSolarPanel")
+{
+    ves_activate_solar(s, false).
+}
+
+when alt:radar > 100 then
+{
+    stage.
+}
 
 // Main
 if ship:status = "LANDED"
@@ -46,3 +64,8 @@ local launchPlan to lex(
 writeJson(launchPlan, launchPlanCache).
 
 runPath("0:/main/controller/launchController").
+
+for s in ship:modulesNamed("ModuleDeployableSolarPanel")
+{
+    ves_activate_solar(s, true).
+}

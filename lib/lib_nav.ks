@@ -21,8 +21,8 @@ global function nav_ang_velocity
               mnvBody is ship:body.
 
     if tgt:typename = "string" set tgt to nav_orbitable(tgt).
-    // local angVel to (360 / (2 * constant:pi)) * sqrt(tgt:body:mu / tgt:orbit:semiMajorAxis ^ 3).
-    local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
+    local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
+    //local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
     return angVel.
 }
 
@@ -113,16 +113,17 @@ global function nav_lng_phase_angle
     return mod(nav_lng_to_degrees(tgt:longitude) - nav_lng_to_degrees(ship:longitude) + 360, 360).
 }
 
-// Returns the proper phase angle to start a transfer burn
+// Returns the proper phase angle to start a transfer burn. from: https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm#calculatinganinterplanetaryhohmanntransfer
 global function nav_transfer_phase_angle
 {
     parameter tgt,
               stAlt.
     
     if tgt:typename = "string" set tgt to nav_orbitable(tgt).
-    local hohSMA to nav_sma(stAlt, tgt:altitude, ship:body).
-    //return 180 - (0.5 * nav_transfer_period(hohSMA, ship:body) * (nav_ang_velocity(tgt) * constant:radToDeg)).
-    return 2 * constant:radToDeg * (constant:pi - (nav_ang_velocity(tgt, ship:body) * nav_transfer_period(hohSMA, ship:body))).
+    local angVelTarget  to nav_ang_velocity(tgt, tgt:body).
+    local tSMA          to nav_sma(stAlt, tgt:altitude, tgt:body).
+    local tHoh          to nav_transfer_period(tSMA, tgt:body).
+    return 180 - 0.5 * (tHoh * angVelTarget).
 }
 //#endregion
 
@@ -202,7 +203,8 @@ global function nav_transfer_period
     parameter xfrSMA,
               tgtBody is ship:body.
 
-    return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
+    //return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
+    return 2 * constant:pi * sqrt(xfrSMA^3 / tgtBody:mu).
 }
 //#endregion
 

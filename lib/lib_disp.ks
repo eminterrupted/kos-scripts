@@ -233,6 +233,7 @@ global function disp_telemetry
         print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
         print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, 21).
         print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, 22).
+        print "Q                : " + round(ship:q, 7) + "     " at (0, 23).
     }
     else
     {
@@ -240,5 +241,6 @@ global function disp_telemetry
         print "                                               " at (0, 20).
         print "                                               " at (0, 21).
         print "                                               " at (0, 22).
+        print "                                               " at (0, 23).
     }
 }

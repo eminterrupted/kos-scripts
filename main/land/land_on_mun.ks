@@ -18,6 +18,7 @@ local tti           to 0.
 local lightList     to list().
 local panelList     to list().
 
+local hasDropTanks  to choose true if ves_get_drop_tanks()[0]:length > 0 else false.
 
 for p in ship:partsTaggedPattern("landingLight")
 {
