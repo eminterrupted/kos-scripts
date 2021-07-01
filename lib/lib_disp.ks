@@ -86,13 +86,14 @@ global function disp_format_timestamp
 global function disp_hud 
 {
     parameter str,
-              errLvl is 0.
+              errLvl is 0,
+              screenTime is 15.
 
     local color to green.
     if errLvl = 1 set color to yellow.
     if errLvl = 2 set color to red.
 
-    hudtext(str, 15, 2, 20, color, false).          
+    hudtext(str, screenTime, 2, 20, color, false).          
 }
 
 // Print a string to the info line
@@ -175,25 +176,27 @@ global function disp_mnv_score
 
     set line to 10.
     
-    print "NODE OPTIMIZATION"                   at (0, line).
-    print "-----------------"                   at (0, cr()).
-    print "TARGET BODY   : " + tgtBody          at (0, cr()).
-    print "TARGET VAL    : " + tgtVal           at (0, cr()).
-    print "RESULT VAL    : " + round(result, 5) at (0, cr()).
+    print "NODE OPTIMIZATION"               at (0, line).
+    print "-----------------"               at (0, cr()).
+    print "TARGET BODY   : " + tgtBody      at (0, cr()).
+    print "TARGET VAL    : " + tgtVal       at (0, cr()).
+    print "RESULT VAL    : " + result       at (0, cr()).
     cr().
-    print "SCORE         : " + round(score, 5)  at (0, cr()).
-    print "INTERCEPT     : " + intercept        at (0, cr()).
+    print "SCORE         : " + score        at (0, cr()).
+    print "INTERCEPT     : " + intercept    at (0, cr()).
 }
 
 // Simple orbital telemetry
 global function disp_orbit
 {
-    print "ORBIT" at (0, 10).
-    print "---------" at (0, 11).
-    print "BODY         : " + ship:body:name        + "       " at (0, 12).
-    print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, 13).
-    print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, 14).
-    print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, 15).
+    set line to 10.
+    
+    print "ORBIT" at (0, line).
+    print "---------" at (0, cr()).
+    print "BODY         : " + ship:body:name        + "       " at (0, cr()).
+    print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, cr()).
+    print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, cr()).
+    print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, cr()).
 }
 
 // Simple landing telemetry
@@ -204,16 +207,54 @@ global function disp_landing
 
     print "LANDING TELEMETRY" at (0, 10).
     print "-----------------" at (0, 11).
-    print "BODY          : " + ship:body:name   + "      " at (0, 12).
-    print "ALTITUDE      : " + round(ship:altitude)    + "m     " at (0, 13).
-    print "RADAR ALT     : " + round(alt:radar)        + "m     " at (0, 14).
-    print "SURFACE SPD   : " + round(ship:groundspeed, 2) + "m/s   " at (0, 15).
-    print "VERTICAL SPD  : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 16).
-    print "" at (0, 17).
-    print "TIME TO IMPACT: " + round(tti, 2)              + "s     " at (0, 18).
-    print "BURN DURATION : " + round(burnDur, 2)          + "s     " at (0, 19).
+    print "BODY           : " + ship:body:name   + "      " at (0, 12).
+    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, 13).
+    print "RADAR ALT      : " + round(alt:radar)        + "m     " at (0, 14).
+    print "SURFACE SPD    : " + round(ship:groundspeed, 2) + "m/s   " at (0, 15).
+    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 16).
+
+    print "TIME TO IMPACT:  " + round(tti, 2)              + "s     " at (0, 18).
+    print "BURN DURATION :  " + round(burnDur, 2)          + "s     " at (0, 19).
 }
 
+// Generic API for printing a telemetry section, takes a list of header strings / values
+global function disp_generic
+{
+    parameter dispList, stLine is 22.
+
+    set line to stLine.
+    
+    from { local idx is 0.} until idx >= dispList:length step { set idx to idx + 1.} do 
+    {
+        if idx = 0 
+        {
+            print dispList[idx] at (0, line).
+            print "--------------" at (0, cr()).
+            cr().
+        }
+        else
+        {
+            print dispList[idx]:toUpper at (0, line).
+            print ":     " at (16, line).
+            set idx to idx + 1.
+            print dispList[idx] at (18, line).
+            cr().
+        }
+    }
+}
+
+// Provides a readout of pid values and output against tgt val
+global function disp_pid_readout
+{
+    parameter pid, tgtVal is 0.
+
+     print "TGTVAL: " + round(tgtVal, 5) + "     " at (0, 25).
+     print "PIDOUT: " + round(pid:output, 2) + "     " at (0, 26).
+
+     print "P TERM: " + round(pid:pterm, 5) + "     " at (0, 28).
+     print "I TERM: " + round(pid:iterm, 5) + "     " at (0, 29).
+     print "D TERM: " + round(pid:dterm, 5) + "     " at (0, 30).
+}
 
 // General telemetry for flight
 global function disp_telemetry

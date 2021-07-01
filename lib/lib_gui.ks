@@ -9,7 +9,7 @@ global tabWidget_allPanels to list().
 
 //#region -- Widgets
 // Popup Menu
-global function add_popup_menu {
+global function gui_add_popup_menu {
 
     parameter pTabPanel,
               pOptions.
@@ -21,7 +21,7 @@ global function add_popup_menu {
 }
 
 // Scrollbox
-global function add_scrollbox {
+global function gui_add_scrollbox {
 
     parameter pTabWidget. // tab title
 
@@ -41,7 +41,7 @@ global function add_scrollbox {
 
 
 // Box Widgets
-global function add_tab {
+global function gui_add_tab {
 
     parameter pTabWidget,   // (the vbox)
               pTabName.     // tab title
@@ -82,7 +82,7 @@ global function add_tab {
 }
 
 
-global function add_tab_widget {
+global function gui_add_tab_widget {
     parameter pBox.
 
     // See if styles for the TabWidget components (tabs and gPanels) has
@@ -125,7 +125,7 @@ global function add_tab_widget {
 }
 
 
-global function choose_tab {
+global function gui_choose_tab {
     parameter pTabWidget,   //the tab
               pNum.         //tab to choose (0-indexed)
 
@@ -137,7 +137,7 @@ global function choose_tab {
 }
 
 
-global function get_launch_scripts {
+global function gui_get_launch_scripts {
         local fList to list().
         local scrList to list().
 
@@ -150,7 +150,7 @@ global function get_launch_scripts {
 }
 
 
-global function get_mission_scripts {
+global function gui_get_mission_scripts {
         local fList to list().
         local scrList to list().
 

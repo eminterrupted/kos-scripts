@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter ascentAlt is 25000, 
+parameter ascentAlt is 50000, 
           ascentInc is 0.
 
 runOncePath("0:/lib/lib_disp").
@@ -21,15 +21,7 @@ for e in engList
     if e:stage = stage:number e:activate.
 }
 
-for s in ship:modulesNamed("ModuleDeployableSolarPanel")
-{
-    ves_activate_solar(s, false).
-}
-
-when alt:radar > 100 then
-{
-    stage.
-}
+ves_activate_solar(ship:modulesNamed("ModuleDeployableSolarPanel"), false).
 
 // Main
 if ship:status = "LANDED"
@@ -63,9 +55,17 @@ local launchPlan to lex(
 ).
 writeJson(launchPlan, launchPlanCache).
 
-runPath("0:/main/controller/launchController").
-
-for s in ship:modulesNamed("ModuleDeployableSolarPanel")
+ship:deltaV:forcecalc.
+disp_hud("Forcing dV recalc for stage: " + stage:number).
+wait 2.5.
+if stage:number > 2 and stage:deltaV:current > 500
 {
-    ves_activate_solar(s, true).
+    when alt:radar > 50 then
+    {
+        stage.
+    }
 }
+
+runPath("0:/main/controller/launchController").
+deletePath(launchPlanCache).
+ves_activate_solar(ship:modulesNamed("ModuleDeployableSolarPanel"), true).

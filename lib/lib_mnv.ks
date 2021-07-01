@@ -7,6 +7,7 @@ runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_nav").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/kslib/lib_navball").
+runOncePath("0:/lib/lib_disp").
 //runOncePath("0:/kslib/lib_navigation").
 
 // Variables
@@ -618,7 +619,7 @@ local function mnv_eval_candidates
 }
 
 // Improves a maneuver node based on tgtVal and compMode
-local function mnv_improve_node 
+global function mnv_improve_node 
 {
     parameter data,
               tgtVal,
@@ -808,6 +809,7 @@ global function mnv_optimize_node_data
 }
 
 
+// Optimize a node list, obvi
 global function mnv_opt_result
 {
     parameter compMode, 
@@ -819,6 +821,9 @@ global function mnv_opt_result
     else if compMode = "tliInc" return testOrbit:inclination.
     else if compMode = "lan"    return testOrbit:longitudeOfAscendingNode.
     else if compMode = "argpe"  return testOrbit:argumentofperiapsis.
+    else if compMode = "impactPos" return addons:tr:impactPos.
+    else if compMode = "impactPosLat" return addons:tr:impactPos:lat.
+    else if compMode = "impactPosLng" return addons:tr:impactPos:lng.
 }
 
 
@@ -857,7 +862,16 @@ global function mnv_score
         if scoredOrbit:body = tgtBody
         {
             set result to mnv_opt_result(compMode, scoredOrbit).
-            set score to result / tgtVal.
+            if result:typeName = "GeoCoordinates" 
+            {
+                local latCheck to result:lat / tgtVal:lat.
+                local lngCheck to result:lng / tgtVal:lng.
+                set score to (latCheck + (3 * lngCheck)) / 4.
+            }
+            else 
+            {
+                set score to result / tgtVal.
+            }
             set intercept to true.
         }
         else if scoredOrbit:hasNextPatch

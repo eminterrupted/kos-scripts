@@ -19,13 +19,21 @@ local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 // local activeEng to list().
 // local curThr    to 0.
 local boosters      to list().
+local dropTanks     to list().
+
 local boostersDC    to lex().
 local boostersTank  to lex().
+local dropTanksDC   to lex().
+local dropTanksTank to lex().
+
+local hasBoosters   to false.
+local hasDropTanks  to false.
+
+local lesTower      to "".
+
 local curTwr        to 0.
 local endPitch      to 0.
 local finalAlt      to 0.
-local hasBoosters   to false.
-local lesTower      to "".
 local maxAcc        to 35.
 local maxQ          to 0.145.
 local maxTwr        to 2.
@@ -77,6 +85,14 @@ if ship:partsTaggedPattern("booster"):length > 0
     set boosters    to ves_get_boosters().
     set boostersDC  to boosters[0].
     set boostersTank to boosters[1].
+}
+
+if ship:partsTaggedPattern("dropTank"):length > 0
+{
+    set hasDropTanks    to true.
+    set dropTanks       to ves_get_drop_tanks().
+    set dropTanksDC     to dropTanks[0].
+    set dropTanksTank   to dropTanks[1].
 }
 
 // Fairing trigger
@@ -198,6 +214,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
+    if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     //print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
@@ -226,6 +243,7 @@ until ship:apoapsis >= tgtAp * 0.995
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
+    if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     //print "Boosters: " + hasBoosters at (2, 35).
 
     disp_telemetry().
@@ -243,6 +261,7 @@ until ship:apoapsis >= finalAlt
 
     // Booster update
     if hasBoosters set hasBoosters to update_booster().
+    if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     //print "Boosters: " + hasBoosters at (2, 35).
     
     disp_telemetry().
@@ -278,32 +297,9 @@ wait 2.5.
 clearScreen.
 //-- End Main --//
 
-// Local functions
-// local function pid_readout
-// {
-//     print "q     : " + round(ship:q, 5) + "     " at (0, 25).
-//     print "qVal  : " + round(qVal, 2) + "     " at (0, 26).
-
-//     print "curAcc: " + round(curAcc, 2) + "     " at (0, 28).
-//     print "aVal  : " + round(aVal, 2) + "     " at (0, 29).
-
-//     print "curTwr: " + round(curTwr, 2) + "     " at (0, 31).
-//     print "twrVal: " + round(twrVal, 2) + "     " at (0, 32).
-    
-//     print "tVal  : " + round(tVal, 2) + "     " at (0, 34). 
-
-//     print "twr P : " + round(twrPid:pterm, 5) + "     " at (0, 36).
-//     print "twr I : " + round(twrPid:iterm, 5) + "     " at (0, 37).
-//     print "twr D : " + round(twrPid:dterm, 5) + "     " at (0, 38).
-// }
-
 // Checks booster resources and stages when booster res falls below threshold
 local function update_booster
 {
-    // parameter boostersObj.
-
-    // set boostersDC to boostersObj[0].
-    // set boostersTank to boostersObj[1].
     if boostersDC:length > 0
     {
         local boosterId     to boostersDC:length - 1.
@@ -321,10 +317,10 @@ local function update_booster
                 }
             }
             ves_safe_stage("booster").
+            disp_info().
             accPid:reset.
             twrPid:reset.
             qPid:reset.
-            disp_info().
         }
         if boostersDC:length > 0 
         {

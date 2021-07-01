@@ -186,6 +186,54 @@ global function ves_stage_thrust
 }
 //#endregion
 
+//#region -- Boosters and Drop Tanks
+// Boosters
+
+
+// Drop tanks - checks the amount of fuel left in drop tanks and releases them when empty
+global function ves_update_droptank
+{
+    parameter dropTanks.
+
+    local dropTanksDC to dropTanks[0].
+    local dropTanksTank to dropTanks[1].
+
+    if dropTanksDC:keys:length > 0
+    {
+        local dropTankId to dropTanksDC:length - 1.
+        local dropTankRes to dropTanksTank[dropTankId]:resources[0].
+        
+        if dropTankRes:amount < 0.001
+        {
+            for dc in dropTanksDC[dropTankId]
+            {
+                local dcModule to choose "ModuleAnchoredDecoupler" if dc:hasModule("ModuleAnchoredDecoupler") else "ModuleDecouple".
+                if dc:children:length > 0 
+                {
+                    util_do_event(dc:getModule(dcModule), "decouple").
+                    disp_info("External Tank Loop ID[" + dropTankId + "] dropped").
+                    dropTanksDC:remove(dropTankId).
+                    dropTanksTank:remove(dropTankId).
+                }
+            }
+        }
+
+        if dropTanksDC:length > 0 
+        {
+            return true.
+        }
+        else 
+        {
+            return false.
+        }
+    }
+    else 
+    {
+        return false.
+    }
+}
+//#endregion
+
 //#region -- Mass
 // ToDo: Return fuel mass for a given stage
 global function ves_stage_fuel_mass

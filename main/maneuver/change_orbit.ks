@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 30000,
-          tgtAp is 30000,
+parameter tgtPe is 50000,
+          tgtAp is 50000,
           tgtArgPe is ship:orbit:argumentofperiapsis.
 
 clearScreen.

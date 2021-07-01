@@ -71,7 +71,7 @@ if not ship:orbit:hasnextpatch
     wait 1.
 
     // Optimize dV for free return
-    disp_msg("Optimizing for free return trajectory").
+    disp_msg("Optimizing reentry window").
     remove mnvNode.
     set mnvNode to mnv_opt_return_node(mnvNode, returnBody, returnAlt).
     add mnvNode.

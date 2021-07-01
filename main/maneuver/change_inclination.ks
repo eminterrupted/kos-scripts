@@ -50,49 +50,59 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
 }
 
 // Main
-disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + tgtInc).
+disp_info("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + tgtInc).
+disp_info2("Current LAN: " + round(ship:orbit:lan, 1) + " | Target LAN: " + tgtLAN).
 
-//Setup burn
-set burnData    to mnv_inc_match_burn(ship, targetObt).
-set mnvTime     to burnData[0].
-set burnMag     to burnData[3].
-set burnVec     to burnData[1].
-set mnvNode     to burnData[2].
-add mnvNode. 
-
-set burnDur     to mnv_staged_burn_dur(burnMag).
-set burnETA     to mnvTime - mnv_staged_burn_dur(burnMag / 2).
-disp_info("DeltaV remaining: " + round(burnMag, 1)).
-
-
-// Vecdraw
-if drawVec
+if util_check_range(ship:orbit:inclination, tgtInc - 1, tgtInc + 1) and util_check_range(ship:orbit:lan, tgtLAN - 2.5, tgtLAN + 2.5)
 {
-    local burnVDTail to positionAt(ship, mnvTime).
-    local burnVD     to vecDraw(
-        burnVDTail,
-        1000 * burnVec,
-        magenta,
-        "dV:" + round(burnMag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
-        1,
-        true,
-        0.1
-    ).
-    print burnVD.
-    // Keep the draw updating the start position until the burn is done.
-    set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
+    disp_msg("Orbit already within target error margin").
+    disp_hud("Orbit already within target error margin", 1, 5).
+}
+else
+{
+    disp_msg("Executing inclination change").
+    //Setup burn
+    set burnData    to mnv_inc_match_burn(ship, targetObt).
+    set mnvTime     to burnData[0].
+    set burnMag     to burnData[3].
+    set burnVec     to burnData[1].
+    set mnvNode     to burnData[2].
+    add mnvNode. 
+
+    set burnDur     to mnv_staged_burn_dur(burnMag).
+    set burnETA     to mnvTime - mnv_staged_burn_dur(burnMag / 2).
+    disp_info("DeltaV remaining: " + round(burnMag, 1)).
+
+
+    // Vecdraw
+    if drawVec
+    {
+        local burnVDTail to positionAt(ship, mnvTime).
+        local burnVD     to vecDraw(
+            burnVDTail,
+            1000 * burnVec,
+            magenta,
+            "dV:" + round(burnMag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
+            1,
+            true,
+            0.1
+        ).
+        print burnVD.
+        // Keep the draw updating the start position until the burn is done.
+        set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
+    }
+
+    set sVal to lookDirUp(burnVec, sun:position).
+    lock steering to sVal.
+
+    // Perform the maneuver
+    mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+    set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    lock steering to sVal.
+    remove mnvNode.
+    clearVecDraws().
 }
 
-// Set up the inclination check delegate
-set sVal to lookDirUp(burnVec, sun:position).
-lock steering to sVal.
-disp_info2("Waiting until vessel is settled").
-wait until ves_settled().
+disp_msg(scriptPath() + " completed").
+disp_info().
 disp_info2().
-
-// Perform the maneuver
-mnv_exec_node_burn(mnvNode, burnETA, burnDur).
-set sVal to lookDirUp(ship:prograde:vector, sun:position).
-lock steering to sVal.
-remove mnvNode.
-clearVecDraws().
