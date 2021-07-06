@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 50000,
-          tgtAp is 50000,
+parameter tgtPe is 25000,
+          tgtAp is 25000,
           tgtArgPe is ship:orbit:argumentofperiapsis.
 
 clearScreen.
@@ -44,7 +44,7 @@ local tgtVal_1 to 0.
 local xfrAp to choose tgtAp if tgtAp >= ship:apoapsis else ship:apoapsis.
 
 // Control locks
-local sVal          to lookDirUp(ship:prograde:vector, sun:position).
+local sVal          to lookDirUp(ship:facing:vector, sun:position).
 local tVal          to 0.
 lock  steering      to sVal.
 lock  throttle      to tVal.

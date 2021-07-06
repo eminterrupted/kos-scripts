@@ -33,52 +33,96 @@ local function cr
 }
 
 // Formats a timestamp into one of a few format strings
-global function disp_format_timestamp
+global function disp_format_time
 {
     parameter ts,
-              format is "t".
+              format is "ts".
+
+    set ts to abs(ts).
+    local tsMod to 0.
 
     local y  to 0.
     local d  to 0.
     local h  to 0.
     local m  to 0.
     local s  to 0.
+    local ms to 0.
     
-    local secPerDay  to kuniverse:hoursperday * 3600.
-    local secPerYear to kerbin:orbit:period.
+    local secsPerDay  to kuniverse:hoursperday * 3600.
+    local secsPerYear to kerbin:orbit:period.
 
-    if ts >= secPerYear
+    if ts >= secsPerYear
     {
-        set y to round(ts / secPerYear).
-        set ts to mod(ts, secPerYear).
+        set tsMod to mod(ts, secsPerYear).
+        set y to ts - tsMod.
+        set y to y / secsPerYear.
+        set ts to tsMod.
     }
-    if ts >= secPerDay
+    if ts >= secsPerDay
     {
-        set d to round(ts / secPerDay).
-        set ts to mod(ts, secPerDay).
+        set tsMod to mod(ts, secsPerDay).
+        set d to ts - tsMod.
+        set d to d / secsPerDay.
+        set ts to tsMod.
     }
     if ts >= 3600
     {
-        set h to round(ts / 3600).
-        set ts to mod(ts, 3600).
+        set tsMod to mod(ts, 3600).
+        set h to ts - tsMod.
+        set h to h / 3600.
+        set ts to tsMod.
     }
     if ts >= 60
     {
-        set m to round(ts / 60).
-        set ts to mod(ts, 60).
+        set tsMod to mod(ts, 60).
+        set m to ts - tsMod.
+        set m to m / 60.
+        set ts to tsMod.
     }
     if ts >= 1 
     {
-        set s to round(ts).
+        set tsMod to mod(ts, 1).
+        set s to ts - tsMod.
+        set ts to tsMod.
+    }
+    if ts > 0 
+    {
+        set ms to round(ts, 2).
     }
 
-    if format = "t"
+    if format = "ts"
     {
-        return "y" + y + " d" + d + " " + h + "h" + m + "m" + s + "s".
+        local tsY  to choose y  if y  >= 10 else choose "0" + y  if y  >= 0 else "00".
+        local tsD  to choose d  if d  >= 10 else choose "0" + d  if d  >= 0 else "00".
+        local tsH  to choose h  if h  >= 10 else choose "0" + h  if h  >= 0 else "00".
+        local tsM  to choose m  if m  >= 10 else choose "0" + m  if m  >= 0 else "00".
+        local tsS  to choose s  if s  >= 10 else choose "0" + s  if s  >= 0 else "00".
+        local tsMS to "00".
+        if ms > 0
+        {
+            set tsMS to choose ms if ms >= 10 else "0" + ms.
+            print "                   " at (2, 25).
+            print "tsMS: " + tsMS at (2, 25).
+            if tsMS:contains(".") set tsMS to tsMs:toString:split(".")[1].
+        }
+        
+        return tsY + "y, " + tsD + "d T" + tsH + ":" + tsM + ":" + tsS + "." + tsMS.
     }
-    else if format = "utc"
+    else if format = "dateTime"
     {
-        return "y" + (y + 1) + " d" + (d + 1) + " " + h + ":" + (m - 1) + ":" + s.
+        local dtY  to choose y  if y >= 1000 else choose "0" + y if y >= 100 else choose "00" + y if y >= 10 else "000" + y.
+        local dtD  to choose d  if d  >= 10 else choose "0" + d  if d  >= 0 else "00".
+        local dtH  to choose h  if h  >= 10 else choose "0" + h  if h  >= 0 else "00".
+        local dtM  to choose m  if m  >= 10 else choose "0" + m  if m  >= 0 else "00".
+        local dtS  to choose s  if s  >= 10 else choose "0" + s  if s  >= 0 else "00".
+        local dtMS to choose ms if ms >= .1 else choose "0" + ms if ms >= .01 else choose "00" + ms if ms >= .001 else choose "000" + ms if ms >= .0001 else choose "0000" + ms if ms >= .00001 else "00000".
+        if ms > 0 
+        {
+            if dtMS:typename = "Scalar" set dtMS to dtMS:toString.
+            if dtMS:contains(".") set dtMS to dtMS:toString:split(".")[1].
+        }
+        
+        return dtY + "-" + dtD + "T" + dtH + ":" + dtM + ":" + dtS + "." + dtMS.
     }
 }
 
@@ -159,11 +203,39 @@ global function disp_main
     set line to 1.
     if showTerminal disp_terminal().
 
-    print "Mission Controller v0.02b" at (0, line).
+    print "Mission Controller v2.0.1" at (0, line).
     print "=========================" at (0, cr()).
     print "MISSION : " + ship:name    at (0, 3).
     print "PLAN    : " + plan         at (0, 4).
 }
+
+// Mnv details
+global function disp_mnv_burn
+{
+    parameter burnEta, dvToGo is 0, burnDur is 0.
+
+    disp_msg("MNV DELTAV TO GO: " + round(dvToGo, 2)). 
+    if burnEta <= 0 
+    {
+        set burnEta to abs(burnEta).
+        if burnEta > 60
+        {
+            set burnEta to disp_format_time(burnEta, "datetime").
+        }
+        else
+        {
+            set burnEta to round(burnEta, 2).
+        }
+        disp_info("BURN ETA        : " + burnEta).
+        disp_info2("BURN DURATION   : " + round(burnDur, 2) + "s     ").
+    }
+    else
+    {
+        disp_info("BURN DURATION   : " + round(burnDur, 2) + "s     ").
+        disp_info2().
+    }
+}
+
 
 // Results of a maneuver optimization
 global function disp_mnv_score 
@@ -209,12 +281,13 @@ global function disp_landing
     print "-----------------" at (0, 11).
     print "BODY           : " + ship:body:name   + "      " at (0, 12).
     print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, 13).
-    print "RADAR ALT      : " + round(alt:radar)        + "m     " at (0, 14).
+    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, 14).
     print "SURFACE SPD    : " + round(ship:groundspeed, 2) + "m/s   " at (0, 15).
     print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 16).
 
-    print "TIME TO IMPACT:  " + round(tti, 2)              + "s     " at (0, 18).
-    print "BURN DURATION :  " + round(burnDur, 2)          + "s     " at (0, 19).
+    print "THROTTLE       : " + round(throttle * 100)            + "%  " at (0, 18).
+    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, 19).
+    print "BURN DURATION  : " + round(burnDur, 2)          + "s   " at (0, 20).
 }
 
 // Generic API for printing a telemetry section, takes a list of header strings / values
@@ -267,10 +340,10 @@ global function disp_telemetry
 
     print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, 16).
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, 17).
+    print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, 18).
 
-    if ship:altitude <= 85000
+    if body:atm:exists and ship:altitude <= 85000
     {
-        print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, 19).
         print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
         print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, 21).
         print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, 22).
@@ -278,8 +351,7 @@ global function disp_telemetry
     }
     else
     {
-        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 19).
-        print "                                               " at (0, 20).
+        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 20).
         print "                                               " at (0, 21).
         print "                                               " at (0, 22).
         print "                                               " at (0, 23).

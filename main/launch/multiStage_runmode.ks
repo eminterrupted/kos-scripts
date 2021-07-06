@@ -316,7 +316,7 @@ until runmode = -1
         else
         {
             set sVal to heading(l_az_calc(azCalcObj), 0, 0).
-            mnv_burn_disp(burnETA, dvToGo, burnDur).
+            disp_mnv_burn(burnETA, dvToGo, burnDur).
         }
     }
 
@@ -328,13 +328,13 @@ until runmode = -1
         {
             set sVal to heading(l_az_calc(azCalcObj), 0, 0).
             set tVal to 1.
-            mnv_burn_disp(burnETA, dvToGo, mecoTS - time:seconds).
+            disp_mnv_burn(burnETA, dvToGo, mecoTS - time:seconds).
         }
         else if dvToGo > 0.1
         {
             set sVal to heading(l_az_calc(azCalcObj), 0, 0).
             set tVal to dvToGo / 10.
-            mnv_burn_disp(burnETA, dvToGo, mecoTS - time:seconds).
+            disp_mnv_burn(burnETA, dvToGo, mecoTS - time:seconds).
         }
         else 
         {

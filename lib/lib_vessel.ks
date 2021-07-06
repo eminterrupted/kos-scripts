@@ -82,33 +82,6 @@ global function ves_active_thrust
     return curThrust.
 }
 
-// Returns any boosters via tag "boosters.[loopId]"
-global function ves_get_boosters
-{
-    local dcList    to lex().
-    local tList     to lex().
-    
-    for t in ship:partsTaggedPattern("booster") 
-    {
-        local loopId to t:tag:split(".")[1]:toNumber.
-        
-        if t:typeName = "decoupler" 
-        {
-            if not dcList:hasKey(loopId)
-            {
-                set dcList[loopId] to list(t).
-            }
-            else
-            {
-                dcList[loopId]:add(t).
-            }
-
-            set tList[loopId] to t:children[0].
-        }
-    }
-    return list(dcList, tList).
-}
-
 // Returns a list of engines that are in the currently activated stage
 global function ves_stage_engines
 {
@@ -188,20 +161,111 @@ global function ves_stage_thrust
 
 //#region -- Boosters and Drop Tanks
 // Boosters
+// Returns any boosters via tag "boosters.[loopId]"
+global function ves_get_boosters
+{
+    local dcLex   to lex().
+    local tankLex to lex().
+    
+    for t in ship:partsTaggedPattern("booster") 
+    {
+        local loopId to t:tag:split(".")[1]:toNumber.
+        
+        if t:typeName = "decoupler" 
+        {
+            if not dcLex:hasKey(loopId)
+            {
+                set dcLex[loopId] to list(t).
+            }
+            else
+            {
+                dcLex[loopId]:add(t).
+            }
 
+            set tankLex[loopId] to t:children[0].
+        }
+    }
+    return list(dcLex, tankLex).
+}
+
+// Checks booster resources and stages when booster res falls below threshold
+global function ves_update_booster
+{
+    parameter boosterObj. // Idx 0 is DCs, 1 is tanks
+
+    local boosterDC to boosterObj[0].
+    local boosterTanks to boosterObj[1].
+
+    if boosterDC:length > 0
+    {
+        local boosterId     to boosterDC:keys:length - 1.
+        local boosterRes    to choose boosterTanks[boosterId]:resources[1] if boosterTanks[boosterId]:name:matchesPattern("Size1p5.Tank.05") else boosterTanks[boosterId]:resources[0].
+        if boosterRes:amount < 0.001
+        {
+            for dc in boosterDC[boosterId]
+            {
+                if dc:children:length > 0 
+                {
+                    boosterDC:remove(boosterId).
+                    boosterTanks:remove(boosterId).
+                }
+            }
+            ves_safe_stage("booster").
+        }
+        if boosterDC:length > 0 
+        {
+            return true.
+        }
+        else 
+        {
+            return false.
+        }
+    }
+    else 
+    {
+        return false.
+    }
+}
+
+// Returns all drop tanks (decouplers tagged with dropTank.<n>) and their child tanks for monitoring
+global function ves_get_drop_tanks
+{
+    local dcList    to lex().
+    local tList     to lex().
+    
+    for t in ship:partsTaggedPattern("dropTank") 
+    {
+        local loopId to t:tag:split(".")[1]:toNumber.
+        
+        if t:typeName = "decoupler" 
+        {
+            if not dcList:hasKey(loopId)
+            {
+                set dcList[loopId] to list(t).
+            }
+            else
+            {
+                dcList[loopId]:add(t).
+            }
+
+            set tList[loopId] to t:children[0].
+        }
+    }
+    return list(dcList, tList).
+}
 
 // Drop tanks - checks the amount of fuel left in drop tanks and releases them when empty
 global function ves_update_droptank
 {
-    parameter dropTanks.
+    parameter dropTanksObj.
 
-    local dropTanksDC to dropTanks[0].
-    local dropTanksTank to dropTanks[1].
+    local dropTanksDC   to dropTanksObj[0].
+    local dropTanks     to dropTanksObj[1].
 
     if dropTanksDC:keys:length > 0
     {
         local dropTankId to dropTanksDC:length - 1.
-        local dropTankRes to dropTanksTank[dropTankId]:resources[0].
+        local dropTankRes to dropTanks[dropTankId]:resources[0].
         
         if dropTankRes:amount < 0.001
         {
@@ -211,9 +275,8 @@ global function ves_update_droptank
                 if dc:children:length > 0 
                 {
                     util_do_event(dc:getModule(dcModule), "decouple").
-                    disp_info("External Tank Loop ID[" + dropTankId + "] dropped").
                     dropTanksDC:remove(dropTankId).
-                    dropTanksTank:remove(dropTankId).
+                    dropTanks:remove(dropTankId).
                 }
             }
         }
@@ -368,7 +431,7 @@ global function ves_safe_stage
         {
             if e:hasModule("ModuleDeployableEngine") 
             {
-                disp_info2("Engine with ModuleDeployableEngine found").
+                disp_info2("ModuleDeployableEngine found, deploying...").
                 wait until e:thrust > 0.
                 break.
             }
@@ -406,33 +469,6 @@ global function ves_get_resource
         if r:name = resource return r.
     }
     return false.
-}
-
-// Returns all drop tanks (decouplers tagged with dropTank.<n>) and their child tanks for monitoring
-global function ves_get_drop_tanks
-{
-    local dcList    to lex().
-    local tList     to lex().
-    
-    for t in ship:partsTaggedPattern("dropTank") 
-    {
-        local loopId to t:tag:split(".")[1]:toNumber.
-        
-        if t:typeName = "decoupler" 
-        {
-            if not dcList:hasKey(loopId)
-            {
-                set dcList[loopId] to list(t).
-            }
-            else
-            {
-                dcList[loopId]:add(t).
-            }
-
-            set tList[loopId] to t:children[0].
-        }
-    }
-    return list(dcList, tList).
 }
 //#endregion
 
@@ -476,6 +512,37 @@ global function ves_antenna_range
     else if rangeMulti = "G" set commRange to commRange * 1000000000.
 
     return commRange.
+}
+
+// Sets up triggers to extend antennas when staged to the part's stage
+global function ves_antenna_stage_trigger
+{
+    parameter commList to ship:modulesNamed("ModuleRTAntenna").
+
+    local stagedCommsObj to lex().
+
+    for m in commList
+    {
+        if m:part:tag:contains("stageAntenna")
+        {
+            if not stagedCommsObj:hasKey(m:part:stage) 
+            {
+                set stagedCommsObj[m:part:stage] to list(m).
+            }
+            else
+            {
+                stagedCommsObj[m:part:stage]:add(m).
+            }
+        }
+    }
+
+    for stg in stagedCommsObj:keys
+    {
+        when stage:number = stg + 1 then
+        {
+            ves_activate_antenna(stagedCommsObj[stg], true).
+        }
+    }
 }
 
 // Returns the highest gain antenna on the vessel
@@ -741,5 +808,21 @@ global function ves_recharge_capacitor
     return true.
 }
 //#endregion
+
+//#region -- Launch Escape System
+// Jettison a given LES tower, ensuring the engine starts before decoupling.
+global function ves_jettison_les
+{
+    parameter lesTower.
+
+    lesTower:activate.
+    wait 0.01.
+    if not lesTower:flameout 
+    {
+        lesTower:getModule("ModuleDecouple"):doEvent("decouple").
+        return true.
+    }
+    else return false. 
+}
 
 //#endregion -- Part module actions / events

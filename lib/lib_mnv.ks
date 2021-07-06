@@ -425,7 +425,7 @@ global function mnv_exec_circ_burn
     {
         set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
         set sVal to heading(burnDir, 0, 0).
-        mnv_burn_disp(burnEta, dvRemaining, mecoTS - time:seconds).
+        disp_mnv_burn(burnEta, dvRemaining, mecoTS - time:seconds).
     }
 
     set tVal to 1.
@@ -434,7 +434,7 @@ global function mnv_exec_circ_burn
     {
         set burnDir to choose compass_for(ship, ship:prograde) if dv > 0 else compass_for(ship, ship:retrograde).
         set sVal to heading(burnDir, 0, 0).
-        mnv_burn_disp(burnEta, dvRemaining).
+        disp_mnv_burn(burnEta, dvRemaining).
     }
 
     set tVal to 0.
@@ -467,7 +467,7 @@ global function mnv_exec_vec_burn
     until time:seconds >= mnvETA
     {
         set sVal to mnvVec.
-        mnv_burn_disp(mnvETA, dvToGo, mecoTS - time:seconds).
+        disp_mnv_burn(mnvETA, dvToGo, mecoTS - time:seconds).
         wait 0.01.
     }
 
@@ -484,7 +484,7 @@ global function mnv_exec_vec_burn
         { 
             set tVal to max(0, min(1, dvToGo / 10)). 
         } 
-        mnv_burn_disp(mnvETA, dvToGo).
+        disp_mnv_burn(mnvETA, dvToGo).
         wait 0.01.
     }
     set tVal to 0.
@@ -510,14 +510,14 @@ global function mnv_exec_node_burn
     lock steering    to sVal.
     lock throttle    to tVal.
 
-    disp_info("Burn ETA : " + round(burnEta, 2) + "          ").
-    disp_info2("Burn duration: " + round(burnDur, 2) + "          ").
+    disp_info("Burn ETA        : " + round(burnEta, 2) + "          ").
+    disp_info2("Burn duration   : " + round(burnDur, 2) + "          ").
 
     util_warp_trigger(burnEta).
 
     until time:seconds >= burnEta
     {
-        mnv_burn_disp(time:seconds - burnEta, dvRemaining, burnDur).
+        disp_mnv_burn(time:seconds - burnEta, dvRemaining, burnDur).
         wait 0.01.
     }
 
@@ -539,7 +539,7 @@ global function mnv_exec_node_burn
         {
             set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
         }
-        mnv_burn_disp(time:seconds - burnEta, dvRemaining, mecoTS - time:seconds).
+        disp_mnv_burn(time:seconds - burnEta, dvRemaining, mecoTS - time:seconds).
         wait 0.01.
     }
 
@@ -548,33 +548,6 @@ global function mnv_exec_node_burn
     mnv_clr_disp().
     unlock steering.
     remove mnvNode.
-}
-//#endregion
-
-// -- Disp
-//#region
-global function mnv_burn_disp
-{
-    parameter burnEta, dvToGo is 0, burnDur is 0.
-
-    disp_msg("DeltaV Remaining: " + round(dvToGo, 2)). 
-    if burnEta <= 0 
-    {
-        disp_info("Burn ETA: " + round(burnEta, 2)).
-        disp_info2("Burn duration: " + round(burnDur, 2)).
-    }
-    else
-    {
-        disp_info("Burn duration: " + round(burnDur, 2)).
-        disp_info2().
-    }
-}
-
-local function mnv_clr_disp
-{
-    disp_msg().
-    disp_info().
-    disp_info2().
 }
 //#endregion
 
@@ -600,7 +573,7 @@ local function mnv_eval_candidates
             {
                 if candScore:score < curScore:score 
                 {
-                    set curScore to mnv_score(c, tgtVal, tgtBody, compMode).
+                    //set curScore to mnv_score(c, tgtVal, tgtBody, compMode).
                     set data to c.
                 }
             } 
@@ -608,7 +581,7 @@ local function mnv_eval_candidates
             {
                 if candScore:score > curScore:score 
                 {
-                    set curScore to mnv_score(c, tgtVal, tgtBody, compMode).
+                    //set curScore to mnv_score(c, tgtVal, tgtBody, compMode).
                     set data to c.
                 }
             }
@@ -617,6 +590,95 @@ local function mnv_eval_candidates
 
     return lex("data", data, "curScore", curScore).
 }
+
+
+// Returns a list of candidates given node data and addition factors
+global function mnv_get_candidates
+{
+    parameter data,
+              mnvFactor,
+              timeFactor to 1,
+              radialFactor to 1,
+              normalFactor to 1,
+              progradeFactor to 1.
+
+    local mnvCandidates to list(
+        list(data[0] + mnvFactor, data[1], data[2], data[3])  //Time
+        ,list(data[0] - mnvFactor, data[1], data[2], data[3]) //Time
+        ,list(data[0], data[1] + mnvFactor, data[2], data[3]) //Radial
+        ,list(data[0], data[1] - mnvFactor, data[2], data[3]) //Radial
+        ,list(data[0], data[1], data[2] + mnvFactor, data[3]) //Normal
+        ,list(data[0], data[1], data[2] - mnvFactor, data[3]) //Normal
+        ,list(data[0], data[1], data[2], data[3] + mnvFactor) //Prograde
+        ,list(data[0], data[1], data[2], data[3] - mnvFactor) //Prograde
+    ).
+    if progradeFactor = 0
+    {
+        mnvCandidates:remove(7).
+        mnvCandidates:remove(6).    
+    }
+    if normalFactor = 0
+    {
+        mnvCandidates:remove(5).
+        mnvCandidates:remove(4).
+    }
+    if radialFactor = 0
+    {
+        mnvCandidates:remove(3).
+        mnvCandidates:remove(2).
+    }
+    if timeFactor = 0
+    {
+        mnvCandidates:remove(1).
+        mnvCandidates:remove(0).
+    }
+
+    return mnvCandidates.
+}
+
+// Returns a maneuver factor for multiplication by the individual node component factors
+local function mnv_factor
+{
+    parameter score.
+              
+    local limHi to 1 + 0.005.
+    local limLo to 1 - 0.005.
+    local mnvFactor to 0.1.
+
+    // if      score >= -0.95 and score <= 1.05   set mnvFactor to (score * 0.1)   * mnvFactor.
+    // else if score >= -0.50 and score <= 1.50   set mnvFactor to score           * mnvFactor.
+    // else if score >= -100  and score <= 101    set mnvFactor to (score * 2)     * mnvFactor.
+    // else set mnvFactor to 250. 
+
+    if      (score > 0.975 * limLo) and (score < 1.025 * limHi) set mnvFactor to 0.050  * mnvFactor.
+    else if (score > 0.950 * limLo) and (score < 1.050 * limHi) set mnvFactor to 0.125  * mnvFactor.
+    else if (score > 0.925 * limLo) and (score < 0.750 * limHi) set mnvFactor to 0.375  * mnvFactor. 
+    else if (score > 0.850 * limLo) and (score < 1.150 * limHi) set mnvFactor to 0.500  * mnvFactor. 
+    else if (score > 0.750 * limLo) and (score < 1.250 * limHi) set mnvFactor to 0.750  * mnvFactor.
+    else if (score > 0.500 * limLo) and (score < 1.500 * limHi) set mnvFactor to 1      * mnvFactor.
+    else if (score > 0.000 * limLo) and (score < 2.0   * limHi) set mnvFactor to 2      * mnvFactor.
+    else if (score > -2.5  * limLo) and (score < 3.5   * limHi) set mnvFactor to 4      * mnvFactor. 
+    else if (score > -10.0 * limLo) and (score < 11.0  * limHi) set mnvFactor to 8      * mnvFactor.
+    else if (score > -25.0 * limLo) and (score < 26.0  * limHi) set mnvFactor to 16     * mnvFactor.
+    else if (score > -50.0 * limLo) and (score < 51.0  * limHi) set mnvFactor to 32     * mnvFactor.
+    else if (score > -75.0 * limLo) and (score < 76.0  * limHi) set mnvFactor to 64     * mnvFactor.
+    else if (score > -100  * limLo) and (score < 101   * limHi) set mnvFactor to 128    * mnvFactor.
+    else set mnvFactor to 256 * mnvFactor.
+
+    // if      score > 0.95 * limLo and score < 1.05 * limHi set mnvFactor to 0.050.
+    // else if score > 0.85 * limLo and score < 1.15 * limHi set mnvFactor to 0.250. 
+    // else if score > 0.75  * limLo and score < 1.25  * limHi set mnvFactor to 0.500. 
+    // else if score > 0 * limLo and score < 1.5  * limHi set mnvFactor to 1.
+    // else if score > -2.50  * limLo and score < 2.5   * limHi set mnvFactor to 2.
+    // else if score > -5.00  * limLo and score < 6     * limHi set mnvFactor to 3.5.
+    // else if score > -10.0  * limLo and score < 11    * limHi set mnvFactor to 5.
+    // else if score > -25.0  *  limLo and score < 26    * limHi set mnvFactor to 7.5.
+    // else if score > -2500  * limLo and score < 2501  * limHi set mnvFactor to 20.
+    // else set mnvFactor to 50.
+
+    return mnvFactor.
+}
+
 
 // Improves a maneuver node based on tgtVal and compMode
 global function mnv_improve_node 
@@ -627,63 +689,26 @@ global function mnv_improve_node
               compMode,
               changeModes.
 
-    local limLo to 1 - 0.0075.
-    local limHi to 1 + 0.0075.
-
+    
     //hill climb to find the best time
     local curScore is mnv_score(data, tgtVal, tgtBody, compMode).
 
     // mnvCandidates placeholder
-    local mnvCandidates is list().
+    local bestCandidate  to list().
+    local mnvCandidates  to list().
+    local timeFactor     to changeModes[0].
+    local radialFactor   to changeModes[1].
+    local normalFactor   to changeModes[2].
+    local progradeFactor to changeModes[3].
 
     // Base maneuver factor - the amount of dV that is used for hill
     // climb iterations
-    local mnvFactor is 1.
+    local mnvFactor is mnv_factor(curScore["score"]).
 
-    if curScore:score > (limLo * 0.975) and curScore:score < (limHi * 1.025)        set mnvFactor to 0.05   * mnvFactor.
-    else if curScore:score > (limLo * 0.925) and curScore:score < (limHi * 1.075)   set mnvFactor to 0.125  * mnvFactor. 
-    else if curScore:score > (limLo * 0.85) and curScore:score < (limHi * 1.15)     set mnvFactor to 0.25   * mnvFactor. 
-    else if curScore:score > (limLo * 0.75) and curScore:score < (limHi * 1.25)     set mnvFactor to 0.50   * mnvFactor.
-    else if curScore:score > (limLo * 0.65) and curScore:score < (limHi * 1.35)     set mnvFactor to 0.75   * mnvFactor.
-    else if curScore:score > 0.5 * limLo and curScore:score < limHi * 1.5               set mnvFactor to 1      * mnvFactor.
-    else if curScore:score > -10 * limLo and curScore:score < limHi * 11            set mnvFactor to 2      * mnvFactor. 
-    else                                                                            set mnvFactor to 5      * mnvFactor.
-    
     disp_info("Optimizing node.").
 
-    set mnvCandidates to list(
-        list(data[0] + mnvFactor, data[1], data[2], data[3])  //Time
-        ,list(data[0] - mnvFactor, data[1], data[2], data[3]) //Time
-        ,list(data[0], data[1] + mnvFactor, data[2], data[3]) //Radial
-        ,list(data[0], data[1] - mnvFactor, data[2], data[3]) //Radial
-        ,list(data[0], data[1], data[2] + mnvFactor, data[3]) //Normal
-        ,list(data[0], data[1], data[2] - mnvFactor, data[3]) //Normal
-        ,list(data[0], data[1], data[2], data[3] + mnvFactor) //Prograde
-        ,list(data[0], data[1], data[2], data[3] - mnvFactor) //Prograde
-    ).
-    if changeModes[3] = "0"
-    {
-        mnvCandidates:remove(7).
-        mnvCandidates:remove(6).    
-    }
-    if changeModes[2] = "0"
-    {
-        mnvCandidates:remove(5).
-        mnvCandidates:remove(4).
-    }
-    if changeModes[1] = "0"
-    {
-        mnvCandidates:remove(3).
-        mnvCandidates:remove(2).
-    }
-    if changeModes[0] = "0"
-    {
-        mnvCandidates:remove(1).
-        mnvCandidates:remove(0).
-    }
-
-
-    local bestCandidate to mnv_eval_candidates(data, mnvCandidates, tgtVal, tgtBody, compMode).
+    set mnvCandidates to mnv_get_candidates(data, mnvFactor, timeFactor, radialFactor, normalFactor, progradeFactor).
+    set bestCandidate to mnv_eval_candidates(data, mnvCandidates, tgtVal, tgtBody, compMode).
     return bestCandidate.
 }
 
@@ -694,10 +719,53 @@ global function mnv_opt_return_node
               returnAlt.
 
     local data  to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).
-    set data    to mnv_optimize_node_data(data, returnAlt, returnBody, "pe", "1001").
+    set data    to mnv_optimize_node_data(data, returnAlt, returnBody, "pe", "1101").
     return node(data[0], data[1], data[2], data[3]).
 }
 
+//#region -- Transfer Nodes
+// Optimizes a transfer node to another vessel using position prediction and hill climbing.
+global function mnv_opt_object_transfer_node
+{
+    parameter mnvNode,
+              tgtVAng is 0.25.
+
+    local bestCandidate to list().
+    local candidates    to list().
+    local data          to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).
+
+    local nodeScore     to mnv_score(data, tgtVAng, target:body, "rendezvousAng").
+    local curScore      to nodeScore["score"].
+    local intercept     to nodeScore["intercept"].
+    local mnvFactor     to mnv_factor(curScore).
+
+    until allNodes:length = 0
+    {
+        remove nextNode.
+    }
+    
+    // Make sure we will be in the same SOI
+    if not intercept 
+    {
+        set data to mnv_optimize_node_data(data, (target:orbit:semiMajorAxis - target:body:radius) * 2, target:body, "pe").
+    }
+    
+    // Hill climb - eval candidates until within acceptable range
+    until curScore >= 0.995 and curScore <= 1.005
+    {
+        set mnvFactor  to mnv_factor(curScore).
+        set candidates to mnv_get_candidates(data, mnvFactor, 10, 0, 0, 0).
+        set bestCandidate to mnv_eval_candidates(data, candidates, tgtVAng, target:body, "rendezvousAng").
+        set data to bestCandidate["data"].
+
+        set curScore to bestCandidate["curScore"]["score"].
+    }
+
+    set mnvNode to node(data[0], data[1], data[2], data[3]).
+    return mnvNode.
+}
+
+// Optimizes a standard transfer node to another celestial body (not ships!)
 global function mnv_opt_transfer_node
 {
     parameter mnvNode,
@@ -762,9 +830,12 @@ global function mnv_opt_transfer_node
         }
         set optimizedData to data.
     }
+    disp_msg().
     set optimizedData to mnv_optimize_node_data(optimizedData, tgtAlt, tgtBody, "pe").
     return node(optimizedData[0], optimizedData[1], optimizedData[2], optimizedData[3]).
 }
+//#endregion
+
 
 // Optimize a node list, obvi
 global function mnv_optimize_node_data
@@ -773,7 +844,7 @@ global function mnv_optimize_node_data
               tgtVal,
               tgtBody,
               compMode,
-              changeModes is "1111".
+              changeModes is list(10, 1, 1, 1).
 
     disp_info("Optimizing node.").
 
@@ -784,23 +855,27 @@ global function mnv_optimize_node_data
     local limHi         to 1 + 0.005.
     local nodeScore     to 0.
 
-    until iteration >= 5
+    until iteration >= 10
     {
         set lastScore to mnv_score(data, tgtVal, tgtBody, compMode):score.
         set improvedData to mnv_improve_node(data, tgtVal, tgtBody, compMode, changeModes).
         set data to improvedData["data"].
         set nodeScore to improvedData["curScore"]:score.
-        wait 0.01.
         if nodeScore >= limLo and nodeScore <= limHi 
         {
             break.
         }
-        else if round(nodeScore, 8) = round(lastScore, 8)
+        else if round(nodeScore, 12) = round(lastScore, 12)
         {
             print "Same score iteration: " + iteration at (2, 35).
             set iteration to iteration + 1.
+            if iteration = 10 disp_info2("Reached same score iteration limit: " + iteration).
         }
-        wait 0.01.
+        else 
+        {
+            set iteration to 0.
+            print "Same score iteration: 0 " at (2, 35).
+        }
     }
     print "                        " at (2, 25).
     disp_info("Optimized maneuver found (score: " + round(nodeScore, 5) + ")").
@@ -824,6 +899,13 @@ global function mnv_opt_result
     else if compMode = "impactPos" return addons:tr:impactPos.
     else if compMode = "impactPosLat" return addons:tr:impactPos:lat.
     else if compMode = "impactPosLng" return addons:tr:impactPos:lng.
+    else if compMode = "rendezvousAng"
+    {
+        local rendezvousTime to nextNode:time + (nextNode:orbit:period / 2).
+        local targetVelocity to velocityAt(target, rendezvousTime).
+        local myVelocity     to velocityAt(ship, rendezvousTime).
+        return vang(targetVelocity:orbit, myVelocity:orbit).
+    }
 }
 
 
@@ -835,8 +917,6 @@ global function mnv_opt_simple_node
               tgtBody is ship:body.
 
 
-    print "tgtVal: " + tgtVal at (2, 25).
-    print "compMode: " + compMode at (2, 26).
     local data to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).
     set data to mnv_optimize_node_data(data, tgtVal, tgtBody, compMode).
     return node(data[0], data[1], data[2], data[3]).
@@ -868,7 +948,7 @@ global function mnv_score
                 local lngCheck to result:lng / tgtVal:lng.
                 set score to (latCheck + (3 * lngCheck)) / 4.
             }
-            else 
+            else
             {
                 set score to result / tgtVal.
             }
@@ -887,5 +967,14 @@ global function mnv_score
     remove mnvTest.
 
     return lex("score", score, "result", result, "intercept", intercept).
+}
+//#endregion
+
+//#region -- Local functions
+local function mnv_clr_disp
+{
+    disp_msg().
+    disp_info().
+    disp_info2().
 }
 //#endregion

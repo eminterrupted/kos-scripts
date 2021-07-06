@@ -19,10 +19,11 @@ disp_msg("Calculating circ burn data").
 local tgtAp         to launchPlan:tgtAp.
 local tgtPe         to launchPlan:tgtPe.
 local mnvTime       to time:seconds + eta:apoapsis.
+local panelList     to list().
 
 // Control
 local rVal          to launchPlan:tgtRoll.
-local sVal          to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+local sVal          to lookDirUp(ship:facing:vector, sun:position) + r(0, 0, rVal).
 local tVal          to 0.
 lock steering       to sVal.
 lock throttle       to tVal.
@@ -35,10 +36,39 @@ local burnDur       to burnTime[1].
 local mnvNode       to node(mnvTime, 0, 0, dv).
 set mnvNode to mnv_opt_simple_node(mnvNode, tgtPe, "pe").
 add mnvNode.
-    
-disp_msg().
-disp_msg("dv needed: " + round(dv, 2)).
-disp_info("Burn duration: " + round(burnDur, 1)).
+
+disp_msg("Getting burn data").
+disp_info("dv needed: " + round(dv, 2)).
+disp_info2("Burn duration: " + round(burnDur, 1)).
+
+for m in ship:modulesNamed("ModuleDeployableSolarPanel") 
+{
+    if m:part = "" panelList:add(m).
+}
+
+disp_msg("Measuring EC Drain rate").
+disp_info().
+disp_info2().
+local ec to ship:electricCharge.
+wait 2.5.
+local ecRate to (ec - ship:electricCharge) / 2.5.
+local ecSecs to ship:electricCharge / ecRate.
+local span to burnETA + 60 - time:seconds.
+
+disp_msg("EC drain rate calculations").
+disp_info("ecSecsRemaining : " + round(ecSecs, 2) + "s     ").
+disp_info2("timeToManeuver  : " + round(span, 2) + "s     ").
+wait 0.25.
+
+if span >= ecSecs
+{
+    disp_msg("EC drain rate warning! Mode: SolarPanelDeploy").
+    ves_activate_solar(panelList, true).
+    disp_hud("EC drain rate warning! Not enough EC until circularization", 1).
+    disp_hud("Panels deployed").
+    disp_info("Panels deployed").
+}
+wait 1.
 
 when ship:maxThrust <= 0.1 and throttle > 0 then 
 {

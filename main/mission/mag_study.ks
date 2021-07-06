@@ -7,8 +7,7 @@ runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_util").
 
 local sciList to sci_modules().
-local rVal to 0.
-local sVal to ship:prograde + r(0, 0, rVal).
+local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
 ag10 off.

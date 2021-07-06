@@ -49,7 +49,7 @@ util_warp_trigger(burnETA - 30).
 until time:seconds >= burnETA
 {
     set sVal to heading(l_az_calc(azCalcObj), 0, 0).
-    mnv_burn_disp(burnETA, 0, burnDur).
+    disp_mnv_burn(burnETA, 0, burnDur).
     disp_telemetry().
 }
 
@@ -58,7 +58,7 @@ disp_msg("Executing burn").
 until time:seconds >= mecoTS
 {
     set sVal to heading(l_az_calc(azCalcObj), 0, 0).
-    mnv_burn_disp(burnETA, 0, mecoTS - time:seconds).
+    disp_mnv_burn(burnETA, 0, mecoTS - time:seconds).
     disp_telemetry().
 }
 set tVal to 0.

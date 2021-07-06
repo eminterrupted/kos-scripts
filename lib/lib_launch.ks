@@ -14,6 +14,8 @@ global function launch_ang_for_alt
               startAlt,
               endPitch.
     
+    local pitchLim to 4.
+
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
 
@@ -21,7 +23,7 @@ global function launch_ang_for_alt
     local pgPitch   to 90 - vang(ship:up:vector, pg).
 
     // Calculate the effective pitch with a 5 degree limiter
-    local effPitch  to max(pgPitch - 5, min(pitch, pgPitch + 5)).
+    local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
     return effPitch.
 }.
 //#endregion

@@ -2,8 +2,8 @@
 clearScreen.
 
 parameter tgtParam is target,
-          tgtAlt is 1000,
-          altPadding to 0.
+          tgtAlt is target:orbit:semiMajorAxis - target:body:radius,
+          altPadding to 100.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -69,7 +69,11 @@ local angVelSt      to nav_ang_velocity(ship, target:body).
 local angVelTgt     to nav_ang_velocity(target, target:body).
 local angVelPhase   to angVelSt - angVelTgt.
 set burnEta         to (currentPhase - transferPhase) / angVelPhase.
-set burnAt          to choose burnEta + time:seconds if burnEta > 0 else burnEta + time:seconds + ship:orbit:period.
+until burnEta > 300
+{
+    set burnEta to burnEta + ship:orbit:period.
+}
+set burnAt          to burnEta + time:seconds.
 
 print "Target           : " + target + "   " at (2, 23).
 
@@ -81,13 +85,14 @@ disp_msg().
 disp_info().
 
 // Get the amount of dv needed to get to the target
-set tgtBodyAlt to target:altitude - ship:body:radius + altPadding.
-set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
+set tgtBodyAlt  to target:altitude - ship:body:radius + altPadding.
+set dvNeeded    to mnv_dv_hohmann(ship:orbit:semimajoraxis - ship:body:radius, tgtAlt).
+//set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
 print "Transfer dV      : " + round(dvNeeded[0], 2) + "m/s     " at (2, 27).
 print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 
 // Add the maneuver node
-set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, 1).
+set mnv to mnv_opt_object_transfer_node(node(burnAt, 0, 0, dvNeeded[0])).
 add mnv.
 
 set burnAt  to mnv:time.

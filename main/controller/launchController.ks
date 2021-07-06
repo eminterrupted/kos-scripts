@@ -3,6 +3,7 @@
 //#include "0:/boot/bootLoader.ks"
 
 runOncePath("0:/lib/lib_launch").
+local circPath      to choose path("0:/main/launch/circ_burn_node") if career():canMakeNodes else path("0:/main/launch/circ_burn_simple").
 local launchCache   to dataDisk + "launchPlan.json".
 local launchPlan    to readJson(launchCache).
 local launchQueue   to launchPlan:queue.
@@ -28,12 +29,13 @@ until launchQueue:length = 0
         }
         ag10 off.
 
+        download(circPath).
         runPath("0:/main/launch/" + launchQueue:pop(), launchPlan).
         writeJson(launchPlan, launchCache).
     }
-    else
+    else 
     {
-        local curScript to "0:/main/launch/" + launchQueue:pop().
+        local curScript to choose path("local:/" + launchQueue:pop()) if exists(path("local:/" + launchQueue:peek())) else path("0:/main/launch/" + launchQueue:pop()).
         runPath(curScript, launchPlan).
         writeJson(launchPlan, launchCache).
     }

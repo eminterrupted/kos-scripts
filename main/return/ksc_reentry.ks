@@ -88,7 +88,7 @@ if testPatch:periapsis > Kerbin:atm:height
 
 local startAlt to kerbin:atm:height + 17500.
 disp_msg("Waiting until altitude <= " + startAlt).
-//util_warp_altitude(startAlt).
+util_warp_altitude(startAlt).
 until ship:altitude <= startAlt
 {
     set sVal to lookDirUp(ship:retrograde:vector, sun:position).
@@ -104,7 +104,8 @@ for c in parachutes
 }
 
 disp_msg("Waiting until staging altitude").
-until ship:altitude <= Kerbin:atm:height + 10000
+local tgtAlt to Kerbin:atm:height + 10000.
+until ship:altitude <= tgtAlt
 {
     set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 90, 0).
     disp_telemetry().
@@ -114,7 +115,6 @@ wait until kuniverse:timewarp:issettled.
 
 disp_msg("Staging").
 //set sVal to ship:prograde:vector + r(0, -90, 0).
-wait 5.
 until stage:number = 1 
 {
     stage.
@@ -129,7 +129,7 @@ until ship:altitude <= body:atm:height
 }
 disp_msg("Reentry interface").
 
-until ship:groundspeed <= 1000
+until ship:groundspeed <= 1500
 {
     set sVal to ship:retrograde.
     disp_telemetry().

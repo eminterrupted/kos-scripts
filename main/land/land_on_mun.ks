@@ -9,10 +9,12 @@ runOncePath("0:/lib/lib_util").
 
 disp_main(scriptPath()).
 
+local adjBurnDur    to 0.
+local adjBurnDurFactor to 0.10.
 local burnDur       to 0.
 local tgtDescentSpd to -2.5.
 local tgtHSpd       to 50.
-local tgtRadarAlt   to 25.
+local tgtRadarAlt   to 15.
 local tti           to 0.
 
 local hasDropTanks  to false.
@@ -22,6 +24,14 @@ local groundAntenna to list().
 local groundLights  to list().
 local groundPanels  to list().
 local landingLights to list().
+
+local shipBounds    to ship:bounds.
+
+local ttiPid    to pidLoop(0.5, 0.001, 0.01, 0, 1).
+local vsPid     to pidLoop(0.5, 0.001, 0.01, 0, 1).
+
+local tVal to 0.
+local tValLim to 0.
 
 if ship:partsTaggedPattern("dropTank"):length > 0
 {
@@ -49,10 +59,7 @@ for p in ship:partsTaggedPattern("landingLight")
     landingLights:add(p:getModule("ModuleLight")).
 }
 
-local ttiPid    to pidLoop(0.5, 0.001, 0.01, 0, 1).
-local vsPid     to pidLoop(0.5, 0.001, 0.01, 0, 1).
-
-local tVal to 0.
+lock altRadarOverride to shipBounds:bottomAltRadar.
 lock throttle to tVal.
 lock steering to lookDirUp(ship:retrograde:vector, sun:position).
 
@@ -79,6 +86,7 @@ ag10 off.
 until ship:groundspeed <= tgtHSpd or ag10
 {
     disp_orbit().
+    
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     if ag10 break.
 }
@@ -114,28 +122,31 @@ if stage:number > 0
 
 lock steering to lookDirUp(land_srfretro_or_up():vector, sun:position). 
 disp_info("Unpowered descent to 5000m altitude").
-until alt:radar <= 5000 or tti < burnDur
+until altRadarOverride <= 5000 or tti < adjBurnDur
 {
     vsPid:update(time:seconds, ship:verticalspeed).
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
+    set tti to land_time_to_impact(ship:verticalspeed, altRadarOverride).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+    set adjBurnDur to burnDur - (burnDur * adjBurnDurFactor).
+    
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }
 
-set vsPid:setpoint to -25.
+set vsPid:setpoint to -50.
 disp_info("Unpowered descent to burn altitude").
-until tti < burnDur 
+until tti < adjBurnDur
 {
-    //set tVal to vsPid:update(time:seconds, ship:verticalspeed).
     vsPid:update(time:seconds, ship:verticalspeed).
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
+    set tti to land_time_to_impact(ship:verticalspeed, altRadarOverride).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+    set adjBurnDur to burnDur - (burnDur * adjBurnDurFactor).
+    
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }
 
-when alt:radar <= 250 then 
+when altRadarOverride <= 250 then 
 {
     disp_info("Extending landing legs").
     gear on.
@@ -145,21 +156,26 @@ when alt:radar <= 250 then
 disp_info("Powered descent, slowing to -10m/s Vertical Speed").
 set tVal to 1.
 set ttiPid:setpoint to 1.
-until alt:radar <= 50
+until altRadarOverride <= 50
 {
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
+    set tVal to max(tValLim, ttiPid:update(time:seconds, (tti - adjBurnDur))).
+    
+    set tti to land_time_to_impact(ship:verticalspeed, altRadarOverride).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
-    set tVal to ttiPid:update(time:seconds, (tti - burnDur)).
+    set adjBurnDur to burnDur - (burnDur * adjBurnDurFactor).
+        
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }
 
 set vsPid:setpoint to tgtDescentSpd.
-until alt:radar <= tgtRadarAlt
+until altRadarOverride <= tgtRadarAlt
 {
-    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
-    set tti to land_time_to_impact(ship:verticalspeed, alt:radar).
+    set tVal to max(tValLim, vsPid:update(time:seconds, ship:verticalspeed)).
+    
+    set tti to land_time_to_impact(ship:verticalspeed, altRadarOverride).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+        
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }
@@ -169,9 +185,11 @@ set vsPid:setpoint to tgtDescentSpd / 2.
 lock steering to lookDirUp(up:vector, sun:position).
 until ship:status = "LANDED"
 {
-    set tVal to vsPid:update(time:seconds, ship:verticalspeed).
+    set tVal to max(tValLim, vsPid:update(time:seconds, ship:verticalspeed)).
+    
     set tti to land_time_to_impact(time:seconds, alt:radar).
     set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+        
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }

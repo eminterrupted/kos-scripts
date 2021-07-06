@@ -84,10 +84,11 @@ if not ship:orbit:hasnextpatch
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
 disp_hud("Press 0 to warp to next SOI").
-util_warp_trigger(ship:orbit:nextpatcheta).
+util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
 
 until ship:orbit:body:name = "Kerbin"
 {
+    disp_info("Time to SOI change: " + disp_format_time(round(ship:orbit:nextpatcheta), "ts")).
     disp_orbit().
     wait 0.01.
 }

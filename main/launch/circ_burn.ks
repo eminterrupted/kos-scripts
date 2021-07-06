@@ -56,7 +56,7 @@ util_warp_trigger(burnETA).
 until time:seconds >= burnETA
 {
     set sVal to heading(l_az_calc(azCalcObj), 0, rVal).
-    mnv_burn_disp(burnETA, dvToGo, burnDur).
+    disp_mnv_burn(burnETA, dvToGo, burnDur).
 }
 
 set tVal to 1.
@@ -64,14 +64,14 @@ disp_msg("Executing burn").
 until dvToGo <= 10
 {
     set sVal to heading(l_az_calc(azCalcObj), 0, rVal).
-    mnv_burn_disp(burnETA, dvToGo, mecoTS - time:seconds).
+    disp_mnv_burn(burnETA, dvToGo, mecoTS - time:seconds).
 }
 
 until dvToGo <= 0.1
 {
     set sVal to heading(l_az_calc(azCalcObj), 0, rVal).
     set tVal to dvToGo / 10.
-    mnv_burn_disp(burnETA, dvToGo, mecoTS - time:seconds).
+    disp_mnv_burn(burnETA, dvToGo, mecoTS - time:seconds).
 }
 set tVal to 0.
 

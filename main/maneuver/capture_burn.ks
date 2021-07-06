@@ -17,6 +17,8 @@ disp_main(scriptPath():name).
 // Variables
 local mnvNode   to node(0, 0, 0, 0).
 
+if hasNode remove nextNode.
+
 // Setup taging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
 {

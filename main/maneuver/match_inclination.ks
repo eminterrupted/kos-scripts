@@ -1,6 +1,6 @@
 @lazyGlobal off.
 
-parameter tgt is "Minmus".
+parameter tgt is "".
 
 clearscreen.
 clearVecDraws().
@@ -13,14 +13,15 @@ runOncePath("0:/lib/lib_vessel").
 
 if not hasTarget 
 {
-    if tgt:typename = "list" 
+    if tgt:typename = "list"
     {
         set tgt to tgt[0].
     }
-    else if tgt:typename = "string"
+    else if tgt:typename = "string" and tgt <> ""
     {
         set tgt to nav_orbitable(tgt).
     }
+    else set tgt to nav_orbitable("Minmus").
     set target to tgt.
 }
 else

@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
 parameter tgtInc is 60,
-          tgtLAN is ship:orbit:lan.
+          tgtLAN is 0.
 
 clearscreen.
 clearVecDraws().

@@ -1,38 +1,24 @@
 @lazyGlobal off.
 clearScreen.
 
+parameter p0.
+
+runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 
-local groundAntenna to list().
-local groundLights to list().
-local groundPanels to list().
-local landingLights to list().
+clearScreen.
+//disp_main(scriptPath()).
 
-for p in ship:partsTaggedPattern("groundAntenna")
+print "Inputted timestamp: " + p0.
+print "Formatted time (t)        : " at (0, 2). 
+print "Formatted time (datetime) : " at (0, 3).
+
+local ts to time:seconds - p0.
+
+until false 
 {
-    groundAntenna:add(p:getModule("ModuleRTAntenna")).
+    print disp_format_time(ts - time:seconds, "ts") at (28, 2).
+    print disp_format_time(ts - time:seconds, "datetime") at (28, 3).
 }
-
-for p in ship:partsTaggedPattern("groundLight")
-{
-    groundLights:add(p:getModule("ModuleLight")).
-}
-
-for p in ship:partsTaggedPattern("groundPanel")
-{
-    groundPanels:add(p:getModule("ModuleDeployableSolarPanel")).
-}
-
-for p in ship:partsTaggedPattern("landingLight")
-{
-    landingLights:add(p:getModule("ModuleLight")).
-}
-
-
-// Turn off the landing lights
-ves_activate_lights(landingLights, false).
-
-// Activate the ground-only solar panels, comms, and lights
-ves_activate_solar(groundPanels).
-ves_activate_antenna(groundAntenna).
-ves_activate_lights(groundLights).
+print " ".
+print "Time format complete".

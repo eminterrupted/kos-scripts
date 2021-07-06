@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is "Mun",
-          tgtAlt is 250000,
+parameter tgtParam is "Minmus",
+          tgtAlt is 150000,
           altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").

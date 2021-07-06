@@ -2,6 +2,9 @@
 
 //#include "0:/boot/bootloader"
 
+// Dependencies
+runOncePath("0:/lib/lib_disp").
+
 //-- Variables --//
 
 // Global
@@ -340,9 +343,25 @@ global function util_capacitor_discharge_trigger
     }
 }
 
+global function util_grapling_hook
+{
+    parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
+              mode is "arm". // other values: release, pivot, decouple
+
+    local event to "".
+    if mode = "arm" {
+        set m to m:part:getModule("ModuleAnimateGeneric").
+        set event to "arm".
+    }
+    else if mode = "release" set event to "release".
+    else if mode = "pivot" set event to "free pivot".
+
+    util_do_event(m, event).
+}
 
 
-// -- Warp functions -- //
+
+//#region -- Warp functions -- //
 //
 // Creates a trigger to warp to a timestamp using AG10
 global function util_warp_trigger
@@ -353,7 +372,7 @@ global function util_warp_trigger
     if time:seconds <= tStamp
     {   
         ag10 off.
-        hudtext("Press 0 to warp to " + str, 15, 2, 20, green, false).
+        disp_hud("Press 0 to warp to " + str).
         on ag10 
         {
             warpTo(tStamp).
@@ -370,12 +389,48 @@ global function util_warp_altitude
 
     local dAlt to ship:altitude.
     wait 2.5.
-    local s to (tgtAlt - ship:altitude) / ((ship:altitude - dAlt) / 2).
+    local s to (tgtAlt - ship:altitude) / ((ship:altitude - dAlt) / 2.25).
         
     local ts to time:seconds + abs(s).
-    util_warp_trigger(ts).
+    util_warp_alt_trigger(tgtAlt, ts).
 }
 
+// Creates a trigger to warp to an altitude using AG10
+global function util_warp_alt_trigger
+{
+    parameter tgtAlt, tStamp.
+
+    set tStamp to tStamp - 15.
+
+    if time:seconds <= tStamp
+    {   
+        ag10 off.
+        disp_hud("Press 0 to warp to " + tgtAlt + "m altitude").
+        on ag10 
+        {
+            warpTo(tStamp).
+            util_warp_down("alt", tgtAlt).
+            wait until kuniverse:timewarp:issettled.
+            ag10 off.
+        }
+    }
+}
+
+// Smooths out a warp down by either altitude or timestamp
+global function util_warp_down {
+    parameter mode, tgtParam.
+
+    if mode = "alt"
+    {
+        if ship:altitude <= tgtParam * 5 set warp to 5.
+        if ship:altitude <= tgtParam * 3 set warp to 4.
+        else if ship:altitude <= tgtParam * 1.50 set warp to 3.
+        else if ship:altitude <= tgtParam * 1.25 set warp to 2.
+        else if ship:altitude <= tgtParam * 1.10 set warp to 1.
+        else if ship:altitude <= tgtParam * 1.01 set warp to 0.
+    }
+}
+//#endregion
 
 // -- Local functions -- //
 //

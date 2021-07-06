@@ -5,6 +5,8 @@ clearScreen.
 
 init_disk().
 
+if ksc_comm runOncePath("0:/lib/lib_vessel").
+
 global dataDisk to data_disk().
 local lc        to "controller/launchController".
 local mc        to "controller/missionController".
