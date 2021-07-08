@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtParam is "Minmus",
+parameter tgtParam is "Mun",
           tgtAlt is 150000,
           altPadding to 50000.
 

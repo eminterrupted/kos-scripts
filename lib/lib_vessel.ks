@@ -720,21 +720,21 @@ global function ves_jettison_fairings
     {
         for m in ship:modulesNamed(procFairing)
         {
-            util_do_event(m, procEvent).
+            if m:part:tag = "" util_do_event(m, procEvent).
         }
     }
     if ship:modulesNamed(stFairing):length > 0
     {
         for m in ship:modulesNamed(stFairing)
         {
-            util_do_event(m, stEvent).
+            if m:part:tag = "" util_do_event(m, stEvent).
         }
     }
     if ship:modulesNamed(safFairing):length > 0
     {
         for m in ship:modulesNamed(safFairing)
         {
-            util_do_event(m, stEvent).
+            if m:part:tag = "" util_do_event(m, stEvent).
         }
     }
 }

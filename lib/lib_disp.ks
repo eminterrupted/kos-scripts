@@ -115,7 +115,7 @@ global function disp_format_time
         local dtH  to choose h  if h  >= 10 else choose "0" + h  if h  >= 0 else "00".
         local dtM  to choose m  if m  >= 10 else choose "0" + m  if m  >= 0 else "00".
         local dtS  to choose s  if s  >= 10 else choose "0" + s  if s  >= 0 else "00".
-        local dtMS to choose ms if ms >= .1 else choose "0" + ms if ms >= .01 else choose "00" + ms if ms >= .001 else choose "000" + ms if ms >= .0001 else choose "0000" + ms if ms >= .00001 else "00000".
+        local dtMS to choose ms if ms >= .1 else choose "0" + ms if ms >= .01 else "00".
         if ms > 0 
         {
             if dtMS:typename = "Scalar" set dtMS to dtMS:toString.

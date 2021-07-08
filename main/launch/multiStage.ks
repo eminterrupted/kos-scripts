@@ -294,4 +294,5 @@ until ship:altitude >= body:atm:height or ship:verticalspeed < 0
 disp_msg("Launch complete").
 wait 0.5.
 clearScreen.
+if hasNode remove nextNode.
 //-- End Main --//

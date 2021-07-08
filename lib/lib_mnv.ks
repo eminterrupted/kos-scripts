@@ -640,29 +640,30 @@ global function mnv_get_candidates
 local function mnv_factor
 {
     parameter score.
-              
-    local limHi to 1 + 0.005.
-    local limLo to 1 - 0.005.
-    local mnvFactor to 0.1.
 
-    // if      score >= -0.95 and score <= 1.05   set mnvFactor to (score * 0.1)   * mnvFactor.
-    // else if score >= -0.50 and score <= 1.50   set mnvFactor to score           * mnvFactor.
+    local mnvFactor to 0.25.
+
+    // if      score >= -0.95 and score <= 1.05   set mnvFactor to (score * 0.01)  * mnvFactor.
+    // else if score >= -0.75 and score <= 1.25   set mnvFactor to (score * 0.1)   * mnvFactor.
+    // else if score >= -0.50 and score <= 1.50   set mnvFactor to (score * 0.5)   * mnvFactor.
+    // else if score >= -1.0  and score <= 2.0    set mnvFactor to score           * mnvFactor.
     // else if score >= -100  and score <= 101    set mnvFactor to (score * 2)     * mnvFactor.
     // else set mnvFactor to 250. 
 
-    if      (score > 0.975 * limLo) and (score < 1.025 * limHi) set mnvFactor to 0.050  * mnvFactor.
-    else if (score > 0.950 * limLo) and (score < 1.050 * limHi) set mnvFactor to 0.125  * mnvFactor.
-    else if (score > 0.925 * limLo) and (score < 0.750 * limHi) set mnvFactor to 0.375  * mnvFactor. 
-    else if (score > 0.850 * limLo) and (score < 1.150 * limHi) set mnvFactor to 0.500  * mnvFactor. 
-    else if (score > 0.750 * limLo) and (score < 1.250 * limHi) set mnvFactor to 0.750  * mnvFactor.
-    else if (score > 0.500 * limLo) and (score < 1.500 * limHi) set mnvFactor to 1      * mnvFactor.
-    else if (score > 0.000 * limLo) and (score < 2.0   * limHi) set mnvFactor to 2      * mnvFactor.
-    else if (score > -2.5  * limLo) and (score < 3.5   * limHi) set mnvFactor to 4      * mnvFactor. 
-    else if (score > -10.0 * limLo) and (score < 11.0  * limHi) set mnvFactor to 8      * mnvFactor.
-    else if (score > -25.0 * limLo) and (score < 26.0  * limHi) set mnvFactor to 16     * mnvFactor.
-    else if (score > -50.0 * limLo) and (score < 51.0  * limHi) set mnvFactor to 32     * mnvFactor.
-    else if (score > -75.0 * limLo) and (score < 76.0  * limHi) set mnvFactor to 64     * mnvFactor.
-    else if (score > -100  * limLo) and (score < 101   * limHi) set mnvFactor to 128    * mnvFactor.
+    if      score > 0.990 and score < 1.010 set mnvFactor to 0.050  * mnvFactor.
+    else if score > 0.975 and score < 1.025 set mnvFactor to 0.125  * mnvFactor.
+    else if score > 0.950 and score < 1.050 set mnvFactor to 0.250  * mnvFactor.
+    else if score > 0.925 and score < 0.750 set mnvFactor to 0.375  * mnvFactor. 
+    else if score > 0.850 and score < 1.150 set mnvFactor to 0.500  * mnvFactor. 
+    else if score > 0.750 and score < 1.250 set mnvFactor to 0.750  * mnvFactor.
+    else if score > 0.500 and score < 1.500 set mnvFactor to 1      * mnvFactor.
+    else if score > 0.000 and score < 2.0   set mnvFactor to 2      * mnvFactor.
+    else if score > -2.5  and score < 3.5   set mnvFactor to 4      * mnvFactor. 
+    else if score > -10.0 and score < 11.0  set mnvFactor to 8      * mnvFactor.
+    else if score > -25.0 and score < 26.0  set mnvFactor to 16     * mnvFactor.
+    else if score > -50.0 and score < 51.0  set mnvFactor to 32     * mnvFactor.
+    else if score > -75.0 and score < 76.0  set mnvFactor to 64     * mnvFactor.
+    else if score > -100  and score < 101   set mnvFactor to 128    * mnvFactor.
     else set mnvFactor to 256 * mnvFactor.
 
     // if      score > 0.95 * limLo and score < 1.05 * limHi set mnvFactor to 0.050.
@@ -704,7 +705,7 @@ global function mnv_improve_node
     // Base maneuver factor - the amount of dV that is used for hill
     // climb iterations
     local mnvFactor is mnv_factor(curScore["score"]).
-
+    
     disp_info("Optimizing node.").
 
     set mnvCandidates to mnv_get_candidates(data, mnvFactor, timeFactor, radialFactor, normalFactor, progradeFactor).

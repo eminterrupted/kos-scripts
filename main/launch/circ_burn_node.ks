@@ -20,6 +20,7 @@ local tgtAp         to launchPlan:tgtAp.
 local tgtPe         to launchPlan:tgtPe.
 local mnvTime       to time:seconds + eta:apoapsis.
 local panelList     to list().
+disp_info("Variables set").
 
 // Control
 local rVal          to launchPlan:tgtRoll.
@@ -27,13 +28,18 @@ local sVal          to lookDirUp(ship:facing:vector, sun:position) + r(0, 0, rVa
 local tVal          to 0.
 lock steering       to sVal.
 lock throttle       to tVal.
+disp_info("Controls set").
 
 // Get dv and duration of burn
 local dv            to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
+disp_info("DeltaV calculated").
 local burnTime      to mnv_burn_times(dv, mnvTime).
+disp_info("Burn times calculated").
 local burnETA       to burnTime[0].
 local burnDur       to burnTime[1].
 local mnvNode       to node(mnvTime, 0, 0, dv).
+disp_info("Maneuver DV Calculated").
+
 set mnvNode to mnv_opt_simple_node(mnvNode, tgtPe, "pe").
 add mnvNode.
 
@@ -50,8 +56,8 @@ disp_msg("Measuring EC Drain rate").
 disp_info().
 disp_info2().
 local ec to ship:electricCharge.
-wait 2.5.
-local ecRate to (ec - ship:electricCharge) / 2.5.
+wait 1.
+local ecRate to (ec - ship:electricCharge).
 local ecSecs to ship:electricCharge / ecRate.
 local span to burnETA + 60 - time:seconds.
 
@@ -68,7 +74,7 @@ if span >= ecSecs
     disp_hud("Panels deployed").
     disp_info("Panels deployed").
 }
-wait 1.
+wait 0.25.
 
 when ship:maxThrust <= 0.1 and throttle > 0 then 
 {

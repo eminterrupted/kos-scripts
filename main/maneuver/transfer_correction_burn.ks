@@ -2,7 +2,8 @@
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
 parameter tgtBody,
-          tgtVal.
+          tgtPe,
+          tgtInc is 0.1.
 
 clearScreen.
 
@@ -14,7 +15,6 @@ runOncePath("0:/lib/lib_nav").
 disp_main(scriptPath():name).
 
 // Variables
-local compMode      to "pe".
 local dvNeeded      to list().
 local mnvTime       to time:seconds + 90.
 
@@ -40,16 +40,16 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 }
 
 // Main
-set compMode to "pe".
-set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtVal, tgtVal, stAp, tgtBody).
+set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtPe, stAp, tgtBody).
 set dvNeeded to list(dvNeeded[0]).
 
 disp_msg("dv0: " + round(dvNeeded[0], 2)).
 wait 1.
 disp_msg().
 
-disp_msg("Correction Burn").
-set mnvNode to mnv_opt_simple_node(mnvNode, tgtVal, compMode, tgtBody).
+disp_msg("Correction Burn Calculations").
+set mnvNode to mnv_opt_simple_node(mnvNode, tgtInc, "tliInc", tgtBody).
+set mnvNode to mnv_opt_simple_node(mnvNode, tgtPe, "pe", tgtBody).
 add mnvNode.
 
 mnv_exec_node_burn(mnvNode).

@@ -14,7 +14,7 @@ global function launch_ang_for_alt
               startAlt,
               endPitch.
     
-    local pitchLim to 4.
+    local pitchLim to 3.5.
 
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
