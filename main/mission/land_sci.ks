@@ -14,12 +14,17 @@ local bayLights to list().
 
 for light in ship:modulesNamed("ModuleLight")
 {
-    if light:part:tag = "bayLight" bayLights:add(light).
+    if light:part:tag:contains("bayLight") bayLights:add(light).
 }
 
 for bay in ship:modulesNamed("USAnimateGeneric")
 {
     if bay:hasEvent("deploy primary bays") bayList:add(bay).
+}
+
+for bay in ship:modulesNamed("ModuleAnimateGeneric") 
+{
+    if bay:hasEvent("open doors") bayList:add(bay).
 }
 
 if bayList:length > 0 
@@ -65,3 +70,4 @@ until false
 ag10 off.
 
 disp_msg("Experiments completed").
+ves_close_bays(bayList).

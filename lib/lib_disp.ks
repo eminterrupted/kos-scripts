@@ -101,8 +101,6 @@ global function disp_format_time
         if ms > 0
         {
             set tsMS to choose ms if ms >= 10 else "0" + ms.
-            print "                   " at (2, 25).
-            print "tsMS: " + tsMS at (2, 25).
             if tsMS:contains(".") set tsMS to tsMs:toString:split(".")[1].
         }
         
@@ -270,6 +268,21 @@ global function disp_orbit
     print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, cr()).
     print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, cr()).
 }
+
+// Impact telemetry
+global function disp_impact
+{
+    parameter tti is 0.
+
+    print "LANDING TELEMETRY" at (0, 10).
+    print "-----------------" at (0, 11).
+    print "BODY           : " + ship:body:name   + "      " at (0, 12).
+    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, 13).
+    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, 14).
+    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 15).
+    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, 16).
+}
+
 
 // Simple landing telemetry
 global function disp_landing

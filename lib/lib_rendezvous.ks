@@ -5,7 +5,12 @@ runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_util").
 
+// TODOs
+// -- Relative speed calculation 
+//    -- (ship:orbit:velocity:orbit - target:orbit:velocity:orbit):mag.
+
 // Functions
+
 
 // Approaching
 global function rdv_approach_target

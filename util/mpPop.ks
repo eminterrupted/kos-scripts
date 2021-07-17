@@ -1,13 +1,17 @@
 local mpPath to path().
 local volList to list().
 list volumes in volList.
-for vol in volList 
-{
-    if exists(vol:name + ":/missionPlan.json")
-    {
-        set mpPath to path(vol:name + ":/missionPlan.json").
-    }
-}
+
+set mpPath to path(core:volume:name + ":/missionPlan.json").
+//if not exists(mpPath) if exists("data_0:/missionPlan.json") set mpPath to path("data_0:/missionPlan.json").
+
+// for vol in volList 
+// {
+//     if exists(vol:name + ":/missionPlan.json")
+//     {
+//         set mpPath to path(vol:name + ":/missionPlan.json").
+//     }
+// }
 if mpPath:toString:split("/")[1] <> ""
 {
     if exists(mpPath) 

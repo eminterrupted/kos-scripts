@@ -88,7 +88,7 @@ util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
 
 until ship:orbit:body:name = "Kerbin"
 {
-    disp_info("Time to SOI change: " + disp_format_time(round(ship:orbit:nextpatcheta), "ts")).
+    disp_info("Time to SOI change: " + disp_format_time(ship:orbit:nextpatcheta, "ts")).
     disp_orbit().
     wait 0.01.
 }

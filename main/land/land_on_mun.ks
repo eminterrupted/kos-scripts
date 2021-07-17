@@ -14,7 +14,7 @@ local adjBurnDurFactor to 0.10.
 local burnDur       to 0.
 local tgtDescentSpd to -2.5.
 local tgtHSpd       to 50.
-local tgtRadarAlt   to 15.
+local tgtRadarAlt   to 10.
 local tti           to 0.
 
 local hasDropTanks  to false.

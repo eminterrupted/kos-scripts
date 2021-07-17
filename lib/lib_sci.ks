@@ -5,6 +5,7 @@ runOncePath("0:/lib/lib_util").
 
 //-- Functions
 
+//#region -- Generic science functions
 // Takes a list and deploys each
 global function sci_deploy_list
 {
@@ -84,6 +85,40 @@ global function sci_reset_list
         sci_reset(m).
     }
 }
+//#endregion
+
+//#region -- Seismic Hammer Functions
+// If a seismic hammer and pods are present, arm them
+global function sci_arm_hammer
+{
+    local hammerList to ship:modulesNamed("DMSeismicHammer").
+    local podList to ship:partsNamed("dmSeismicPod").
+
+    if hammerList:length > 0 
+    {
+        util_do_action(hammerList[0], "arm hammer").
+        if podList:length > 0 
+        {
+            for pod in podList
+            {
+                util_do_action(pod:getModule("DMSeismicSensor"), "arm pod").
+                util_do_event(pod:getModule("ModuleAnchoredDecoupler"), "decouple").
+            }
+        }
+        return true.
+    }
+    else 
+    {
+        return false.
+    }
+}
+
+global function sci_deploy_hammer
+{
+    util_do_event(ship:modulesNamed("DMSeismicHammer")[0], "collect seismic data").
+}
+//#endregion
+
 
 //-- Local functions --//
 

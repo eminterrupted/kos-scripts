@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter ascentAlt is 40000, 
-          ascentInc is 0,
+parameter ascentAlt is 25000, 
+          ascentInc is 169,
           stageOnAscent is false.
 
 runOncePath("0:/lib/lib_disp").

@@ -112,6 +112,12 @@ global function util_clear_cache_key
     }
 }
 
+// Removes the entire state file
+global function util_remove_state
+{
+    deletePath(stateFile).
+}
+
 // Resets the entire state file
 global function util_reset_state
 {
@@ -382,53 +388,18 @@ global function util_warp_trigger
     }
 }
 
-// Warps to a given altitude
-global function util_warp_altitude
-{
-    parameter tgtAlt.
-
-    local dAlt to ship:altitude.
-    wait 2.5.
-    local s to (tgtAlt - ship:altitude) / ((ship:altitude - dAlt) / 2.25).
-        
-    local ts to time:seconds + abs(s).
-    util_warp_alt_trigger(tgtAlt, ts).
-}
-
-// Creates a trigger to warp to an altitude using AG10
-global function util_warp_alt_trigger
-{
-    parameter tgtAlt, tStamp.
-
-    set tStamp to tStamp - 15.
-
-    if time:seconds <= tStamp
-    {   
-        ag10 off.
-        disp_hud("Press 0 to warp to " + tgtAlt + "m altitude").
-        on ag10 
-        {
-            warpTo(tStamp).
-            util_warp_down("alt", tgtAlt).
-            wait until kuniverse:timewarp:issettled.
-            ag10 off.
-        }
-    }
-}
-
 // Smooths out a warp down by either altitude or timestamp
-global function util_warp_down {
-    parameter mode, tgtParam.
-
-    if mode = "alt"
-    {
-        if ship:altitude <= tgtParam * 5 set warp to 5.
-        if ship:altitude <= tgtParam * 3 set warp to 4.
-        else if ship:altitude <= tgtParam * 1.50 set warp to 3.
-        else if ship:altitude <= tgtParam * 1.25 set warp to 2.
-        else if ship:altitude <= tgtParam * 1.10 set warp to 1.
-        else if ship:altitude <= tgtParam * 1.01 set warp to 0.
-    }
+global function util_warp_down_to_alt {
+    parameter tgtAlt.
+    
+    if ship:altitude <= tgtAlt * 1.01 set warp to 0.
+    else if ship:altitude <= tgtAlt * 1.10 set warp to 1.
+    else if ship:altitude <= tgtAlt * 1.25 set warp to 2.
+    else if ship:altitude <= tgtAlt * 1.50 set warp to 3.
+    else if ship:altitude <= tgtAlt * 3 set warp to 4.
+    else if ship:altitude <= tgtAlt * 5 set warp to 5.
+    else if ship:altitude <= tgtAlt * 20 set warp to 6.
+    else set warp to 7.
 }
 //#endregion
 

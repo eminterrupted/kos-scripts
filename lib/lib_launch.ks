@@ -48,6 +48,67 @@ global function launch_engine_start
     }
 }
 
+// Drops umbilicals and retracts swing arms randomly within 1s
+global function launch_pad_arms_retract
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    if animateMod:length > 0
+    {
+        for m in animateMod
+        {
+            if m:part:name:contains("umbilical")
+            {
+                util_do_event(m, "drop umbilical").
+            }
+            else if m:part:name:contains("swingarm")
+            {
+                if m:hasEvent("toggle") util_do_event(m, "toggle").
+                if m:hasEvent("retract arm right") util_do_event(m, "retract arm right").
+                if m:hasEvent("retract arm") util_do_event(m, "retract arm").
+            }
+        }
+    }
+}
+
+// Fallback tower
+global function launch_pad_fallback_partial
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local clampEvent to "open upper clamp".
+    local towerEvent to "partial retract tower step 1".
+
+    if animateMod:length > 0 
+    {
+        for m in animateMod
+        {
+            if m:hasEvent(clampEvent) 
+            {
+                util_do_event(m, clampEvent).
+                wait until m:getField("status") = "Locked".
+            }
+            else if m:hasEvent(towerEvent) util_do_event(m, towerEvent).
+        }
+    }
+}
+
+global function launch_pad_fallback_full
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local towerEvent to "full retract tower step 2".
+
+    if animateMod:length > 0 
+    {
+        for m in animateMod
+        {
+            if m:hasEvent(towerEvent) 
+            {
+                util_do_event(m, towerEvent).
+                break.
+            }
+        }
+    }
+}
+
 // Toggles launchpad generator
 global function launch_pad_gen
 {
@@ -67,27 +128,6 @@ global function launch_pad_gen
     }
 }
 
-// Drops umbilicals and retracts swing arms randomly within 1s
-global function launch_pad_arms_retract
-{
-    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
-    if animateMod:length > 0
-    {
-        for m in animateMod
-        {
-            if m:part:name:contains("umbilical")
-            {
-                util_do_event(m, "drop umbilical").
-            }
-            else if m:part:name:contains("swingarm")
-            {
-                util_do_event(m, "toggle").
-                util_do_event(m, "retract arm right").
-            }
-        }
-    }
-}
-
 // Hold downs retract
 global function launch_pad_holdowns_retract
 {
@@ -99,6 +139,10 @@ global function launch_pad_holdowns_retract
             if m:part:name:contains("hold")
             {
                 util_do_event(m, "retract arm").
+            }
+            else if m:part:name:contains("SaturnLauncherTSM")
+            {
+                util_do_event(m, "retract arm").   
             }
         }
     }

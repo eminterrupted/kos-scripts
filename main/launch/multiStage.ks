@@ -67,11 +67,6 @@ local accPid    to pidLoop().
 local qPid      to pidLoop().
 local twrPid    to pidLoop().
 
-// Setup countdown
-local cdStamp   to time:seconds + 10.
-lock  countdown to time:seconds - cdStamp.
-ag8 off.
-
 // Set up the display
 disp_terminal().
 disp_main(scriptPath():name).
@@ -98,6 +93,12 @@ if hasFairing
     }
 }
 
+launch_pad_fallback_partial().  // If we have a strongback tower, partially retract it prior to commencing the countdown
+
+// Setup countdown
+local cdStamp   to time:seconds + 10.
+lock  countdown to time:seconds - cdStamp.
+ag8 off.
 
 //-- Main --//
 sas off.
@@ -123,14 +124,8 @@ if ship:status = "PRELAUNCH"
     launch_engine_start(cdStamp).
     set tVal to 1.
 }
-
-until countdown >= -0.25 
-{
-    disp_msg("COUNTDOWN T" + round(countdown, 1)).
-    wait 0.05.
-}
 launch_pad_arms_retract().
-
+launch_pad_fallback_full().
 until countdown >= 0
 {
     disp_msg("COUNTDOWN T" + round(countdown, 1)).

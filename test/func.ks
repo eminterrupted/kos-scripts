@@ -1,24 +1,16 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter p0.
-
 runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_vessel").
+runOncePath("0:/lib/lib_sci").
 
-clearScreen.
-//disp_main(scriptPath()).
-
-print "Inputted timestamp: " + p0.
-print "Formatted time (t)        : " at (0, 2). 
-print "Formatted time (datetime) : " at (0, 3).
-
-local ts to time:seconds - p0.
-
-until false 
+if sci_arm_hammer()
 {
-    print disp_format_time(ts - time:seconds, "ts") at (28, 2).
-    print disp_format_time(ts - time:seconds, "datetime") at (28, 3).
+    disp_msg("Performing Seismic Hammer Experiment").
+    local ts to time:seconds + 60.
+    until time:seconds >= ts
+    {
+        disp_info("Time until experiment completion: " + round(ts - time:seconds, 2) + "s").
+    }
+    sci_deploy_hammer().
 }
-print " ".
-print "Time format complete".

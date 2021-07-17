@@ -123,3 +123,157 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
         accPid:reset.
         if stage:number > 0 preserve.
 }
+
+// Variables here
+local boosterObj    to ves_get_boosters().
+
+// Flags here
+local doStaging     to false.
+local deployFairing to false.
+local dropBoosters  to false.
+local hasBooster   to false.
+local resetAccPid   to false.
+local resetTwrPid   to false.
+local resetQPid     to false.
+
+// Init runmode
+local runmode to util_init_runmode().
+
+// Runmode loop
+until runmode = -1
+{
+    // Flag checks
+    if doStaging
+    {
+        disp_info("Staging").
+        ves_safe_stage().
+        set activeEng to ves_active_engines().
+        disp_info().
+        set resetAccPid to true.
+        set resetTwrPid to true.
+        set doStaging to false.
+    }
+
+    if hasBooster
+    {
+        if not ves_check_ext_tank(boosterObj)
+        {
+            ves_drop_booster(boosterObj).
+            if boosterObj[0]:length = 0
+            {
+                set hasBooster to false.
+            }
+        }
+    }
+
+    if hasFairing
+    {
+        if ship:altitude >= body:atm:height + 250
+        {
+            ves_jettison_fairings().
+            set hasFairing to false.
+        }
+    }
+
+    if resetAccPid 
+    {
+        accPid:reset.
+    }
+
+    if resetQPid 
+    {
+        qPid:reset.
+    }
+
+    if resetTwrPid
+    {
+        twrPid:reset.
+    }
+    // End flag checks
+
+    // Runmodes
+
+    // Launch pad prep
+    if runmode = 0 
+    {
+        set runmode to util_set_runmode(10).
+    }
+
+    // Countdown
+    else if runmode = 10
+    {
+
+        set runmode to util_set_runmode(20).
+    }
+
+    // Liftoff
+    else if runmode = 20
+    {
+
+        set runmode to util_set_runmode(30).
+    }
+
+    // Roll program
+    else if runmode = 30
+    {
+
+        set runmode to util_set_runmode(40).
+    }
+
+    // Vertical ascent
+    else if runmode = 40
+    {
+        
+        set runmode to util_set_runmode(50).
+    }
+
+    // Gravity turn
+    else if runmode = 50
+    {
+
+        set runmode to util_set_runmode(60).
+    }
+
+    // Post-gravity turn burn to apoapsis
+    else if runmode = 60
+    {
+
+        set runmode to util_set_runmode(70).
+    }
+
+    // MECO
+    else if runmode = 70
+    {
+
+        set runmode to util_set_runmode(80).
+    }
+
+    // Coast to space
+    else if runmode = 80
+    {
+
+        if correctionNeeded set runmode to util_set_runmode(90).
+        else if ship:altitude >= tgtAp set runmode to util_set_runmode(100).
+    }
+
+    // Correction burn
+    else if runmode = 90
+    {
+
+        // Always set this back to coast to space once complete
+        set runmode to util_set_runmode(80).
+    }
+
+    // Reach space
+    else if runmode = 100
+    {
+
+        set runmode to -1.
+    }
+
+    // State checks (for detecting things like staging)
+    if ship:availableThrust <= 0.01 and throttle > 0
+    {
+        set doStaging to true.
+    }
+}

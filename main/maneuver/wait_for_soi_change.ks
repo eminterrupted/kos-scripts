@@ -39,7 +39,7 @@ if ship:body:name <> tgtBody:name
 
 until ship:body:name = tgtBody:name
 {
-    disp_info2("Time to SOI change: " + disp_format_time(round(ship:orbit:nextpatcheta), "ts")).
+    disp_info2("Time to SOI change: " + disp_format_time(ship:orbit:nextpatcheta, "ts")).
     disp_orbit().
     wait 0.01.
 }

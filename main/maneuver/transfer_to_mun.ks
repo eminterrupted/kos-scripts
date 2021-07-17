@@ -2,7 +2,7 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 150000,
+          tgtAlt is 100000,
           altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").
@@ -67,6 +67,7 @@ if not hasNode
     local angVelTgt     to nav_ang_velocity(target, target:body).
     local angVelPhase   to angVelSt - angVelTgt.
     set burnEta         to (currentPhase - transferPhase) / angVelPhase.
+    if burnEta < 0 set burnEta to burnEta + ship:orbit:period.
     set burnAt          to choose burnEta + time:seconds if burnEta > 0 else burnEta + time:seconds + ship:orbit:period.
 
     print "Target           : " + target + "   " at (2, 23).

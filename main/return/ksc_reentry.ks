@@ -15,6 +15,7 @@ local parachutes to ship:modulesNamed("RealChuteModule").
 local kscWindow  to list(145, 150).
 local reentryAlt to 35000.
 local shipLng    to 0.
+local stagingAlt to ship:body:atm:height + 15000.
 local sVal       to lookDirUp(ship:retrograde:vector, sun:position).
 local testPatch  to ship:orbit.
 local tVal       to 0.
@@ -86,14 +87,37 @@ if testPatch:periapsis > Kerbin:atm:height
     set tVal to 0.
 }
 
-local startAlt to kerbin:atm:height + 17500.
+local startAlt to stagingAlt + 25000.
 disp_msg("Waiting until altitude <= " + startAlt).
-util_warp_altitude(startAlt).
-until ship:altitude <= startAlt
+
+ag10 off.
+ag9 off.
+disp_hud("Activate AG10 to warp to starting altitude, or AG9 for manual warp").
+local ts to time:seconds + 30.
+until ag10 or ag9 or time:seconds > ts
 {
     set sVal to lookDirUp(ship:retrograde:vector, sun:position).
     disp_telemetry().
 }
+
+if ag9
+{
+    until ship:altitude <= startAlt
+    {
+        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+        disp_telemetry().
+    }
+}
+else if ag10
+{
+    until ship:altitude <= startAlt
+    {
+        util_warp_down_to_alt(startAlt).
+        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+        disp_telemetry().
+    }
+}
+
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 
@@ -103,9 +127,8 @@ for c in parachutes
     util_do_event(c, "arm parachute").
 }
 
-disp_msg("Waiting until staging altitude").
-local tgtAlt to Kerbin:atm:height + 10000.
-until ship:altitude <= tgtAlt
+disp_msg("Waiting until staging altitude: " + stagingAlt).
+until ship:altitude <= stagingAlt.
 {
     set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 90, 0).
     disp_telemetry().

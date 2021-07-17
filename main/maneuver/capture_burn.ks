@@ -17,7 +17,7 @@ disp_main(scriptPath():name).
 // Variables
 local mnvNode   to node(0, 0, 0, 0).
 
-if hasNode remove nextNode.
+if hasNode and nextNode:eta > 300 remove nextNode.
 
 // Setup taging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -50,7 +50,7 @@ until false
     }
 }
 remove mnvNode.
-set mnvNode to mnv_opt_simple_node(mnvNode, tgtAlt, "ap").
+set mnvNode to mnv_opt_simple_node(mnvNode, tgtAlt, "ap", ship:body, 0.005, list(10, 0, 0, 1)).
 add mnvNode.
 
 mnv_exec_node_burn(mnvNode).

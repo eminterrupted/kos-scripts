@@ -29,7 +29,6 @@ local hasGear       to false.
 local curTwr        to 0.
 local endPitch      to 0.
 local finalAlt      to 0.
-local maxAcc        to 50.
 local maxTwr        to 5.
 local stAlt         to 0.
 local stTurn        to 500.
@@ -48,7 +47,6 @@ local tVal      to 0.
 local tValLoLim to 0.63.
 
 // throttle pid controllers
-local accPid    to pidLoop().
 local twrPid    to pidLoop().
 
 // Setup countdown
@@ -142,9 +140,6 @@ until alt:radar >= 75
     wait 0.01.
 }
 
-// Roll program at 250m - rotates from 270 degrees to 0 or 180 based on
-// whether a crew member is present. 
-
 if hasGear
 {
     disp_info("Gear up").
@@ -169,15 +164,8 @@ disp_info().
 // Store the altitude at which we reached the turn threshold
 set stAlt to ship:altitude.
 
-// Set up gravity turn pids
-// set accPid to pidLoop(0.02, 0, 0, -1, 1).
-// set accPid:setpoint to maxAcc.
-
 set twrPid to pidLoop(twr_kP, twr_kI, twr_kD, -1, 1).
 set twrPid:setpoint to maxTwr.
-
-//local activeThr to { parameter engList. local thr to 0. for e in engList { set thr to thr + e:thrust.} return thr.}.
-lock curAcc to ship:availableThrust / ship:mass.
 
 disp_msg("Gravity turn").
 until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
@@ -188,7 +176,6 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
     // Throttle update
     set curTwr to ship:availablethrust / (ship:mass * kGrav).
     
-    //local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc else 1.
     local twrVal    to max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr))).
     set tVal to twrVal.
     
@@ -205,12 +192,10 @@ until ship:apoapsis >= tgtAp * 0.995
 {
     set curTwr   to ship:availablethrust / (ship:mass * kGrav).
 
-    //local aVal   to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))) if curAcc >= maxAcc else 1.
     local twrVal to choose max(tValLoLim, min(1, 1 + twrPid:update(time:seconds, curTwr))) if curTwr >= maxTwr else 1.
 
     set sVal     to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal     to twrVal.
-    // pid_readout().
 
     // Booster update
     if hasBoosters set hasBoosters to ves_update_booster(boosters).

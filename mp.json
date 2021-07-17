@@ -1,23 +1,19 @@
 {
     "items": [
         {
+            "value": "land/land_on_mun",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mission/land_sci",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "launch/mun_ascent",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
             "value": "mission/simple_orbit",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": "maneuver/match_inclination",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": "maneuver/change_orbit",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": "mission/relay_orbit",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": "return/no_return",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],

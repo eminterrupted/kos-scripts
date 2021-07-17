@@ -29,8 +29,13 @@ local function print_lex
     {
         if line < terminal:height - 3 
         {
-            print "[" + key + "] = " + inObj[key] at (col, line).
+            print "Key: " + key at (col, line).
             set line to line + 1.
+            for val in inObj[key]
+            {
+                print "[" + key + "] = " + val at (col, line).
+                set line to line + 1.
+            }
         } 
         else 
         {

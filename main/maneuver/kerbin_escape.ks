@@ -2,6 +2,7 @@
 clearScreen.
 
 runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
 
@@ -43,33 +44,40 @@ until false
             break.
         }
     }
-    else 
+    else
     {
-        disp_msg("Waiting until periapsis for escape burn").
-        // Wait until periapsis
-        local tsPe to time:seconds + eta:periapsis - 30.
-        util_warp_trigger(tsPe).
-        until time:seconds >= tsPe 
-        {
-            disp_info("Time to burn start: " + round(time:seconds - tsPe)).
-            disp_orbit().
-            wait 0.1.
-        }
-        disp_info().
+        disp_msg("Calculating necessary deltaV").
+        local dvNeeded to mnv_dv_hohmann(ship:orbit:semimajoraxis - ship:body:radius, ship:body:soiradius + 25000)[0].
+        disp_info("DeltaV needed for escape velocity: " + round(dvNeeded, 2)).
+                
+        disp_info2("Optimizing").
+    } 
+    // {
+    //     disp_msg("Waiting until periapsis for escape burn").
+    //     // Wait until periapsis
+    //     local tsPe to time:seconds + eta:periapsis - 30.
+    //     util_warp_trigger(tsPe).
+    //     until time:seconds >= tsPe 
+    //     {
+    //         disp_info("Time to burn start: " + round(time:seconds - tsPe)).
+    //         disp_orbit().
+    //         wait 0.1.
+    //     }
+    //     disp_info().
 
-        // Burn
-        disp_msg("Burning to escape velocity            ").
-        set tVal to 1.
-        until false
-        {
-            if ship:orbit:hasNextPatch
-            {
-                if ship:orbit:nextPatch:body = body("sun") break.
-            }
-            disp_orbit().
-            wait 0.01.
-        }
-        set tVal to 0.
-        disp_msg("Escape velocity reached            ").
-    }
+    //     // Burn
+    //     disp_msg("Burning to escape velocity            ").
+    //     set tVal to 1.
+    //     until false
+    //     {
+    //         if ship:orbit:hasNextPatch
+    //         {
+    //             if ship:orbit:nextPatch:body = body("sun") break.
+    //         }
+    //         disp_orbit().
+    //         wait 0.01.
+    //     }
+    //     set tVal to 0.
+    //     disp_msg("Escape velocity reached            ").
+    // }
 }

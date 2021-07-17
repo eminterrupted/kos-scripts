@@ -227,6 +227,7 @@ global function ves_update_booster
     }
 }
 
+
 // Returns all drop tanks (decouplers tagged with dropTank.<n>) and their child tanks for monitoring
 global function ves_get_drop_tanks
 {
@@ -697,10 +698,31 @@ global function ves_open_bays
         if door = "all" or door = "primary"
         {
             util_do_event(bay, "deploy primary bays").
+            util_do_event(bay, "open doors").
         }
         if door = "all" or door = "secondary"
         {
             util_do_event(bay, "deploy secondary bays").
+        }
+    }
+}
+
+// Close bay doors
+global function ves_close_bays
+{
+    parameter bayList,
+              door is "all".
+
+    for bay in bayList 
+    {
+        if door = "all" or door = "primary"
+        {
+            util_do_event(bay, "retract primary bays").
+            util_do_event(bay, "close doors").
+        }
+        if door = "all" or door = "secondary"
+        {
+            util_do_event(bay, "retract secondary bays").
         }
     }
 }
@@ -826,3 +848,80 @@ global function ves_jettison_les
 }
 
 //#endregion -- Part module actions / events
+
+
+//#region -- vNext function playground
+
+// checking an external tank (drop tank or booster) for resources. Returns true if the tank has resources, false if not
+global function ves_check_ext_tank
+{
+    parameter extObj,
+              extId to -1. // Idx 0 is DCs, 1 is tanks
+
+    local extDC to extObj[0].
+    local extTanks to extObj[1].
+
+    if extDC:length > 0
+    {
+        if extId = -1 set extId to extDC:keys:length - 1.
+        local extRes    to choose extTanks[extId]:resources[1] if extTanks[extId]:name:matchesPattern("Size1p5.Tank.05") else extTanks[extId]:resources[0].
+        if extRes:amount >= 0.01
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }
+    }
+    return false.
+}
+
+global function ves_drop_tank
+{
+    parameter extObj,
+              extId to -1.
+
+    local extDC     to extObj[0].
+    local extTank   to extObj[1].
+    
+    if extDC:length > 0 
+    {
+        if extId = -1 set extId to extDC:length - 1.
+        for dc in extDC[extId]
+        {
+            local dcModule to choose "ModuleAnchoredDecoupler" if dc:hasModule("ModuleAnchoredDecoupler") else "ModuleDecouple".
+            if dc:children:length > 0 
+            {
+                util_do_event(dc:getModule(dcModule), "decouple").
+                extDC:remove(extId).
+                extTank:remove(extId).
+            }
+        }
+    }
+}
+
+global function ves_drop_booster
+{
+    parameter extObj,
+              extId to -1.
+
+    local extDC     to extObj[0].
+    local extTank   to extObj[1].
+
+    if extDC:length > 0 
+    {
+        if extId = -1 set extId to extDC:length - 1.
+        for dc in extDC[extId]
+        {
+            
+            if dc:children:length > 0 
+            {
+                extDC:remove(extId).
+                extTank:remove(extId).
+            }
+        }
+        ves_safe_stage("booster").
+    }
+}
+//#endregion

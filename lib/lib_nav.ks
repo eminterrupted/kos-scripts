@@ -6,6 +6,37 @@
 
 //-- Functions --//
 
+//#region -- Patch handling
+// Returns the last patch for a given node
+global function nav_last_patch_for_node
+{
+    parameter _node.
+
+    local curPatch to _node:orbit.
+    until not curPatch:hasNextPatch 
+    {
+        set curPatch to curPatch:nextPatch.
+    }
+
+    return curPatch.
+}
+
+// Returns the next patch for a given node if one exists
+global function nav_next_patch_for_node
+{
+    parameter _node.
+
+    local curPatch to _node:orbit.
+    if curPatch:hasNextPatch 
+    {
+        set curPatch to curPatch:nextPatch.
+    }
+
+    return curPatch.
+}
+//#endregion
+
+//#region -- GeoCoordinates
 // Converts longitude into degrees
 global function nav_lng_to_degrees
 {
@@ -13,7 +44,7 @@ global function nav_lng_to_degrees
     return mod(lng + 360, 360).
 }
 
-//#region -- Target Functions
+//#region -- Target and Transfer data Functions
 // Angular velocity of a target in radians
 global function nav_ang_velocity 
 {
@@ -24,6 +55,14 @@ global function nav_ang_velocity
     local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
     //local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
     return angVel.
+}
+
+// Phase angle relative to longitude
+global function nav_lng_phase_angle
+{
+    parameter tgt.
+
+    return mod(nav_lng_to_degrees(tgt:longitude) - nav_lng_to_degrees(ship:longitude) + 360, 360).
 }
 
 // Converts a string to an orbitable type
@@ -49,8 +88,21 @@ global function nav_orbitable
     return body(tgtStr).
 }
 
+// Returns the proper phase angle to start a transfer burn. from: https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm#calculatinganinterplanetaryhohmanntransfer
+global function nav_transfer_phase_angle
+{
+    parameter tgt,
+              stAlt.
+    
+    if tgt:typename = "string" set tgt to nav_orbitable(tgt).
+    local angVelTarget  to nav_ang_velocity(tgt, tgt:body).
+    local tSMA          to nav_sma(stAlt, tgt:altitude, tgt:body).
+    local tHoh          to nav_transfer_period(tSMA, tgt:body).
+    return 180 - 0.5 * (tHoh * angVelTarget).
+}
+
 // From KSLib - Gets the phase angle relative to LAN 
-function ksnav_phase_angle {
+global function ksnav_phase_angle {
     parameter tgt is target.
     
     local common_ancestor is 0.
@@ -105,26 +157,6 @@ function ksnav_phase_angle {
     }
 }
 
-// Phase angle relative to longitude
-global function nav_lng_phase_angle
-{
-    parameter tgt.
-
-    return mod(nav_lng_to_degrees(tgt:longitude) - nav_lng_to_degrees(ship:longitude) + 360, 360).
-}
-
-// Returns the proper phase angle to start a transfer burn. from: https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm#calculatinganinterplanetaryhohmanntransfer
-global function nav_transfer_phase_angle
-{
-    parameter tgt,
-              stAlt.
-    
-    if tgt:typename = "string" set tgt to nav_orbitable(tgt).
-    local angVelTarget  to nav_ang_velocity(tgt, tgt:body).
-    local tSMA          to nav_sma(stAlt, tgt:altitude, tgt:body).
-    local tHoh          to nav_transfer_period(tSMA, tgt:body).
-    return 180 - 0.5 * (tHoh * angVelTarget).
-}
 //#endregion
 
 //#region -- Orbit Calculations

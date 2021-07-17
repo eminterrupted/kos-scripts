@@ -58,6 +58,7 @@ disp_info2().
 local ec to ship:electricCharge.
 wait 1.
 local ecRate to (ec - ship:electricCharge).
+if ecRate < 0 set ecRate to 0.0001.
 local ecSecs to ship:electricCharge / ecRate.
 local span to burnETA + 60 - time:seconds.
 
