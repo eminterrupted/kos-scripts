@@ -5,7 +5,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "/maneuver/transfer_to_mun",
+            "value": "/maneuver/transfer_to_body",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {

@@ -22,7 +22,7 @@ local safeDist  to 100.
 local startDist to 1000.
 
 lock steering to lookdirup(relVel, sun:position).
-disp_msg("Awaiting ideal startDist: " + startDist).
+disp_msg("Awaiting ideal startDist or closest approach").
 until target:distance <= startDist
 {
     set lastDist to target:distance.

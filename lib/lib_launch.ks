@@ -12,10 +12,9 @@ global function launch_ang_for_alt
 {
     parameter turnAlt,
               startAlt,
-              endPitch.
+              endPitch,
+              pitchLim is 3.5.
     
-    local pitchLim to 3.5.
-
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
 
@@ -51,7 +50,13 @@ global function launch_engine_start
 // Drops umbilicals and retracts swing arms randomly within 1s
 global function launch_pad_arms_retract
 {
-    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").     // For swing arms
+    local umbilicalAnimateMod to ship:modulesNamed("ModuleAnimateGeneric"). // For Umbilicals using the old module
+    for m in umbilicalAnimateMod                                            // Combine the lists
+    {
+        if m:hasEvent("drop umbilical") animateMod:add(m).
+    }
+
     if animateMod:length > 0
     {
         for m in animateMod
@@ -73,7 +78,7 @@ global function launch_pad_arms_retract
 // Fallback tower
 global function launch_pad_fallback_partial
 {
-    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     local clampEvent to "open upper clamp".
     local towerEvent to "partial retract tower step 1".
 
@@ -93,7 +98,7 @@ global function launch_pad_fallback_partial
 
 global function launch_pad_fallback_full
 {
-    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     local towerEvent to "full retract tower step 2".
 
     if animateMod:length > 0 
@@ -131,7 +136,7 @@ global function launch_pad_gen
 // Hold downs retract
 global function launch_pad_holdowns_retract
 {
-    local animateMod to ship:modulesNamed("ModuleAnimateGeneric").
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     if animateMod:length > 0
     {
         for m in animateMod

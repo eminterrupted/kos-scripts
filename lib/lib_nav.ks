@@ -103,13 +103,14 @@ global function nav_transfer_phase_angle
 
 // From KSLib - Gets the phase angle relative to LAN 
 global function ksnav_phase_angle {
-    parameter tgt is target.
+    parameter tgt is target, 
+              stObj is ship.
     
     local common_ancestor is 0.
     local my_ancestors is list().
     local your_ancestors is list().
 
-    my_ancestors:add(ship:body).
+    my_ancestors:add(stObj:body).
     until not(my_ancestors[my_ancestors:length-1]:hasBody) {
         my_ancestors:add(my_ancestors[my_ancestors:length-1]:body).
     }
@@ -132,10 +133,10 @@ global function ksnav_phase_angle {
         }
     }
 
-    local vel is ship:velocity:orbit.
+    local vel is stObj:orbit:velocity:orbit.
     local my_ancestor is my_ancestors[0].
     until my_ancestor = common_ancestor {
-        set vel to vel + my_ancestor:velocity:orbit.
+        set vel to vel + my_ancestor:orbit:velocity:orbit.
         set my_ancestor to my_ancestor:body.
     }
     local binormal is vcrs(-common_ancestor:position:normalized, vel:normalized):normalized.

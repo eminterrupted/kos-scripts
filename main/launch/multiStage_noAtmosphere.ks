@@ -31,8 +31,8 @@ local endPitch      to 0.
 local finalAlt      to 0.
 local maxTwr        to 5.
 local stAlt         to 0.
-local stTurn        to 500.
-local stSpeed       to 100.
+local stTurn        to 250.
+local stSpeed       to 75.
 local twr_kP        to 0.225.
 local twr_kI        to 0.004.
 local twr_kD        to 0.00.

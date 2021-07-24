@@ -23,7 +23,7 @@ if tgtBody <> ship:body
     }
     else
     {
-        print "ERR: No next patch. Run transfer_to_mun to fix" at (2, 10).
+        print "ERR: No next patch. Run transfer_to_body to fix" at (2, 10).
     }
 
     if tgtParam = "pe" 

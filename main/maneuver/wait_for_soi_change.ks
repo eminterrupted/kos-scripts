@@ -39,11 +39,11 @@ if ship:body:name <> tgtBody:name
 
 until ship:body:name = tgtBody:name
 {
-    disp_info2("Time to SOI change: " + disp_format_time(ship:orbit:nextpatcheta, "ts")).
+    disp_msg("Time to SOI change: " + disp_format_time(ship:orbit:nextpatcheta, "ts")).
     disp_orbit().
     wait 0.01.
 }
 
-disp_info2().
-disp_info2("Arrived at " + tgtBody:name + " SOI").
+disp_msg().
+disp_msg("Arrived at " + tgtBody:name + " SOI").
 util_clear_cache_key("soiDestination").

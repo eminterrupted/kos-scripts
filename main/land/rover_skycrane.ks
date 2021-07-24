@@ -12,6 +12,7 @@ disp_main(scriptPath()).
 local adjBurnDur    to 0.
 local adjBurnDurFactor to 0.10.
 local burnDur       to 0.
+local finalAlt      to 5.
 local tgtDescentSpd to -2.5.
 local tgtHSpd       to 50.
 local tgtRadarAlt   to 10.
@@ -103,7 +104,7 @@ if stage:number > 0
     lock timer to time:seconds - ts.
     until false
     {
-        disp_hud("Press 9 to discard kick stage or 0 to skip", 0, 2).
+        disp_hud("Press 9 for non-return landings to stage, or 0 to skip staging", 0, 2).
         disp_hud("Skipping in " + round(10 - timer), 0, 2).
         if ag9 {
             disp_hud("Staging", 0, 2).
@@ -148,12 +149,12 @@ until tti < adjBurnDur
 
 when altRadarOverride <= 250 then 
 {
-    disp_info("Extending landing legs").
+    disp_info("Extending rover wheels").
     gear on.
     ves_activate_lights(landingLights).
 }
 
-disp_info("Powered descent").
+disp_info("Powered descent, slowing to -10m/s Vertical Speed").
 set tVal to 1.
 set ttiPid:setpoint to 1.
 until altRadarOverride <= 50
@@ -183,7 +184,7 @@ until altRadarOverride <= tgtRadarAlt
 disp_info("Final descent at " + (tgtDescentSpd / 2) + "m/s").
 set vsPid:setpoint to tgtDescentSpd / 2.
 lock steering to lookDirUp(up:vector, sun:position).
-until ship:status = "LANDED"
+until altRadarOverride <= finalAlt
 {
     set tVal to max(tValLim, vsPid:update(time:seconds, ship:verticalspeed)).
     
@@ -193,19 +194,68 @@ until ship:status = "LANDED"
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     disp_landing(tti, burnDur).
 }
-disp_msg("Touchdown").
-disp_info().
-set tVal to 0.
 
+disp_info("Entering hover").
+set vsPid:setpoint to -0.15.
+until altRadarOverride <= 2.5
+{
+    set tVal to max(tValLim, vsPid:update(time:seconds, ship:verticalspeed)).
+
+    set tti to land_time_to_impact(time:seconds, alt:radar).
+    set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+
+    if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
+    disp_landing(tti, burnDur).
+}
+disp_info().
+
+disp_msg("Deploying rover").
+until false
+{
+    set tVal to max(tValLim, vsPid:update(time:seconds, ship:verticalspeed)).
+
+    set tti to land_time_to_impact(time:seconds, alt:radar).
+    set burnDur to mnv_active_burn_dur(ship:verticalspeed).
+
+    if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
+    disp_landing(tti, burnDur).
+
+    if stage:number > 0 
+    {
+        stage.
+        wait 0.01.
+    }
+    else
+    {
+        wait 1. 
+        break.
+    }
+}
+
+clr_disp().
+disp_main(scriptPath()).
+disp_msg("Rover deployed, lifting off").
+set tVal to 1.
+local ts to time:seconds + 2.5.
+until time:seconds > ts
+{
+    disp_telemetry().
+}
+
+lock steering to heading(90, 45).
+
+until time:seconds > ts + 5
+{
+    disp_telemetry().
+}
+
+disp_msg("Engine shutdown, awaiting impact").
 for e in ves_active_engines() {
     e:shutdown.
 }
+lock steering to ship:srfprograde.
 
-wait 1.
-// Turn off the landing lights
-ves_activate_lights(landingLights, false).
-
-// Activate the ground-only solar panels, comms, and lights
-ves_activate_solar(groundPanels).
-ves_activate_antenna(groundAntenna).
-ves_activate_lights(groundLights).
+until false
+{
+    disp_telemetry().
+}

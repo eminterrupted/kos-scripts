@@ -210,7 +210,6 @@ global function mnv_burn_stages
     set dv to abs(dv).
     local dvNeeded to dv.
     local dvStgObj to lex().
-    
 
     // If we need more dV than the vessel has, throw an exception.
     if ship:deltaV:current < dv 
@@ -231,8 +230,8 @@ global function mnv_burn_stages
     from { local stg to stage:number.} until dv <= 0 step { set stg to stg - 1.} do
     {
         
-        //local dvStg to ship:stageDeltaV(stg):current.
-        local dvStg to mnv_stage_dv(stg).
+        local dvStg to ship:stageDeltaV(stg):current.
+        //local dvStg to mnv_stage_dv(stg).
 
         if dvStg > 0 
         {
@@ -249,6 +248,48 @@ global function mnv_burn_stages
         }
     }
     return dvStgObj.
+}
+
+
+// Calculates stages used for a given dv burn. Assumes that the burn starts 
+// with the current stage. Returns a lexicon containing stage num and dv per 
+// stage. Used with the mnv_burn_dur function
+global function mnv_burn_stages_next
+{
+    parameter dv.
+
+    local availDv to 0.
+    local dvStgObj to lex().
+    local dvBurnObj to lex().
+
+    set dv to abs(dv).
+
+    set availDv to ves_available_dv().
+    breakpoint().
+
+    // If we need more dV than the vessel has, throw an exception.
+    if dv > availDv {
+        hudText("dV Needed: " + round(dv, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
+        return 1 / 0.
+    }
+
+    // Iterate over stages until dv is covered
+    for stg in dvStgObj:keys
+    {
+        local stgDv to dvStgObj[stg].
+        if dv < stgDv 
+        {
+            set dvBurnObj[stg] to dv.
+            break.
+        }
+        else
+        {
+            set dvBurnObj[stg] to stgDv.
+            set dv to dv - stgDv.
+        }
+    }
+
+    return dvBurnObj.
 }
 
 // Returns a list of burn eta / duration
@@ -337,18 +378,19 @@ global function mnv_argpe_match_burn
 // - [2] (nodeStruc)  - A maneuver node structure for this burn
 global function mnv_inc_match_burn 
 {
-    parameter burnVes,  // Vessel that will perform the burn
-              tgtObt.   // target orbit to match
+    parameter burnVes,      // Vessel that will perform the burn
+              burnVesObt,   // The orbit where the burn will take place. This may not be the current orbit
+              tgtObt.       // target orbit to match
 
     // Normals
-    local ves_nrm is nav_obt_normal(burnVes:obt).
+    local ves_nrm is nav_obt_normal(burnVesObt).
     local tgt_nrm is nav_obt_normal(tgtObt).
 
     // Total inclination change
     local d_inc is vang(ves_nrm, tgt_nrm).
 
     // True anomaly of ascending node
-    local node_ta is nav_asc_node_ta(burnVes:obt, tgtObt).
+    local node_ta is nav_asc_node_ta(burnVesObt, tgtObt).
 
     // ** IMPORTANT ** - Below is the "right" code, I am testing picking the soonest vs most efficient
     // Pick whichever node of AN or DN is higher in altitude,
@@ -360,7 +402,7 @@ global function mnv_inc_match_burn
     }
 
     // Get the burn eta
-    local burn_utc is time:seconds + nav_eta_to_ta(burnVes:obt, node_ta).
+    local burn_utc is time:seconds + nav_eta_to_ta(burnVesObt, node_ta).
     
     // TEST CODE BASED ON SOONEST NODE
     // if burn_utc > ship:orbit:period / 2 

@@ -130,18 +130,19 @@ for c in parachutes
 disp_msg("Waiting until staging altitude: " + stagingAlt).
 until ship:altitude <= stagingAlt.
 {
-    set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 90, 0).
+    set sVal to body:position.
     disp_telemetry().
 }
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
-
+set sVal to body:position.
+wait 1.
 disp_msg("Staging").
 //set sVal to ship:prograde:vector + r(0, -90, 0).
 until stage:number = 1 
 {
     stage.
-    wait 5.
+    wait 2.5.
 }
 disp_msg("Waiting for reentry interface").
 

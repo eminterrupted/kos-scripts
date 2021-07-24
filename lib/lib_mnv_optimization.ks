@@ -101,14 +101,17 @@ local function mnv_factor
     // else set mnvFactor to 250. 
 
     // Newest
-    if score >= 0.985        and score <= 1.015 set mnvFactor to mnvFactor * 0.025.
-    else if score >= 0.950   and score <= 1.050 set mnvFactor to mnvFactor * 0.05.
-    else if score >= 0.925   and score <= 1.075 set mnvFactor to mnvFactor * 0.125. 
-    else if score >= 0.85    and score <= 1.15  set mnvFactor to mnvFactor * 0.25. 
-    else if score >= 0.75    and score <= 1.25  set mnvFactor to mnvFactor * 0.50.
-    else if score >= 0.65    and score <= 1.35  set mnvFactor to mnvFactor * 0.75.
-    else if score >= 0.5     and score <= 1.5   set mnvFactor to mnvFactor * 1.
-    else if score >= -10     and score <= 11    set mnvFactor to mnvFactor * 2. 
+    if score >= 0.975        and score <= 1.025 set mnvFactor to mnvFactor * 0.0125.
+    else if score >= 0.950   and score <= 1.050 set mnvFactor to mnvFactor * 0.025.
+    else if score >= 0.925   and score <= 1.075 set mnvFactor to mnvFactor * 0.05. 
+    else if score >= 0.85    and score <= 1.15  set mnvFactor to mnvFactor * 0.125. 
+    else if score >= 0.75    and score <= 1.25  set mnvFactor to mnvFactor * 0.25.
+    else if score >= 0.65    and score <= 1.35  set mnvFactor to mnvFactor * 0.50.
+    else if score >= 0.5     and score <= 1.5   set mnvFactor to mnvFactor * 0.75.
+    else if score >= 0.25    and score <= 1.75  set mnvFactor to mnvFactor * 1.
+    else if score >= 0       and score <= 2     set mnvFactor to mnvFactor * 2.
+    else if score >= -4      and score <= 5     set mnvFactor to mnvFactor * 4.
+    else if score >= -10     and score <= 11    set mnvFactor to mnvFactor * 5.
     else if score >= -100    and score <= 101   set mnvFactor to mnvFactor * 10.
     else set mnvFactor to mnvFactor * 25.
 

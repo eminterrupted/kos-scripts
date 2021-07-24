@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter tgtInc is 45,
-          tgtLAN is 235.
+parameter tgtInc is 12.5,
+          tgtLAN is 35.
 
 clearscreen.
 clearVecDraws().
@@ -62,7 +62,7 @@ else
 {
     disp_msg("Executing inclination change").
     //Setup burn
-    set burnData    to mnv_inc_match_burn(ship, targetObt).
+    set burnData    to mnv_inc_match_burn(ship, ship:orbit, targetObt).
     set mnvTime     to burnData[0].
     set burnMag     to burnData[3].
     set burnVec     to burnData[1].

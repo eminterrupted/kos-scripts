@@ -8,10 +8,9 @@ runOncePath("0:/lib/lib_util").
 
 local scanCov to false.
 local sciList to sci_modules().
-local tStamp  to time:seconds + 21600.
 
 local rVal to 0.
-local sVal to ship:prograde + r(0, 0, rVal).
+local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 
 
@@ -44,7 +43,7 @@ wait 2.5.
 local function manual_sci_report 
 {
     ag10 off.
-    until time:seconds >= tStamp or ag10
+    until ag10
     {
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
         local sciInterval to time:seconds + 15.
@@ -74,7 +73,7 @@ local function scanned_biome_sci_report
     local biomeList to list().
     local curBiome  to "".
 
-    until time:seconds >= tStamp or ag10
+    until ag10
     {
         set curBiome to addons:scansat:getBiome(ship:body, ship:geoposition).
         set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).

@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter ascentAlt is 25000, 
-          ascentInc is 169,
+parameter ascentAlt is 50000, 
+          ascentInc is 0,
           stageOnAscent is false.
 
 runOncePath("0:/lib/lib_disp").
@@ -28,6 +28,12 @@ for m in ship:modulesNamed("ModuleRTAntenna")
     {
         groundComms:add(m).
     }
+}
+
+for m in ship:modulesNamed("ModuleAnimateGeneric")
+{
+    if m:hasEvent("open doors") util_do_event(m, "open doors").
+    else if m:hasEvent("close doors") util_do_event(m, "close doors").
 }
 
 ves_activate_solar(ship:modulesNamed("ModuleDeployableSolarPanel"), false).

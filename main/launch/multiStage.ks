@@ -155,13 +155,13 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
 }
 
 disp_msg("Vertical ascent").
-until alt:radar >= 100
+until alt:radar >= 150
 {
     disp_telemetry().
     wait 0.01.
 }
 
-// Roll program at 250m - rotates from 270 degrees to 0 or 180 based on
+// Roll program at 150m - rotates from 270 degrees to 0 or 180 based on
 // whether a crew member is present. 
 set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 

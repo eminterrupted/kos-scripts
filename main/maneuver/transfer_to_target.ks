@@ -2,8 +2,7 @@
 clearScreen.
 
 parameter tgtParam is target,
-          tgtAlt is target:orbit:semiMajorAxis - target:body:radius,
-          altPadding to 100.
+          tgtAlt is target:orbit:semiMajorAxis - target:body:radius.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -22,7 +21,6 @@ local currentPhase      to 0.
 local dvNeeded          to list().
 local halfDur           to 0.
 local mnv               to node(0, 0, 0, 0).
-local tgtBodyAlt        to 0.
 local transferPhase     to 0.
 
 // Param validation
@@ -30,7 +28,6 @@ if tgtParam:typeName = "list"
 {
     set target      to nav_orbitable(tgtParam[0]).
     set tgtAlt      to tgtParam[1].
-    set altPadding  to tgtParam[2].
 }
 else
 {
@@ -85,9 +82,7 @@ disp_msg().
 disp_info().
 
 // Get the amount of dv needed to get to the target
-set tgtBodyAlt  to target:altitude - ship:body:radius + altPadding.
 set dvNeeded    to mnv_dv_hohmann(ship:orbit:semimajoraxis - ship:body:radius, tgtAlt).
-//set dvNeeded to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtBodyAlt, tgtBodyAlt, tgtBodyAlt).
 print "Transfer dV      : " + round(dvNeeded[0], 2) + "m/s     " at (2, 27).
 print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 

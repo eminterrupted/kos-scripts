@@ -12,7 +12,7 @@ local missionPlan  to list(
     // Mission scripts (all missions in order)
         lex("scr", "mission/simple_orbit"),
         //lex("scr", "mission/auto_sci_biome"),
-        //lex("scr", "maneuver/transfer_to_mun",        "prm", list()),
+        //lex("scr", "maneuver/transfer_to_body",        "prm", list()),
         //lex("scr", "maneuver/wait_for_soi_change"),
         //lex("scr", "maneuver/capture_burn"),           "prm", list()),
         //lex("scr", "maneuver/change_inclination",     "prm", list()),

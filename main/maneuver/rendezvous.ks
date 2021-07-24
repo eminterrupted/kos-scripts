@@ -57,7 +57,7 @@ if runmode = 0
     if not util_check_value(ship:orbit:inclination, 2.5)
     {
         disp_msg("Inc_Match with " + target:name).
-        set mnvBurn to mnv_inc_match_burn(ship, tgtObt).
+        set mnvBurn to mnv_inc_match_burn(ship, ship:orbit, tgtObt).
         set mnvNode to mnvBurn[2].
         add mnvNode.
         mnv_exec_node_burn(mnvNode).

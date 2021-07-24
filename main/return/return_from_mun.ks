@@ -17,7 +17,7 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     preserve.
 }
 
-if hasNode until not hasNode remove nextNode.
+if hasNode remove nextNode.
 if not ship:orbit:hasnextpatch
     {
     // Add node at Pe

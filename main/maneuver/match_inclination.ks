@@ -60,7 +60,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
 disp_msg("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + tgtInc).
 
 //Setup burn
-set burnData    to mnv_inc_match_burn(ship, tgt:orbit).
+set burnData    to mnv_inc_match_burn(ship, ship:orbit, tgt:orbit).
 set mnvTime     to burnData[0].
 set burnMag     to burnData[3].
 set burnVec     to burnData[1].

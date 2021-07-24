@@ -3,7 +3,7 @@
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
 parameter tgtPe is 25000,
           tgtAp is 25000,
-          tgtArgPe is ship:orbit:argumentofperiapsis.
+          tgtArgPe is 270.
 
 clearScreen.
 

@@ -19,6 +19,55 @@ local sepList to list(
 
 //-- Functions --//
 
+//#region -- DeltaV
+// Returns available deltaV on the vessel
+global function ves_available_dv
+{
+    local availDv to 0.
+    local dvStgObj to lex().
+
+    // Iterate over stages until dv is covered
+    from { local stg to stage:number.} until stg <= -1 step { set stg to stg - 1.} do
+    {
+        //local dvStg to mnv_stage_dv(stg).
+        local dvStg to ship:stageDeltaV(stg):current.
+        set dvStgObj[stg] to dvStg.
+        set availDv to availDv + dvStg.
+        print "Stage " + stg + " dV: " + dvStg.
+    }
+
+    print " ".
+    print "Total available dV: " + availDv.
+
+    //print dvStgObj at (2, 15).
+
+    return dvStgObj.
+}
+
+// Returns available deltaV on the vessel
+global function ves_available_dv_next
+{
+    local availDv to 0.
+    local dvStgObj to lex().
+
+    // Iterate over stages until dv is covered
+    from { local stg to stage:number.} until stg <= -1 step { set stg to stg - 1.} do
+    {
+        local dvStg to mnv_stage_dv(stg).
+        //local dvStg to ship:stageDeltaV(stg):current.
+        set dvStgObj[stg] to dvStg.
+        set availDv to availDv + dvStg.
+        print "Stage " + stg + " dV: " + dvStg.
+    }
+
+    print " ".
+    print "Total available dV: " + availDv.
+
+    //print dvStgObj at (2, 15).
+
+    return dvStgObj.
+}
+
 //#region -- Engines
 // Returns a list of active engines
 global function ves_active_engines

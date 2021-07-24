@@ -9,9 +9,7 @@ disp_main(scriptPath()).
 local avgClock      to list(0, 0).
 local dClock        to 0.
 local dropTanks     to list().
-local flowRate      to 0.
 local pClock        to time:seconds.
-local prevFuel      to 0.
 global stgDecoupler  to lex().
 global stgTanks      to lex().
 
@@ -20,19 +18,9 @@ if stgTanks:keys:length > 0
     disp_msg("Drop tank triggers initialized").
 }
 
-local tClock to 0.
 wait 0.01.
 until false
 {
-    if mod(tClock, 10) = 0 
-    {
-        set dClock  to time:seconds - pClock.
-        set avgClock to util_avg_values(list(dClock, 10)).
-        set pClock  to time:seconds.
-        print avgClock at (2, 35).
-    }
-    set tClock to tClock + 1.
-    
     set dropTanks to get_drop_tanks().
     set stgDecoupler to dropTanks[0].
     set stgTanks to dropTanks[1].
@@ -102,30 +90,4 @@ global function get_drop_tanks
         }
     }
     return list(dcList, tList).
-}
-
-local function util_avg_values
-{
-    parameter avgList.
-
-    local avg to 0.
-    if not (defined avgVals) global avgVals to list().
-    
-    if avgList:length >= avgList[1] {
-        avgList:remove(9).
-    }
-
-    avgList:add(avgList[0]).
-    for i in avgList
-    {
-        set avg to avg + i.
-    }
-
-    if avg <> 0 {
-        return avg / avgList:length.
-    }
-    else
-    {
-        return 0.
-    }
 }
