@@ -10,7 +10,8 @@
 		"files.autoSaveDelay": 600000,
 		"files.trimFinalNewlines": true,
 		"files.maxMemoryForLargeFilesMB": 8192,
-		"files.participants.timeout": 10000
+		"files.participants.timeout": 10000,
+		"editor.fontLigatures": null
 	},
 	"editor.codeActionsOnSave": null,
 	"workbench.editorAssociations": []

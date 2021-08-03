@@ -3,7 +3,7 @@
 
 clearscreen.
 
-runPath("0:/kslib/library/lib_navigation").
+runPath("0:/kslib/lib_navigation").
 
 local quit is false.
 on AG10 {
@@ -19,7 +19,7 @@ print "Phase angle to the Mun   : ".
 print "Phase angle (normalized) : ".
 print "Phase change per s       : ".
 print "Angle to RAN for the Mun : ".
-lock phaseAng to phaseAngle().
+lock phaseAng to kslib_nav_phase_angle().
 local p0 to phaseAng. 
 wait 1. 
 local p1 to phaseAng.
@@ -32,8 +32,8 @@ until quit {
     set line to line + 1.
     print abs(p1 - p0) at (28, line).
     set line to line + 1.
-    print angleToRelativeAscendingNode(
-        orbitBinormal(ship),
-        orbitBinormal(target)
+    print kslib_nav_ang_to_rel_asc_node(
+        kslib_nav_obt_binormal(ship),
+        kslib_nav_obt_binormal(target)
     ) at (28, line). 
 }

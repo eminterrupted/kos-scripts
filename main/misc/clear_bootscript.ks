@@ -1,0 +1,1 @@
+set core:bootFileName to "".

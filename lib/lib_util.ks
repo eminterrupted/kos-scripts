@@ -1,209 +1,437 @@
 @lazyGlobal off.
 
-//Global lexicon of various anonymous function delegates
-global utils is lex(
-        "checkAltHi"        ,{ parameter _alt. return ship:altitude >= _alt.}
-        ,"checkAltLo"       ,{ parameter _alt. return ship:altitude < _alt.}
-        ,"checkRadarHi"     ,{ parameter _alt. return alt:radar >= _alt.}
-        ,"checkRadarLo"     ,{ parameter _alt. return alt:radar < _alt.}
-        ,"getRVal"          ,{ return ship:facing:roll - lookDirUp(ship:facing:forevector, sun:position):roll.}
-        ,"timeToGround"     ,{ local ttg to choose 0 if ship:verticalSpeed > 0 else alt:radar / -(ship:verticalSpeed). return ttg. }
-        ,"stgFromTag"       ,{ parameter _p. for t in _p:tag:split(".") { if t:startsWith("stgId") { return t:split(":")[1].} return "".}}
-        ).
+//#include "0:/boot/bootloader"
 
+// Dependencies
+runOncePath("0:/lib/lib_disp").
+
+//-- Variables --//
+
+// Global
 global info is lex(
     "altForSci", lex(
         "Kerbin", 250000,
         "Mun", 60000,
         "Minmus", 30000
-        )
-    ).
+    )
+).
+
+// Local
+local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
+local stateFile to dataDisk + "state.json".
 
 
-// Check functions
-    // Checks whether a value falls within a target range
-    global function check_value {
-        parameter _val,
-                  _tgt,
-                  _range.
+//-- Global Functions --//
 
-        if _val >= _tgt - _range and _val <= _tgt + _range {
-            return true.
-        } else {
-            return false.
+// -- Generic functions -- //
+//
+// Creates a breakpoint
+global function breakpoint
+{
+    print "* Press any key to continue *" at (10, terminal:height - 2).
+    terminal:input:getChar().
+    print "                             " at (10, terminal:height - 2).
+}
+
+global function util_play_sfx 
+{
+    parameter sfxId to 0.
+
+    if sfxId = 0 set sfxId to readJson("0:/sfx/ZeldaUnlock.json").
+    local v0 to getVoice(0).
+    from { local idx to 0.} until idx = sfxId:length step { set idx to idx + 1.} do
+    {
+        v0:play(sfxId[idx]).
+        wait 0.05.
+    }
+}
+
+// -- Vessel State functions -- //
+//
+// State cache
+// Caches an arbitrary bit of data in the state file
+global function util_cache_state
+{
+    parameter lexKey,
+              lexVal.
+
+    local stateObj to lex().
+    if exists(stateFile) 
+    {
+        set stateObj to readJson(stateFile).
+    }
+    set stateObj[lexKey] to lexVal.
+    writeJson(stateObj, stateFile).
+    return stateObj[lexKey].
+}
+
+global function util_peek_cache
+{
+    parameter lexKey.
+
+    local stateObj to lex().
+    if exists(stateFile)
+    {
+        set stateObj to readJson(stateFile).
+    }
+    if stateObj:hasKey(lexKey)
+    {
+        return true.
+    }
+    else 
+    {
+        return false.
+    }
+}
+
+global function util_read_cache
+{
+    parameter lexKey.
+
+    if exists(stateFile)
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey(lexKey) return stateObj[lexKey].
+    }
+    return false.
+}
+
+// Clears a value from the state file
+global function util_clear_cache_key
+{
+    parameter lexKey.
+
+    if exists(stateFile) 
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey(lexKey)
+        {
+            stateObj:remove(lexKey).
+            writeJson(stateObj, stateFile).
         }
     }
+}
 
+// Removes the entire state file
+global function util_remove_state
+{
+    deletePath(stateFile).
+}
 
-// Math functions
-    // Calculates the eccentricity of given ap, pe, and planet
-    global function calc_ecc {
-        parameter _ap,
-                _pe,
-                _body is ship:body.
+// Resets the entire state file
+global function util_reset_state
+{
+    writeJson(lex(), stateFile).
+}
 
-        if _body:typeName <> "Body" set _body to Body(_body).
-        
-        return (_ap + _body:radius) - (_pe + _body:radius) / (_ap + _pe + (_body:radius * 2)).
-    }
-
-    // Returns the desired apoapsis given a known periapsis and
-    // eccentricity
-    global function get_ap_for_pe_ecc {
-        parameter _pe,
-                  _ecc,
-                  _body is ship:body.
-
-        local sma   to (_pe + _body:radius) / (1 - _ecc).
-        local rA    to sma * (1 + _ecc).
-
-        return rA - _body:radius.
-    }
-
-    // Returns the desired periapsis given a known apoapsis and
-    // eccentricity
-    global function get_pe_for_ap_ecc {
-        parameter _ap,
-                  _ecc,
-                  _body is ship:body.
-
-        local sma   to (_ap + _body:radius) / (1 + _ecc).
-        local rP    to sma * (1 - _ecc).
-
-        return rP - _body:radius.
-    }
-
-
-//Part module utils
-    // Checks a given module for presence of an event, and does it 
-    // if available
-    global function do_action {
-        parameter _m,       // Module
-                _event,   // Event to do if present
-                _bit is true.     // The true/false bit for an action.
-                                    // Not usually needed, hence the default
-
-        if _m:hasAction(_event) {
-            _m:doAction(_event, _bit).
-            return true.
-        } else {
-            return false.
+// Runmode
+// Gets the runmode from disk if exists, else returns 0
+global function util_init_runmode
+{
+    if exists(stateFile) 
+    {
+        local stateObj to readJson(stateFile).
+        if stateObj:hasKey("runmode")
+        {
+            return stateObj["runmode"].
+        }
+        else
+        {
+            set stateObj["runmode"] to 0.
+            writeJson(stateObj, stateFile).
         }
     }
+    else
+    {
+        writeJson(lex("runmode", 0), stateFile).
+    }
+    return 0.
+}
 
+// Writes the runmode to disk
+global function util_set_runmode
+{
+    parameter runmode is 0.
 
-    // Checks a given module for presence of an event, and does it 
-    // if available
-    global function do_event {
-        parameter _m,       // Module
-                _event.   // Event to do if present
-
-        if _m:hasEvent(_event) {
-            _m:doEvent(_event).
-            return true.
-        } else {
-            return false.
+    if runmode <> 0 
+    {
+        if exists(stateFile) 
+        {
+            local curState to readJson(stateFile).
+            set curState["runmode"] to runmode.
+            writeJson(curState, stateFile).
+        }
+        else
+        {
+            writeJson(lex("runmode", runmode), stateFile).
         }
     }
+    else if exists(stateFile) deletePath(stateFile).
 
-
-    // Checks a given module for presence of a field, and 
-    // returns it if present, false if not 
-    global function get_field {
-        parameter _m,
-                  _field.
-
-        if _m:hasField(_field) {
-            return _m:getField(_field).
-        } else {
-            return false.
-        }
-    }
-
-    // Returns an obj with all fields for a given module
-    global function get_module_fields {
-    parameter m.
-
-    local retObj is lexicon().
-    
-    for f in m:allFieldNames {
-        set retObj[f] to m:getField(f).
-    }
-
-    return retObj.
+    return runmode.
 }
 
 
-//Staging
+// -- List functions -- //
+//
+// Sorts a list of parts by stage
+// Possible sortDir values: asc, desc
+global function util_order_list_by_stage
+{
+    parameter inList,
+              sortDir is "desc".
 
-    // Safe stage. Enforces wait between staging attempts.
-    // Also will add delay for cryo upper stages with 
-    // deployable nozzles if LH2 is present in the stage
-    global function safe_stage {
-        
-        wait 0.5.
-        logStr("Staging").
+    local outList    to list().
+    local startCount to choose -1 if sortDir = "asc" else stage:number.
+    local endCount   to choose stage:number if sortDir = "asc" else -2.
 
-        until false {
-            until stage:ready {   
-                wait 0.01.
-            }
-
-            if stage:ready {
-                stage.
-                wait 0.5.
-                break.
-            }
-        }
-
-        for r in stage:resources {
-            if r:name = "lqdHydrogen" {
-                if r:amount > 0 wait 5.
+    from { local c to startCount.} until c = endCount step { set c to list_step(c, sortDir). } do
+    {
+        for p in inList 
+        {
+            if p:stage = c
+            {
+                outList:add(p).
             }
         }
     }
+    return outList.
+}
 
 
-    // Staging triggers
-    global function staging_triggers {
+// -- Check functions -- //
+//
+// Function for use in maneuver delegates
+global function util_check_del 
+{
+    parameter checkType,
+              rangeLo,
+              rangeHi.
+    
+    local val to 0.
 
-        //One time trigger for solid fuel launch boosters
-        if ship:partsTaggedPattern("eng.solid"):length > 0 {
-            when stage:solidfuel < 0.1 and throttle > 0 then {
-                safe_stage().
-            }
-        }
+    if checkType = "ap"         set val to ship:apoapsis.
+    else if checkType = "pe"    set val to ship:periapsis.
+    else if checkType = "inc"   set val to ship:orbit:inclination.
 
-        // For liquid fueled engines.
-        when ship:availableThrust < 0.1 and throttle > 0 then {
-            safe_stage().
-            preserve.
-        }
+    if val >= rangeLo and val <= rangeHi return true.
+    else return false.
+}
+
+// Checks if ship EC is high enough
+global function util_check_power
+{
+    parameter checkType is "sample".
+
+    local charge to 0.
+    local draw   to 0.
+
+    if checkType = "sample" 
+    {
+        set charge to ship:resources:ec.
+        wait 0.25.
+        set draw to charge - ship:resources:ec / 0.25.
     }
 
+    print draw.
 
-// Vessel state
+    return false.
+}
 
-    // Checks if the ship is settled with respect to it's intended orientation
-    global function shipSettled {
-        if steeringmanager:angleerror >= -0.1 and steeringmanager:angleerror <= 0.1 {
-            if steeringmanager:rollerror >= -0.1 and steeringmanager:rollerror <= 0.1 {
-                return true.
-            }
-        }
+// Checks if a value is above/below the range bounds given
+global function util_check_range
+{
+    parameter val,
+              rangeLo,
+              rangeHi.
 
+    if val >= rangeLo and val <= rangeHi return true.
+    else return false.
+}
+
+// Checks if a value is between a range centered around 0.
+global function util_check_value
+{
+    parameter val,
+              valRange.
+
+    if val >= -(valRange) and val <= valRange return true.
+    else return false.
+}
+
+
+// -- Part modules -- //
+//
+// Checks for an action and executes if found
+global function util_do_action
+{
+    parameter m, 
+              action, 
+              state is true.
+
+    if m:hasAction(action)
+    {
+        m:doAction(action, state).
+        return true.
+    }
+    else
+    {
         return false.
     }
+}
 
+// Checks for an event and executes if found
+global function util_do_event
+{
+    parameter m, 
+              event.
 
-    // Gets the time until impact with the ground, with optional margin
-    // From CheersKevin - https://www.youtube.com/watch?v=-goK27y6Xd4&list=PLb6UbFXBdbCrvdXVgY_3jp5swtvW24fYv&index=16
-    global function time_to_impact {
-        parameter margin is 0.
-
-        local d is alt:radar - margin.
-        local v is -(ship:verticalspeed).
-        local g is ship:body:mu / ship:body:radius^2. 
-
-        return (sqrt(v^2 + 2 * g * d) - v) / g.
+    if m:hasEvent(event)
+    {
+        m:doEvent(event).
+        return true.
     }
+    else
+    {
+        return false.
+    }
+}
+
+// Searches a module for events / actions
+global function util_event_from_module
+{
+    parameter m,
+              event,
+              searchActions to true.
+
+    for e in m:allEvents
+    {
+        if e:contains(event)
+        {
+            return e:replace("(callable) ", ""):replace(", is KSPEvent", "").
+        }
+    }
+
+    if searchActions
+    {
+        for a in m:allActions
+        {
+            if a:contains(event)
+            {
+                return a:replace("(callable) ", ""):replace(", is KSPEvent", "").
+            }
+        }
+    }
+    return "".
+}
+
+// Deploys US Bay Doors
+global function util_us_bay_toggle
+{
+    parameter bay,
+              doors is "all".
+
+    local aniMod to "USAnimateGeneric".
+    local pEvent to "deploy primary bays".
+    local sEvent to "deploy secondary bays".
+
+    if doors = "all" or doors = "primary"
+    {
+        util_do_event(bay:getModule(aniMod), pEvent).
+    }
+    if doors = "all" or doors = "secondary"
+    {
+        util_do_event(bay:getModule(aniMod), sEvent).
+    }
+}
+
+global function util_capacitor_discharge_trigger
+{
+    local ecMon to 0.
+    local resList to list().
+    list resources in resList.
+    for res in resList
+    {
+        if res:name = "ElectricCharge" lock ecMon to res:amount / res:capacity.
+    }
+
+    when ecMon <= 0.05 then
+    {
+        for cap in ship:partsDubbedPattern("capacitor")
+        {
+            local m to cap:getModule("DischargeCapacitor").
+            util_do_event(m, "disable recharge").
+            util_do_event(m, "discharge capacitor").
+            until ecMon >= 0.99 or cap:resources[0]:amount <= 0.1
+            {
+                wait 0.01.
+            }
+        }
+    }
+}
+
+global function util_grapling_hook
+{
+    parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
+              mode is "arm". // other values: release, pivot, decouple
+
+    local event to "".
+    if mode = "arm" {
+        set m to m:part:getModule("ModuleAnimateGeneric").
+        set event to "arm".
+    }
+    else if mode = "release" set event to "release".
+    else if mode = "pivot" set event to "free pivot".
+
+    util_do_event(m, event).
+}
+
+
+
+//#region -- Warp functions -- //
+//
+// Creates a trigger to warp to a timestamp using AG10
+global function util_warp_trigger
+{
+    parameter tStamp, str is "timestamp".
+
+    set tStamp to tStamp - 15.
+    if time:seconds <= tStamp
+    {   
+        ag10 off.
+        disp_hud("Press 0 to warp to " + str).
+        on ag10 
+        {
+            warpTo(tStamp).
+            wait until kuniverse:timewarp:issettled.
+            ag10 off.
+        }
+    }
+}
+
+// Smooths out a warp down by either altitude or timestamp
+global function util_warp_down_to_alt {
+    parameter tgtAlt.
+    
+    if ship:altitude <= tgtAlt * 1.01 set warp to 0.
+    else if ship:altitude <= tgtAlt * 1.10 set warp to 1.
+    else if ship:altitude <= tgtAlt * 1.25 set warp to 2.
+    else if ship:altitude <= tgtAlt * 1.50 set warp to 3.
+    else if ship:altitude <= tgtAlt * 3 set warp to 4.
+    else if ship:altitude <= tgtAlt * 5 set warp to 5.
+    else if ship:altitude <= tgtAlt * 20 set warp to 6.
+    else set warp to 7.
+}
+//#endregion
+
+// -- Local functions -- //
+//
+// Helper function for from loop in list sorting. 
+local function list_step
+{
+    parameter c,
+              sortDir.
+
+    if sortDir = "desc" return c - 1.
+    else return c + 1.
+}

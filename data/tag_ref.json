@@ -245,7 +245,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "eng",
+            "value": "eng.sep",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -285,7 +285,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "eng",
+            "value": "eng.sep",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -1397,7 +1397,7 @@
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
-            "value": "ec.solar.array",
+            "value": "ec.solar.array.retractible",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {
@@ -3830,6 +3830,334 @@
         },
         {
             "value": "comm.dish",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne STP Bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.bus",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-1X-A RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KAL9000 Scriptable Control System",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'M'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.m",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Pico-Port 'F'",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dock.port.pico.f",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MLT-60 Multipurpose Fuel Tank Cluster",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "EVR-WR MP1 - Monopropellant Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Micro Control Moment Gyroscope",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rw",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-L 'Nereid' Specialized Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mk1-3 Command Pod",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Long decal 1x8",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-105 RCS Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEQ-3 Cargo Storage Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cargo.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEQ-3C Conformal Storage Unit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cargo.container",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "STEADLER RC-001MS Probe Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control Decoupler (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Cylindrical fairing (1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "General Launch Base 3 - Large",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.base.clamp",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Section",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Large Modular Service Tower Top",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "mlp.tower",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KX-STAT-2 1x1 Advanced Photovoltaic Truss",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.fixed",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "KV-3 'Pomegranate' Reentry Module",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.crew",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Vostok fairing (1.25m to 1.5m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "bay.doors.us",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Universal Storage: Attitude Control Decoupler (1.875m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.st.ctrl",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Kerbodyne S3-7200 Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CE-2X 'Ulysses' Cryogenic Rocket Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "eng",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RFP-3 Flag (3.75m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SE-PR Small decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc.rad",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RV-1X Variable Thruster Block",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ctrl.rcs",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Z-4K Rechargeable Battery Bank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.battery",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Modular Girder Adapter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.girder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Hexa-Girder Modular Truss M1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.girder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Hexa-Girder Modular Truss L1",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "struct.girder",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TD-18 Decoupler",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dc",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FL-TX440 Fuel Tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "tank",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Probodobodyne RND",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "cmd.core",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RFP-1 Flag (1.25m)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "decal",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "K0x7-FR 'Imager' 1x1 Advanced Photovoltaic Panels",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ec.solar.array.retractible",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MR-420 'Deinonychus' Liquid Methane Engine",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         }
     ],

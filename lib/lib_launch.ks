@@ -1,410 +1,169 @@
 @lazyGlobal off.
 
-runOncePath("0:/lib/lib_init").
-runOncePath("0:/lib/lib_core").
+//-- Dependencies
+runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/lib_util").
 
-if ship:partsTaggedPattern("mlp"):length > 0 runOncePath("0:/lib/part/lib_launchpad").
+//-- Functions
 
-//Main launch sequencer
-global function launch_sequence {
-
-    parameter lObj.
-                
-    local runmode is 0.
-
-    clearScreen.
-    print "MSG: Executing preLaunch()                   " at (2, 7).
-    preLaunch().
-
-    print "MSG: Executing launch()                      " at (2, 7).
-    launch().
-
-    print "MSG: Executing clear_tower()                 " at (2, 7).
-    clear_tower().
-
-    print "MSG: Executing roll_program()                " at (2, 7).
-    roll_program(lObj).
-
-    print "MSG: Executing vertical_ascent()             " at (2, 7).
-    set lObj["gtStart"] to vertical_ascent(lObj).
-
-    print "MSG: Executing gravity turn()                " at (2, 7).
-    gravity_turn(lObj).
-
-    print "MSG: Executing slow_burn_to_apo()            " at (2, 7).
-    slow_burn_to_apo(lObj).
-
-    print "MSG: Executing meco()                        " at (2, 7).
-    meco(lObj).
-
-    if ship:altitude < 70000 {
-        print "MSG: Executing coast_to_space()              " at (2, 7).
-        coast_to_space(lObj).
-    }
-
-    return runmode.
-}
-
-
-//Fairings
-global function arm_proc_fairings {
-    parameter pAlt,
-              base.
-
-    logStr("arm_proc_fairings").
-
-    local cList is base:children.
+//#region -- Ascent functions
+// Set pitch by deviation from a reference pitch
+global function launch_ang_for_alt
+{
+    parameter turnAlt,
+              startAlt,
+              endPitch,
+              pitchLim is 3.5.
     
-    when ship:altitude > pAlt then {
-        for f in cList {
-            if f:tag:contains("pl.pf.fairing") jet_fairing(f).
-        }
-        logStr("Fairings jettison").
-    }
-}
+    // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
+    local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
 
-global function arm_stock_fairings {
-    parameter pAlt,
-              base.
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0001 else ship:prograde:vector.
+    local pgPitch   to 90 - vang(ship:up:vector, pg).
 
-    logStr("arm_stock_fairings").
-
-    when ship:altitude > pAlt then {
-        jet_fairing(base).
-        logStr("Fairings jettison").
-    }
-}
-
-
-// Launch a vessel with a countdown timer
-global function launch_vessel {
-    parameter countdown is 5, 
-              engStart is 2.2.
-
-    logStr("launch_vessel").
-
-    clearScreen.
-    global cd is countdown.
-
-    lock steering to up - r(0,0,90).
-
-    local fallback is false.
-    local holddown is false.
-    local swingarm is false.
-    local umbilical is false.
-
-    for p in ship:partsTaggedPattern("mlp") {
-        if p:tag:matchesPattern("fallback") set fallback to true.
-        else if p:tag:matchesPattern("holddown") set holddown to true.
-        else if p:tag:matchesPattern("swingarm") set swingarm to true.
-        else if p:tag:matchesPattern("umbilical") set umbilical to true.
-    }
-
-    //Setup the launch triggers. 
-    when cd <= countdown * 0.95 then {
-        mlp_retract_crewarm().
-        logStr("Crew arm retract").
-    }   
-    when cd <= countdown * 0.5 then {
-        mlp_fuel_off().
-        logStr("Fueling complete").
-    }
-    when cd <= countdown * 0.45 then {
-        mlp_gen_off(). 
-        logStr("Vehicle on internal power").
-        if fallback {
-            mlp_fallback_open_clamp().
-            logStr("Fallback clamp open").
-        }
-    }
-    when cd <= countdown * 0.4 then {
-        if fallback {
-            mlp_fallback_partial().
-            logStr("Fallback tower partial retract").
-        }
-    }
-    when cd <= engStart then {
-        logStr("Engine start sequence").
-        engine_start_sequence().
-    }
-    when cd <= 0.8 then {
-        if fallback {
-            mlp_fallback_full().
-            logStr("Fallback tower full retract").
-        }
-
-        if swingarm {
-            mlp_retract_swingarm().
-            logStr("Swing arms detached").
-        }
-    }
-    when cd <= 0.2 then {
-        if umbilical {
-            mlp_drop_umbilical().
-            logStr("Umbilicals detached").
-        }
-    }
-    when cd <= 0.1 then {
-        if holddown {
-            mlp_retract_holddown().
-            logStr("Holddown retracted").
-        }
-    }
-
-    logStr("Beginning launch countdown").
-    until cd <= 0 {
-        disp_main().
-        wait 0.1.
-        set cd to cd - 0.1.
-    }
-
-    lock throttle to 1.
-    stage.
-    unset cd.
-    clearScreen.
-}
-
-local function engine_start_sequence {
-    
-    local tSpool to 0.
-    lock throttle to tSpool.
-
-    stage.
-    from { local t to 0.} until t >= 0.15 step { set t to t + 0.01.} do {
-        disp_main().
-        set tSpool to t.
-        set cd to cd - 0.015.
-    }
-
-    from { local t to 0.16.} until t >= 1 step { set t to t + 0.02.} do {
-        disp_main().
-        lock throttle to tSpool.
-        set tSpool to min(1, t).
-        set cd to cd - 0.015.
-    }
-
-    lock throttle to 1.
-}
-
-
-//Set pitch by deviation from a reference pitch to ensure more gradual gravity turns and course corrections
-global function get_la_for_alt {
-
-    parameter rPitch, 
-              tAlt,
-              sAlt is 1000.
-    
-    local tPitch is 0.
-
-    if rPitch < 0 {
-        set tPitch to min( rPitch, -(90 * ( 1 - (ship:altitude - sAlt) / (tAlt)))).
-    }
-
-    else if rPitch >= 0 {
-        set tPitch to max( rPitch, 90 * ( 1 - (ship:altitude - sAlt) / (tAlt))).
-    }
-    
-    local pg is choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) > 0.0001 else ship:prograde:vector.
-    local pgPitch is 90 - vang(ship:up:vector, pg).
-    local effPitch is max(pgPitch - 5, min(tPitch, pgPitch + 5)).
-    
+    // Calculate the effective pitch with a 5 degree limiter
+    local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
     return effPitch.
 }.
+//#endregion
 
+//#region -- Countdown and Launch pad functions
+// Engine startup sequence
+global function launch_engine_start
+{
+    parameter cdEngStart.
 
-global function get_circ_burn_pitch {
-    local obtPitch is 90 - vang(ship:up:vector, ship:prograde:vector).
-    return obtPitch * -1.
-}
-
-
-local function preLaunch {
-    local runmode is set_rm(0).
-    logStr("[Runmode " + runmode + "]: Preparing for launch").
+    local tVal to 0.25.
+    lock throttle to tVal.
     
-    disp_main().
+    stage.
+    until tVal >= .99
+    {
+        disp_msg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
+        disp_info("Engine Start Sequence").
+        disp_info2("Throttle: " + round(tVal * 100) + "% ").
+        set tVal to tVal + 0.0275.
+        wait 0.025.
+    }
 }
 
-
-local function launch {
-    local runmode to set_rm(5).
-    logStr("[Runmode " + runmode + "]: Begin launch procedure").
-
-    if ship:partsTaggedPattern("pl.st.fairing"):length > 0 {
-        arm_stock_fairings(72500, ship:partsTaggedPattern("pl.st.fairing")[0]).
-    } 
-    else if ship:partsTaggedPattern("pl.pf.base"):length > 0 {
-        arm_proc_fairings(72500, ship:partsTaggedPattern("pl.pf.base")[0]).
+// Drops umbilicals and retracts swing arms randomly within 1s
+global function launch_pad_arms_retract
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").     // For swing arms
+    local umbilicalAnimateMod to ship:modulesNamed("ModuleAnimateGeneric"). // For Umbilicals using the old module
+    for m in umbilicalAnimateMod                                            // Combine the lists
+    {
+        if m:hasEvent("drop umbilical") animateMod:add(m).
     }
 
-    launch_vessel(10).
-    
-    local tVal to 1.
-    lock throttle to tVal.
-
-    update_display().
-}    
-
-
-local function clear_tower {
-    local runmode to set_rm(10).
-    logStr("[Runmode " + runmode + "]: Liftoff!").
-    
-    local sVal to heading(90, 90, -90).
-    local tVal to 1.
-
-    lock steering to sVal.
-    lock throttle to tVal.
-
-    //Wait until tower is effectively cleared
-    until alt:radar >= 100 {   
-        update_display().
-    }
-    
-    logStr("Tower cleared").
-    update_display().
-}
-    
-
-local function roll_program {
-    parameter lObj.
-
-    local runmode to set_rm(15).
-    logStr("[Runmode " + runmode + "]: Roll program").
-
-    local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
-    lock steering to sVal.
-
-    local tVal to 1.
-    lock throttle to tVal.
-    
-    update_display().
-}
-
-
-local function vertical_ascent {
-    parameter lObj.
-
-    local runmode to set_rm(20).
-    logStr("[Runmode " + runmode + "]: Vertical ascent").
-    
-    local sVal to heading(l_az_calc(lObj["azObj"]), 90, lObj["rVal"]).
-    lock steering to sVal.
-    
-    local tVal to 1.
-    lock throttle to tVal.
-
-    //Setup staging triggers
-    staging_triggers().
-
-    //Ascent loop
-    until ship:verticalSpeed >= 100 or ship:altitude >= 1000 {
-        update_display().
-    }
-    
-    return ship:altitude.
-}
-
-local function gravity_turn {
-    parameter lObj.
-           
-    local runmode to set_rm(25).
-    logStr("[Runmode " + runmode + "]: Pitch program").
-    
-    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
-    local tVal to 1.
-
-    lock steering to sVal.
-    lock throttle to tVal.
-
-    local acc to 0.
-    local accPid to setup_acc_pid(lObj["maxAcc"]).
-    local qPid to setup_q_pid(lObj["maxQ"]).
-
-    when ship:q >= lObj["maxQ"] then logStr("Approaching Max-Q").
-    when acc >= lObj["maxAcc"] then logStr("Throttling back at maximum acceleration").
-
-    //Gravity turn loop
-    until ship:apoapsis >= lObj["tAp"] * 0.995 {
-        set sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
-        set acc to ship:maxThrust / ship:mass.
-
-        //Check for throttle conditions, otherwise keep it at 100%
-        if ship:q >= lObj["maxQ"] {
-            set tVal to max(0, min(1, 1 + qPid:update(time:seconds, ship:q))). 
-        } else if acc >= lObj["maxAcc"] - 5 {
-            set tVal to max(0, min(1, 1 + accPid:update(time:seconds, acc))).
-        } else {
-            set tVal to 1.
+    if animateMod:length > 0
+    {
+        for m in animateMod
+        {
+            if m:part:name:contains("umbilical")
+            {
+                util_do_event(m, "drop umbilical").
+            }
+            else if m:part:name:contains("swingarm")
+            {
+                if m:hasEvent("toggle") util_do_event(m, "toggle").
+                if m:hasEvent("retract arm left") util_do_event(m, "retract arm left").
+                if m:hasEvent("retract arm") util_do_event(m, "retract arm").
+            }
         }
-        update_display().
-    }
-    
-    set runmode to 30.
-    set stateObj["runmode"] to runmode.
-    log_state(stateObj).
-    
-    return runmode.   
-}
-
-local function slow_burn_to_apo {
-    parameter lObj. 
-
-    local runmode to set_rm(30).
-    logStr("[Runmode " + runmode + "]: Throttling back near apoapsis. [CurAlt:" + round(ship:altitude) + "][Apo:" + round(ship:apoapsis) + "]").
-
-    local sVal to heading(l_az_calc(lObj["azObj"]), get_la_for_alt(lObj["tGEndPitch"], lObj["tGTurnAlt"], lObj["gtStart"]), lObj["rVal"]).
-    lock steering to sVal.
-
-    local tVal to 1.
-    lock throttle to tVal.
-
-    until ship:apoapsis >= lObj["tAp"] {
-        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-        set tval to 0.35.
-
-        update_display().
     }
 }
 
-local function meco {
-    parameter lObj.
+// Fallback tower
+global function launch_pad_fallback_partial
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
+    local clampEvent to "open upper clamp".
+    local towerEvent to "partial retract tower step 1".
 
-    local runmode to set_rm(35).
-    logStr("[Runmode " + runmode + "]: MECO").
-
-    local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-    lock steering to sVal.
-
-    local tVal to 0.
-    lock throttle to tVal.
-
-    update_display().
-}
-
-local function coast_to_space {
-    parameter lObj.
-    
-    local runmode to set_rm(40).
-    logStr("[Runmode " + runmode + "]: Coast phase").
-
-    local sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-    lock steering to sVal.
-
-    local tVal to 0.
-    lock throttle to tVal.
-
-    until ship:altitude >= body:atm:height {
-        set sVal to lookDirUp(ship:facing:forevector, sun:position) + r(0, 0, lObj["rVal"]).
-
-        if ship:apoapsis >= lObj["tAp"] {
-            set tVal to 0.
-        } else {
-            set tVal to 0.25.
+    if animateMod:length > 0 
+    {
+        for m in animateMod
+        {
+            if m:hasEvent(clampEvent) 
+            {
+                util_do_event(m, clampEvent).
+                wait until m:getField("status") = "Locked".
+            }
+            else if m:hasEvent(towerEvent) util_do_event(m, towerEvent).
         }
-
-        update_display().
     }
-    
-    logStr("Reached space").
 }
+
+global function launch_pad_fallback_full
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
+    local towerEvent to "full retract tower step 2".
+
+    if animateMod:length > 0 
+    {
+        for m in animateMod
+        {
+            if m:hasEvent(towerEvent) 
+            {
+                util_do_event(m, towerEvent).
+                break.
+            }
+        }
+    }
+}
+
+// Toggles launchpad generator
+global function launch_pad_gen
+{
+    parameter powerOn.
+
+    local genList   to ship:modulesNamed("ModuleGenerator").
+    for g in genList
+    {
+        if powerOn 
+        {
+            util_do_event(g, "activate generator").
+        }
+        else 
+        {
+            util_do_event(g, "shutdown generator").
+        }
+    }
+}
+
+// Hold downs retract
+global function launch_pad_holdowns_retract
+{
+    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
+    if animateMod:length > 0
+    {
+        for m in animateMod
+        {
+            if m:part:name:contains("hold")
+            {
+                util_do_event(m, "retract arm").
+            }
+            else if m:part:name:contains("SaturnLauncherTSM")
+            {
+                util_do_event(m, "retract arm").   
+            }
+        }
+    }
+}
+
+// ROFI sparklers
+global function launch_pad_rofi
+{
+    local rofiList to ship:partsNamed("AM_MLP_GeneralROFI").
+
+    if rofiList:length > 0 
+    {
+        for r in rofiList 
+        {
+            r:activate.
+        }
+    }
+}
+//#endregion

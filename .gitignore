@@ -1,4 +1,8 @@
-logs/**
+log/**
 vscode/**
 data/launchSelectCache.json
 data/missionCacheParam.json
+data/mp/**
+data/archive/**
+data/cache/**
+data/partRepairLog.log
