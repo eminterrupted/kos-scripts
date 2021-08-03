@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 25000,
-          tgtAp is 25000,
-          tgtArgPe is 270.
+parameter tgtPe is 200000,
+          tgtAp is 200000,
+          tgtArgPe is ship:orbit:argumentofperiapsis.
 
 clearScreen.
 
@@ -58,7 +58,9 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 
 if util_init_runmode() = 0 
 {
-    if exists(path(dataDisk + "state.json")) deletePath(path(dataDisk + "state.json")).
+    util_clear_cache_key("runmode").
+    util_clear_cache_key("dvNeeded").
+    util_clear_cache_key("mnvTA").
 }
 
 // Main
@@ -119,7 +121,7 @@ else if not raiseAp and raisePe
     {
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
-        set dvNeeded to list(-dvNeeded[2], dvNeeded[1]).
+        set dvNeeded to list(dvNeeded[2], -dvNeeded[1]).
         util_cache_state("dvNeeded", dvNeeded).
     }
     else set dvNeeded to util_read_cache("dvNeeded").
@@ -142,7 +144,7 @@ else if not raiseAp and not raisePe
     {
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
-        set dvNeeded to list(dvNeeded[1], -dvNeeded[2]).
+        set dvNeeded to list(-dvNeeded[1], dvNeeded[2]).
         util_cache_state("dvNeeded", dvNeeded).
     }
     else set dvNeeded to util_read_cache("dvNeeded").

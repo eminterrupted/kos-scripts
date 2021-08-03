@@ -29,6 +29,8 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     }
 }
 
+lock steering to lookDirUp(ship:facing:vector, sun:position).
+
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude.
@@ -53,6 +55,6 @@ remove mnvNode.
 set mnvNode to mnv_opt_simple_node(mnvNode, tgtAlt, "ap", ship:body, 0.005, list(10, 0, 0, 1)).
 add mnvNode.
 
-mnv_exec_node_burn(mnvNode).
-
 unlock steering.
+
+mnv_exec_node_burn(mnvNode).

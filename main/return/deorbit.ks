@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter pe is 0.
+parameter pe is -50000.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").

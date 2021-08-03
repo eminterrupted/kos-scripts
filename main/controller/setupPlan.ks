@@ -6,8 +6,8 @@ runOncePath("0:/lib/lib_launch").
 // Global variables
 
 // Mission Params
-local tgtAp     to 500000.
-local tgtPe     to 500000.
+local tgtAp     to 375000.
+local tgtPe     to 375000.
 local tgtInc    to 0.
 //local tgtRoll   to choose 180 if ship:crewcapacity > 0 else 0.
 local tgtRoll   to 0.
@@ -16,21 +16,34 @@ local doReturn  to true.
 
 local missionList to list(
     "mission/simple_orbit"
-    ,"maneuver/transfer_to_body"
+    ,"maneuver/match_inclination"
+    ,"maneuver/transfer_to_planet"
     ,"maneuver/wait_for_soi_change"
     ,"maneuver/capture_burn"
     ,"mission/simple_orbit"
+    ,"maneuver/match_inclination"
     ,"maneuver/transfer_to_target"
     ,"mission/simple_orbit"
     ,"maneuver/kill_relative_velocity"
     ,"mission/simple_orbit"
     ,"return/return_from_mun"
-    //,"maneuver/match_inclination"
-    //,"maneuver/transfer_to_object"
+    //,"mission/orbital_science"
+    //,"maneuver/dock_with_target"
+    //,"misc/clear_bootscript"
+    //,"maneuver/transfer_to_body"
+    //,"maneuver/change_inclination"
+    //,"maneuver/change_orbit"
+    //,"mission/impact_target"
+    //,"maneuver/kill_relative_velocity"
+    //,"maneuver/wait_for_soi_change"
+    //,"maneuver/capture_burn"
+    //,"mission/simple_orbit"
     //,"maneuver/change_inclination"
     //,"maneuver/change_orbit"
     //,"mission/simple_orbit"
-    //,"mission/impact_target"
+    //,"maneuver/transfer_to_object"
+    //,"maneuver/change_inclination"
+    //,"mission/simple_orbit"
     //,"mission/auto_sci_biome"
     //,"maneuver/match_inclination"
     //,"land/land_on_mun"
@@ -42,7 +55,6 @@ local missionList to list(
     //,"maneuver/kerbin_escape"
     //,"mission/sun_science"
     //,"mission/mag_study"
-    //,"mission/orbital_science"
     //,"mission/simple_orbit"
     //,"mission/suborbital_hop"
 ).
@@ -101,7 +113,7 @@ if not reachOrbit
 }
 else if doReturn
 {
-    missionPlan:push("return/ksc_reentry").
+    missionPlan:push("return/reentry").
 }
 
 // Write to cache, and local

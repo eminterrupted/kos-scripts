@@ -68,7 +68,7 @@ global function launch_pad_arms_retract
             else if m:part:name:contains("swingarm")
             {
                 if m:hasEvent("toggle") util_do_event(m, "toggle").
-                if m:hasEvent("retract arm right") util_do_event(m, "retract arm right").
+                if m:hasEvent("retract arm left") util_do_event(m, "retract arm left").
                 if m:hasEvent("retract arm") util_do_event(m, "retract arm").
             }
         }
@@ -149,6 +149,20 @@ global function launch_pad_holdowns_retract
             {
                 util_do_event(m, "retract arm").   
             }
+        }
+    }
+}
+
+// ROFI sparklers
+global function launch_pad_rofi
+{
+    local rofiList to ship:partsNamed("AM_MLP_GeneralROFI").
+
+    if rofiList:length > 0 
+    {
+        for r in rofiList 
+        {
+            r:activate.
         }
     }
 }

@@ -101,8 +101,8 @@ local function mnv_factor
     // else set mnvFactor to 250. 
 
     // Newest
-    if score >= 0.975        and score <= 1.025 set mnvFactor to mnvFactor * 0.0125.
-    else if score >= 0.950   and score <= 1.050 set mnvFactor to mnvFactor * 0.025.
+    if score >= 0.975        and score <= 1.025 set mnvFactor to mnvFactor * 0.025.
+    else if score >= 0.950   and score <= 1.050 set mnvFactor to mnvFactor * 0.035.
     else if score >= 0.925   and score <= 1.075 set mnvFactor to mnvFactor * 0.05. 
     else if score >= 0.85    and score <= 1.15  set mnvFactor to mnvFactor * 0.125. 
     else if score >= 0.75    and score <= 1.25  set mnvFactor to mnvFactor * 0.25.
@@ -237,7 +237,7 @@ global function mnv_opt_transfer_node
     {
         until intercept 
         {
-            set   data    to list(data[0] + 1, data[1], data[2], data[3]).
+            set   data    to list(data[0] + 100, data[1], data[2], data[3]).
             local mnv to node(data[0], data[1], data[2], data[3]).
             add   mnv.
             local testPatch to nav_next_patch_for_node(mnv).
@@ -420,3 +420,16 @@ global function mnv_score
     return lex("score", score, "result", result, "intercept", intercept).
 }
 //#endregion
+
+// Basic mnv change function
+global function mnv_opt_change_node 
+{
+    parameter checkNode,
+              valToChange,
+              changeAmount.
+
+    if valToChange      = "time"     return node(checkNode:time + changeAmount, checkNode:radialOut, checkNode:normal, checkNode:prograde).
+    else if valToChange = "prograde" return node(checkNode:time, checkNode:radialOut, checkNode:normal, checkNode:prograde + changeAmount).
+    else if valToChange = "normal"   return node(checkNode:time, checkNode:radialOut, checkNode:normal + changeAmount, checkNode:prograde).
+    else if valToChange = "radial"   return node(checkNode:time, checkNode:radialOut + changeAmount, checkNode:normal, checkNode:prograde).
+}

@@ -135,6 +135,15 @@ global function util_init_runmode
         {
             return stateObj["runmode"].
         }
+        else
+        {
+            set stateObj["runmode"] to 0.
+            writeJson(stateObj, stateFile).
+        }
+    }
+    else
+    {
+        writeJson(lex("runmode", 0), stateFile).
     }
     return 0.
 }
@@ -144,7 +153,19 @@ global function util_set_runmode
 {
     parameter runmode is 0.
 
-    if runmode <> 0 writeJson(lex("runmode", runmode), stateFile).
+    if runmode <> 0 
+    {
+        if exists(stateFile) 
+        {
+            local curState to readJson(stateFile).
+            set curState["runmode"] to runmode.
+            writeJson(curState, stateFile).
+        }
+        else
+        {
+            writeJson(lex("runmode", runmode), stateFile).
+        }
+    }
     else if exists(stateFile) deletePath(stateFile).
 
     return runmode.

@@ -208,7 +208,6 @@ global function mnv_burn_stages
     parameter dv.
 
     set dv to abs(dv).
-    local dvNeeded to dv.
     local dvStgObj to lex().
 
     // If we need more dV than the vessel has, throw an exception.
@@ -371,6 +370,102 @@ global function mnv_argpe_match_burn
     return list(tgtEta, dvNeeded[0], mnvNode).
 }
 
+// Returns an exit manuever
+global function mnv_exit_node
+{
+    parameter tgtBody.
+
+    // local vInfBody to 1.
+    // local betaAng to arcCos(1 / (1 + (( ship:orbit:semimajoraxis * vInfBody^2) / (ship:body:mu)))) * constant:radtodeg.
+
+    // Add node at Pe
+    disp_msg("Adding node").
+    local mnvTime to time:seconds + eta:periapsis.
+    local mnvNode to node(mnvTime, 0, 0, 10).
+    add mnvNode.
+
+    wait 1.
+
+    // Given it dv to escape
+    disp_msg("Adding escape dv").
+    until false
+    {
+        if mnvNode:orbit:hasnextpatch
+        {
+            if mnvNode:orbit:nextPatch:body = tgtBody
+            {
+                break.
+            }   
+        }
+        remove mnvNode.
+        set mnvNode to mnv_opt_change_node(mnvNode, "prograde", 25).
+        add mnvNode. 
+    }
+    disp_info().
+    wait 1.
+
+    return mnvNode.
+}
+
+// Optimizes an exit node for highest ap
+global function mnv_optimize_exit_ap
+{
+    parameter mnvNode,
+              apThresh.
+    
+    // Sweep timing to lowest Pe
+    local lastAp to mnvNode:orbit:nextPatch:apoapsis.
+    remove mnvNode.
+    until false
+    {
+        add mnvNode.
+        disp_info("Current Ap: " + mnvNode:orbit:nextPatch:apoapsis).
+        disp_info2("LastAp    : " + lastAp).
+        if lastAp > mnvNode:orbit:nextPatch:apoapsis or lastAp >= apThresh
+        {
+            remove mnvNode.
+            break.
+        }
+        set lastAp to mnvNode:orbit:nextPatch:apoapsis. 
+        remove mnvNode.
+        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
+    }
+    disp_info().
+    disp_info2().
+    return mnvNode.
+}
+
+
+// Optimizes an exit node for lowest pe
+global function mnv_optimize_exit_pe
+{
+    parameter mnvNode,
+              peThresh.
+    
+    // Sweep timing to lowest Pe
+    if not hasNode add mnvNode.
+    local lastPe to mnvNode:orbit:nextPatch:periapsis.
+    remove mnvNode.
+    until false
+    {
+        add mnvNode.
+        disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
+        disp_info2("LastPe    : " + lastPe).
+        if lastPe < mnvNode:orbit:nextPatch:periapsis or lastPe <= peThresh
+        {
+            remove mnvNode.
+            break.
+        }
+        set lastPe to mnvNode:orbit:nextPatch:periapsis. 
+        remove mnvNode.
+        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
+    }
+    disp_info().
+    disp_info2().
+
+    return mnvNode.
+}
+
 // Return an object containing all parameters needed for a maneuver
 // to change inclination from orbit 0 to orbit 1. Returns a list:
 // - [0] (nodeAt)     - center of burn node
@@ -530,6 +625,7 @@ global function mnv_exec_node_burn
               burnEta is 0,
               burnDur is 0.
 
+
     set burnDur      to mnv_staged_burn_dur(mnvNode:deltaV:mag).
     local halfDur    to mnv_staged_burn_dur(mnvNode:deltaV:mag / 2).
     set burnEta      to mnvNode:time - halfDur.
@@ -540,6 +636,13 @@ global function mnv_exec_node_burn
     local tVal       to 0.
     lock steering    to sVal.
     lock throttle    to tVal.
+    
+    //Staging trigger
+    when ship:availablethrust <= 0.1 and tVal > 0 then
+    {
+        ves_safe_stage().
+        preserve.
+    }
 
     disp_info("Burn ETA        : " + round(burnEta, 2) + "          ").
     disp_info2("Burn duration   : " + round(burnDur, 2) + "          ").
@@ -548,6 +651,7 @@ global function mnv_exec_node_burn
 
     until time:seconds >= burnEta
     {
+        set sVal to lookDirUp(mnvNode:burnVector, sun:position).
         disp_mnv_burn(time:seconds - burnEta, dvRemaining, burnDur).
         wait 0.01.
     }

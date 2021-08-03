@@ -15,6 +15,7 @@ print "ship:stagedDeltaV".
 print "-----------------".
 ves_available_dv().
 
+print " ".
 print "Calculated DeltaV".
 print "-----------------".
 ves_available_dv_next().
@@ -23,16 +24,16 @@ print " ".
 print " ".
 
 
-print "Mass".
-print "----".
+// print "Mass".
+// print "----".
 
-for p in ship:parts
-{
-    set curMass to curMass + p:mass.
-    set wetMass to wetMass + p:wetmass.
-    set dryMass to dryMass + p:drymass.
+// for p in ship:parts
+// {
+//     set curMass to curMass + p:mass.
+//     set wetMass to wetMass + p:wetmass.
+//     set dryMass to dryMass + p:drymass.
 
-    print "CurMass: " + round(curMass, 3) + " | WetMass: " + round(wetMass, 3) + " | DryMass: " + round(dryMass, 3) + " | PartMass: " + round(p:mass, 3) + " | PartName: " + p:name.
-}
+//     print "CurMass: " + round(curMass, 3) + " | WetMass: " + round(wetMass, 3) + " | DryMass: " + round(dryMass, 3) + " | PartMass: " + round(p:mass, 3) + " | PartName: " + p:name.
+// }
 print " ".
-print "Ship:mass: " + round(ship:mass, 3).
+print "Ship:mass: " + round(ship:mass * 1000).

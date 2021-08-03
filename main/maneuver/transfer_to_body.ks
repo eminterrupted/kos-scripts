@@ -2,7 +2,7 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 250000,
+          tgtAlt is 500000,
           altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").
@@ -86,7 +86,7 @@ if not hasNode
     print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 
     // Add the maneuver node
-    set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, 0.01).
+    set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, 10).
     add mnv.
 }
 

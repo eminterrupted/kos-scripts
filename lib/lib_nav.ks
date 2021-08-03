@@ -332,6 +332,18 @@ global function nav_obt_alt_at_ta
     // Subtract the body radius from the resulting SMA to get alt
     return r - obtIn:body:radius.
 }
+
+// Converts a true anomaly to the mean anomaly. 
+global function nav_ta_to_ma
+{
+    parameter obtIn, 
+              trueAnom.
+
+    local ecc to obtIn:eccentricity.
+    local ea to arctan2(sqrt(1 - ecc^2) * sin(trueAnom), ecc + cos(trueAnom)).
+    local ma to ea - (ecc * sin(ea) * constant:radtodeg).
+    return mod(ma + 360, 360).
+}
 //#endregion
 
 //#region -- Nav vectors

@@ -15,8 +15,8 @@ local parachutes to ship:modulesNamed("RealChuteModule").
 local kscWindow  to list(145, 150).
 local reentryAlt to 35000.
 local shipLng    to 0.
-local stagingAlt to ship:body:atm:height + 15000.
-local sVal       to lookDirUp(ship:retrograde:vector, sun:position).
+local stagingAlt to ship:body:atm:height + 25000.
+local sVal       to lookDirUp(body:position, sun:position).
 local testPatch  to ship:orbit.
 local tVal       to 0.
 
@@ -127,6 +127,7 @@ for c in parachutes
     util_do_event(c, "arm parachute").
 }
 
+set sVal to body:position.
 disp_msg("Waiting until staging altitude: " + stagingAlt).
 until ship:altitude <= stagingAlt.
 {
@@ -155,7 +156,7 @@ disp_msg("Reentry interface").
 
 until ship:groundspeed <= 1500
 {
-    set sVal to ship:retrograde.
+    set sVal to ship:srfRetrograde.
     disp_telemetry().
 }
 unlock steering.

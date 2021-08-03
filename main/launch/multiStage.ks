@@ -41,6 +41,7 @@ local twr_kP        to 0.225.
 local twr_kI        to 0.004.
 local twr_kD        to 0.00.
 local turnAlt       to round(body:atm:height * 0.875).
+local tValLoLim to 0.55.
 
 lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitude)^2.
 
@@ -60,7 +61,6 @@ if hasLES set lesTower to lesTowerList[0].
 local rVal      to launchPlan:tgtRoll.
 local sVal      to heading(90, 90, -90).
 local tVal      to 0.
-local tValLoLim to 0.63.
 
 // throttle pid controllers
 local accPid    to pidLoop().
@@ -106,6 +106,13 @@ lock steering to sVal.
 lock throttle to tVal.
 
 // Countdown
+until countdown >= -6 
+{
+    disp_msg("COUNTDOWN T" + round(countdown, 1)).
+    wait 0.05.
+}
+launch_pad_rofi().
+
 until countdown >= -4 
 {
     disp_msg("COUNTDOWN T" + round(countdown, 1)).

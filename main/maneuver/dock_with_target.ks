@@ -1,8 +1,20 @@
+@lazyGlobal off. 
+
 sas off.
 rcs off.
+clearScreen.
 
 translate().
 clearVecDraws().
+
+
+wait 1.
+
+local capturePort   to "".
+local dockingPorts  to list().
+local probePort     to "".
+local safetyDist    to 75.
+local targetPort    to "".
 
 if not hasTarget {
     print "Select a target".
@@ -12,26 +24,32 @@ if not hasTarget {
     }
 }
 
-wait 1.
-
-local dockingPorts  to list().
-local probePort        to "".
-local targetPort    to "".
-
 list dockingPorts   in dockingPorts.
 set probePort          to dockingPorts[0].
 probePort:controlFrom.
 
-if target:dockingports:length > 0 
+if target:typeName = "Vessel" 
 {
-    for dp in target:dockingPorts 
+    if target:dockingports:length > 1 
     {
-        if dp:tag = "portA" set capturePort to dp.
+        for dp in target:dockingPorts 
+        {
+            if dp:tag = "portA" set capturePort to dp.
+        }
+    }
+    else if target:dockingPorts:length > 0 
+    {
+        set capturePort to target:dockingPorts[0].
+    }
+    else
+    {
+        print "Target has no docking port".
+        print 1 / 0.
     }
 }
-else 
+else if target:typeName <> "dockingPort" 
 {
-    print "Target has no docking port".
+    print "Not a valid target type".
     print 1 / 0.
 }
 
@@ -44,20 +62,23 @@ wait until rcs.
 print "Cancelling relative velocity".
 kill_rel_vel(capturePort, probePort).
 
-print "Ensuring sufficient safety range (100m)".
-clear_docking_port(capturePort, probePort, 100, 2.5).
+print "Ensuring sufficient safety range (" + safetyDist + ")".
+clear_docking_port(capturePort, probePort, safetyDist, 1).
 
 print "Cancelling relative velocity".
 kill_rel_vel(capturePort, probePort).
 
-print "Positioning at port side".
-position_port_side(capturePort, probePort, 100, 2.5).
+if vang(-(probePort:facing:vector), capturePort:facing:vector) <= -180 or vang(-(probePort:facing:vector), capturePort:facing:vector) >= -180
+{
+    print "Positioning at port side".
+    position_port_side(capturePort, probePort, safetyDist, 1).
+}
 
 print "Cancelling relative velocity".
 kill_rel_vel(capturePort, probePort).
 
-print "Making 100m approach".
-approach_docking_port(capturePort, probePort, 100, 2.5).
+print "Making " + safetyDist + "m approach".
+approach_docking_port(capturePort, probePort, safetyDist, 2.5).
 
 print "Making 50m approach".
 approach_docking_port(capturePort, probePort, 50, 1.5).
@@ -89,7 +110,7 @@ global function translate
     parameter vec is v(0, 0, 0).
 
     if vec:mag > 1 set vec to vec:normalized. 
-
+    
     set ship:control:fore       to vDot(vec, ship:facing:forevector).
     set ship:control:starboard  to vDot(vec, ship:facing:starvector).
     set ship:control:top        to vDot(vec, ship:facing:topvector).
@@ -103,6 +124,7 @@ global function kill_rel_vel
     ctrlPort:controlFrom().
 
     lock relVel to ctrlPort:ship:velocity:orbit - tgtPort:ship:velocity:orbit.
+    lock steering to ship:facing.
     until relVel:mag < 0.1 
     {
         translate(-(relVel)).

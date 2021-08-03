@@ -20,7 +20,7 @@ global function nav_hyperbolic_escape_angle
     parameter stBody,
               vEscape.
 
-    local rPark to st:orbit:semiMajorAxis.
+    local rPark to stBody:orbit:semiMajorAxis.
     return arccos(1 / (1 + ((rPark * vEscape^2) / stBody:mu))).
 }
 
