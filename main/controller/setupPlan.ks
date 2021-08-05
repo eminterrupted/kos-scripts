@@ -6,31 +6,33 @@ runOncePath("0:/lib/lib_launch").
 // Global variables
 
 // Mission Params
-local tgtAp     to 375000.
-local tgtPe     to 375000.
-local tgtInc    to 0.
-//local tgtRoll   to choose 180 if ship:crewcapacity > 0 else 0.
+local tgtAp     to 225000.
+local tgtPe     to 225000.
+local tgtInc    to 87.5.
 local tgtRoll   to 0.
 local lazObj    to l_az_calc_init(tgtAp, tgtInc).
-local doReturn  to true.
+local doReturn  to false.
 
 local missionList to list(
     "mission/simple_orbit"
-    ,"maneuver/match_inclination"
-    ,"maneuver/transfer_to_planet"
-    ,"maneuver/wait_for_soi_change"
-    ,"maneuver/capture_burn"
-    ,"mission/simple_orbit"
-    ,"maneuver/match_inclination"
-    ,"maneuver/transfer_to_target"
-    ,"mission/simple_orbit"
-    ,"maneuver/kill_relative_velocity"
-    ,"mission/simple_orbit"
-    ,"return/return_from_mun"
+    ,"mission/recon"
+    //,"maneuver/match_inclination"
+    //,"maneuver/transfer_to_body"
+    //,"maneuver/wait_for_soi_change"
+    //,"maneuver/capture_burn"
+    //,"maneuver/change_inclination"
+    //,"maneuver/change_orbit"
+    //,"mission/simple_orbit"
+    //,"maneuver/transfer_to_planet"
+    //,"maneuver/match_inclination"
+    //,"maneuver/transfer_to_target"
+    //,"mission/simple_orbit"
+    //,"maneuver/kill_relative_velocity"
+    //,"mission/simple_orbit"
+    //,"return/return_from_mun"
     //,"mission/orbital_science"
     //,"maneuver/dock_with_target"
     //,"misc/clear_bootscript"
-    //,"maneuver/transfer_to_body"
     //,"maneuver/change_inclination"
     //,"maneuver/change_orbit"
     //,"mission/impact_target"

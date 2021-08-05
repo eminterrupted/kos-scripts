@@ -221,8 +221,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 // LES Tower jet
 if hasLES 
 {
-    local towerJet to ves_jettison_les(lesTower).
-    if towerJet 
+    if ves_jettison_les(lesTower)
     {
         disp_info("LES Tower jettisoned").
     }

@@ -887,8 +887,8 @@ global function ves_jettison_les
     parameter lesTower.
 
     lesTower:activate.
-    wait 0.01.
-    if not lesTower:flameout 
+    wait 0.05.
+    if not lesTower:flameout
     {
         lesTower:getModule("ModuleDecouple"):doEvent("decouple").
         return true.

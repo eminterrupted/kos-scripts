@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter tgtInc is 0,
-          tgtLAN is 0.
+parameter tgtInc is 29.7,
+          tgtLAN is 216.7.
 
 clearscreen.
 clearVecDraws().
@@ -52,7 +52,7 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
 // Main
 disp_info("Current inc: " + round(ship:orbit:inclination, 5) + " | Target inc: " + tgtInc).
 disp_info2("Current LAN: " + round(ship:orbit:lan, 1) + " | Target LAN: " + tgtLAN).
-
+wait 2.
 if util_check_range(ship:orbit:inclination, tgtInc - 1, tgtInc + 1) and util_check_range(ship:orbit:lan, tgtLAN - 2.5, tgtLAN + 2.5)
 {
     disp_msg("Orbit already within target error margin").

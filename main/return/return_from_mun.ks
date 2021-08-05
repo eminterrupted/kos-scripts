@@ -5,13 +5,17 @@ clearscreen.
 parameter returnBody is body("Kerbin"),
           returnAlt  is 45000.
 
+runOncePath("0:/lib/lib_conics").
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_mnv_optimization").
 
 disp_main(scriptPath()).
 
+local exitTS  to 0.
+local exitVel to 0.
 local mnvNode to node(0, 0, 0, 0).
+
 
 // Staging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -23,9 +27,11 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 if hasNode remove nextNode.
 if not ship:orbit:hasnextpatch
 {
-    set mnvNode to mnv_exit_node(returnBody).
-    set mnvNode to mnv_optimize_exit_pe(mnvNode, returnAlt).
+    
 
+    set mnvNode to mnv_exit_node(returnBody).
+    set exitTS  to nextNode:orbit:nextpatcheta + time:seconds.
+    set mnvNode to mnv_optimize_exit_pe(mnvNode, returnAlt).
     wait 1.
 
     // Optimize dV for free return

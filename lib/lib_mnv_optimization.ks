@@ -294,7 +294,7 @@ global function mnv_optimize_node_data
               tgtBody,
               compMode,
               changeModes is list(10, 1, 1, 1),
-              accVal is 0.005.
+              accVal is 0.0025.
 
     disp_info("Optimizing node.").
 
@@ -365,7 +365,7 @@ global function mnv_opt_simple_node
               tgtVal,
               compMode,
               tgtBody is ship:body,
-              accVal is 0.005,
+              accVal is 0.0025,
               changeModes is list(10, 1, 1, 1).
 
     local data to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).

@@ -2,7 +2,7 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 500000,
+          tgtAlt is 1500000,
           altPadding to 50000.
 
 runOncePath("0:/lib/lib_disp").

@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 200000,
-          tgtAp is 200000,
-          tgtArgPe is ship:orbit:argumentofperiapsis.
+parameter tgtPe is 40113,
+          tgtAp is 2043540,
+          tgtArgPe is 281.7.
 
 clearScreen.
 
@@ -26,6 +26,7 @@ if tgtPe:typename = "list"
 }
 
 // Variables
+local cacheValues   to list("compMode", "dvNeeded", "mnvTA", "runmode", "tgtVal_0", "tgtVal_1").
 local compMode      to "".
 local dvNeeded      to list().
 local mnvEta        to 0.
@@ -56,129 +57,89 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     preserve.
 }
 
+// Main
 if util_init_runmode() = 0 
 {
-    util_clear_cache_key("runmode").
-    util_clear_cache_key("dvNeeded").
-    util_clear_cache_key("mnvTA").
-}
-
-// Main
-disp_msg("Calculating burn data").
-if raiseAp and raisePe 
-{
-    print "raise rAp and raise rPe" at (2, 25).
-    set tgtVal_0 to tgtAp.
-    set tgtVal_1 to tgtPe.
-    set compMode to "ap".
-    if not util_peek_cache("dvNeeded") 
+    for val in cacheValues 
     {
+        util_clear_cache_key(val).
+    }
+    
+    disp_msg("Calculating burn data").
+    if raiseAp and raisePe 
+    {
+        print "raise rAp and raise rPe" at (2, 25).
+        set tgtVal_0 to tgtAp.
+        set tgtVal_1 to tgtPe.
+        set compMode to "ap".
         set xfrAp    to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        util_cache_state("dvNeeded", dvNeeded).
-    }
-    else set dvNeeded to util_read_cache("dvNeeded").
-    if not util_peek_cache("mnvTA")
-    {
         set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
-    else
+    else if raiseAp and not raisePe 
     {
-        set mnvTA to util_read_cache("mnvTA").
-    }
-}
-else if raiseAp and not raisePe 
-{
-    print "raise rAp and lower rPe" at (2, 25).
-    set tgtVal_0 to tgtAp.
-    set tgtVal_1 to tgtPe.
-    set compMode to "ap".
-    if not util_peek_cache("dvNeeded") 
-    {
+        print "raise rAp and lower rPe" at (2, 25).
+        set tgtVal_0 to tgtAp.
+        set tgtVal_1 to tgtPe.
+        set compMode to "ap".
         set xfrAp    to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        util_cache_state("dvNeeded", dvNeeded).
-    }
-    else set dvNeeded to util_read_cache("dvNeeded").
-    if not util_peek_cache("mnvTA")
-    {
         set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
     }
-    else 
+    else if not raiseAp and raisePe
     {
-        set mnvTA to util_read_cache("mnvTA").
-    }
-}
-else if not raiseAp and raisePe
-{
-    print "lower rAp and raise rPe" at (2, 25).
-    set tgtVal_0 to tgtPe.
-    set tgtVal_1 to tgtAp.
-    set compMode to "pe".
-    if not util_peek_cache("dvNeeded") 
-    {
+        print "lower rAp and raise rPe" at (2, 25).
+        set tgtVal_0 to tgtPe.
+        set tgtVal_1 to tgtAp.
+        set compMode to "pe".
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[2], -dvNeeded[1]).
-        util_cache_state("dvNeeded", dvNeeded).
-    }
-    else set dvNeeded to util_read_cache("dvNeeded").
-    if not util_peek_cache("mnvTA")
-    {
         set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
-    else 
+    else if not raiseAp and not raisePe
     {
-        set mnvTA to util_read_cache("mnvTA").
-    }
-}
-else if not raiseAp and not raisePe
-{
-    print "lower rAp and lower rPe" at (2, 25).
-    set tgtVal_0 to tgtPe.
-    set tgtVal_1 to tgtAp.
-    set compMode to "pe".
-    if not util_peek_cache("dvNeeded") 
-    {
+        print "lower rAp and lower rPe" at (2, 25).
+        set tgtVal_0 to tgtPe.
+        set tgtVal_1 to tgtAp.
+        set compMode to "pe".
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(-dvNeeded[1], dvNeeded[2]).
-        util_cache_state("dvNeeded", dvNeeded).
-    }
-    else set dvNeeded to util_read_cache("dvNeeded").
-    if not util_peek_cache("mnvTA")
-    {
         set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
     }
-    else 
-    {
-        set mnvTA to util_read_cache("mnvTA").
-    }
-}
 
-// Write to cache
-if util_peek_cache("compMode")
-{
-    set compMode to util_read_cache("compMode").
-}
-else
-{
+    // Write to cache
     util_cache_state("compMode", compMode).
+    util_cache_state("dvNeeded", dvNeeded).
+    util_cache_state("mnvTA", mnvTA).
+    util_cache_state("tgtVal_0", tgtVal_0).
+    util_cache_state("tgtVal_1", tgtVal_1).
+
+    disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
+    wait 1.
+    disp_msg().
+
+    util_set_runmode(1).
 }
 
-disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
-wait 1.
-disp_msg().
+// Read values from state file
+set compMode    to util_read_cache("compMode").
+set dvNeeded    to util_read_cache("dvNeeded").
+set mnvTA       to util_read_cache("mnvTA").
+set tgtVal_0    to util_read_cache("tgtVal_0").
+set tgtVal_1    to util_read_cache("tgtVal_1").
 
-if util_init_runmode() = 0 
+// Transfer burn
+if util_init_runmode() = 1
 {
-    // Transfer burn
     disp_msg("Transfer Burn").
-    set mnvTime to time:seconds + nav_eta_to_ta(ship:orbit, mnvTA).
+    set mnvTA       to util_read_cache("mnvTA").
+    set mnvTime     to time:seconds + nav_eta_to_ta(ship:orbit, mnvTA).
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
-    set mnvNode to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
+    set mnvNode     to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
     add mnvNode.
     if mnvNode:burnvector:mag > 0.1 
     {
@@ -188,7 +149,6 @@ if util_init_runmode() = 0
     {
         remove mnvNode.
     }
-    util_set_runmode(1).
     if compMode = "ap" 
     {
         util_cache_state("mnvTA", 180).
@@ -197,19 +157,14 @@ if util_init_runmode() = 0
     {
         util_cache_state("mnvTA", 0).
     }
+    util_set_runmode(2).
 }
 
-if util_init_runmode() = 1
+// Arrival burn
+if util_init_runmode() = 2
 {
-    // Arrival burn
     disp_msg("Arrival Burn").
-    if util_peek_cache("mnvTA") {
-        set mnvTA to util_read_cache("mnvTA").
-    }
-    else
-    {
-        set mnvTA to mod(mnvTA + 180, 360).
-    }
+    set mnvTA       to util_read_cache("mnvTA").
     set mnvEta      to nav_eta_to_ta(ship:orbit, mnvTA).
     set mnvTime     to time:seconds + mnvEta.
     local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
@@ -228,6 +183,7 @@ if util_init_runmode() = 1
 }
 
 // Cleanup the state file
-util_clear_cache_key("runmode").
-util_clear_cache_key("dvNeeded").
-util_clear_cache_key("mnvTA").
+for val in cacheValues 
+{
+    util_clear_cache_key(val).
+}

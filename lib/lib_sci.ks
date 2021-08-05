@@ -17,6 +17,10 @@ global function sci_deploy_list
         {
             sci_deploy_us(m).
         }
+        else if m:name:contains("recon")
+        {
+            sci_deploy_recon(m).
+        }
         else
         {
             sci_deploy(m).
@@ -31,6 +35,7 @@ global function sci_modules
     for m in ship:modulesNamed("ModuleScienceExperiment")   sciList:add(m).
     for m in ship:modulesNamed("DMModuleScienceAnimate")    sciList:add(m).
     for m in ship:modulesNamed("DMXrayDiffract")            sciList:add(m).
+    for m in ship:modulesNamed("DMReconScope")              sciList:add(m).
     for m in ship:modulesNamed("DMRoverGooMat")             sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience") sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")           sciList:add(m).
@@ -168,6 +173,14 @@ local function sci_deploy
         wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
     }
+}
+
+// Deploy DM Recon
+local function sci_deploy_recon
+{
+    parameter m.
+
+    util_do_event(m, "collect recon data").
 }
 
 // Deploy USScience experiments

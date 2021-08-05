@@ -440,7 +440,8 @@ global function mnv_optimize_exit_ap
 global function mnv_optimize_exit_pe
 {
     parameter mnvNode,
-              peThresh.
+              peThresh,
+              tgtBody is ship:body:body.
     
     // Sweep timing to lowest Pe
     if not hasNode add mnvNode.
@@ -451,7 +452,7 @@ global function mnv_optimize_exit_pe
         add mnvNode.
         disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
         disp_info2("LastPe    : " + lastPe).
-        if lastPe < mnvNode:orbit:nextPatch:periapsis or lastPe <= peThresh
+        if (lastPe < mnvNode:orbit:nextPatch:periapsis or lastPe <= peThresh) and mnvNode:orbit:nextPatch:body = tgtBody
         {
             remove mnvNode.
             break.
