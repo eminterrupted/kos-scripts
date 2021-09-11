@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 40113,
-          tgtAp is 2043540,
-          tgtArgPe is 281.7.
+parameter tgtPe is 25000,
+          tgtAp is 25000,
+          tgtArgPe is ship:orbit:argumentofperiapsis.
 
 clearScreen.
 
@@ -11,6 +11,7 @@ clearScreen.
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/lib_util").
 
 disp_main(scriptPath():name).
 
@@ -75,7 +76,7 @@ if util_init_runmode() = 0
         set xfrAp    to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
+        set mnvTA to mod((360 + tgtArgPe) - ship:orbit:argumentofperiapsis, 360).
     }
     else if raiseAp and not raisePe 
     {
@@ -86,7 +87,7 @@ if util_init_runmode() = 0
         set xfrAp    to tgtAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
-        set mnvTA to mod(360 + tgtArgPe - ship:orbit:argumentofperiapsis, 360).
+        set mnvTA to mod((360 + tgtArgPe) - ship:orbit:argumentofperiapsis, 360).
     }
     else if not raiseAp and raisePe
     {
@@ -96,8 +97,8 @@ if util_init_runmode() = 0
         set compMode to "pe".
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
-        set dvNeeded to list(dvNeeded[2], -dvNeeded[1]).
-        set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
+        set dvNeeded to list(dvNeeded[1], -dvNeeded[2]).
+        set mnvTA to mod((540 + tgtArgPe) - ship:orbit:argumentOfPeriapsis, 360).
     }
     else if not raiseAp and not raisePe
     {
@@ -107,8 +108,8 @@ if util_init_runmode() = 0
         set compMode to "pe".
         set xfrAp    to stAp.
         set dvNeeded to mnv_dv_bi_elliptic(stPe, stPe, tgtPe, tgtAp, xfrAp, ship:body).
-        set dvNeeded to list(-dvNeeded[1], dvNeeded[2]).
-        set mnvTA to mod(540 + tgtArgPe - ship:orbit:argumentOfPeriapsis, 360).
+        set dvNeeded to list(dvNeeded[1], -dvNeeded[2]).
+        set mnvTA to mod((540 + tgtArgPe) - ship:orbit:argumentOfPeriapsis, 360).
     }
 
     // Write to cache
@@ -117,12 +118,9 @@ if util_init_runmode() = 0
     util_cache_state("mnvTA", mnvTA).
     util_cache_state("tgtVal_0", tgtVal_0).
     util_cache_state("tgtVal_1", tgtVal_1).
-
     disp_msg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
-    wait 1.
-    disp_msg().
 
-    util_set_runmode(1).
+    util_set_runmode(2).
 }
 
 // Read values from state file
@@ -133,7 +131,7 @@ set tgtVal_0    to util_read_cache("tgtVal_0").
 set tgtVal_1    to util_read_cache("tgtVal_1").
 
 // Transfer burn
-if util_init_runmode() = 1
+if util_init_runmode() = 2
 {
     disp_msg("Transfer Burn").
     set mnvTA       to util_read_cache("mnvTA").
@@ -157,11 +155,11 @@ if util_init_runmode() = 1
     {
         util_cache_state("mnvTA", 0).
     }
-    util_set_runmode(2).
+    util_set_runmode(3).
 }
 
 // Arrival burn
-if util_init_runmode() = 2
+if util_init_runmode() = 3
 {
     disp_msg("Arrival Burn").
     set mnvTA       to util_read_cache("mnvTA").

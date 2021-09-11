@@ -16,6 +16,7 @@ local tgtDescentSpd to -2.5.
 local tgtHSpd       to 50.
 local tgtRadarAlt   to 10.
 local tti           to 0.
+local wpStartDist   to 100000.
 
 local hasDropTanks  to false.
 local dropTanks     to list().
@@ -31,8 +32,12 @@ local shipBounds    to ship:bounds.
 local ttiPid    to pidLoop(0.5, 0.001, 0.01, 0, 1).
 local vsPid     to pidLoop(0.5, 0.001, 0.01, 0, 1).
 
+local sVal to lookDirUp(ship:retrograde:vector, sun:position).
+
 local tVal to 0.
 local tValLim to 0.
+
+local tgtWaypoint is nav_get_active_wp().
 
 if ship:partsTaggedPattern("dropTank"):length > 0
 {
@@ -76,6 +81,7 @@ for p in ship:partsTaggedPattern("landingLight")
 lock altRadarOverride to shipBounds:bottomAltRadar.
 lock throttle to tVal.
 lock steering to lookDirUp(ship:retrograde:vector, sun:position).
+lock tgtVector to tgtWaypoint:position.
 
 // Staging trigger
 when ship:availablethrust <= 0.1 and tVal > 0 then
@@ -86,15 +92,48 @@ when ship:availablethrust <= 0.1 and tVal > 0 then
         if stage:number > 0 preserve.
 }
 
-disp_hud("Press 0 to initiate landing sequence").
-ag10 off.
-until ag10
+disp_hud("Waiting until waypoint distance is " + wpStartDist + "m").
+
+until tgtWaypoint:geoPosition:distance <= wpStartDist
 {
     disp_orbit().
 }
 
 disp_msg("Landing sequence").
-disp_info("Cancelling horizontal velocity to " + tgtHSpd + "m/s").
+
+local tgtWaypointAtAlt to tgtWaypoint:geoPosition:altitudeVelocity(ship:altitude).
+lock hAngleError to vAng(ship:prograde:vector, tgtWaypointAtAlt:orbit).
+lock vAngleError to vAng(ship:prograde:vector, tgtWaypoint:position).
+
+local yawPid    to pidLoop(0.01, 0.0, 0.0, -45, 45, 0.001).
+local pitchPid  to pidLoop(0.1, 0.0, 0.0, -90, 90, 0.01).
+
+disp_info("Changing inclination for intercept").
+disp_info2("Current hAngleError: " + hAngleError).
+if not util_check_range(hAngleError, -1, 1)
+{
+    set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(hAngleError, 0, 0).
+    lock steering to sval.
+    set tVal to 1.
+    until util_check_range(hAngleError, -1, 1)
+    {
+        set yawPid:setpoint to 0.
+        set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(hAngleError, 0, 0).
+        disp_landing().
+        disp_info2("Current hAngleError: " + hAngleError).
+        wait 0.01.
+    }
+    set tVal to 0.
+}
+
+
+
+
+
+
+
+
+
 set tVal to 1.
 ag10 off.
 until ship:groundspeed <= tgtHSpd or ag10

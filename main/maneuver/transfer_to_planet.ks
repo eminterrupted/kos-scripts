@@ -2,8 +2,8 @@
 clearScreen.
 
 parameter stBody is ship:body,
-          tgtBody is "Eve",
-          tgtAlt  is 1000000.
+          tgtBody is "Minmus",
+          tgtAlt  is 50000.
 
 // Dependencies
 local libs to list(
@@ -51,6 +51,9 @@ local transferAlt   to 0.
 local transferPhase to 0.
 local tgtBodyAlt    to target:altitude - target:body:radius.
 
+local sVal to lookDirUp(ship:prograde:vector, sun:position).
+lock steering to sVal.
+
 // Below this line is the "proper" way to find the transfer time. 
 // However, since we will be using a 4 step method of exit, circ, 
 // match inc, transfer, we need to exit immediately vs some arbitrary
@@ -94,15 +97,16 @@ local tgtBodyAlt    to target:altitude - target:body:radius.
 
 if runmode = 0 
 {
-    set mnvExit to mnv_exit_node(stBody:body).
     if target:altitude > stBody:altitude
     {
+        set mnvExit to mnv_exit_node(stBody:body, "pro").
         set transferAlt to stBody:altitude + ((target:altitude - stBody:altitude) / 8).
         set mnvExit to mnv_optimize_exit_ap(mnvExit, transferAlt).
         set mnvExit to mnv_opt_simple_node(mnvExit, transferAlt, "ap", stBody:body).
     }
     else
     {
+        set mnvExit to mnv_exit_node(stBody:body, "retro").
         set transferAlt to stBody:altitude - ((stBody:altitude - target:altitude) / 8).
         set mnvExit to mnv_optimize_exit_pe(mnvExit, transferAlt).
         set mnvExit to mnv_opt_simple_node(mnvExit, transferAlt, "pe", stBody:body).

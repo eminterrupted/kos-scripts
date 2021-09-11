@@ -1,6 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
+parameter toggleHighlight is false.
+
 runOncePath("0:/lib/lib_util").
 
 print "Running repair program".
@@ -38,6 +40,7 @@ for m in ship:modulesNamed("ModuleUPFMEvents")
             log ship:name + ",SUCCESS," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
         }
         print " ".
+        if toggleHighlight util_do_event(m, "toggle failure highlight").
     }
 }
 

@@ -49,7 +49,8 @@ global function mnv_get_candidates
               timeFactor to 1,
               radialFactor to 1,
               normalFactor to 1,
-              progradeFactor to 1.
+              progradeFactor to 1,
+              positiveTimeOnly to false.
 
     local mnvCandidates to list(
         list(data[0] + mnvFactor, data[1], data[2], data[3])  //Time
@@ -80,6 +81,10 @@ global function mnv_get_candidates
     {
         mnvCandidates:remove(1).
         mnvCandidates:remove(0).
+    }
+    if positiveTimeOnly
+    {
+        mnvCandidates:remove(1).
     }
 
     return mnvCandidates.
@@ -161,6 +166,67 @@ global function mnv_improve_node
     return bestCandidate.
 }
 
+
+// Optimizes an exit node for highest ap
+global function mnv_optimize_exit_ap
+{
+    parameter mnvNode,
+              apThresh.
+    
+    // Sweep timing to lowest Pe
+    local lastAp to mnvNode:orbit:nextPatch:apoapsis.
+    remove mnvNode.
+    until false
+    {
+        add mnvNode.
+        disp_info("Current Ap: " + mnvNode:orbit:nextPatch:apoapsis).
+        disp_info2("LastAp    : " + lastAp).
+        if lastAp > mnvNode:orbit:nextPatch:apoapsis or lastAp >= apThresh
+        {
+            remove mnvNode.
+            break.
+        }
+        set lastAp to mnvNode:orbit:nextPatch:apoapsis. 
+        remove mnvNode.
+        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
+    }
+    disp_info().
+    disp_info2().
+    return mnvNode.
+}
+
+
+// Optimizes an exit node for lowest pe
+global function mnv_optimize_exit_pe
+{
+    parameter mnvNode,
+              peThresh,
+              tgtBody is ship:body:body.
+    
+    // Sweep timing to lowest Pe
+    if not hasNode add mnvNode.
+    local lastPe to mnvNode:orbit:nextPatch:periapsis.
+    remove mnvNode.
+    until false
+    {
+        add mnvNode.
+        disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
+        disp_info2("LastPe    : " + lastPe).
+        if (lastPe < mnvNode:orbit:nextPatch:periapsis or lastPe <= peThresh) and mnvNode:orbit:nextPatch:body = tgtBody
+        {
+            remove mnvNode.
+            break.
+        }
+        set lastPe to mnvNode:orbit:nextPatch:periapsis. 
+        remove mnvNode.
+        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
+    }
+    disp_info().
+    disp_info2().
+
+    return mnvNode.
+}
+
 global function mnv_opt_return_node
 {
     parameter mnvNode,
@@ -183,6 +249,7 @@ global function mnv_opt_object_transfer_node
     local candidates    to list().
     local data          to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).
 
+    local orbitCount    to 0.
     local nodeScore     to mnv_score(data, tgtVAng, target:body, "rendezvousAng").
     local curScore      to nodeScore["score"].
     local intercept     to nodeScore["intercept"].
@@ -202,6 +269,11 @@ global function mnv_opt_object_transfer_node
     // Hill climb - eval candidates until within acceptable range
     until curScore >= 0.995 and curScore <= 1.005
     {
+        if data[0] <= (time:seconds + (ship:orbit:period * orbitCount))
+        {
+            set orbitCount to orbitCount + 4. 
+            set data to list(data[0] + (ship:orbit:period * orbitCount), data[1], data[2], data[3]).
+        }
         set mnvFactor  to mnv_factor(curScore).
         set candidates to mnv_get_candidates(data, mnvFactor, 10, 0, 0, 0).
         set bestCandidate to mnv_eval_candidates(data, candidates, tgtVAng, target:body, "rendezvousAng").
@@ -210,6 +282,8 @@ global function mnv_opt_object_transfer_node
         set curScore to bestCandidate["curScore"]["score"].
     }
 
+    clr_disp().
+    
     set mnvNode to node(data[0], data[1], data[2], data[3]).
     return mnvNode.
 }
@@ -280,6 +354,7 @@ global function mnv_opt_transfer_node
         set optimizedData to data.
     }
     disp_msg().
+    clr_disp().
     set optimizedData to mnv_optimize_node_data(optimizedData, tgtAlt, tgtBody, "pe").
     return node(optimizedData[0], optimizedData[1], optimizedData[2], optimizedData[3]).
 }
@@ -294,7 +369,7 @@ global function mnv_optimize_node_data
               tgtBody,
               compMode,
               changeModes is list(10, 1, 1, 1),
-              accVal is 0.0025.
+              accVal is 0.005.
 
     disp_info("Optimizing node.").
 
@@ -365,7 +440,7 @@ global function mnv_opt_simple_node
               tgtVal,
               compMode,
               tgtBody is ship:body,
-              accVal is 0.0025,
+              accVal is 0.005,
               changeModes is list(10, 1, 1, 1).
 
     local data to list(mnvNode:time, mnvNode:radialOut, mnvNode:normal, mnvNode:prograde).

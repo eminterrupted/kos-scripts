@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter ascentAlt is 20000, 
+parameter ascentAlt is 50000, 
           ascentInc is 0,
           stageOnAscent is false.
 

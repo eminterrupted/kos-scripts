@@ -20,17 +20,14 @@ local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 // local curThr    to 0.
 local boosters      to list().
 local dropTanks     to list().
-local fairings      to list().
 
 local hasBoosters   to false.
 local hasDropTanks  to false.
-local hasFairing    to false.
+
 local hasLES        to false.
 local lesTower      to "".
 local lesTowerList  to list().
 
-local curAcc        to 0.
-local curThr        to 0.
 local curTwr        to 0.
 local endPitch      to 0.
 local finalAlt      to 0.
@@ -40,9 +37,9 @@ local maxTwr        to 2.25.
 local stAlt         to 0.
 local stTurn        to 750.
 local stSpeed       to 100.
-local twr_kP        to 0.175.
-local twr_kI        to 0.005.
-local twr_kD        to 0.0.
+local twr_kP        to 0.225.
+local twr_kI        to 0.004.
+local twr_kD        to 0.00.
 local turnAlt       to round(body:atm:height * 0.875).
 local tValLoLim to 0.55.
 
@@ -50,22 +47,10 @@ lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitud
 
 // Flags
 // Fairings
-for m in ship:modulesNamed("ProceduralFairingDecoupler")
-{
-    if m:part:tag = "" fairings:add(m).
-}
-
-for m in ship:modulesNamed("ModuleProceduralFairing")
-{
-    if m:part:tag = "" fairings:add(m).
-}
-
-for m in ship:modulesNamed("ModuleSimpleAdjustableFairing")
-{
-    if m:part:tag = "" fairings:add(m).
-}
-
-set hasFairing to choose true if fairings:length > 0 else false.
+local hasFairing to choose true if ship:modulesNamed("ProceduralFairingDecoupler"):length > 0 
+        or ship:modulesNamed("ModuleProceduralFairing"):length > 0 
+        or ship:modulesNamed("ModuleSimpleAdjustableFairing"):length > 0 
+    else false.
 
 // LES
 set lesTowerList to ship:partsDubbedPattern("escape").
@@ -104,7 +89,7 @@ if hasFairing
 {
     when ship:altitude > body:atm:height + 250 then
     {
-        ves_jettison_fairings(fairings).
+        ves_jettison_fairings().
     }
 }
 
@@ -121,8 +106,6 @@ lock steering to sVal.
 lock throttle to tVal.
 
 // Countdown
-launch_pad_crew_arm_retract().
-
 until countdown >= -6 
 {
     disp_msg("COUNTDOWN T" + round(countdown, 1)).
@@ -210,9 +193,7 @@ set accPid:setpoint to maxAcc.
 set twrPid to pidLoop(twr_kP, twr_kI, twr_kD, -1, 1).
 set twrPid:setpoint to maxTwr.
 
-//lock curAcc to ship:availableThrust / ship:mass.
-local pidQVal   to maxQ * 0.9.
-local pidTwrVal to maxTwr * 0.9.
+lock curAcc to ship:availableThrust / ship:mass.
 
 disp_msg("Gravity turn").
 until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
@@ -221,15 +202,11 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
     set sVal to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
 
     // Throttle update
-    // Current thrust used by a few calculations
-    //set curThr to ship:availableThrust.
-    set curThr to ves_active_thrust().
-    set curTwr to curThr / (ship:mass * kGrav).
-    set curAcc to curThr / ship:mass.
+    set curTwr to ship:availablethrust / (ship:mass * kGrav).
     
-    local qVal      to choose max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q)))     if ship:q >= pidQVal    else 1.
-    local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc     else 1.
-    local twrVal    to choose max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr)))    if curTwr >= pidTwrVal  else 1.
+    local qVal      to choose max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q)))     if ship:q >= maxQ   else 1.
+    local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc else 1.
+    local twrVal    to max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr))).
     local tValTemp  to min(qVal, aVal).
     set tVal to min(tValTemp, twrVal).
     
@@ -238,7 +215,6 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     
     disp_telemetry().
-    disp_pid_readout(twrPid, maxTwr, curTwr).
     wait 0.01.
 }
 
@@ -258,12 +234,10 @@ if hasLES
 disp_msg("Post-turn burning to apoapsis").
 until ship:apoapsis >= tgtAp * 0.995
 {
-    set curThr to ves_active_thrust().
-    set curTwr to curThr / (ship:mass * kGrav).
-    set curAcc to curThr / ship:mass.
+    set curTwr   to ship:availablethrust / (ship:mass * kGrav).
 
     local aVal   to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc))) if curAcc >= maxAcc else 1.
-    local twrVal    to choose max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr)))    if curTwr >= pidTwrVal  else 1.
+    local twrVal to choose max(tValLoLim, min(1, 1 + twrPid:update(time:seconds, curTwr))) if curTwr >= maxTwr else 1.
 
     set sVal     to heading(l_az_calc(azCalcObj), launch_ang_for_alt(turnAlt, stAlt, endPitch), rVal).
     set tVal     to min(aVal, twrVal).
@@ -273,7 +247,6 @@ until ship:apoapsis >= tgtAp * 0.995
     if hasDropTanks set hasDropTanks to ves_update_droptank(dropTanks).
     
     disp_telemetry().
-    disp_pid_readout(twrPid, maxTwr, curTwr).
     wait 0.01.
 }
 disp_msg().
@@ -322,4 +295,5 @@ until ship:altitude >= body:atm:height or ship:verticalspeed < 0
 disp_msg("Launch complete").
 wait 0.5.
 clearScreen.
+if hasNode remove nextNode.
 //-- End Main --//

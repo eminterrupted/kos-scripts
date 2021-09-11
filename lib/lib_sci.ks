@@ -21,6 +21,10 @@ global function sci_deploy_list
         {
             sci_deploy_recon(m).
         }
+        else if m:name = "TSTChemCam"
+        {
+            sci_deploy_chemcam(m).
+        }
         else
         {
             sci_deploy(m).
@@ -32,14 +36,17 @@ global function sci_deploy_list
 global function sci_modules
 {
     local sciList to list().
-    for m in ship:modulesNamed("ModuleScienceExperiment")   sciList:add(m).
-    for m in ship:modulesNamed("DMModuleScienceAnimate")    sciList:add(m).
-    for m in ship:modulesNamed("DMXrayDiffract")            sciList:add(m).
-    for m in ship:modulesNamed("DMReconScope")              sciList:add(m).
-    for m in ship:modulesNamed("DMRoverGooMat")             sciList:add(m).
-    for m in ship:modulesNamed("DMUniversalStorageScience") sciList:add(m).
-    for m in ship:modulesNamed("USSimpleScience")           sciList:add(m).
-    for m in ship:modulesNamed("USAdvancedScience")         sciList:add(m).
+    for m in ship:modulesNamed("ModuleScienceExperiment")           sciList:add(m).
+    for m in ship:modulesNamed("DMModuleScienceAnimate")            sciList:add(m).
+    for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
+    for m in ship:modulesNamed("DMReconScope")                      sciList:add(m).
+    for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
+    for m in ship:modulesNamed("dmSolarCollector")                  sciList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageSolarCollector")  sciList:add(m).
+    for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
+    for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
+    //for m in ship:modulesNamed("TSTChemCam")                        sciList:add(m).
     return sciList.
 }
 
@@ -51,30 +58,33 @@ global function sci_recover_list
 
     for m in sciList
     {
-        if m:hasData
+        if m:hasSuffix("HASDATA")
         {
-            if mode = "transmit"
+            if m:hasData
             {
-                sci_transmit(m).
-            }
-            else if mode = "ideal"
-            {
-                if m:data[0]:transmitValue > 0 and m:data[0]:transmitValue = m:data[0]:scienceValue
+                if mode = "transmit"
                 {
                     sci_transmit(m).
                 }
-                else if m:data[0]:scienceValue > 0
+                else if mode = "ideal"
+                {
+                    if m:data[0]:transmitValue > 0 and m:data[0]:transmitValue = m:data[0]:scienceValue
+                    {
+                        sci_transmit(m).
+                    }
+                    else if m:data[0]:scienceValue > 0
+                    {
+                        sci_collect_experiments().
+                    }
+                    else 
+                    {
+                        sci_reset(m).
+                    }
+                }
+                else if mode = "collect"
                 {
                     sci_collect_experiments().
                 }
-                else 
-                {
-                    sci_reset(m).
-                }
-            }
-            else if mode = "collect"
-            {
-                sci_collect_experiments().
             }
         }
     }
@@ -122,8 +132,36 @@ global function sci_deploy_hammer
 {
     util_do_event(ship:modulesNamed("DMSeismicHammer")[0], "collect seismic data").
 }
+
 //#endregion
 
+//#region -- Tarsier Sci Modules
+// #region -- ChemCam
+// Deploy the Tarsier ChemCam. Note that this will simply open the window, user interaction is required
+global function sci_deploy_chemcam
+{
+    parameter m is ship:modulesNamed("TSTChemCam")[0].
+
+    util_do_event(m, "open camera").
+}
+
+// Open the results window
+global function sci_get_chemcam_results
+{
+    parameter m is ship:modulesNamed("TSTChemCam")[0].
+
+    util_do_event(m, "check results").
+}
+
+// Close and stow the camera
+global function sci_retract_chemcam
+{
+    parameter m is ship:modulesNamed("TSTChemCam")[0].
+    
+    util_do_event(m, "close camera").
+}
+// #endregion
+//#endregion
 
 //-- Local functions --//
 
@@ -205,13 +243,17 @@ local function sci_deploy_us
     }
 }
 
+
 // Function for resetting an experiment
 local function sci_reset
 {
     parameter m.
     
-    m:reset().
-    wait until not m:hasData.
+    if m:name <> "TSTChemCam" 
+    {
+        m:reset().
+        wait until not m:hasData.
+    }
     sci_retract(m).
 }
 

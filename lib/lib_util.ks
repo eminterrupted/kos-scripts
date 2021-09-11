@@ -18,7 +18,7 @@ global info is lex(
 
 // Local
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
-local stateFile to dataDisk + "state.json".
+global stateFile to dataDisk + "state.json".
 
 
 //-- Global Functions --//
@@ -31,6 +31,25 @@ global function breakpoint
     print "* Press any key to continue *" at (10, terminal:height - 2).
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
+}
+
+global function except
+{
+    parameter msg, 
+              errtarget is 0.
+
+    if errTarget = 0 
+    {
+        disp_msg(msg).
+    } else if errtarget = 1
+    {
+        disp_info(msg).
+    } else if errtarget >= 2
+    {
+        disp_hud(msg, 2).
+    }
+
+    return 0 / 1.
 }
 
 global function util_play_sfx 
@@ -62,7 +81,7 @@ global function util_cache_state
     }
     set stateObj[lexKey] to lexVal.
     writeJson(stateObj, stateFile).
-    return stateObj[lexKey].
+    return readJson(stateFile):keys:contains(lexKey).
 }
 
 global function util_peek_cache
@@ -414,9 +433,9 @@ global function util_warp_down_to_alt {
     parameter tgtAlt.
     
     if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-    else if ship:altitude <= tgtAlt * 1.10 set warp to 1.
-    else if ship:altitude <= tgtAlt * 1.25 set warp to 2.
-    else if ship:altitude <= tgtAlt * 1.50 set warp to 3.
+    else if ship:altitude <= tgtAlt * 1.05 set warp to 1.
+    else if ship:altitude <= tgtAlt * 1.20 set warp to 2.
+    else if ship:altitude <= tgtAlt * 1.35 set warp to 3.
     else if ship:altitude <= tgtAlt * 3 set warp to 4.
     else if ship:altitude <= tgtAlt * 5 set warp to 5.
     else if ship:altitude <= tgtAlt * 20 set warp to 6.

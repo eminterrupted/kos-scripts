@@ -332,14 +332,17 @@ global function disp_generic
 // Provides a readout of pid values and output against tgt val
 global function disp_pid_readout
 {
-    parameter pid, tgtVal is 0.
+    parameter pid, tgtVal is 0, curVal is 0.
 
      print "TGTVAL: " + round(tgtVal, 5) + "     " at (0, 25).
-     print "PIDOUT: " + round(pid:output, 2) + "     " at (0, 26).
+     print "CURVAL: " + round(curVal, 5) + "      " at (0, 26).
+     print "ERROR : " + round(curVal - tgtVal, 5) + "     " at (0, 27).
 
-     print "P TERM: " + round(pid:pterm, 5) + "     " at (0, 28).
-     print "I TERM: " + round(pid:iterm, 5) + "     " at (0, 29).
-     print "D TERM: " + round(pid:dterm, 5) + "     " at (0, 30).
+     print "PIDOUT: " + round(pid:output, 2) + "     " at (0, 29).
+
+     print "P TERM: " + round(pid:pterm, 5) + "     " at (0, 31).
+     print "I TERM: " + round(pid:iterm, 5) + "     " at (0, 32).
+     print "D TERM: " + round(pid:dterm, 5) + "     " at (0, 33).
 }
 
 // General telemetry for flight
@@ -369,4 +372,25 @@ global function disp_telemetry
         print "                                               " at (0, 22).
         print "                                               " at (0, 23).
     }
+}
+
+// Resource transfer readout
+global function disp_res_transfer
+{
+    parameter res, srcElement, tgtElement, amt, srcRes, srcResFill, tgtRes, tgtResFill.
+
+    if amt < 0 set amt to srcRes.
+
+    print "RESOURCE TRANSFER" at (0, 10).
+    print "-----------------" at (0, 11).
+    print "RESOURCE             : " + res at (0, 12).
+    print "AMOUNT TO TRANSFER   : " + round(amt) + "     " at (0, 13).
+    print " " at (0, 14).
+    print "SOURCE ELEMENT       : " + srcElement:name at (0, 15).
+    print "RESOURCE REMAINING   : " + round(srcRes) + "     " at (0, 16).
+    print "FILL (%)             : " + round(srcResFill * 100) + "     " at (0, 17).
+    print " " at (0, 18).
+    print "TARGET ELEMENT       : " + tgtElement:name at (0, 19).
+    print "RESOURCE REMAINING   : " + round(tgtRes) + "     " at (0, 20).
+    print "FILL (%)             : " + round(tgtResFill * 100) + "     " at (0, 21).
 }

@@ -12,8 +12,8 @@ disp_main(scriptPath()).
 
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(145, 150).
-local reentryAlt to 35000.
+local kscWindow  to list(150, 152.5).
+local reentryAlt to 40000.
 local shipLng    to 0.
 local stagingAlt to ship:body:atm:height + 40000.
 local sVal       to lookDirUp(body:position, sun:position).
@@ -86,7 +86,7 @@ if testPatch:periapsis >= Kerbin:atm:height
     set tVal to 0.
 }
 
-local startAlt to stagingAlt + 50000.
+local startAlt to stagingAlt + 10000.
 disp_msg("Waiting until altitude <= " + startAlt).
 
 ag10 off.
@@ -112,9 +112,25 @@ if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 
 disp_msg("Beginning reetry procedure").
-for c in parachutes 
+if parachutes:length > 0 
 {
-    util_do_event(c, "arm parachute").
+    if parachutes[0]:name = "RealChuteModule" 
+    {
+        for c in parachutes 
+        {
+            util_do_event(c, "arm parachute").
+        }
+    }
+    else if parachutes[0]:name = "ModuleParachute"
+    {
+        when parachutes[0]:getField("safe to deploy?") = "Safe" then 
+        {
+            for c in parachutes
+            {
+                util_do_event(c, "deploy chute").
+            }
+        }
+    }
 }
 
 set sVal to body:position.

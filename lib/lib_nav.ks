@@ -6,6 +6,20 @@
 
 //-- Functions --//
 
+//#region -- Waypoints
+// Returns the currently active waypoint
+global function nav_get_active_wp
+{
+    for wp in allWaypoints()
+    {
+        if wp:isSelected
+        {
+            return wp.
+        }
+    }
+    return false.
+}
+
 //#region -- Patch handling
 // Returns the last patch for a given node
 global function nav_last_patch_for_node

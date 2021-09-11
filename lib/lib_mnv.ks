@@ -163,7 +163,33 @@ global function mnv_active_burn_dur
     return abs(g * m * p * (1 - e^(-dv / (g * p))) / f).
 }
 
-// Burn duration over multiple stages. Used for maneuver calculations
+// Full and Half Burn duration times over multiple stages.
+global function mnv_burn_dur 
+{
+    parameter dv.
+
+    local dvBurnObj to lex().
+    
+    local dvFullStgObj  to mnv_burn_stages(dv).
+    set dvBurnObj["Full"] to mnv_burn_dur_stage(dvFullStgObj)["All"].
+
+    local dvHalfStgObj to mnv_burn_stages(dv / 2).
+    set dvBurnObj["Half"] to mnv_burn_dur_stage(dvHalfStgObj)["All"].
+
+    return dvBurnObj.
+}
+
+// Full and Half Burn duration times over multiple stages.
+global function mnv_burn_dur_next
+{
+    parameter dv.
+
+    local dvStgObj  to mnv_burn_stages_next(dv).   
+    local dvBurnObj to mnv_burn_dur_stage_next(dvStgObj).
+    return dvBurnObj.
+}
+
+// Burn duration over multiple stages.
 global function mnv_staged_burn_dur
 {
     parameter dv.
@@ -200,6 +226,37 @@ global function mnv_burn_dur_stage
     return dvBurnObj.
 }
 
+// Calculates Half Duration Too
+global function mnv_burn_dur_stage_next
+{
+    parameter dvStgObj.
+
+    local dvBurnObj to lex(
+        "Full", 0
+        ,"Half", 0
+    ).
+    
+    for key in dvStgObj["Full"]:keys
+    {
+        local stgStats    to ves_stage_stats(key).
+        //local stgMass   to stgStats["Stage"]["CurMass"].
+        local exhVel    to stgStats["Stage"]["ExhVel"].
+        local stgThr    to stgStats["Stage"]["PossThr"].
+        local vesMass   to stgStats["Stage"]["ShipMass"].
+
+        // Multiply thrust and mass by 1000 to move from t / kn to kg / n.
+        local fullDur to (((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Full"][key] / exhVel)))).
+        set dvBurnObj["Full"] to dvBurnObj["Full"] + fullDur.
+
+        if dvStgObj["Half"]:hasKey(key)
+        {
+            local halfDur to (((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Half"][key] / exhVel)))).
+            set dvBurnObj["Half"] to dvBurnObj["Half"] + halfDur.
+        }
+    }
+    return dvBurnObj.
+}
+
 // Calculates stages used for a given dv burn. Assumes that the burn starts 
 // with the current stage. Returns a lexicon containing stage num and dv per 
 // stage. Used with the mnv_burn_dur function
@@ -209,28 +266,21 @@ global function mnv_burn_stages
 
     set dv to abs(dv).
     local dvStgObj to lex().
-
+    local dvShip to ves_available_dv().
     // If we need more dV than the vessel has, throw an exception.
-    if ship:deltaV:current < dv 
-    {
-        ship:deltaV:forcecalc.
-        wait 1.
-    }
-    if verbose
-    {
-        print "ship:deltaV:current: " + ship:deltaV:current at (2, 35).
-    }
-    if dv > ship:deltaV:current {
-        hudText("dV Needed: " + round(dv, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
+   
+    if dv > dvShip["availDv"] {
+        hudText("dV Needed: " + round(dv, 2) + ". Available: " + round(dvShip["availDv"], 1) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
     }
-
+    
     // Iterate over stages until dv is covered
-    from { local stg to stage:number.} until dv <= 0 step { set stg to stg - 1.} do
+    from { local stg to stage:number.} until dv <= 0 or stg < -1 step { set stg to stg - 1.} do
     {
         
+        //print "Stage Num: " + stg at (2, 25).
         local dvStg to ship:stageDeltaV(stg):current.
-        //local dvStg to mnv_stage_dv(stg).
+        //local dvStg to mnv_stage_dv_next(stg).
 
         if dvStg > 0 
         {
@@ -249,58 +299,60 @@ global function mnv_burn_stages
     return dvStgObj.
 }
 
-
-// Calculates stages used for a given dv burn. Assumes that the burn starts 
-// with the current stage. Returns a lexicon containing stage num and dv per 
-// stage. Used with the mnv_burn_dur function
+// Calculates half duration as well
 global function mnv_burn_stages_next
 {
     parameter dv.
 
-    local availDv to 0.
-    local dvStgObj to lex().
-    local dvBurnObj to lex().
-
     set dv to abs(dv).
-
-    set availDv to ves_available_dv().
-    breakpoint().
-
+    
+    local dvShip to ves_available_dv_next().
     // If we need more dV than the vessel has, throw an exception.
-    if dv > availDv {
-        hudText("dV Needed: " + round(dv, 2) + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
+    if dv > dvShip["availDv"] {
+        hudText("dV Needed: " + round(dv, 2) + ". Available: " + dvShip["availDv"] + ". Not enough deltaV on vessel!", 10, 2, 24, red, false).
         return 1 / 0.
     }
 
+    local dvHalf        to dv / 2.
+    local dvFullObj     to lex().
+    local dvHalfObj     to lex().
+    
     // Iterate over stages until dv is covered
-    for stg in dvStgObj:keys
+    from { local stg to stage:number.} until dv <= 0 or stg < -1 step { set stg to stg - 1.} do
     {
-        local stgDv to dvStgObj[stg].
-        if dv < stgDv 
+        
+        //print "Stage Num: " + stg at (2, 25).
+        //local dvStg to ship:stageDeltaV(stg):current.
+        local stgStatObj to ves_stage_stats(stg).
+        local dvStg to mnv_stage_dv_next(stgStatObj).
+
+        if dvStg > 0 
         {
-            set dvBurnObj[stg] to dv.
-            break.
-        }
-        else
-        {
-            set dvBurnObj[stg] to stgDv.
-            set dv to dv - stgDv.
+            if dv <= dvStg
+            {
+                set dvFullObj[stg] to dv.
+                break.
+            }
+            else 
+            {
+                set dvFullObj[stg] to dvStg.
+                set dv to dv - dvStg.
+            }
+
+            if dvHalf > 0 and dvHalf <= dvStg 
+            {
+                set dvHalfObj[stg] to dvHalf.
+            }
+            else if dvHalf > 0 
+            {
+                set dvHalfObj[stg] to dvStg.
+                set dvHalf to dvHalf - dvStg.
+            }
         }
     }
-
-    return dvBurnObj.
+    return lex("Full", dvFullObj, "Half", dvHalfObj).
 }
 
-// Returns a list of burn eta / duration
-global function mnv_burn_times
-{
-    parameter dv,
-              mnvTime.
-
-    local burnDur to mnv_staged_burn_dur(dv).
-    local burnEta to mnvTime - mnv_staged_burn_dur(dv / 2).
-    return list(burnEta, burnDur).
-}
 
 // Returns the DV for a stage. Manual process for ship:stageDeltaV(stg)
 global function mnv_stage_dv
@@ -313,7 +365,7 @@ global function mnv_stage_dv
     local fuelMass  to 0.
     
     local allEng    to list().
-    local fuelUsed  to uniqueSet().
+    local fuelsUsed to uniqueSet().
     local stgFuel   to lex().
 
     local stgIsp    to ves_stage_isp(stg).
@@ -326,17 +378,17 @@ global function mnv_stage_dv
         {
             for r in e:consumedResources:values
             {
-                fuelUsed:add(r:name).
+                fuelsUsed:add(r:name).
             }
         }
     }
 
     // Get cur / dry mass of stage
     set curMass  to ves_mass_at_stage(stg).
-    set stgFuel  to ves_stage_fuel_mass(stg).
+    set stgFuel  to ves_stage_fuel_mass(stg, fuelsUsed).
     for fuel in stgFuel:keys
     {
-        if fuelUsed:contains(fuel) 
+        if fuelsUsed:contains(fuel) 
         {
             set fuelMass to fuelMass + stgFuel[fuel].
         }
@@ -349,6 +401,45 @@ global function mnv_stage_dv
     }
     set dvStg to choose exhVel * ln(curMass / (dryMass)) if fuelMass > 0 else 0.
     return dvStg.
+}
+
+// Attempts to account for payload decouplers
+global function mnv_stage_dv_next
+{
+    parameter stStatsObj.
+
+    local curMass   to 0.
+    local dryMass   to 0.
+    local dvStg     to 0.
+    local fuelMass  to 0.
+    
+    local stgIsp    to stStatsObj["Stage"]["ISP"].
+    local exhVel    to stgIsp * constant:g0.
+
+    // Get cur / dry mass of stage
+    set curMass to stStatsObj["Stage"]:CurMass.
+    set dryMass to stStatsObj["Stage"]:DryMass.
+    set fuelMass to stStatsObj["Stage"]:FuelMass.
+    set dvStg to choose exhVel * ln(curMass / (dryMass)) if fuelMass > 0 else 0.
+
+    return dvStg.
+}
+
+// Returns the dV for a given list of parts
+global function mnv_parts_dv
+{
+    parameter pList.
+
+    local partsMass    to ves_mass_for_parts(pList).
+    local curMass   to partsMass["Current"].
+    local dryMass   to partsMass["Dry"].
+    local dv        to 0.
+    local fuelMass  to 0.
+
+    local engObj to ves_parts_engines_stats(pList).
+
+    local exhVel    to engObj["ISP"] * constant:g0.
+
 }
 //#endregion
 
@@ -373,14 +464,24 @@ global function mnv_argpe_match_burn
 // Returns an exit manuever
 global function mnv_exit_node
 {
-    parameter tgtBody.
+    parameter tgtBody,
+              dir is "retro".
 
     // local vInfBody to 1.
     // local betaAng to arcCos(1 / (1 + (( ship:orbit:semimajoraxis * vInfBody^2) / (ship:body:mu)))) * constant:radtodeg.
 
     // Add node at Pe
     disp_msg("Adding node").
-    local mnvTime to time:seconds + eta:periapsis.
+    local mnvTime to 0.
+    if dir = "retro" 
+    {
+        set mnvTime to time:seconds + eta:periapsis.
+    }
+    else
+    {
+        set mnvTime to time:seconds + eta:apoapsis.
+    }
+    
     local mnvNode to node(mnvTime, 0, 0, 10).
     add mnvNode.
 
@@ -407,66 +508,6 @@ global function mnv_exit_node
     return mnvNode.
 }
 
-// Optimizes an exit node for highest ap
-global function mnv_optimize_exit_ap
-{
-    parameter mnvNode,
-              apThresh.
-    
-    // Sweep timing to lowest Pe
-    local lastAp to mnvNode:orbit:nextPatch:apoapsis.
-    remove mnvNode.
-    until false
-    {
-        add mnvNode.
-        disp_info("Current Ap: " + mnvNode:orbit:nextPatch:apoapsis).
-        disp_info2("LastAp    : " + lastAp).
-        if lastAp > mnvNode:orbit:nextPatch:apoapsis or lastAp >= apThresh
-        {
-            remove mnvNode.
-            break.
-        }
-        set lastAp to mnvNode:orbit:nextPatch:apoapsis. 
-        remove mnvNode.
-        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
-    }
-    disp_info().
-    disp_info2().
-    return mnvNode.
-}
-
-
-// Optimizes an exit node for lowest pe
-global function mnv_optimize_exit_pe
-{
-    parameter mnvNode,
-              peThresh,
-              tgtBody is ship:body:body.
-    
-    // Sweep timing to lowest Pe
-    if not hasNode add mnvNode.
-    local lastPe to mnvNode:orbit:nextPatch:periapsis.
-    remove mnvNode.
-    until false
-    {
-        add mnvNode.
-        disp_info("Current Pe: " + mnvNode:orbit:nextPatch:periapsis).
-        disp_info2("LastPe    : " + lastPe).
-        if (lastPe < mnvNode:orbit:nextPatch:periapsis or lastPe <= peThresh) and mnvNode:orbit:nextPatch:body = tgtBody
-        {
-            remove mnvNode.
-            break.
-        }
-        set lastPe to mnvNode:orbit:nextPatch:periapsis. 
-        remove mnvNode.
-        set mnvNode to mnv_opt_change_node(mnvNode, "time", 10).
-    }
-    disp_info().
-    disp_info2().
-
-    return mnvNode.
-}
-
 // Return an object containing all parameters needed for a maneuver
 // to change inclination from orbit 0 to orbit 1. Returns a list:
 // - [0] (nodeAt)     - center of burn node
@@ -476,17 +517,21 @@ global function mnv_inc_match_burn
 {
     parameter burnVes,      // Vessel that will perform the burn
               burnVesObt,   // The orbit where the burn will take place. This may not be the current orbit
-              tgtObt.       // target orbit to match
+              tgtObt,       // target orbit to match
+              nearestNode is false. // If true, choose the nearest of AN / DN, not the cheapest
+
+    // Variables
+    local burn_utc to 0.
 
     // Normals
-    local ves_nrm is nav_obt_normal(burnVesObt).
-    local tgt_nrm is nav_obt_normal(tgtObt).
+    local ves_nrm to nav_obt_normal(burnVesObt).
+    local tgt_nrm to nav_obt_normal(tgtObt).
 
     // Total inclination change
-    local d_inc is vang(ves_nrm, tgt_nrm).
+    local d_inc to vang(ves_nrm, tgt_nrm).
 
     // True anomaly of ascending node
-    local node_ta is nav_asc_node_ta(burnVesObt, tgtObt).
+    local node_ta to nav_asc_node_ta(burnVesObt, tgtObt).
 
     // ** IMPORTANT ** - Below is the "right" code, I am testing picking the soonest vs most efficient
     // Pick whichever node of AN or DN is higher in altitude,
@@ -497,23 +542,28 @@ global function mnv_inc_match_burn
         set node_ta to mod(node_ta + 180, 360).
     }
 
-    // Get the burn eta
-    local burn_utc is time:seconds + nav_eta_to_ta(burnVesObt, node_ta).
-    
-    // TEST CODE BASED ON SOONEST NODE
-    // if burn_utc > ship:orbit:period / 2 
-    // {
-    //     set node_ta to mod(node_ta + 180, 360).
-    //     set burn_utc to time:seconds + nav_eta_to_ta(burnVes:obt, node_ta).
-    // }
-
+    // Get the burn eta. If nearestNode flag is set, choose the node with 
+    // soonest ETA. Else, choose the cheapest node.
+    if nearestNode 
+    {
+        set burn_utc to time:seconds + nav_eta_to_ta(burnVesObt, node_ta).
+        if burn_utc > ship:orbit:period / 2 
+        {
+            set node_ta to mod(node_ta + 180, 360).
+            set burn_utc to time:seconds + nav_eta_to_ta(burnVes:obt, node_ta).
+        }
+    }
+    else 
+    {
+        set burn_utc to time:seconds + nav_eta_to_ta(burnVesObt, node_ta).
+    }
 
     // Get the burn unit direction (burnvector direction)
-    local burn_unit is (ves_nrm + tgt_nrm):normalized.
+    local burn_unit to (ves_nrm + tgt_nrm):normalized.
 
     // Get deltav / burnvector magnitude
-    local vel_at_eta is velocityAt(burnVes, burn_utc):orbit.
-    local burn_mag is -2 * vel_at_eta:mag * cos(vang(vel_at_eta, burn_unit)).
+    local vel_at_eta to velocityAt(burnVes, burn_utc):orbit.
+    local burn_mag to -2 * vel_at_eta:mag * cos(vang(vel_at_eta, burn_unit)).
     
     // Get the dV components for creating the node structure
     local burn_nrm to burn_mag * cos(d_inc / 2).
@@ -624,13 +674,29 @@ global function mnv_exec_node_burn
 {
     parameter mnvNode,
               burnEta is 0,
-              burnDur is 0.
+              burnDur is lex().
 
+    local fullDur to 0.
+    local halfDur to 0.
 
-    set burnDur      to mnv_staged_burn_dur(mnvNode:deltaV:mag).
-    local halfDur    to mnv_staged_burn_dur(mnvNode:deltaV:mag / 2).
+    if burnDur:typeName = "Scalar" 
+    {
+        set fullDur to burnDur.
+        set halfDur to burnDur / 2.
+    } 
+    else 
+    {
+        set burnDur to mnv_burn_dur(mnvNode:deltaV:mag).
+        set fullDur to burnDur["Full"].
+        set halfDur to burnDur["Half"].
+    }
+    disp_info("Burn durations").
+    disp_info2("Full: " + round(fullDur, 2) + " | Half: " + round(halfDur, 2)).
+    
     set burnEta      to mnvNode:time - halfDur.
-    local mecoTS     to burnEta + burnDur.
+    disp_info2("Burn ETA: " + round(burnEta, 2) + " | MnvTime: " + round(mnvNode:time, 2)).
+    
+    local mecoTS     to burnEta + fullDur.
     lock dvRemaining to abs(mnvNode:burnVector:mag).
     
     local sVal       to lookDirUp(mnvNode:burnVector, sun:position).
@@ -646,14 +712,14 @@ global function mnv_exec_node_burn
     }
 
     disp_info("Burn ETA        : " + round(burnEta, 2) + "          ").
-    disp_info2("Burn duration   : " + round(burnDur, 2) + "          ").
+    disp_info2("Burn duration   : " + round(fullDur, 2) + "          ").
 
     util_warp_trigger(burnEta).
 
     until time:seconds >= burnEta
     {
         set sVal to lookDirUp(mnvNode:burnVector, sun:position).
-        disp_mnv_burn(time:seconds - burnEta, dvRemaining, burnDur).
+        disp_mnv_burn(time:seconds - burnEta, dvRemaining, fullDur).
         wait 0.01.
     }
 

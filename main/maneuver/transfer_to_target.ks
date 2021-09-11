@@ -90,10 +90,4 @@ print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 set mnv to mnv_opt_object_transfer_node(node(burnAt, 0, 0, dvNeeded[0])).
 add mnv.
 
-set burnAt  to mnv:time.
-set burnDur to mnv_staged_burn_dur(mnv:deltav:mag).
-set halfDur to mnv_staged_burn_dur(mnv:deltav:mag / 2).
-set burnEta to burnAt - halfDur.
-disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
-disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
-mnv_exec_node_burn(mnv, burnEta, burnDur).
+mnv_exec_node_burn(mnv).

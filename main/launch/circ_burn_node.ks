@@ -30,14 +30,28 @@ lock steering       to sVal.
 lock throttle       to tVal.
 disp_info("Controls set").
 
+// Main
+
+// If a node exists, make sure it is past apoapsis so as not to confuse anything
+if hasNode 
+{
+    if nextNode:time <= time:seconds + eta:apoapsis 
+    {
+        local n to node(time:seconds + eta:apoapsis + 60, nextNode:normal, nextNode:radialout, nextNode:prograde).
+        remove nextNode.
+        add n.
+    }
+}
+
 // Get dv and duration of burn
-local dv            to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
+local dv        to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
 disp_info("DeltaV calculated").
-local burnTime      to mnv_burn_times(dv, mnvTime).
+local burnDur   to mnv_burn_dur_next(dv).
+local fullDur   to burnDur["Full"].
+local halfDur   to burnDur["Half"].
 disp_info("Burn times calculated").
-local burnETA       to burnTime[0].
-local burnDur       to burnTime[1].
-local mnvNode       to node(mnvTime, 0, 0, dv).
+local burnETA   to mnvTime - halfDur.
+local mnvNode   to node(mnvTime, 0, 0, dv).
 disp_info("Maneuver DV Calculated").
 
 set mnvNode to mnv_opt_simple_node(mnvNode, tgtPe, "pe").
@@ -45,7 +59,7 @@ add mnvNode.
 
 disp_msg("Getting burn data").
 disp_info("dv needed: " + round(dv, 2)).
-disp_info2("Burn duration: " + round(burnDur, 1)).
+disp_info2("Burn duration: " + round(fullDur, 1)).
 
 for m in ship:modulesNamed("ModuleDeployableSolarPanel") 
 {
@@ -85,9 +99,11 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     if stage:number > 0 preserve.
 }
 
-mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+mnv_exec_node_burn(mnvNode, burnETA, fullDur).
 
 disp_msg("Maneuver complete!").
 wait 1.
+
+if hasNode remove nextNode.
 clearScreen.
 //-- End Main --//

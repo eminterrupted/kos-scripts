@@ -9,9 +9,10 @@ runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
 
 // Flags
-local recover       to true.
-local validModes  to list("transmit", "ideal", "collect").
-local sciList       to sci_modules().
+local validModes to list("transmit", "ideal", "collect").
+local sciList    to sci_modules().
+local sciNorth   to false.
+local sciSouth   to false.
 
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
@@ -30,29 +31,47 @@ if not validModes:contains(recoveryMode)
 }
 
 sci_deploy_list(sciList).
-
-if recover 
+sci_recover_list(sciList, recoveryMode).
+if ship:latitude > 0 
 {
-    sci_recover_list(sciList, recoveryMode).
+    set sciNorth to true.
+    disp_msg("Recon of northern hemisphere complete").
+}
+else
+{
+    set sciSouth to true.
+    disp_msg("Recon of southern hemisphere complete").
 }
 
-disp_msg("Orbital science complete!").
-wait 1.
-disp_msg("Manual science mode, press 0 to collect data").
-
-ag10 off.
-when ag10 then 
+if sciNorth
 {
-    disp_msg("Manual data collection in progress").
+    until ship:latitude < 0
+    {
+       disp_orbit().
+       wait 0.01.
+    }
     sci_deploy_list(sciList).
     sci_recover_list(sciList, recoveryMode).
-    disp_msg("Manual science mode, press 0 to collect data").
-    ag10 off.
-    preserve.
+    disp_msg("Recon of southern hemisphere complete").
+    set sciSouth to true.
+}
+else 
+{
+    until ship:latitude > 0 
+    {
+        disp_orbit().
+        wait 0.01.
+    }
+    sci_deploy_list(sciList).
+    sci_recover_list(sciList, recoveryMode).
+    set sciNorth to true.
+    disp_msg("Recon of northern hemisphere complete").
 }
 
-until false 
+wait 2.
+
+if sciNorth and sciSouth 
 {
-    disp_orbit().
-    wait 0.01.
+    disp_msg("Recon mission complete").
+    wait 1.
 }

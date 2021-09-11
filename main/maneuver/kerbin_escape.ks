@@ -47,12 +47,16 @@ until false
     else
     {
         disp_msg("Calculating necessary deltaV").
-        local dvNeeded to mnv_dv_hohmann(ship:orbit:semimajoraxis - ship:body:radius, ship:body:soiradius + 25000)[0].
+        local dvNeeded to mnv_dv_hohmann(ship:orbit:semimajoraxis - ship:body:radius, ship:body:soiradius + 100000)[0].
         disp_info("DeltaV needed for escape velocity: " + round(dvNeeded, 2)).
                 
-        disp_info2("Optimizing").
-    } 
-    // {
+        local escNode to node(time:seconds + eta:periapsis, 0, 0, dvNeeded).
+        add escNode.
+
+        mnv_exec_node_burn(escNode).
+    }
+
+
     //     disp_msg("Waiting until periapsis for escape burn").
     //     // Wait until periapsis
     //     local tsPe to time:seconds + eta:periapsis - 30.
@@ -79,5 +83,6 @@ until false
     //     }
     //     set tVal to 0.
     //     disp_msg("Escape velocity reached            ").
+    //     break.
     // }
 }

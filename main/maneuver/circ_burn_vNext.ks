@@ -40,9 +40,9 @@ set dvNeeded to mnv_dv_hohmann_velocity(stAlt, tgtAlt, tgtAlt, ship:body)[1].
 disp_msg("dv1: " + round(dvNeeded, 2)).
 
 // Burn timing
-set burnTime to mnv_burn_times(dvNeeded, mnvTime).
-disp_info("Burn duration: " + round(burnTime[1])).
+set burnTime to mnv_burn_dur(dvNeeded).
+disp_info("Burn duration: " + round(burnTime["Full"])).
 
 // Execute
-mnv_exec_circ_burn(dvNeeded, mnvTime, burnTime[0]).
+mnv_exec_circ_burn(dvNeeded, mnvTime, mnvTime - burnTime["Half"], burnTime["Full"]).
 ag9 on.

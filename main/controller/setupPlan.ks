@@ -6,55 +6,69 @@ runOncePath("0:/lib/lib_launch").
 // Global variables
 
 // Mission Params
-local tgtAp     to 225000.
-local tgtPe     to 225000.
-local tgtInc    to 87.5.
+local tgtPe     to 500000.
+local tgtAp     to 500000.
+local tgtInc    to 0.
+local tgtLAN    to -1.
 local tgtRoll   to 0.
 local lazObj    to l_az_calc_init(tgtAp, tgtInc).
 local doReturn  to false.
 
 local missionList to list(
     "mission/simple_orbit"
-    ,"mission/recon"
-    //,"maneuver/match_inclination"
-    //,"maneuver/transfer_to_body"
+    ,"maneuver/match_inclination"
+    ,"maneuver/transfer_to_body"
+    ,"maneuver/wait_for_soi_change"
+    ,"maneuver/capture_burn"
+    ,"maneuver/change_inclination"
+    ,"maneuver/change_orbit"
+    ,"mission/station_orbit"
+    // ,"mission/simple_orbit"
+    // ,"maneuver/transfer_to_target"
+    // ,"mission/simple_orbit"
+    // ,"maneuver/kill_relative_velocity"
+    // ,"maneuver/dock_with_target"
+    //,"mission/clever_sat"
+    //,"maneuver/exec_node"
+    //,"return/return_from_mun"
+    //,"mission/simple_orbit"
+    //,"mission/orbital_science"
+    //,"mission/simple_orbit"
+    //,"maneuver/exec_node"
     //,"maneuver/wait_for_soi_change"
-    //,"maneuver/capture_burn"
-    //,"maneuver/change_inclination"
-    //,"maneuver/change_orbit"
-    //,"mission/simple_orbit"
     //,"maneuver/transfer_to_planet"
-    //,"maneuver/match_inclination"
+    //,"return/reentry"
     //,"maneuver/transfer_to_target"
-    //,"mission/simple_orbit"
     //,"maneuver/kill_relative_velocity"
     //,"mission/simple_orbit"
-    //,"return/return_from_mun"
-    //,"mission/orbital_science"
-    //,"maneuver/dock_with_target"
+    //,"maneuver/wait_for_soi_change"
+    //,"maneuver/capture_burn"
+    //,"mission/simple_orbit"
+    //,"mission/simple_orbit"
+    //,"land/land_on_mun"
+    //,"mission/land_sci"
+    //,"launch/mun_ascent"
+    //,"maneuver/exec_node"
+    //,"mission/auto_sci_biome"
+    //,"maneuver/kerbin_escape"
+    //,"mission/recon"
+    //,"mission/impact_target"
+    //,"mission/deploy_payload"
+    //,"maneuver/match_inclination"
     //,"misc/clear_bootscript"
     //,"maneuver/change_inclination"
-    //,"maneuver/change_orbit"
-    //,"mission/impact_target"
-    //,"maneuver/kill_relative_velocity"
     //,"maneuver/wait_for_soi_change"
     //,"maneuver/capture_burn"
-    //,"mission/simple_orbit"
     //,"maneuver/change_inclination"
     //,"maneuver/change_orbit"
     //,"mission/simple_orbit"
     //,"maneuver/transfer_to_object"
     //,"maneuver/change_inclination"
     //,"mission/simple_orbit"
-    //,"mission/auto_sci_biome"
     //,"maneuver/match_inclination"
-    //,"land/land_on_mun"
     //,"land/rover_skycrane"
-    //,"mission/land_sci"
     //,"mission/scansat"
-    //,"launch/mun_ascent"
     //,"mission/relay_orbit"
-    //,"maneuver/kerbin_escape"
     //,"mission/sun_science"
     //,"mission/mag_study"
     //,"mission/simple_orbit"
@@ -92,6 +106,7 @@ local launchPlan to lex(
     "tgtAp",  tgtAp,
     "tgtPe",  tgtPe,
     "tgtInc", tgtInc,
+    "tgtLAN", tgtLAN,
     "tgtRoll",tgtRoll,
     "lazObj", lazObj,
     "queue",  launchQueue

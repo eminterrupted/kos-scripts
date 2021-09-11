@@ -292,9 +292,9 @@ until runmode = -1
         //local dv            to mnv_dv_hohmann(stAlt, tgtPe)[1].
         //local dv            to mnv_dv_bi_elliptic(ship:periapsis, 0, tgtPe, tgtPe, tgtAp, ship:body)[1].
         set dv          to mnv_dv_hohmann_velocity(stPe, tgtPe, tgtAp, ship:body)[1].
-        set burnTime    to mnv_burn_times(dv, mnvTime).
-        set burnETA     to burnTime[0].
-        set burnDur     to burnTime[1].
+        set burnTime    to mnv_burn_dur(dv).
+        set burnETA     to mnvTime - burnTime["Half"].
+        set burnDur     to burnTime["Full"].
         set mecoTS      to burnETA + burnDur.
         set tgtVelocity to velocityAt(ship, mnvTime):orbit:mag + dv.
         lock  dvToGo    to abs(tgtVelocity - ship:velocity:orbit:mag).
