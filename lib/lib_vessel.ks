@@ -4,6 +4,15 @@
 runOncePath("0:/lib/lib_util").
 
 //-- Variables --//
+local engPlates to list (
+    "restock-engineplate-125-1",
+    "EnginePlate1p5",
+    "EnginePlate2",
+    "EnginePlate3",
+    "EnginePlate4",
+    "EnginePlate5"
+).
+
 local sepList to list(
     "sepMotor1", 
     "sepMotorJr",
@@ -34,6 +43,8 @@ global function ves_available_dv
         set availDv to availDv + dvStg.
     }
     set dvStgObj["availDv"] to availDv.
+    // print dvStgObj at (2, 35).
+    // breakpoint().
     return dvStgObj.
 }
 
@@ -48,9 +59,14 @@ global function ves_available_dv_next
     from { local stg to stage:number.} until stg < 0 step { set stg to stg - 1.} do
     {
         local stgStats to ves_stage_stats(stg).
-        local dvStg to mnv_stage_dv_next(stgStats).
-        set dvStgObj[stg] to dvStg.
-        set availDv to availDv + dvStg.
+        set dvStgObj[stg] to mnv_stage_dv_next(stgStats).
+    }
+    for stg in dvStgObj:keys
+    {
+        if dvStgObj[stg] > 0 set availDv to availDv + dvStgObj[stg].
+        // print "Stage " + stg + " dV Post-Process: " + round(dvStgObj[stg]) at (2, 21).
+        // print "Avail dV Calculation: " + round(availDv) at (2, 22).
+        // wait 2.
     }
     set dvStgObj["availDv"] to availDv.
     return dvStgObj.
@@ -196,6 +212,8 @@ global function ves_stage_stats
     ).
 
     local engActive     to false.
+    local engFlameout   to false.
+    local engStg        to 0.
     local fuelMass      to 0.
     local stgAvailThr   to 0.
     local stgCurThr     to 0.
@@ -221,7 +239,9 @@ global function ves_stage_stats
         }
 
         set engStats["Engines"][e:uid] to lex(
+            "Name", e:name,
             "Active", engActive,
+            "Flameout", e:flameout,
             "AvailThr", e:availableThrust,
             "CurThr", e:thrust,
             "MaxThr", e:maxThrust,
@@ -236,45 +256,56 @@ global function ves_stage_stats
             "Stage", e:stage
         ).
 
-        set stgDecoupledIn to e:decoupledIn. 
 
-        // Stage calculations
-        //set stgDecoupledIn  to e:decoupledIn. 
+        //set stgDecoupledIn to choose e:decoupledIn if not engPlates:contains(e:parent:name) else e:decoupledIn - 1.
+        set engStg to e:stage.
+        set stgDecoupledIn  to e:decoupledIn. 
 
-        set stgAvailThr     to stgAvailThr + e:availableThrust.
-        set stgCurThr       to stgCurThr + e:thrust.
-        set stgMaxThr       to stgMaxThr + e:maxThrust.
-        set stgPossThr      to stgPossThr + e:possibleThrust.
-
-        set stgFuelFlow     to stgFuelFlow + e:maxFuelFlow.
-        set stgMassFlow     to stgMassFlow + e:maxMassFlow.
 
         // Resources
         set engStats["Engines"][e:uid]["FuelMass"] to lex().
-        for r in e:consumedResources:keys
+        if not e:flameout
         {
-            local rName to "".
-            if r = "LH2" set rName to "LqdHydrogen".
-            else if r = "Liquid Fuel" set rName to "LiquidFuel".
-            else if r = "Solid Fuel" set rName to "SolidFuel".
-            else set rName to r.
-            
-            if not engStats["Stage"]["Resources"]:hasKey(rName)
+            for r in e:consumedResources:keys
             {
-                set engStats["Stage"]["Resources"][rName] to e:consumedResources[r].
+                local rName to "".
+                if r = "LH2" set rName to "LqdHydrogen".
+                else if r = "Liquid Fuel" set rName to "LiquidFuel".
+                else if r = "Solid Fuel" set rName to "SolidFuel".
+                else if r = "Electric Charge" set rName to "ElectricCharge".
+                else if r = "Xenon Gas" set rName to "XenonGas".
+                else set rName to r.
+                
+                if not engStats["Stage"]["Resources"]:hasKey(rName)
+                {
+                    set engStats["Stage"]["Resources"][rName] to e:consumedResources[r].
+                }
+
                 if not engStats["Engines"][e:uid]["FuelMass"]:hasKey(rName) 
                 {
+                    // print rName at (2, 35).
                     set fuelMass to ves_stage_fuel_mass_next(e:decoupledIn, list(rName))[rName].
                     set engStats["Engines"][e:uid]["FuelMass"][rName] to fuelMass.
-                    set stgFuelMass to stgFuelMass + fuelMass.
+                    if fuelMass = 0 set engFlameout to true.
                 }
             }
-        }
 
-        // ISP
-        if not sepList:contains(e:name)
-        {
-            set stgRelThr to stgRelThr + (e:possibleThrust / e:visp).
+        
+
+            // Stage calculations
+            set stgAvailThr     to stgAvailThr + e:availableThrust.
+            set stgCurThr       to stgCurThr + e:thrust.
+            set stgMaxThr       to stgMaxThr + e:maxThrust.
+            set stgPossThr      to stgPossThr + e:possibleThrust.
+
+            set stgFuelFlow     to stgFuelFlow + e:maxFuelFlow.
+            set stgMassFlow     to stgMassFlow + e:maxMassFlow.
+
+            // ISP
+            if not sepList:contains(e:name)
+            {
+                set stgRelThr to stgRelThr + (e:possibleThrust / e:visp).
+            }
         }
     }
     
@@ -295,6 +326,10 @@ global function ves_stage_stats
     set engStats["Stage"]["ShipMass"] to stgMass["Ship"].
     set engStats["Stage"]["FuelMass"] to stgMass["FuelMass"].
 
+    writeJson(stgMass, "0:/ves_stage_stats-stgMass.json").
+    writeJson(engStats, "0:/ves_stage_stats-engStats.json").
+
+    // print "                                   " at (2, 35).
     return engStats.
 }
 
@@ -369,8 +404,7 @@ global function ves_stage_exh_vel
 {
     parameter stg.
 
-    local stgIsp to ves_stage_isp(stg).
-    return constant:g0 * stgIsp.
+    return constant:g0 * ves_stage_isp(stg).
 }
 
 // Returns the aggregate exhaust velocity for a given decoupledIn stage
@@ -378,8 +412,7 @@ global function ves_stage_exh_vel_next
 {
     parameter stg.
 
-    local stgIsp to ves_stage_isp_next(stg).
-    return constant:g0 * stgIsp.
+    return constant:g0 * ves_stage_isp_next(stg).
 }
 
 // Returns isp for a given stage
@@ -409,7 +442,7 @@ global function ves_stage_isp
         {
             sepStgList:add(e).
             set sepStgThr to sepStgThr + e:possibleThrust.
-            set sepRelThr to choose sepRelThr + (e:possibleThrust / e:isp) if e:isp > 0 else 0.
+            set sepRelThr to sepRelThr + (e:possibleThrust / e:visp).
         }
     }
     
@@ -417,7 +450,7 @@ global function ves_stage_isp
     {
         if engStgThr = 0 
         {
-            return 0.
+            return 0.00001.
         }
         else
         {
@@ -426,9 +459,10 @@ global function ves_stage_isp
     }
     else if sepStgList:length > 0 
     {
+
         if sepStgThr = 0 
         {
-            return 0.
+            return 0.00001.
         }
         else
         {
@@ -437,7 +471,7 @@ global function ves_stage_isp
     }
     else 
     {
-        return 0.
+        return 0.00001.
     }
 }
 
@@ -484,10 +518,10 @@ global function ves_stage_thrust
 
     for e in engList
     {
-        if e:stage = stg and not sepList:contains(e:name)
-        {
-            set stgThr to stgThr + e:possibleThrust.
-        }
+        // if e:stage = stg and not sepList:contains(e:name)
+        // {
+        set stgThr to stgThr + e:possibleThrust.
+        // }
     }
     return stgThr.
 }
@@ -750,6 +784,7 @@ global function ves_stage_fuel_mass_next
                     }
 
                     set thisRatio to stgResAmt / stgResCap.
+                    //print "FuelMass_ThisRatio: " + thisRatio at (2, 22).
                     if thisRatio < fuelRatio set fuelRatio to thisRatio.
 
                     for pRes in p:resources
@@ -771,12 +806,12 @@ global function ves_stage_fuel_mass_next
                     }
                 }
             }
-
             fuelsCopy:remove(fuelsCopy:find(r:name)).
             if fuelsCopy:length = 0 break.
         }
     }
     //set stgFuelObj["StgFuelMass"] to stgFuelMass.
+    //print "stgFuelObj: " + stgFuelObj at (2, 30).
     return stgFuelObj.
 }
 
@@ -914,14 +949,13 @@ global function ves_stage_mass
     
     local fuelObj to lex().
     local stgFuelObj to lex().
-    
 
     for p in ship:parts
     {
         fuelObj:clear().
-        local fuelRatio to 1.
+        //local fuelRatio to 1.
 
-        if p:decoupledIn <= stg 
+        if p:decoupledIn <= stg
         {
             set shipMass to shipMass + p:mass.
             // set curMass to curMass + p:mass.
@@ -934,20 +968,20 @@ global function ves_stage_mass
             set curMass to curMass + p:mass.
             set dryMass to dryMass + p:dryMass.
             set wetMass to wetMass + p:wetMass.
-
+        
             if p:resources:length > 0
             {
                 for r in p:resources 
                 {
                     if fuels:contains(r:name)
                     {
-                        local thisRatio to r:amount / r:capacity.
+                        //local thisRatio to r:amount / r:capacity.
                         // set fuelObj[r:name] to lex(
                         //     "ratio", thisRatio
                         // ).
-                        if thisRatio < fuelRatio set fuelRatio to thisRatio.
+                        //if thisRatio < fuelRatio set fuelRatio to thisRatio.
 
-                        set fuelMass to ((r:capacity * fuelRatio) * r:density).
+                        set fuelMass to r:amount * r:density.
                         set stgFuelMass to stgFuelMass + fuelMass.
                         if stgFuelObj:hasKey(r:name)
                         {
@@ -964,7 +998,8 @@ global function ves_stage_mass
         }
     }
 
-    return lex("Current", curMass, "Dry", dryMass, "Wet", wetMass, "Ship", shipMass, "FuelMass", stgFuelMass, "Resources", stgFuelObj).
+    local stgObj to lex("Current", curMass, "Dry", dryMass, "Wet", wetMass, "Ship", shipMass, "FuelMass", stgFuelMass, "Resources", stgFuelObj).
+    return stgObj.
 }
 //#endregion
 

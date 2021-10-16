@@ -1,13 +1,15 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter corFactor is 2,
+parameter flip is false,
+          corFactor is 2,
           wp is "active".
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_vessel").
 
 disp_main(scriptPath()).
+clearVecDraws().
 
 // Variables
 local vdCor         to vecDraw(v(0, 0, 0), v(0, 0, 0), rgb(0, 1, 0), "", 1.0, false).
@@ -39,14 +41,14 @@ else if wp:typename <> "Waypoint"
 disp_msg("Horizontal mode - Press 0 for Vertical mode").
 lock wpXcl       to vxcl(body:position, wp:position).
 lock proXcl      to vxcl(body:position, ship:orbit:velocity:orbit).
-lock errAng      to -vAng(wpXcl, proXcl) * corFactor.
-lock errAngRet   to -vAng(wpXcl, -proXcl) * corFactor.
+lock errAng      to choose -vAng(wpXcl, proXcl) * corFactor if not flip else vAng(wpXcl, proXcl) * corFactor.
+lock errAngRet   to choose -vAng(wpXcl, -proXcl) * corFactor if not flip else vAng(wpXcl, -proXcl) * corFactor.
 lock corAng      to errAng * 2.
 lock corAngAxis  to errAng + 90.
 lock corAngRet   to errAngRet * 2.
 
 lock corVec      to (ship:prograde - r(errAng, 0, 0)):vector * wp:position:mag.
-lock corVecAxis  to (ship:prograde - r(mod(errAng - 90, 360), 0, 0)):vector * wp:position:mag.
+lock corVecAxis  to choose (ship:prograde - r(mod(errAng - 90, 360), 0, 0)):vector * wp:position:mag if not flip else (ship:prograde - r(mod(errAng + 90, 360), 0, 0)):vector * wp:position:mag.
 lock corVecRet   to -(ship:retrograde - r(errAng, 0, 0)):vector * wp:position:mag.
 lock wpLatMag    to wpXcl:mag.
 lock wpDist      to wp:geoPosition:distance.

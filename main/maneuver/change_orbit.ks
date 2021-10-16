@@ -1,9 +1,9 @@
 @lazyGlobal off.
 
 // This script does a hohmann transfer to a given Ap, Pe, and ArgPe
-parameter tgtPe is 25000,
-          tgtAp is 25000,
-          tgtArgPe is ship:orbit:argumentofperiapsis.
+parameter tgtPe is ship:orbit:periapsis,
+          tgtAp is ship:orbit:periapsis,
+          tgtArgPe is 0.
 
 clearScreen.
 
@@ -129,6 +129,12 @@ set dvNeeded    to util_read_cache("dvNeeded").
 set mnvTA       to util_read_cache("mnvTA").
 set tgtVal_0    to util_read_cache("tgtVal_0").
 set tgtVal_1    to util_read_cache("tgtVal_1").
+
+// print "compMode: " + compMode at (2, 30).
+// print "mvnTA: " + mnvTA AT (2, 31).
+// print "tgtVal_0: " + tgtVal_0 at (2, 32).
+// print "tgtVal_1: " + tgtVal_1 at (2, 33).
+// print "runmode: " + util_read_cache("runmode") at (2, 34).
 
 // Transfer burn
 if util_init_runmode() = 2

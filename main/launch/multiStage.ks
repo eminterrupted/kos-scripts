@@ -21,13 +21,17 @@ local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 local boosters      to list().
 local dropTanks     to list().
 local fairings      to list().
+local lesTowerList  to list().
 
+local abortDecoupler to "".
+local abortChute    to "".
+local LES           to "".
+
+local abortArmed    to true.
 local hasBoosters   to false.
 local hasDropTanks  to false.
 local hasFairing    to false.
 local hasLES        to false.
-local lesTower      to "".
-local lesTowerList  to list().
 
 local curAcc        to 0.
 local curThr        to 0.
@@ -40,15 +44,24 @@ local maxTwr        to 2.25.
 local stAlt         to 0.
 local stTurn        to 750.
 local stSpeed       to 100.
-local twr_kP        to 0.175.
+local twr_kP        to 0.225.
 local twr_kI        to 0.005.
 local twr_kD        to 0.0.
 local turnAlt       to round(body:atm:height * 0.875).
-local tValLoLim to 0.55.
+local tValLoLim to 0.40.
 
 lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitude)^2.
 
-// Flags
+// Control values
+local rVal      to launchPlan:tgtRoll.
+local sVal      to heading(90, 90, -90).
+local tVal      to 0.
+
+// throttle pid controllers
+local accPid    to pidLoop().
+local qPid      to pidLoop().
+local twrPid    to pidLoop().
+
 // Fairings
 for m in ship:modulesNamed("ProceduralFairingDecoupler")
 {
@@ -67,20 +80,90 @@ for m in ship:modulesNamed("ModuleSimpleAdjustableFairing")
 
 set hasFairing to choose true if fairings:length > 0 else false.
 
-// LES
+// Abort setup
 set lesTowerList to ship:partsDubbedPattern("escape").
 set hasLES to choose true if lesTowerList:length > 0 else false.
-if hasLES set lesTower to lesTowerList[0].
+if hasLES 
+{
+    set LES to lesTowerList[0].
 
-// Control values
-local rVal      to launchPlan:tgtRoll.
-local sVal      to heading(90, 90, -90).
-local tVal      to 0.
+    // Get the decoupler and chute needed for abort
+    for c in ship:rootPart:children
+    {
+        if c:hasModule("ModuleAblator")
+        {
+            for hsChild in c:children
+            {
+                //print hsChild at (2, 25).
+                if hsChild:hasModule("ModuleDecouple")
+                {
+                    //print hsChild:modules at (2, 27).
+                    set abortDecoupler to hsChild:getModule("ModuleDecouple").
+                    //print abortDecoupler at (2, 26).
+                }
+            }
+        }
+        else if c:hasModule("RealChuteModule")
+        {
+            set abortChute to c:getModule("RealChuteModule").
+        }
+    }
 
-// throttle pid controllers
-local accPid    to pidLoop().
-local qPid      to pidLoop().
-local twrPid    to pidLoop().
+    disp_msg("Abort system armed").
+    
+    on abort 
+    {
+        if abortArmed
+        {
+            for eng in ves_active_engines()
+            {
+                eng:shutdown.
+            }
+
+            util_do_event(abortDecoupler, "decouple").   
+            LES:activate.
+            disp_msg("*** MASTER ALARM: Abort triggered! ***").
+            util_do_event(abortChute, "arm parachute").
+            local hudTS to time:seconds + 2.5.
+            until LES:thrust <= 0.1
+            {
+                if time:seconds > hudTS
+                {
+                    disp_hud("*** MASTER ALARM ***", 2, 2).
+                    disp_hud("*** ABORT ***", 2, 2).
+                    set hudTS to time:seconds + 2.5.
+                }
+                disp_telemetry().
+            }
+            lock steering to ship:srfretrograde.
+            
+            local jetTS to time:seconds + 5.
+
+            until time:seconds >= jetTS
+            {
+                if time:seconds > hudTS 
+                {
+                    disp_hud("*** MASTER ALARM ***", 2, 2).
+                    disp_hud("*** ABORT ***", 2, 2).
+                    set hudTS to time:seconds + 2.5. 
+                }
+                disp_telemetry().
+            }
+            ves_jettison_les(LES).
+            
+            until false
+            {
+                if time:seconds > hudTS 
+                {
+                    disp_hud("*** MASTER ALARM ***", 2, 2).
+                    disp_hud("*** ABORT ***", 2, 2).
+                    set hudTS to time:seconds + 2.5. 
+                }
+                disp_telemetry().
+            }
+        }
+    }
+}
 
 // Set up the display
 disp_terminal().
@@ -93,6 +176,7 @@ if ship:partsTaggedPattern("booster"):length > 0
     set boosters    to ves_get_boosters().
 }
 
+// Drop tank check / enumeration
 if ship:partsTaggedPattern("dropTank"):length > 0
 {
     set hasDropTanks    to true.
@@ -201,13 +285,13 @@ disp_info().
 set stAlt to ship:altitude.
 
 // Set up gravity turn pids
-set qPid to pidLoop(10, 0, 0, -1, 1).
+set qPid to pidLoop(10, 0, 0, -tValLoLim, 0).
 set qPid:setpoint to maxQ.
 
-set accPid to pidLoop(0.02, 0, 0, -1, 1).
+set accPid to pidLoop(0.02, 0, 0, -tValLoLim, 0).
 set accPid:setpoint to maxAcc.
 
-set twrPid to pidLoop(twr_kP, twr_kI, twr_kD, -1, 1).
+set twrPid to pidLoop(twr_kP, twr_kI, twr_kD, -tValLoLim, 0).
 set twrPid:setpoint to maxTwr.
 
 //lock curAcc to ship:availableThrust / ship:mass.
@@ -230,6 +314,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
     local qVal      to choose max(tValLoLim, min(1, 1 + qPid:update(time:seconds, ship:q)))     if ship:q >= pidQVal    else 1.
     local aVal      to choose max(tValLoLim, min(1, 1 + accPid:update(time:seconds, curAcc)))   if curAcc >= maxAcc     else 1.
     local twrVal    to choose max(tValLoLim, min(1, 1+ twrPid:update(time:seconds, curTwr)))    if curTwr >= pidTwrVal  else 1.
+    
     local tValTemp  to min(qVal, aVal).
     set tVal to min(tValTemp, twrVal).
     
@@ -245,7 +330,7 @@ until ship:altitude >= turnAlt or ship:apoapsis >= tgtAp * 0.975
 // LES Tower jet
 if hasLES 
 {
-    if ves_jettison_les(lesTower)
+    if ves_jettison_les(LES)
     {
         disp_info("LES Tower jettisoned").
     }
@@ -253,6 +338,7 @@ if hasLES
     {
         disp_info("LES Tower jettison failure!").
     }
+    set abortArmed to false.
 }
 
 disp_msg("Post-turn burning to apoapsis").

@@ -8,6 +8,8 @@ disp_main(scriptPath()).
 local cores to ship:modulesnamed("kosProcessor").
 local shipCore to "".
 
+set core:volume:name to "local".
+
 for c in cores {
     if c:volume:name:contains("local") 
     {

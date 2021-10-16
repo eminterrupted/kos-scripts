@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
-parameter tgtInc is 0,
-          tgtLAN is ship:orbit:lan,
-          nearestNode is true.
+parameter tgtInc is 7.5,
+          tgtLAN is 125,
+          nearestNode is false.
 
 clearscreen.
 clearVecDraws().
@@ -70,36 +70,37 @@ else
     set mnvNode     to burnData[2].
     add mnvNode. 
 
-    set burnDur     to mnv_burn_dur(burnMag).
-    local fullDur   to burnDur["Full"].
-    local halfDur   to burnDur["Half"].
-    set burnETA     to mnvTime - halfDur.
+    // set burnDur     to mnv_burn_dur(burnMag).
+    // local fullDur   to burnDur["Full"].
+    // local halfDur   to burnDur["Half"].
+    // set burnETA     to mnvTime - halfDur.
     disp_info("DeltaV remaining: " + round(burnMag, 1)).
 
 
     // Vecdraw
-    if drawVec
-    {
-        local burnVDTail to positionAt(ship, mnvTime).
-        local burnVD     to vecDraw(
-            burnVDTail,
-            1000 * burnVec,
-            magenta,
-            "dV:" + round(burnMag, 1) + " m/s, dur:" + round(fullDur, 1) + "s",
-            1,
-            true,
-            0.1
-        ).
-        print burnVD.
-        // Keep the draw updating the start position until the burn is done.
-        set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
-    }
+    // if drawVec
+    // {
+    //     local burnVDTail to positionAt(ship, mnvTime).
+    //     local burnVD     to vecDraw(
+    //         burnVDTail,
+    //         1000 * burnVec,
+    //         magenta,
+    //         "dV:" + round(burnMag, 1) + " m/s, dur:" + round(fullDur, 1) + "s",
+    //         1,
+    //         true,
+    //         0.1
+    //     ).
+    //     print burnVD.
+    //     // Keep the draw updating the start position until the burn is done.
+    //     set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
+    // }
 
     set sVal to lookDirUp(burnVec, sun:position).
     lock steering to sVal.
 
     // Perform the maneuver
-    mnv_exec_node_burn(mnvNode, burnETA, fullDur).
+    //mnv_exec_node_burn(mnvNode, burnETA, fullDur).
+    mnv_exec_node_burn(mnvNode).
     set sVal to lookDirUp(ship:prograde:vector, sun:position).
     lock steering to sVal.
     remove mnvNode.

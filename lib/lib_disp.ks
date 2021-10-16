@@ -26,7 +26,7 @@ global function clr_disp
 }
 
 // Local function for incrementing ln
-local function cr
+global function cr
 {
     set line to line + 1.
     return line.
@@ -164,6 +164,17 @@ global function disp_msg
     print str at (0, 6).
 }
 
+// Prints to both hud and msg line
+global function disp_tee
+{
+    parameter str is "",
+              errLvl is 0,
+              screenTime is 15.
+
+    disp_msg(str).
+    disp_hud(str, errLvl, screenTime).
+}
+
 // Sets up the terminal
 global function disp_terminal
 {
@@ -190,6 +201,43 @@ global function disp_avionics
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
     cr().
     print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 5) + "   " at (0, cr()).
+}
+
+// Displays the launch plan prior to launching
+global function disp_launch_plan
+{
+    parameter launchPlan.
+    
+    set line to 10.
+
+    print "LAUNCH PLAN OVERVIEW" at (0, line).
+    print "--------------------" at (0, cr()).
+    cr().
+    print "APOAPSIS            : " + launchPlan:tgtAp at (0, cr()).
+    print "PERIAPSIS           : " + launchPlan:tgtPe at (0, cr()).
+    cr().
+    print "INCLINATION         : " + launchPlan:tgtInc at (0, cr()).
+    print "LAUNCH LAN          : " + launchPlan:tgtLAN at (0, cr()).
+    cr().
+    print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
+}
+
+global function disp_launch_window
+{
+    parameter tgtLAN, tgtEffectiveLAN, launchTime.
+
+    set line to 10.
+
+    print "LAUNCH WINDOW" at (0, line).
+    print "-------------" at (0, cr()).
+    cr().
+    if hasTarget 
+    print "TARGET           : " + target at (0, cr()).
+    print "TARGET LAN       : " + tgtLAN at (0, cr()).
+    print "EFFECTIVE LAN    : " + tgtEffectiveLAN at (0, cr()).
+    cr().
+    print "CURRENT LAN      : " + round(ship:orbit:lan, 5) at (0, cr()).
+    print "TIME TO LAUNCH   : " + disp_format_time(time:seconds - launchTime) at (0, cr()).
 }
 
 

@@ -42,7 +42,16 @@ for m in ship:modulesNamed("ModuleDeployableSolarPanel")
 {
     if m:part:tag = ""
     {
-        util_do_event(m, "extend solar panel").
+        if m:part <> ship:rootpart 
+        {
+            if m:part:parent:name:contains("hinge") 
+            {
+                local hingeMod to m:part:parent:getModule("ModuleRoboticServoHinge").
+                util_do_action(hingeMod, "toggle hinge").
+                wait max(5, abs((hingeMod:getField("target angle") - hingeMod:getField("current angle")) / hingeMod:getField("traverse rate"))).
+            }
+        }
+        util_do_event(m, "extend solar panel").   
     }
 }
    
@@ -51,13 +60,16 @@ for m in ship:modulesNamed("ModuleRTAntenna")
 {       
     if m:part:tag = "" 
     {
-        if m:part:parent:name:contains("hinge") 
+        if m:part <> ship:rootpart 
         {
-            local hingeMod to m:part:parent:getModule("ModuleRoboticServoHinge").
-            util_do_action(hingeMod, "toggle hinge").
-            wait max(5, abs((hingeMod:getField("target angle") - hingeMod:getField("current angle")) / hingeMod:getField("traverse rate"))).
+            if m:part:parent:name:contains("hinge") 
+            {
+                local hingeMod to m:part:parent:getModule("ModuleRoboticServoHinge").
+                util_do_action(hingeMod, "toggle hinge").
+                wait max(5, abs((hingeMod:getField("target angle") - hingeMod:getField("current angle")) / hingeMod:getField("traverse rate"))).
+            }
+            util_do_event(m, "activate").
         }
-        util_do_event(m, "activate").
     }
 }
 

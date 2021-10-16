@@ -278,6 +278,81 @@ global function util_check_value
     else return false.
 }
 
+global function util_check_char
+{
+    parameter checkChar to "0".
+    
+    if terminal:input:hasChar
+    {
+        if terminal:input:getChar = checkChar 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }
+    }
+}
+
+global function util_wait_for_char
+{
+    parameter keyToCheck to 0.
+
+    local agFlag is false.
+
+    if keyToCheck:typename = "Scalar"
+    {
+        set agFlag to true.
+        if keyToCheck = 0 ag10 off.
+        else if keyToCheck = 1 ag1 off.
+        else if keyToCheck = 2 ag2 off.
+        else if keyToCheck = 3 ag3 off.
+        else if keyToCheck = 4 ag4 off.
+        else if keyToCheck = 5 ag5 off.
+        else if keyToCheck = 6 ag6 off.
+        else if keyToCheck = 7 ag7 off.
+        else if keyToCheck = 8 ag8 off.
+        else if keyToCheck = 9 ag9 off.
+    }
+
+    until false
+    {
+        if terminal:input:hasChar
+        {
+            if terminal:input:getChar = keyToCheck:toString break.
+        }
+        if agFlag
+        {
+            if keyToCheck = 0     if ag10 break.
+            else if keyToCheck = 1 if ag1 break.
+            else if keyToCheck = 2 if ag2 break.
+            else if keyToCheck = 3 if ag3 break.
+            else if keyToCheck = 4 if ag4 break.
+            else if keyToCheck = 5 if ag5 break.
+            else if keyToCheck = 6 if ag6 break.
+            else if keyToCheck = 7 if ag7 break.
+            else if keyToCheck = 8 if ag8 break.
+            else if keyToCheck = 9 if ag9 break.
+        }    
+        wait 0.01.
+    }
+
+    if agFlag
+    {
+        if keyToCheck = 0 ag10 off.
+        else if keyToCheck = 1 ag1 off.
+        else if keyToCheck = 2 ag2 off.
+        else if keyToCheck = 3 ag3 off.
+        else if keyToCheck = 4 ag4 off.
+        else if keyToCheck = 5 ag5 off.
+        else if keyToCheck = 6 ag6 off.
+        else if keyToCheck = 7 ag7 off.
+        else if keyToCheck = 8 ag8 off.
+        else if keyToCheck = 9 ag9 off.
+    }
+}
+
 
 // -- Part modules -- //
 //
@@ -389,7 +464,7 @@ global function util_capacitor_discharge_trigger
     }
 }
 
-global function util_grapling_hook
+global function util_grappling_hook
 {
     parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
               mode is "arm". // other values: release, pivot, decouple

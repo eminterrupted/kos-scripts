@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter ascentAlt is 50000, 
+parameter ascentAlt is 15000, 
           ascentInc is 0,
           stageOnAscent is false.
 
@@ -48,6 +48,8 @@ local launchPlan to lex(
     "tgtAp",  ascentAlt,
     "tgtPe",  ascentAlt,
     "tgtInc", ascentInc,
+    "tgtLAN", -1,
+    "waitForLAN", false,
     "tgtRoll",0,
     "lazObj", l_az_calc_init(ascentAlt, ascentInc),
     "queue", queue(ascentPath:name, circPath:name)

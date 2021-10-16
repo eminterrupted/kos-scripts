@@ -55,7 +55,7 @@ local function correction_burn
     set burnEta to burnAt - halfDur.
     disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
     disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
-    mnv_exec_node_burn(mnvNode, burnEta, burnDur).
+    mnv_exec_node_burn(mnvNode).
 
     if ship:orbit:hasnextpatch 
     {

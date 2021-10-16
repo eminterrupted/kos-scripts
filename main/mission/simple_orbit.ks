@@ -7,8 +7,10 @@ runOncePath("0:/lib/lib_vessel").
 runOncePath("0:/lib/lib_util").
 
 disp_main(scriptPath():name).
+
 local orbitalPanels to list().
 local orbitalComms  to list().
+local orientation to "prograde".
 
 local sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
@@ -30,7 +32,14 @@ disp_hud("Activate AG10 to end Simple Orbit sequence").
 //hudtext("Activate AG10 to end Simple Orbit sequence", 25, 2, 20, green, false).
 until ag10
 {
-    set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    if orientation = "sun_position" 
+    {
+        set sVal to lookDirUp(sun:position, ship:prograde:vector).
+    }
+    else 
+    {
+        set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    }
     disp_orbit().
 }
 ag10 off.

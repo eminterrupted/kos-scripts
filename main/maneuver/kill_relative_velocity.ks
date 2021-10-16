@@ -20,7 +20,7 @@ local lastDist  to 999999.
 lock  relVel to target:velocity:orbit - ship:velocity:orbit.
 lock maxAcc to (0.000000001 + ship:availablethrust) / ship:mass.
 local safeDist  to 100.
-local startDist to 250.
+local startDist to 150.
 
 lock steering to lookdirup(relVel, sun:position).
 ag10 off.

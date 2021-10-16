@@ -1,3 +1,7 @@
+// Script to allow vessels to enter a body's atmosphere.
+// Terminates once the vessel is moving slow enough through the 
+// atmosphere
+
 @lazyGlobal off.
 clearScreen.
 
@@ -11,74 +15,61 @@ runOncePath("0:/lib/lib_util").
 disp_main(scriptPath()).
 
 //-- Variables --//
+local fairings to list().
+local hasFairings to false.
 local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(150, 152.5).
-local reentryAlt to 50000.
-local shipLng    to 0.
+local reentryAlt to ship:body:atm:height * 0.525.
 local stagingAlt to ship:body:atm:height + 50000.
-local sVal       to lookDirUp(body:position, sun:position).
 local testPatch  to ship:orbit.
-local tVal       to 0.
 
 // Locks
+local sVal       to lookDirUp(body:position, sun:position).
 lock steering to sVal.
+local tVal       to 0.
 lock throttle to tVal.
 
+// Fairing check
+if ship:partsTaggedPattern("landingFairing"):length > 0 or ship:partsTaggedPattern("reentryFairing"):length > 0
+{
+    set hasFairings to true.
+    for m in ship:modulesNamed("ProceduralFairingDecoupler")
+    {
+        fairings:add(m).
+    }
+
+    for m in ship:modulesNamed("ModuleProceduralFairing")
+    {
+        fairings:add(m).
+    }
+
+    for m in ship:modulesNamed("ModuleSimpleAdjustableFairing")
+    {
+        fairings:add(m).
+    }
+}
 
 // Main
-until false
+
+if not ship:body:atm:exists
 {
-    if testPatch:hasNextPatch 
-    {
-        if testPatch:nextPatch:body:name = "Kerbin" or testPatch:nextPatch:body:name = "Mun" or testPatch:nextPatch:body:name = "Minmus"
-        {
-            set testPatch to testPatch:nextpatch.
-        }
-        else
-        {
-            break.
-        }
-    }
-    else
-    {
-        break.
-    }
+    disp_tee("No atmosphere present on " + ship:body:name + "!", 2).
+    print 1 / 0.
 }
 
-until ship:body:name = "Kerbin"
+if testPatch:periapsis >= body:atm:height
 {
-    disp_orbit().
-    wait 0.01.
-}
-
-if testPatch:periapsis >= Kerbin:atm:height
-{
-    disp_msg("Waiting for KSC window or AG10 activation").
+    disp_msg("Waiting for AG10 activation").
     ag10 off.
-    until (shipLng >= kscWindow[0] - 2.5 and shipLng <= kscWindow[1] + 2.5) or ag10
+    until ag10 or ship:altitude <= body:atm:height
     {
-        set shipLng to nav_lng_to_degrees(ship:longitude).
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-        disp_info2("Current longitude: " + round(shipLng, 2)).
+        disp_info("Lattitude: " + round(ship:latitude, 2)).
+        disp_info2("Longitude: " + round(ship:longitude, 2)).
         disp_orbit().
         wait 0.01.
     }
     if warp > 0 set warp to 0.
     wait until kuniverse:timewarp:issettled.
 
-    disp_msg("In KSC window, beyond warp                ").
-    until (shipLng >= kscWindow[0] and shipLng <= kscWindow[1]) or ag10
-    {
-        set shipLng to nav_lng_to_degrees(ship:longitude).
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-        disp_info2("Current longitude: " + round(shipLng, 2)).
-        disp_orbit().
-        wait 0.01.
-    }
-    if warp > 0 set warp to 0.
-    wait until kuniverse:timewarp:issettled.
     disp_info().
     disp_info2().
     ag10 off.
@@ -151,13 +142,13 @@ if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 set sVal to body:position.
 wait 1.
-disp_msg("Staging").
-//set sVal to ship:prograde:vector + r(0, -90, 0).
-until stage:number = 1 
-{
-    stage.
-    wait 2.5.
-}
+// Stage once to get rid of transfer stage
+ves_safe_stage().
+wait 1.
+// Uncomment if two stages are necessary
+ves_safe_stage().
+wait 1.
+
 disp_msg("Waiting for reentry interface").
 
 until ship:altitude <= body:atm:height
@@ -172,16 +163,15 @@ until ship:groundspeed <= 1500
     set sVal to ship:srfRetrograde.
     disp_telemetry().
 }
+
 unlock steering.
 disp_msg("Control released").
 
-until alt:radar <= 2500
+until ship:groundspeed <= 500
 {
     disp_telemetry().
 }
-disp_msg("Chute deploy").
+disp_msg("Deploying fairings").
+if hasFairings ves_jettison_fairings(fairings).
 
-until alt:radar <= 5
-{
-    disp_telemetry().
-}
+disp_tee("Unpowered entry complete").

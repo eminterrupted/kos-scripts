@@ -4,81 +4,94 @@ clearScreen.
 parameter res,
           srcElement,
           tgtElement,
-          amt is -1.
+          tgtFillPct is 100.
 
 runOncePath("0:/lib/lib_disp").
 
-local srcParts to list().
-local srcRes to -1.
-local srcResFill to 0.
-local srcResFinal to 0.
-local srcValid to false.
-local tgtParts to list().
-local tgtRes to -1.
-local tgtResFill to 0.
-local tgtResFinal to 0.
-local tgtValid to false.
+disp_main(scriptPath(), false).
 
-disp_main(scriptPath()).
-disp_msg("Creating transfer object").
+if tgtFillPct > 1 set tgtFillPct to tgtFillPct / 100.
 
-for r in srcElement:resources 
+disp_msg("Creating transfer object for " + res).
+
+print "Resource: " + res at (2, 15).
+
+print "Source Element: " + srcElement at (2, 17).
+
+print "Target Element: " + tgtElement at (2, 20).
+
+
+if res = "LFO" 
 {
-    if r:name = res
-    {
-        set srcParts to r:parts.
-        lock srcRes to r:amount.
-        lock srcResFill to r:amount / r:capacity.
-        set srcResFinal to srcRes - amt.
-        set srcValid to true.
-    }
+    transfer_resource("LiquidFuel", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
 }
-
-if not srcValid
+else if res = "LH2O" 
 {
-    disp_msg("ERROR: Source does not have resource!").
-    print 1 / 0.
+    transfer_resource("LqdHydrogen", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
 }
-
-for r in tgtElement:resources
+else if res = "LCH4O"
 {
-    if r:name = res
-    {
-        set tgtParts to r:parts.
-        lock tgtRes to r:amount.
-        lock tgtResFill to r:amount / r:capacity.
-        set tgtResFinal to tgtRes + amt.
-        set tgtValid to true.
-    }
+    transfer_resource("LqdMethane", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
 }
-
-if not tgtValid
+else if res = "MP" or res = "MonoProp" 
 {
-    disp_msg("ERROR: Target does not have resource capacity!").
-    print 1 / 0.
-}
-
-local resTransfer to "".
-
-if amt < 0 
-{
-    set resTransfer to transferAll(res, srcParts, tgtParts).
+    transfer_resource("MonoPropellant", srcElement, tgtElement, tgtFillPct).
 }
 else
 {
-    set resTransfer to transfer(res, srcParts, tgtParts, amt).
+    transfer_resource(res, srcElement, tgtElement, tgtFillPct).
 }
 
-disp_msg("Transferring resource: " + res).
+disp_msg("All transfers complete").
 
 
-set resTransfer:active to true.
-wait 1. 
-until resTransfer:status <> "Transferring" or srcRes <= srcResFinal or tgtRes >= tgtResFinal
+// Functions
+local function transfer_resource 
 {
-    disp_res_transfer(res, srcElement, tgtElement, amt, srcRes, srcResFill, tgtRes, tgtResFill).
-    disp_info("Status: " + resTransfer:status).
+    parameter resName,
+              src,
+              tgt,
+              pct.
+
+    local fillTgt to -1.
+
+    for r in src:resources
+    {
+        if r:name = resName
+        {
+            lock srcAmt to r:amount.
+            print "Source Units: " + round(srcAmt, 2) at (2, 18).
+        }
+    }
+
+    for r in tgt:resources 
+    {
+        if r:name = resName
+        {
+            set fillTgt to r:capacity * pct.
+            lock tgtAmt to r:amount.
+            print "Target Units: " + round(r:amount, 2) at (2, 21).
+            print "Target Fill: " + round(fillTgt, 2) at (2, 22).
+        }
+    }
+
+    if fillTgt = -1 return -1.
+    else 
+    {
+        local resTransfer to transfer(resName, src, tgt, fillTgt).
+        set resTransfer:active to true.
+        print "Transfer Status: " + resTransfer:status at (2, 25).
+        wait 2.
+        until tgtAmt >= fillTgt or srcAmt <= 0.1
+        {
+            disp_info("Transferring " + round(fillTgt - tgtAmt, 2) + " units of " + resName).
+            wait 2.
+        }
+        set resTransfer:active to false.
+        disp_info("Transfer complete!").
+        return 1.
+    }
 }
-disp_info().
-disp_msg("Transfer complete with status result: " + resTransfer:status).
-set resTransfer:active to false.

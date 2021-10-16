@@ -171,7 +171,8 @@ global function mnv_improve_node
 global function mnv_optimize_exit_ap
 {
     parameter mnvNode,
-              apThresh.
+              apThresh,
+              tgtBody is ship:body:body.
     
     // Sweep timing to lowest Pe
     local lastAp to mnvNode:orbit:nextPatch:apoapsis.

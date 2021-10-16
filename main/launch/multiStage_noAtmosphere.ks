@@ -14,6 +14,7 @@ runOncePath("0:/kslib/lib_navigation").
 // variables
 local tgtAp    to launchPlan:tgtAp.
 local tgtInc   to launchPlan:tgtInc.
+local tgtLAN    to launchPlan:tgtLAN.
 local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 
 // local activeEng to list().
@@ -44,7 +45,7 @@ lock kGrav     to constant:g * ship:body:mass / (ship:body:radius + ship:altitud
 local rVal      to launchPlan:tgtRoll.
 local sVal      to heading(90, 90).
 local tVal      to 0.
-local tValLoLim to 0.63.
+local tValLoLim to 0.40.
 
 // throttle pid controllers
 local twrPid    to pidLoop().

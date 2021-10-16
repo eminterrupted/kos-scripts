@@ -2,8 +2,8 @@
 clearScreen.
 
 parameter tgtParam is "Mun",
-          tgtAlt is 500000,
-          altPadding to 50000.
+          tgtAlt is 250000,
+          tgtInc is 1.
 
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
@@ -15,12 +15,11 @@ runOncePath("0:/lib/lib_vessel").
 
 disp_main(scriptPath()).
 
+local altPadding        to 0.
 local burnAt            to 0.
-local burnDur           to 0.
 local burnEta           to 0.
 local currentPhase      to 0.
 local dvNeeded          to list().
-local halfDur           to 0.
 local mnv               to node(0, 0, 0, 0).
 local tgtBodyAlt        to 0.
 local transferPhase     to 0.
@@ -30,7 +29,7 @@ if tgtParam:typeName = "list"
 {
     set target      to nav_orbitable(tgtParam[0]).
     set tgtAlt      to tgtParam[1].
-    set altPadding  to tgtParam[2].
+    set tgtInc      to tgtParam[2].
 }
 else
 {
@@ -86,21 +85,22 @@ if not hasNode
     print "Arrival  dV      : " + round(dvNeeded[1], 2) + "m/s     " at (2, 28).
 
     // Add the maneuver node
-    set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, 1).
+    set mnv to mnv_opt_transfer_node(node(burnAt, 0, 0, dvNeeded[0]), target, tgtAlt, tgtInc).
     add mnv.
 }
 
 if hasNode
 {
     // Transfer burn
-    set mnv to nextNode.
-    set burnAt  to nextNode:time.
-    set burnDur to mnv_staged_burn_dur(nextNode:deltav:mag).
-    set halfDur to mnv_staged_burn_dur(nextNode:deltav:mag / 2).
-    set burnEta to burnAt - halfDur.
-    disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
-    disp_info2("Burn duration: " + round(burnDur, 1) + "          ").
-    mnv_exec_node_burn(mnv, burnEta, burnDur).
+    // set mnv to nextNode.
+    // set burnAt  to nextNode:time.
+    // set burnDur to mnv_burn_dur_next(nextNode:deltav:mag).
+    // set fullDur to burnDur["Full"].
+    // set halfDur to burnDur["Half"].
+    // set burnEta to burnAt - halfDur.
+    // disp_info("Burn ETA : " + round(burnEta, 1) + "          ").
+    // disp_info2("Burn duration: " + round(fullDur, 1) + "          ").
+    mnv_exec_node_burn(nextNode).
 
     if ship:orbit:hasnextpatch 
     {
