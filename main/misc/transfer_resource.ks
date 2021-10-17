@@ -4,66 +4,61 @@ clearScreen.
 parameter res,
           srcElement,
           tgtElement,
-          tgtFillPct is 100.
-
+          tgtAmount is 100,
+          amountType is "pct".
+          
 runOncePath("0:/lib/lib_disp").
 
 disp_main(scriptPath(), false).
 
-if tgtFillPct > 1 set tgtFillPct to tgtFillPct / 100.
-
 disp_msg("Creating transfer object for " + res).
-
-print "Resource: " + res at (2, 15).
-
-print "Source Element: " + srcElement at (2, 17).
-
-print "Target Element: " + tgtElement at (2, 20).
-
 
 if res = "LFO" 
 {
-    transfer_resource("LiquidFuel", srcElement, tgtElement, tgtFillPct).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("LiquidFuel", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
 }
 else if res = "LH2O" 
 {
-    transfer_resource("LqdHydrogen", srcElement, tgtElement, tgtFillPct).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("LqdHydrogen", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
 }
 else if res = "LCH4O"
 {
-    transfer_resource("LqdMethane", srcElement, tgtElement, tgtFillPct).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("LqdMethane", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
 }
 else if res = "MP" or res = "MonoProp" 
 {
-    transfer_resource("MonoPropellant", srcElement, tgtElement, tgtFillPct).
+    transfer_resource("MonoPropellant", srcElement, tgtElement, tgtAmount, amountType).
 }
 else
 {
-    transfer_resource(res, srcElement, tgtElement, tgtFillPct).
+    transfer_resource(res, srcElement, tgtElement, tgtAmount, amountType).
 }
 
-disp_msg("All transfers complete").
+disp_msg("Transfer complete").
 
 
 // Functions
-local function transfer_resource 
+local function transfer_resource
 {
     parameter resName,
               src,
               tgt,
-              pct.
+              fillAmt,
+              amtType.
 
-    local fillTgt to -1.
+    local fillTgt to 0.
+    local srcCap to 0.
+    local tgtCap to 0.
+    local xfrAmt to 0.
 
     for r in src:resources
     {
         if r:name = resName
         {
-            lock srcAmt to r:amount.
-            print "Source Units: " + round(srcAmt, 2) at (2, 18).
+            set srcCap to r:capacity.
         }
     }
 
@@ -71,27 +66,87 @@ local function transfer_resource
     {
         if r:name = resName
         {
-            set fillTgt to r:capacity * pct.
-            lock tgtAmt to r:amount.
-            print "Target Units: " + round(r:amount, 2) at (2, 21).
-            print "Target Fill: " + round(fillTgt, 2) at (2, 22).
+            if amtType = "pct"
+            {
+                set fillTgt to r:capacity * fillAmt.
+                set xfrAmt  to fillTgt - r:amount.
+            }
+            else if amtType = "units"
+            {
+                local maxFill to r:capacity - r:amount.
+                if maxFill > fillAmt 
+                {
+                    set fillTgt to r:amount + fillAmt.
+                    set xfrAmt to fillAmt.
+                }
+                else
+                {
+                    set fillTgt to r:capacity.
+                    set xfrAmt to r:capacity - r:amount.
+                }
+            }
+            else
+            {
+                return -1.
+            }
+            set tgtCap to r:capacity.
         }
     }
 
-    if fillTgt = -1 return -1.
-    else 
+    local resTransfer to transfer(resName, src, tgt, xfrAmt).
+    set resTransfer:active to true.
+    
+    disp_msg("Transferring resource").
+    until resTransfer:status = "Failed" or resTransfer:status = "Finished"
     {
-        local resTransfer to transfer(resName, src, tgt, fillTgt).
-        set resTransfer:active to true.
-        print "Transfer Status: " + resTransfer:status at (2, 25).
-        wait 2.
-        until tgtAmt >= fillTgt or srcAmt <= 0.1
-        {
-            disp_info("Transferring " + round(fillTgt - tgtAmt, 2) + " units of " + resName).
-            wait 2.
-        }
-        set resTransfer:active to false.
-        disp_info("Transfer complete!").
-        return 1.
+        disp_info("Transfer status: " + resTransfer:status).
+        disp_info2(resTransfer:message).
+        disp_resource_transfer(resName, src, srcCap, tgt, tgtCap, fillTgt, xfrAmt).
     }
+    set resTransfer:active to false.
+    return 1.
+}
+
+local function disp_resource_transfer
+{
+    parameter resName, 
+              src,
+              srcCap,
+              tgt,
+              tgtCap,
+              fillTgt,
+              xfrAmt.
+
+    global line to 10.
+    local srcAmt to 0.
+    local tgtAmt to 0.
+
+    for r in src:resources
+    {
+        if r:name = resName set srcAmt to r:amount.
+    }
+
+    for r in tgt:resources
+    {
+        if r:name = resName set tgtAmt to r:amount.
+    }
+
+    print "RESOURCE TRANSFER" at (0, line).
+    print "-----------------" at (0, cr()).
+    print "RESOURCE             : " + resName at (0, cr()).
+    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
+    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtAmt), 2) * 100 + "%   " at (0, cr()).
+    cr().
+    print "SOURCE ELEMENT       : " + src:name at (0, cr()).
+    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcCap) at (0, cr()).
+    cr().
+    print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
+    print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
+    cr().
+}
+
+local function cr
+{
+    set line to line + 1.
+    return line.
 }
