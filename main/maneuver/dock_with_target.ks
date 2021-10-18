@@ -1,8 +1,6 @@
 @lazyGlobal off. 
 clearScreen.
 
-parameter tgtPort to "port.B.2".
-
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_util").
 runOncePath("0:/lib/lib_vessel").
@@ -20,11 +18,12 @@ wait 1.
 local capturePort   to "".
 local dockingPorts  to list().
 local lightList     to list().
-local probePort     to "".
 local rcsList       to list().
 local safetyDist    to 50.
 local elementName   to ship:name.
 local targetPort    to "".
+
+local probePort     to rdz_select_probe_port().
 
 // Get RCS
 for p in ship:parts 
@@ -40,15 +39,6 @@ for p in ship:parts
     }
 }
 
-if ship:partsTagged("probePort"):length > 0 
-{
-    set probePort to ship:partsTagged("probePort")[0].
-}
-else
-{ 
-    list dockingPorts      in dockingPorts.
-    set probePort          to dockingPorts[0].
-}
 probePort:controlFrom.
 
 if probePort:hasModule("ModuleAnimateGeneric")
@@ -62,7 +52,7 @@ for m in lightList
     util_do_event(m, "lights on").
 }
 
-rdz_select_docking_target().
+set capturePort to rdz_select_docking_target().
 
 disp_msg("Enable RCS to begin docking or 0 to reconfirm target").
 
@@ -295,7 +285,7 @@ global function position_port_side
 
 global function rcs_toggle_full_thrust
 {
-    parameter rcsParts, 
+    parameter rcsParts,
               state is true.
 
     for r in rcsParts
@@ -304,8 +294,43 @@ global function rcs_toggle_full_thrust
     }
 }
 
+global function rcs_set_deadband
+{
+    parameter rcsParts, 
+              deadband to 0.01.
+
+    for r in rcsParts
+    {
+        set r:deadband to deadband.
+    }
+}
+
+global function rdz_select_probe_port
+{
+    if ship:partsTagged("probePort"):length = 1 
+    {
+        return ship:partsTagged("probePort")[0].
+    }
+    else if ship:dockingPorts:length = 1
+    { 
+        return ship:dockingPorts[0].
+    }
+    else if ship:dockingPorts:length > 1
+    {
+        disp_msg("Select probe port").
+        return util_select_port(ship:dockingports).
+    }
+    else
+    {
+        disp_tee("No docking port on vessel!", 2).
+        return 1 / 0.
+    }
+}
+
 global function rdz_select_docking_target
 {
+    local selectedPort to "".
+
     if not hasTarget {
         disp_msg("Select a target for docking").
         until hasTarget
@@ -314,45 +339,101 @@ global function rdz_select_docking_target
         }
     }
     
-    disp_msg("Target found, identifying target port").
-
-    if target:typeName = "Vessel" 
+    if target:typeName = "Vessel"
     {
+        disp_msg("Target vessel selected: " + target:name).
+        wait 1.
         if target:dockingports:length > 1 
         {
-            for dp in target:dockingPorts 
+            disp_msg("Select target port").
+            set selectedPort to util_select_port(target:dockingPorts).
+        }
+        else if target:dockingPorts:length = 1
+        {
+            set selectedPort to target:dockingPorts[0].
+            if selectedPort:state = "Ready" 
             {
-                if dp:tag = tgtPort 
+                if not probePort:name = selectedPort:name
                 {
-                    set capturePort to dp.
-                    set target to dp.
+                    disp_tee("Target port does not match probePort", 2).
                 }
             }
-        }
-        else if target:dockingPorts:length > 0 
-        {
-            for port in target:dockingPorts
+            else 
             {
-                if port:state = "Ready" set capturePort to port.
+                disp_tee("Target port is not available", 2).
+                return 1 / 0.
             }
         }
         else
         {
-            disp_msg("Target has no matching docking port").
-            print 1 / 0.
+            disp_tee("Target has no docking port").
+            return 1 / 0.
         }
     }
     else if target:typeName = "dockingPort"
     {
-        set capturePort to target.
-        disp_msg("Target port detected").
+        set selectedPort to target.
     }
     else
     {
-        disp_msg("Not a valid target type").
-        print 1 / 0.
+        disp_tee("Not a valid target type").
+        return 1 / 0.
     }
 
-    disp_msg("Target port confirmed").
-    return target.
+    disp_msg("Target port selected").
+    disp_info("Name: '" + selectedPort:name + "' Tag: '" + selectedPort:tag + "'").
+    wait 1.
+    return selectedPort.
+}
+
+global function util_select_port 
+{
+    parameter portList.
+    
+    local keyIdx to 0.
+    local portIdx to 0.
+    local portKeyList to list().
+    local validPortList to list().
+
+    for p in portList
+    {
+        if p:state = "Ready" 
+        {
+            print "[" + (keyIdx) + "][" + colorStr[keyIdx] + "] (" + p:name + ") | (" + p:tag + ")  " at (0, 10 + keyIdx).
+            highlight(p, colors[keyIdx]).
+            portKeyList:add(keyIdx:tostring).
+            validPortList:add(p).
+            set keyIdx to keyIdx + 1.
+        }
+    }
+    
+    disp_info("Select:").
+    
+    until false
+    {
+        set portIdx to util_wait_on_char().
+        if not portKeyList:contains(portIdx)
+        {
+            disp_info("Invalid Selection: " + portIdx).
+            set portIdx to "".
+            wait 1.
+            disp_info("Select:").
+        }
+        else
+        {
+            disp_msg("Selected: " + portIdx).
+            break.
+        }
+    }
+
+    set keyIdx to 0.
+    for p in portList
+    {
+        print "                                                       " at (0, 10 + keyIdx).
+        local hl to highlight(p, black).
+        set hl:enabled to false.
+        set keyIdx to keyIdx + 1.
+    }
+
+    return validPortList[portIdx:tonumber].
 }

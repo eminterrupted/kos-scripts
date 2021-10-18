@@ -29,8 +29,10 @@ if tgtPe:typename = "list"
 // Variables
 local cacheValues   to list("compMode", "dvNeeded", "mnvTA", "runmode", "tgtVal_0", "tgtVal_1").
 local compMode      to "".
+local doneFlag      to false.
 local dvNeeded      to list().
 local mnvEta        to 0.
+local mnvNode       to node(0, 0, 0, 0).
 local mnvTA         to 0.
 local mnvTime       to time:seconds + nav_eta_to_ta(ship:orbit, tgtArgPe).
 
@@ -59,8 +61,9 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 }
 
 // Main
-if util_init_runmode() = 0 
+if util_init_runmode() = 0
 {
+    print "runmode is 0" at (0, 25).
     for val in cacheValues 
     {
         util_clear_cache_key(val).
@@ -137,53 +140,85 @@ set tgtVal_1    to util_read_cache("tgtVal_1").
 // print "runmode: " + util_read_cache("runmode") at (2, 34).
 
 // Transfer burn
-if util_init_runmode() = 2
+until doneFlag
 {
-    disp_msg("Transfer Burn").
-    set mnvTA       to util_read_cache("mnvTA").
-    set mnvTime     to time:seconds + nav_eta_to_ta(ship:orbit, mnvTA).
-    local mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
-    set mnvNode     to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
-    add mnvNode.
-    if mnvNode:burnvector:mag > 0.1 
+    if util_init_runmode() = 2
     {
-        mnv_exec_node_burn(mnvNode).
-    }
-    else
-    {
-        remove mnvNode.
-    }
-    if compMode = "ap" 
-    {
-        util_cache_state("mnvTA", 180).
-    }
-    else
-    {
-        util_cache_state("mnvTA", 0).
-    }
-    util_set_runmode(3).
-}
+        disp_msg("Transfer Burn").
+        set mnvTA       to util_read_cache("mnvTA").
+        set mnvTime     to time:seconds + nav_eta_to_ta(ship:orbit, mnvTA).
+        set mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
+        set mnvNode     to mnv_opt_simple_node(mnvNode, tgtVal_0, compMode).
+        add mnvNode.
 
-// Arrival burn
-if util_init_runmode() = 3
-{
-    disp_msg("Arrival Burn").
-    set mnvTA       to util_read_cache("mnvTA").
-    set mnvEta      to nav_eta_to_ta(ship:orbit, mnvTA).
-    set mnvTime     to time:seconds + mnvEta.
-    local mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
-    wait 1.
-    set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
-    add mnvNode.
-    if mnvNode:burnVector:mag > 0.1
-    {
-        mnv_exec_node_burn(mnvNode).
+        util_set_runmode(4).
     }
-    else
+
+    if util_init_runmode() = 4
     {
-        remove mnvNode.
+        if not hasNode 
+        {
+            util_set_runmode(2).
+        }
+        else
+        {
+            set mnvNode to nextNode.
+            if mnvNode:burnvector:mag > 0.1 
+            {
+                mnv_exec_node_burn(mnvNode).
+            }
+            else
+            {
+                remove mnvNode.
+            }
+            if compMode = "ap" 
+            {
+                util_cache_state("mnvTA", 180).
+            }
+            else
+            {
+                util_cache_state("mnvTA", 0).
+            }
+            util_set_runmode(6).
+        }
     }
-    util_set_runmode().
+
+    // Arrival burn
+    if util_init_runmode() = 6
+    {
+        disp_msg("Arrival Burn").
+        set mnvTA       to util_read_cache("mnvTA").
+        set mnvEta      to nav_eta_to_ta(ship:orbit, mnvTA).
+        set mnvTime     to time:seconds + mnvEta.
+        set mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
+        wait 1.
+        set mnvNode to choose mnv_opt_simple_node(mnvNode, tgtVal_1, "pe") if compMode = "ap" else mnv_opt_simple_node(mnvNode, tgtVal_1, "ap").
+        add mnvNode.
+
+        util_set_runmode(8).
+    }
+
+    if util_init_runmode() = 8
+    {
+        if not hasNode
+        {
+            util_set_runmode(6).
+        }
+        else
+        {
+            set mnvNode to nextNode.
+            if mnvNode:burnVector:mag > 0.1
+            {
+                mnv_exec_node_burn(mnvNode).
+            }
+            else
+            {
+                remove mnvNode.
+            }
+            util_set_runmode(10).
+            set doneFlag to true.
+        }
+    }
 }
 
 // Cleanup the state file

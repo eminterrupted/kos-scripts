@@ -100,9 +100,9 @@ local function transfer_resource
     until resTransfer:status = "Failed" or resTransfer:status = "Finished"
     {
         disp_info("Transfer status: " + resTransfer:status).
-        disp_info2(resTransfer:message).
         disp_resource_transfer(resName, src, srcCap, tgt, tgtCap, fillTgt, xfrAmt).
     }
+    disp_info2(resTransfer:message).
     set resTransfer:active to false.
     return 1.
 }

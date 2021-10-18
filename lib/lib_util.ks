@@ -16,6 +16,32 @@ global info is lex(
     )
 ).
 
+global colors is list(
+    red,
+    magenta,
+    rgb(0.25, 0, 0.75),
+    blue,
+    cyan,
+    green,
+    yellow,
+    rgb(1, 1, 0),
+    white,
+    black
+).
+
+global colorStr to list(
+    "Red",
+    "Magenta",
+    "Violet",
+    "Blue",
+    "Cyan",
+    "Green",
+    "Yellow",
+    "Orange",
+    "White",
+    "Black"
+).
+
 // Local
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 global stateFile to dataDisk + "state.json".
@@ -295,15 +321,36 @@ global function util_check_char
     }
 }
 
+global function util_return_char
+{
+    if terminal:input:hasChar
+    {
+        return terminal:input:getChar.
+    }
+    return "".
+}
+
+global function util_wait_on_char
+{
+    local char to "".
+    
+    until false
+    {
+        if terminal:input:hasChar
+        {
+            set char to terminal:input:getChar().
+            break.
+        }
+    }
+    return char.
+}
+
 global function util_wait_for_char
 {
-    parameter keyToCheck to 0.
-
-    local agFlag is false.
+    parameter keyToCheck to 0, agFlag to true.
 
     if keyToCheck:typename = "Scalar"
     {
-        set agFlag to true.
         if keyToCheck = 0 ag10 off.
         else if keyToCheck = 1 ag1 off.
         else if keyToCheck = 2 ag2 off.
