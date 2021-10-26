@@ -3,8 +3,9 @@
 clearscreen.
 
 parameter returnBody is body("Kerbin"),
-          returnAlt  is 45000.
+          returnAlt  is 42500.
 
+runOncePath("0:/lib/lib_conics").
 runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_mnv").
 runOncePath("0:/lib/lib_mnv_optimization").
@@ -12,6 +13,7 @@ runOncePath("0:/lib/lib_mnv_optimization").
 disp_main(scriptPath()).
 
 local mnvNode to node(0, 0, 0, 0).
+local exitTS to 0.
 
 // Staging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -23,9 +25,11 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
 if hasNode remove nextNode.
 if not ship:orbit:hasnextpatch
 {
-    set mnvNode to mnv_exit_node(returnBody).
-    set mnvNode to mnv_optimize_exit_pe(mnvNode, returnAlt).
+    
 
+    set mnvNode to mnv_exit_node(returnBody).
+    set exitTS  to nextNode:orbit:nextpatcheta + time:seconds.
+    set mnvNode to mnv_optimize_exit_pe(mnvNode, returnAlt).
     wait 1.
 
     // Optimize dV for free return
@@ -41,8 +45,7 @@ if not ship:orbit:hasnextpatch
 
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
-disp_hud("Press 0 to warp to next SOI").
-util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
+util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "next SOI").
 
 until ship:orbit:body:name = "Kerbin"
 {

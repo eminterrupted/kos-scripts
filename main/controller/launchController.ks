@@ -1,8 +1,13 @@
 @lazyGlobal off.
+clearScreen.
 
 //#include "0:/boot/bootLoader.ks"
 
+runOncePath("0:/lib/lib_disp").
 runOncePath("0:/lib/lib_launch").
+
+disp_main(scriptPath()).
+
 local circPath      to choose path("0:/main/launch/circ_burn_node") if career():canMakeNodes else path("0:/main/launch/circ_burn_simple").
 local launchCache   to dataDisk + "launchPlan.json".
 local launchPlan    to readJson(launchCache).
@@ -13,21 +18,41 @@ until launchQueue:length = 0
 {
     if ship:status = "PRELAUNCH" or ship:status = "LANDED"
     {
-        launch_pad_gen(true).
-
-        print "Launch Plan" .
-        print "Apoapsis    : " + launchPlan:tgtAp.
-        print "Periapsis   : " + launchPlan:tgtPe.
-        print "Inclination : " + launchPlan:tgtInc.
-        print "Roll Program: " + launchPlan:tgtRoll.
-        core:doAction("open terminal", true).
-        ag10 off.
-        until ag10
+        if ship:status = "PRELAUNCH" 
         {
-            hudtext("Activate AG10 to initiate launch", 1, 2, 20, yellow, false).
-            wait 0.01.
+            disp_msg("Enabling external power").
+            launch_pad_gen(true).
+            wait 1.
+        }
+
+        disp_launch_plan(launchPlan).
+        local ts to time:seconds + 5.
+        ag10 off.
+        until time:seconds > ts or ag10
+        {
+            disp_msg("Reviewing plan, press 0 to skip").
+            if ag10 break.
+            if terminal:input:hasChar
+            {
+                if terminal:input:getChar() = "0" break.
+            }
         }
         ag10 off.
+
+        if launchPlan:waitForLAN or launchPlan:tgtLAN <> -1
+        {
+            runPath("0:/util/launchIntoLAN", target:orbit:lan, launchPlan:tgtInc).
+        }
+        else
+        {
+            ag10 off.
+            until ag10
+            {
+                disp_tee("Activate AG10 to initiate immediate launch").
+                wait 0.01.
+            }
+            ag10 off.
+        }
 
         download(circPath).
         runPath("0:/main/launch/" + launchQueue:pop(), launchPlan).

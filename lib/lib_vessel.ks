@@ -4,6 +4,15 @@
 runOncePath("0:/lib/lib_util").
 
 //-- Variables --//
+local engPlates to list (
+    "restock-engineplate-125-1",
+    "EnginePlate1p5",
+    "EnginePlate2",
+    "EnginePlate3",
+    "EnginePlate4",
+    "EnginePlate5"
+).
+
 local sepList to list(
     "sepMotor1", 
     "sepMotorJr",
@@ -29,18 +38,13 @@ global function ves_available_dv
     // Iterate over stages until dv is covered
     from { local stg to stage:number.} until stg <= -1 step { set stg to stg - 1.} do
     {
-        //local dvStg to mnv_stage_dv(stg).
         local dvStg to ship:stageDeltaV(stg):current.
         set dvStgObj[stg] to dvStg.
         set availDv to availDv + dvStg.
-        print "Stage " + stg + " dV: " + dvStg.
     }
-
-    print " ".
-    print "Total available dV: " + availDv.
-
-    //print dvStgObj at (2, 15).
-
+    set dvStgObj["availDv"] to availDv.
+    // print dvStgObj at (2, 35).
+    // breakpoint().
     return dvStgObj.
 }
 
@@ -49,23 +53,47 @@ global function ves_available_dv_next
 {
     local availDv to 0.
     local dvStgObj to lex().
-
+    //local massStats to ves_mass_stats().
+    
     // Iterate over stages until dv is covered
-    from { local stg to stage:number.} until stg <= -1 step { set stg to stg - 1.} do
+    from { local stg to stage:number.} until stg < 0 step { set stg to stg - 1.} do
     {
-        local dvStg to mnv_stage_dv(stg).
-        //local dvStg to ship:stageDeltaV(stg):current.
-        set dvStgObj[stg] to dvStg.
-        set availDv to availDv + dvStg.
-        print "Stage " + stg + " dV: " + dvStg.
+        local stgStats to ves_stage_stats(stg).
+        set dvStgObj[stg] to mnv_stage_dv_next(stgStats).
     }
-
-    print " ".
-    print "Total available dV: " + availDv.
-
-    //print dvStgObj at (2, 15).
-
+    for stg in dvStgObj:keys
+    {
+        if dvStgObj[stg] > 0 set availDv to availDv + dvStgObj[stg].
+        // print "Stage " + stg + " dV Post-Process: " + round(dvStgObj[stg]) at (2, 21).
+        // print "Avail dV Calculation: " + round(availDv) at (2, 22).
+        // wait 2.
+    }
+    set dvStgObj["availDv"] to availDv.
     return dvStgObj.
+}
+
+// Creates an object of parts and masses by stage and decoupledIn
+global function ves_mass_stats
+{
+    local stgObj to lex().
+    local dcInObj to lex().
+
+    for p in ship:parts 
+    {   
+        if not stgObj:hasKey(p:stage) set stgObj[p:stage] to lex("CurMass", 0, "DryMass", 0, "WetMass", 0, "Parts", list()).
+        if not dcInObj:hasKey(p:stage) set dcInObj[p:stage] to lex("CurMass", 0, "DryMass", 0, "WetMass", 0, "Parts", list()).
+        
+        stgObj[p:stage]["parts"]:add(p).
+        set stgObj[p:stage]["CurMass"] to stgObj[p:stage]["CurMass"]  + p:mass.
+        set stgObj[p:stage]["DryMass"] to stgObj[p:stage]["DryMass"]  + p:dryMass.
+        set stgObj[p:stage]["WetMass"] to stgObj[p:stage]["WetMass"]  + p:wetMass.
+
+        dcInObj[p:decoupledIn]["parts"]:add(p).
+        set dcInObj[p:decoupledIn]["CurMass"] to dcInObj[p:decoupledIn]["CurMass"]  + p:mass.
+        set dcInObj[p:decoupledIn]["DryMass"] to dcInObj[p:decoupledIn]["DryMass"]  + p:dryMass.
+        set dcInObj[p:decoupledIn]["WetMass"] to dcInObj[p:decoupledIn]["WetMass"]  + p:wetMass.
+    }
+    return lex("stg", stgObj, "decoupledIn", dcInObj).
 }
 
 //#region -- Engines
@@ -118,8 +146,13 @@ global function ves_active_engines_stats
 // Returns summed thrust for provided engines at the current throttle 
 global function ves_active_thrust
 {
-    parameter engList.
+    parameter engList is list().
     
+    if engList:length = 0 
+    {
+        list engines in engList.
+    }
+
     local curThrust to 0.
     for e in engList
     {
@@ -129,6 +162,205 @@ global function ves_active_thrust
         }
     }
     return curThrust.
+}
+
+// Returns the current TWR based on active engines
+global function ves_active_twr
+{
+    local curThr to ves_active_thrust().
+    return curThr / ship:mass.
+}
+
+// Returns list containing a list of active engines, overall thrust, average isp
+global function ves_parts_engines_stats
+{
+    parameter engList.
+
+    local relThrust   to 0.
+    local totalIsp    to 0.
+    local totalThrust to 0.
+
+    list engines in engList. 
+    for e in engList 
+    {
+        set totalThrust to totalThrust + e:availableThrust.
+        set relThrust to relThrust + (e:availableThrust / e:visp).
+        
+    }
+    if totalThrust = 0 
+    {
+        return list(list(), 0, 0).
+    }
+    else 
+    {
+        set totalIsp to totalThrust / relThrust.
+        return list(totalThrust, totalIsp).
+    }
+}
+
+// Returns an object of data about a given stage's engines
+global function ves_stage_stats
+{
+    parameter stg.
+
+    local engList   to ves_stage_engines_next(stg).
+    local engStats  to lex(
+        "Engines", lex(),
+        "Stage", lex(
+            "Resources", lex()
+        )
+    ).
+
+    local engActive     to false.
+    local engFlameout   to false.
+    local engStg        to 0.
+    local fuelMass      to 0.
+    local stgAvailThr   to 0.
+    local stgCurThr     to 0.
+    local stgDecoupledIn to -1.
+    local stgDv         to 0.
+    local stgFuelFlow   to 0.
+    local stgFuelMass   to 0.
+    local stgMass       to lex().
+    local stgMassFlow   to 0.
+    local stgMaxThr     to 0.
+    local stgPossThr    to 0.
+    local stgRelThr     to 0.
+        
+    for e in engList 
+    {
+        if e:ignition and not e:flameout 
+        {
+            set engActive to true. 
+        }
+        else
+        {
+            set engActive to false.
+        }
+
+        set engStats["Engines"][e:uid] to lex(
+            "Name", e:name,
+            "Active", engActive,
+            "Flameout", e:flameout,
+            "AvailThr", e:availableThrust,
+            "CurThr", e:thrust,
+            "MaxThr", e:maxThrust,
+            "PossThr", e:possibleThrust,
+            "ISP", e:visp,
+            "SLISP", e:slisp,
+            "ExhVel", e:visp * constant:g0,
+            "MaxFuelFlow", e:maxFuelFlow,
+            "MaxMassFlow", e:maxMassFlow,
+            "Resources", e:consumedResources,
+            "DecoupledIn", e:decoupledIn,
+            "Stage", e:stage
+        ).
+
+
+        //set stgDecoupledIn to choose e:decoupledIn if not engPlates:contains(e:parent:name) else e:decoupledIn - 1.
+        set engStg to e:stage.
+        set stgDecoupledIn  to e:decoupledIn. 
+
+
+        // Resources
+        set engStats["Engines"][e:uid]["FuelMass"] to lex().
+        if not e:flameout
+        {
+            for r in e:consumedResources:keys
+            {
+                local rName to "".
+                if r = "LH2" set rName to "LqdHydrogen".
+                else if r = "Liquid Fuel" set rName to "LiquidFuel".
+                else if r = "Solid Fuel" set rName to "SolidFuel".
+                else if r = "Electric Charge" set rName to "ElectricCharge".
+                else if r = "Xenon Gas" set rName to "XenonGas".
+                else set rName to r.
+                
+                if not engStats["Stage"]["Resources"]:hasKey(rName)
+                {
+                    set engStats["Stage"]["Resources"][rName] to e:consumedResources[r].
+                }
+
+                if not engStats["Engines"][e:uid]["FuelMass"]:hasKey(rName) 
+                {
+                    // print rName at (2, 35).
+                    set fuelMass to ves_stage_fuel_mass_next(e:decoupledIn, list(rName))[rName].
+                    set engStats["Engines"][e:uid]["FuelMass"][rName] to fuelMass.
+                    if fuelMass = 0 set engFlameout to true.
+                }
+            }
+
+        
+
+            // Stage calculations
+            set stgAvailThr     to stgAvailThr + e:availableThrust.
+            set stgCurThr       to stgCurThr + e:thrust.
+            set stgMaxThr       to stgMaxThr + e:maxThrust.
+            set stgPossThr      to stgPossThr + e:possibleThrust.
+
+            set stgFuelFlow     to stgFuelFlow + e:maxFuelFlow.
+            set stgMassFlow     to stgMassFlow + e:maxMassFlow.
+
+            // ISP
+            if not sepList:contains(e:name)
+            {
+                set stgRelThr to stgRelThr + (e:possibleThrust / e:visp).
+            }
+        }
+    }
+    
+    set engStats["Stage"]["Number"] to stg. 
+    set engStats["Stage"]["AvailThr"] to stgAvailThr.
+    set engStats["Stage"]["CurThr"] to stgCurThr.
+    set engStats["Stage"]["MaxThr"] to stgMaxThr.
+    set engStats["Stage"]["PossThr"] to stgPossThr.
+    set engStats["Stage"]["ISP"] to choose stgPossThr / stgRelThr if stgRelThr > 0 and stgPossThr > 0 else 0.
+    set engStats["Stage"]["ExhVel"] to engStats["Stage"]["ISP"] * constant:g0.
+    set engStats["Stage"]["FuelFlow"] to stgFuelFlow.
+    set engStats["Stage"]["MassFlow"] to stgMassFlow.
+
+    set stgMass to ves_stage_mass(stg, stgDecoupledIn, engStats["Stage"]["Resources"]:keys).
+    set engStats["Stage"]["CurMass"] to stgMass["Current"].
+    set engStats["Stage"]["DryMass"] to stgMass["Current"] - stgMass["FuelMass"].
+    set engStats["Stage"]["WetMass"] to stgMass["Wet"].
+    set engStats["Stage"]["ShipMass"] to stgMass["Ship"].
+    set engStats["Stage"]["FuelMass"] to stgMass["FuelMass"].
+
+    writeJson(stgMass, "0:/ves_stage_stats-stgMass.json").
+    writeJson(engStats, "0:/ves_stage_stats-engStats.json").
+
+    // print "                                   " at (2, 35).
+    return engStats.
+}
+
+// Returns whether any engine is on (true / false)
+global function ves_engines_on
+{
+    local engList to list().
+    list engines in engList.
+    for e in engList
+    {
+        if e:ignition and not e:flameout
+        {
+            return true.
+        }
+    }
+    return false.
+}
+
+// Returns engines in a given set of parts
+global function ves_parts_engines
+{
+    parameter pList.
+
+    local engList to list().
+
+    for p in pList
+    {
+        if p:typeName = "engine" engList:add(p).
+    }
+
+    return engList.
 }
 
 // Returns a list of engines that are in the currently activated stage
@@ -148,17 +380,104 @@ global function ves_stage_engines
     return stgList.
 }
 
+// Returns a list of engines that are decoupled in the provided stage
+global function ves_stage_engines_next
+{
+    parameter stg.
+
+    local engList to list().
+    local stgList to list().
+    list engines in engList.
+
+    for e in engList 
+    {
+        if e:stage = stg
+        {
+            stgList:add(e).
+        }
+    }
+    return stgList.
+}
+
 // Returns the aggregate exhaust velocity for a given stage
 global function ves_stage_exh_vel
 {
     parameter stg.
 
-    local stgIsp to ves_stage_isp(stg).
-    return constant:g0 * stgIsp.
+    return constant:g0 * ves_stage_isp(stg).
+}
+
+// Returns the aggregate exhaust velocity for a given decoupledIn stage
+global function ves_stage_exh_vel_next
+{
+    parameter stg.
+
+    return constant:g0 * ves_stage_isp_next(stg).
 }
 
 // Returns isp for a given stage
 global function ves_stage_isp
+{
+    parameter stg.
+
+    local engRelThr    to 0.
+    local engStgThr    to 0.
+    local sepRelThr    to 0.
+    local sepStgThr    to 0.
+
+    local engStgList   to list().
+    local sepStgList   to list().
+    local stgList       to list().
+    list engines in engStgList.
+
+    for e in engStgList 
+    {
+        if e:stage = stg and not sepList:contains(e:name)
+        {
+            stgList:add(e).
+            set engStgThr to engStgThr + e:possibleThrust.
+            set engRelThr to engRelThr + (e:possibleThrust / e:visp).
+        }
+        else if e:stage = stg
+        {
+            sepStgList:add(e).
+            set sepStgThr to sepStgThr + e:possibleThrust.
+            set sepRelThr to sepRelThr + (e:possibleThrust / e:visp).
+        }
+    }
+    
+    if engStgList:length > 0 
+    {
+        if engStgThr = 0 
+        {
+            return 0.00001.
+        }
+        else
+        {
+            return engStgThr / engRelThr.
+        }
+    }
+    else if sepStgList:length > 0 
+    {
+
+        if sepStgThr = 0 
+        {
+            return 0.00001.
+        }
+        else
+        {
+            return sepStgThr / sepRelThr.
+        }
+    }
+    else 
+    {
+        return 0.00001.
+    }
+}
+
+// Returns isp for a given stage
+// using decoupledIn for stage info
+global function ves_stage_isp_next
 {
     parameter stg.
 
@@ -199,7 +518,27 @@ global function ves_stage_thrust
 
     for e in engList
     {
-        if e:stage = stg and not sepList:contains(e:name)
+        // if e:stage = stg and not sepList:contains(e:name)
+        // {
+        set stgThr to stgThr + e:possibleThrust.
+        // }
+    }
+    return stgThr.
+}
+
+// Returns the possible aggregate thrust for a given decoupledIn stage
+global function ves_stage_thrust_next
+{
+    parameter stg.
+
+    local stgThr    to 0.
+    
+    local engList   to list().
+    list engines in engList.
+
+    for e in engList
+    {
+        if e:decoupledIn = stg and not sepList:contains(e:name)
         {
             set stgThr to stgThr + e:possibleThrust.
         }
@@ -348,33 +687,131 @@ global function ves_update_droptank
 //#endregion
 
 //#region -- Mass
-// ToDo: Return fuel mass for a given stage
+// Mass of fuel that can be burned in a stage. 
+// [stg(int), fuels(list) -> stgFuelObj(lex)]
 global function ves_stage_fuel_mass
 {
-    parameter stg.
+    parameter stg,
+              fuels.
 
-    local stgFuelObj to lex().
+    local fuelMass      to 0.
+    local fuelObj       to lex().
+    local fuelRatio     to 1.
+    local stgFuelObj    to lex().
+    local thisRatio     to 1.
 
     for p in ship:parts
     {
+        fuelObj:clear().
+        set fuelRatio to 1.
         if p:decoupledIn = stg - 1
         {
             if p:resources:length > 0
             {
+                for r in p:resources 
+                {
+                    if fuels:contains(r:name)
+                    {
+                        set thisRatio to r:amount / r:capacity.
+                        set fuelObj[r:name] to lex(
+                            "ratio", thisRatio
+                        ).
+                        if thisRatio < fuelRatio set fuelRatio to thisRatio.
+                    }
+                }
+
                 for r in p:resources
                 {
-                    if stgFuelObj:hasKey(r:name) 
+                    if fuels:contains(r:name)
                     {
-                        set stgFuelObj[r:name] to stgFuelObj[r:name] + (r:amount * r:density).
-                    }
-                    else
-                    {
-                        set stgFuelObj[r:name] to r:amount * r:density.
+                        set fuelMass to ((r:capacity * fuelRatio) * r:density).
+                        if stgFuelObj:hasKey(r:name)
+                        {
+                            
+                            set stgFuelObj[r:name] to stgFuelObj[r:name] + fuelMass.
+                        }
+                        else
+                        {
+                            set stgFuelObj[r:name] to fuelMass.
+                        }
                     }
                 }
             }
         }
     }
+    return stgFuelObj.
+}
+
+// Attempting to take payload decouplers into account
+global function ves_stage_fuel_mass_next
+{
+    parameter stg,
+              fuels.
+
+    local fuelsCopy     to fuels:copy().
+    local fuelMass      to 0.
+    //local fuelObj       to lex().
+    //local fuelRatio     to 1.
+    local stgFuelObj    to lex().
+    //local stgFuelMass   to 0.
+    //local stgRes        to 0.
+    local stgResAmt     to 0.
+    local stgResCap     to 0.
+    local thisRatio     to 1.
+
+    
+    for r in ship:resources 
+    {
+        if fuels:contains(r:name) 
+        {
+            for p in r:parts 
+            {
+                local fuelRatio to 1.
+                
+                if p:decoupledIn = stg
+                {
+                    // print "Found: " + p:name.
+                    for pRes in p:resources
+                    {
+                        if pRes:name = r:name
+                        {   
+                            // print "Resource: " + r:name.
+                            // print "Amount  : " + pRes:amount.
+                            // print "Capacity: " + pRes:capacity.
+                            set stgResAmt to stgResAmt + pRes:amount.
+                            set stgResCap to stgResCap + pRes:capacity.
+                        }
+                    }
+
+                    set thisRatio to stgResAmt / stgResCap.
+                    //print "FuelMass_ThisRatio: " + thisRatio at (2, 22).
+                    if thisRatio < fuelRatio set fuelRatio to thisRatio.
+
+                    for pRes in p:resources
+                    {
+                        if pRes:name = r:name 
+                        {
+                            set fuelMass to ((pRes:capacity * fuelRatio) * pRes:density).
+                            //set stgFuelMass to stgFuelMass + fuelMass.
+                            // print pRes:name + " Mass: " + fuelMass.
+                            if stgFuelObj:hasKey(r:name)
+                            {
+                                set stgFuelObj[r:name] to stgFuelObj[r:name] + fuelMass.
+                            }
+                            else
+                            {
+                                set stgFuelObj[r:name] to fuelMass.
+                            }
+                        }
+                    }
+                }
+            }
+            fuelsCopy:remove(fuelsCopy:find(r:name)).
+            if fuelsCopy:length = 0 break.
+        }
+    }
+    //set stgFuelObj["StgFuelMass"] to stgFuelMass.
+    //print "stgFuelObj: " + stgFuelObj at (2, 30).
     return stgFuelObj.
 }
 
@@ -393,6 +830,80 @@ global function ves_mass_at_stage
         }
     }
     return curMass.
+}
+
+// Returns the current vessel mass if the vessel was on the 
+// given stage number (i.e., stg = 4, mass for parts decoupledIn stages 4 -> -1).
+global function ves_mass_at_stage_next
+{
+    parameter stg.
+
+    local curMass to 0.
+    for p in ship:parts
+    {
+        if p:decoupledIn <= stg 
+        {
+            set curMass to curMass + p:mass.
+        }
+    }
+    return curMass.
+}
+
+// Returns a mass object for a list of parts
+global function ves_mass_for_parts
+{
+    parameter pList.
+
+    local curMass to 0.
+    local dryMass to 0.
+    local elFuelMass to 0.
+    local fuelMass to 0.
+    local fuelRatio to 0.
+    local wetMass to 0.
+
+    local resObj  to lex().
+
+    for p in pList
+    {
+        set curMass to curMass + p:mass.
+        set dryMass to dryMass + p:dryMass.
+        set wetMass to wetMass + p:wetMass.
+
+        set fuelRatio to 1.
+
+        if p:resources:length > 0
+        {
+            for r in p:resources 
+            {
+                if r:amount > 0 
+                {
+                    local thisRatio to r:amount / r:capacity.
+                    if thisRatio < fuelRatio set fuelRatio to thisRatio.
+
+                    set fuelMass to ((r:capacity * fuelRatio) * r:density).
+                    set elFuelMass to elFuelMass + fuelMass.
+                    if resObj:hasKey(r:name)
+                    {
+                        
+                        set resObj[r:name] to resObj[r:name] + fuelMass.
+                    }
+                    else
+                    {
+                        set resObj[r:name] to fuelMass.
+                    }
+                }
+                else
+                {
+                    if not resObj:hasKey(r:name)
+                    {
+                        set resObj[r:name] to fuelMass.
+                    }
+                }
+            }
+        }
+    }
+
+    return lex("Current", curMass, "Dry", dryMass, "Wet", wetMass, "Resources", resObj).
 }
 
 // Returns the current and dry mass for a given stage for DV calcs
@@ -420,6 +931,75 @@ global function ves_mass_for_stage
     }
 
     return list(curMass, dryMass).
+}
+
+// Returns a list of vessel mass at stage, stage mass, stage dry mass
+global function ves_stage_mass
+{
+    parameter stg,
+              decoupledIn is -1,
+              fuels is list().
+
+    local curMass to 0.
+    local dryMass to 0.
+    local fuelMass to 0.
+    local shipMass to 0.
+    local stgFuelMass to 0.
+    local wetMass to 0.
+    
+    local fuelObj to lex().
+    local stgFuelObj to lex().
+
+    for p in ship:parts
+    {
+        fuelObj:clear().
+        //local fuelRatio to 1.
+
+        if p:decoupledIn <= stg
+        {
+            set shipMass to shipMass + p:mass.
+            // set curMass to curMass + p:mass.
+            // set dryMass to dryMass + p:dryMass.
+            // set wetMass to wetMass + p:wetMass.
+        }
+        
+        if p:decoupledIn = decoupledIn
+        {
+            set curMass to curMass + p:mass.
+            set dryMass to dryMass + p:dryMass.
+            set wetMass to wetMass + p:wetMass.
+        
+            if p:resources:length > 0
+            {
+                for r in p:resources 
+                {
+                    if fuels:contains(r:name)
+                    {
+                        //local thisRatio to r:amount / r:capacity.
+                        // set fuelObj[r:name] to lex(
+                        //     "ratio", thisRatio
+                        // ).
+                        //if thisRatio < fuelRatio set fuelRatio to thisRatio.
+
+                        set fuelMass to r:amount * r:density.
+                        set stgFuelMass to stgFuelMass + fuelMass.
+                        if stgFuelObj:hasKey(r:name)
+                        {
+                            
+                            set stgFuelObj[r:name] to stgFuelObj[r:name] + fuelMass.
+                        }
+                        else
+                        {
+                            set stgFuelObj[r:name] to fuelMass.
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    local stgObj to lex("Current", curMass, "Dry", dryMass, "Wet", wetMass, "Ship", shipMass, "FuelMass", stgFuelMass, "Resources", stgFuelObj).
+    return stgObj.
 }
 //#endregion
 
@@ -719,6 +1299,48 @@ global function ves_activate_radiator
 }
 //#endregion
  
+//#region -- Robotics
+// Get all robotic modules for a given set of parts
+global function ves_get_robotics
+{
+    parameter pList is ship:parts.
+
+    local roboticMods to list().
+
+    local mHinge to "ModuleRoboticServoHinge".
+    local mPiston to "ModuleRoboticServoPiston".
+    local mRotate to "ModuleRoboticRotationServo".
+    local mRotor  to "ModuleRoboticServoRotor".
+
+    for p in pList
+    {    
+        if p:hasModule(mHinge)       roboticMods:add(p:getModule(mHinge)).
+        else if p:hasModule(mPiston) roboticMods:add(p:getModule(mPiston)).
+        else if p:hasModule(mRotate) roboticMods:add(p:getModule(mRotate)).
+        else if p:hasModule(mRotor)  roboticMods:add(p:getModule(mRotor)).
+    }
+
+    return roboticMods.
+}
+
+// Toggle a servo / hinge
+global function ves_toggle_robotics
+{
+    parameter roboticsList.
+    
+    for m in roboticsList
+    {
+        if m:getField("locked") 
+        {
+            util_do_action(m, "toggle locked").
+            print "Unlocking " + m:part:name.
+        }
+        util_do_action(m, "toggle hinge").
+    }
+    wait 8.
+}
+//#endregion
+
 //#region -- Solar panels
 // Extend / retract solar panels in a list. 
 global function ves_activate_solar
@@ -736,12 +1358,29 @@ global function ves_activate_solar
 //#endregion
 
 //#region -- Bays
+// Get all bays on a vessel
+global function ves_get_us_bays
+{
+    local bayList to list().
+    if ship:modulesNamed("USAnimateGeneric"):length > 0 
+    {
+        for bay in ship:partsNamedPattern("USCylindricalShroud")
+        {
+            local b to bay:getModule("USAnimateGeneric").
+            bayList:add(b).
+        }
+    }
+    return bayList.
+}
+
 // Open bay doors
 global function ves_open_bays
 {
-    parameter bayList,
+    parameter bayList is ship:modulesNamed("USAnimateGeneric"),
               door is "all".
 
+    //if door = "all" bays on.
+    // Below for US bays
     for bay in bayList 
     {
         if door = "all" or door = "primary"
@@ -759,9 +1398,11 @@ global function ves_open_bays
 // Close bay doors
 global function ves_close_bays
 {
-    parameter bayList,
+    parameter bayList is ship:modulesnamed("USAnimateGeneric"),
               door is "all".
 
+    bays off.
+    // Below for US bays
     for bay in bayList 
     {
         if door = "all" or door = "primary"
@@ -780,6 +1421,8 @@ global function ves_close_bays
 // Jettison 
 global function ves_jettison_fairings
 {
+    parameter fairingList to list().
+
     local procEvent     to "jettison fairing".
     local procFairing   to "ProceduralFairingDecoupler".
 
@@ -787,25 +1430,12 @@ global function ves_jettison_fairings
     local safFairing    to "ModuleSimpleAdjustableFairing".
     local stFairing     to "ModuleProceduralFairing".
 
-    if ship:modulesNamed(procFairing):length > 0
+    if fairingList:length > 0
     {
-        for m in ship:modulesNamed(procFairing)
+        for m in fairingList
         {
-            if m:part:tag = "" util_do_event(m, procEvent).
-        }
-    }
-    if ship:modulesNamed(stFairing):length > 0
-    {
-        for m in ship:modulesNamed(stFairing)
-        {
-            if m:part:tag = "" util_do_event(m, stEvent).
-        }
-    }
-    if ship:modulesNamed(safFairing):length > 0
-    {
-        for m in ship:modulesNamed(safFairing)
-        {
-            if m:part:tag = "" util_do_event(m, stEvent).
+            if m:name = procFairing util_do_event(m, procEvent).
+            else if m:name = safFairing or m:name = stFairing util_do_event(m, stEvent).
         }
     }
 }
@@ -887,8 +1517,8 @@ global function ves_jettison_les
     parameter lesTower.
 
     lesTower:activate.
-    wait 0.01.
-    if not lesTower:flameout 
+    wait 0.05.
+    if not lesTower:flameout
     {
         lesTower:getModule("ModuleDecouple"):doEvent("decouple").
         return true.

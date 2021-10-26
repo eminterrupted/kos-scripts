@@ -23,6 +23,7 @@ local dropTanks     to list().
 local groundAntenna to list().
 local groundLights  to list().
 local groundPanels  to list().
+local groundRobotics to list().
 local landingLights to list().
 
 local shipBounds    to ship:bounds.
@@ -52,6 +53,19 @@ for p in ship:partsTaggedPattern("groundLight")
 for p in ship:partsTaggedPattern("groundPanel")
 {
     groundPanels:add(p:getModule("ModuleDeployableSolarPanel")).
+}
+
+for p in ship:partsTaggedPattern("groundRobotic")
+{
+    local mHinge to "ModuleRoboticServoHinge".
+    local mPiston to "ModuleRoboticServoPiston".
+    local mRotate to "ModuleRoboticRotationServo".
+    local mRotor  to "ModuleRoboticServoRotor".
+
+    if p:hasModule(mHinge)       groundRobotics:add(p:getModule(mHinge)).
+    else if p:hasModule(mPiston) groundRobotics:add(p:getModule(mPiston)).
+    else if p:hasModule(mRotate) groundRobotics:add(p:getModule(mRotate)).
+    else if p:hasModule(mRotor)  groundRobotics:add(p:getModule(mRotor)).
 }
 
 for p in ship:partsTaggedPattern("landingLight")
@@ -202,10 +216,11 @@ for e in ves_active_engines() {
 }
 
 wait 1.
-// Turn off the landing lights
+// Turn off the landing lights and turn on ground lights
 ves_activate_lights(landingLights, false).
+ves_activate_lights(groundLights).
 
-// Activate the ground-only solar panels, comms, and lights
+// Activate the ground-only robotics, solar panels, comms
+ves_toggle_robotics(groundRobotics).
 ves_activate_solar(groundPanels).
 ves_activate_antenna(groundAntenna).
-ves_activate_lights(groundLights).

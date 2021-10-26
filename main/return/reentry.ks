@@ -12,10 +12,10 @@ disp_main(scriptPath()).
 
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(145, 150).
-local reentryAlt to 35000.
+local kscWindow  to list(150, 152.5).
+local reentryAlt to 50000.
 local shipLng    to 0.
-local stagingAlt to ship:body:atm:height + 25000.
+local stagingAlt to ship:body:atm:height + 50000.
 local sVal       to lookDirUp(body:position, sun:position).
 local testPatch  to ship:orbit.
 local tVal       to 0.
@@ -30,7 +30,14 @@ until false
 {
     if testPatch:hasNextPatch 
     {
-        set testPatch to testPatch:nextpatch.
+        if testPatch:nextPatch:body:name = "Kerbin" or testPatch:nextPatch:body:name = "Mun" or testPatch:nextPatch:body:name = "Minmus"
+        {
+            set testPatch to testPatch:nextpatch.
+        }
+        else
+        {
+            break.
+        }
     }
     else
     {
@@ -44,9 +51,8 @@ until ship:body:name = "Kerbin"
     wait 0.01.
 }
 
-if testPatch:periapsis > Kerbin:atm:height
+if testPatch:periapsis >= Kerbin:atm:height
 {
-    disp_main(scriptPath():name).
     disp_msg("Waiting for KSC window or AG10 activation").
     ag10 off.
     until (shipLng >= kscWindow[0] - 2.5 and shipLng <= kscWindow[1] + 2.5) or ag10
@@ -87,28 +93,12 @@ if testPatch:periapsis > Kerbin:atm:height
     set tVal to 0.
 }
 
-local startAlt to stagingAlt + 25000.
+local startAlt to stagingAlt + 10000.
 disp_msg("Waiting until altitude <= " + startAlt).
 
 ag10 off.
-ag9 off.
-disp_hud("Activate AG10 to warp to starting altitude, or AG9 for manual warp").
-local ts to time:seconds + 30.
-until ag10 or ag9 or time:seconds > ts
-{
-    set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-    disp_telemetry().
-}
-
-if ag9
-{
-    until ship:altitude <= startAlt
-    {
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_telemetry().
-    }
-}
-else if ag10
+disp_hud("Activate AG10 to warp to starting altitude").
+on ag10
 {
     until ship:altitude <= startAlt
     {
@@ -118,13 +108,36 @@ else if ag10
     }
 }
 
+until ship:altitude <= startAlt
+{
+    set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+    disp_telemetry().
+}
+
+
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 
 disp_msg("Beginning reetry procedure").
-for c in parachutes 
+if parachutes:length > 0 
 {
-    util_do_event(c, "arm parachute").
+    if parachutes[0]:name = "RealChuteModule" 
+    {
+        for c in parachutes 
+        {
+            util_do_event(c, "arm parachute").
+        }
+    }
+    else if parachutes[0]:name = "ModuleParachute"
+    {
+        when parachutes[0]:getField("safe to deploy?") = "Safe" then 
+        {
+            for c in parachutes
+            {
+                util_do_event(c, "deploy chute").
+            }
+        }
+    }
 }
 
 set sVal to body:position.

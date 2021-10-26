@@ -17,7 +17,12 @@ global function launch_ang_for_alt
     
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
+    // local pg to ship:srfprograde:vector.
 
+    // if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0002 
+    // {
+    //     set pg to ship:prograde:vector.
+    // }
     local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0001 else ship:prograde:vector.
     local pgPitch   to 90 - vang(ship:up:vector, pg).
 
@@ -47,16 +52,21 @@ global function launch_engine_start
     }
 }
 
-// Drops umbilicals and retracts swing arms randomly within 1s
+// Drops umbilicals and retracts swing arms
 global function launch_pad_arms_retract
 {
-    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").     // For swing arms
-    local umbilicalAnimateMod to ship:modulesNamed("ModuleAnimateGeneric"). // For Umbilicals using the old module
-    for m in umbilicalAnimateMod                                            // Combine the lists
+    local animateMod to list().  // Main list
+    
+    for m in ship:modulesNamed("ModuleAnimateGenericExtra")  // Swing arms that are not crew arms
+    {
+        if not m:part:name:contains("CrewArm") animateMod:add(m).
+    }
+    
+    for m in ship:modulesNamed("ModuleAnimateGeneric")  // Add Umbilicals
     {
         if m:hasEvent("drop umbilical") animateMod:add(m).
     }
-
+    
     if animateMod:length > 0
     {
         for m in animateMod
@@ -68,9 +78,28 @@ global function launch_pad_arms_retract
             else if m:part:name:contains("swingarm")
             {
                 if m:hasEvent("toggle") util_do_event(m, "toggle").
-                if m:hasEvent("retract arm left") util_do_event(m, "retract arm left").
+                if m:hasEvent("retract arm right") util_do_event(m, "retract arm right").
                 if m:hasEvent("retract arm") util_do_event(m, "retract arm").
             }
+        }
+    }
+}
+
+// Retracts a crew arm
+global function launch_pad_crew_arm_retract
+{
+    local animateMod to list().  // Main list
+    
+    for m in ship:modulesNamed("ModuleAnimateGenericExtra")  // Swing arms that are not crew arms
+    {
+        if m:part:name:contains("CrewArm") animateMod:add(m).
+    }
+        
+    if animateMod:length > 0
+    {
+        for m in animateMod
+        {
+            if m:hasEvent("retract arm") util_do_event(m, "retract arm").
         }
     }
 }

@@ -3,6 +3,9 @@
 wait until ship:loaded and ship:unpacked.
 clearScreen.
 
+local oldBoot to "/boot/bootPayload.ks".
+if exists(oldBoot) deletePath(oldBoot).
+
 init_disk().
 
 if ksc_comm runOncePath("0:/lib/lib_vessel").

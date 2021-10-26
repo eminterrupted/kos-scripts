@@ -29,9 +29,9 @@ lock throttle       to tVal.
 
 // Get dv and duration of burn
 local dv            to mnv_dv_hohmann(stAlt, tgtAlt)[1].
-local burnTime      to mnv_burn_times(dv, mnvTime).
-local burnETA       to burnTime[0].
-local burnDur       to burnTime[1].
+local burnTime    to mnv_burn_dur(dv).
+local burnETA     to mnvTime - burnTime["Half"].
+local burnDur     to burnTime["Full"].
 local mecoTS        to burnETA + burnDur.
     
 disp_msg("dv needed: " + round(dv, 2)).

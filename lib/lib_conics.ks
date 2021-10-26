@@ -24,6 +24,16 @@ global function nav_hyperbolic_escape_angle
     return arccos(1 / (1 + ((rPark * vEscape^2) / stBody:mu))).
 }
 
+// TO DO
+global function nav_escape_angle_eta
+{
+    parameter stBody, 
+              escapeAng.
+
+    local bodyOrbitVec to stBody:orbit:velocity:orbit.
+    //local escapeVec    to angleAxis(-(escapeAng), bodyOrbitVec).
+}
+
 // Calculates the hyperbolic excess speed of departure hyperbold for patched conics transfers
 // From: https://ai-solutions.com/_freeflyeruniversityguide/patched_conics_transfer.htm
 global function nav_hyperbolic_excess_exit_velocity

@@ -67,35 +67,31 @@ set burnVec     to burnData[1].
 set mnvNode     to burnData[2].
 add mnvNode. 
 
-set burnDur     to mnv_staged_burn_dur(burnMag).
-set burnETA     to mnvTime - mnv_staged_burn_dur(burnMag / 2).
-disp_info("DeltaV remaining: " + round(burnMag, 1)).
-
-
 // Vecdraw
-if drawVec
-{
-    local burnVDTail to positionAt(ship, mnvTime).
-    local burnVD     to vecDraw(
-        burnVDTail,
-        1000 * burnVec,
-        magenta,
-        "dV:" + round(burnMag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
-        1,
-        true,
-        0.1
-    ).
-    print burnVD.
-    // Keep the draw updating the start position until the burn is done.
-    set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
-}
+// if drawVec
+// {
+//     local burnVDTail to positionAt(ship, mnvTime).
+//     local burnVD     to vecDraw(
+//         burnVDTail,
+//         1000 * burnVec,
+//         magenta,
+//         "dV:" + round(burnMag, 1) + " m/s, dur:" + round(burnDur, 1) + "s",
+//         1,
+//         true,
+//         0.1
+//     ).
+//     print burnVD.
+//     // Keep the draw updating the start position until the burn is done.
+//     set burnVD:startUpdater to { return positionAt(ship, mnvTime). }.
+// }
 
 // Set up the inclination check delegate
 set sVal to lookDirUp(burnVec, sun:position).
 lock steering to sVal.
 
 // Perform the maneuver
-mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+//mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+mnv_exec_node_burn(mnvNode).
 set sVal to lookDirUp(ship:prograde:vector, sun:position).
 lock steering to sVal.
 remove mnvNode.

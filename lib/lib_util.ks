@@ -16,9 +16,35 @@ global info is lex(
     )
 ).
 
+global colors is list(
+    red,
+    magenta,
+    rgb(0.25, 0, 0.75),
+    blue,
+    cyan,
+    green,
+    yellow,
+    rgb(1, 1, 0),
+    white,
+    black
+).
+
+global colorStr to list(
+    "Red",
+    "Magenta",
+    "Violet",
+    "Blue",
+    "Cyan",
+    "Green",
+    "Yellow",
+    "Orange",
+    "White",
+    "Black"
+).
+
 // Local
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
-local stateFile to dataDisk + "state.json".
+global stateFile to dataDisk + "state.json".
 
 
 //-- Global Functions --//
@@ -31,6 +57,25 @@ global function breakpoint
     print "* Press any key to continue *" at (10, terminal:height - 2).
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
+}
+
+global function except
+{
+    parameter msg, 
+              errtarget is 0.
+
+    if errTarget = 0 
+    {
+        disp_msg(msg).
+    } else if errtarget = 1
+    {
+        disp_info(msg).
+    } else if errtarget >= 2
+    {
+        disp_hud(msg, 2).
+    }
+
+    return 0 / 1.
 }
 
 global function util_play_sfx 
@@ -62,7 +107,7 @@ global function util_cache_state
     }
     set stateObj[lexKey] to lexVal.
     writeJson(stateObj, stateFile).
-    return stateObj[lexKey].
+    return readJson(stateFile):keys:contains(lexKey).
 }
 
 global function util_peek_cache
@@ -259,6 +304,102 @@ global function util_check_value
     else return false.
 }
 
+global function util_check_char
+{
+    parameter checkChar to "0".
+    
+    if terminal:input:hasChar
+    {
+        if terminal:input:getChar = checkChar 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }
+    }
+}
+
+global function util_return_char
+{
+    if terminal:input:hasChar
+    {
+        return terminal:input:getChar.
+    }
+    return "".
+}
+
+global function util_wait_on_char
+{
+    local char to "".
+    
+    until false
+    {
+        if terminal:input:hasChar
+        {
+            set char to terminal:input:getChar().
+            break.
+        }
+    }
+    return char.
+}
+
+global function util_wait_for_char
+{
+    parameter keyToCheck to 0, agFlag to true.
+
+    if keyToCheck:typename = "Scalar"
+    {
+        if keyToCheck = 0 ag10 off.
+        else if keyToCheck = 1 ag1 off.
+        else if keyToCheck = 2 ag2 off.
+        else if keyToCheck = 3 ag3 off.
+        else if keyToCheck = 4 ag4 off.
+        else if keyToCheck = 5 ag5 off.
+        else if keyToCheck = 6 ag6 off.
+        else if keyToCheck = 7 ag7 off.
+        else if keyToCheck = 8 ag8 off.
+        else if keyToCheck = 9 ag9 off.
+    }
+
+    until false
+    {
+        if terminal:input:hasChar
+        {
+            if terminal:input:getChar = keyToCheck:toString break.
+        }
+        if agFlag
+        {
+            if keyToCheck = 0     if ag10 break.
+            else if keyToCheck = 1 if ag1 break.
+            else if keyToCheck = 2 if ag2 break.
+            else if keyToCheck = 3 if ag3 break.
+            else if keyToCheck = 4 if ag4 break.
+            else if keyToCheck = 5 if ag5 break.
+            else if keyToCheck = 6 if ag6 break.
+            else if keyToCheck = 7 if ag7 break.
+            else if keyToCheck = 8 if ag8 break.
+            else if keyToCheck = 9 if ag9 break.
+        }    
+        wait 0.01.
+    }
+
+    if agFlag
+    {
+        if keyToCheck = 0 ag10 off.
+        else if keyToCheck = 1 ag1 off.
+        else if keyToCheck = 2 ag2 off.
+        else if keyToCheck = 3 ag3 off.
+        else if keyToCheck = 4 ag4 off.
+        else if keyToCheck = 5 ag5 off.
+        else if keyToCheck = 6 ag6 off.
+        else if keyToCheck = 7 ag7 off.
+        else if keyToCheck = 8 ag8 off.
+        else if keyToCheck = 9 ag9 off.
+    }
+}
+
 
 // -- Part modules -- //
 //
@@ -370,7 +511,7 @@ global function util_capacitor_discharge_trigger
     }
 }
 
-global function util_grapling_hook
+global function util_grappling_hook
 {
     parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
               mode is "arm". // other values: release, pivot, decouple
@@ -414,9 +555,9 @@ global function util_warp_down_to_alt {
     parameter tgtAlt.
     
     if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-    else if ship:altitude <= tgtAlt * 1.10 set warp to 1.
-    else if ship:altitude <= tgtAlt * 1.25 set warp to 2.
-    else if ship:altitude <= tgtAlt * 1.50 set warp to 3.
+    else if ship:altitude <= tgtAlt * 1.05 set warp to 1.
+    else if ship:altitude <= tgtAlt * 1.20 set warp to 2.
+    else if ship:altitude <= tgtAlt * 1.35 set warp to 3.
     else if ship:altitude <= tgtAlt * 3 set warp to 4.
     else if ship:altitude <= tgtAlt * 5 set warp to 5.
     else if ship:altitude <= tgtAlt * 20 set warp to 6.

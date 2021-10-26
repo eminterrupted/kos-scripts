@@ -4,64 +4,64 @@
             "freq": 783.99,
             "endfreq": 783.99,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 739.998,
             "endfreq": 739.998,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 622.254,
             "endfreq": 622.254,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 440,
             "endfreq": 440,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 415.305,
             "endfreq": 415.305,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 659.255,
             "endfreq": 659.255,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 830.609,
             "endfreq": 830.609,
             "vol": 1,
-            "keydown": 0.225,
-            "duration": 0.25,
+            "keydown": 0.175,
+            "duration": 0.2,
             "$type": "kOS.Sound.NoteValue"
         },
         {
             "freq": 1046.502,
             "endfreq": 1046.502,
             "vol": 1,
-            "keydown": 0.45,
-            "duration": 0.5,
+            "keydown": 0.4,
+            "duration": 0.45,
             "$type": "kOS.Sound.NoteValue"
         }
     ],

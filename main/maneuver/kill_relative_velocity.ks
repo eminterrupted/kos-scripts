@@ -18,18 +18,21 @@ if not hasTarget
 
 local lastDist  to 999999.
 lock  relVel to target:velocity:orbit - ship:velocity:orbit.
+lock maxAcc to (0.000000001 + ship:availablethrust) / ship:mass.
 local safeDist  to 100.
-local startDist to 500.
+local startDist to 150.
 
 lock steering to lookdirup(relVel, sun:position).
-disp_msg("Awaiting ideal startDist or closest approach").
-until target:distance <= startDist
+ag10 off.
+disp_msg("Awaiting ideal startDist, closest approach, or AG10").
+until target:distance <= startDist or ag10
 {
     set lastDist to target:distance.
-    disp_info("Target distance: " + round(lastDist)).
+    disp_info("Target distance: " + round(lastDist, 2)).
     wait 0.1.
     if target:distance > lastDist break.
 }
+ag10 off.
 
 until target:distance <= safeDist 
 {

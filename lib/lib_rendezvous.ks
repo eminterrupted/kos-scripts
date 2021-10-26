@@ -64,17 +64,20 @@ global function rdv_await_nearest_approach
     }
 }
 
+// TO DO: Incorporate maxaccel and relative velocity into calculation on when to burn
 // Cancel out relative velocity
 global function rdv_cancel_velocity 
 {
     parameter rdvTgt is target.
 
     local lock relativeVelocity to rdvTgt:velocity:orbit - ship:velocity:orbit.
+    local lock maxAcc to (0.000000001 + ship:availablethrust) / ship:mass.
     lock steering to lookDirUp(relativeVelocity, sun:position).
     wait until ves_settled().
     
     local lock maxAccel to ship:maxThrust / ship:mass.
     lock throttle to max(0.05, min(1, relativeVelocity:mag / maxAccel)).
+    
     until relativeVelocity:mag < 0.1
     {
         disp_info("Distance to target: " + round(rdvTgt:distance)).

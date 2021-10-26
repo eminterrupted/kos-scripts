@@ -13,6 +13,14 @@ runOncePath("0:/lib/lib_util").
 print "Waiting for launch".
 print " ".
 
+if hasTarget 
+{
+    set tgtLaunchLAN to target:orbit:lan.
+    print "Target mode".
+    print "Target: " + target.
+    print "Target LAN: " + tgtLaunchLAN.
+}
+
 until util_check_range(ship:orbit:LAN, tgtLaunchLAN - 1, tgtLaunchLAN + 1)
 {
     print "Current LAN: " + round(ship:orbit:longitudeofascendingnode, 5) + "   " at (0, 9).

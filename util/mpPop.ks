@@ -1,5 +1,5 @@
 local mpPath to path().
-local volList to list().
+//local volList to list().
 list volumes in volList.
 
 set mpPath to path(core:volume:name + ":/missionPlan.json").

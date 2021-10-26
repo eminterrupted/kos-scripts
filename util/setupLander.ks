@@ -6,8 +6,9 @@ runOncePath("0:/lib/lib_disp").
 disp_main(scriptPath()).
 
 local cores to ship:modulesnamed("kosProcessor").
-local dataCore to "".
 local shipCore to "".
+
+set core:volume:name to "local".
 
 for c in cores {
     if c:volume:name:contains("local") 
@@ -19,7 +20,6 @@ for c in cores {
     }
     else if c:volume:name:contains("data") 
     {
-        set dataCore to c.
         set c:volume:name to "data_0".
     }
 }

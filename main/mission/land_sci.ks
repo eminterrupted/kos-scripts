@@ -55,6 +55,20 @@ else
     sci_recover_list(sciMod, "collect").
 }
 
+if ship:modulesNamed("TSTChemCam"):length > 0
+{
+    disp_msg("Deploying ChemCam").
+    sci_deploy_chemcam().
+    wait 5.
+    ag10 off.
+    disp_msg("ChemCam deployed. Press AG10 to terminate experiment").
+    until ag10 
+    {
+        wait 0.1.
+    }
+    sci_retract_chemcam().
+}
+
 ag9 off.
 ag10 off.
 disp_hud("Press 9 to capture Neptune images, 0 to continue").

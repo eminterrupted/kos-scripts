@@ -30,14 +30,29 @@ lock steering       to sVal.
 lock throttle       to tVal.
 disp_info("Controls set").
 
+// Main
+
+// If a node exists, make sure it is past apoapsis so as not to confuse anything
+if hasNode 
+{
+    if nextNode:time <= time:seconds + eta:apoapsis 
+    {
+        local n to node(time:seconds + eta:apoapsis + 60, nextNode:normal, nextNode:radialout, nextNode:prograde).
+        remove nextNode.
+        add n.
+    }
+}
+
 // Get dv and duration of burn
-local dv            to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
+local dv        to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
 disp_info("DeltaV calculated").
-local burnTime      to mnv_burn_times(dv, mnvTime).
-disp_info("Burn times calculated").
-local burnETA       to burnTime[0].
-local burnDur       to burnTime[1].
-local mnvNode       to node(mnvTime, 0, 0, dv).
+// local burnDur   to mnv_burn_dur(dv).
+// if burnDur:typename <> "Lexicon" set burnDur to mnv_burn_dur_next(dv).
+// local fullDur   to burnDur["Full"].
+// local halfDur   to burnDur["Half"].
+//disp_info("Burn times calculated").
+//local burnETA   to mnvTime - halfDur.
+local mnvNode   to node(mnvTime, 0, 0, dv).
 disp_info("Maneuver DV Calculated").
 
 set mnvNode to mnv_opt_simple_node(mnvNode, tgtPe, "pe").
@@ -45,37 +60,38 @@ add mnvNode.
 
 disp_msg("Getting burn data").
 disp_info("dv needed: " + round(dv, 2)).
-disp_info2("Burn duration: " + round(burnDur, 1)).
+//disp_info2("Burn duration: " + round(fullDur, 1)).
 
 for m in ship:modulesNamed("ModuleDeployableSolarPanel") 
 {
     if m:part = "" panelList:add(m).
 }
 
-disp_msg("Measuring EC Drain rate").
-disp_info().
-disp_info2().
-local ec to ship:electricCharge.
-wait 1.
-local ecRate to (ec - ship:electricCharge).
-if ecRate < 0 set ecRate to 0.0001.
-local ecSecs to ship:electricCharge / ecRate.
-local span to burnETA + 60 - time:seconds.
+// Check to see if our EC will run out prior to the burn. If yes, activate panels.
+// disp_msg("Measuring EC Drain rate").
+// disp_info().
+// disp_info2().
+// local ec to ship:electricCharge.
+// wait 1.
+// local ecRate to (ec - ship:electricCharge).
+// if ecRate <= 0 set ecRate to 0.0001.
+// local ecSecs to ship:electricCharge / ecRate.
+// local span to burnETA + 60 - time:seconds.
 
-disp_msg("EC drain rate calculations").
-disp_info("ecSecsRemaining : " + round(ecSecs, 2) + "s     ").
-disp_info2("timeToManeuver  : " + round(span, 2) + "s     ").
-wait 0.25.
+// disp_msg("EC drain rate calculations").
+// disp_info("ecSecsRemaining : " + round(ecSecs, 2) + "s     ").
+// disp_info2("timeToManeuver  : " + round(span, 2) + "s     ").
+// wait 0.25.
 
-if span >= ecSecs
-{
-    disp_msg("EC drain rate warning! Mode: SolarPanelDeploy").
-    ves_activate_solar(panelList, true).
-    disp_hud("EC drain rate warning! Not enough EC until circularization", 1).
-    disp_hud("Panels deployed").
-    disp_info("Panels deployed").
-}
-wait 0.25.
+// if span >= ecSecs
+// {
+//     disp_msg("EC drain rate warning! Mode: SolarPanelDeploy").
+//     ves_activate_solar(panelList, true).
+//     disp_hud("EC drain rate warning! Not enough EC until circularization", 1).
+//     disp_hud("Panels deployed").
+//     disp_info("Panels deployed").
+// }
+// wait 0.25.
 
 when ship:maxThrust <= 0.1 and throttle > 0 then 
 {
@@ -85,9 +101,11 @@ when ship:maxThrust <= 0.1 and throttle > 0 then
     if stage:number > 0 preserve.
 }
 
-mnv_exec_node_burn(mnvNode, burnETA, burnDur).
+mnv_exec_node_burn(mnvNode).
 
 disp_msg("Maneuver complete!").
 wait 1.
+
+if hasNode remove nextNode.
 clearScreen.
 //-- End Main --//

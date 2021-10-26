@@ -10,7 +10,10 @@ runOncePath("0:/lib/lib_vessel").
 
 // Flags
 local recover       to true.
-local validModes  to list("transmit", "ideal", "collect").
+
+// Variables
+local bayList      to ves_get_us_bays().
+local validModes   to list("transmit", "ideal", "collect").
 local sciList       to sci_modules().
 
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
@@ -18,6 +21,7 @@ lock steering to lookDirUp(ship:prograde:vector, sun:position).
 disp_main(scriptPath():name).
 disp_orbit().
 
+ves_open_bays(bayList).
 ves_activate_antenna().
 ves_activate_solar().
 

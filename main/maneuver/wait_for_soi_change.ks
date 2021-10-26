@@ -9,6 +9,7 @@ runOncePath("0:/lib/lib_nav").
 
 disp_main(scriptPath()).
 
+local orientation to "prograde".
 local tgtBody to tgtParam.
 
 if tgtParam:typename = "list"
@@ -30,11 +31,22 @@ else
 }
 
 local rVal to 0.
-lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+if orientation = "retrograde"
+{
+    lock steering to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
+}
+else if orientation = "sun_facing"
+{
+    lock steering to lookDirUp(sun:position, tgtBody:position) + r(0, 0, rVal).
+}
+else
+{
+    lock steering to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+}
 
 if ship:body:name <> tgtBody:name 
 {
-    util_warp_trigger(time:seconds + ship:orbit:nextpatcheta).
+    util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "SOI change").
 }
 
 until ship:body:name = tgtBody:name

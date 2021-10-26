@@ -6,10 +6,7 @@ runOncePath("0:/lib/lib_disp").
 
 disp_main(scriptPath()).
 
-local avgClock      to list(0, 0).
-local dClock        to 0.
 local dropTanks     to list().
-local pClock        to time:seconds.
 global stgDecoupler  to lex().
 global stgTanks      to lex().
 

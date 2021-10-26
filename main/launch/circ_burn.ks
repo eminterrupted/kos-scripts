@@ -33,7 +33,7 @@ lock throttle       to tVal.
 //local dv            to mnv_dv_hohmann(stPe, tgtPe)[1].
 //local dv            to mnv_dv_hohmann_velocity(stPe, tgtPe, tgtAp, ship:body)[1].
 local dv            to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
-local burnTime      to mnv_burn_times(dv, mnvTime).
+local burnTime      to mnv_burn_dur(dv, mnvTime).
 local burnETA       to burnTime[0].
 local burnDur       to burnTime[1].
 local mecoTS        to burnETA + burnDur.

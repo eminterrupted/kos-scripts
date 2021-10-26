@@ -17,7 +17,13 @@ disp_main(scriptPath():name).
 // Variables
 local mnvNode   to node(0, 0, 0, 0).
 
-if hasNode and nextNode:eta > 300 remove nextNode.
+if hasNode 
+{
+    if nextNode:eta > 300 and nextNode:orbit:apoapsis >= ship:orbit:periapsis + ship:orbit:periapsis * 1.005 
+    {
+        remove nextNode.
+    }
+}
 
 // Setup taging trigger
 when ship:maxThrust <= 0.1 and throttle > 0 then 
@@ -34,7 +40,8 @@ lock steering to lookDirUp(ship:facing:vector, sun:position).
 disp_msg("Calculating burn data").
 
 // Calculate the starting altitude.
-local dvNeeded to mnv_dv_hohmann(ship:body:soiradius - ship:apoapsis, tgtAlt)[1].
+local stAlt to choose ship:body:soiRadius - ship:apoapsis if ship:apoapsis < 0 else ship:apoapsis - ship:body:soiRadius.
+local dvNeeded to mnv_dv_hohmann(stAlt, tgtAlt)[1].
 set mnvNode to node(time:seconds + eta:periapsis, 0, 0, dvNeeded).
 add mnvNode.
 
@@ -42,12 +49,14 @@ until false
 {
     if mnvNode:orbit:hasnextpatch
     {
+        disp_info("Adjusting maneuver to terminate in current SOI").
         remove mnvNode.
         set mnvNode to node(mnvNode:time, 0, 0, mnvNode:prograde - 10).
         add mnvNode.
     }
     else
     {
+        disp_info().
         break.
     }
 }
