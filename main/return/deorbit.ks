@@ -16,15 +16,15 @@ lock steering to lookDirUp(ship:retrograde:vector, sun:position).
 if ship:periapsis > ship:body:atm:height 
 {
     disp_msg("Waiting for apoapsis").
-    disp_info("Press 0 to deorbit immediately").
-    ag10 off.
-    on ag10 
+    disp_info("Press 9 to deorbit immediately").
+    ag9 off.
+    on ag9 
     {
         disp_msg("Immediate deorbit mode").
         disp_info().
     
         set warp to 0.
-        wait 5.
+        wait 1.
     }
 
     local ts to time:seconds + eta:apoapsis.
@@ -33,6 +33,8 @@ if ship:periapsis > ship:body:atm:height
     until time:seconds >= ts
     {   
         disp_orbit().
+        if ag9 break.
+        
     }
 
     lock throttle to 1.

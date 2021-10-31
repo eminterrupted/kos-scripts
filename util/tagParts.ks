@@ -1,8 +1,15 @@
 clearScreen.
 
-parameter parts to ship:parts.
+parameter parts to ship:parts, startIdx to -1.
 
-if not (defined(partIdx)) global partIdx to 0.
+if not (defined(partIdx)) 
+{
+    global partIdx to 0.
+}
+else if startIdx > -1 
+{
+    set partIdx to startIdx.
+}
 
 local preTag to "".
 local postTag to "".

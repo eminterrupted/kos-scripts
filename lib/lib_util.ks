@@ -332,17 +332,18 @@ global function util_return_char
 
 global function util_wait_on_char
 {
-    local char to "".
-    
+    local tick to 0.
+
     until false
     {
-        if terminal:input:hasChar
+        if terminal:input:haschar
         {
-            set char to terminal:input:getChar().
-            break.
+            return terminal:input:getChar().
         }
+        disp_info2("No Char | Tick: " + tick).
+        set tick to choose 0 if tick > 999 else tick + 1.
+        wait 0.01.
     }
-    return char.
 }
 
 global function util_wait_for_char
@@ -534,9 +535,11 @@ global function util_grappling_hook
 // Creates a trigger to warp to a timestamp using AG10
 global function util_warp_trigger
 {
-    parameter tStamp, str is "timestamp".
+    parameter tStamp, 
+              str is "timestamp",
+              buffer is 15.
 
-    set tStamp to tStamp - 15.
+    set tStamp to tStamp - buffer.
     if time:seconds <= tStamp
     {   
         ag10 off.

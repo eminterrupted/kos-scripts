@@ -40,12 +40,12 @@ local endPitch      to 0.
 local finalAlt      to 0.
 local maxAcc        to 35.
 local maxQ          to 0.1875.
-local maxTwr        to 2.10.
+local maxTwr        to 2.25.
 local stAlt         to 0.
 local stTurn        to 750.
 local stSpeed       to 100.
-local twr_kP        to 0.225.
-local twr_kI        to 0.005.
+local twr_kP        to 0.200.
+local twr_kI        to 0.025.
 local twr_kD        to 0.0.
 local turnAlt       to round(body:atm:height * 0.875).
 local tValLoLim to 0.40.

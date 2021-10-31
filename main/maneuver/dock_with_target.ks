@@ -22,15 +22,36 @@ local rcsList       to list().
 local safetyDist    to 50.
 local elementName   to ship:name.
 local targetPort    to "".
+local rollVal       to 0.
 
 local probePort     to rdz_select_probe_port().
+
+// Setup roll val trigger
+when terminal:input:haschar then
+{
+    local keyChar to terminal:input:getchar().
+    if keyChar = terminal:input:upCursorOne 
+    {
+        set rollVal to 0.
+    }
+    else if keyChar = terminal:input:rightCursorOne
+    {
+        set rollVal to mod(rollVal - 90, 360).
+    }
+    else if keyChar = terminal:input:leftCursorOne
+    {
+        set rollVal to mod(rollVal + 90, 360).
+    }
+    preserve.
+}
 
 // Get RCS
 for p in ship:parts 
 {
     if p:hasModule("ModuleRCSFX") or p:hasModule("ModuleRCS")
     {
-        rcsList:add(p). 
+        rcsList:add(p).
+        set p:fullThrust to true.
     }
 
     if p:tag = "dockingLight" 
@@ -55,19 +76,25 @@ for m in lightList
 set capturePort to rdz_select_docking_target().
 
 disp_msg("Enable RCS to begin docking or 0 to reconfirm target").
+disp_info("Probe port: " + probePort).
+disp_info("Target selected: " + capturePort).
 
+ag10 off.
 until false
 {
     if rcs break.
     if ag10 
     {
         set capturePort to rdz_select_docking_target().
+        disp_msg("Enable RCS to begin docking or 0 to reconfirm target").
+        disp_info("Target selected: " + capturePort).
+        ag10 off.
     }
-    ag10 off.
-    disp_info("Target selected: " + capturePort).
-    disp_info2("Probe port: " + probePort).
     wait 0.01.
 }
+
+set target to capturePort.
+rcs_toggle_full_thrust(rcsList).
 
 disp_msg("Docking procedure activated").
 disp_info().
@@ -79,8 +106,8 @@ kill_rel_vel(capturePort, probePort).
 disp_info("Ensuring sufficient safety range (" + safetyDist + ")").
 clear_docking_port(capturePort, probePort, safetyDist, 2).
 
-disp_info("Cancelling relative velocity").
-kill_rel_vel(capturePort, probePort).
+// disp_info("Cancelling relative velocity").
+// kill_rel_vel(capturePort, probePort).
 
 if vang(-(probePort:facing:vector):normalized, capturePort:facing:vector:normalized) >= 180
 {
@@ -91,8 +118,8 @@ if vang(-(probePort:facing:vector):normalized, capturePort:facing:vector:normali
 
 disp_msg("Docking procedure in progress").
 
-disp_info("Cancelling relative velocity").
-kill_rel_vel(capturePort, probePort).
+// disp_info("Cancelling relative velocity").
+// kill_rel_vel(capturePort, probePort).
 
 disp_info("Making " + safetyDist + "m approach").
 approach_docking_port(capturePort, probePort, safetyDist, 1).
@@ -153,17 +180,22 @@ for p in localElement:parts
 {
     if p:hasModule("ModuleResourceConverter")
     {
-        ves_activate_fuel_cell(p, false).
+        ves_activate_fuel_cell(list(p:getModule("ModuleResourceConverter")), false).
     }
 
     if p:hasModule("ModuleDeployableSolarPanel")
     {
-        elementSolar:add(p:getModule("ModuleDeployableSolarPanel")).
+        if p:tag = "stationPanel" elementSolar:add(p:getModule("ModuleDeployableSolarPanel")).
     }
 }
 
 ves_activate_solar(elementSolar).
-
+for e in ves_active_engines()
+{
+    e:shutdown.
+}
+unlock steering.
+sas on.
 disp_msg("Hard dock complete!").
 
 //TO DO - prevent script from running until undocked.
@@ -185,7 +217,7 @@ global function kill_rel_vel
               ctrlPort.
     
     ctrlPort:controlFrom().
-    rcs_toggle_full_thrust(rcsList).
+    //rcs_toggle_full_thrust(rcsList).
 
     lock relVel to ctrlPort:ship:velocity:orbit - tgtPort:ship:velocity:orbit.
     lock steering to ship:facing.
@@ -195,7 +227,7 @@ global function kill_rel_vel
         disp_info2("Current distance: " + round(target:position:mag, 1)).
     }
     translate().
-    rcs_toggle_full_thrust(rcsList, false).
+    //rcs_toggle_full_thrust(rcsList, false).
 }
 
 global function approach_docking_port
@@ -210,7 +242,7 @@ global function approach_docking_port
     lock distOffset to tgtPort:portFacing:vector * dist.
     lock approachVec to tgtPort:nodePosition - ctrlPort:nodePosition + distOffset.
     lock relVel to ship:velocity:orbit - tgtPort:ship:velocity:orbit.
-    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector).
+    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector) + r(0, 0, rollVal).
 
     until ctrlPort:state <> "ready" 
     {
@@ -237,7 +269,7 @@ global function clear_docking_port
     lock relPosition to ship:position - tgtPort:ship:position.
     lock departVec to (relPosition:normalized * dist) - relPosition.
     lock relVel to ship:velocity:orbit - tgtPort:ship:velocity:orbit.
-    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector).
+    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector) + r(0, 0, rollVal).
 
     until false 
     {
@@ -269,7 +301,7 @@ global function position_port_side
     lock distOffset to sideDir * dist.
     lock approachVec to tgtPort:nodePosition - ctrlPort:nodePosition + distOffset. 
     lock relVel to ship:velocity:orbit - tgtPort:ship:velocity:orbit.
-    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector).
+    lock steering to lookDirUp(-(tgtPort:portFacing:vector), tgtPort:ship:facing:foreVector) + r(0, 0, rollVal).
 
     until false 
     {
@@ -390,40 +422,54 @@ global function util_select_port
 {
     parameter portList.
     
+    local colorIdx to 0.
     local keyIdx to 0.
-    local portIdx to 0.
+    local portIdx to "".
     local portKeyList to list().
     local validPortList to list().
 
     for p in portList
     {
-        if p:state = "Ready" 
+        if p:state = "Ready" and keyIdx <= 9
         {
-            print "[" + (keyIdx) + "][" + colorStr[keyIdx] + "] (" + p:name + ") | (" + p:tag + ")  " at (0, 10 + keyIdx).
-            highlight(p, colors[keyIdx]).
+            print "[" + (keyIdx) + "][" + colorStr[colorIdx] + "] (" + p:name + ") | (" + p:tag + ")  " at (0, 10 + keyIdx).
+            highlight(p, colors[colorIdx]).
             portKeyList:add(keyIdx:tostring).
             validPortList:add(p).
             set keyIdx to keyIdx + 1.
+            set colorIdx to choose colorIdx + 1 if colorIdx < colors:length else 0.
         }
     }
     
     disp_info("Select:").
     
-    until false
-    {
-        set portIdx to util_wait_on_char().
-        if not portKeyList:contains(portIdx)
+    local doneFlag to false.
+    until doneFlag
+    {   
+        disp_hud("Select a port in the terminal").
+        if terminal:input:haschar
         {
-            disp_info("Invalid Selection: " + portIdx).
-            set portIdx to "".
-            wait 1.
-            disp_info("Select:").
+            set portIdx to terminal:input:getchar.
+            //disp_hud("Char detected: [" + portIdx + "]").
+            disp_info("Select: [" + portIdx + "] ").
+
+            if portIdx <> "" 
+            {
+                if not portKeyList:contains(portIdx)
+                {
+                    disp_info("Invalid Selection: [" + portIdx + "] ").
+                    disp_hud("Invalid selection: [" + portIdx + "]").
+                    set portIdx to "".
+                    wait 0.25.
+                }
+                else
+                {
+                    disp_msg("Selected: [" + portIdx + "] ").
+                    set doneFlag to true.
+                }
+            }
         }
-        else
-        {
-            disp_msg("Selected: " + portIdx).
-            break.
-        }
+        wait 0.1.
     }
 
     set keyIdx to 0.

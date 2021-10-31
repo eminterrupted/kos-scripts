@@ -45,7 +45,7 @@ if not ship:orbit:hasnextpatch
 
 lock steering to lookDirUp(ship:prograde:vector, sun:position).
 
-util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "next SOI").
+util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "next SOI", 5).
 
 until ship:orbit:body:name = "Kerbin"
 {

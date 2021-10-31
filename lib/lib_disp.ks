@@ -233,10 +233,10 @@ global function disp_launch_window
     cr().
     if hasTarget 
     print "TARGET           : " + target at (0, cr()).
-    print "TARGET LAN       : " + tgtLAN at (0, cr()).
-    print "EFFECTIVE LAN    : " + tgtEffectiveLAN at (0, cr()).
+    print "TARGET LAN       : " + round(tgtLAN, 3) at (0, cr()).
+    print "EFFECTIVE LAN    : " + round(tgtEffectiveLAN, 3) at (0, cr()).
     cr().
-    print "CURRENT LAN      : " + round(ship:orbit:lan, 5) at (0, cr()).
+    print "CURRENT LAN      : " + round(ship:orbit:lan, 3) at (0, cr()).
     print "TIME TO LAUNCH   : " + disp_format_time(time:seconds - launchTime) at (0, cr()).
 }
 

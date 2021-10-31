@@ -19,6 +19,7 @@ disp_msg("Calculating circ burn data").
 local tgtAp         to launchPlan:tgtAp.
 local tgtPe         to launchPlan:tgtPe.
 local mnvTime       to time:seconds + eta:apoapsis.
+local cellList      to list().
 local panelList     to list().
 disp_info("Variables set").
 
@@ -46,12 +47,7 @@ if hasNode
 // Get dv and duration of burn
 local dv        to mnv_dv_bi_elliptic(ship:periapsis, ship:apoapsis, tgtPe, tgtPe, tgtAp, ship:body)[1].
 disp_info("DeltaV calculated").
-// local burnDur   to mnv_burn_dur(dv).
-// if burnDur:typename <> "Lexicon" set burnDur to mnv_burn_dur_next(dv).
-// local fullDur   to burnDur["Full"].
-// local halfDur   to burnDur["Half"].
-//disp_info("Burn times calculated").
-//local burnETA   to mnvTime - halfDur.
+
 local mnvNode   to node(mnvTime, 0, 0, dv).
 disp_info("Maneuver DV Calculated").
 
@@ -64,34 +60,50 @@ disp_info("dv needed: " + round(dv, 2)).
 
 for m in ship:modulesNamed("ModuleDeployableSolarPanel") 
 {
-    if m:part = "" panelList:add(m).
+    if m:part:tag = "" panelList:add(m).
 }
 
-// Check to see if our EC will run out prior to the burn. If yes, activate panels.
-// disp_msg("Measuring EC Drain rate").
-// disp_info().
-// disp_info2().
-// local ec to ship:electricCharge.
-// wait 1.
-// local ecRate to (ec - ship:electricCharge).
-// if ecRate <= 0 set ecRate to 0.0001.
-// local ecSecs to ship:electricCharge / ecRate.
-// local span to burnETA + 60 - time:seconds.
+for m in ship:modulesNamed("ModuleResourceConverter")
+{
+    if m:part:tag = "" and m:hasEvent("start fuel cell") cellList:add(m).
+}
 
-// disp_msg("EC drain rate calculations").
-// disp_info("ecSecsRemaining : " + round(ecSecs, 2) + "s     ").
-// disp_info2("timeToManeuver  : " + round(span, 2) + "s     ").
-// wait 0.25.
+//Check to see if our EC will run out prior to the burn. If yes, activate panels.
+disp_msg("Measuring EC Drain rate").
+disp_info().
+disp_info2().
+local ec to ship:electricCharge.
+wait 1.
+local ecRate to (ec - ship:electricCharge).
+if ecRate <= 0 set ecRate to 0.0001.
+local ecSecs to ship:electricCharge / ecRate.
 
-// if span >= ecSecs
-// {
-//     disp_msg("EC drain rate warning! Mode: SolarPanelDeploy").
-//     ves_activate_solar(panelList, true).
-//     disp_hud("EC drain rate warning! Not enough EC until circularization", 1).
-//     disp_hud("Panels deployed").
-//     disp_info("Panels deployed").
-// }
-// wait 0.25.
+if mnvNode:eta >= ecSecs
+{
+    disp_tee("CAUTION: EC drain rate", 1).
+    disp_info("EC Remaining: " + round(ecSecs, 2) + "s | Node ETA: " + round(mnvNode:eta, 2) + "s").
+    if cellList:length > 0 
+    {
+        disp_tee("Starting fuel cell").
+        ves_activate_fuel_cell(cellList[0]).
+        disp_info2("Fuel cell started").
+    }
+    else if panelList:length > 0 
+    {
+        disp_tee("Deploying panels", 1).
+        ves_activate_solar(panelList, true).
+        disp_info2("Panels deployed").
+    }
+    else
+    {
+        disp_tee("MASTER CAUTION: No power source on board!").
+        wait 2.5.
+    }
+}
+else
+{
+    disp_msg("EC Drain rate test passed").
+}
 
 when ship:maxThrust <= 0.1 and throttle > 0 then 
 {

@@ -46,7 +46,7 @@ else
 
 if ship:body:name <> tgtBody:name 
 {
-    util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "SOI change").
+    util_warp_trigger(time:seconds + ship:orbit:nextpatcheta, "SOI change", 5).
 }
 
 until ship:body:name = tgtBody:name

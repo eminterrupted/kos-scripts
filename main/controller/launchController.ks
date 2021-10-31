@@ -41,7 +41,7 @@ until launchQueue:length = 0
 
         if launchPlan:waitForLAN or launchPlan:tgtLAN <> -1
         {
-            runPath("0:/util/launchIntoLAN", target:orbit:lan, launchPlan:tgtInc).
+            runPath("0:/util/launchIntoLAN", launchPlan:tgtLAN, launchPlan:tgtInc).
         }
         else
         {
