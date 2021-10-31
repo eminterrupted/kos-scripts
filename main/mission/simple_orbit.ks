@@ -8,6 +8,7 @@ runOncePath("0:/lib/lib_util").
 
 disp_main(scriptPath():name).
 
+local orbitalFuelCells to list().
 local orbitalPanels to list().
 local orbitalComms  to list().
 local orientation to "prograde".
@@ -27,9 +28,15 @@ for m in ship:modulesNamed("ModuleRTAntenna")
 }
 ves_activate_antenna(orbitalComms).
 
+for m in ship:modulesNamed("ModuleResourceConverter")
+{
+    if m:part:tag = "" and m:hasEvent("Start Fuel Cell") orbitalFuelCells:add(m).
+}
+ves_activate_fuel_cell(orbitalFuelCells).
+
 ag10 off.
-disp_hud("Activate AG10 to end Simple Orbit sequence").
-//hudtext("Activate AG10 to end Simple Orbit sequence", 25, 2, 20, green, false).
+disp_hud("AG10 to end Simple Orbit sequence").
+
 until ag10
 {
     if orientation = "sun_position" 

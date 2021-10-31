@@ -61,6 +61,13 @@ global function mnv_dv_hohmann
     local stSMA  to (stAlt + burnAlt + (2 * mnvBody:radius)) / 2.
     local tgtSMA to tgtAlt + mnvBody:radius.
 
+    // print stAlt at (2, 22).
+    // print burnAlt at (2, 23).
+
+    // print mnvBody:mu at (2, 25).
+    // print stSMA at (2, 26).
+    // print tgtSMA at (2, 27).
+
     local dv1 to sqrt(mnvBody:mu / stSMA) * (sqrt((2 * tgtSMA) / (tgtSMA + stSMA)) - 1).
     local dv2 to sqrt(mnvBody:mu / tgtSMA) * (1 - sqrt((2 * stSMA) / (stSMA + tgtSMA))).
     return list(dv1, dv2).
@@ -364,7 +371,7 @@ global function mnv_burn_stages_next
                 set hudWait to time:seconds + 3.
             }
 
-            if util_check_char("Enter")
+            if util_check_char("Return")
             {
                 disp_hud("Low dV caution overridden").
                 break.

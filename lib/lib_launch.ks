@@ -23,9 +23,9 @@ global function launch_ang_for_alt
     // {
     //     set pg to ship:prograde:vector.
     // }
-    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0001 else ship:prograde:vector.
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.005 else ship:prograde:vector.
     local pgPitch   to 90 - vang(ship:up:vector, pg).
-
+    set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0025 else pitchLim * 4.25.
     // Calculate the effective pitch with a 5 degree limiter
     local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
     return effPitch.
@@ -100,6 +100,7 @@ global function launch_pad_crew_arm_retract
         for m in animateMod
         {
             if m:hasEvent("retract arm") util_do_event(m, "retract arm").
+            if m:hasEvent("retract crew arm") util_do_event(m, "retract crew arm").
         }
     }
 }

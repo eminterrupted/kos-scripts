@@ -19,40 +19,45 @@ local tgtRoll   to 0.
 local doReturn  to false.
 local waitForLAN to false.
 
-if hasTarget 
+if hasTarget
 {
     set tgtInc to target:orbit:inclination.
     set tgtLAN to target:orbit:lan.
     set waitForLAN to true.
 }
+else if tgtLAN >= 0 and tgtLAN <= 360 
+{
+    set waitForLAN to true.
+}
 
 local missionList to list(
     "mission/simple_orbit"
-    ,"maneuver/match_inclination"
-    ,"maneuver/transfer_to_body"
-    ,"maneuver/wait_for_soi_change"
-    ,"maneuver/capture_burn"
-    //,"mission/clever_sat"
-    // ,"mission/simple_orbit"
-    ,"maneuver/match_inclination"
-    ,"maneuver/transfer_to_target"
-    ,"mission/simple_orbit"
-    ,"maneuver/kill_relative_velocity"
-    ,"maneuver/dock_with_target"
-    //,"maneuver/kerbin_escape"
-    //,"mission/simple_orbit"
-    //,"maneuver/change_orbit"
-    //,"maneuver/exec_node"
-    // ,"land/land_on_mun"
-    // ,"mission/land_sci"
-    //,"maneuver/transfer_to_planet"
-    //,"mission/orbital_science"
-    //,"mission/simple_orbit"
-    //,"maneuver/wait_for_soi_change"
+    //,"maneuver/match_inclination"
+    // ,"maneuver/transfer_to_body"
+    // ,"maneuver/wait_for_soi_change"
     // ,"maneuver/capture_burn"
-    // ,"launch/mun_ascent"
+    // ,"maneuver/match_inclination"
+    // ,"maneuver/transfer_to_target"
+    // ,"mission/simple_orbit"
+    // ,"maneuver/kill_relative_velocity"
+    // ,"maneuver/dock_with_target"
     //,"return/return_from_mun"
-    //,"maneuver/change_inclination"
+    // ,"land/land_on_mun"
+    // ,"launch/mun_ascent"
+    // ,"mission/simple_orbit"
+    // ,"mission/clever_sat"
+    // ,"mission/simple_orbit"
+    // ,"maneuver/transfer_to_planet"
+    // ,"maneuver/wait_for_soi_change"
+    // ,"maneuver/capture_burn"
+    // ,"mission/simple_orbit"
+    //,"maneuver/exec_node"
+    // ,"maneuver/change_inclination"
+    // ,"maneuver/change_orbit"
+    // ,"mission/relay_orbit"
+    //,"maneuver/kerbin_escape"
+    // ,"mission/land_sci"
+    //,"mission/orbital_science"
     //,"mission/station_orbit"
     //,"maneuver/exec_node"
     // ,"maneuver/wait_for_soi_change"
@@ -101,7 +106,7 @@ local launchQueue to queue().
 
 if ship:status = "PRELAUNCH" or ship:status = "LANDED"
 {
-    if stage:number > 1 
+    if stage:number > 1
     {
         launchQueue:push("multiStage").
     }
@@ -111,7 +116,7 @@ if ship:status = "PRELAUNCH" or ship:status = "LANDED"
     }
 }
 
-if reachOrbit 
+if reachOrbit
 {
     if career():canMakeNodes launchQueue:push("circ_burn_node").
     else launchQueue:push("circ_burn_simple").

@@ -276,14 +276,15 @@ global function ves_stage_stats
                 else if r = "Xenon Gas" set rName to "XenonGas".
                 else set rName to r.
                 
-                if not engStats["Stage"]["Resources"]:hasKey(rName)
+                if not engStats["Stage"]["Resources"]:hasKey(rName) and rName <> "ElectricCharge"
                 {
                     set engStats["Stage"]["Resources"][rName] to e:consumedResources[r].
                 }
 
-                if not engStats["Engines"][e:uid]["FuelMass"]:hasKey(rName) 
+                if not engStats["Engines"][e:uid]["FuelMass"]:hasKey(rName) and rName <> "ElectricCharge"
                 {
-                    // print rName at (2, 35).
+                    // print stg + " : " + rName at (2, 25).
+                    // breakpoint().
                     set fuelMass to ves_stage_fuel_mass_next(e:decoupledIn, list(rName))[rName].
                     set engStats["Engines"][e:uid]["FuelMass"][rName] to fuelMass.
                     if fuelMass = 0 set engFlameout to true.
@@ -1241,24 +1242,28 @@ global function ves_neptune_image
 //#endregion
 
 //#region -- Fuel cell actions
-// Activate / Deactivate a fuel cell
+// Activate / Deactivate a fuel cell. <part>, <bool>
 global function ves_activate_fuel_cell
 {
-    parameter fuelCell,
-              mode is true. // on = true, off = false
+    parameter cellList is list(), // <part>
+              mode is true. // <bool> on = true, off = false
 
-    local fcMod to fuelCell:getModule("ModuleResourceConverter").
-
-    if mode
+    if cellList:length > 0
     {
-        local onEvent to choose "start turbine" if fuelCell:name:contains("apu-radial") else "start fuel cell".
-        util_do_event(fcMod, onEvent).
-        
-    }
-    else if not mode
-    {
-        local offEvent to choose "stop turbine" if fuelCell:name:contains("apu-radial") else "stop fuel cell".
-        util_do_event(fcMod, offEvent).
+        for m in cellList
+        {        
+            if mode
+            {
+                local onEvent to choose "start turbine" if m:part:name:contains("apu-radial") else "start fuel cell".
+                util_do_event(m, onEvent).
+                
+            }
+            else if not mode
+            {
+                local offEvent to choose "stop turbine" if m:part:name:contains("apu-radial") else "stop fuel cell".
+                util_do_event(m, offEvent).
+            }
+        }
     }
 }
 //#endregion

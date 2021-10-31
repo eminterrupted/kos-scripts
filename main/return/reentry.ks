@@ -13,7 +13,7 @@ disp_main(scriptPath()).
 //-- Variables --//
 local parachutes to ship:modulesNamed("RealChuteModule").
 local kscWindow  to list(150, 152.5).
-local reentryAlt to 50000.
+local reentryAlt to 40000.
 local shipLng    to 0.
 local stagingAlt to ship:body:atm:height + 50000.
 local sVal       to lookDirUp(body:position, sun:position).

@@ -4,7 +4,7 @@ clearScreen.
 parameter res,
           srcElement,
           tgtElement,
-          tgtAmount is 100,
+          transferAmount is 90,
           amountType is "pct".
           
 runOncePath("0:/lib/lib_disp").
@@ -15,33 +15,33 @@ disp_msg("Creating transfer object for " + res).
 
 if res = "LFO" 
 {
-    transfer_resource("LiquidFuel", srcElement, tgtElement, tgtAmount, amountType).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource_to_target("LiquidFuel", srcElement, tgtElement, transferAmount, amountType).
+    transfer_resource_to_target("Oxidizer", srcElement, tgtElement, transferAmount, amountType).
 }
 else if res = "LH2O" 
 {
-    transfer_resource("LqdHydrogen", srcElement, tgtElement, tgtAmount, amountType).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource_to_target("LqdHydrogen", srcElement, tgtElement, transferAmount, amountType).
+    transfer_resource_to_target("Oxidizer", srcElement, tgtElement, transferAmount, amountType).
 }
 else if res = "LCH4O"
 {
-    transfer_resource("LqdMethane", srcElement, tgtElement, tgtAmount, amountType).
-    transfer_resource("Oxidizer", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource_to_target("LqdMethane", srcElement, tgtElement, transferAmount, amountType).
+    transfer_resource_to_target("Oxidizer", srcElement, tgtElement, transferAmount, amountType).
 }
 else if res = "MP" or res = "MonoProp" 
 {
-    transfer_resource("MonoPropellant", srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource_to_target("MonoPropellant", srcElement, tgtElement, transferAmount, amountType).
 }
 else
 {
-    transfer_resource(res, srcElement, tgtElement, tgtAmount, amountType).
+    transfer_resource_to_target(res, srcElement, tgtElement, transferAmount, amountType).
 }
 
 disp_msg("Transfer complete").
 
 
 // Functions
-local function transfer_resource
+local function transfer_resource_to_target
 {
     parameter resName,
               src,
@@ -100,7 +100,7 @@ local function transfer_resource
     until resTransfer:status = "Failed" or resTransfer:status = "Finished"
     {
         disp_info("Transfer status: " + resTransfer:status).
-        disp_resource_transfer(resName, src, srcCap, tgt, tgtCap, fillTgt, xfrAmt).
+        disp_resource_transfer(resName, src, srcCap, tgt, tgtCap, xfrAmt).
     }
     disp_info2(resTransfer:message).
     set resTransfer:active to false.
@@ -114,7 +114,6 @@ local function disp_resource_transfer
               srcCap,
               tgt,
               tgtCap,
-              fillTgt,
               xfrAmt.
 
     global line to 10.

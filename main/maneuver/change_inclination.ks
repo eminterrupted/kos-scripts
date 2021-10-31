@@ -1,7 +1,7 @@
 @lazyGlobal off.
 
-parameter tgtInc is 7.5,
-          tgtLAN is 125,
+parameter tgtInc is 90,
+          tgtLAN is 315,
           nearestNode is false.
 
 clearscreen.
