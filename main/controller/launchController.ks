@@ -3,8 +3,8 @@ clearScreen.
 
 //#include "0:/boot/bootLoader.ks"
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_launch").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/launch").
 
 disp_main(scriptPath()).
 

@@ -3,7 +3,7 @@ clearScreen.
 
 parameter toggleHighlight is false.
 
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/util").
 
 print "Running repair program".
 print "----------------------".

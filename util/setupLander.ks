@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/disp").
 
 disp_main(scriptPath()).
 

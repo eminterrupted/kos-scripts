@@ -6,9 +6,9 @@ clearScreen.
 
 parameter tgtLaunchLAN to 359.5.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/util").
 
 print "Waiting for launch".
 print " ".

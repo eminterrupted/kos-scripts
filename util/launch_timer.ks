@@ -4,7 +4,7 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/nav").
 
 local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 2, 2).
 

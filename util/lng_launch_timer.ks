@@ -4,8 +4,8 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
 
 local upload to false.
 

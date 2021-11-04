@@ -3,9 +3,8 @@ clearScreen.
 
 parameter pe is -(ship:body:radius / 4).
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_vessel").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/util").
 
 disp_main(scriptPath():name).
 

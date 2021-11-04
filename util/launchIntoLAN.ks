@@ -5,9 +5,9 @@ clearScreen.
 parameter tgtLaunchLAN to ship:orbit:lan + 5,
           tgtInc to 0.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/util").
 
 disp_main(scriptPath()).
 

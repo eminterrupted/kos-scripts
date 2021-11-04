@@ -1,10 +1,10 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_sci").
-runOncePath("0:/lib/lib_vessel").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/bak/lib_sci").
+runOncePath("0:/lib/bak/lib_vessel").
+runOncePath("0:/lib/util").
 
 local scanCov to false.
 local sciList to sci_modules().

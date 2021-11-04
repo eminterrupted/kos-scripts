@@ -1,8 +1,8 @@
 @lazyGlobal off.
 
 //-- Dependencies
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/bak/lib_disp").
+runOncePath("0:/lib/bak/lib_util").
 
 //-- Functions
 
@@ -13,19 +13,15 @@ global function launch_ang_for_alt
     parameter turnAlt,
               startAlt,
               endPitch,
-              pitchLim is 3.5.
+              pitchLim is 4.
     
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
     // local pg to ship:srfprograde:vector.
 
-    // if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0002 
-    // {
-    //     set pg to ship:prograde:vector.
-    // }
-    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.005 else ship:prograde:vector.
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0050 else ship:prograde:vector.
     local pgPitch   to 90 - vang(ship:up:vector, pg).
-    set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0025 else pitchLim * 4.25.
+    set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
     // Calculate the effective pitch with a 5 degree limiter
     local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
     return effPitch.
@@ -33,6 +29,62 @@ global function launch_ang_for_alt
 //#endregion
 
 //#region -- Countdown and Launch pad functions
+// Launch countdown
+global function launch_countdown
+{
+    parameter s is 15.
+
+    local tVal to 0.
+    lock throttle to tVal.
+
+    local launchTime to time:seconds + s.
+    lock countdown to time:seconds - launchTime. 
+    
+    disp_info("Countdown initiated").
+
+    launch_pad_fallback_partial().
+    launch_pad_crew_arm_retract().
+    until countdown >= -10 
+    {
+        disp_msg("COUNTDOWN: " + round(countdown, 2)).
+    }    
+
+    until countdown >= -8
+    {
+        disp_msg("COUNTDOWN T" + round(countdown, 2)).
+        wait 0.05.
+    }
+    launch_pad_rofi().
+
+    until countdown >= -6
+    {
+        disp_msg("COUNTDOWN T" + round(countdown, 2)).
+        wait 0.05.
+    }
+    launch_pad_gen(false).
+
+    until countdown >= -1.5
+    {
+        disp_msg("COUNTDOWN T" + round(countdown, 2)).
+        wait 0.05.
+    }
+
+    if ship:status = "PRELAUNCH" 
+    {
+        launch_engine_start(launchTime).
+        set tVal to 1.
+    }
+    disp_info2().
+    launch_pad_arms_retract().
+    launch_pad_fallback_full().
+    until countdown >= 0
+    {
+        disp_msg("COUNTDOWN T" + round(countdown, 2)).
+        wait 0.05.
+    }
+    unlock countdown.
+}
+
 // Engine startup sequence
 global function launch_engine_start
 {
@@ -97,6 +149,7 @@ global function launch_pad_crew_arm_retract
         
     if animateMod:length > 0
     {
+        disp_info("Retracting crew arm").
         for m in animateMod
         {
             if m:hasEvent("retract arm") util_do_event(m, "retract arm").
@@ -154,10 +207,12 @@ global function launch_pad_gen
     {
         if powerOn 
         {
+            disp_info("Vehicle on external power").
             util_do_event(g, "activate generator").
         }
         else 
         {
+            disp_info("Vehicle on internal power").
             util_do_event(g, "shutdown generator").
         }
     }
@@ -190,6 +245,7 @@ global function launch_pad_rofi
 
     if rofiList:length > 0 
     {
+        disp_info("Igniting ROFI system").
         for r in rofiList 
         {
             r:activate.

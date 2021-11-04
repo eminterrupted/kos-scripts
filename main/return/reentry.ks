@@ -4,9 +4,9 @@ clearScreen.
 // Easy reentry near KSC
 
 //-- Dependencies --//
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/util").
 
 disp_main(scriptPath()).
 

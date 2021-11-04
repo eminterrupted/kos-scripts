@@ -1,8 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/util").
 
 parameter res,
           eSrc,
@@ -210,20 +210,20 @@ local function disp_resource_transfer
     }
 
     print "RESOURCE TRANSFER" at (0, line).
-    print "-----------------" at (0, cr()).
-    print "RESOURCE             : " + resName at (0, cr()).
-    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
-    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtAmt), 2) * 100 + "%   " at (0, cr()).
-    cr().
-    print "SOURCE ELEMENT       : " + src:name at (0, cr()).
-    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcCap) at (0, cr()).
-    cr().
-    print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
-    print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
-    cr().
+    print "-----------------" at (0, crs()).
+    print "RESOURCE             : " + resName at (0, crs()).
+    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, crs()).
+    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtAmt), 2) * 100 + "%   " at (0, crs()).
+    crs().
+    print "SOURCE ELEMENT       : " + src:name at (0, crs()).
+    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcCap) at (0, crs()).
+    crs().
+    print "TARGET ELEMENT       : " + tgt:name at (0, crs()).
+    print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, crs()).
+    crs().
 }
 
-local function cr
+local function crs
 {
     set line to line + 1.
     return line.

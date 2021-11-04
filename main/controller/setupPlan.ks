@@ -1,8 +1,8 @@
 //#include "0:/boot/bootLoader"
 
 runOncePath("0:/kslib/lib_l_az_calc").
-runOncePath("0:/lib/lib_launch").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/launch").
+runOncePath("0:/lib/util").
 
 core:doAction("open terminal", true).
 // print "Press 0 to begin launch plan setup".
@@ -11,8 +11,8 @@ core:doAction("open terminal", true).
 // Global variables
 
 // Mission Params
-local tgtPe     to 500000.
-local tgtAp     to 500000.
+local tgtPe     to 100000.
+local tgtAp     to 100000.
 local tgtInc    to 0.
 local tgtLAN    to -1.
 local tgtRoll   to 0.
@@ -129,8 +129,8 @@ local launchPlan to lex(
     "tgtLAN",       tgtLAN,
     "waitForLAN",   waitForLAN,
     "tgtRoll",      tgtRoll,
-    "lazObj",       l_az_calc_init(tgtAp, tgtInc),
-    "queue",        launchQueue
+    "queue",        launchQueue,
+    "lazObj",       l_az_calc_init(tgtAp, tgtInc)
 ).
 writeJson(launchPlan, launchPlanCache).
 

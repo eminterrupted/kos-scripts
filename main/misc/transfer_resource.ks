@@ -7,7 +7,7 @@ parameter res,
           transferAmount is 90,
           amountType is "pct".
           
-runOncePath("0:/lib/lib_disp").
+runOncePath("0:/lib/disp").
 
 disp_main(scriptPath(), false).
 
