@@ -15,7 +15,7 @@ global function clr
     print "                                                            " at (0, clrLine).
 }
 
-global function clr_disp
+global function clrDisp
 {
     set line to 10.
     until line = terminal:height - 1
@@ -33,7 +33,7 @@ global function cr
 }
 
 // Formats a timestamp into one of a few format strings
-global function disp_format_time
+global function DispTimeFormat
 {
     parameter ts,
               format is "ts".
@@ -125,7 +125,7 @@ global function disp_format_time
 }
 
 // Print a string to the hud with errorLevel
-global function disp_hud 
+global function OutHUD 
 {
     parameter str,
               errLvl is 0,
@@ -139,7 +139,7 @@ global function disp_hud
 }
 
 // Print a string to the info line
-global function disp_info
+global function OutInfo
 {
     parameter str is "".
     //print "INFO : " + str + "          " at (0, 7).
@@ -147,7 +147,7 @@ global function disp_info
     print str at (0, 7).
 }
 
-global function disp_info2
+global function OutInfo2
 {
     parameter str is "".
     //print "INFO : " + str + "          " at (0, 8).
@@ -156,7 +156,7 @@ global function disp_info2
 }
 
 // Print a string to the msg line
-global function disp_msg
+global function OutMsg
 {
     parameter str is "".
     //print "MSG  : " + str + "          " at (0, 6).
@@ -165,18 +165,18 @@ global function disp_msg
 }
 
 // Prints to both hud and msg line
-global function disp_tee
+global function OutTee
 {
     parameter str is "",
               errLvl is 0,
               screenTime is 15.
 
-    disp_msg(str).
-    disp_hud(str, errLvl, screenTime).
+    OutMsg(str).
+    OutHUD(str, errLvl, screenTime).
 }
 
 // Sets up the terminal
-global function disp_terminal
+global function DispTerm
 {
     set terminal:height to 50.
     set terminal:width to 60.
@@ -185,7 +185,7 @@ global function disp_terminal
 
 //-- Main Displays
 // A display for airplane flights
-global function disp_avionics
+global function DispAvionics
 {
     set line to 10.
     
@@ -204,7 +204,7 @@ global function disp_avionics
 }
 
 // Displays the launch plan prior to launching
-global function disp_launch_plan
+global function DispLaunchPlan
 {
     parameter launchPlan.
     
@@ -222,7 +222,7 @@ global function disp_launch_plan
     print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
 }
 
-global function disp_launch_window
+global function DispLaunchWindow
 {
     parameter tgtLAN, tgtEffectiveLAN, launchTime.
 
@@ -237,17 +237,17 @@ global function disp_launch_window
     print "EFFECTIVE LAN    : " + round(tgtEffectiveLAN, 3) at (0, cr()).
     cr().
     print "CURRENT LAN      : " + round(ship:orbit:lan, 3) at (0, cr()).
-    print "TIME TO LAUNCH   : " + disp_format_time(time:seconds - launchTime) at (0, cr()).
+    print "TIME TO LAUNCH   : " + dispTimeFormat(time:seconds - launchTime) at (0, cr()).
 }
 
 
 // A display header for mission control
-global function disp_main
+global function DispMain
 {
     parameter plan is scriptPath():name,
               showTerminal is true.
     set line to 1.
-    if showTerminal disp_terminal().
+    if showTerminal dispTerm().
 
     print "Mission Controller v2.0.1" at (0, line).
     print "=========================" at (0, cr()).
@@ -256,35 +256,35 @@ global function disp_main
 }
 
 // Mnv details
-global function disp_mnv_burn
+global function DispBurn
 {
     parameter burnEta, dvToGo is 0, burnDur is 0.
 
-    disp_msg("MNV DELTAV TO GO: " + round(dvToGo, 2)). 
+    OutMsg("MNV DELTAV TO GO: " + round(dvToGo, 2)). 
     if burnEta <= 0 
     {
         set burnEta to abs(burnEta).
         if burnEta > 60
         {
-            set burnEta to disp_format_time(burnEta, "datetime").
+            set burnEta to dispTimeFormat(burnEta, "datetime").
         }
         else
         {
             set burnEta to round(burnEta, 2).
         }
-        disp_info("BURN ETA        : " + burnEta).
-        disp_info2("BURN DURATION   : " + round(burnDur, 2) + "s     ").
+        OutInfo("BURN ETA        : " + burnEta).
+        OutInfo2("BURN DURATION   : " + round(burnDur, 2) + "s     ").
     }
     else
     {
-        disp_info("BURN DURATION   : " + round(burnDur, 2) + "s     ").
-        disp_info2().
+        OutInfo("BURN DURATION   : " + round(burnDur, 2) + "s     ").
+        OutInfo2().
     }
 }
 
 
 // Results of a maneuver optimization
-global function disp_mnv_score 
+global function DispMnvScore
 {
     parameter tgtVal,
               tgtBody,
@@ -305,7 +305,7 @@ global function disp_mnv_score
 }
 
 // Simple orbital telemetry
-global function disp_orbit
+global function DispOrbit
 {
     set line to 10.
     
@@ -318,41 +318,45 @@ global function disp_orbit
 }
 
 // Impact telemetry
-global function disp_impact
+global function DispImpact
 {
     parameter tti is 0.
 
-    print "LANDING TELEMETRY" at (0, 10).
-    print "-----------------" at (0, 11).
-    print "BODY           : " + ship:body:name   + "      " at (0, 12).
-    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, 13).
-    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, 14).
-    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 15).
-    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, 16).
+    set line to 10.
+
+    print "LANDING TELEMETRY" at (0, line).
+    print "-----------------" at (0, cr()).
+    print "BODY           : " + ship:body:name   + "      " at (0, cr()).
+    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
+    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, cr()).
+    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, cr()).
+    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
 }
 
 
 // Simple landing telemetry
-global function disp_landing
+global function DispLanding
 {
     parameter tti is 0, 
               burnDur is 0.
 
-    print "LANDING TELEMETRY" at (0, 10).
-    print "-----------------" at (0, 11).
-    print "BODY           : " + ship:body:name   + "      " at (0, 12).
-    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, 13).
-    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, 14).
-    print "SURFACE SPD    : " + round(ship:groundspeed, 2) + "m/s   " at (0, 15).
-    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, 16).
+    set line to 10.
 
-    print "THROTTLE       : " + round(throttle * 100)            + "%  " at (0, 18).
-    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, 19).
-    print "BURN DURATION  : " + round(burnDur, 2)          + "s   " at (0, 20).
+    print "LANDING TELEMETRY" at (0, line).
+    print "-----------------" at (0, cr()).
+    print "BODY           : " + ship:body:name   + "      " at (0, cr()).
+    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
+    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, cr()).
+    print "SURFACE SPD    : " + round(ship:groundspeed, 2) + "m/s   " at (0, cr()).
+    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, cr()).
+    cr().
+    print "THROTTLE       : " + round(throttle * 100)            + "%  " at (0, cr()).
+    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
+    print "BURN DURATION  : " + round(burnDur, 2)          + "s   " at (0, cr()).
 }
 
 // Generic API for printing a telemetry section, takes a list of header strings / values
-global function disp_generic
+global function DispGeneric
 {
     parameter dispList, stLine is 22.
 
@@ -378,67 +382,90 @@ global function disp_generic
 }
 
 // Provides a readout of pid values and output against tgt val
-global function disp_pid_readout
+global function DispPIDReadout
 {
-    parameter pid, tgtVal is 0, curVal is 0.
+    parameter pidName, pid, tgtVal is 0, curVal is 0.
 
-     print "TGTVAL: " + round(tgtVal, 5) + "     " at (0, 25).
-     print "CURVAL: " + round(curVal, 5) + "      " at (0, 26).
-     print "ERROR : " + round(curVal - tgtVal, 5) + "     " at (0, 27).
+    set line to 25.
 
-     print "PIDOUT: " + round(pid:output, 2) + "     " at (0, 29).
-
-     print "P TERM: " + round(pid:pterm, 5) + "     " at (0, 31).
-     print "I TERM: " + round(pid:iterm, 5) + "     " at (0, 32).
-     print "D TERM: " + round(pid:dterm, 5) + "     " at (0, 33).
+    print "PIDTYPE: " + pidName at (0, line).
+    print "TGTVAL : " + round(tgtVal, 5) + "     " at (0, cr()).
+    print "CURVAL : " + round(curVal, 5) + "      " at (0, cr()).
+    print "ERROR  : " + round(curVal - tgtVal, 5) + "     " at (0, cr()).
+    cr().
+    print "PIDOUT : " + round(pid:output, 2) + "     " at (0, cr()).
+    cr().
+    print "P TERM : " + round(pid:pterm, 5) + "     " at (0, cr()).
+    print "I TERM : " + round(pid:iterm, 5) + "     " at (0, cr()).
+    print "D TERM : " + round(pid:dterm, 5) + "     " at (0, cr()).
 }
 
 // General telemetry for flight
-global function disp_telemetry
+global function DispTelemetry
 {
-    print "TELEMETRY" at (0, 10).
-    print "---------" at (0, 11).
-    print "ALTITUDE         : " + round(ship:altitude)              + "m      " at (0, 12).
-    print "APOAPSIS         : " + round(ship:apoapsis)              + "m      " at (0, 13).
-    print "PERIAPSIS        : " + round(ship:periapsis)             + "m      " at (0, 14).
+    set line to 10.
 
-    print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, 16).
-    print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, 17).
-    print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, 18).
-
+    print "TELEMETRY" at (0, line).
+    print "---------" at (0, cr()).
+    print "ALTITUDE         : " + round(ship:altitude)              + "m      " at (0, cr()).
+    print "APOAPSIS         : " + round(ship:apoapsis)              + "m      " at (0, cr()).
+    print "PERIAPSIS        : " + round(ship:periapsis)             + "m      " at (0, cr()).
+    cr().
+    print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, cr()).
+    print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
+    print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, cr()).
+    cr().
     if body:atm:exists and ship:altitude <= 85000
     {
-        print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, 20).
-        print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, 21).
-        print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, 22).
-        print "Q                : " + round(ship:q, 7) + "     " at (0, 23).
+        print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, cr()).
+        print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, cr()).
+        print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, cr()).
+        print "Q                : " + round(ship:q, 7) + "     " at (0, cr()).
     }
     else
     {
-        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, 20).
-        print "                                               " at (0, 21).
-        print "                                               " at (0, 22).
-        print "                                               " at (0, 23).
+        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
     }
 }
 
 // Resource transfer readout
-global function disp_res_transfer
+global function DispResTransfer
 {
-    parameter res, srcElement, tgtElement, amt, srcRes, srcResFill, tgtRes, tgtResFill.
+    parameter resName, 
+              src,
+              srcCap,
+              tgt,
+              tgtCap,
+              xfrAmt.
 
-    if amt < 0 set amt to srcRes.
+    set line to 10.
 
-    print "RESOURCE TRANSFER" at (0, 10).
-    print "-----------------" at (0, 11).
-    print "RESOURCE             : " + res at (0, 12).
-    print "AMOUNT TO TRANSFER   : " + round(amt) + "     " at (0, 13).
-    print " " at (0, 14).
-    print "SOURCE ELEMENT       : " + srcElement:name at (0, 15).
-    print "RESOURCE REMAINING   : " + round(srcRes) + "     " at (0, 16).
-    print "FILL (%)             : " + round(srcResFill * 100) + "     " at (0, 17).
-    print " " at (0, 18).
-    print "TARGET ELEMENT       : " + tgtElement:name at (0, 19).
-    print "RESOURCE REMAINING   : " + round(tgtRes) + "     " at (0, 20).
-    print "FILL (%)             : " + round(tgtResFill * 100) + "     " at (0, 21).
+    local srcAmt to 0.
+    local tgtAmt to 0.
+
+    for r in src:resources
+    {
+        if r:name = resName set srcAmt to r:amount.
+    }
+
+    for r in tgt:resources
+    {
+        if r:name = resName set tgtAmt to r:amount.
+    }
+
+    print "RESOURCE TRANSFER" at (0, line).
+    print "-----------------" at (0, cr()).
+    print "RESOURCE             : " + resName at (0, cr()).
+    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
+    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtAmt), 2) * 100 + "%   " at (0, cr()).
+    cr().
+    print "SOURCE ELEMENT       : " + src:name at (0, cr()).
+    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcCap) at (0, cr()).
+    cr().
+    print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
+    print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
+    cr().
 }

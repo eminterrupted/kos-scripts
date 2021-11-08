@@ -28,7 +28,7 @@ print "Target selected: " + target.
 print "Waiting for launch".
 print " ".
 
-lock tgtPhase to nav_lng_phase_angle(target).
+lock tgtPhase to LngToPhaseAng(target).
 print "Desired phase angle at launch: " + launchPhase at (0, 8).
 until tgtPhase >= mod((launchPhase + 360) - 2.5, 360) and tgtPhase < launchPhase 
 {
@@ -57,8 +57,8 @@ until ag8
 }
 
 local launchTime    to time:seconds.
-local myLaunchLng   to nav_lng_to_degrees(ship:longitude).
-local tgtLaunchLng  to nav_lng_to_degrees(target:longitude).
+local myLaunchLng   to LngToDegress(ship:longitude).
+local tgtLaunchLng  to LngToDegress(target:longitude).
 local phaseAtLiftoff to mod(tgtLaunchLng - myLaunchLng + 360, 360).
 
 clearScreen.
@@ -81,8 +81,8 @@ until ag9
 }
 
 local arrivalTime   to time:seconds.
-local myArrivalLng  to nav_lng_to_degrees(ship:longitude).
-local tgtArrivalLng to nav_lng_to_degrees(target:longitude).
+local myArrivalLng  to LngToDegress(ship:longitude).
+local tgtArrivalLng to LngToDegress(target:longitude).
 local myLngDiff     to myArrivalLng - myLaunchLng.
 local tgtLngDiff    to tgtArrivalLng - tgtLaunchLng.
 local phaseAtArrival to mod(tgtArrivalLng - myArrivalLng + 360, 360).

@@ -1,14 +1,11 @@
 @lazyGlobal off.
 
-//#include "0:/boot/bootloader"
-
 // Dependencies
-runOncePath("0:/lib/disp").
 
 //-- Variables --//
 
 // Global
-global info is lex(
+global BodyInfo to lex(
     "altForSci", lex(
         "Kerbin", 250000,
         "Mun", 60000,
@@ -16,69 +13,36 @@ global info is lex(
     )
 ).
 
-global colors is list(
-    red,
-    magenta,
-    rgb(0.25, 0, 0.75),
-    blue,
-    cyan,
-    green,
-    yellow,
-    rgb(1, 1, 0),
-    white,
-    black
-).
-
-global colorStr to list(
-    "Red",
-    "Magenta",
-    "Violet",
-    "Blue",
-    "Cyan",
-    "Green",
-    "Yellow",
-    "Orange",
-    "White",
-    "Black"
+global ColorLex to lex(
+    "Red", red
+    ,"Magenta", magenta
+    ,"Violet", rgb(0.25, 0, 0.75)
+    ,"Blue", blue
+    ,"Cyan", cyan
+    ,"Green", green
+    ,"Yellow", yellow
+    ,"Orange", rgb(1, 1, 0)
+    ,"White", white
+    ,"Black", black
 ).
 
 // Local
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
-global stateFile to dataDisk + "state.json".
-
+global StateFile to dataDisk + "state.json".
 
 //-- Global Functions --//
 
 // -- Generic functions -- //
 //
 // Creates a breakpoint
-global function breakpoint
+global function Breakpoint
 {
     print "* Press any key to continue *" at (10, terminal:height - 2).
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
 }
 
-global function except
-{
-    parameter msg, 
-              errtarget is 0.
-
-    if errTarget = 0 
-    {
-        disp_msg(msg).
-    } else if errtarget = 1
-    {
-        disp_info(msg).
-    } else if errtarget >= 2
-    {
-        disp_hud(msg, 2).
-    }
-
-    return 0 / 1.
-}
-
-global function util_play_sfx 
+global function PlaySFX
 {
     parameter sfxId to 0.
 
@@ -95,7 +59,7 @@ global function util_play_sfx
 //
 // State cache
 // Caches an arbitrary bit of data in the state file
-global function util_cache_state
+global function CacheState
 {
     parameter lexKey,
               lexVal.
@@ -110,7 +74,7 @@ global function util_cache_state
     return readJson(stateFile):keys:contains(lexKey).
 }
 
-global function util_peek_cache
+global function PeekCache
 {
     parameter lexKey.
 
@@ -129,7 +93,7 @@ global function util_peek_cache
     }
 }
 
-global function util_read_cache
+global function ReadCache
 {
     parameter lexKey.
 
@@ -142,7 +106,7 @@ global function util_read_cache
 }
 
 // Clears a value from the state file
-global function util_clear_cache_key
+global function ClearCacheKey
 {
     parameter lexKey.
 
@@ -158,20 +122,20 @@ global function util_clear_cache_key
 }
 
 // Removes the entire state file
-global function util_remove_state
+global function DeleteCache
 {
     deletePath(stateFile).
 }
 
 // Resets the entire state file
-global function util_reset_state
+global function PurgeCache
 {
     writeJson(lex(), stateFile).
 }
 
 // Runmode
 // Gets the runmode from disk if exists, else returns 0
-global function util_init_runmode
+global function InitRunmode
 {
     if exists(stateFile) 
     {
@@ -194,7 +158,7 @@ global function util_init_runmode
 }
 
 // Writes the runmode to disk
-global function util_set_runmode
+global function SetRunmode
 {
     parameter runmode is 0.
 
@@ -221,7 +185,7 @@ global function util_set_runmode
 //
 // Sorts a list of parts by stage
 // Possible sortDir values: asc, desc
-global function util_order_list_by_stage
+global function OrderPartsByStageNumber
 {
     parameter inList,
               sortDir is "desc".
@@ -230,7 +194,7 @@ global function util_order_list_by_stage
     local startCount to choose -1 if sortDir = "asc" else stage:number.
     local endCount   to choose stage:number if sortDir = "asc" else -2.
 
-    from { local c to startCount.} until c = endCount step { set c to list_step(c, sortDir). } do
+    from { local c to startCount.} until c = endCount step { set c to stepList(c, sortDir). } do
     {
         for p in inList 
         {
@@ -247,7 +211,7 @@ global function util_order_list_by_stage
 // -- Check functions -- //
 //
 // Function for use in maneuver delegates
-global function util_check_del 
+global function CheckMnvDelegate
 {
     parameter checkType,
               rangeLo,
@@ -263,8 +227,8 @@ global function util_check_del
     else return false.
 }
 
-// Checks if ship EC is high enough
-global function util_check_power
+// Returns the amount of EC that is used over time
+global function GetECDraw
 {
     parameter checkType is "sample".
 
@@ -274,8 +238,8 @@ global function util_check_power
     if checkType = "sample" 
     {
         set charge to ship:resources:ec.
-        wait 0.25.
-        set draw to charge - ship:resources:ec / 0.25.
+        wait 1.
+        set draw to charge - ship:resources:ec.
     }
 
     print draw.
@@ -284,7 +248,7 @@ global function util_check_power
 }
 
 // Checks if a value is above/below the range bounds given
-global function util_check_range
+global function CheckValRange
 {
     parameter val,
               rangeLo,
@@ -294,17 +258,18 @@ global function util_check_range
     else return false.
 }
 
-// Checks if a value is between a range centered around 0.
-global function util_check_value
+// Checks if a provided value is within allowed deviation of a target value
+global function CheckValDeviation
 {
     parameter val,
-              valRange.
+              tgtCenter,
+              maxDeviation.
 
-    if val >= -(valRange) and val <= valRange return true.
+    if val >= tgtCenter - maxDeviation and val <= tgtCenter + maxDeviation return true.
     else return false.
 }
 
-global function util_check_char
+global function CheckInputChar
 {
     parameter checkChar to "0".
     
@@ -319,9 +284,10 @@ global function util_check_char
             return false.
         }
     }
+    return false.
 }
 
-global function util_return_char
+global function ReturnInputChar
 {
     if terminal:input:hasChar
     {
@@ -330,7 +296,7 @@ global function util_return_char
     return "".
 }
 
-global function util_wait_on_char
+global function WaitOnTermInput
 {
     local tick to 0.
 
@@ -340,13 +306,13 @@ global function util_wait_on_char
         {
             return terminal:input:getChar().
         }
-        disp_info2("No Char | Tick: " + tick).
+        OutInfo2("No Char | Tick: " + tick).
         set tick to choose 0 if tick > 999 else tick + 1.
         wait 0.01.
     }
 }
 
-global function util_wait_for_char
+global function WaitOnAllInput
 {
     parameter keyToCheck to 0, agFlag to true.
 
@@ -405,7 +371,7 @@ global function util_wait_for_char
 // -- Part modules -- //
 //
 // Checks for an action and executes if found
-global function util_do_action
+global function DoAction
 {
     parameter m, 
               action, 
@@ -423,7 +389,7 @@ global function util_do_action
 }
 
 // Checks for an event and executes if found
-global function util_do_event
+global function DoEvent
 {
     parameter m, 
               event.
@@ -440,7 +406,7 @@ global function util_do_event
 }
 
 // Searches a module for events / actions
-global function util_event_from_module
+global function GetEventFromModule
 {
     parameter m,
               event,
@@ -468,7 +434,7 @@ global function util_event_from_module
 }
 
 // Deploys US Bay Doors
-global function util_us_bay_toggle
+global function ToggleUSBayDoor
 {
     parameter bay,
               doors is "all".
@@ -479,15 +445,15 @@ global function util_us_bay_toggle
 
     if doors = "all" or doors = "primary"
     {
-        util_do_event(bay:getModule(aniMod), pEvent).
+        DoEvent(bay:getModule(aniMod), pEvent).
     }
     if doors = "all" or doors = "secondary"
     {
-        util_do_event(bay:getModule(aniMod), sEvent).
+        DoEvent(bay:getModule(aniMod), sEvent).
     }
 }
 
-global function util_capacitor_discharge_trigger
+global function InitCapacitorDischarge
 {
     local ecMon to 0.
     local resList to list().
@@ -502,8 +468,8 @@ global function util_capacitor_discharge_trigger
         for cap in ship:partsDubbedPattern("capacitor")
         {
             local m to cap:getModule("DischargeCapacitor").
-            util_do_event(m, "disable recharge").
-            util_do_event(m, "discharge capacitor").
+            DoEvent(m, "disable recharge").
+            DoEvent(m, "discharge capacitor").
             until ecMon >= 0.99 or cap:resources[0]:amount <= 0.1
             {
                 wait 0.01.
@@ -512,7 +478,7 @@ global function util_capacitor_discharge_trigger
     }
 }
 
-global function util_grappling_hook
+global function SetGrappleHook
 {
     parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
               mode is "arm". // other values: release, pivot, decouple
@@ -525,7 +491,7 @@ global function util_grappling_hook
     else if mode = "release" set event to "release".
     else if mode = "pivot" set event to "free pivot".
 
-    util_do_event(m, event).
+    DoEvent(m, event).
 }
 
 
@@ -533,7 +499,7 @@ global function util_grappling_hook
 //#region -- Warp functions -- //
 //
 // Creates a trigger to warp to a timestamp using AG10
-global function util_warp_trigger
+global function InitWarp
 {
     parameter tStamp, 
               str is "timestamp",
@@ -543,7 +509,7 @@ global function util_warp_trigger
     if time:seconds <= tStamp
     {   
         ag10 off.
-        disp_hud("Press 0 to warp to " + str).
+        OutHUD("Press 0 to warp to " + str).
         on ag10 
         {
             warpTo(tStamp).
@@ -554,24 +520,41 @@ global function util_warp_trigger
 }
 
 // Smooths out a warp down by either altitude or timestamp
-global function util_warp_down_to_alt {
+global function WarpToAlt
+{
     parameter tgtAlt.
     
-    if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-    else if ship:altitude <= tgtAlt * 1.05 set warp to 1.
-    else if ship:altitude <= tgtAlt * 1.20 set warp to 2.
-    else if ship:altitude <= tgtAlt * 1.35 set warp to 3.
-    else if ship:altitude <= tgtAlt * 3 set warp to 4.
-    else if ship:altitude <= tgtAlt * 5 set warp to 5.
-    else if ship:altitude <= tgtAlt * 20 set warp to 6.
-    else set warp to 7.
+    local dir to choose "down" if ship:altitude > tgtAlt else "up".
+
+    if dir = "down" 
+    {
+        if ship:altitude <= tgtAlt * 1.01 set warp to 0.
+        else if ship:altitude <= tgtAlt * 1.05 set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.20 set warp to 2.
+        else if ship:altitude <= tgtAlt * 1.35 set warp to 3.
+        else if ship:altitude <= tgtAlt * 3 set warp to 4.
+        else if ship:altitude <= tgtAlt * 5 set warp to 5.
+        else if ship:altitude <= tgtAlt * 20 set warp to 6.
+        else set warp to 7.
+    }
+    else if dir = "up"
+    {
+        if ship:altitude >= tgtAlt * 0.99 set warp to 0.
+        else if ship:altitude >= tgtAlt * 0.95 set warp to 1.
+        else if ship:altitude >= tgtAlt * 0.80 set warp to 2.
+        else if ship:altitude >= tgtAlt * 0.70 set warp to 3.
+        else if ship:altitude >= tgtAlt * 0.35 set warp to 4.
+        else if ship:altitude >= tgtAlt * 0.20 set warp to 5.
+        else if ship:altitude >= tgtAlt * 0.05 set warp to 6.
+        else set warp to 7.
+    }
 }
 //#endregion
 
 // -- Local functions -- //
-//
+//StepList
 // Helper function for from loop in list sorting. 
-local function list_step
+local function stepList
 {
     parameter c,
               sortDir.

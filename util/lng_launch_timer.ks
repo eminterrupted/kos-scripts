@@ -23,12 +23,12 @@ print " ".
 ag8 off.
 until ag8
 {
-    print "Current longitude: " + round(nav_lng_to_degrees(ship:longitude), 3) + "   " at (0, 9).
+    print "Current longitude: " + round(LngToDegress(ship:longitude), 3) + "   " at (0, 9).
     wait 0.01.
 }
 
 local launchTime    to time:seconds.
-local myLaunchLng   to nav_lng_to_degrees(ship:longitude).
+local myLaunchLng   to LngToDegress(ship:longitude).
 
 clearScreen.
 
@@ -47,7 +47,7 @@ until ag9
 }
 
 local arrivalTime   to time:seconds.
-local myArrivalLng  to nav_lng_to_degrees(ship:longitude).
+local myArrivalLng  to LngToDegress(ship:longitude).
 local myLngDiff     to myArrivalLng - myLaunchLng.
 
 print "Arrival on orbit at " + time:full.

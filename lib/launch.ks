@@ -8,20 +8,20 @@ runOncePath("0:/lib/util").
 
 //#region -- Ascent functions
 // Set pitch by deviation from a reference pitch
-global function launch_ang_for_alt
+global function LaunchAngForAlt
 {
     parameter turnAlt,
               startAlt,
               endPitch,
-              pitchLim is 4.
+              pitchLim is 5.
     
     // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
     local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
     // local pg to ship:srfprograde:vector.
 
-    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.0050 else ship:prograde:vector.
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.01 else ship:prograde:vector.
     local pgPitch   to 90 - vang(ship:up:vector, pg).
-    set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
+    //set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
     // Calculate the effective pitch with a 5 degree limiter
     local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
     return effPitch.
@@ -30,7 +30,7 @@ global function launch_ang_for_alt
 
 //#region -- Countdown and Launch pad functions
 // Launch countdown
-global function launch_countdown
+global function LaunchCountdown
 {
     parameter s is 15.
 
@@ -40,53 +40,56 @@ global function launch_countdown
     local launchTime to time:seconds + s.
     lock countdown to time:seconds - launchTime. 
     
-    disp_info("Countdown initiated").
+    OutInfo("Countdown initiated").
 
-    launch_pad_fallback_partial().
-    launch_pad_crew_arm_retract().
+    FallbackRetract(1).
+    CrewArmRetract().
     until countdown >= -10 
     {
-        disp_msg("COUNTDOWN: " + round(countdown, 2)).
+        OutMsg("COUNTDOWN: " + round(countdown, 1)).
+        wait 0.1.
     }    
 
     until countdown >= -8
     {
-        disp_msg("COUNTDOWN T" + round(countdown, 2)).
-        wait 0.05.
+        OutMsg("COUNTDOWN T" + round(countdown, 1)).
+        wait 0.1.
     }
-    launch_pad_rofi().
+    PadROFI().
 
     until countdown >= -6
     {
-        disp_msg("COUNTDOWN T" + round(countdown, 2)).
-        wait 0.05.
+        OutMsg("COUNTDOWN T" + round(countdown, 1)).
+        wait 0.1.
     }
-    launch_pad_gen(false).
+    LaunchPadGen(false).
 
     until countdown >= -1.5
     {
-        disp_msg("COUNTDOWN T" + round(countdown, 2)).
-        wait 0.05.
+        OutMsg("COUNTDOWN T" + round(countdown, 1)).
+        wait 0.1.
     }
 
     if ship:status = "PRELAUNCH" 
     {
-        launch_engine_start(launchTime).
+        IgnitionSequenceStart(launchTime).
         set tVal to 1.
     }
-    disp_info2().
-    launch_pad_arms_retract().
-    launch_pad_fallback_full().
+    OutInfo2().
+
+    LaunchArmRetract().
+    FallbackRetract(2).
+
     until countdown >= 0
     {
-        disp_msg("COUNTDOWN T" + round(countdown, 2)).
-        wait 0.05.
+        OutMsg("COUNTDOWN T" + round(countdown, 1)).
+        wait 0.01.
     }
     unlock countdown.
 }
 
 // Engine startup sequence
-global function launch_engine_start
+global function IgnitionSequenceStart
 {
     parameter cdEngStart.
 
@@ -96,16 +99,16 @@ global function launch_engine_start
     stage.
     until tVal >= .99
     {
-        disp_msg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
-        disp_info("Engine Start Sequence").
-        disp_info2("Throttle: " + round(tVal * 100) + "% ").
+        OutMsg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
+        OutInfo("Engine Start Sequence").
+        OutInfo2("Throttle: " + round(tVal * 100) + "% ").
         set tVal to tVal + 0.0275.
         wait 0.025.
     }
 }
 
 // Drops umbilicals and retracts swing arms
-global function launch_pad_arms_retract
+global function LaunchArmRetract
 {
     local animateMod to list().  // Main list
     
@@ -125,20 +128,27 @@ global function launch_pad_arms_retract
         {
             if m:part:name:contains("umbilical")
             {
-                util_do_event(m, "drop umbilical").
+                if not DoEvent(m, "drop umbilical")
+                {
+                    DoEvent(m, "retract arm").
+                }
             }
             else if m:part:name:contains("swingarm")
             {
-                if m:hasEvent("toggle") util_do_event(m, "toggle").
-                if m:hasEvent("retract arm right") util_do_event(m, "retract arm right").
-                if m:hasEvent("retract arm") util_do_event(m, "retract arm").
+                if not DoEvent(m, "toggle").
+                {
+                    if not DoEvent(m, "retract arm right").
+                    {
+                        DoEvent(m, "retract arm").
+                    }
+                }
             }
         }
     }
 }
 
 // Retracts a crew arm
-global function launch_pad_crew_arm_retract
+global function CrewArmRetract
 {
     local animateMod to list().  // Main list
     
@@ -149,21 +159,25 @@ global function launch_pad_crew_arm_retract
         
     if animateMod:length > 0
     {
-        disp_info("Retracting crew arm").
+        OutInfo("Retracting crew arm").
         for m in animateMod
         {
-            if m:hasEvent("retract arm") util_do_event(m, "retract arm").
-            if m:hasEvent("retract crew arm") util_do_event(m, "retract crew arm").
+            if not DoEvent(m, "retract arm").
+            {
+                DoEvent(m, "retract crew arm").
+            }
         }
     }
 }
 
 // Fallback tower
-global function launch_pad_fallback_partial
+global function FallbackRetract
 {
+    parameter state is 0.
+
     local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     local clampEvent to "open upper clamp".
-    local towerEvent to "partial retract tower step 1".
+    local towerEvent to choose "full retract tower step 2" if state = 2 else "partial retract tower step 1".
 
     if animateMod:length > 0 
     {
@@ -171,34 +185,16 @@ global function launch_pad_fallback_partial
         {
             if m:hasEvent(clampEvent) 
             {
-                util_do_event(m, clampEvent).
+                DoEvent(m, clampEvent).
                 wait until m:getField("status") = "Locked".
             }
-            else if m:hasEvent(towerEvent) util_do_event(m, towerEvent).
-        }
-    }
-}
-
-global function launch_pad_fallback_full
-{
-    local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
-    local towerEvent to "full retract tower step 2".
-
-    if animateMod:length > 0 
-    {
-        for m in animateMod
-        {
-            if m:hasEvent(towerEvent) 
-            {
-                util_do_event(m, towerEvent).
-                break.
-            }
+            else if m:hasEvent(towerEvent) DoEvent(m, towerEvent).
         }
     }
 }
 
 // Toggles launchpad generator
-global function launch_pad_gen
+global function LaunchPadGen
 {
     parameter powerOn.
 
@@ -207,19 +203,19 @@ global function launch_pad_gen
     {
         if powerOn 
         {
-            disp_info("Vehicle on external power").
-            util_do_event(g, "activate generator").
+            OutInfo("Vehicle on external power").
+            DoEvent(g, "activate generator").
         }
         else 
         {
-            disp_info("Vehicle on internal power").
-            util_do_event(g, "shutdown generator").
+            OutInfo("Vehicle on internal power").
+            DoEvent(g, "shutdown generator").
         }
     }
 }
 
 // Hold downs retract
-global function launch_pad_holdowns_retract
+global function HolddownRetract
 {
     local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     if animateMod:length > 0
@@ -228,24 +224,24 @@ global function launch_pad_holdowns_retract
         {
             if m:part:name:contains("hold")
             {
-                util_do_event(m, "retract arm").
+                DoEvent(m, "retract arm").
             }
             else if m:part:name:contains("SaturnLauncherTSM")
             {
-                util_do_event(m, "retract arm").   
+                DoEvent(m, "retract arm").   
             }
         }
     }
 }
 
 // ROFI sparklers
-global function launch_pad_rofi
+global function PadROFI
 {
     local rofiList to ship:partsNamed("AM_MLP_GeneralROFI").
 
     if rofiList:length > 0 
     {
-        disp_info("Igniting ROFI system").
+        OutInfo("Igniting ROFI system").
         for r in rofiList 
         {
             r:activate.
