@@ -2,8 +2,8 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtLaunchLAN to ship:orbit:lan + 5,
-          tgtInc to 0.
+parameter tgtInc to 0,
+          tgtLaunchLAN to ship:orbit:lan + 5.
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/nav").

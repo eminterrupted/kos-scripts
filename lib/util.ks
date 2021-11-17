@@ -247,6 +247,39 @@ global function GetECDraw
     return false.
 }
 
+global function CheckMsg
+{
+    local msgList to list().
+    if not core:messages:empty
+    {
+        wait until core:messages:length >= 2.
+        local msgComplete to false.
+        until msgComplete
+        {
+            local sender to core:messages:pop():content.
+            local msgVal to core:messages:pop().
+            local msgTime to msgVal:receivedAt.
+            msgList:add(msgTime).
+            msgList:add(sender).
+            msgList:add(msgVal:content).
+            set msgComplete to true.
+        }
+    }
+    return msgList.
+}
+
+global function SendMsg
+{
+    parameter sendTo, 
+              msgData.
+
+    if sendTo = "root" set sendTo to ship:rootPart:tag.
+    local cx to processor(sendTo):connection.
+
+    cx:sendMessage(core:part:tag). 
+    cx:sendMessage(msgData).
+}
+
 // Checks if a value is above/below the range bounds given
 global function CheckValRange
 {
@@ -271,7 +304,7 @@ global function CheckValDeviation
 
 global function CheckInputChar
 {
-    parameter checkChar to "0".
+    parameter checkChar.
     
     if terminal:input:hasChar
     {
@@ -507,15 +540,17 @@ global function InitWarp
 
     set tStamp to tStamp - buffer.
     if time:seconds <= tStamp
-    {   
-        ag10 off.
-        OutHUD("Press 0 to warp to " + str).
-        on ag10 
+    {
+        when CheckInputChar(terminal:input:enter) then
         {
             warpTo(tStamp).
             wait until kuniverse:timewarp:issettled.
-            ag10 off.
         }
+        OutHUD("Press Enter in terminal to warp to " + str).
+    }
+    else
+    {
+        OutHUD("Warp not available, too close to timestamp", 1).
     }
 }
 
@@ -526,14 +561,14 @@ global function WarpToAlt
     
     local dir to choose "down" if ship:altitude > tgtAlt else "up".
 
-    if dir = "down" 
+    if dir = "down"
     {
         if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.05 set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.20 set warp to 2.
-        else if ship:altitude <= tgtAlt * 1.35 set warp to 3.
-        else if ship:altitude <= tgtAlt * 3 set warp to 4.
-        else if ship:altitude <= tgtAlt * 5 set warp to 5.
+        else if ship:altitude <= tgtAlt * 1.25 set warp to 1.
+        else if ship:altitude <= tgtAlt * 2 set warp to 2.
+        else if ship:altitude <= tgtAlt * 3 set warp to 3.
+        else if ship:altitude <= tgtAlt * 5 set warp to 4.
+        else if ship:altitude <= tgtAlt * 10 set warp to 5.
         else if ship:altitude <= tgtAlt * 20 set warp to 6.
         else set warp to 7.
     }

@@ -74,10 +74,10 @@ local sepList to list(
 // #region
 
     // GetEngines :: ([<string>]) -> <list>Engines
-    // Returns engines by state (all, active)
+    // Returns engines by state (any, active)
     global function GetEngines
     {
-        parameter engState is "all".
+        parameter engState is "any", includeSep is true.
 
         local engList to list().
         local engs to list().
@@ -87,10 +87,44 @@ local sepList to list(
         {
             for e in engs
             {
-                if e:ignition and not e:flameout engList:add(e).
+                if includeSep
+                {
+                    if e:ignition and not e:flameout engList:add(e).
+                }
+                else if not sepList:contains(e) or e:tag = ""
+                {
+                    if e:ignition and not e:flameout engList:add(e).
+                }
             }
         }
-        else return engs.
+        else if engState = "off"
+        {
+            for e in engs
+            {
+                if includeSep
+                {
+                    if not e:ignition engList:add(e).
+                }
+                else if not sepList:contains(e) or e:tag = ""
+                {
+                    if not e:ignition engList:add(e).
+                }
+            }
+        }
+        else 
+        {
+            if not includeSep
+            {
+                for e in engs
+                {
+                    if not sepList:contains(e) or e:tag = ""
+                    {
+                        engList:add(e).
+                    }
+                }
+            }
+            else return engs.
+        }
 
         return engList.
     }
@@ -208,16 +242,23 @@ local sepList to list(
 
         local relThr to 0.
         local totThr to 0.
-
+        local stg to 0.
         for e in engList
         {
-            set totThr to totThr + e:availableThrust.
-            set relThr to relThr + (e:availableThrust / e:isp).
+            set stg to e:stage.
+            set totThr to totThr + e:possibleThrust.
+            set relThr to relThr + (e:possibleThrust / e:visp).
         }
 
-        if totThr = 0 
+        // clrDisp(30).
+        // print "GetTotalIsp                    " at (2, 30).
+        // print "stg: " + stg.
+        // print "totThr: " + totThr at (2, 31).
+        // print "relThr: " + relThr at (2, 32).
+        //Breakpoint().
+        if totThr = 0
         {
-            return 0.
+            return 0.001.
         }
         else
         {
@@ -247,7 +288,7 @@ local sepList to list(
         when ship:availablethrust <= 0.01 and throttle > 0 then
         {
             OutInfo("AutoStage Mode").
-            wait 0.25.
+            wait 0.50.
             until stage:ready
             {
                 wait 0.01.

@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter lp to readJson("1:/lp.json").
+parameter lp to list().
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/launch").
@@ -13,8 +13,10 @@ runOncePath("0:/kslib/lib_l_az_calc").
 DispMain(scriptPath()).
 
 // Vars
-local azCalcObj to lp["azCalcObj"].
-local tgtPe to lp["tgtPe"].
+if lp:length = 0 set lp to readJson("1:/lp.json").
+
+local tgtPe to lp[0].
+local azCalcObj to lp[4].
 local deployPayload to true.
 
 local burnBeforeApoSecs to 30.
@@ -67,7 +69,12 @@ until ship:periapsis >= tgtPe * 0.975 or (stage:number = 1 and ship:availablethr
 set tVal to 0.
 
 OutMsg("Circularization phase complete").
-wait 1.
+local ts to time:seconds + 5.
+until time:seconds > ts 
+{
+    wait 5.
+    DispTelemetry().
+}
 
 // Payload deployment
 if deployPayload 

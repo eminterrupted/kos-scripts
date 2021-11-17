@@ -3,7 +3,7 @@
 //-- Dependencies --//
 
 //-- Variables --//
-local line to 0.
+local line to 10.
 
 //-- Functions --//
 
@@ -17,11 +17,11 @@ global function clr
 
 global function clrDisp
 {
-    set line to 10.
-    until line = terminal:height - 1
+    parameter clrLine to 10.
+    until clrLine = terminal:height - 1
     {
-        clr(line).
-        set line to line + 1.
+        clr(clrLine).
+        set clrLine to clrLine + 1.
     }
 }
 
@@ -168,11 +168,30 @@ global function OutMsg
 global function OutTee
 {
     parameter str is "",
+              pos is 0,
               errLvl is 0,
               screenTime is 15.
 
-    OutMsg(str).
+    if pos = 0 OutMsg(str).
+    else if pos = 1 OutInfo(str).
+    else if pos = 2 OutInfo2(str).
     OutHUD(str, errLvl, screenTime).
+}
+
+global function OutWait
+{
+    parameter str, 
+              waitTime is 1.
+
+    local charIdx to 0.
+    local waitChar to list("", ".", "..", "...", "...").
+    local ts to time:seconds + waitTime.
+    until time:seconds >= ts
+    {
+        OutMsg(str + waitChar[charIdx]).
+        set charIdx to choose 0 if charIdx = waitChar:length - 1 else charIdx + 1.
+        wait 0.20.
+    }
 }
 
 // Sets up the terminal
@@ -213,13 +232,13 @@ global function DispLaunchPlan
     print "LAUNCH PLAN OVERVIEW" at (0, line).
     print "--------------------" at (0, cr()).
     cr().
-    print "APOAPSIS            : " + launchPlan:tgtAp at (0, cr()).
-    print "PERIAPSIS           : " + launchPlan:tgtPe at (0, cr()).
+    print "PERIAPSIS           : " + launchPlan[0] at (0, cr()).
+    print "APOAPSIS            : " + launchPlan[1] at (0, cr()).
     cr().
-    print "INCLINATION         : " + launchPlan:tgtInc at (0, cr()).
-    print "LAUNCH LAN          : " + launchPlan:tgtLAN at (0, cr()).
+    print "INCLINATION         : " + launchPlan[2] at (0, cr()).
+    print "LAUNCH LAN          : " + launchPlan[3] at (0, cr()).
     cr().
-    print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
+    //print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
 }
 
 global function DispLaunchWindow
@@ -246,11 +265,11 @@ global function DispMain
 {
     parameter plan is scriptPath():name,
               showTerminal is true.
-    set line to 1.
+
     if showTerminal dispTerm().
 
-    print "Mission Controller v2.0.1" at (0, line).
-    print "=========================" at (0, cr()).
+    print "Mission Controller v2.0.1" at (0, 0).
+    print "=========================" at (0, 1).
     print "MISSION : " + ship:name    at (0, 3).
     print "PLAN    : " + plan         at (0, 4).
 }
@@ -415,10 +434,9 @@ global function DispTelemetry
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
     print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, cr()).
     cr().
-    if body:atm:exists and ship:altitude <= 85000
+    if body:atm:exists and ship:altitude < body:atm:height
     {
         print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, cr()).
-        print "PRESSURE (ATM)   : " + round(body:atm:altitudePressure(ship:altitude), 7) + "   " at (0, cr()).
         print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, cr()).
         print "Q                : " + round(ship:q, 7) + "     " at (0, cr()).
     }

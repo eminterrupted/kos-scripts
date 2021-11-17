@@ -1,48 +1,112 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtPe to 750000,
-          tgtAp to 750000,
-          tgtInc to 0,
-          tgtLAN to 0.
+parameter lp to list().
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/launch").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/kslib/lib_l_az_calc.ks").
+runOncePath("0:/kslib/lib_navball").
 
 DispMain(scriptPath()).
 
 // Vars
+// Launch params
+local tgtPe     to 1250000.
+local tgtAp     to 1250000.
+local tgtInc    to 86.
+local tgtLAN    to -1.
+
+// If the launch plan was passed in via param, override manual values
+if lp:length > 0
+{
+    set tgtPe to lp[0].
+    set tgtAp to lp[1].
+    set tgtInc to lp[2].
+    set tgtLAN to lp[3].
+}
+else 
+{
+    set lp to list(tgtPe, tgtAp, tgtInc, tgtLAN).
+}
+local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN).
+
+// Turn params
 local altStartTurn to 750.
 local altGravTurn  to 50000.
 local spdStartTurn to 75.
 
+// Boosters
 local boosterLex to lex().
 local hasBoosters to false.
 
+// Controls
 local rVal to 0.
-local sVal to heading(0, 90, 0).
+local sVal to ship:facing.
 local tVal to 0.
+OutInfo2("Launch Heading: " + compass_for(ship, ship:facing)).
+
+// Core tag
+local cTag to core:tag.
+local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1].
+// Optional second core
+local core2 to "".
 
 // Begin  
 LaunchPadGen(true).
 lock steering to sVal. 
-ag10 off.
 
-// Wait for specific LAN goes here
-local ts to time:seconds.
+DispLaunchPlan(lpCache).
+
+// Write tgtPe to the local drive. If write fails, iterate through volumes. If no other volumes, write to archive.
+local volIdx to 1. 
 until false
 {
-    if CheckInputChar(terminal:input:enter) break.
-    else if time:seconds >= ts
+    writeJson(list(tgtPe), volIdx + ":/lp.json").
+    if exists(volIdx + ":/lp.json") 
     {
-        OutTee("Press Enter in terminal to launch", 0, 2.5).
-        set ts to time:seconds + 5.
+        break.
     }
-    wait 0.05.
+    else if volIdx = ship:modulesNamed("kOSProcessor"):length 
+    {
+        writeJson(list(tgtPe), "0:/data/lp.json").
+        break.
+    }
+    else
+    {
+        set volIdx to volIdx + 1.
+    }
 }
+
+// Wait for specific LAN goes here
+if tgtLAN > -1
+{
+    runPath("0:/util/launchIntoLAN", tgtInc, tgtLAN).
+}
+else
+{
+    local ts to time:seconds.
+    until false
+    {
+        if CheckInputChar(terminal:input:enter) break.
+        local msgs to CheckMsg().
+        if msgs:contains("launchCommit") 
+        {
+            set core2 to msgs[1].
+            break.
+        }
+        else if time:seconds >= ts
+        {
+            OutTee("Press Enter in terminal to launch", 0, 2.5).
+            set ts to time:seconds + 5.
+        }
+        wait 0.05.
+    }
+}
+clearScreen.
+DispMain(scriptPath()).
 
 // Booster check
 for p in ship:parts
@@ -62,7 +126,7 @@ for p in ship:parts
 }
 
 // Arm staging
-ArmAutoStaging(1).
+ArmAutoStaging(stageLimit).
 
 if hasBoosters
 {
@@ -72,16 +136,17 @@ if hasBoosters
         {
             for dc in boosterLex[b]
             {
-                DoEvent(dc:getModule("ModuleDecouple"), "decouple").
+                for sep in dc:partsDubbedPattern("sep") sep:activate.
+                local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
             }
         }
     }
 }
 
-// Calculate AZ here, write to disk for circularization
+// Calculate AZ here, write to disk for circularization. 
+// We will write this to disk along with tgtPe and boost stage at launch
 local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
-local lpCache to lex("tgtPe", tgtPe, "azCalcObj", azCalcObj).
-writeJson(lpCache, "1:/lp.json").
 
 // Countdown to launch
 LaunchCountdown(10).
@@ -91,10 +156,13 @@ set tVal to 1.
 lock throttle to tVal.
 HolddownRetract().
 if missionTime <= 0.01 stage.  // Release launch clamps at T-0.
-ag10 off.   // Reset ag10 (is true to initiate launch)
+if core2 <> "" 
+{
+    SendMsg(core2, "CountdownComplete").
+}.    // A flag used for other scripts to denote that launch has occured
+
 OutInfo().
 OutInfo2().
-
 
 OutMsg("Vertical Ascent").
 until ship:altitude >= 150

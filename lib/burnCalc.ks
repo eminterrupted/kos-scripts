@@ -43,12 +43,12 @@
 
     // BurnDur :: (<scalar>) -> <list>scalar [Full, Half]
     // Returns the time to burn a given dV, including the halfway burn dur for burn start timing
-    global function BurnDur
+    global function CalcBurnDur
     {
         parameter dv.
 
         local stgObj to BurnStagesUsed(dv).
-        //print stgObj.
+        
         local durObj to BurnDurStage(stgObj).
         
         return list(durObj["Full"], durObj["Half"]).
@@ -88,6 +88,7 @@
             }
         }
 
+        //print burnDurObj at (2, 25).
         return burnDurObj.
     }
 
@@ -138,6 +139,7 @@
             if breakFlag break.
         }
 
+        //print lex("full", dvFullObj, "half", dvHalfObj) at (2, 23).
         return lex("Full", dvFullObj, "Half", dvHalfObj).
     }
 //#endregion
@@ -170,12 +172,15 @@
     {
         parameter stg.
 
-        // print "AvailStageDV".
         local stgMass to StageMass(stg).
-        // print "stgMass: " + stgMass.
         local exhVel to GetExhVel(GetEnginesByStage(stg)).
-        // print "exhVel: " + exhVel.
-
+        
+        //clrDisp(30).
+        //print "AvailStageDV               " at (2, 30).
+        //print "stg : " + stg at (2, 31).
+        //print "stgMass: " + stgMass at (2, 32).
+        //print "exhVel: " + exhVel at (2, 33).
+        //Breakpoint().
         return exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
     }
 //#endregion
