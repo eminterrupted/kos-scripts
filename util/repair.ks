@@ -3,7 +3,7 @@ clearScreen.
 
 parameter toggleHighlight is false.
 
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/util").
 
 print "Running repair program".
 print "----------------------".
@@ -26,7 +26,7 @@ for m in ship:modulesNamed("ModuleUPFMEvents")
         set partCount to partCount + 1.
         print "Failed part found: " + m:part:title.
         print "Attempting to repair part".
-        util_do_event(m, "repair").
+        DoEvent(m, "repair").
         if m:hasEvent("repair") 
         {
             set failCount to failCount + 1.
@@ -40,7 +40,7 @@ for m in ship:modulesNamed("ModuleUPFMEvents")
             log ship:name + ",SUCCESS," + m:part:uid + "," + m:part:name + "," + m:part:title to repairLog.
         }
         print " ".
-        if toggleHighlight util_do_event(m, "toggle failure highlight").
+        if toggleHighlight DoEvent(m, "toggle failure highlight").
     }
 }
 

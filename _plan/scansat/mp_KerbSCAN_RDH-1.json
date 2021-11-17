@@ -1,0 +1,18 @@
+{
+    "items": [
+        {
+            "value": "mission/scansat",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": "pro-body",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}

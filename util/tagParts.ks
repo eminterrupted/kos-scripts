@@ -22,16 +22,16 @@ from { local i to partIdx.} until i >= parts:length step {set i to i + 1.} do {
         clearScreen.
     }
     
-    print "----------------------------------------------" at (0, cr()).
+    print "----------------------------------------------" at (0, crs()).
     set p to parts[i].
     set partIdx to i.
     set preTag to p:tag.
     set hl to highlight(p, cyan).
-    print "Part Index: " + partIdx + "/" + (parts:length - 1) at (0, cr()).
-    print "Part Name : " + p:name at (0, cr()).
-    print "Part Tag  : " + preTag at (0, cr()).
-    cr().
-    print "Press Enter to rename, Backspace to skip, or Home for facing vector" at (0, cr()).
+    print "Part Index: " + partIdx + "/" + (parts:length - 1) at (0, crs()).
+    print "Part Name : " + p:name at (0, crs()).
+    print "Part Tag  : " + preTag at (0, crs()).
+    crs().
+    print "Press Enter to rename, Backspace to skip, or Home for facing vector" at (0, crs()).
     local cont to false.
     until cont
     {
@@ -46,7 +46,7 @@ from { local i to partIdx.} until i >= parts:length step {set i to i + 1.} do {
             {
                 local tagDone to false.
                 set postTag to preTag.
-                print "Enter new part tag: " + postTag at (0, cr()).
+                print "Enter new part tag: " + postTag at (0, crs()).
                 until tagDone
                 {
                     if terminal:input:hasChar
@@ -72,8 +72,8 @@ from { local i to partIdx.} until i >= parts:length step {set i to i + 1.} do {
                         print postTag + " " at (20, line).
                     }
                 }
-                cr(). 
-                print "Part " + partIdx + " tag changed from [" + preTag + "] to [" + postTag + "]" at (0, cr()).
+                crs(). 
+                print "Part " + partIdx + " tag changed from [" + preTag + "] to [" + postTag + "]" at (0, crs()).
                 wait 0.25.
             }
             else if tChar = terminal:input:homeCursor
@@ -84,14 +84,14 @@ from { local i to partIdx.} until i >= parts:length step {set i to i + 1.} do {
     }
     set hl:enabled to false.
     clearVecDraws().
-    print "----------------------------------------------" at (0, cr()).
-    cr().
+    print "----------------------------------------------" at (0, crs()).
+    crs().
 }
 
 unset partIdx.
-print "Tagging Complete" at (0, cr()).
+print "Tagging Complete" at (0, crs()).
 
-local function cr 
+local function crs 
 {
     set line to line + 1.
     return line.

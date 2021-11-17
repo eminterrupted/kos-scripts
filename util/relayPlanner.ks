@@ -4,127 +4,205 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
+parameter tgtOrbitPhase is 90.
 
-local upload to true.
-local launchPhase to 87.172.
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/util").
+runOncePath("0:/lib/disp").
 
-local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 2, 2).
+DispMain(scriptPath(), false).
+
+local core0 to "PCX0".
+local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 1, 1).
+local vLn to 10.
+
 local arcLog to "0:/log/relay_planner_" + shipNameTrimmed + ".log".
 local logPath to "1:/log/relay_planner_" + shipNameTrimmed + ".log".
+local phasePath to "0:/data/relayPlanner/launchPhase_" + shipNameTrimmed + ".json".
+
+local phaseObj to lex("TTO", 0, "Iterations", 0).
+if exists(phasePath) set phaseObj to readJson(phasePath).
+
+local launchPhase to "unk".
+if phaseObj:hasKey("Phase")
+{
+    if phaseObj["Phase"]:hasKey(tgtOrbitPhase) 
+    {
+        set launchPhase to phaseObj["Phase"][tgtOrbitPhase]["LaunchWindow"].
+    }
+    else 
+    {
+        set phaseObj["Phase"][tgtOrbitPhase] to lex("Iterations", 0).
+    }
+}
+else 
+{
+    set phaseObj["Phase"] to lex(tgtOrbitPhase, lex("Iterations", 0)).
+}
+
+if launchPhase = "unk" set launchPhase to tgtOrbitPhase.
+local lastIteration to phaseObj["Iterations"].
+local lastPhaseIteration to phaseObj["Phase"][tgtOrbitPhase]["Iterations"].
+local thisIteration to lastIteration + 1.
+local thisPhaseIteration to lastPhaseIteration + 1.
+
 if exists(logPath) deletePath(logPath).
 
-log "Relay Type: " + shipNameTrimmed to logPath.
-log " " to logPath.
-
-print "Waiting for target vessel selection".
+OutMsg("Waiting for target vessel selection").
 until hasTarget
 {
     wait 0.1.
 }
-print "Target selected: " + target.
+OutMsg("Target selected: " + target).
+// local tgtPe to round(target:orbit:periapsis).
+// local tgtAp to round(target:orbit:apoapsis).
+// local tgtInc to round(target:orbit:inclination, 1).
+// local tgtLAN to round(target:orbit:LAN, 1).
+// writeJson(list(tgtPe, tgtAp, tgtInc, tgtLAN), "2:/lp.json").
+// OutInfo("Plan derived, rebooting LVDC").
+// for m in ship:modulesNamed("kOSProcessor") 
+// {
+//     if m:part:uid <> core:part:uid m:activate.
+// }
+wait 1.
 
-print "Waiting for launch".
-print " ".
+OutMsg("Waiting for launch. Press 0 in terminal to warp").
+lock tgtPhase to LngToPhaseAng(target).
+print "Desired phase to target in orbit: " + tgtOrbitPhase at (0, cr()).
+print "Desired phase to target at launch: " + launchPhase at (0, cr()).
+set vLn to cr().
 
-lock tgtPhase to nav_lng_phase_angle(target).
-print "Desired phase angle at launch: " + launchPhase at (0, 8).
-until tgtPhase >= mod((launchPhase + 360) - 2.5, 360) and tgtPhase < launchPhase 
+until tgtPhase >= mod((launchPhase + 360) - 12.5, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
 {
-    print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
-    print "In the first loop" at (0, 11).
+    if CheckInputChar("0") set warp to 4.
+    print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
     wait 0.01.
 }
+if warp > 3 set warp to 3.
 
-if warp > 0 set warp to 0.
-print "                          " at (0, 11).
-print "Approaching launch phase" at (0, 6).
-
-until false
+until tgtPhase >= mod((launchPhase + 360) - 3.25, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
 {
-    if tgtPhase >= launchPhase - 0.35 break.
-    print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
+    print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
     wait 0.01.
 }
-ag10 on.
-if warp > 0 set warp to 0.
-print "Initiating launch sequence" at (0, 6).
-until ag8
+if warp > 1 set warp to 1.
+OutMsg("Approach Launch Phase").
+
+until tgtPhase >= launchPhase or ship:status <> "PRELAUNCH"
 {
-  print "Target phase angle: " + round(tgtPhase, 3) + "   " at (0, 9).
+    print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
+    wait 0.01.
+}
+if warp > 0 set warp to 0.
+if ship:status = "PRELAUNCH"
+{
+    OutMsg("Initiating launch countdown").
+    SendMsg("root", "launchCommit").
+}
+
+until CheckMsg():length > 0
+{
+  print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
   wait 0.01.
 }
 
 local launchTime    to time:seconds.
-local myLaunchLng   to nav_lng_to_degrees(ship:longitude).
-local tgtLaunchLng  to nav_lng_to_degrees(target:longitude).
+local myLaunchLng   to LngToDegress(ship:longitude).
+local tgtLaunchLng  to LngToDegress(target:longitude).
 local phaseAtLiftoff to mod(tgtLaunchLng - myLaunchLng + 360, 360).
+local launchErr     to mod(phaseAtLiftoff - launchPhase + 360, 360).
 
-clearScreen.
+print "                                                           " at (0, vLn).
+set vLn to cr().
 
-log "Liftoff timestamp: " + launchTime to logPath.
-log "Vessel launch longitude: " + myLaunchLng to logPath.
-log "Target launch longitude: " + tgtLaunchLng to logPath.
-log "Phase angle at liftoff : " + phaseAtLiftoff to logPath.
-log " " to logPath.
+teeLog("Iteration count        : " + thisIteration).
+teeLog("Phase interation count : " + thisPhaseIteration).
+teeLog("Liftoff timestamp      : " + launchTime).
+teeLog("Vessel launch longitude: " + myLaunchLng).
+teeLog("Target launch longitude: " + tgtLaunchLng).
+teeLog("Phase angle at liftoff : " + phaseAtLiftoff).
+teeLog("Liftoff error          : " + launchErr).
+teeLog(" ").
+wait 1.
 
-print "Liftoff at " + time:full.
-print "Vessel longitude at liftoff : " + myLaunchLng.
-print "Target longitude at liftoff : " + tgtLaunchLng.
-print "Phase angle at liftoff      : " + phaseAtLiftoff.
-print " ".
-
-until ag9
+OutInfo("Awaiting Orbital Insertion").
+until CheckMsg():length > 0 or ag9
 {
+    OutMsg("MET: " + round(missionTime, 1)).
+    OutInfo("Target phase angle: " + round(tgtPhase, 3)).
     wait 0.01.
 }
 
 local arrivalTime   to time:seconds.
-local myArrivalLng  to nav_lng_to_degrees(ship:longitude).
-local tgtArrivalLng to nav_lng_to_degrees(target:longitude).
+local myArrivalLng  to LngToDegress(ship:longitude).
+local tgtArrivalLng to LngToDegress(target:longitude).
 local myLngDiff     to myArrivalLng - myLaunchLng.
 local tgtLngDiff    to tgtArrivalLng - tgtLaunchLng.
 local phaseAtArrival to mod(tgtArrivalLng - myArrivalLng + 360, 360).
 
-print "Arrival on orbit at " + time:full.
-print "Vessel longitude at arrival : " + myArrivalLng.
-print "Target longitude at arrival : " + tgtArrivalLng.
-print " ".
-print "Time eclipsed: " + (arrivalTime - launchTime).
-print "Vessel longitude covered: " + myLngDiff.
-print "Target longitude covered: " + tgtLngDiff.
-print "Phase angle at arrival: " + phaseAtArrival.
-print " ".
-print "Phase angle for launch: " + (90 - (phaseAtArrival - phaseAtLiftoff)).
+local tgtLaunchPhase to (tgtOrbitPhase - (phaseAtArrival - phaseAtLiftoff)) - launchErr.
+local launchDur to round((arrivalTime - launchTime), 5).
 
-log "Arrival timestamp: " + arrivalTime to logPath.
-log "Vessel arrival longitude: " + myArrivalLng to logPath.
-log "Target arrival longitude: " + tgtArrivalLng to logPath.
-log " " to logPath.
-log "Time eclipsed: " + (arrivalTime - launchTime) to logPath.
-log "Vessel longitude covered: " + myLngDiff to logPath.
-log "Target longitude covered: " + tgtLngDiff to logPath.
-log "Phase angle at arrival  : " + phaseAtArrival to logPath.
-log " " to logPath.
-log "Phase angle for launch  : " + (90 - (phaseAtArrival - phaseAtLiftoff)) to logPath.
-print "Results logged to: " + logPath.
+// Average and write the launch phase window and duration values against the existing ones
+set phaseObj["TTO"] to round(((phaseObj["TTO"] * lastIteration) + (arrivalTime - launchTime) / (thisIteration)), 3).
+set phaseObj["Iterations"] to thisIteration.
+set phaseObj["Phase"][tgtOrbitPhase]["LaunchWindow"] to choose round(((phaseObj["Phase"][tgtOrbitPhase]["LaunchWindow"] * lastPhaseIteration) + tgtLaunchPhase) / (thisPhaseIteration), 5) if phaseObj["Phase"][tgtOrbitPhase]:hasKey("LaunchWindow") else round(tgtLaunchPhase, 5).
+set phaseObj["Phase"][tgtOrbitPhase]["Iterations"] to thisPhaseIteration.
 
-print " ".
+local launchSpanStr to timespan(launchDur):hour + "h " + timespan(launchDur):minute + "m " + round(timespan(launchDur):second, 3) + "s".
 
-if upload 
+teeLog("Arrival on orbit at MET:" + launchSpanStr).
+teeLog(" ").
+teeLog("Time to orbit: " + round(launchDur, 3)).
+teeLog("Vessel longitude covered: " + myLngDiff).
+teeLog("Target longitude covered: " + tgtLngDiff).
+teeLog(" ").
+teeLog("Vessel longitude at arrival : " + myArrivalLng).
+teeLog("Target longitude at arrival : " + tgtArrivalLng).
+teeLog("Phase angle at arrival: " + phaseAtArrival).
+teeLog(" ").
+teeLog("Calculated phase angle at launch: " + tgtLaunchPhase).
+teeLog(" ").
+teeLog("New weighted averages for Phase Window [" + tgtOrbitPhase + "]:").
+teeLog("Time to orbit: " + phaseObj["TTO"]).
+teeLog("Phase angle at launch: " + phaseObj["Phase"][tgtOrbitPhase]["LaunchWindow"]).
+
+outMsg("Results logged to " + logPath).
+wait 2.
+
+OutMsg("Uploading log to archive").
+OutInfo("Waiting for KSC connection to upload log").
+wait until addons:rt:hasKscConnection(ship).
+OutInfo("Connection established").
+
+OutMsg("Uploading log to " + arcLog).
+copyPath(logPath, arcLog).
+wait 1.
+
+OutInfo("Writing PhaseObj to '" + phasePath + "'").
+writeJson(phaseObj, phasePath).
+
+OutInfo().
+OutMsg("RelayPlanner complete!").
+
+// ag9 off.
+// OutMsg("Press enter to deploy payload").
+// terminal:input:clear.
+// until false
+// {
+//     if CheckInputChar(terminal:input:enter) break.
+//     wait 0.05.
+// }
+// ag9 on.
+
+local function teeLog 
 {
-    print "Waiting for KSC connection to upload log...".
-    wait until addons:rt:hasKscConnection(ship).
-    print "Connection established".
+    parameter str, lvl is 0.
 
-    copyPath(logPath, arcLog).
-    if exists(arcLog) 
-    {
-        print "Log upload complete".
-    }
-    else 
-    {
-        print "Log upload failed! Please try manually".
-    }
+    local lvlStr to "LOG".
+    if lvl = 1 set lvlStr to "WRN".
+    else if lvl = 2 set lvlStr to "ERR".
+
+    log "[" + missionTime + "][" + lvlStr + "] " + str to logPath.
+    print str at (0, cr()).
 }

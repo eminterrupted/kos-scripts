@@ -1,131 +1,148 @@
 @lazyGlobal off.
 clearScreen.
 
-// Easy reentry near KSC
+parameter params is list().
 
-//-- Dependencies --//
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/vessel").
+runOncePath("0:/lib/util").
 
-disp_main(scriptPath()).
+DispMain(scriptPath()).
 
-//-- Variables --//
-local parachutes to ship:modulesNamed("RealChuteModule").
-local kscWindow  to list(150, 152.5).
-local reentryAlt to 40000.
-local shipLng    to 0.
+local parachutes to ship:modulesnamed("RealChuteModule").
+local reentryTgt to 42500.
+local retroFire to false.
+local retroStage to 2.
+local spinStab to false.
 local stagingAlt to ship:body:atm:height + 50000.
-local sVal       to lookDirUp(body:position, sun:position).
-local testPatch  to ship:orbit.
-local tVal       to 0.
+local startAlt to stagingAlt + 25000.
 
-// Locks
+local sVal to ship:facing.
 lock steering to sVal.
+
+local tVal to 0.
 lock throttle to tVal.
 
-
-// Main
-until false
+if params:length > 0 
 {
-    if testPatch:hasNextPatch 
+    set retroFire to params[0].
+    if params:length > 1 set spinStab to params[1].
+    if params:length > 2 set stagingAlt to params[2].
+    if params:length > 3 set retroStage to params[3].
+}
+
+OutMsg("Beginning Reentry Procedure").
+
+if retroFire and ship:periapsis > reentryTgt
+{
+    OutMsg("Aligning retrograde for retro fire").
+    set sVal to ship:retrograde.
+    local ts to time:seconds + 10.
+    until time:seconds > ts
     {
-        if testPatch:nextPatch:body:name = "Kerbin" or testPatch:nextPatch:body:name = "Mun" or testPatch:nextPatch:body:name = "Minmus"
+        DispTelemetry().
+        wait 0.01.
+    }
+    
+    if stage:number > retroStage
+    {
+        OutMsg("Staging for retro fire").
+        until stage:number = 3
         {
-            set testPatch to testPatch:nextpatch.
-        }
-        else
-        {
-            break.
+            if stage:ready stage.
+            wait 0.25.
         }
     }
-    else
+    
+    if spinStab
     {
+        OutMsg("Initiating spin stabilization").
+        unlock steering.
+        set ts to time:seconds + 7.5.
+        until time:seconds > ts 
+        {
+            set ship:control:roll to 0.5.
+            DispTelemetry().
+            wait 0.01.
+        }
+        OutMsg("Spin stabilization complete").
+    }
+
+    OutMsg("Firing retro rockets").
+    set tVal to 1.
+    until stage:number = 2
+    {
+        stage.
+        wait until stage:ready.
+    }
+    until ship:periapsis <= reentryTgt or ship:availableThrust <= 0.1
+    {
+        DispTelemetry().
+    }
+    set tVal to 0.
+    OutMsg("Retro fire complete").
+    wait 1.
+    if spinStab
+    {
+        OutMsg("Stabilizing spin").
+        set ts to time:seconds + 7.5.
+        until time:seconds > ts
+        {
+            set ship:control:roll to -1.
+            DispTelemetry().wait 0.01.
+            set ship:control:neutralize to true.
+        }
+    }
+}
+
+set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+lock steering to sVal.
+
+OutMsg("Waiting until altitude <= " + startAlt).
+local dir to choose "down" if startAlt <= ship:altitude else "up".
+until false
+{
+    if ship:altitude <= startAlt 
+    {
+        break.
+    }
+    else 
+    {
+        OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
+        until ship:altitude <= startAlt 
+        {
+            if CheckInputChar(terminal:input:enter) 
+            {
+                WarpToAlt(startAlt).
+            }
+            set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+            DispTelemetry().
+            wait 0.01. 
+        }
         break.
     }
 }
 
-until ship:body:name = "Kerbin"
-{
-    disp_orbit().
-    wait 0.01.
-}
-
-if testPatch:periapsis >= Kerbin:atm:height
-{
-    disp_msg("Waiting for KSC window or AG10 activation").
-    ag10 off.
-    until (shipLng >= kscWindow[0] - 2.5 and shipLng <= kscWindow[1] + 2.5) or ag10
-    {
-        set shipLng to nav_lng_to_degrees(ship:longitude).
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-        disp_info2("Current longitude: " + round(shipLng, 2)).
-        disp_orbit().
-        wait 0.01.
-    }
-    if warp > 0 set warp to 0.
-    wait until kuniverse:timewarp:issettled.
-
-    disp_msg("In KSC window, beyond warp                ").
-    until (shipLng >= kscWindow[0] and shipLng <= kscWindow[1]) or ag10
-    {
-        set shipLng to nav_lng_to_degrees(ship:longitude).
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_info("Window: " + kscWindow[0] + " - " + kscWindow[1]).
-        disp_info2("Current longitude: " + round(shipLng, 2)).
-        disp_orbit().
-        wait 0.01.
-    }
-    if warp > 0 set warp to 0.
-    wait until kuniverse:timewarp:issettled.
-    disp_info().
-    disp_info2().
-    ag10 off.
-
-    set tVal to 1.
-    disp_msg("Reentry burn").
-    until ship:periapsis <= reentryAlt
-    {
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_orbit().
-    }
-    set tVal to 0.
-}
-
-local startAlt to stagingAlt + 10000.
-disp_msg("Waiting until altitude <= " + startAlt).
-
-ag10 off.
-disp_hud("Activate AG10 to warp to starting altitude").
-on ag10
-{
-    until ship:altitude <= startAlt
-    {
-        util_warp_down_to_alt(startAlt).
-        set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-        disp_telemetry().
-    }
-}
+if warp > 0 set warp to 0.
+wait until kuniverse:timewarp:issettled.
 
 until ship:altitude <= startAlt
 {
     set sVal to lookDirUp(ship:retrograde:vector, sun:position).
-    disp_telemetry().
+    DispTelemetry().
 }
-
 
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 
-disp_msg("Beginning reetry procedure").
+OutMsg("Arming Parachute(s)").
 if parachutes:length > 0 
 {
     if parachutes[0]:name = "RealChuteModule" 
     {
         for c in parachutes 
         {
-            util_do_event(c, "arm parachute").
+            DoEvent(c, "arm parachute").
         }
     }
     else if parachutes[0]:name = "ModuleParachute"
@@ -134,54 +151,66 @@ if parachutes:length > 0
         {
             for c in parachutes
             {
-                util_do_event(c, "deploy chute").
+                DoEvent(c, "deploy chute").
             }
         }
     }
 }
 
 set sVal to body:position.
-disp_msg("Waiting until staging altitude: " + stagingAlt).
+OutMsg("Waiting until staging altitude: " + stagingAlt).
 until ship:altitude <= stagingAlt.
 {
     set sVal to body:position.
-    disp_telemetry().
+    DispTelemetry().
 }
+
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 set sVal to body:position.
 wait 1.
-disp_msg("Staging").
-//set sVal to ship:prograde:vector + r(0, -90, 0).
-until stage:number = 1 
+
+OutMsg("Staging").
+until stage:number <= 1 
 {
     stage.
-    wait 2.5.
+    wait 5.
 }
-disp_msg("Waiting for reentry interface").
+OutMsg("Waiting for reentry interface").
 
 until ship:altitude <= body:atm:height
 {
     set sVal to ship:retrograde.
-    disp_telemetry().
+    DispTelemetry().
 }
-disp_msg("Reentry interface").
+OutMsg("Reentry interface, signal lost").
+for m in ship:modulesNamed("ModuleRTAntenna")
+{
+    DoEvent(m, "Deactivate").
+}
 
 until ship:groundspeed <= 1500
 {
     set sVal to ship:srfRetrograde.
-    disp_telemetry().
+    DispTelemetry().
 }
+for m in ship:modulesNamed("ModuleRTAntenna")
+{
+    DoEvent(m, "Activate").
+}
+OutMsg("Signal reacquired").
+wait 1.
+
 unlock steering.
-disp_msg("Control released").
+OutMsg("Control released").
 
 until alt:radar <= 2500
 {
-    disp_telemetry().
+    DispTelemetry().
 }
-disp_msg("Chute deploy").
+OutMsg("Chute deploy").
 
 until alt:radar <= 5
 {
-    disp_telemetry().
+    DispTelemetry().
 }

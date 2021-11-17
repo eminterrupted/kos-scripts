@@ -6,9 +6,9 @@ clearScreen.
 
 parameter tgtLaunchLAN to 359.5.
 
-runOncePath("0:/lib/lib_disp").
-runOncePath("0:/lib/lib_nav").
-runOncePath("0:/lib/lib_util").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/util").
 
 print "Waiting for launch".
 print " ".
@@ -21,13 +21,13 @@ if hasTarget
     print "Target LAN: " + tgtLaunchLAN.
 }
 
-until util_check_range(ship:orbit:LAN, tgtLaunchLAN - 1, tgtLaunchLAN + 1)
+until CheckValRange(ship:orbit:LAN, tgtLaunchLAN - 1, tgtLaunchLAN + 1)
 {
     print "Current LAN: " + round(ship:orbit:longitudeofascendingnode, 5) + "   " at (0, 9).
     wait 0.01.
 }
 if warp > 0 set warp to 0.
-until util_check_range(ship:orbit:LAN, tgtLaunchLAN, tgtLaunchLAN + (90 - tgtLaunchLAN))
+until CheckValRange(ship:orbit:LAN, tgtLaunchLAN, tgtLaunchLAN + (90 - tgtLaunchLAN))
 {
     print "Current LAN: " + round(ship:orbit:longitudeofascendingnode, 5) + "   " at (0, 9).
     wait 0.01.

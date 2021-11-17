@@ -1,8 +1,7 @@
 // This file is distributed under the terms of the MIT license, (c) the KSLib
 // team
 
-{
-  global enum is lex(
+  global Enum is lex(
     "version", "0.1.1",
     "all", all@,
     "any", any@,
@@ -360,4 +359,3 @@
     
     return cast(r, l:typename).
   }
-}

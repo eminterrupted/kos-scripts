@@ -1,22 +1,30 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/lib_addon_scansat").
+// [0] Direction to lock steering to
+parameter params to list().
 
-set terminal:height to 40.
-set terminal:width  to 60.
-core:doAction("open terminal", true).
+runOncePath("0:/lib/scansat").
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/nav").
+runOncePath("0:/lib/vessel").
+runOncePath("0:/lib/util").
 
-local scanList to ship:partsDubbedPattern("scansat").
-local scanner  to scanList[0].
+DispMain(scriptPath()).
 
-local sVal to lookDirUp(ship:prograde:vector, -body:position).
+local scanner to ship:partsDubbedPattern("scansat")[0].
+
+local sVal to ship:facing.
 lock steering to sVal.
 
-panels on.
-scansat_activate(scanner, true).
+ScansatActivate(scanner).
 
 until false
 {
-    scansat_disp(scanner).
+    if params[0] = "radIn-sun" set sVal to lookDirUp(body:position, sun:position).
+    else if params[0] = "pro-sun" set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    else if params[0] = "pro-body" set sVal to lookDirUp(ship:prograde:vector, -body:position).
+
+    DispScansat(scanner).
+    wait 0.01.
 }

@@ -1,6 +1,5 @@
 local mpPath to path().
 //local volList to list().
-list volumes in volList.
 
 set mpPath to path(core:volume:name + ":/missionPlan.json").
 //if not exists(mpPath) if exists("data_0:/missionPlan.json") set mpPath to path("data_0:/missionPlan.json").

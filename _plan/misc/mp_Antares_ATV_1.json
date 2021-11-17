@@ -1,0 +1,18 @@
+{
+    "items": [
+        {
+            "value": "mission/simpleOrbit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": "pro-up",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}
