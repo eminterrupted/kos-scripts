@@ -17,6 +17,8 @@ local cTag to core:tag:split("|").
 local lp to list().
 local lpPath to "".
 
+global MECO to 0.
+
 local volIdx to 1.
 until false 
 {
@@ -58,7 +60,7 @@ local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis,
 local burnDur   to CalcBurnDur(dv).
 local mnvTime   to time:seconds + eta:apoapsis.
 local burnEta   to mnvTime - burnDur[1].
-local MECO      to burnEta + burnDur[0].
+set MECO      to burnEta + burnDur[0].
 
 OutMsg("Calculation Complete!").
 OutInfo("DV Needed: " + round(dv, 1) + "m/s | Burn Duration: " + round(burnDur[0], 1) + "s").
