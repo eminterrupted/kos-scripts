@@ -10,6 +10,7 @@ runOncePath("0:/lib/util").
 
 DispMain(scriptPath():name).
 
+local doneFlag to false.
 local orbitTime to 0.
 local orientation to "pro-sun".
 
@@ -43,25 +44,34 @@ fuelCells on.
 if orbitTime > 0
 {
     OutTee("Orbiting until " + timestamp(orbitTS):full).
-    InitWarp(OrbitTS, "orbit script termination").
 }
 else
 {
     OutTee("Orbiting indefinitely").
 }
-OutHUD("Press Backspace in terminal to abort").
+OutHUD("Press Enter to warp to orbit timestamp").
+OutHUD("Press End in terminal to abort").
 
-until false
+until doneFlag
 {
-    if CheckInputChar(terminal:input:backspace)
-    {
-        OutMsg("Terminating Orbit").
-        wait 1.
-        break.
-    }
     if orbitTime > 0 and time:seconds >= orbitTS 
     {
-        break.
+        set doneFlag to true.
+    }
+
+    if terminal:input:hasChar
+    {
+        if terminal:input:getChar = terminal:input:endCursor
+        {
+            OutTee("Terminating Orbit").
+            set warp to 0.
+            set doneFlag to true.
+        }
+        else if terminal:input:getChar = terminal:input:enter
+        {
+            OutTee("Warping to orbital timestamp").
+            warpTo(orbitTS).
+        }
     }
 
     if orientation = "sun-pro" 
@@ -84,5 +94,5 @@ until false
         OutInfo("Time remaining: " + tsStr).
     }
     DispOrbit().
-    wait 0.1.
+    wait 0.05.
 }

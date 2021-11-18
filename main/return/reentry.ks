@@ -7,15 +7,16 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
 
-DispMain(scriptPath()).
+DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
-local reentryTgt to 42500.
+local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1].
+local reentryTgt to 45000.
 local retroFire to false.
 local retroStage to 2.
 local spinStab to false.
 local stagingAlt to ship:body:atm:height + 50000.
-local startAlt to stagingAlt + 25000.
+local ts to time:seconds.
 
 local sVal to ship:facing.
 lock steering to sVal.
@@ -30,6 +31,14 @@ if params:length > 0
     if params:length > 2 set stagingAlt to params[2].
     if params:length > 3 set retroStage to params[3].
 }
+local startAlt to stagingAlt + 10000.
+
+OutMsg("Waiting until descent").
+until ship:verticalspeed < 0 
+{
+    DispTelemetry().
+    wait 0.01.
+}
 
 OutMsg("Beginning Reentry Procedure").
 
@@ -37,17 +46,28 @@ if retroFire and ship:periapsis > reentryTgt
 {
     OutMsg("Aligning retrograde for retro fire").
     set sVal to ship:retrograde.
-    local ts to time:seconds + 10.
-    until time:seconds > ts
+    local settleTime to 3.
+    set ts to time:seconds + settleTime.
+    // set steeringManager:pitchts to 0.25.
+    // set steeringManager:yawts to 0.25.
+    // set steeringManager:rollts to 0.25.
+    until time:seconds >= ts
     {
+        if not CheckSteering() 
+        {
+            set ts to time:seconds + settleTime.
+        }
+        
+        OutInfo("Settle time remaining: " + round(settleTime, 2)).
         DispTelemetry().
-        wait 0.01.
+        wait 0.05.
     }
-    
-    if stage:number > retroStage
+    OutInfo().
+
+    if stage:number > payloadStage
     {
         OutMsg("Staging for retro fire").
-        until stage:number = 3
+        until stage:number = payloadStage.
         {
             if stage:ready stage.
             wait 0.25.
@@ -70,7 +90,7 @@ if retroFire and ship:periapsis > reentryTgt
 
     OutMsg("Firing retro rockets").
     set tVal to 1.
-    until stage:number = 2
+    until stage:number = retroStage
     {
         stage.
         wait until stage:ready.
@@ -109,9 +129,14 @@ until false
     else 
     {
         OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
+        local warpFlag to false.
         until ship:altitude <= startAlt 
         {
             if CheckInputChar(terminal:input:enter) 
+            {
+                set warpFlag to true.
+            }
+            if warpFlag 
             {
                 WarpToAlt(startAlt).
             }
@@ -189,7 +214,7 @@ for m in ship:modulesNamed("ModuleRTAntenna")
     DoEvent(m, "Deactivate").
 }
 
-until ship:groundspeed <= 1500
+until ship:groundspeed <= 1500 and ship:altitude <= 30000
 {
     set sVal to ship:srfRetrograde.
     DispTelemetry().

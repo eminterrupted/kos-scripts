@@ -9,6 +9,7 @@ runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
 
 local multiScan to true.
+local orientation to "pro-sun".
 local sciAction to "ideal".
 local scanCov to false.
 local sciList to GetSciModules().
@@ -17,10 +18,11 @@ if params:length > 0
 {
     set sciAction to params[0].
     if params:length > 1 set multiScan to params[1].
+    if params:length > 2 set orientation to params[2].
 }
 
-local rVal to 0.
-local sVal to lookDirUp(ship:prograde:vector, sun:position).
+local rVal to choose 0 if orientation = "pro-sun" else 180.
+local sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
 lock steering to sVal.
 
 ag10 off.
