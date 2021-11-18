@@ -284,9 +284,11 @@ local sepList to list(
     global function ArmAutoStaging
     {
         parameter stopAtStg is 0.
-
+        
         when ship:availablethrust <= 0.01 and throttle > 0 then
         {
+            local startTime to Time:seconds.
+
             OutInfo("AutoStage Mode").
             wait 0.50.
             until stage:ready
@@ -296,6 +298,9 @@ local sepList to list(
             stage.
             wait 0.50.
             OutInfo().
+            local endTime to Time:seconds.
+
+            set MECO to MECO + (endTime - startTime).
             if stage:number > stopAtStg preserve.
         }
     }
