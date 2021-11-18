@@ -51,7 +51,7 @@
         
         local durObj to BurnDurStage(stgObj).
         
-        return list(durObj["Full"], durObj["Half"]).
+        return list(durObj["Full"], durObj["Half"], stgObj).
     }
 
     // BurnDurStage :: (<lexicon>) -> <lexicon>

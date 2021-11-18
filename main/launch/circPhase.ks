@@ -48,6 +48,8 @@ local rVal to 0.
 local sVal to ship:facing.
 local tVal to 0.
 
+local avgStageWaitTime to 1.02.
+
 lock steering to sVal.
 lock throttle to tVal.
 
@@ -58,8 +60,19 @@ ArmAutoStaging(payloadStage + 1).
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
 local burnDur   to CalcBurnDur(dv).
+local fullStageDict to burnDur[2]["Full"].
+
+local totalStages to fullStageDict:keys:length - 1.
+
+local additionalMnvTime to 0.
+
+if (totalStages > 1)
+{
+    set additionalMnvTime to (totalStages * avgStageWaitTime) / 2.
+}
+
 local mnvTime   to time:seconds + eta:apoapsis.
-local burnEta   to mnvTime - burnDur[1].
+local burnEta   to mnvTime - burnDur[1] - additionalMnvTime.
 set MECO      to burnEta + burnDur[0].
 
 OutMsg("Calculation Complete!").
