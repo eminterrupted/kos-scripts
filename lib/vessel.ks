@@ -31,6 +31,37 @@ local sepList to list(
 // *~ Functions ~* //
 // #region
 
+// -- Steering
+// #region
+// GetSteeringDir :: <string> -> <direction>
+// Returns the current vessel direction to align with the provided orientation string
+global function GetSteeringDir
+{
+    parameter orientation.
+
+    if orientation = "pro-sun"
+    {
+        return lookDirUp(ship:prograde:vector, sun:position).
+    }
+    else if orientation = "sun-pro" 
+    {
+        return lookDirUp(sun:position, ship:prograde:vector).
+    }
+    else if orientation = "pro-radOut"
+    {
+        return lookDirUp(ship:prograde:vector, -body:position).
+    }
+    else if orientation = "pro-body"
+    {
+        return lookDirUp(ship:prograde:vector, body:position).
+    }
+    else 
+    {
+        return ship:facing.
+    }
+}
+// #endregion
+
 // -- Resources
 // #region
 

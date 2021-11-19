@@ -1,6 +1,6 @@
 set mp to list(
-    "launch/boostPhase", list(150000, 150000, 0, -1, 180)
-    ,"launch/suborbitalHop", list(180)
+    "launch/boostPhase", list(135000, 135000, 0, -45, 180)
+    ,"launch/suborbitalHop", list("pro-body")
     ,"mission/collectSci", list("collect", false, "pro-body")
     ,"return/reentry", list(true, false, 125000, 2)
 ).
