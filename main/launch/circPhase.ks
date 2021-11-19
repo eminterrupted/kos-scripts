@@ -42,7 +42,7 @@ local tgtPe         to lp[0].
 local autoDeployPayload to choose false if not param[0] = "deploy" else true.
 local payloadStage to choose cTag[1] if cTag:length > 1 else 0.
 
-local rVal to 0.
+local rVal to 0 - ship:facing:roll.
 local sVal to ship:facing.
 local tVal to 0.
 

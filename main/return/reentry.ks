@@ -19,7 +19,8 @@ local stagingAlt to ship:body:atm:height + 50000.
 local ts to time:seconds.
 
 local sVal to ship:facing.
-lock steering to sVal.
+local rVal to 0 - ship:facing:roll.
+lock steering to sVal + r(0, 0, rVal).
 
 local tVal to 0.
 lock throttle to tVal.
@@ -45,12 +46,9 @@ OutMsg("Beginning Reentry Procedure").
 if retroFire and ship:periapsis > reentryTgt
 {
     OutMsg("Aligning retrograde for retro fire").
-    set sVal to ship:retrograde.
+    set sVal to ship:retrograde + r(0, 0, rVal).
     local settleTime to 3.
     set ts to time:seconds + settleTime.
-    // set steeringManager:pitchts to 0.25.
-    // set steeringManager:yawts to 0.25.
-    // set steeringManager:rollts to 0.25.
     until time:seconds >= ts
     {
         if not CheckSteering() 
@@ -115,7 +113,7 @@ if retroFire and ship:periapsis > reentryTgt
     }
 }
 
-set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
 lock steering to sVal.
 
 OutMsg("Waiting until altitude <= " + startAlt).
@@ -153,7 +151,7 @@ wait until kuniverse:timewarp:issettled.
 
 until ship:altitude <= startAlt
 {
-    set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+    set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
     DispTelemetry().
 }
 
@@ -205,7 +203,7 @@ OutMsg("Waiting for reentry interface").
 
 until ship:altitude <= body:atm:height
 {
-    set sVal to ship:retrograde.
+    set sVal to ship:retrograde + r(0, 0, rVal).
     DispTelemetry().
 }
 OutMsg("Reentry interface, signal lost").
@@ -216,7 +214,7 @@ for m in ship:modulesNamed("ModuleRTAntenna")
 
 until ship:groundspeed <= 1500 and ship:altitude <= 30000
 {
-    set sVal to ship:srfRetrograde.
+    set sVal to ship:srfRetrograde + r(0, 0, rVal).
     DispTelemetry().
 }
 for m in ship:modulesNamed("ModuleRTAntenna")
