@@ -138,7 +138,7 @@ until false
             {
                 WarpToAlt(startAlt).
             }
-            set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+            set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
             DispTelemetry().
             wait 0.01. 
         }
@@ -190,7 +190,7 @@ until ship:altitude <= stagingAlt.
 
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
-set sVal to body:position.
+set sVal to body:position + r(0, 0, rVal).
 wait 1.
 
 OutMsg("Staging").
