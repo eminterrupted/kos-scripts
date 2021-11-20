@@ -151,7 +151,7 @@ wait until kuniverse:timewarp:issettled.
 
 until ship:altitude <= startAlt
 {
-    set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
+    set sVal to ship:facing.
     DispTelemetry().
 }
 

@@ -59,6 +59,7 @@ global function GetSteeringDir
     {
         return ship:facing.
     }
+    
 }
 // #endregion
 

@@ -12,6 +12,11 @@ runOncePath("0:/lib/util").
 
 DispMain(scriptPath()).
 
+local orientation to "pro-sun".
+if params:length > 0 
+{
+    set orientation to params[0].
+}
 local scanner to ship:partsDubbedPattern("scansat")[0].
 
 local sVal to ship:facing.
@@ -21,9 +26,7 @@ ScansatActivate(scanner).
 
 until false
 {
-    if params[0] = "radIn-sun" set sVal to lookDirUp(body:position, sun:position).
-    else if params[0] = "pro-sun" set sVal to lookDirUp(ship:prograde:vector, sun:position).
-    else if params[0] = "pro-body" set sVal to lookDirUp(ship:prograde:vector, -body:position).
+    set sVal to GetSteeringDir(orientation).
 
     DispScansat(scanner).
     wait 0.01.

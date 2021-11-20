@@ -24,6 +24,8 @@ local orbitTS to time:seconds + orbitTime.
 local sVal to ship:facing.
 lock steering to sVal.
 
+for p in ship:partsTagged("openBay")
+
 for m in ship:modulesnamed("ModuleDeployableSolarPanel")
 {
     if m:part:tag = "" DoAction(m, "Extend Solar Panels").
