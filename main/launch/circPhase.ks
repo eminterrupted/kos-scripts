@@ -17,6 +17,8 @@ local cTag to core:tag:split("|").
 local lp to list().
 local lpPath to "".
 
+global MECO to 0.
+
 local volIdx to 1.
 until false 
 {
@@ -46,6 +48,8 @@ local rVal to 0 - ship:facing:roll.
 local sVal to ship:facing.
 local tVal to 0.
 
+local avgStageWaitTime to 1.02.
+
 lock steering to sVal.
 lock throttle to tVal.
 
@@ -56,9 +60,20 @@ ArmAutoStaging(payloadStage + 1).
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
 local burnDur   to CalcBurnDur(dv).
+local fullStageDict to burnDur[2]["Full"].
+
+local totalStages to fullStageDict:keys:length - 1.
+
+local additionalMnvTime to 0.
+
+if (totalStages > 1)
+{
+    set additionalMnvTime to (totalStages * avgStageWaitTime) / 2.
+}
+
 local mnvTime   to time:seconds + eta:apoapsis.
-local burnEta   to mnvTime - burnDur[1].
-local MECO      to burnEta + burnDur[0].
+local burnEta   to mnvTime - burnDur[1] - additionalMnvTime.
+set MECO      to burnEta + burnDur[0].
 
 OutMsg("Calculation Complete!").
 OutInfo("DV Needed: " + round(dv, 1) + "m/s | Burn Duration: " + round(burnDur[0], 1) + "s").
