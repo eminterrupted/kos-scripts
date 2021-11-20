@@ -367,11 +367,6 @@ global function GetExhVel
             set MECO to MECO + (endTime - startTime).
             if stage:number > stopAtStg preserve.
         }
-        stage.
-        wait 0.50.
-        OutInfo().
-        if stage:number > stopAtStg preserve.
     }
-}
 // #endregion
 // #endregion
