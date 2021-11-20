@@ -24,11 +24,25 @@ local orbitTS to time:seconds + orbitTime.
 local sVal to ship:facing.
 lock steering to sVal.
 
-for p in ship:partsTagged("openBay")
+for p in ship:partsTagged("solarBay")
+{
+    if p:hasModule("ModuleAnimateGeneric") 
+    {
+        OutMsg("Opening solar bay doors").
+        DoAction(p:getModule("ModuleAnimateGeneric"), "toggle").
+        wait 0.1.
+        until p:getModule("ModuleAnimateGeneric"):getfield("status") = "Locked"
+        {
+            DispOrbit().
+            wait 0.01.
+        }
+        OutMsg().
+    }
+}
 
 for m in ship:modulesnamed("ModuleDeployableSolarPanel")
 {
-    if m:part:tag = "" DoAction(m, "Extend Solar Panels").
+    if m:part:tag = "" DoAction(m, "Extend Solar Panel").
 }
 
 for m in ship:modulesNamed("ModuleRTAntenna")
