@@ -9,6 +9,7 @@ runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/kslib/lib_l_az_calc.ks").
 runOncePath("0:/kslib/lib_navball").
+runOncePath("0:/lib/globals").
 
 DispMain(scriptPath()).
 

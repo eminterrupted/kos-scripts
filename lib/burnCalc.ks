@@ -43,15 +43,30 @@
 
     // BurnDur :: (<scalar>) -> <list>scalar [Full, Half]
     // Returns the time to burn a given dV, including the halfway burn dur for burn start timing
+    // Also returns values with staging time included
     global function CalcBurnDur
     {
         parameter dv.
 
         local stgObj to BurnStagesUsed(dv).
-        
         local durObj to BurnDurStage(stgObj).
         
-        return list(durObj["Full"], durObj["Half"], stgObj).
+        local fullDurWithStaging to durObj["Full"].
+        local halfDurWithStaging to durObj["Half"].
+
+        if stgObj["Full"]:keys:length > 1 
+        {
+            local stageWaitTime to 1.
+            from { local stg to stage:number - 1.} until stg = 0 step { set stg to stg - 1.} do
+            {
+                if stgObj["Full"]:hasKey(stg) set fullDurWithStaging to fullDurWithStaging + stageWaitTime.
+                if stgObj["Half"]:hasKey(stg) set halfDurWithStaging to halfDurWithStaging + stageWaitTime.
+            }
+        }
+        set durObj["FullStaged"] to fullDurWithStaging.
+        set durObj["HalfStaged"] to halfDurWithStaging.
+        
+        return list(durObj["Full"], durObj["FullStaged"], durObj["Half"], durObj["HalfStaged"]).
     }
 
     // BurnDurStage :: (<lexicon>) -> <lexicon>
@@ -71,13 +86,6 @@
             local stgThr to GetStageThrust(key, "poss").
             local vesMass to StageMass(key)["ship"].
 
-            // print "final dur params".
-            // print "exhVel[" + (key) + "]: " + exhVel.
-            // print "stgThr[" + (key) + "]: " + stgThr.
-            // print "vesMass[" + key + "]:" + vesMass.
-            // print " ".
-            // print " ".
-
             local fullDur to (((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Full"][key] / exhVel)))).
             set burnDurObj["Full"] to burnDurObj["Full"] + fullDur.
 
@@ -88,7 +96,6 @@
             }
         }
 
-        //print burnDurObj at (2, 25).
         return burnDurObj.
     }
 
@@ -106,9 +113,7 @@
 
         from { local stg to stage:number.} until dv <= 0 or stg < 0 step { set stg to stg - 1.} do {
             local breakFlag to false.
-            // print "In the loop with stage: " + stg.
             local dvStg to AvailStageDV(stg).
-            // print "AvailStageDV Return: " + dvStg.
             if dvStg > 0 
             {
                 // Full
@@ -139,7 +144,6 @@
             if breakFlag break.
         }
 
-        //print lex("full", dvFullObj, "half", dvHalfObj) at (2, 23).
         return lex("Full", dvFullObj, "Half", dvHalfObj).
     }
 //#endregion

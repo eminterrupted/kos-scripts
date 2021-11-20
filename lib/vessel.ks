@@ -343,30 +343,30 @@ global function GetExhVel
 // -- Ship Triggers
 // #region
 
-    // ArmAutoStaging :: (<scalar>) -> <none>
-    // Creates a trigger for staging, with optional param to unregister at a stage number
-    global function ArmAutoStaging
+// ArmAutoStaging :: (<scalar>) -> <none>
+// Creates a trigger for staging, with optional param to unregister at a stage number
+global function ArmAutoStaging
+{
+    parameter stopAtStg is 0.
+    
+    when ship:availablethrust <= 0.01 and throttle > 0 then
     {
-        parameter stopAtStg is 0.
-        
-        when ship:availablethrust <= 0.01 and throttle > 0 then
+        local startTime to Time:seconds.
+
+        OutInfo("AutoStage Mode").
+        wait 0.50.
+        until stage:ready
         {
-            local startTime to Time:seconds.
-
-            OutInfo("AutoStage Mode").
-            wait 0.50.
-            until stage:ready
-            {
-                wait 0.01.
-            }
-            stage.
-            wait 0.50.
-            OutInfo().
-            local endTime to Time:seconds.
-
-            set MECO to MECO + (endTime - startTime).
-            if stage:number > stopAtStg preserve.
+            wait 0.01.
         }
+        stage.
+        wait 0.50.
+        OutInfo().
+        local endTime to Time:seconds.
+
+        set MECO to MECO + (endTime - startTime).
+        if stage:number > stopAtStg preserve.
     }
+}
 // #endregion
 // #endregion

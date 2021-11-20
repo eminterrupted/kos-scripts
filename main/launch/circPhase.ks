@@ -9,6 +9,7 @@ runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/kslib/lib_navball").
 runOncePath("0:/lib/disp").
+runOncePath("0:/lib/globals").
 
 DispMain(scriptPath()).
 
@@ -16,8 +17,6 @@ DispMain(scriptPath()).
 local cTag to core:tag:split("|").
 local lp to list().
 local lpPath to "".
-
-global MECO to 0.
 
 local volIdx to 1.
 until false 
@@ -48,7 +47,7 @@ local rVal to 0 - ship:facing:roll.
 local sVal to ship:facing.
 local tVal to 0.
 
-local avgStageWaitTime to 1.02.
+// local avgStageWaitTime to 1.02.
 
 lock steering to sVal.
 lock throttle to tVal.
@@ -60,28 +59,29 @@ ArmAutoStaging(payloadStage + 1).
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
 local burnDur   to CalcBurnDur(dv).
-local fullStageDict to burnDur[2]["Full"].
+// local fullStageDict to burnDur[4]["Full"].
 
-local totalStages to fullStageDict:keys:length - 1.
+// local totalStages to fullStageDict:keys:length - 1.
 
-local additionalMnvTime to 0.
+// local additionalMnvTime to 0.
 
-if (totalStages > 1)
-{
-    set additionalMnvTime to (totalStages * avgStageWaitTime) / 2.
-}
+// if (totalStages > 1)
+// {
+//     set additionalMnvTime to (totalStages * avgStageWaitTime) / 2.
+// }
 
-local mnvTime   to time:seconds + eta:apoapsis.
-local burnEta   to mnvTime - burnDur[1] - additionalMnvTime.
-set MECO      to burnEta + burnDur[0].
+local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
+local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
+local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
+set MECO        to burnEta + burnDur[1].        // Expected cutoff point with full duration + waiting for staging
 
 OutMsg("Calculation Complete!").
-OutInfo("DV Needed: " + round(dv, 1) + "m/s | Burn Duration: " + round(burnDur[0], 1) + "s").
+OutInfo("DV Needed: " + round(dv, 1) + "m/s").
 InitWarp(burnEta, "Circularization Burn").
 until time:seconds >= burnEta 
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
-    OutInfo2("Burn ETA: " + round(burnEta - time:seconds, 1) + "s     ").
+    OutInfo2("Burn Dur: " + round(fullDur, 1) + "s | Burn ETA: " + round(burnEta - time:seconds, 1) + "s     ").
     DispTelemetry().
     wait 0.01.
 }
@@ -92,18 +92,19 @@ OutInfo2().
 set tVal to 1.
 wait 0.05.
 
-local engs to GetEngines().
+// local engs to GetEngines().
 until time:seconds >= MECO
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
     OutInfo("Est time to MECO: " + round(MECO - time:seconds, 1) + "s   ").
-    if stage:number > 0 and GetTotalThrust(engs) <= 0.1
-    {
-        OutInfo("Circ Staging").
-        if stage:ready stage.
-        set engs to GetEngines().
-        OutInfo().
-    }
+    // Not sure we need this below anymore now that we have ArmAutoStaging
+    // if stage:number > 0 and GetTotalThrust(engs) <= 0.1
+    // {
+    //     OutInfo("Circ Staging").
+    //     if stage:ready stage.
+    //     set engs to GetEngines().
+    //     OutInfo().
+    // }
     DispTelemetry().
     wait 0.01.
 }
