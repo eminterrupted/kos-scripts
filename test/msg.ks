@@ -26,7 +26,7 @@ if param = "Read"
         local ts to time:seconds.
         until msgs:length > 0
         {
-            set msgs to CheckMsg().
+            set msgs to CheckMsgQueue().
             if time:seconds < ts + 0.1 print "[" + waitChars[0] + "]" at (waitStr:length + 1, 5).
             else if time:seconds < ts + 0.2 print "[" + waitChars[1] + "]" at (waitStr:length + 1, 5).
             else if time:seconds < ts + 0.3 print "[" + waitChars[2] + "]" at (waitStr:length + 1, 5).

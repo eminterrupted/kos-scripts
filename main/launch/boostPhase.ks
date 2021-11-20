@@ -18,6 +18,7 @@ local tgtPe     to 1250000.
 local tgtAp     to 1250000.
 local tgtInc    to 86.
 local tgtLAN    to -1.
+local tgtRoll   to 0.
 
 // If the launch plan was passed in via param, override manual values
 if lp:length > 0
@@ -26,12 +27,13 @@ if lp:length > 0
     set tgtAp to lp[1].
     set tgtInc to lp[2].
     set tgtLAN to lp[3].
+    set tgtRoll to lp[4]. 
 }
 else 
 {
-    set lp to list(tgtPe, tgtAp, tgtInc, tgtLAN).
+    set lp to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 }
-local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN).
+local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 
 // Turn params
 local altStartTurn to 750.
@@ -43,10 +45,9 @@ local boosterLex to lex().
 local hasBoosters to false.
 
 // Controls
-local rVal to 0.
+local rVal to tgtRoll.
 local sVal to ship:facing.
 local tVal to 0.
-OutInfo2("Launch Heading: " + compass_for(ship, ship:facing)).
 
 // Core tag
 local cTag to core:tag.
@@ -91,7 +92,7 @@ else
     until false
     {
         if CheckInputChar(terminal:input:enter) break.
-        local msgs to CheckMsg().
+        local msgs to CheckMsgQueue().
         if msgs:contains("launchCommit") 
         {
             set core2 to msgs[1].
@@ -136,7 +137,10 @@ if hasBoosters
         {
             for dc in boosterLex[b]
             {
-                for sep in dc:partsDubbedPattern("sep") sep:activate.
+                if dc:partsDubbedPattern("sep"):length > 0 
+                {
+                    for sep in dc:partsDubbedPattern("sep") sep:activate.
+                }
                 local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
                 if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
             }

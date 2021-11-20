@@ -9,6 +9,7 @@ runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
 
 local multiScan to true.
+local orientation to "pro-sun".
 local sciAction to "ideal".
 local scanCov to false.
 local sciList to GetSciModules().
@@ -17,10 +18,10 @@ if params:length > 0
 {
     set sciAction to params[0].
     if params:length > 1 set multiScan to params[1].
+    if params:length > 2 set orientation to params[2].
 }
 
-local rVal to 0.
-local sVal to lookDirUp(ship:prograde:vector, sun:position).
+local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
 
 ag10 off.
@@ -64,7 +65,7 @@ else
         ag10 off.
         until ag10
         {
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+            set sVal to GetSteeringDir(orientation).
             local sciInterval to time:seconds + 15.
             until time:seconds >= sciInterval 
             {   
@@ -92,10 +93,12 @@ else
         local biomeList to list().
         local curBiome  to "".
 
-        until ag10
+        OutHUD("Press End to terminate Science mission").
+
+        until CheckInputChar(terminal:input:endCursor)
         {
             set curBiome to addons:scansat:getBiome(ship:body, ship:geoposition).
-            set sVal to lookDirUp(ship:prograde:vector, sun:position) + r(0, 0, rVal).
+            set sVal to GetSteeringDir(orientation).
             OutMsg("Scanning for unresearched biomes").
             if not biomeList:contains(curBiome)
             {

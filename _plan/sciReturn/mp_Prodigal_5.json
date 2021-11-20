@@ -1,6 +1,22 @@
 {
     "items": [
-        
+        {
+            "value": "return/reentry",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": true,
+                    "$type": "kOS.Safe.Encapsulation.BooleanValue"
+                },
+                {
+                    "value": true,
+                    "$type": "kOS.Safe.Encapsulation.BooleanValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        }
     ],
     "$type": "kOS.Safe.Encapsulation.ListValue"
 }

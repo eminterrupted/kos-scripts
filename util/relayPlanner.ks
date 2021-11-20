@@ -100,7 +100,7 @@ if ship:status = "PRELAUNCH"
     SendMsg("root", "launchCommit").
 }
 
-until CheckMsg():length > 0
+until CheckMsgQueue():length > 0
 {
   print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
   wait 0.01.
@@ -126,7 +126,7 @@ teeLog(" ").
 wait 1.
 
 OutInfo("Awaiting Orbital Insertion").
-until CheckMsg():length > 0 or ag9
+until CheckMsgQueue():length > 0 or ag9
 {
     OutMsg("MET: " + round(missionTime, 1)).
     OutInfo("Target phase angle: " + round(tgtPhase, 3)).

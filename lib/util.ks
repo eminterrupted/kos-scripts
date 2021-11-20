@@ -2,9 +2,11 @@
 
 // Dependencies
 
-//-- Variables --//
+// *~ Variables ~* //
+//#region
 
-// Global
+// -- Global
+// #region
 global BodyInfo to lex(
     "altForSci", lex(
         "Kerbin", 250000,
@@ -25,15 +27,23 @@ global ColorLex to lex(
     ,"White", white
     ,"Black", black
 ).
+// #endregion
 
-// Local
+// -- Local
+// #region
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 global StateFile to dataDisk + "state.json".
+// #endregion
+//#endregion
 
-//-- Global Functions --//
 
-// -- Generic functions -- //
-//
+// *~ Functions ~* //
+// #region
+
+// -- Debug
+// #region
+
+// Breakpoint <none> -> <none>
 // Creates a breakpoint
 global function Breakpoint
 {
@@ -41,7 +51,14 @@ global function Breakpoint
     terminal:input:getChar().
     print "                             " at (10, terminal:height - 2).
 }
+// #endregion
 
+
+// -- Sound
+// #region
+
+// PlaySFX :: <int> -> <none>
+// Plays a sound effect based chosen by param idx
 global function PlaySFX
 {
     parameter sfxId to 0.
@@ -54,11 +71,17 @@ global function PlaySFX
         wait 0.05.
     }
 }
+// #endregion
 
-// -- Vessel State functions -- //
-//
-// State cache
-// Caches an arbitrary bit of data in the state file
+
+// -- Vessel Cache / State
+// #region
+
+// - Cache
+// #region
+
+// CacheState :: [<any>, <any>] -> <any>
+// Caches a key/value pair in the state file
 global function CacheState
 {
     parameter lexKey,
@@ -74,6 +97,8 @@ global function CacheState
     return readJson(stateFile):keys:contains(lexKey).
 }
 
+// PeekCache :: <any> -> <bool>
+// Checks state file for existence of key and returns true/false
 global function PeekCache
 {
     parameter lexKey.
@@ -93,6 +118,9 @@ global function PeekCache
     }
 }
 
+// ReadCache :: <any> -> <any | bool>
+// Reads the value of the passed in key. 
+// Returns false if key does not exist
 global function ReadCache
 {
     parameter lexKey.
@@ -105,7 +133,9 @@ global function ReadCache
     return false.
 }
 
+// ClearCacheKey :: <any> -> <bool>
 // Clears a value from the state file
+// Returns bool on operation success / fail
 global function ClearCacheKey
 {
     parameter lexKey.
@@ -117,23 +147,52 @@ global function ClearCacheKey
         {
             stateObj:remove(lexKey).
             writeJson(stateObj, stateFile).
+            return true.
+        }
+        else
+        {
+            return false.
         }
     }
 }
 
+// DeleteCache :: <none> -> <bool>
 // Removes the entire state file
+// Returns bool on success / fail
 global function DeleteCache
 {
     deletePath(stateFile).
+    if not exists(stateFile) 
+    {
+        return true.
+    }
+    else
+    {
+        return false.
+    }
 }
 
-// Resets the entire state file
+// PurgeCache :: <none> -> <none>
+// Resets the entire state file to an empty state
+// Returns bool on success / fail
 global function PurgeCache
 {
     writeJson(lex(), stateFile).
+    if readJson(stateFile):keys:length = 0
+    {
+        return true.
+    }
+    else
+    {
+        return false.
+    }
 }
+// #endregion
 
-// Runmode
+// - Runmode
+// #region
+
+// InitRunmode :: <none> -> <int>
 // Gets the runmode from disk if exists, else returns 0
 global function InitRunmode
 {
@@ -148,6 +207,7 @@ global function InitRunmode
         {
             set stateObj["runmode"] to 0.
             writeJson(stateObj, stateFile).
+            return 0.
         }
     }
     else
@@ -157,7 +217,27 @@ global function InitRunmode
     return 0.
 }
 
-// Writes the runmode to disk
+// Runmode :: [<int>] -> <int>
+// Combination function. 
+// No param: Reads the runmode from cache or returns 0 if cache doesn't contain runmode key
+// With param: Writes the value to the cache and returns it back to the function
+global function Runmode
+{
+    parameter runmode is -1.
+
+    if runmode < 0 
+    {
+        return InitRunmode().
+    }
+    else
+    {
+        return SetRunmode(runmode).
+    }
+
+} 
+
+// SetRunmode :: <int> -> <int>
+// Writes the runmode to disk, and returns the value back to the function
 global function SetRunmode
 {
     parameter runmode is 0.
@@ -179,10 +259,11 @@ global function SetRunmode
 
     return runmode.
 }
+// #endregion
+// #endregion
 
-
-// -- List functions -- //
-//
+// -- List
+// #region
 // Sorts a list of parts by stage
 // Possible sortDir values: asc, desc
 global function OrderPartsByStageNumber
@@ -206,10 +287,11 @@ global function OrderPartsByStageNumber
     }
     return outList.
 }
+// #endregion
 
 
-// -- Check functions -- //
-//
+// -- Checks
+// #region
 // Function for use in maneuver delegates
 global function CheckMnvDelegate
 {
@@ -227,27 +309,76 @@ global function CheckMnvDelegate
     else return false.
 }
 
-// Returns the amount of EC that is used over time
-global function GetECDraw
+// CheckSteering :: [<str>], [<int>]:: <bool>
+// Given a generic "angle" argument or specific control axis (roll, pitch, yaw), 
+// returns a bool if steeringManager values are within the optional zero-centered range
+global function CheckSteering
 {
-    parameter checkType is "sample".
+    parameter axis is "angle",
+              accRange to 0.025.
 
-    local charge to 0.
-    local draw   to 0.
-
-    if checkType = "sample" 
+    if axis = "angle" 
     {
-        set charge to ship:resources:ec.
-        wait 1.
-        set draw to charge - ship:resources:ec.
+        if steeringManager:angleError >= -accRange and steeringManager:angleError <= accRange 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }
     }
-
-    print draw.
-
-    return false.
+    else if axis = "roll"
+    {
+        if steeringManager:rollError >= -accRange and steeringManager:rollError <= accRange 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }  
+    }
+    else if axis = "pitch"
+    {
+        if steeringManager:pitchError >= -accRange and steeringManager:pitchError <= accRange 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }  
+    }
+    else if axis = "yaw"
+    {
+        if steeringManager:yawError >= -accRange and steeringManager:yawError <= accRange 
+        {
+            return true.
+        }
+        else
+        {
+            return false.
+        }  
+    }
 }
 
-global function CheckMsg
+// Checks if a value is above/below the range bounds given
+global function CheckValRange
+{
+    parameter val,
+              rangeLo,
+              rangeHi.
+
+    if val >= rangeLo and val <= rangeHi return true.
+    else return false.
+}
+// #endregion
+
+
+// -- Core Messages
+// #region
+global function CheckMsgQueue
 {
     local msgList to list().
     if not core:messages:empty
@@ -279,18 +410,11 @@ global function SendMsg
     cx:sendMessage(core:part:tag). 
     cx:sendMessage(msgData).
 }
+// #endregion
 
-// Checks if a value is above/below the range bounds given
-global function CheckValRange
-{
-    parameter val,
-              rangeLo,
-              rangeHi.
 
-    if val >= rangeLo and val <= rangeHi return true.
-    else return false.
-}
-
+// -- Terminal / AG Input Checks
+// #region
 // Checks if a provided value is within allowed deviation of a target value
 global function CheckValDeviation
 {
@@ -308,7 +432,7 @@ global function CheckInputChar
     
     if terminal:input:hasChar
     {
-        if terminal:input:getChar = checkChar 
+        if terminal:input:getChar = checkChar
         {
             return true.
         }
@@ -399,10 +523,11 @@ global function WaitOnAllInput
         else if keyToCheck = 9 ag9 off.
     }
 }
+// #endregion
 
 
-// -- Part modules -- //
-//
+// -- Part Modules
+//#region
 // Checks for an action and executes if found
 global function DoAction
 {
@@ -526,11 +651,11 @@ global function SetGrappleHook
 
     DoEvent(m, event).
 }
+//#endregion
 
 
-
-//#region -- Warp functions -- //
-//
+// -- Warp
+// #region
 // Creates a trigger to warp to a timestamp using AG10
 global function InitWarp
 {
@@ -564,12 +689,12 @@ global function WarpToAlt
     if dir = "down"
     {
         if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.25 set warp to 1.
-        else if ship:altitude <= tgtAlt * 2 set warp to 2.
-        else if ship:altitude <= tgtAlt * 3 set warp to 3.
-        else if ship:altitude <= tgtAlt * 5 set warp to 4.
-        else if ship:altitude <= tgtAlt * 10 set warp to 5.
-        else if ship:altitude <= tgtAlt * 20 set warp to 6.
+        else if ship:altitude <= tgtAlt * 1.15 set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.35 set warp to 2.
+        else if ship:altitude <= tgtAlt * 2 set warp to 3.
+        else if ship:altitude <= tgtAlt * 4 set warp to 4.
+        else if ship:altitude <= tgtAlt * 8 set warp to 5.
+        else if ship:altitude <= tgtAlt * 16 set warp to 6.
         else set warp to 7.
     }
     else if dir = "up"
@@ -584,10 +709,13 @@ global function WarpToAlt
         else set warp to 7.
     }
 }
-//#endregion
+// #endregion
 
-// -- Local functions -- //
-//StepList
+
+// -- Local
+// #region
+
+// StepList
 // Helper function for from loop in list sorting. 
 local function stepList
 {
@@ -597,3 +725,6 @@ local function stepList
     if sortDir = "desc" return c - 1.
     else return c + 1.
 }
+// #endregion
+
+// #endregion

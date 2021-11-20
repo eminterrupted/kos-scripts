@@ -4,6 +4,11 @@ wait 1.
 global mp to list().
 global plan to choose "misc" if core:tag = "" else core:tag:split("|")[0].
 global missionName to ship:name:replace(" ", "_").
+
+local localPlan to "1:/mp.json".
+local archivePlan to "0:/_plan/" + plan + "/mp_" + missionName + ".json".
+local runPlan to localPlan.
+
 if ship:status = "PRELAUNCH" 
 {
     global lp to list().
@@ -12,7 +17,18 @@ if ship:status = "PRELAUNCH"
 
 tagCores().
 
-if exists("1:/mp.json") set mp to readJson("1:/mp.json").
+if not exists(localPlan)
+{
+    if exists(archivePlan)
+    {
+        copyPath(archivePlan, localPlan).
+        if not exists(localPlan) 
+        {
+            set runPlan to archivePlan.
+        }
+    }
+}
+set mp to readJson(runPlan).
 
 until mp:length = 0
 {
@@ -22,8 +38,8 @@ until mp:length = 0
     runPath(scr, param).
     mp:remove(1).
     mp:remove(0).
-    writeJson(mp, "1:/mp.json").
-    if addons:rt:hasKscConnection(ship) writeJson(mp, "0:/_plan/" + plan + "/mp_" + missionName + ".json").
+    writeJson(mp, localPlan).
+    if addons:rt:hasKscConnection(ship) writeJson(mp, archivePlan).
 }
 
 // Local functions
