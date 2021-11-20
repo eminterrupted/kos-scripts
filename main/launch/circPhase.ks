@@ -59,16 +59,6 @@ ArmAutoStaging(payloadStage + 1).
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
 local burnDur   to CalcBurnDur(dv).
-// local fullStageDict to burnDur[4]["Full"].
-
-// local totalStages to fullStageDict:keys:length - 1.
-
-// local additionalMnvTime to 0.
-
-// if (totalStages > 1)
-// {
-//     set additionalMnvTime to (totalStages * avgStageWaitTime) / 2.
-// }
 
 local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
 local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
@@ -92,19 +82,10 @@ OutInfo2().
 set tVal to 1.
 wait 0.05.
 
-// local engs to GetEngines().
 until time:seconds >= MECO
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
     OutInfo("Est time to MECO: " + round(MECO - time:seconds, 1) + "s   ").
-    // Not sure we need this below anymore now that we have ArmAutoStaging
-    // if stage:number > 0 and GetTotalThrust(engs) <= 0.1
-    // {
-    //     OutInfo("Circ Staging").
-    //     if stage:ready stage.
-    //     set engs to GetEngines().
-    //     OutInfo().
-    // }
     DispTelemetry().
     wait 0.01.
 }
