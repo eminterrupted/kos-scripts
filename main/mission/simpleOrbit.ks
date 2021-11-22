@@ -10,7 +10,6 @@ runOncePath("0:/lib/util").
 
 DispMain(scriptPath():name).
 
-local doneFlag to false.
 local orbitTime to 0.
 local orientation to "pro-sun".
 
@@ -21,31 +20,13 @@ if param:length > 0
 }
 local orbitTS to time:seconds + orbitTime.
 
+
 local sVal to ship:facing.
 lock steering to sVal.
 
-for p in ship:partsTagged("solarBay")
-{
-    if p:hasModule("ModuleAnimateGeneric") 
-    {
-        OutMsg("Opening solar bay doors").
-        if not DoEvent(p:getModule("ModuleAnimateGeneric"), "open").
-        {
-            DoAction(p:getModule("ModuleAnimateGeneric"), "toggle").
-        }
-        wait 0.1.
-        until p:getModule("ModuleAnimateGeneric"):getfield("status") = "Locked"
-        {
-            DispOrbit().
-            wait 0.01.
-        }
-        OutMsg().
-    }
-}
-
 for m in ship:modulesnamed("ModuleDeployableSolarPanel")
 {
-    if m:part:tag = "" DoAction(m, "Extend Solar Panel").
+    if m:part:tag = "" DoAction(m, "Extend Solar Panels").
 }
 
 for m in ship:modulesNamed("ModuleRTAntenna")
@@ -62,36 +43,39 @@ fuelCells on.
 if orbitTime > 0
 {
     OutTee("Orbiting until " + timestamp(orbitTS):full).
+    InitWarp(OrbitTS, "orbit script termination").
 }
 else
 {
     OutTee("Orbiting indefinitely").
 }
-OutHUD("Press Enter to warp to orbit timestamp").
-OutHUD("Press End in terminal to abort").
+OutHUD("Press Backspace in terminal to abort").
 
-until doneFlag
+until false
 {
+    if CheckInputChar(terminal:input:backspace)
+    {
+        OutMsg("Terminating Orbit").
+        wait 1.
+        break.
+    }
     if orbitTime > 0 and time:seconds >= orbitTS 
     {
-        set doneFlag to true.
+        break.
     }
 
-    if terminal:input:hasChar
+    if orientation = "sun-pro" 
     {
-        if terminal:input:getChar = terminal:input:endCursor
-        {
-            OutTee("Terminating Orbit").
-            set warp to 0.
-            set doneFlag to true.
-        }
-        else if terminal:input:getChar = terminal:input:enter
-        {
-            OutTee("Warping to orbital timestamp").
-            warpTo(orbitTS).
-        }
+        set sVal to lookDirUp(sun:position, ship:prograde:vector).
     }
-    set sVal to GetSteeringDir(orientation).
+    else if orientation = "pro-radOut"
+    {
+        set sVal to lookDirUp(ship:prograde:vector, -body:position).
+    }
+    else if orientation = "pro-sun"
+    {
+        set sVal to lookDirUp(ship:prograde:vector, sun:position).
+    }
     
     if orbitTime > 0 
     {
@@ -100,5 +84,5 @@ until doneFlag
         OutInfo("Time remaining: " + tsStr).
     }
     DispOrbit().
-    wait 0.05.
+    wait 0.1.
 }

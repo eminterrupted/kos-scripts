@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 //-- Dependencies --//
+runOncePath("0:/lib/globals.ks").
 
 //-- Variables --//
 local line to 10.

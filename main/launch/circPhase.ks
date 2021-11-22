@@ -85,7 +85,7 @@ wait 0.05.
 until time:seconds >= g_MECO
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
-    OutInfo("Est time to MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
+    OutInfo("Est time to g_MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
     DispTelemetry().
     wait 0.01.
 }

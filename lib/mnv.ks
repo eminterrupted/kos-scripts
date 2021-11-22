@@ -28,7 +28,7 @@ global function ExecNodeBurn
     local halfDur to burnDur[1].
 
     local burnEta to mnvNode:time - halfDur. 
-    set MECO    to burnEta + fullDur.
+    set g_MECO    to burnEta + fullDur.
     lock dvRemaining to abs(mnvNode:burnVector:mag).
 
     lock rVal to r(0, 0, ship:facing:roll).
@@ -50,7 +50,7 @@ global function ExecNodeBurn
     until time:seconds >= burnEta
     {
         set sVal to mnvNode:burnvector:direction - rVal.
-        DispBurn(burnEta, dvRemaining, MECO - time:seconds).
+        DispBurn(burnEta, dvRemaining, g_MECO - time:seconds).
     }
 
     local dv0 to mnvNode:deltav.
@@ -72,7 +72,7 @@ global function ExecNodeBurn
         {
             set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
         }
-        DispBurn(time:seconds - burnEta, dvRemaining, MECO).
+        DispBurn(time:seconds - burnEta, dvRemaining, g_MECO).
         wait 0.01.
     }
 
