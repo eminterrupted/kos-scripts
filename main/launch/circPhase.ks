@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter param is list("").
+parameter param is list().
 
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/launch").
@@ -40,7 +40,6 @@ set lp to readJson(lpPath).
 
 
 local tgtPe         to lp[0].
-local autoDeployPayload to choose false if not param[0] = "deploy" else true.
 local payloadStage to choose cTag[1] if cTag:length > 1 else 0.
 
 local rVal to 0 - ship:facing:roll.
@@ -96,31 +95,12 @@ OutInfo().
 OutMsg("Circularization phase complete").
 wait 1.
 
-OutWait("Preparing for payload deployment", 5).
-
 ag9 off.
-// Payload deployment
-if autoDeployPayload or ag9
-{
-    OutMsg("Deploying payload").
-    until stage:number = payloadStage 
-    {
-        if stage:ready stage.
-        wait 0.5.
-    }
-}
-
-OutMsg("Deploying orbital apparatus").
-for m in ship:modulesNamed("ModuleRTAntenna") 
-{
-    if m:part:tag = "" DoEvent(m, "activate").
-}
-
-for m in ship:modulesNamed("ModuleDeployableSolarPanel")
-{
-    if m:part:tag = "" DoAction(m, "extend solar panel", true).
-}
-
 deletePath("1:/lp.json").
 
 OutMsg("Launch complete").
+
+if param:length > 0 
+{
+    if param[0] = "deploy" runPath("0:/main/util/payloadDeploy").
+}
