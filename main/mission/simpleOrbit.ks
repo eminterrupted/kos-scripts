@@ -24,22 +24,27 @@ local orbitTS to time:seconds + orbitTime.
 local sVal to ship:facing.
 lock steering to sVal.
 
-for m in ship:modulesnamed("ModuleDeployableSolarPanel")
+local deployOrder to lex().
+
+for p in ship:partsTaggedPattern("payloadDeploy.")
 {
-    if m:part:tag = "" DoEvent(m, "Extend Solar Panel").
-    else if m:part:tag = "" DoAction(m, "Extend Solar Panels").
+    local pTag to p:tag:split(".")[1].
+    if not deployOrder:hasKey(pTag)
+    {
+        set deployOrder[pTag] to list(p).
+    }
+    else
+    {
+        deployOrder[pTag]:add(p).
+    }
 }
 
-for m in ship:modulesNamed("ModuleRTAntenna")
+from { local idx to 0.} until idx >= deployOrder:keys:length - 1 step { set idx to idx + 1.} do 
 {
-    if m:part:tag = "" DoAction(m, "Activate").
+    deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
+    wait 2.
 }
-
-// for m in ship:modulesNamed("ModuleResourceConverter")
-// {
-//     if m:part:tag = "" and m:hasEvent("Start Fuel Cell") orbitalFuelCells:add(m).
-// }
-fuelCells on.
+deployPayloadId(ship:partsTaggedPattern(""), "").
 
 if orbitTime > 0
 {
@@ -86,4 +91,52 @@ until false
     }
     DispOrbit().
     wait 0.1.
+}
+
+// Local functions
+// deployPayloadId :: <parts>, <int> | <none>
+// Runs a step on the parts passed in
+local function deployPayloadId
+{
+    parameter partsList,
+            sequenceIdx.
+    
+    OutMsg("Deploying orbital apparatus.").
+    OutInfo("Step: " + sequenceIdx).
+    
+    for p in partsList
+    {
+        if p:hasModule("ModuleAnimateGeneric")
+        {
+            local m to p:getModule("ModuleAnimateGeneric").
+            DoEvent(m, "open").
+        }
+    }
+
+    for p in partsList
+    {
+        if p:hasModule("ModuleDeployablePart")
+        {
+            local m to p:getModule("ModuleDeployablePart").
+            DoEvent(m, "extend").
+        }
+    }
+
+    for p in partsList 
+    {
+        if p:hasModule("ModuleRTAntenna")
+        {
+            local m to p:getModule("ModuleRTAntenna").
+            DoEvent(m, "activate").
+        }
+    }
+
+    for p in partsList
+    {
+        if p:hasModule("ModuleDeployableSolarPanel")
+        {
+            local m to p:getModule("ModuleDeployableSolarPanel").
+            DoAction(m, "extend solar panel", true).
+        }
+    }
 }
