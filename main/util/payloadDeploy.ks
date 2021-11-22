@@ -46,7 +46,10 @@ if not autoDeploy
         deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
         wait 2.
     }
+
     OutInfo().
+    OutInfo("Deploying all remaining").
+    deployPayloadId(ship:parts, "*").
     OutMsg("Deployment completed").
 }
 
