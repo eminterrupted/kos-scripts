@@ -63,15 +63,15 @@ local burnDur   to CalcBurnDur(dv).
 local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
 local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
 local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
-set MECO        to burnEta + burnDur[1].        // Expected cutoff point with full duration + waiting for staging
+set g_MECO        to burnEta + burnDur[1].        // Expected cutoff point with full duration + waiting for staging
 
-OutMsg("Calculation Complete!").
-OutInfo("DV Needed: " + round(dv, 1) + "m/s").
+OutMsg("DV Needed: " + round(dv, 1) + "m/s").
 InitWarp(burnEta, "Circularization Burn").
 until time:seconds >= burnEta 
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
-    OutInfo2("Burn Dur: " + round(fullDur, 1) + "s | Burn ETA: " + round(burnEta - time:seconds, 1) + "s     ").
+    OutInfo("Burn Dur: " + round(fullDur, 1) + "s   ").
+    OutInfo2("Burn ETA: " + round(burnEta - time:seconds, 1) + "s     ").
     DispTelemetry().
     wait 0.01.
 }
@@ -82,10 +82,10 @@ OutInfo2().
 set tVal to 1.
 wait 0.05.
 
-until time:seconds >= MECO
+until time:seconds >= g_MECO
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
-    OutInfo("Est time to MECO: " + round(MECO - time:seconds, 1) + "s   ").
+    OutInfo("Est time to g_MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
     DispTelemetry().
     wait 0.01.
 }
@@ -95,10 +95,10 @@ OutInfo().
 
 OutMsg("Circularization phase complete").
 wait 1.
-ag9 off.
 
 OutWait("Preparing for payload deployment", 5).
 
+ag9 off.
 // Payload deployment
 if autoDeployPayload or ag9
 {

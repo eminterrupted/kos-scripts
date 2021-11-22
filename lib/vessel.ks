@@ -364,7 +364,7 @@ global function ArmAutoStaging
         OutInfo().
         local endTime to Time:seconds.
 
-        set MECO to MECO + (endTime - startTime).
+        set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
 }

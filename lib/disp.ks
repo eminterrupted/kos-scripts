@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 //-- Dependencies --//
+runOncePath("0:/lib/globals.ks").
 
 //-- Variables --//
 local line to 10.
@@ -280,7 +281,7 @@ global function DispBurn
     parameter burnEta, dvToGo is 0, burnDur is 0.
 
     OutMsg("MNV DELTAV TO GO: " + round(dvToGo, 2)). 
-    if burnEta <= 0 
+    if burnEta >= 0 
     {
         set burnEta to abs(burnEta).
         if burnEta > 60
