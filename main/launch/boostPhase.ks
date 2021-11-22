@@ -17,7 +17,7 @@ DispMain(scriptPath()).
 // Launch params
 local tgtPe     to 1250000.
 local tgtAp     to 1250000.
-local tgtInc    to 86.
+local tgtInc    to 0.
 local tgtLAN    to -1.
 local tgtRoll   to 0.
 

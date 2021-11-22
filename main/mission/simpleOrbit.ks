@@ -29,7 +29,10 @@ for p in ship:partsTagged("solarBay")
     if p:hasModule("ModuleAnimateGeneric") 
     {
         OutMsg("Opening solar bay doors").
-        DoAction(p:getModule("ModuleAnimateGeneric"), "toggle").
+        if not DoEvent(p:getModule("ModuleAnimateGeneric"), "open").
+        {
+            DoAction(p:getModule("ModuleAnimateGeneric"), "toggle").
+        }
         wait 0.1.
         until p:getModule("ModuleAnimateGeneric"):getfield("status") = "Locked"
         {

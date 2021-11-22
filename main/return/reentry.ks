@@ -200,6 +200,7 @@ until stage:number <= 1
     wait 5.
 }
 OutMsg("Waiting for reentry interface").
+set sVal to ship:retrograde + r(0, 0, rVal).
 
 until ship:altitude <= body:atm:height
 {

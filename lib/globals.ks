@@ -1,1 +1,1 @@
-global MECO to 0.
+global g_MECO to 0.
