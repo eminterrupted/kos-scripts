@@ -286,7 +286,7 @@ global function DispBurn
         set burnEta to abs(burnEta).
         if burnEta > 60
         {
-            set burnEta to dispTimeFormat(burnEta, "datetime").
+            set burnEta to timeSpan(burnEta):full.
         }
         else
         {
