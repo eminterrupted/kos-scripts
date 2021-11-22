@@ -26,7 +26,8 @@ lock steering to sVal.
 
 for m in ship:modulesnamed("ModuleDeployableSolarPanel")
 {
-    if m:part:tag = "" DoAction(m, "Extend Solar Panels").
+    if m:part:tag = "" DoEvent(m, "Extend Solar Panel").
+    else if m:part:tag = "" DoAction(m, "Extend Solar Panels").
 }
 
 for m in ship:modulesNamed("ModuleRTAntenna")
