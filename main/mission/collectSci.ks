@@ -69,7 +69,7 @@ else
             local sciInterval to time:seconds + 15.
             until time:seconds >= sciInterval 
             {   
-                set sVal to ship:prograde + r(0, 0, rVal).
+                set sVal to GetSteeringDir(orientation).
                 OutMsg("Next science report in " + round(sciInterval - time:seconds) + "s").
                 DispOrbit().
                 wait 0.1.
