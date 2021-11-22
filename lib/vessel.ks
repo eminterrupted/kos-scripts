@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 // Dependencies
+runOncePath("0:/lib/nav").
 
 // *~ Variables ~* //
 // #region
@@ -49,11 +50,15 @@ global function GetSteeringDir
     }
     else if orientation = "pro-radOut"
     {
-        return lookDirUp(ship:prograde:vector, -body:position).
+        return lookDirUp(ship:prograde:vector, VesTangent(ship)).
     }
     else if orientation = "pro-body"
     {
         return lookDirUp(ship:prograde:vector, body:position).
+    }
+    else if orientation = "radOut-radOut"
+    {
+        return lookDirUp(VesNormal(ship), -body:position).
     }
     else 
     {
