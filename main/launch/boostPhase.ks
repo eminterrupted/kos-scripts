@@ -150,6 +150,7 @@ if hasBoosters
             }
             wait 1.
             OutInfo().
+            if bIdx = 1 stage.
         }
     }
 }
@@ -204,7 +205,6 @@ until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:ap
     DispTelemetry().
     wait 0.01.
 }
-
 
 OutMsg("Horizontal Velocity Program").
 until ship:apoapsis >= tgtAp * 0.9995
