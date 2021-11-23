@@ -115,7 +115,7 @@ for p in ship:parts
 {
     if p:tag:contains("booster") 
     {
-        local pIdx to p:tag:split(".")[1].
+        local pIdx to p:tag:split(".")[1]:tonumber.
         set hasBoosters to true.
         if boosterLex:hasKey(pIdx) 
         {
@@ -133,14 +133,13 @@ ArmAutoStaging(stageLimit).
 
 if hasBoosters
 {
-    from { local idx to boosterLex:keys:length - 1.} until idx = 0 step { set idx to idx - 1.} do 
+    for idx in boosterLex:keys
     {
-        local dcLex to boosterLex:copy().
-
-        when dcLex[idx:tostring][0]:children[0]:resources[0]:amount <= 0.01 then 
+        local bIdx to idx.
+        when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
         {
-            set dcLex to boosterLex:copy().
-            for dc in dcLex[idx:tostring]
+            OutInfo("Detaching Booster: " + bIdx).
+            for dc in boosterLex[bIdx]
             {
                 if dc:partsDubbedPattern("sep"):length > 0 
                 {
@@ -149,6 +148,8 @@ if hasBoosters
                 local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
                 if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
             }
+            wait 1.
+            OutInfo().
         }
     }
 }
@@ -197,7 +198,7 @@ until ship:altitude >= altStartTurn or ship:verticalspeed >= spdStartTurn
 set altStartTurn to ship:altitude.
 
 OutMsg("Pitch Program").
-until (ship:altitude >= altGravTurn and ship:apoapsis >= body:atm:height + 10000) or ship:apoapsis >= tgtAp * 0.975
+until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:apoapsis >= tgtAp * 0.975
 {
     set sVal to heading(l_az_calc(azCalcObj), LaunchAngForAlt(altGravTurn, altStartTurn, 0), rVal).
     DispTelemetry().
