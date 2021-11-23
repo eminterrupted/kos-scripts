@@ -357,12 +357,15 @@ global function ArmAutoStaging
     when ship:availablethrust <= 0.01 and throttle > 0 then
     {
         local startTime to time:seconds.
-        OutInfo("AutoStage Mode").
+        OutInfo("[" + stage:number + "] AutoStage Mode").
         SafeStage().
+        wait 0.25.
         local endTime to time:seconds.
-
         set g_MECO to g_MECO + (endTime - startTime).
-        if stage:number > stopAtStg preserve.
+        print "[" + stage:number + "] stopAtStage: " + stopAtStg at (2, 25).
+        print "[" + stage:number + "] CurStage" at (2, 26).
+        print "[" + stage:number + "] Expression: " + (stage:number >= stopAtStg) at (2, 27).
+        if stage:number >= stopAtStg preserve.
     }
 }
 
@@ -374,49 +377,58 @@ global function SafeStage
 {
     parameter mode is "".
 
-    local startTime to time:seconds.
     local onlySep to true.
-    local deployableEng to false.
-    local engToDeploy to "".
-
-    OutInfo("Staging").
+    local stg to stage:number.
+    OutInfo2("Staging (" + stg + ")").
     wait 0.5. 
-    until stage:ready
+    until false
     {
+        if stage:ready
+        {
+            stage.
+            break.
+        }
         wait 0.01.
     }
-    stage.
+    print "[" + stg + "] Stage " + stg + "  " at (2, 28).
 
-    if mode = ""
+    // Check for special conditions
+    local engList to GetEnginesByStage(stg).
+    
+    print "[" + stg + "] Ship:availableThrust: " + round(ship:availablethrust, 1) at (2, 29).
+    if ship:maxThrust > 0
     {
-        for eng in GetEnginesByStage(stage:number)
+        print "[" + stg + "] Passed ship:availablethrust check" at (2, 30).
+        for eng in engList
         {
             if not sepList:contains(eng:name)
             {
                 set onlySep to false.
-                if eng:hasModule("ModuleDeployableEngine") 
-                {
-                    set deployableEng to true.
-                    set engToDeploy to eng.
-                }
             }
         }
 
+        print "[" + stg + "] onlySep: " + onlySep at (2, 31).
         if onlySep
         {
             wait 0.5.
             stage.
-        }
-        else if deployableEng
-        {
-            OutInfo2("Deploying engine").
-            wait until engToDeploy:thrust > 0.
+            wait 0.25.
         }
     }
 
-    wait 0.5.
-
-    return time:seconds - startTime.
+    print "[" + stg + "] engList:length: " + engList:length at (2, 32).
+    if engList:length > 0 
+    {
+        for eng in engList
+        {
+            if eng:hasModule("ModuleDeployableEngine") 
+            {
+                OutInfo2("Deploying engine").
+                wait until eng:thrust > 0.
+            }
+        }
+    }
+    print "[" + stg + "] Returning from SafeStage()" at (2, 33).
 }
 // #endregion
 // #endregion
