@@ -17,6 +17,8 @@ if ship:status = "PRELAUNCH"
 
 tagCores().
 
+core:doAction("open terminal", true).
+
 if not exists(localPlan)
 {
     if exists(archivePlan)

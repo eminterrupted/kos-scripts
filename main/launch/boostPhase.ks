@@ -11,7 +11,7 @@ runOncePath("0:/kslib/lib_l_az_calc.ks").
 runOncePath("0:/kslib/lib_navball").
 runOncePath("0:/lib/globals").
 
-DispMain(scriptPath()).
+DispMain(scriptPath(), false).
 
 // Vars
 // Launch params
@@ -108,21 +108,22 @@ else
     }
 }
 clearScreen.
-DispMain(scriptPath()).
+DispMain(scriptPath(), false).
 
 // Booster check
 for p in ship:parts
 {
     if p:tag:contains("booster") 
     {
+        local pIdx to p:tag:split(".")[1].
         set hasBoosters to true.
-        if boosterLex:hasKey(p:tag) 
+        if boosterLex:hasKey(pIdx) 
         {
-            boosterLex[p:tag]:add(p).
+            boosterLex[pIdx]:add(p).
         }
         else
         {
-            set boosterLex[p:tag] to list(p).
+            set boosterLex[pIdx] to list(p).
         }
     }
 }
@@ -132,11 +133,14 @@ ArmAutoStaging(stageLimit).
 
 if hasBoosters
 {
-    for b in boosterLex:keys
+    from { local idx to boosterLex:keys:length - 1.} until idx = 0 step { set idx to idx - 1.} do 
     {
-        when boosterLex[b][0]:children[0]:resources[0]:amount <= 0.01 then 
+        local dcLex to boosterLex:copy().
+
+        when dcLex[idx:tostring][0]:children[0]:resources[0]:amount <= 0.01 then 
         {
-            for dc in boosterLex[b]
+            set dcLex to boosterLex:copy().
+            for dc in dcLex[idx:tostring]
             {
                 if dc:partsDubbedPattern("sep"):length > 0 
                 {
