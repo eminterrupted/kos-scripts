@@ -55,11 +55,11 @@ else
 {
     OutTee("Orbiting indefinitely").
 }
-OutHUD("Press Backspace in terminal to abort").
+OutHUD("Press End key in terminal to abort").
 
 until false
 {
-    if CheckInputChar(terminal:input:backspace)
+    if CheckInputChar(terminal:input:endcursor)
     {
         OutMsg("Terminating Orbit").
         wait 1.
