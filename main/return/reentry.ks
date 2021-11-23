@@ -15,11 +15,11 @@ local reentryTgt to 45000.
 local retroFire to false.
 local retroStage to 2.
 local spinStab to false.
-local stagingAlt to ship:body:atm:height + 50000.
+local stagingAlt to ship:body:atm:height + 25000.
 local ts to time:seconds.
 
 local sVal to ship:facing.
-local rVal to 0 - ship:facing:roll.
+local rVal to ship:facing:roll.
 lock steering to sVal + r(0, 0, rVal).
 
 local tVal to 0.
@@ -68,7 +68,7 @@ if retroFire and ship:periapsis > reentryTgt
         until stage:number = payloadStage.
         {
             if stage:ready stage.
-            wait 0.25.
+            wait 0.50.
         }
     }
     
