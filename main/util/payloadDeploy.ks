@@ -27,31 +27,32 @@ if ship:rootPart:tag:split("|"):length > 1
 
 if not autoDeploy 
 {
-    OutTee("payloadDeploy: No-op").
+    OutTee("payloadDeploy: No staging").
     wait 0.25.
 }
+else
 {
     OutWait("Preparing for payload deployment", 5).
 
     ag9 off.
     // Payload deployment
-    OutMsg("Deploying payload").
+    OutMsg("Staging payload").
     until stage:number = payloadStage 
     {
         if stage:ready stage.
         wait 0.5.
     }
-
-    from { local idx to 0.} until idx = ship:rootpart:tag:split("|")[1]:tonumber - 1 step { set idx to idx + 1.} do {
-        deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
-        wait 2.
-    }
-
-    OutInfo().
-    OutInfo("Deploying all remaining").
-    deployPayloadId(ship:parts, "*").
-    OutMsg("Deployment completed").
 }
+
+from { local idx to 0.} until idx = ship:rootpart:tag:split("|")[1]:tonumber - 1 step { set idx to idx + 1.} do {
+    deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
+    wait 2.
+}
+
+OutInfo().
+OutInfo("Deploying all remaining").
+deployPayloadId(ship:parts, "*").
+OutMsg("Deployment completed").
 
 
 // Local functions

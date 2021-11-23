@@ -375,8 +375,6 @@ global function ArmAutoStaging
 // Also checks whether current engines are deployable, and adds more wait time to allow for engine deployment
 global function SafeStage
 {
-    parameter mode is "".
-
     local onlySep to true.
     local stg to stage:number.
     OutInfo2("Staging (" + stg + ")").
@@ -390,15 +388,12 @@ global function SafeStage
         }
         wait 0.25.
     }
-    print "[" + stg + "] Stage " + stg + "  " at (2, 28).
 
     // Check for special conditions
     local engList to GetEnginesByStage(stg).
     
-    print "[" + stg + "] Ship:availableThrust: " + round(ship:availablethrust, 1) at (2, 29).
     if ship:availableThrust > 0
     {
-        print "[" + stg + "] Passed ship:availablethrust check" at (2, 30).
         for eng in engList
         {
             if not sepList:contains(eng:name)
@@ -407,7 +402,6 @@ global function SafeStage
             }
         }
 
-        print "[" + stg + "] onlySep: " + onlySep at (2, 31).
         if onlySep
         {
             wait 0.50.
@@ -416,7 +410,6 @@ global function SafeStage
         }
     }
 
-    print "[" + stg + "] engList:length: " + engList:length at (2, 32).
     if engList:length > 0 
     {
         for eng in engList
@@ -428,7 +421,6 @@ global function SafeStage
             }
         }
     }
-    print "[" + stg + "] Returning from SafeStage()" at (2, 33).
 }
 // #endregion
 // #endregion
