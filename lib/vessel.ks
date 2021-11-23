@@ -388,7 +388,7 @@ global function SafeStage
             stage.
             break.
         }
-        wait 0.01.
+        wait 0.25.
     }
     print "[" + stg + "] Stage " + stg + "  " at (2, 28).
 
@@ -396,7 +396,7 @@ global function SafeStage
     local engList to GetEnginesByStage(stg).
     
     print "[" + stg + "] Ship:availableThrust: " + round(ship:availablethrust, 1) at (2, 29).
-    if ship:maxThrust > 0
+    if ship:availableThrust > 0
     {
         print "[" + stg + "] Passed ship:availablethrust check" at (2, 30).
         for eng in engList
@@ -410,9 +410,9 @@ global function SafeStage
         print "[" + stg + "] onlySep: " + onlySep at (2, 31).
         if onlySep
         {
-            wait 0.5.
+            wait 0.50.
             stage.
-            wait 0.25.
+            wait 0.50.
         }
     }
 
