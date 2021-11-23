@@ -345,7 +345,7 @@ global function GetExhVel
 }
 // #endregion
 
-// -- Ship Triggers
+// -- Ship Staging
 // #region
 
 // ArmAutoStaging :: (<scalar>) -> <none>
@@ -356,22 +356,67 @@ global function ArmAutoStaging
     
     when ship:availablethrust <= 0.01 and throttle > 0 then
     {
-        local startTime to Time:seconds.
-
+        local startTime to time:seconds.
         OutInfo("AutoStage Mode").
-        wait 0.50.
-        until stage:ready
-        {
-            wait 0.01.
-        }
-        stage.
-        wait 0.50.
-        OutInfo().
-        local endTime to Time:seconds.
+        SafeStage().
+        local endTime to time:seconds.
 
         set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
+}
+
+// SafeStage :: <string> -> <scalar>
+// Performs a staging operation, and returns the time it took to complete staging.
+// Checks for whether this is only a sepmotor stage, and stages again if so. 
+// Also checks whether current engines are deployable, and adds more wait time to allow for engine deployment
+global function SafeStage
+{
+    parameter mode is "".
+
+    local startTime to time:seconds.
+    local onlySep to true.
+    local deployableEng to false.
+    local engToDeploy to "".
+
+    OutInfo("Staging").
+    wait 0.5. 
+    until stage:ready
+    {
+        wait 0.01.
+    }
+    stage.
+
+    if mode = ""
+    {
+        for eng in GetEnginesByStage(stage:number)
+        {
+            if not sepList:contains(eng:name)
+            {
+                set onlySep to false.
+                if eng:hasModule("ModuleDeployableEngine") 
+                {
+                    set deployableEng to true.
+                    set engToDeploy to eng.
+                }
+            }
+        }
+
+        if onlySep
+        {
+            wait 0.5.
+            stage.
+        }
+        else if deployableEng
+        {
+            OutInfo2("Deploying engine").
+            wait until engToDeploy:thrust > 0.
+        }
+    }
+
+    wait 0.5.
+
+    return time:seconds - startTime.
 }
 // #endregion
 // #endregion

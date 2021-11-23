@@ -17,6 +17,8 @@ if ship:status = "PRELAUNCH"
 
 tagCores().
 
+set terminal:width to 60.
+set terminal:height to 40.
 core:doAction("open terminal", true).
 
 if not exists(localPlan)
