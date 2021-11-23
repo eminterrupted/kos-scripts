@@ -207,7 +207,7 @@ until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:ap
 
 
 OutMsg("Horizontal Velocity Program").
-until ship:apoapsis >= tgtAp * 0.9995 or eta:apoapsis <= 10
+until ship:apoapsis >= tgtAp * 0.9995
 {
     local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
     local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
