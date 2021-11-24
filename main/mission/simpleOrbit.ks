@@ -46,6 +46,12 @@ from { local idx to 0.} until idx >= deployOrder:keys:length - 1 step { set idx 
 }
 deployPayloadId(ship:partsTaggedPattern(""), "").
 
+local termChar to "".
+when terminal:input:hasChar then
+{
+    set termChar to terminal:input:getChar.
+}
+
 if orbitTime > 0
 {
     OutTee("Orbiting until " + timestamp(orbitTS):full).
@@ -59,12 +65,19 @@ OutHUD("Press End key in terminal to abort").
 
 until false
 {
-    if CheckInputChar(terminal:input:endcursor)
+    set g_termChar to GetInputChar().
+
+    if g_termChar = terminal:input:endcursor
     {
         OutMsg("Terminating Orbit").
         wait 1.
         break.
     }
+    else if g_termChar = terminal:input:enter
+    {
+        InitWarp(OrbitTS, "orbit script termination", 15, true).
+    }
+    
     if orbitTime > 0 and time:seconds >= orbitTS 
     {
         break.
