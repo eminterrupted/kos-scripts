@@ -353,7 +353,6 @@ global function ArmAutoStaging
     when ship:availablethrust <= 0.01 and throttle > 0 then
     {
         local startTime to time:seconds.
-        OutInfo("[" + stage:number + "] AutoStage Mode").
         SafeStage().
         wait 0.25.
         local endTime to time:seconds.
@@ -370,7 +369,6 @@ global function SafeStage
 {
     local onlySep to true.
     local stg to stage:number.
-    OutInfo2("Staging (" + stg + ")").
     wait 0.5. 
     until false
     {
@@ -397,7 +395,6 @@ global function SafeStage
 
         if onlySep
         {
-            OutInfo2("Sep stage, staging again...").
             wait 0.50.
             until false
             {
@@ -417,7 +414,6 @@ global function SafeStage
         {
             if eng:hasModule("ModuleDeployableEngine") 
             {
-                OutInfo2("Deploying engine").
                 wait until eng:thrust > 0.
             }
         }
