@@ -65,8 +65,12 @@ local fullDur   to burnDur[0].                  // Full duration, no staging tim
 set g_MECO      to burnEta + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
 //local l_MECO    to burnEta + burnDur[1].        // Expected cutoff point with full duration and staging estimates
 
-local mnv to node(time:seconds + eta:apoapsis, 0, 0, dv).
-add mnv.
+// Uncomment below to see the maneuver that will be executed in map view assumed you have the ability in career mode
+// if career():canMakeNodes
+// {
+//    local mnv to node(time:seconds + eta:apoapsis, 0, 0, dv).
+//    add mnv.
+// }
 
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
 InitWarp(burnEta, "Circularization Burn").
@@ -96,7 +100,7 @@ set tVal to 0.
 ag9 on.
 OutInfo().
 
-remove mnv.
+if hasNode remove nextNode.
 OutMsg("Circularization phase complete").
 wait 1.
 
