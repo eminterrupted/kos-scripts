@@ -203,7 +203,7 @@ global function GetEngines
 global function GetEnginesByStage
 {
     parameter stg,
-                includeSep is false.
+              includeSep is false.
 
     local engList to list().
     local stgEngs to list().
@@ -231,38 +231,34 @@ global function GetEnginesByStage
 global function GetStageThrust
 {
     parameter stg,
-                thrType is "curr".
+              thrType is "curr",
+              includeSep is false.
 
     local stgThr to 0.
     local engList to list().
     list engines in engList.
 
-    if thrType = "curr"
+    for e in engList
     {
-        for e in engList 
+        if e:stage = stg
         {
-            if e:stage = stg set stgThr to stgThr + e:thrust.
-        }
-    }
-    else if thrType = "max" 
-    {
-        for e in engList 
-        {
-            if e:stage = stg set stgThr to stgThr + e:maxThrust.
-        }
-    }
-    else if thrType = "avail" 
-    {
-        for e in engList 
-        {
-            if e:stage = stg set stgThr to stgThr + e:availableThrust.
-        }
-    }
-    else if thrType = "poss"
-    {
-        for e in engList 
-        {
-            if e:stage = stg set stgThr to stgThr + e:possibleThrust.
+            if not includeSep
+            {
+                if not sepList:contains(e:name)
+                {
+                    if thrType = "curr"         set stgThr to stgThr + e:thrust.
+                    else if thrType = "max"     set stgThr to stgThr + e:maxThrust.
+                    else if thrType = "avail"   set stgThr to stgThr + e:availableThrust.
+                    else if thrType = "poss"    set stgThr to stgThr + e:possibleThrust.
+                }
+            }
+            else
+            {
+                if thrType = "curr"         set stgThr to stgThr + e:thrust.
+                else if thrType = "max"     set stgThr to stgThr + e:maxThrust.
+                else if thrType = "avail"   set stgThr to stgThr + e:availableThrust.
+                else if thrType = "poss"    set stgThr to stgThr + e:possibleThrust.
+            }
         }
     }
     return stgThr.
@@ -273,7 +269,7 @@ global function GetStageThrust
 global function GetTotalThrust
 {
     parameter engList,
-                thrType is "curr".
+              thrType is "curr".
 
     local totThr to 0.
 
@@ -357,15 +353,11 @@ global function ArmAutoStaging
     when ship:availablethrust <= 0.01 and throttle > 0 then
     {
         local startTime to time:seconds.
-        OutInfo("[" + stage:number + "] AutoStage Mode").
         SafeStage().
         wait 0.25.
         local endTime to time:seconds.
         set g_MECO to g_MECO + (endTime - startTime).
-        print "[" + stage:number + "] stopAtStage: " + stopAtStg at (2, 25).
-        print "[" + stage:number + "] CurStage" at (2, 26).
-        print "[" + stage:number + "] Expression: " + (stage:number >= stopAtStg) at (2, 27).
-        if stage:number >= stopAtStg preserve.
+        if stage:number > stopAtStg preserve.
     }
 }
 
@@ -375,11 +367,8 @@ global function ArmAutoStaging
 // Also checks whether current engines are deployable, and adds more wait time to allow for engine deployment
 global function SafeStage
 {
-    parameter mode is "".
-
     local onlySep to true.
     local stg to stage:number.
-    OutInfo2("Staging (" + stg + ")").
     wait 0.5. 
     until false
     {
@@ -390,15 +379,12 @@ global function SafeStage
         }
         wait 0.25.
     }
-    print "[" + stg + "] Stage " + stg + "  " at (2, 28).
 
     // Check for special conditions
     local engList to GetEnginesByStage(stg).
     
-    print "[" + stg + "] Ship:availableThrust: " + round(ship:availablethrust, 1) at (2, 29).
     if ship:availableThrust > 0
     {
-        print "[" + stg + "] Passed ship:availablethrust check" at (2, 30).
         for eng in engList
         {
             if not sepList:contains(eng:name)
@@ -407,28 +393,31 @@ global function SafeStage
             }
         }
 
-        print "[" + stg + "] onlySep: " + onlySep at (2, 31).
         if onlySep
         {
-            wait 0.50.
-            stage.
-            wait 0.50.
+            until false
+            {
+                wait 0.50.
+                if stage:ready
+                {
+                    stage.
+                    break.
+                }
+            }
         }
     }
+    wait 0.25.
 
-    print "[" + stg + "] engList:length: " + engList:length at (2, 32).
     if engList:length > 0 
     {
         for eng in engList
         {
             if eng:hasModule("ModuleDeployableEngine") 
             {
-                OutInfo2("Deploying engine").
                 wait until eng:thrust > 0.
             }
         }
     }
-    print "[" + stg + "] Returning from SafeStage()" at (2, 33).
 }
 // #endregion
 // #endregion

@@ -426,13 +426,21 @@ global function CheckValDeviation
     else return false.
 }
 
+global function CheckChar
+{
+    parameter varToCheck, charToCheck.
+
+    if varToCheck = charToCheck return true.
+    else return false.
+}
+
 global function CheckInputChar
 {
-    parameter checkChar.
+    parameter charToCheck.
     
     if terminal:input:hasChar
     {
-        if terminal:input:getChar = checkChar
+        if terminal:input:getChar = charToCheck
         {
             return true.
         }
@@ -444,7 +452,7 @@ global function CheckInputChar
     return false.
 }
 
-global function ReturnInputChar
+global function GetInputChar
 {
     if terminal:input:hasChar
     {
@@ -661,17 +669,26 @@ global function InitWarp
 {
     parameter tStamp, 
               str is "timestamp",
-              buffer is 15.
+              buffer is 15,
+              warpNow to false.
 
     set tStamp to tStamp - buffer.
     if time:seconds <= tStamp
     {
-        when CheckInputChar(terminal:input:enter) then
+        if warpNow 
         {
             warpTo(tStamp).
             wait until kuniverse:timewarp:issettled.
         }
-        OutHUD("Press Enter in terminal to warp to " + str).
+        else
+        {
+            when CheckInputChar(terminal:input:enter) then
+            {
+                warpTo(tStamp).
+                wait until kuniverse:timewarp:issettled.
+            }
+            OutHUD("Press Enter in terminal to warp to " + str).
+        }
     }
     else
     {

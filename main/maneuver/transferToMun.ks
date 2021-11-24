@@ -21,7 +21,7 @@ local mnv               to node(0, 0, 0, 0).
 local tgtBodyAlt        to 0.
 local transferPhase     to 0.
 local tgtAlt            to 250000.
-local tgtInc            to 0.
+local tgtInc            to 84.
 
 // Param validation
 if param:length > 0

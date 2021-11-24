@@ -62,7 +62,15 @@ local burnDur   to CalcBurnDur(dv).
 local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
 local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
 local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
-set g_MECO        to burnEta + burnDur[1].        // Expected cutoff point with full duration + waiting for staging
+set g_MECO      to burnEta + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
+//local l_MECO    to burnEta + burnDur[1].        // Expected cutoff point with full duration and staging estimates
+
+// Uncomment below to see the maneuver that will be executed in map view assumed you have the ability in career mode
+// if career():canMakeNodes
+// {
+//    local mnv to node(time:seconds + eta:apoapsis, 0, 0, dv).
+//    add mnv.
+// }
 
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
 InitWarp(burnEta, "Circularization Burn").
@@ -92,6 +100,7 @@ set tVal to 0.
 ag9 on.
 OutInfo().
 
+if hasNode remove nextNode.
 OutMsg("Circularization phase complete").
 wait 1.
 

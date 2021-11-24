@@ -10,7 +10,7 @@ runOncePath("0:/lib/util").
 DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
-local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1].
+local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
 local reentryTgt to 45000.
 local retroFire to false.
 local retroStage to 2.
