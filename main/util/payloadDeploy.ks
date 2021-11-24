@@ -46,12 +46,16 @@ else
 
 from { local idx to 0.} until idx = ship:rootpart:tag:split("|")[1]:tonumber - 1 step { set idx to idx + 1.} do {
     deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
-    wait 2.
+    wait 2.5.
 }
 
 OutInfo().
 OutInfo("Deploying all remaining").
-deployPayloadId(ship:parts, "*").
+local unTaggedParts to list().
+for p in ship:parts { 
+    if p:tag = "" untaggedParts:add(p).
+}
+deployPayloadId(untaggedParts, "Untagged").
 OutMsg("Deployment completed").
 
 
@@ -68,6 +72,12 @@ local function deployPayloadId
     
     for p in partsList
     {
+        if p:hasModule("ModuleAnimateGeneric")
+        {
+            local m to p:getModule("ModuleAnimateGeneric").
+            DoEvent(m, "open").
+        }
+        
         if p:hasModule("ModuleRTAntenna")
         {
             local m to p:getModule("ModuleRTAntenna").

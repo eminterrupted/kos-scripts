@@ -88,7 +88,7 @@ if retroFire and ship:periapsis > reentryTgt
 
     OutMsg("Firing retro rockets").
     set tVal to 1.
-    until stage:number = retroStage
+    until stage:number <= retroStage
     {
         stage.
         wait until stage:ready.
