@@ -106,6 +106,16 @@ global function StageMass
     local stgFuelMass to 0.
     local stgShipMass to 0.
     
+    local stgEngs to GetEnginesByStage(stg).
+    local engResUsed to list().
+    for e in stgEngs
+    {
+        for k in e:consumedResources:keys 
+        {
+            if not engResUsed:contains(k) engResUsed:add(k).
+        }
+    }
+
     for p in ship:parts
     {
         if p:typeName = "Decoupler" 
@@ -126,7 +136,7 @@ global function StageMass
         {
             for r in p:resources
             {
-                if resList:contains(r:name) 
+                if engResUsed:contains(r:name) 
                 {
                     // print "Calculating: " + r:name.
                     set stgFuelMass to stgFuelMass + (r:amount * r:density).
@@ -303,31 +313,45 @@ global function GetTotalThrust
 // Returns averaged ISP for a list of engines
 global function GetTotalIsp
 {
-    parameter engList.
+    parameter engList, 
+              mode is "vac".
 
     local relThr to 0.
     local totThr to 0.
-    local stg to 0.
-    for e in engList
-    {
-        set stg to e:stage.
-        set totThr to totThr + e:possibleThrust.
-        set relThr to relThr + (e:possibleThrust / e:visp).
-    }
 
-    // clrDisp(30).
-    // print "GetTotalIsp                    " at (2, 30).
-    // print "stg: " + stg.
-    // print "totThr: " + totThr at (2, 31).
-    // print "relThr: " + relThr at (2, 32).
-    //Breakpoint().
-    if totThr = 0
+    local engIsp to { 
+        parameter e. 
+        if mode = "vac" return e:visp.
+        if mode = "sl" return e:slisp.
+        if mode = "cur" return e:ispAt(body:atm:altitudePressure(ship:altitude)).
+    }.
+
+    if engList:length > 0 
     {
-        return 0.001.
+        for e in engList
+        {
+            set totThr to totThr + e:possibleThrust.
+            set relThr to relThr + (e:possibleThrust / engIsp(e)).
+        }
+
+        // clrDisp(30).
+        // print "GetTotalIsp                    " at (2, 30).
+        // print "stg: " + stg.
+        // print "totThr: " + totThr at (2, 31).
+        // print "relThr: " + relThr at (2, 32).
+        //Breakpoint().
+        if totThr = 0
+        {
+            return 0.00001.
+        }
+        else
+        {
+            return totThr / relThr.
+        }
     }
     else
     {
-        return totThr / relThr.
+        return 0.00001.
     }
 }
 
@@ -335,9 +359,9 @@ global function GetTotalIsp
 // Returns the averaged exhaust velocity for a list of engines
 global function GetExhVel
 {
-    parameter engList.
+    parameter engList, mode is "vac".
 
-    return constant:g0 * GetTotalIsp(engList).
+    return constant:g0 * GetTotalIsp(engList, mode).
 }
 // #endregion
 

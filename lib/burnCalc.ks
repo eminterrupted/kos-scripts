@@ -157,12 +157,14 @@
     // Returns a lex of dv available for vessel and per stage
     global function AvailShipDV
     {
+        parameter mode is "vac".
+
         local availDv to 0.
         local dvStgObj to lex().
 
         from { local stg to stage:number.} until stg < 0 step { set stg to stg - 1.} do 
         {
-            set dvStgObj to AvailStageDV(stg).
+            set dvStgObj to AvailStageDV(stg, mode).
             set availDv to availDv + dvStgObj[stg].
         }
 
@@ -174,10 +176,10 @@
     // Returns the calculated deltaV for a given stage
     global function AvailStageDV
     {
-        parameter stg.
+        parameter stg, mode is "vac".
 
         local stgMass to StageMass(stg).
-        local exhVel to GetExhVel(GetEnginesByStage(stg)).
+        local exhVel to GetExhVel(GetEnginesByStage(stg), mode).
         
         //clrDisp(30).
         //print "AvailStageDV               " at (2, 30).
