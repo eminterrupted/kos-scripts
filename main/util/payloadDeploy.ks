@@ -44,7 +44,7 @@ else
     }
 }
 
-from { local idx to 0.} until idx = ship:rootpart:tag:split("|")[1]:tonumber - 1 step { set idx to idx + 1.} do {
+from { local idx to 0.} until idx >= ship:rootpart:tag:split("|")[1]:tonumber - 1 or idx >= 5 step { set idx to idx + 1.} do {
     deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
     wait 2.5.
 }
