@@ -2,7 +2,9 @@
 wait 1.
 
 global mp to list().
-global plan to choose "misc" if core:tag = "" else core:tag:split("|")[0].
+global planTags to parseMissionTags(core).
+global plan to planTags[0].
+global branch to choose planTags[1] if planTags:length > 1 else "".
 global missionName to ship:name:replace(" ", "_").
 
 local localPlan to "1:/mp.json".
@@ -54,15 +56,32 @@ local function tagCores
     local idx to 1.
     for c in ship:modulesNamed("kOSProcessor")
     {
-        if c:part:tag = "" 
+        if c:tag = "" 
         {
-            set c:part:tag to "PCX" + idx.
+            set c:tag to "PCX" + idx.
             set c:volume:name to "PLX" + idx.
             set idx to idx + 1.
         }
         else if c:volume:name = ""
         {
-            set c:volume:name to c:part:tag.
+            set c:volume:name to c:tag.
         }
     }
+}
+
+local function parseMissionTags
+{
+    parameter c.
+
+    local fragList to list().
+    local pipeSplit to c:tag:split("|").
+    for word in pipeSplit
+    {
+        local colonSplit to word:split(":").
+        for frag in colonSplit
+        {
+            fragList:add(frag).
+        }
+    }
+    return fragList.
 }

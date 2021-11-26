@@ -52,7 +52,7 @@ local tVal to 0.
 
 // Core tag
 local cTag to core:tag.
-local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1].
+local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1]:tonumber.
 // Optional second core
 local core2 to "".
 

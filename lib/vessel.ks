@@ -383,6 +383,8 @@ global function ArmAutoStaging
         set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
+
+    print "Autostaging armed: " + stopAtStg at (2, 25).
 }
 
 // SafeStage :: <string> -> <scalar>
@@ -396,49 +398,49 @@ global function SafeStage
     wait 0.5. 
     until false
     {
-        if stage:ready
+        until stage:ready
         {
-            stage.
-            break.
+            wait 0.25.
         }
-        wait 0.25.
+        stage.
+        break.
     }
-
+    print "First stage complete" at (2, 30).
     // Check for special conditions
     local engList to GetEnginesByStage(stg).
-    
-    if ship:availableThrust > 0
+    if engList:length > 0
     {
-        for eng in engList
+        if ship:availableThrust > 0
         {
-            if not sepList:contains(eng:name)
+            for eng in engList
             {
-                set onlySep to false.
-            }
-        }
-
-        if onlySep
-        {
-            until false
-            {
-                wait 0.50.
-                if stage:ready
+                if not sepList:contains(eng:name)
                 {
-                    stage.
-                    break.
+                    set onlySep to false.
                 }
             }
-        }
-    }
-    wait 0.25.
 
-    if engList:length > 0 
-    {
-        for eng in engList
-        {
-            if eng:hasModule("ModuleDeployableEngine") 
+            if onlySep
             {
-                wait until eng:thrust > 0.
+                until false
+                {
+                    wait 0.50.
+                    if stage:ready break.
+                }
+                stage.
+                print "onlySep stage complete" at (2, 31).
+            }
+        }
+        wait 0.25.
+
+        if engList:length > 0 
+        {
+            for eng in engList
+            {
+                if eng:hasModule("ModuleDeployableEngine") 
+                {
+                    wait until eng:thrust > 0.
+                }
             }
         }
     }

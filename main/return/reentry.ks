@@ -13,7 +13,7 @@ local parachutes to ship:modulesnamed("RealChuteModule").
 local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
 local reentryTgt to 45000.
 local retroFire to false.
-local retroStage to 2.
+local retroStage to 4.
 local spinStab to false.
 local stagingAlt to ship:body:atm:height + 25000.
 local ts to time:seconds.
@@ -64,9 +64,11 @@ if retroFire and ship:periapsis > reentryTgt
 
     if stage:number > payloadStage
     {
-        OutMsg("Staging for retro fire").
-        until stage:number = payloadStage.
+        OutMsg("[" + stage:number + "] Staging to payloadStage [" + payloadStage + "] for retro fire").
+        until false 
         {
+            if stage:number = payloadStage break.
+            wait 0.50.
             if stage:ready stage.
             wait 0.50.
         }
@@ -86,9 +88,9 @@ if retroFire and ship:periapsis > reentryTgt
         OutMsg("Spin stabilization complete").
     }
 
-    OutMsg("Firing retro rockets").
+    OutMsg("Firing retro rockets to stage " + retroStage).
     set tVal to 1.
-    until stage:number <= retroStage
+    until stage:number = retroStage
     {
         stage.
         wait until stage:ready.
