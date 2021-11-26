@@ -383,6 +383,8 @@ global function ArmAutoStaging
         set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
+
+    print "Autostaging armed: " + stopAtStg at (2, 25).
 }
 
 // SafeStage :: <string> -> <scalar>
@@ -403,39 +405,42 @@ global function SafeStage
         stage.
         break.
     }
-
+    print "First stage complete" at (2, 30).
     // Check for special conditions
     local engList to GetEnginesByStage(stg).
-    
-    if ship:availableThrust > 0
+    if engList:length > 0
     {
-        for eng in engList
+        if ship:availableThrust > 0
         {
-            if not sepList:contains(eng:name)
+            for eng in engList
             {
-                set onlySep to false.
+                if not sepList:contains(eng:name)
+                {
+                    set onlySep to false.
+                }
+            }
+
+            if onlySep
+            {
+                until false
+                {
+                    wait 0.50.
+                    if stage:ready break.
+                }
+                stage.
+                print "onlySep stage complete" at (2, 31).
             }
         }
+        wait 0.25.
 
-        if onlySep
+        if engList:length > 0 
         {
-            until false
+            for eng in engList
             {
-                wait 0.50.
-                if stage:ready break.
-            }
-            stage.
-        }
-    }
-    wait 0.25.
-
-    if engList:length > 0 
-    {
-        for eng in engList
-        {
-            if eng:hasModule("ModuleDeployableEngine") 
-            {
-                wait until eng:thrust > 0.
+                if eng:hasModule("ModuleDeployableEngine") 
+                {
+                    wait until eng:thrust > 0.
+                }
             }
         }
     }
