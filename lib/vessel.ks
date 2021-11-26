@@ -419,9 +419,10 @@ global function SafeStage
 
         if onlySep
         {
-            until stage:ready
+            until false
             {
                 wait 0.50.
+                if stage:ready break.
             }
             stage.
         }
