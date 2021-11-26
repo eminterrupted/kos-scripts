@@ -396,12 +396,12 @@ global function SafeStage
     wait 0.5. 
     until false
     {
-        if stage:ready
+        until stage:ready
         {
-            stage.
-            break.
+            wait 0.25.
         }
-        wait 0.25.
+        stage.
+        break.
     }
 
     // Check for special conditions
@@ -419,15 +419,11 @@ global function SafeStage
 
         if onlySep
         {
-            until false
+            until stage:ready
             {
                 wait 0.50.
-                if stage:ready
-                {
-                    stage.
-                    break.
-                }
             }
+            stage.
         }
     }
     wait 0.25.
