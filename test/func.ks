@@ -8,46 +8,68 @@ runOncePath("0:/lib/vessel").
 
 parameter p0 is ship:name.
 
-print "FUNCTIONAL TEST SCRIPT    v0.000001a".
-print "====================================".
+print "parseMissionTags(core:part) result".
+print parseMissionTags(core:part).
 
-local charList to list(" ", ".", "-", "_", ":").
 
-print "Mission name: " + p0.
-
-local str to p0.
-
-local strLex to lex().
-for c in charList
+local function parseMissionTags
 {
-    print "-----------------------------------------------".
-    print "Parsing by char [" + c + "]".
-    print " ".
-    local strSplit to str:split(c).
-    print strSplit:length + " part(s)".
-    local partsStr to " ".
-    if strSplit:length > 1 
+    parameter c.
+
+    local fragList to list().
+    local pipeSplit to c:tag:split("|").
+    for word in pipeSplit
     {
-        set strLex[c] to strSplit.
-        for spl in strSplit
+        local colonSplit to word:split(":").
+        for frag in colonSplit
         {
-            for ch in charList
-            {
-                local spl2 to spl:split(ch).
-                if spl2:length > 1 
-                {
-                    from { local idx to 0.} until idx > spl2:length - 1 step { set idx to idx + 1.} do 
-                    {
-                        set partsStr to partsStr + ch + "[" + spl2[idx] + "]".
-                    }
-                }
-            }
+            fragList:add(frag).
         }
     }
-    else set partsStr to partsStr + " [" + strSplit[0] + "].".
-    set partsStr to "Parts         : " + partsStr:remove(0, 1).
-    print partsStr.
+    return fragList.
 }
+
+
+// print "FUNCTIONAL TEST SCRIPT    v0.000001a".
+// print "====================================".
+
+// local charList to list(" ", ".", "-", "_", ":").
+
+// print "Mission name: " + p0.
+
+// local str to p0.
+
+// local strLex to lex().
+// for c in charList
+// {
+//     print "-----------------------------------------------".
+//     print "Parsing by char [" + c + "]".
+//     print " ".
+//     local strSplit to str:split(c).
+//     print strSplit:length + " part(s)".
+//     local partsStr to " ".
+//     if strSplit:length > 1 
+//     {
+//         set strLex[c] to strSplit.
+//         for spl in strSplit
+//         {
+//             for ch in charList
+//             {
+//                 local spl2 to spl:split(ch).
+//                 if spl2:length > 1 
+//                 {
+//                     from { local idx to 0.} until idx > spl2:length - 1 step { set idx to idx + 1.} do 
+//                     {
+//                         set partsStr to partsStr + ch + "[" + spl2[idx] + "]".
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     else set partsStr to partsStr + " [" + strSplit[0] + "].".
+//     set partsStr to "Parts         : " + partsStr:remove(0, 1).
+//     print partsStr.
+// }
 
 
 
