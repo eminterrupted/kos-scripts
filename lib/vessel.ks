@@ -403,7 +403,7 @@ global function SafeStage
         break.
     }
     // Check for special conditions
-    local engList to GetEnginesByStage(stage:number).
+    local engList to GetEnginesByStage(stage:number, true).
     if engList:length > 0
     {
         if ship:availableThrust > 0
