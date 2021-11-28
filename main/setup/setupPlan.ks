@@ -5,7 +5,7 @@ local planPath to path("0:/_plan/" + plan + "/mp_" + missionName + ".json").
 local setupPath to path("0:/_plan/" + plan + "/setup.ks").
 if branch <> "" 
 {
-     if branch:toNumber(-1) = -1 set setupPath to path("0:/_plan/" + plan + "/" + branch + "_setup.ks").
+     if branch:toNumber(-1) = -1 set setupPath to path("0:/_plan/" + plan + "/setup_" + branch + ".ks").
 }
 
 runPath(setupPath).

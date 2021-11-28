@@ -90,13 +90,14 @@ if retroFire and ship:periapsis > reentryTgt
 
     OutMsg("Firing retro rockets to stage " + retroStage).
     set tVal to 1.
-    until stage:number = retroStage
+    until stage:number <= retroStage
     {
         stage.
         wait until stage:ready.
     }
     until ship:periapsis <= reentryTgt or ship:availableThrust <= 0.1
     {
+        if stage = 1 set tVal to 0.
         DispTelemetry().
     }
     set tVal to 0.

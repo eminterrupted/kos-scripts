@@ -383,8 +383,6 @@ global function ArmAutoStaging
         set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
-
-    print "Autostaging armed: " + stopAtStg at (2, 25).
 }
 
 // SafeStage :: <string> -> <scalar>
@@ -394,7 +392,6 @@ global function ArmAutoStaging
 global function SafeStage
 {
     local onlySep to true.
-    local stg to stage:number.
     wait 0.5. 
     until false
     {
@@ -405,9 +402,8 @@ global function SafeStage
         stage.
         break.
     }
-    print "First stage complete" at (2, 30).
     // Check for special conditions
-    local engList to GetEnginesByStage(stg).
+    local engList to GetEnginesByStage(stage:number).
     if engList:length > 0
     {
         if ship:availableThrust > 0
@@ -428,7 +424,6 @@ global function SafeStage
                     if stage:ready break.
                 }
                 stage.
-                print "onlySep stage complete" at (2, 31).
             }
         }
         wait 0.25.
