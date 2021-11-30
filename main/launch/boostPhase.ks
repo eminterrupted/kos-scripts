@@ -1,7 +1,9 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter lp to list().
+// #include "0:/boot/_bl.ks"
+
+parameter lPlan to list().
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/launch").
@@ -22,17 +24,17 @@ local tgtLAN    to -1.
 local tgtRoll   to 0.
 
 // If the launch plan was passed in via param, override manual values
-if lp:length > 0
+if lPlan:length > 0
 {
-    set tgtPe to lp[0].
-    set tgtAp to lp[1].
-    set tgtInc to lp[2].
-    set tgtLAN to lp[3].
-    set tgtRoll to lp[4]. 
+    set tgtPe to lPlan[0].
+    set tgtAp to lPlan[1].
+    set tgtInc to lPlan[2].
+    set tgtLAN to lPlan[3].
+    set tgtRoll to lPlan[4]. 
 }
 else 
 {
-    set lp to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
+    set lPlan to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 }
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 
@@ -60,7 +62,7 @@ local core2 to "".
 LaunchPadGen(true).
 lock steering to sVal. 
 
-DispLaunchPlan(lpCache).
+DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper)).
 
 // Write tgtPe to the local drive. If write fails, iterate through volumes. If no other volumes, write to archive.
 local volIdx to 1. 
