@@ -39,7 +39,9 @@ ArmAutoStaging(0).
 // Calculations
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, curAp, ship:periapsis, tgtAp, curAp)[2].
-print dv at (2, 25).
+print "Calculated dV: " + round(dv, 2) at (2, 25).
+set dv to dv * 1.625.
+print "Adjusted dV  : " + round(dv, 2) at (2, 26).
 
 local burnDur   to CalcBurnDur(dv).
 
