@@ -35,11 +35,29 @@ if params:length > 0
 local startAlt to stagingAlt + 10000.
 
 OutMsg("Waiting until descent").
+OutInfo("Press Enter to warp to Ap").
+OutInfo2("Press End to begin reentry procedures now").
 until ship:verticalspeed < 0 
 {
+    local charToCheck to GetInputChar().
+    if charToCheck <> ""
+    {
+        if charToCheck = terminal:input:enter
+        {
+            InitWarp(time:seconds + eta:apoapsis, "apoapsis").
+        }
+        else if charToCheck = terminal:input:endcursor
+        {
+            OutInfo("Immediate reentry procedure mode").
+            OutInfo2().
+            break.
+        }
+    }
     DispTelemetry().
     wait 0.01.
 }
+OutInfo().
+OutInfo2().
 
 OutMsg("Beginning Reentry Procedure").
 

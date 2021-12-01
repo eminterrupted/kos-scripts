@@ -226,12 +226,15 @@ global function DispAvionics
 // Displays the launch plan prior to launching
 global function DispLaunchPlan
 {
-    parameter launchPlan.
+    parameter launchPlan, planName.
     
     set line to 10.
 
     print "LAUNCH PLAN OVERVIEW" at (0, line).
     print "--------------------" at (0, cr()).
+    cr().
+    print "PLAN USED           : " + planName[0] at (0, cr()).
+    if planName:length > 1 print "BRANCH USED         : " + planName[1] at (0, cr()).
     cr().
     print "PERIAPSIS           : " + launchPlan[0] at (0, cr()).
     print "APOAPSIS            : " + launchPlan[1] at (0, cr()).
