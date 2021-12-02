@@ -15,8 +15,9 @@ runOncePath("0:/lib/vessel").
 runOncePath("0:/kslib/lib_navball").
 
 // Variables
-local tgtAp to ship:periapsis.
 local curAp to ship:body:soiradius + ship:body:body:soiradius - (ship:apoapsis + ship:body:radius).
+local magicVal to 1.20. 
+local tgtAp to ship:periapsis.
 
 local rVal to 0 - ship:facing:roll.
 local sVal to ship:facing.
@@ -40,7 +41,7 @@ ArmAutoStaging(0).
 OutMsg("Calculating Burn Parameters").
 local dv        to CalcDvBE(ship:periapsis, curAp, ship:periapsis, tgtAp, curAp)[2].
 print "Calculated dV: " + round(dv, 2) at (2, 25).
-set dv to dv * 1.625.
+set dv to dv * magicVal.
 print "Adjusted dV  : " + round(dv, 2) at (2, 26).
 
 local burnDur   to CalcBurnDur(dv).
