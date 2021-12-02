@@ -59,15 +59,28 @@ global function LngToDegress
 }
 
 //#region -- Target and Transfer data Functions
+// GetAngVelocity :: <orbitable>, <body> -> <scalar>
 // Angular velocity of a target in radians
 global function GetAngVelocity 
 {
     parameter tgt,
               mnvBody is ship:body.
 
-    if tgt:typename = "string" set tgt to GetOrbitable(tgt).
     local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
+    //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis) * constant:radtodeg.
+    //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis).
     //local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
+    return angVel.
+}
+
+// GetAngVelocityNext :: <orbitable>, <body> -> <scalar>
+// Angular velocity of a target using a different formula than above
+global function GetAngVelocityNext
+{
+    parameter tgt,
+              mnvBody is ship:body.
+
+    local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis) * constant:radtodeg.
     return angVel.
 }
 
@@ -102,20 +115,21 @@ global function GetOrbitable
     return body(tgtStr).
 }
 
+// GetTransferPhase :: <orbitable / string>, <scalar> -> <scalar>
 // Returns the proper phase angle to start a transfer burn. from: https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm#calculatinganinterplanetaryhohmanntransfer
 global function GetTransferPhase
 {
     parameter tgt,
               stAlt.
     
-    if tgt:typename = "string" set tgt to GetOrbitable(tgt).
     local angVelTarget  to GetAngVelocity(tgt, tgt:body).
     local tSMA          to GetSMA(stAlt, tgt:altitude, tgt:body).
     local tHoh          to GetTransferPeriod(tSMA, tgt:body).
     return 180 - 0.5 * (tHoh * angVelTarget).
 }
 
-// From KSLib - Gets the phase angle relative to LAN 
+// KSNavPhaseAng :: <orbitable>, <vessel> -> <scalar>
+// From KSLib - Gets the phase angle relative to LAN for a target and starting ship
 global function KSNavPhaseAng {
     parameter tgt is target, 
               stObj is ship.

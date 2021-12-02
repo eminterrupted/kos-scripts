@@ -223,15 +223,15 @@ global function InitRunmode
 // With param: Writes the value to the cache and returns it back to the function
 global function Runmode
 {
-    parameter runmode is -1.
+    parameter rm is -1.
 
-    if runmode < 0 
+    if rm < 0 
     {
         return InitRunmode().
     }
     else
     {
-        return SetRunmode(runmode).
+        return SetRunmode(rm).
     }
 
 } 
@@ -240,24 +240,24 @@ global function Runmode
 // Writes the runmode to disk, and returns the value back to the function
 global function SetRunmode
 {
-    parameter runmode is 0.
+    parameter rm is 0.
 
-    if runmode <> 0 
+    if rm <> 0 
     {
         if exists(stateFile) 
         {
             local curState to readJson(stateFile).
-            set curState["runmode"] to runmode.
+            set curState["runmode"] to rm.
             writeJson(curState, stateFile).
         }
         else
         {
-            writeJson(lex("runmode", runmode), stateFile).
+            writeJson(lex("runmode", rm), stateFile).
         }
     }
     else if exists(stateFile) deletePath(stateFile).
 
-    return runmode.
+    return rm.
 }
 // #endregion
 // #endregion

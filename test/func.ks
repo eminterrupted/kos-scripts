@@ -6,28 +6,12 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 
-parameter p0 is ship:name.
+parameter p0 is target.
 
-print "parseMissionTags(core:part) result".
-print parseMissionTags(core:part).
+set p0 to GetOrbitable(p0).
 
-
-local function parseMissionTags
-{
-    parameter c.
-
-    local fragList to list().
-    local pipeSplit to c:tag:split("|").
-    for word in pipeSplit
-    {
-        local colonSplit to word:split(":").
-        for frag in colonSplit
-        {
-            fragList:add(frag).
-        }
-    }
-    return fragList.
-}
+print "GetAngVelocity     : " + GetAngVelocity(p0).
+print "GetAngVelocityNext : " + GetAngVelocityNext(p0).
 
 
 // print "FUNCTIONAL TEST SCRIPT    v0.000001a".
