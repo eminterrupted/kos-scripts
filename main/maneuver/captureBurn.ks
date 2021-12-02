@@ -15,8 +15,8 @@ runOncePath("0:/lib/vessel").
 runOncePath("0:/kslib/lib_navball").
 
 // Variables
-local curAp to ship:body:soiradius + ship:body:body:soiradius - (ship:apoapsis + ship:body:radius).
-local magicVal to 1.25. 
+//local curAp to ship:body:soiradius + ship:body:body:soiradius - (ship:apoapsis + ship:body:radius).
+local curAp to body:soiRadius + (-ship:apoapsis + (body:soiradius - body:radius)).
 local tgtAp to ship:periapsis.
 
 local rVal to 0 - ship:facing:roll.
@@ -39,10 +39,9 @@ ArmAutoStaging(0).
 
 // Calculations
 OutMsg("Calculating Burn Parameters").
-local dv        to CalcDvBE(ship:periapsis, curAp, ship:periapsis, tgtAp, curAp)[2].
+//local dv        to CalcDvBE(ship:periapsis, curAp, ship:periapsis, tgtAp, curAp)[0].
+local dv to CalcDvHyperCapture(ship, ship:periapsis, tgtAp, ship:body).
 print "Calculated dV: " + round(dv, 2) at (2, 25).
-set dv to dv * magicVal.
-print "Adjusted dV  : " + round(dv, 2) at (2, 26).
 
 local burnDur   to CalcBurnDur(dv).
 
