@@ -66,9 +66,9 @@ global function GetAngVelocity
     parameter tgt,
               mnvBody is ship:body.
 
-    //local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
+    local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
     //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis) * constant:radtodeg.
-    local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis).
+    //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis).
     //local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
     return angVel.
 }
