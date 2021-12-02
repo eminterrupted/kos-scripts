@@ -60,6 +60,14 @@ global function GetSteeringDir
     {
         return lookDirUp(VesNormal(ship), -body:position).
     }
+    else if orientation = "target-sun"
+    {
+        return lookDirUp(target:position, sun:position).
+    }
+    else if orientation = "home-sun"
+    {
+        return lookDirUp(kerbin:position, sun:position).
+    }
     else 
     {
         return ship:facing.
