@@ -40,30 +40,37 @@
     // Hohmann orbital calculations
     global function CalcDvHoh
     {
-        parameter tgtAlt,
-                  stAlt,
-                  mode is "ap",
-                  tgtBody to ship:body.
+        parameter stPe, 
+                  stAp,
+                  tgtAlt,
+                  tgtBody is ship:body,
+                  mode is "ap".
 
-        local stSma to GetSMA(stAlt, stAlt, tgtBody).
+        local stSma to GetSMA(stPe, stAp, tgtBody).
         local tgtSma to GetSMA(tgtAlt, tgtAlt, tgtBody).
         local xfrSma to (stSma + tgtSma) / 2.
 
-        print "stSma     : " + round(stSma) at (2, 20).
-        print "tgtSma    : " + round(tgtSma) at (2, 21).
-        print "xfrSma    : " + round(xfrSma) at (2, 22).
+        // print "stSma     : " + round(stSma) at (2, 20).
+        // print "tgtSma    : " + round(tgtSma) at (2, 21).
+        // print "xfrSma    : " + round(xfrSma) at (2, 22).
 
         local vPark to sqrt(tgtBody:mu * ((2 / stSma) - (1 / stSma))).
-        local vTransfer to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
         local vTgt to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / tgtSma))).
+        local vTransferPe to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
+        local vTransferAp to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / xfrSma))).
+        //local vTransfer to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
 
-        print "vPark     : " + round(vPark, 2) at (2, 25).
-        print "vTransfer : " + round(vTransfer, 2) at (2, 26).
-        print "vTgt      : " + round(vTgt, 2) at (2, 27).
+        // print "vPark     : " + round(vPark, 2) at (2, 25).
+        // print "vTransfer : " + round(vTransfer, 2) at (2, 26).
+        // print "vTransferPe: " + round(vTransferPe, 2) at (2, 27).
+        // print "vTransferAp: " + round(vTransferAp, 2) at (2, 28).
+        // print "vTgt      : " + round(vTgt, 2) at (2, 29).
 
-        Breakpoint().
+        // print "xfr dV    : " + round(vTransferPe - vPark, 2) at (2, 31).
+        // print "arr dV    : " + round(vTgt - vTransferAp, 2) at (2, 32).
+        // Breakpoint().
 
-        return list(vTransfer - vPark, vPark - vTgt).
+        return list(vTransferPe - vPark, vTransferAp - vTgt).
     }
 //#endregion
 

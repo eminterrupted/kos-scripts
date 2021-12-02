@@ -167,9 +167,8 @@ global function GetEngines
     parameter engState is "any", includeSep is true.
 
     local engList to list().
-    local engs to list().
-    list engines in engs.
-
+    local engs to buildList("engines").
+    
     if engState = "active"  
     {
         for e in engs
@@ -223,10 +222,9 @@ global function GetEnginesByStage
     parameter stg,
               includeSep is false.
 
-    local engList to list().
+    local engList to buildList("engines").
     local stgEngs to list().
 
-    list engines in engList.
     for e in engList
     {
         if e:stage = stg
@@ -253,8 +251,7 @@ global function GetStageThrust
               includeSep is false.
 
     local stgThr to 0.
-    local engList to list().
-    list engines in engList.
+    local engList to buildList("engines").
 
     for e in engList
     {
