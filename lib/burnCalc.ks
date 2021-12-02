@@ -35,6 +35,36 @@
 
         return list(dv1, dv2, dv3).
     }
+
+    // CalcDvHoh :: (<scalar>, <scalar>, [<scalar>], [<scalar>]) -> <list>
+    // Hohmann orbital calculations
+    global function CalcDvHoh
+    {
+        parameter tgtAlt,
+                  stAlt,
+                  mode is "ap",
+                  tgtBody to ship:body.
+
+        local stSma to GetSMA(stAlt, stAlt, tgtBody).
+        local tgtSma to GetSMA(tgtAlt, tgtAlt, tgtBody).
+        local xfrSma to (stSma + tgtSma) / 2.
+
+        print "stSma     : " + round(stSma) at (2, 20).
+        print "tgtSma    : " + round(tgtSma) at (2, 21).
+        print "xfrSma    : " + round(xfrSma) at (2, 22).
+
+        local vPark to sqrt(tgtBody:mu * ((2 / stSma) - (1 / stSma))).
+        local vTransfer to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
+        local vTgt to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / tgtSma))).
+
+        print "vPark     : " + round(vPark, 2) at (2, 25).
+        print "vTransfer : " + round(vTransfer, 2) at (2, 26).
+        print "vTgt      : " + round(vTgt, 2) at (2, 27).
+
+        Breakpoint().
+
+        return list(vTransfer - vPark, vPark - vTgt).
+    }
 //#endregion
 
 
