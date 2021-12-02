@@ -572,3 +572,67 @@ global function VelocityAtTA
     return velocityAt(ves, etaToAnomaly):orbit:mag.
 }
 //#endregion
+
+// GetHyperAsymptoteAng :: <none> -> <scalar>
+// Returns the angle between the two asymptotes in a hyperbolic trajectory
+global function GetHyperAsymptoteAng
+{
+    return arcSin(1 / ship:orbit:eccentricity).
+}
+
+// GetHyperDepartureAng :: <none> -> <scalar>
+// 
+global function GetHyperDepatureAng
+{
+    return arcCos(-(1 / ship:orbit:eccentricity)).
+}
+
+// GetHyperTA :: <none> -> <scalar>
+//
+global function GetHyperTA 
+{
+    local peSma to ship:periapsis + body:radius.
+    local ta to arcCos((ship:orbit:semimajoraxis * (1 - ship:orbit:eccentricity^2) - (peSma)) / (ship:orbit:eccentricity * peSma)).
+    return ta.
+}
+
+// GetHyperPe :: <none> -> <scalar>
+// Returns the periapsis of the current hyperbolic orbit
+global function GetHyperPe
+{
+    return (ship:orbit:semiMajorAxis * (1 - ship:orbit:eccentricity)) - ship:body:radius.
+}
+
+// GetFlightPathAng :: <ship> -> <scalar>
+global function GetFlightPathAng
+{
+    parameter ves is ship.
+
+    local ecc to ves:orbit:eccentricity.
+    local ta to GetTA(ves).
+
+    return arcTan((ecc * sin(ta)) / (1 + (ecc * cos(ta)))).
+}
+
+// GetTA :: <ship>, <scalar> -> <scalar>
+// Returns the TA for the given ship at a specific radius
+global function GetTA
+{
+    parameter ves is ship,
+              radius is ship:altitude + body:radius.
+
+    local ecc to ves:orbit:eccentricity.
+    local a to ves:orbit:semimajoraxis.
+    
+    return arcCos((a * (1 - ecc^2) - radius) / (ecc * radius)).
+}
+
+// GetVelAtSMA :: <ship>, <scalar> -> <scalar>
+// 
+global function GetVelAtRadius
+{
+    parameter ves is ship,
+              radius is ship:altitude + body:radius.
+
+    return sqrt(body:mu * ((2 / radius) - (1 / ves:orbit:semimajoraxis))).
+}

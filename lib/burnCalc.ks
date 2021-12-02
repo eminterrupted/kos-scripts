@@ -72,6 +72,25 @@
 
         return list(vTransferPe - vPark, vTransferAp - vTgt).
     }
+
+    // CalcDvHyperCapture :: <scalar>, <scalar>, <ship>, <body> -> <scalar>
+    // Returns the dV needed to capture given the current hyperbolic orbit
+    global function CalcDvHyperCapture
+    {
+        parameter ves is ship,
+                  stPe is ves:periapsis,
+                  tgtAp is ves:periapsis,
+                  tgtBody is ship:body.
+
+        local aCur to ves:orbit:semimajoraxis.
+        local aTgt to GetSMA(stPe, tgtAp, tgtBody).
+        local rPe to stPe + tgtBody:radius.
+
+        local vPeCur     to sqrt(tgtBody:mu * ((2 / rPe) - (1 / aCur))).
+        local vPeTgt     to sqrt(tgtBody:mu * ((2 / rPe) - (1 / aTgt))).
+
+        return vPeCur - vPeTgt.
+    }
 //#endregion
 
 
