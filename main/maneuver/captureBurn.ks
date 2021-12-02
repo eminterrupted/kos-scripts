@@ -16,7 +16,7 @@ runOncePath("0:/kslib/lib_navball").
 
 // Variables
 local curAp to ship:body:soiradius + ship:body:body:soiradius - (ship:apoapsis + ship:body:radius).
-local magicVal to 2.25. 
+local magicVal to 1.25. 
 local tgtAp to ship:periapsis.
 
 local rVal to 0 - ship:facing:roll.
