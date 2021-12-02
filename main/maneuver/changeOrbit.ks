@@ -17,6 +17,7 @@ local tgtPe to 0.
 local tgtAp to 0.
 local argPe to ship:orbit:argumentofperiapsis.
 local orientation to "pro-sun".
+local resetState to false.
 
 if params:length > 0 
 {
@@ -24,6 +25,7 @@ if params:length > 0
     if params:length > 1 set tgtAp to params[1].
     if params:length > 2 set argPe to params[2].
     if params:length > 3 set orientation to params[3].
+    if params:length > 4 set resetState to params[4].
 }
 
 // Old code below
@@ -58,10 +60,11 @@ lock  throttle      to tVal.
 // Staging trigger
 ArmAutoStaging().
 
+if resetState PurgeCache().
+
 // Main
 if InitRunmode() = 0
 {
-    print "runmode is 0" at (0, 25).
     for val in cacheValues 
     {
         ClearCacheKey(val).
@@ -75,7 +78,7 @@ if InitRunmode() = 0
         set tgtVal_1 to tgtPe.
         set compMode to "ap".
         set xfrAp    to tgtAp.
-        set dvNeeded to CalcDvHoh(tgtAp, stAp, compMode).
+        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
@@ -86,7 +89,7 @@ if InitRunmode() = 0
         set tgtVal_1 to tgtPe.
         set compMode to "ap".
         set xfrAp    to tgtAp.
-        set dvNeeded to CalcDvHoh(tgtAp, stAp, compMode).
+        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
@@ -97,7 +100,7 @@ if InitRunmode() = 0
         set tgtVal_1 to tgtAp.
         set compMode to "pe".
         set xfrAp    to stAp.
-        set dvNeeded to CalcDvHoh(tgtPe, stPe, compMode).
+        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
         set mnvTA to mod((540 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
     }
@@ -108,7 +111,7 @@ if InitRunmode() = 0
         set tgtVal_1 to tgtAp.
         set compMode to "pe".
         set xfrAp    to stAp.
-        set dvNeeded to CalcDvHoh(tgtPe, tgtAp, compMode).
+        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
         set mnvTA to mod((540 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
     }

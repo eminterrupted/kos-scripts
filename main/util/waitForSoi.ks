@@ -44,6 +44,7 @@ until runmode = -1
         else
         {
             OutTee("Already in SOI", 1).
+            break.
         }
     }
 
