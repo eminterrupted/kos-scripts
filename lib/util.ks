@@ -217,25 +217,6 @@ global function InitRunmode
     return 0.
 }
 
-// Runmode :: [<int>] -> <int>
-// Combination function. 
-// No param: Reads the runmode from cache or returns 0 if cache doesn't contain runmode key
-// With param: Writes the value to the cache and returns it back to the function
-global function Runmode
-{
-    parameter rm is -1.
-
-    if rm < 0 
-    {
-        return InitRunmode().
-    }
-    else
-    {
-        return SetRunmode(rm).
-    }
-
-} 
-
 // SetRunmode :: <int> -> <int>
 // Writes the runmode to disk, and returns the value back to the function
 global function SetRunmode
