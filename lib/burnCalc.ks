@@ -89,7 +89,7 @@
         local vPeCur     to sqrt(tgtBody:mu * ((2 / rPe) - (1 / aCur))).
         local vPeTgt     to sqrt(tgtBody:mu * ((2 / rPe) - (1 / aTgt))).
 
-        return vPeCur - vPeTgt.
+        return vPeTgt - vPeCur.
     }
 //#endregion
 
