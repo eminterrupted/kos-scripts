@@ -13,14 +13,11 @@ DispMain(scriptPath(), false).
 
 local lastBody to ship:body.
 local tgt to ship.
-local soiBody to ship:body.
 local orientation to "pro-sun".
 
 local runmode to 0.
 local warpFlag to true.
 
-local sVal to ship:facing.
-lock steering to sVal.
 
 if hasTarget 
 {
@@ -29,9 +26,11 @@ if hasTarget
 else if param:length > 0 
 {
     set tgt to GetOrbitable(param[0]).
-    if param:length > 1 set soiBody to GetOrbitable(param[1]).
-    if param:length > 2 set orientation to param[2].
+    if param:length > 1 set orientation to GetOrbitable(param[1]).
 }
+
+local sVal to GetSteeringDir(orientation).
+lock steering to sVal.
 
 until runmode = -1
 {
