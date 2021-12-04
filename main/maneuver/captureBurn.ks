@@ -49,7 +49,7 @@ local mnvTime   to time:seconds + eta:periapsis. // Since this is a simple circu
 local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
 local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
 set g_MECO        to burnEta + burnDur[1].      // Expected cutoff point with full duration + waiting for staging
-local mnvNode to node(mnvTime, 0, 0, -dv).
+local mnvNode to node(mnvTime, 0, 0, dv).
 add mnvNode.
 
 ExecNodeBurn(nextNode).
