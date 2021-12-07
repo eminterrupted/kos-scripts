@@ -247,7 +247,7 @@ global function DispLaunchPlan
 
 global function DispLaunchWindow
 {
-    parameter tgtLAN, tgtEffectiveLAN, launchTime.
+    parameter tgtInc, tgtLAN, tgtEffectiveLAN, launchTime.
 
     set line to 10.
 
@@ -256,6 +256,7 @@ global function DispLaunchWindow
     cr().
     if hasTarget 
     print "TARGET           : " + target at (0, cr()).
+    print "TARGET INC       : " + round(tgtInc, 1) at (0, cr()).
     print "TARGET LAN       : " + round(tgtLAN, 3) at (0, cr()).
     print "EFFECTIVE LAN    : " + round(tgtEffectiveLAN, 3) at (0, cr()).
     cr().
