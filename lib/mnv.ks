@@ -38,7 +38,7 @@ global function ExecNodeBurn
         lock dvRemaining to abs(mnvNode:burnVector:mag).
 
         lock rVal to r(0, 0, ship:facing:roll).
-        local sVal to mnvNode:burnvector:direction - rVal.
+        local sVal to lookDirUp(mnvNode:burnvector, sun:position).
         local tVal to 0.
         lock steering to sVal.
         lock throttle to tVal.
@@ -55,7 +55,7 @@ global function ExecNodeBurn
 
         until time:seconds >= burnEta
         {
-            set sVal to mnvNode:burnvector:direction - rVal.
+            set sVal to lookDirUp(mnvNode:burnvector, sun:position).
             DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
         }
 
