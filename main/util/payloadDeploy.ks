@@ -12,6 +12,11 @@ DispMain(scriptPath()).
 local autoDeploy to true.
 local payloadStage to 0.
 
+if ship:rootPart:tag:split("|"):length > 1 
+{
+    set payloadStage to ship:rootpart:tag:split("|")[1].
+}
+
 if params:length > 0
 {
     set autoDeploy to params[0].
@@ -19,11 +24,6 @@ if params:length > 0
 }
 
 lock steering to ship:facing.
-
-if ship:rootPart:tag:split("|"):length > 1 
-{
-    set payloadStage to ship:rootpart:tag:split("|")[1].
-}
 
 if not autoDeploy 
 {
