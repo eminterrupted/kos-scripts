@@ -1,6 +1,8 @@
 @lazyGlobal off. 
 wait 1.
 
+if exists("1:/vessel.json") set ship:name to readJson("1:/vessel.json")[0].
+
 global mp to list().
 global planTags to parseMissionTags(core).
 global plan to planTags[0].
