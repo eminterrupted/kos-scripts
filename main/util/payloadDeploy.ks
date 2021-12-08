@@ -48,7 +48,7 @@ from { local idx to 0.} until idx >= ship:rootpart:tag:split("|")[1]:tonumber - 
     deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
     wait 2.5.
 }
-
+wait 2.5.
 OutInfo().
 OutInfo("Deploying all remaining").
 local unTaggedParts to list().
@@ -56,6 +56,7 @@ for p in ship:parts {
     if p:tag = "" untaggedParts:add(p).
 }
 deployPayloadId(untaggedParts, "Untagged").
+wait 5. 
 OutMsg("Deployment completed").
 
 
