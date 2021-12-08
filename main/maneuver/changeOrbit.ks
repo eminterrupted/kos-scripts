@@ -126,11 +126,12 @@ if InitRunmode() = 0
         set tgtVal_1 to tgtAp.
         set stVal_0  to stPe.
         set stVal_1  to stAp.
-        set compMode to "pe".
         set xfrAp    to stAp.
-        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
-        set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
+        set compMode to "pe".
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
+        set dvNeeded to CalcDvHoh(stPe, stAp, tgtPe, ship:body, compMode).
+        //set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, mnvTA).
+        set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
     }
 
     // Write to cache

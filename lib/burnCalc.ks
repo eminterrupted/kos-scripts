@@ -94,21 +94,22 @@
                   stAp,
                   tgtPe,
                   tgtAp,
-                  tgtBody is ship:body,
-                  mode is "ap".
-
-        local stSma to GetSMA(stPe, stAp, tgtBody).
-        local tgtSma to GetSMA(tgtPe, tgtAp, tgtBody).
+                  mnvBody,
+                  burnTA.
+                  
+        //local stRad  to AltAtTA(ship:orbit, burnTA) + mnvBody:radius.
+        local stSma  to GetSMA(stPe, stAp, mnvBody).
+        local tgtSma to GetSMA(tgtPe, tgtAp, mnvBody).
         local xfrSma to (stSma + tgtSma) / 2.
         
         // print "stSma     : " + round(stSma) at (2, 20).
         // print "tgtSma    : " + round(tgtSma) at (2, 21).
         // print "xfrSma    : " + round(xfrSma) at (2, 22).
 
-        local vPark to sqrt(tgtBody:mu * ((2 / stSma) - (1 / stSma))).
-        local vTgt to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / tgtSma))).
-        local vTransferPe to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
-        local vTransferAp to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / xfrSma))).
+        local vPark to sqrt(mnvBody:mu * ((2 / stSma) - (1 / stSma))).
+        local vTgt to sqrt(mnvBody:mu * ((2 / tgtSma) - (1 / tgtSma))).
+        local vTransferPe to sqrt(mnvBody:mu * ((2 / stSma) - (1 / xfrSma))).
+        local vTransferAp to sqrt(mnvBody:mu * ((2 / tgtSma) - (1 / xfrSma))).
         //local vTransfer to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
 
         // print "vPark     : " + round(vPark, 2) at (2, 25).
