@@ -32,7 +32,7 @@ if params:length > 0
 // #region
 
 // Variables
-local cacheValues   to list("compMode", "dvNeeded", "mnvTA", "runmode", "tgtVal_0", "tgtVal_1").
+local cacheValues   to list("compMode", "dvNeeded", "mnvTA", "runmode", "stVal_0", "stVal_1", "tgtVal_0", "tgtVal_1").
 local compMode      to "".
 local doneFlag      to false.
 local dvNeeded      to list().
@@ -46,6 +46,8 @@ local stPe          to ship:periapsis.
 local raisePe to choose true if tgtPe >= ship:periapsis else false.
 local raiseAp to choose true if tgtAp >= ship:apoapsis else false.
 
+local stVal_0  to 0.
+local stVal_1  to 0.
 local tgtVal_0 to 0.
 local tgtVal_1 to 0.
 
@@ -76,9 +78,14 @@ if InitRunmode() = 0
         print "raise rAp and raise rPe" at (2, 25).
         set tgtVal_0 to tgtAp.
         set tgtVal_1 to tgtPe.
-        set compMode to "ap".
+        set stVal_0  to stAp.
+        set stVal_1  to stPe.
+        set stPe     to choose stPe if not CheckValRange(stPe, tgtVal_0 - (tgtVal_0 * 0.01), tgtVal_0 + (tgtVal_0 * 0.01)) else stAp.
+        set stAp     to choose stAp if not CheckValRange(stAp, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01)) else stPe.
         set xfrAp    to tgtAp.
-        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
+        set compMode to "ap".
+        set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, compMode).
+        //set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
@@ -87,9 +94,13 @@ if InitRunmode() = 0
         print "raise rAp and lower rPe" at (2, 25).
         set tgtVal_0 to tgtAp.
         set tgtVal_1 to tgtPe.
-        set compMode to "ap".
+        set stVal_0  to stAp.
+        set stVal_1  to stPe.
+        set stPe     to choose stPe if not CheckValRange(stPe, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01)) else stAp.
+        set stAp     to choose stAp if not CheckValRange(stPe, tgtVal_0 - (tgtVal_0 * 0.01), tgtVal_0 + (tgtVal_0 * 0.01)) else stPe.
         set xfrAp    to tgtAp.
-        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
+        set compMode to "ap".
+        set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
@@ -98,10 +109,14 @@ if InitRunmode() = 0
         print "lower rAp and raise rPe" at (2, 25).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
-        set compMode to "pe".
+        set stVal_0  to stPe.
+        set stVal_1  to stAp.
+        set stPe     to choose stPe if not CheckValRange(stPe, tgtVal_0 - (tgtVal_0 * 0.01), tgtVal_0 + (tgtVal_0 * 0.01)) else stAp.
+        set stAp     to choose stAp if not CheckValRange(stPe, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01)) else stPe.
         set xfrAp    to stAp.
-        set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
-        set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
+        set compMode to "pe".
+        set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
+        set dvNeeded to list(dvNeeded[1], -dvNeeded[2]).
         set mnvTA to mod((540 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
     }
     else if not raiseAp and not raisePe
@@ -109,17 +124,21 @@ if InitRunmode() = 0
         print "lower rAp and lower rPe" at (2, 25).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
+        set stVal_0  to stPe.
+        set stVal_1  to stAp.
         set compMode to "pe".
         set xfrAp    to stAp.
         set dvNeeded to CalcDvHoh(stPe, stAp, tgtAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], -dvNeeded[1]).
-        set mnvTA to mod((540 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod((360 + argPe) - ship:orbit:argumentOfPeriapsis, 360).
     }
 
     // Write to cache
     CacheState("compMode", compMode).
     CacheState("dvNeeded", dvNeeded).
     CacheState("mnvTA", mnvTA).
+    CacheState("stVal_0", stVal_0).
+    CacheState("stVal_1", stVal_1).
     CacheState("tgtVal_0", tgtVal_0).
     CacheState("tgtVal_1", tgtVal_1).
     OutMsg("dv0: " + round(dvNeeded[0], 2) + "  |  dv1: " + round(dvNeeded[1], 2)).
@@ -131,27 +150,41 @@ if InitRunmode() = 0
 set compMode    to ReadCache("compMode").
 set dvNeeded    to ReadCache("dvNeeded").
 set mnvTA       to ReadCache("mnvTA").
+set stVal_0     to ReadCache("stVal_0").
+set stVal_1     to ReadCache("stVal_1").
 set tgtVal_0    to ReadCache("tgtVal_0").
 set tgtVal_1    to ReadCache("tgtVal_1").
 
 // print "compMode: " + compMode at (2, 30).
-// print "mvnTA: " + mnvTA AT (2, 31).
-// print "tgtVal_0: " + tgtVal_0 at (2, 32).
-// print "tgtVal_1: " + tgtVal_1 at (2, 33).
-// print "runmode: " + ReadCache("runmode") at (2, 34).
+// print "mvnTA   : " + mnvTA AT (2, 31).
+// print "stVal_0 : " + stVal_0 at (2, 32).
+// print "stVal_1 : " + stVal_1 at (2, 33).
+// print "tgtVal_0: " + tgtVal_0 at (2, 34).
+// print "tgtVal_1: " + tgtVal_1 at (2, 35).
+// print "runmode : " + ReadCache("runmode") at (2, 36).
 
 // Transfer burn
 until doneFlag
 {
     if InitRunmode() = 2
     {
-        OutMsg("Transfer Burn").
-        set mnvTA       to ReadCache("mnvTA").
-        set mnvTime     to time:seconds + ETAtoTA(ship:orbit, mnvTA).
-        set mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
-        add mnvNode.
+        if CheckValRange(stVal_0, tgtVal_0 - (tgtVal_0 * 0.01), tgtVal_0 + (tgtVal_0 * 0.01))
+        {
+            OutMsg("Skipping Transfer Burn").
+            set mnvTA to mod(mnvTA + 180, 360).
+            CacheState("mnvTA", mnvTA). 
+            SetRunmode(6).
+        }
+        else
+        {
+            OutMsg("Transfer Burn").
+            set mnvTA       to ReadCache("mnvTA").
+            set mnvTime     to time:seconds + ETAtoTA(ship:orbit, mnvTA).
+            set mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
+            add mnvNode.
 
-        SetRunmode(4).
+            SetRunmode(4).
+        }
     }
 
     if InitRunmode() = 4
@@ -192,7 +225,7 @@ until doneFlag
         set mnvTime     to time:seconds + mnvEta.
         set mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
         add mnvNode.
-
+        OutInfo("Arrival dV: " + round(mnvNode:deltav:mag, 1)).
         SetRunmode(8).
     }
 

@@ -14,16 +14,29 @@
                   tgtPe,
                   tgtAp,
                   xfrAp,
-                  mnvBody is ship:body.
+                  mnvBody is ship:body,
+                  compMode is "pe".
 
         local dv1 to 0. // First transfer burn, boost up to xfrAp
         local dv2 to 0. // Second transfer burn at xfrAp to tgtPe
         local dv3 to 0. // Circularization to tgtAp
 
+        local r1 to 0.
+        local r2 to 0.
+        local rB to 0.
+
         // Orbiting radii for initial, target, and transfer orbits
-        local r1  to stPe + mnvBody:radius.
-        local r2  to tgtPe + mnvBody:radius.
-        local rB  to xfrAp + mnvBody:radius.
+        if compMode = "ap" 
+        {
+            set r1 to stAp + mnvBody:radius.
+            set r2 to tgtAp + mnvBody:radius.
+        }
+        else
+        {
+            set r1  to stPe + mnvBody:radius.
+            set r2  to tgtPe + mnvBody:radius.
+        }
+        set rB  to xfrAp + mnvBody:radius.
 
         // Semimajor-axis for transfer 1 and 2
         local a1 to (r1 + rb) / 2.
@@ -36,7 +49,7 @@
         return list(dv1, dv2, dv3).
     }
 
-    // CalcDvHoh :: (<scalar>, <scalar>, [<scalar>], [<scalar>]) -> <list>
+    // CalcDvHoh :: (<scalar>, <scalar>, <scalar>, [<body>], [<string>]) -> <list>
     // Hohmann orbital calculations
     global function CalcDvHoh
     {
@@ -49,7 +62,45 @@
         local stSma to GetSMA(stPe, stAp, tgtBody).
         local tgtSma to GetSMA(tgtAlt, tgtAlt, tgtBody).
         local xfrSma to (stSma + tgtSma) / 2.
+        
+        // print "stSma     : " + round(stSma) at (2, 20).
+        // print "tgtSma    : " + round(tgtSma) at (2, 21).
+        // print "xfrSma    : " + round(xfrSma) at (2, 22).
 
+        local vPark to sqrt(tgtBody:mu * ((2 / stSma) - (1 / stSma))).
+        local vTgt to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / tgtSma))).
+        local vTransferPe to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
+        local vTransferAp to sqrt(tgtBody:mu * ((2 / tgtSma) - (1 / xfrSma))).
+        //local vTransfer to sqrt(tgtBody:mu * ((2 / stSma) - (1 / xfrSma))).
+
+        // print "vPark     : " + round(vPark, 2) at (2, 25).
+        // print "vTransfer : " + round(vTransfer, 2) at (2, 26).
+        // print "vTransferPe: " + round(vTransferPe, 2) at (2, 27).
+        // print "vTransferAp: " + round(vTransferAp, 2) at (2, 28).
+        // print "vTgt      : " + round(vTgt, 2) at (2, 29).
+
+        // print "xfr dV    : " + round(vTransferPe - vPark, 2) at (2, 31).
+        // print "arr dV    : " + round(vTgt - vTransferAp, 2) at (2, 32).
+        // Breakpoint().
+
+        return list(vTransferPe - vPark, vTransferAp - vTgt).
+    }
+
+    // CalcDvHoh :: (<scalar>, <scalar>, <scalar>, <scalar>, [<body>], [<string>]) -> <list>
+    // Hohmann orbital calculations
+    global function CalcDvHoh2
+    {
+        parameter stPe, 
+                  stAp,
+                  tgtPe,
+                  tgtAp,
+                  tgtBody is ship:body,
+                  mode is "ap".
+
+        local stSma to GetSMA(stPe, stAp, tgtBody).
+        local tgtSma to GetSMA(tgtPe, tgtAp, tgtBody).
+        local xfrSma to (stSma + tgtSma) / 2.
+        
         // print "stSma     : " + round(stSma) at (2, 20).
         // print "tgtSma    : " + round(tgtSma) at (2, 21).
         // print "xfrSma    : " + round(xfrSma) at (2, 22).

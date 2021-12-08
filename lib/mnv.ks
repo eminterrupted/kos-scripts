@@ -23,68 +23,75 @@ global function ExecNodeBurn
     local magVec to v(0, 0, 0).
 
     local dv to mnvNode:deltaV:mag.
-    local burnDur to CalcBurnDur(dv).
-    local fullDur to burnDur[1].
-    local halfDur to burnDur[3].
-
-    local burnEta to mnvNode:time - halfDur. 
-    set g_MECO    to burnEta + fullDur.
-    lock dvRemaining to abs(mnvNode:burnVector:mag).
-
-    lock rVal to r(0, 0, ship:facing:roll).
-    local sVal to mnvNode:burnvector:direction - rVal.
-    local tVal to 0.
-    lock steering to sVal.
-    lock throttle to tVal.
-
-    ArmAutoStaging().
-    
-    if showVec
+    if dv <= 0.1 
     {
-        set magVec to vecDraw(ship:position, mnvNode:burnvector, purple, "BurnVector", 2.5, true, 0.25, true).
-        set magVec:vectorUpdater to { return mnvNode:burnvector.}.
+        OutMsg("No burn necessary").
     }
-
-    InitWarp(burnEta, "Burn ETA").
-
-    until time:seconds >= burnEta
+    else
     {
-        set sVal to mnvNode:burnvector:direction - rVal.
-        DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
-    }
+        local burnDur to CalcBurnDur(dv).
+        local fullDur to burnDur[1].
+        local halfDur to burnDur[3].
 
-    local dv0 to mnvNode:deltav.
-    lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
+        local burnEta to mnvNode:time - halfDur. 
+        set g_MECO    to burnEta + fullDur.
+        lock dvRemaining to abs(mnvNode:burnVector:mag).
 
-    OutMsg("Executing burn").
-    OutInfo().
-    OutInfo2().
-    set tVal to 1.
-    set sVal to lookDirUp(mnvNode:burnVector, sun:position).
-    until false
-    {
-        if vdot(dv0, mnvNode:deltaV) <= 0.01
+        lock rVal to r(0, 0, ship:facing:roll).
+        local sVal to mnvNode:burnvector:direction - rVal.
+        local tVal to 0.
+        lock steering to sVal.
+        lock throttle to tVal.
+
+        ArmAutoStaging().
+        
+        if showVec
         {
-            set tVal to 0.
-            break.
+            set magVec to vecDraw(ship:position, mnvNode:burnvector, purple, "BurnVector", 2.5, true, 0.25, true).
+            set magVec:vectorUpdater to { return mnvNode:burnvector.}.
         }
-        else
-        {
-            set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
-        }
-        DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
-        wait 0.01.
-    }
 
-    OutTee("Maneuver Complete!").
-    wait 1.
-    clrDisp().
-    if showVec
-    {
-        set magVec:vectorUpdater to DONOTHING.
-        set magVec:show to false.
+        InitWarp(burnEta, "Burn ETA").
+
+        until time:seconds >= burnEta
+        {
+            set sVal to mnvNode:burnvector:direction - rVal.
+            DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
+        }
+
+        local dv0 to mnvNode:deltav.
+        lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
+
+        OutMsg("Executing burn").
+        OutInfo().
+        OutInfo2().
+        set tVal to 1.
+        set sVal to lookDirUp(mnvNode:burnVector, sun:position).
+        until false
+        {
+            if vdot(dv0, mnvNode:deltaV) <= 0.01
+            {
+                set tVal to 0.
+                break.
+            }
+            else
+            {
+                set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
+            }
+            DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
+            wait 0.01.
+        }
+
+        OutTee("Maneuver Complete!").
+        wait 1.
+        clrDisp().
+        if showVec
+        {
+            set magVec:vectorUpdater to DONOTHING.
+            set magVec:show to false.
+        }
+        unlock steering.
     }
-    unlock steering.
     remove mnvNode.
 }
 
