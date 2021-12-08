@@ -26,5 +26,4 @@ until false
 {
     set sVal to GetSteeringDir(orientation).
     DispOrbit().
-
 }
