@@ -101,7 +101,7 @@ if InitRunmode() = 0
         set xfrAp    to tgtAp.
         set compMode to "ap".
         set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
-        set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
+        set dvNeeded to list(dvNeeded[0], dvNeeded[2]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
     else if not raiseAp and raisePe
