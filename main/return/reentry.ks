@@ -218,8 +218,9 @@ OutMsg("Staging").
 until stage:number <= 1 
 {
     stage.
-    wait 5.
+    wait 2.
 }
+wait 5.
 OutMsg("Waiting for reentry interface").
 set sVal to ship:retrograde + r(0, 0, rVal).
 

@@ -74,6 +74,11 @@ global function GetSteeringDir
     }
     
 }
+
+global function GetRollDegrees
+{
+    local rollAng to ship:facing:roll - ship:prograde:roll.
+}
 // #endregion
 
 // -- Resources

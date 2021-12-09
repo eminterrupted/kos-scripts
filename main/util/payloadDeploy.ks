@@ -12,6 +12,11 @@ DispMain(scriptPath()).
 local autoDeploy to true.
 local payloadStage to 0.
 
+if ship:rootPart:tag:split("|"):length > 1 
+{
+    set payloadStage to ship:rootpart:tag:split("|")[1].
+}
+
 if params:length > 0
 {
     set autoDeploy to params[0].
@@ -19,11 +24,6 @@ if params:length > 0
 }
 
 lock steering to ship:facing.
-
-if ship:rootPart:tag:split("|"):length > 1 
-{
-    set payloadStage to ship:rootpart:tag:split("|")[1].
-}
 
 if not autoDeploy 
 {
@@ -48,7 +48,7 @@ from { local idx to 0.} until idx >= ship:rootpart:tag:split("|")[1]:tonumber - 
     deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
     wait 2.5.
 }
-
+wait 2.5.
 OutInfo().
 OutInfo("Deploying all remaining").
 local unTaggedParts to list().
@@ -56,6 +56,7 @@ for p in ship:parts {
     if p:tag = "" untaggedParts:add(p).
 }
 deployPayloadId(untaggedParts, "Untagged").
+wait 5. 
 OutMsg("Deployment completed").
 
 

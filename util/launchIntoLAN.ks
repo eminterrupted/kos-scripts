@@ -14,6 +14,25 @@ DispMain(scriptPath()).
 
 if hasTarget set tgtLaunchLAN to target:orbit:lan + 7.5.
 local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
+//local tgtEffectiveLAN to 0.
+//if tgtInc <= 90 and tgtInc >= 0
+//{
+//    set tgtEffectiveLAN to mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360).
+//}
+//else if tgtInc <= 180 and tgtInc > 90
+//{
+//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
+//}
+//else if tgtInc < 0 and tgtInc >= -90
+//{
+//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (tgtInc), 360)).
+//}
+//else if tgtInc < -90 and tgtInc >= -180
+//{
+//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
+//}
+
+//local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
 local tgtLaunchBuffer to 1.50.
 
 local launchWindow to 0.
@@ -30,7 +49,7 @@ if ship:orbit:lan < tgtEffectiveLAN - tgtLaunchBuffer or ship:orbit:lan >= tgtEf
 
 until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN - tgtLaunchBuffer, tgtEffectiveLAN + tgtLaunchBuffer)
 {
-    DispLaunchWindow(tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
+    DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
     wait 0.01.
 }
 if warp > 0 kuniverse:timewarp:cancelwarp.
@@ -38,7 +57,7 @@ wait until kuniverse:timewarp:issettled.
 
 until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN, tgtEffectiveLAN + 10)
 {
-    DispLaunchWindow(tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
+    DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
     wait 0.01.
 }
 if warp > 0 kuniverse:timewarp:cancelwarp.
