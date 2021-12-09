@@ -113,7 +113,7 @@ if retroFire and ship:periapsis > reentryTgt
         stage.
         wait until stage:ready.
     }
-    until ship:periapsis <= reentryTgt or ship:availableThrust <= 0.1
+    until (ship:periapsis <= reentryTgt and GetTotalThrust(GetEngines("active"), "curr") <= 0.1) or GetTotalThrust(GetEngines("active"), "curr") <= 0.1
     {
         if stage = 1 set tVal to 0.
         DispTelemetry().
