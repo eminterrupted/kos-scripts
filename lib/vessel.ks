@@ -116,6 +116,9 @@ global function StageMass
     parameter stg.
 
     local stgMass to 0.
+
+    //ISSUE: stgFuelMass appears to be about half (or at least, lower than) 
+    //what it should be
     local stgFuelMass to 0.
     local stgShipMass to 0.
     
@@ -125,7 +128,7 @@ global function StageMass
     {
         for k in e:consumedResources:keys 
         {
-            if not engResUsed:contains(k) engResUsed:add(k).
+            if not engResUsed:contains(k) engResUsed:add(k:replace(" ", "")).
         }
     }
 

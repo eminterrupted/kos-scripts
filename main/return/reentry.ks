@@ -11,7 +11,7 @@ DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
 local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
-local reentryTgt to 45000.
+local reentryTgt to ship:body:atm:height / 2.
 local retroFire to false.
 local retroStage to 4.
 local spinStab to false.
@@ -25,6 +25,12 @@ lock steering to sVal + r(0, 0, rVal).
 local tVal to 0.
 lock throttle to tVal.
 
+
+///Params
+//retroFire: bool, fire rockets to deorbit
+//spinStab: bool, stages to fire spin stablization motors
+//stagingAlt:scalar, altitude of CSM jetison 
+//retroStage:scalar, stage number of the retro rocket fire
 if params:length > 0 
 {
     set retroFire to params[0].

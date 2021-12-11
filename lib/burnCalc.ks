@@ -286,14 +286,20 @@
     {
         parameter stg, mode is "vac".
 
+        //Problem is in calculating fuel mass in StageMass function
         local stgMass to StageMass(stg).
         local exhVel to GetExhVel(GetEnginesByStage(stg), mode).
         
-        //clrDisp(30).
-        //print "AvailStageDV               " at (2, 30).
-        //print "stg : " + stg at (2, 31).
-        //print "stgMass: " + stgMass at (2, 32).
-        //print "exhVel: " + exhVel at (2, 33).
+        // clrDisp(30).
+        // print "AvailStageDV               " at (2, 30).
+        // print "stg : " + stg at (2, 31).
+        // print "stgMass ship: " + stgMass["ship"] at (2, 32).
+        // print "stgMass fuel: " + stgMass["fuel"] at (2, 33).
+        // print "exhVel: " + exhVel at (2, 34).
+
+        // local tempVar to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
+        // print "return value: " + tempVar at (2, 35).
+
         //Breakpoint().
         return exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
     }
