@@ -23,7 +23,8 @@ local sepList to list(
     "B9.Engine.T2.SRBS",
     "B9.Engine.T2A.SRBS",
     "B9.Engine.T2.SRBS.Jr",
-    "B9.Engine.T2A.SRBS.Jr"
+    "B9.Engine.T2A.SRBS.Jr",
+    "nesdIntRcsSep"
 ).
 // #endregion
 // #endregion
@@ -67,6 +68,10 @@ global function GetSteeringDir
     else if orientation = "home-sun"
     {
         return lookDirUp(kerbin:position, sun:position).
+    }
+    else if orientation = "body-pro"
+    {
+        return lookDirUp(body:position, ship:prograde:vector).
     }
     else 
     {

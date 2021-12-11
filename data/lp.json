@@ -1,0 +1,9 @@
+{
+    "items": [
+        {
+            "value": 875000,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}

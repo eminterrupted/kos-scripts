@@ -9,36 +9,17 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/nav").
 runOncePath("0:/lib/util").
 
-
 DispMain(scriptPath()).
 
-if hasTarget set tgtLaunchLAN to target:orbit:lan + 7.5.
-local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
-//local tgtEffectiveLAN to 0.
-//if tgtInc <= 90 and tgtInc >= 0
-//{
-//    set tgtEffectiveLAN to mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360).
-//}
-//else if tgtInc <= 180 and tgtInc > 90
-//{
-//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
-//}
-//else if tgtInc < 0 and tgtInc >= -90
-//{
-//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (tgtInc), 360)).
-//}
-//else if tgtInc < -90 and tgtInc >= -180
-//{
-//    set tgtEffectiveLAN to abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
-//}
+if hasTarget set tgtLaunchLAN to target:orbit:lan.
+local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + (135 - tgtInc), 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod((360 - tgtLaunchLAN) + (135 - tgtInc), 360)).
 
-//local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + (90 - tgtInc), 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod((360 - tgtLaunchLAN) + (90 - tgtInc), 360)).
-local tgtLaunchBuffer to 1.50.
+local tgtLaunchBuffer to 1.0.
 
 local launchWindow to 0.
 local timeToLAN to 0.
 
-set timeToLAN to mod((360 + tgtEffectiveLAN - ship:orbit:LAN) * (body:rotationperiod / 360), body:rotationPeriod).
+set timeToLAN to (360 + tgtEffectiveLAN - ship:orbit:LAN) * (body:rotationperiod / 360).
 set launchWindow to time:seconds + timeToLAN.
 OutTee("Waiting for launch window").
 
