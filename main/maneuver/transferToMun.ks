@@ -18,7 +18,7 @@ local burnEta           to 0.
 local currentPhase      to 0.
 local dv                to list().
 local mnv               to node(0, 0, 0, 0).
-local orientation       to "pro-sun".
+local orientation       to "facing-sun".
 local tgtBodyAlt        to 0.
 local transferPhase     to 0.
 local tgtAlt            to 250000.

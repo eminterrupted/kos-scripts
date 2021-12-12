@@ -73,17 +73,21 @@ global function GetSteeringDir
     {
         return lookDirUp(body:position, ship:prograde:vector).
     }
-    else 
+    else if orientation = "facing-sun"
+    {
+        return lookDirUp(ship:facing:vector, sun:position).
+    }
+    else
     {
         return ship:facing.
     }
     
 }
 
-global function GetRollDegrees
-{
-    local rollAng to ship:facing:roll - ship:prograde:roll.
-}
+// global function GetRollDegrees
+// {
+//     local rollAng to ship:facing:roll - ship:prograde:roll.
+// }
 // #endregion
 
 // -- Resources
