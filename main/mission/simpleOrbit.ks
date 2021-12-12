@@ -21,7 +21,7 @@ if param:length > 0
 local orbitTS to time:seconds + orbitTime.
 
 
-local sVal to ship:facing.
+local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
 
 local deployOrder to lex().
@@ -83,18 +83,7 @@ until false
         break.
     }
 
-    if orientation = "sun-pro" 
-    {
-        set sVal to lookDirUp(sun:position, ship:prograde:vector).
-    }
-    else if orientation = "pro-radOut"
-    {
-        set sVal to lookDirUp(ship:prograde:vector, -body:position).
-    }
-    else if orientation = "pro-sun"
-    {
-        set sVal to lookDirUp(ship:prograde:vector, sun:position).
-    }
+    set sVal to GetSteeringDir(orientation).
     
     if orbitTime > 0 
     {
