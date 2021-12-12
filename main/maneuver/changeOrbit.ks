@@ -187,7 +187,6 @@ until doneFlag
             set mnvTime     to time:seconds + ETAtoTA(ship:orbit, mnvTA).
             set mnvNode   to node(mnvTime, 0, 0, dvNeeded[0]).
             add mnvNode.
-            Breakpoint().
 
             SetRunmode(4).
         }
@@ -228,7 +227,6 @@ until doneFlag
         if CheckValRange(stVal_1, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01))
         {
             outMsg("Skipping arrival burn").
-            Breakpoint().
 
             SetRunmode(10).
         }
@@ -241,7 +239,6 @@ until doneFlag
             set mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
             add mnvNode.
             OutInfo("Arrival dV: " + round(mnvNode:deltav:mag, 1)).
-            Breakpoint().
 
             SetRunmode(8).
         }
