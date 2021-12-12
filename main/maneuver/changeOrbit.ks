@@ -84,8 +84,8 @@ if InitRunmode() = 0
         set stAp     to choose stAp if not CheckValRange(stAp, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01)) else stPe.
         set xfrAp    to tgtAp.
         set compMode to "ap".
-        set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, compMode).
-        //set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
+        // set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, compMode).
+        set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
         set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
