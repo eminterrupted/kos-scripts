@@ -23,7 +23,8 @@ local sepList to list(
     "B9.Engine.T2.SRBS",
     "B9.Engine.T2A.SRBS",
     "B9.Engine.T2.SRBS.Jr",
-    "B9.Engine.T2A.SRBS.Jr"
+    "B9.Engine.T2A.SRBS.Jr",
+    "nesdIntRcsSep"
 ).
 // #endregion
 // #endregion
@@ -68,17 +69,25 @@ global function GetSteeringDir
     {
         return lookDirUp(kerbin:position, sun:position).
     }
-    else 
+    else if orientation = "body-pro"
+    {
+        return lookDirUp(body:position, ship:prograde:vector).
+    }
+    else if orientation = "facing-sun"
+    {
+        return lookDirUp(ship:facing:vector, sun:position).
+    }
+    else
     {
         return ship:facing.
     }
     
 }
 
-global function GetRollDegrees
-{
-    local rollAng to ship:facing:roll - ship:prograde:roll.
-}
+// global function GetRollDegrees
+// {
+//     local rollAng to ship:facing:roll - ship:prograde:roll.
+// }
 // #endregion
 
 // -- Resources
@@ -116,6 +125,9 @@ global function StageMass
     parameter stg.
 
     local stgMass to 0.
+
+    //ISSUE: stgFuelMass appears to be about half (or at least, lower than) 
+    //what it should be
     local stgFuelMass to 0.
     local stgShipMass to 0.
     
@@ -125,7 +137,7 @@ global function StageMass
     {
         for k in e:consumedResources:keys 
         {
-            if not engResUsed:contains(k) engResUsed:add(k).
+            if not engResUsed:contains(k) engResUsed:add(k:replace(" ", "")).
         }
     }
 

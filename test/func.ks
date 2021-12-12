@@ -6,12 +6,26 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 
-parameter p0 is target.
+parameter p0 is 0.
 
-set p0 to GetOrbitable(p0).
-
-print "GetAngVelocity     : " + GetAngVelocity(p0).
-print "GetAngVelocityNext : " + GetAngVelocityNext(p0).
+print "Testing BurnDurFunc".
+print "-------------------".
+print "input".
+print "dV: " + p0.
+print " ".
+print "-- CalcBurnDur --".
+local burnDur to CalcBurnDur(p0).
+print "output (s): " + burnDur:join(";").
+print " ".
+print "-- BurnStagesUsed --".
+local burnStg to BurnStagesUsed(p0).
+for k0 in burnStg:keys {
+    print k0.
+    for k1 in burnStg[k0]:keys
+    {
+        print k1 + ": " + burnStg[k0][k1].
+    }
+}
 
 
 // print "FUNCTIONAL TEST SCRIPT    v0.000001a".

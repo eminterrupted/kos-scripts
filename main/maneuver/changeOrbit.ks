@@ -11,7 +11,7 @@ runOncePath("0:/lib/nav").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 
-DispMain(scriptPath()).
+DispMain(scriptPath(), false).
 
 local tgtPe to 0.
 local tgtAp to 0.
@@ -35,6 +35,8 @@ if params:length > 0
 local cacheValues   to list("compMode", "dvNeeded", "mnvTA", "runmode", "stVal_0", "stVal_1", "tgtVal_0", "tgtVal_1").
 local compMode      to "".
 local doneFlag      to false.
+local dv1           to 0.
+local dv2           to 0.
 local dvNeeded      to list().
 local mnvEta        to 0.
 local mnvNode       to node(0, 0, 0, 0).
@@ -84,9 +86,10 @@ if InitRunmode() = 0
         set stAp     to choose stAp if not CheckValRange(stAp, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01)) else stPe.
         set xfrAp    to tgtAp.
         set compMode to "ap".
-        set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, compMode).
-        //set dvNeeded to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, compMode).
-        set dvNeeded to list(dvNeeded[0], dvNeeded[1]).
+        // set dvNeeded to CalcDvHoh2(stPe, stAp, tgtPe, tgtAp, ship:body, compMode).
+        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, "ap")[0].
+        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAp, ship:body, "pe")[1].
+        set dvNeeded to list(dv1, dv2).
         set mnvTA to mod((360 + argPe) - ship:orbit:argumentofperiapsis, 360).
     }
     else if raiseAp and not raisePe 
@@ -172,6 +175,7 @@ until doneFlag
         if CheckValRange(stVal_0, tgtVal_0 - (tgtVal_0 * 0.01), tgtVal_0 + (tgtVal_0 * 0.01))
         {
             OutMsg("Skipping Transfer Burn").
+            Breakpoint().
             set mnvTA to mod(mnvTA + 180, 360).
             CacheState("mnvTA", mnvTA). 
             SetRunmode(6).
@@ -188,7 +192,7 @@ until doneFlag
         }
     }
 
-    if InitRunmode() = 4
+    else if InitRunmode() = 4
     {
         if not hasNode 
         {
@@ -218,19 +222,29 @@ until doneFlag
     }
 
     // Arrival burn
-    if InitRunmode() = 6
+    else if InitRunmode() = 6
     {
-        OutMsg("Arrival Burn").
-        set mnvTA       to ReadCache("mnvTA").
-        set mnvEta      to ETAtoTA(ship:orbit, mnvTA).
-        set mnvTime     to time:seconds + mnvEta.
-        set mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
-        add mnvNode.
-        OutInfo("Arrival dV: " + round(mnvNode:deltav:mag, 1)).
-        SetRunmode(8).
+        if CheckValRange(stVal_1, tgtVal_1 - (tgtVal_1 * 0.01), tgtVal_1 + (tgtVal_1 * 0.01))
+        {
+            outMsg("Skipping arrival burn").
+
+            SetRunmode(10).
+        }
+        else
+        {
+            OutMsg("Arrival Burn").
+            set mnvTA       to ReadCache("mnvTA").
+            set mnvEta      to ETAtoTA(ship:orbit, mnvTA).
+            set mnvTime     to time:seconds + mnvEta.
+            set mnvNode   to node(mnvTime, 0, 0, dvNeeded[1]).
+            add mnvNode.
+            OutInfo("Arrival dV: " + round(mnvNode:deltav:mag, 1)).
+
+            SetRunmode(8).
+        }
     }
 
-    if InitRunmode() = 8
+    else if InitRunmode() = 8
     {
         if not hasNode
         {
@@ -248,8 +262,12 @@ until doneFlag
                 remove mnvNode.
             }
             SetRunmode(10).
-            set doneFlag to true.
         }
+    }
+
+    else if InitRunmode() = 10
+    {
+        set doneFlag to true.
     }
 }
 
