@@ -24,28 +24,6 @@ local orbitTS to time:seconds + orbitTime.
 local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
 
-local deployOrder to lex().
-
-for p in ship:partsTaggedPattern("payloadDeploy.")
-{
-    local pTag to p:tag:split(".")[1].
-    if not deployOrder:hasKey(pTag)
-    {
-        set deployOrder[pTag] to list(p).
-    }
-    else
-    {
-        deployOrder[pTag]:add(p).
-    }
-}
-
-from { local idx to 0.} until idx >= deployOrder:keys:length - 1 step { set idx to idx + 1.} do 
-{
-    deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
-    wait 2.
-}
-deployPayloadId(ship:partsTaggedPattern(""), "").
-
 local termChar to "".
 when terminal:input:hasChar then
 {
