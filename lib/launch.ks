@@ -248,4 +248,30 @@ global function PadROFI
         }
     }
 }
+
+// Launch Escape System - Arm Jettison
+global function ArmLESJettison
+{
+    for p in ship:parts
+    {
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
+        {
+            when ship:altitude >= 80000 then
+            {
+                p:activate.
+                wait 0.01. 
+                if p:thrust > 0 
+                {
+                    p:getModule("ModuleDecouple"):doEvent("Decouple").
+                    OutInfo("LES Tower Jettisoned").
+                }
+                else
+                {
+                    OutInfo("CAUTION: LES Engines Failed").
+                }
+            }
+        }
+    }
+}
+
 //#endregion
