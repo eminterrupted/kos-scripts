@@ -130,8 +130,9 @@ for p in ship:parts
     }
 }
 
-// Arm staging
+// Arm staging and LES
 ArmAutoStaging(stageLimit).
+ArmLESJettison().
 
 if hasBoosters
 {
