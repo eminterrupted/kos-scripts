@@ -97,7 +97,7 @@ if warp > 0 set warp to 0.
 if ship:status = "PRELAUNCH"
 {
     OutMsg("Initiating launch countdown").
-    SendMsg("root", "launchCommit").
+    SendMsg(ship:rootpart:tag, "launchCommit").
 }
 
 until CheckMsgQueue():length > 0
