@@ -72,7 +72,7 @@ print "Desired phase to target in orbit: " + tgtOrbitPhase at (0, cr()).
 print "Desired phase to target at launch: " + launchPhase at (0, cr()).
 set vLn to cr().
 
-until tgtPhase >= mod((launchPhase + 360) - 12.5, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
+until tgtPhase >= mod((launchPhase + 360) - 20, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
 {
     if CheckInputChar("0") set warp to 4.
     print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
@@ -80,7 +80,7 @@ until tgtPhase >= mod((launchPhase + 360) - 12.5, 360) and tgtPhase < launchPhas
 }
 if warp > 3 set warp to 3.
 
-until tgtPhase >= mod((launchPhase + 360) - 3.25, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
+until tgtPhase >= mod((launchPhase + 360) - 10, 360) and tgtPhase < launchPhase or ship:status <> "PRELAUNCH"
 {
     print "Phase angle to target: " + round(tgtPhase, 3) + "   " at (0, vLn).
     wait 0.01.
@@ -97,7 +97,7 @@ if warp > 0 set warp to 0.
 if ship:status = "PRELAUNCH"
 {
     OutMsg("Initiating launch countdown").
-    SendMsg("root", "launchCommit").
+    SendMsg(ship:rootpart:tag, "launchCommit").
 }
 
 until CheckMsgQueue():length > 0

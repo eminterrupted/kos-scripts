@@ -357,7 +357,6 @@ global function SendMsg
     parameter sendTo, 
               msgData.
 
-    if sendTo = "root" set sendTo to ship:rootPart:tag.
     local cx to processor(sendTo):connection.
 
     cx:sendMessage(core:part:tag). 
