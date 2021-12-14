@@ -300,47 +300,19 @@ global function CheckSteering
 
     if axis = "angle" 
     {
-        if steeringManager:angleError >= -accRange and steeringManager:angleError <= accRange 
-        {
-            return true.
-        }
-        else
-        {
-            return false.
-        }
+        return steeringManager:angleError >= -accRange and steeringManager:angleError <= accRange.
     }
     else if axis = "roll"
     {
-        if steeringManager:rollError >= -accRange and steeringManager:rollError <= accRange 
-        {
-            return true.
-        }
-        else
-        {
-            return false.
-        }  
+        return steeringManager:rollError >= -accRange and steeringManager:rollError <= accRange.
     }
     else if axis = "pitch"
     {
-        if steeringManager:pitchError >= -accRange and steeringManager:pitchError <= accRange 
-        {
-            return true.
-        }
-        else
-        {
-            return false.
-        }  
+        return steeringManager:pitchError >= -accRange and steeringManager:pitchError <= accRange.
     }
     else if axis = "yaw"
     {
-        if steeringManager:yawError >= -accRange and steeringManager:yawError <= accRange 
-        {
-            return true.
-        }
-        else
-        {
-            return false.
-        }  
+        return steeringManager:yawError >= -accRange and steeringManager:yawError <= accRange.
     }
 }
 
