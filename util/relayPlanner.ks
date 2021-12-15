@@ -12,7 +12,6 @@ runOncePath("0:/lib/disp").
 
 DispMain(scriptPath(), false).
 
-local core0 to "PCX0".
 local shipNameTrimmed to ship:name:replace(" ", "_"):remove(ship:name:length - 1, 1).
 local vLn to 10.
 
@@ -24,6 +23,12 @@ local phaseObj to lex("TTO", 0, "Iterations", 0).
 if exists(phasePath) set phaseObj to readJson(phasePath).
 
 local launchPhase to "unk".
+
+if core:tag:split(":"):length > 1
+{
+    set tgtOrbitPhase to core:tag:split(":")[1]:toNumber(90).
+}
+
 if phaseObj:hasKey("Phase")
 {
     if phaseObj["Phase"]:hasKey(tgtOrbitPhase) 

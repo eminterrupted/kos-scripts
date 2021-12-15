@@ -9,3 +9,4 @@ data/partRepairLog.log
 ves_stage_stats-engStats.json
 ves_stage_stats-stgMass.json
 _plan/*/*
+data/relayPlanner/*
