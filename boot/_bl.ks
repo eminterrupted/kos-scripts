@@ -50,6 +50,8 @@ until mp:length = 0
     if addons:rt:hasKscConnection(ship) writeJson(mp, archivePlan).
 }
 
+deletePath(archivePlan).
+
 // Local functions
 local function tagCores
 {
