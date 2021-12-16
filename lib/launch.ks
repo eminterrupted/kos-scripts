@@ -177,18 +177,20 @@ global function FallbackRetract
 
     local animateMod to ship:modulesNamed("ModuleAnimateGenericExtra").
     local clampEvent to "open upper clamp".
-    local towerEvent to choose "full retract tower step 2" if state = 2 else "partial retract tower step 1".
+    local genericEvent to "retract tower".
+    local fallbackEvent to choose "full retract tower step 2" if state = 2 else "partial retract tower step 1".
 
     if animateMod:length > 0 
     {
         for m in animateMod
         {
-            if m:hasEvent(clampEvent) 
+            if state = 1 and m:hasEvent(genericEvent) DoEvent(m, genericEvent).
+            else if m:hasEvent(fallbackEvent) DoEvent(m, fallbackEvent).
+            else if m:hasEvent(clampEvent) 
             {
                 DoEvent(m, clampEvent).
                 wait until m:getField("status") = "Locked".
             }
-            else if m:hasEvent(towerEvent) DoEvent(m, towerEvent).
         }
     }
 }
