@@ -268,7 +268,7 @@ global function DispLaunchWindow
 // A display header for mission control
 global function DispMain
 {
-    parameter plan is scriptPath():name,
+    parameter scrPlan is scriptPath():name,
               showTerminal is true.
 
     if showTerminal dispTerm().
@@ -276,7 +276,7 @@ global function DispMain
     print "Mission Controller v2.0.1" at (0, 0).
     print "=========================" at (0, 1).
     print "MISSION : " + ship:name    at (0, 3).
-    print "PLAN    : " + plan         at (0, 4).
+    print "PLAN    : " + scrPlan         at (0, 4).
 }
 
 // Mnv details
