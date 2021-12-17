@@ -44,9 +44,15 @@ else
     }
 }
 
-from { local idx to 0.} until idx >= 5 step { set idx to idx + 1.} do {
+local maxDeployStep to 0.
+for p in ship:partstaggedpattern("payloadDeploy.*")
+{
+    if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
+}
+
+from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do {
     deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
-    wait 2.5.
+    wait 2.
 }
 wait 2.5.
 OutInfo().
