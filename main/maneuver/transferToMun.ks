@@ -12,7 +12,7 @@ runOncePath("0:/lib/vessel").
 
 DispMain(scriptPath()).
 
-local altPadding        to 0.
+local altPadding        to -500000.
 local burnAt            to 0.
 local burnEta           to 0.
 local currentPhase      to 0.
@@ -21,7 +21,7 @@ local mnv               to node(0, 0, 0, 0).
 local orientation       to "facing-sun".
 local tgtBodyAlt        to 0.
 local transferPhase     to 0.
-local tgtAlt            to 250000.
+local tgtAlt            to 500000.
 local tgtInc            to 84.
 
 // Param validation
@@ -40,6 +40,8 @@ else
         print 1 / 0.
     }
 }
+
+set altPadding to -tgtAlt.
 
 local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
