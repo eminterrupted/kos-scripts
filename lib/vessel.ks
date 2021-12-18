@@ -57,6 +57,10 @@ global function GetSteeringDir
     {
         return lookDirUp(body:position, ship:prograde:vector).
     }
+    else if orientation = "body-sun"
+    {
+        return lookDirUp(body:position, sun:position).
+    }
     else if orientation = "sun-pro" 
     {
         return lookDirUp(sun:position, ship:prograde:vector).
