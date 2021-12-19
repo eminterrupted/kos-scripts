@@ -45,21 +45,25 @@ global function GetSteeringDir
     {
         return lookDirUp(ship:prograde:vector, sun:position).
     }
-    else if orientation = "sun-pro" 
-    {
-        return lookDirUp(sun:position, ship:prograde:vector).
-    }
-    else if orientation = "pro-radOut"
-    {
-        return lookDirUp(ship:prograde:vector, VesTangent(ship)).
-    }
     else if orientation = "pro-body"
     {
         return lookDirUp(ship:prograde:vector, body:position).
     }
-    else if orientation = "radOut-radOut"
+    else if orientation = "pro-radOut"
     {
-        return lookDirUp(VesNormal(ship), -body:position).
+        return lookDirUp(ship:prograde:vector, -body:position).
+    }
+    else if orientation = "body-pro"
+    {
+        return lookDirUp(body:position, ship:prograde:vector).
+    }
+    else if orientation = "body-sun"
+    {
+        return lookDirUp(body:position, sun:position).
+    }
+    else if orientation = "sun-pro" 
+    {
+        return lookDirUp(sun:position, ship:prograde:vector).
     }
     else if orientation = "target-sun"
     {
@@ -69,13 +73,13 @@ global function GetSteeringDir
     {
         return lookDirUp(kerbin:position, sun:position).
     }
-    else if orientation = "body-pro"
-    {
-        return lookDirUp(body:position, ship:prograde:vector).
-    }
     else if orientation = "facing-sun"
     {
         return lookDirUp(ship:facing:vector, sun:position).
+    }
+    else if orientation = "radOut-sun"
+    {
+        return lookDirUp(-body:position, sun:position).
     }
     else
     {

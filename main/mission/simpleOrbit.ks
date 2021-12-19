@@ -33,7 +33,7 @@ when terminal:input:hasChar then
 if orbitTime > 0
 {
     OutTee("Orbiting until " + timestamp(orbitTS):full).
-    InitWarp(OrbitTS, "orbit script termination").
+    //InitWarp(OrbitTS, "orbit script termination").
 }
 else
 {
@@ -45,15 +45,15 @@ until false
 {
     set g_termChar to GetInputChar().
 
-    if g_termChar = terminal:input:endcursor
+    if g_termChar = terminal:input:enter and orbitTime > 0
+    {
+        InitWarp(OrbitTS, "orbit script termination", 15, true).
+    }
+    else if g_termChar = terminal:input:endcursor
     {
         OutMsg("Terminating Orbit").
         wait 1.
         break.
-    }
-    else if g_termChar = terminal:input:enter
-    {
-        InitWarp(OrbitTS, "orbit script termination", 15, true).
     }
     
     if orbitTime > 0 and time:seconds >= orbitTS 

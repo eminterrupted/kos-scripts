@@ -50,6 +50,8 @@ until mp:length = 0
     if addons:rt:hasKscConnection(ship) writeJson(mp, archivePlan).
 }
 
+deletePath(archivePlan).
+
 // Local functions
 local function tagCores
 {
@@ -66,7 +68,8 @@ local function tagCores
         }
         else if c:volume:name = ""
         {
-            set c:volume:name to c:tag.
+            set c:volume:name to "PLX" + idx.
+            set idx to idx + 1.
         }
     }
 }
