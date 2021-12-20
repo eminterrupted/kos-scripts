@@ -8,8 +8,16 @@ runOncePath("0:/lib/sci").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
 
+//multiscan: 
+/// true: continuosly loop experiment for each biome
+/// false: run once
 local multiScan to true.
 local orientation to "pro-sun".
+
+//sciAction:
+/// "transmit" - immediately transmit experiment results
+/// "ideal" - transmit only if there is untransmitted science and transmitting will result in maximum possible reward benefit
+/// "collect" - works in cases where a science container is present. collect all science data into available container
 local sciAction to "ideal".
 local scanCov to false.
 local sciList to GetSciModules().
@@ -28,7 +36,11 @@ ag10 off.
 panels on.
 DispMain(scriptPath():name).
 
-if not multiScan
+if multiScan
+{
+    PerformMultiscan().
+}
+else
 {
     OutMsg("Operating in single-scan mode").
     OutInfo("Collecting science report").
@@ -38,7 +50,11 @@ if not multiScan
     wait 1.
     OutInfo().
 }
-else
+
+OutMsg("Science scans completed!").
+wait 2.5.
+
+local function PerformMultiscan
 {
     if addons:scansat:available
     {
@@ -123,6 +139,3 @@ else
         }
     }
 }
-
-OutMsg("Science scans completed!").
-wait 2.5.

@@ -58,7 +58,7 @@ local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")
 // Optional second core
 local core2 to "".
 
-OutTee("🔥 Hi I AM SPICY AF 🔥", 0, 2.5).
+OutTee("Hi I AM SpIcY AF", 0, 2.5).
 
 // Begin  
 LaunchPadGen(true).
