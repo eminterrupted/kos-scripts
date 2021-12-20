@@ -276,4 +276,19 @@ global function ArmLESJettison
     }
 }
 
+// 🎅 Seasons Yeetings Fairings 🎄--
+global function ArmFairingJettison
+{
+    if (ship:modulesnamed("ModuleProceduralFairing"):length > 0)
+    {
+        when ship:altitude >= body:atm:height then
+        {
+            for module in ship:modulesnamed("ModuleProceduralFairing")
+            {
+                module:doevent("deploy").
+                wait 0.05.
+            }
+        }
+    }
+}
 //#endregion

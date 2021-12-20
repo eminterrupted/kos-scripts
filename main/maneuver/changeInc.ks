@@ -22,6 +22,8 @@ if params:length > 0
     if params:length > 1 set tgtLAN to params[1].
 }
 
+OutTee("Hi I AM IN YOUR ROCKETS A-CHANGIN URE THINGS >:D", 0, 2.5).
+
 local tgtObt to createOrbit(
     tgtInc,
     ship:orbit:eccentricity,
