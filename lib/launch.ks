@@ -232,6 +232,10 @@ global function HolddownRetract
             {
                 DoEvent(m, "retract arm").   
             }
+            else if m:part:name:contains("SoyuzLaunchBaseClampArm")
+            {
+                DoEvent(m, "retract clamp arm").
+            }
         }
     }
 }
@@ -273,6 +277,41 @@ global function ArmLESJettison
                 }
             }
         }
+    }
+}
+
+// Retracts MLP Soyuz Gantry and Fuel arms and waits for retraction to complete
+global function RetractSoyuzFuelGantry
+{
+    local pList to list().
+    for p in ship:parts
+    {
+        if p:name:contains("SoyuzLaunchBaseGantry") pList:add(p).
+        else if p:name:contains("SoyuzLaunchBaseArm") pList:add(p).
+    }
+
+    if pList:length > 0
+    {
+        local gMod to "".
+        OutMsg("Retracting fuel and gantry arms").
+        for p in pList
+        {
+            for m in p:modulesNamed("ModuleAnimateGenericExtra")
+            {
+                if m:hasEvent("retract gantry arms") 
+                {
+                    set gMod to m.
+                    DoEvent(m, "retract gantry arms").
+                }
+                DoEvent(m, "retract arm").
+            }
+        }
+
+        until gMod:GetField("status") = "locked"
+        {
+            wait 0.1.
+        }
+        OutMsg("Retraction complete").
     }
 }
 
