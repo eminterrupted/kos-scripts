@@ -31,10 +31,20 @@
             set r1 to stAp + mnvBody:radius.
             set r2 to tgtAp + mnvBody:radius.
         }
-        else
+        else if compMode = "pe"
         {
             set r1  to stPe + mnvBody:radius.
             set r2  to tgtPe + mnvBody:radius.
+        }
+        else if compMode = "ap:pe"
+        {
+            set r1 to stAp + mnvBody:radius.
+            set r2 to tgtPe + mnvBody:radius.
+        }
+        else if compMode = "pe:ap"
+        {
+            set r1 to stPe + mnvBody:radius.
+            set r2 to tgtAp + mnvBody:radius.
         }
         set rB  to xfrAp + mnvBody:radius.
 
