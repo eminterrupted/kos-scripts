@@ -9,7 +9,7 @@ runOncePath("0:/lib/vessel").
 
 DispMain(scriptPath()).
 
-local autoDeploy to true.
+local autoStage to true.
 local payloadStage to 0.
 
 if ship:rootPart:tag:split("|"):length > 1 
@@ -19,18 +19,13 @@ if ship:rootPart:tag:split("|"):length > 1
 
 if params:length > 0
 {
-    set autoDeploy to params[0].
+    set autoStage to params[0].
     if params:length > 1 set payloadStage to params[1].
 }
 
 lock steering to ship:facing.
 
-if not autoDeploy 
-{
-    OutTee("payloadDeploy: No staging").
-    wait 0.25.
-}
-else
+if autoStage
 {
     OutWait("Preparing for payload deployment", 5).
 
@@ -42,6 +37,11 @@ else
         if stage:ready stage.
         wait 0.5.
     }
+} 
+else
+{
+    OutTee("payloadDeploy: No staging").
+    wait 0.25.
 }
 
 local maxDeployStep to 0.

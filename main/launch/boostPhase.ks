@@ -58,6 +58,8 @@ local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")
 // Optional second core
 local core2 to "".
 
+OutTee("Hi I AM SpIcY AF", 0, 2.5).
+
 // Begin  
 LaunchPadGen(true).
 lock steering to sVal. 
@@ -137,6 +139,7 @@ for p in ship:parts
 // Arm staging and LES
 ArmAutoStaging(stageLimit).
 ArmLESJettison().
+ArmFairingJettison().
 
 if hasBoosters
 {
