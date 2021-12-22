@@ -36,12 +36,12 @@
             set r1  to stPe + mnvBody:radius.
             set r2  to tgtPe + mnvBody:radius.
         }
-        else if compMode = "ap:pe"
+        else if compMode = "ap:pe" // Compare the starting apoapsis to the target periapsis
         {
             set r1 to stAp + mnvBody:radius.
             set r2 to tgtPe + mnvBody:radius.
         }
-        else if compMode = "pe:ap"
+        else if compMode = "pe:ap" // Compare the starting periapsis to the target apoapsis
         {
             set r1 to stPe + mnvBody:radius.
             set r2 to tgtAp + mnvBody:radius.

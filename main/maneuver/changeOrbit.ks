@@ -108,27 +108,27 @@ if InitRunmode() = 0
     else if not raiseAp and raisePe
     {
         print "lower rAp and raise rPe" at (2, 25).
-        set mnvTA to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
-        set stPe     to AltAtTA(ship:orbit, mnvTA).
-        set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
+        set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
+        set stAp     to AltAtTA(ship:orbit, mnvTA).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
-        set compMode to "pe".
-        set xfrAlt   to choose tgtAp if compMode = "ap" else tgtPe.
+        set compMode to "ap".
+        set xfrAlt   to tgtAp. // choose tgtAp if compMode = "ap" else tgtPe.
         set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[1].
-        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[2].
-        set dvNeeded to list(dv1, -dv2).
+        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
+        set dvNeeded to list(dv1, dv2).
     }
     else if not raiseAp and not raisePe
     {
         print "lower rAp and lower rPe" at (2, 25).
-        set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
         set tgtVal_0 to tgtAp.
         set tgtVal_1 to tgtPe.
         set compMode to "pe".
-        set xfrAlt   to choose tgtAp if compMode = "ap" else tgtPe.
+        set xfrAlt   to tgtAp. // choose tgtAp if compMode = "ap" else tgtPe.
         set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
         set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[2].
         set dvNeeded to list(dv1, -dv2).
@@ -147,14 +147,14 @@ set compMode    to ReadCache("compMode").
 set dvNeeded    to ReadCache("dvNeeded").
 set mnvTA       to ReadCache("mnvTA").
 
-print "dv1     : " + round(dv1, 2) at (2, 28).
-print "dv2     : " + round(dv2, 2) at (2, 29).
-print "compMode: " + compMode at (2, 30).
-print "mvnTA   : " + mnvTA AT (2, 31).
-print "tgtVal_0: " + tgtVal_0 at (2, 34).
-print "tgtVal_1: " + tgtVal_1 at (2, 35).
-print "runmode : " + ReadCache("runmode") at (2, 36).
-
+print "dv1     : " + round(dvNeeded[0], 3) at (2, 27).
+print "dv2     : " + round(dvNeeded[1], 3) at (2, 28).
+print "tgtVal_0: " + tgtVal_0 at (2, 30).
+print "tgtVal_1: " + tgtVal_1 at (2, 31).
+print "mvnTA   : " + mnvTA AT (2, 32).
+print "compMode: " + compMode at (2, 33).
+print "runmode : " + ReadCache("runmode") at (2, 35).
+Breakpoint().
 // Transfer burn
 until doneFlag
 {
