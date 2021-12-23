@@ -680,6 +680,25 @@ global function WarpToAlt
 }
 // #endregion
 
+// -- Vector Math
+// #region
+// Signs the angle between two vectors relative to the velocity of the vessel
+global function signedVAng
+{
+    parameter ves,
+              vec1, 
+              vec2.
+
+    local vecAng to VAng(vec1, vec2).
+    local sign to VDot(VCrs(vec2, vec1), vCrs(ves:velocity:orbit, vec1)).
+    if sign > 0
+    {
+        set vecAng to 360 - vecAng.
+    }
+    return vecAng.
+}
+//#endregion
+
 
 // -- Local
 // #region
