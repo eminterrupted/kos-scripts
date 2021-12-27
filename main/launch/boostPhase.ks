@@ -89,6 +89,8 @@ until false
 // Wait for specific LAN goes here
 if tgtLAN > -1
 {
+    // We need to retract Soyuz launch pad elements if present before handing off to launchIntoLAN
+    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzFuelGantry().
     runPath("0:/util/launchIntoLAN", tgtInc, tgtLAN).
 }
 else
@@ -110,6 +112,8 @@ else
         }
         wait 0.05.
     }
+    // Retract Soyuz launch pad elements if present AFTER user presses enter (avoids long wait times)
+    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzFuelGantry().
 }
 clearScreen.
 DispMain(scriptPath(), false).

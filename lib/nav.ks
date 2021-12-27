@@ -259,6 +259,15 @@ global function GetSMA
     return (pe + ap + (smaBody:radius * 2)) / 2.
 }
 
+// 
+global function GetTransferSma
+{
+    parameter arrivalRadius,
+              parkingOrbit.
+
+    return (arrivalRadius + parkingOrbit) / 2.
+}
+
 global function GetTransferPeriod
 {
     parameter xfrSMA,

@@ -7,9 +7,10 @@ runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/launch").
 
-parameter p0 is 0.
+parameter p0, p1 is 0.
 
-FallbackRetract(p0).
+print "Testing signedVAng".
+print "signed vAng: " + signedVAng(ship, p0, p1).
 
 // print "Testing BurnDurFunc".
 // print "-------------------".
