@@ -184,7 +184,7 @@ global function FallbackRetract
     {
         for m in animateMod
         {
-            if state = 1 and m:hasEvent(genericEvent) DoEvent(m, genericEvent).
+            if state = 2 and m:hasEvent(genericEvent) DoEvent(m, genericEvent).
             else if m:hasEvent(fallbackEvent) DoEvent(m, fallbackEvent).
             else if m:hasEvent(clampEvent) 
             {
