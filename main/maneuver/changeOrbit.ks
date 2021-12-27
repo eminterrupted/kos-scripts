@@ -132,7 +132,6 @@ if InitRunmode() = 0
         set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
         set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[2].
         set dvNeeded to list(dv1, -dv2).
-        print dvNeeded at (2, 25).
     }
 
     // Write to cache
@@ -154,7 +153,7 @@ print "tgtVal_1: " + tgtVal_1 at (2, 31).
 print "mvnTA   : " + mnvTA AT (2, 32).
 print "compMode: " + compMode at (2, 33).
 print "runmode : " + ReadCache("runmode") at (2, 35).
-Breakpoint().
+
 // Transfer burn
 until doneFlag
 {
@@ -166,7 +165,7 @@ until doneFlag
             set mnvTA to mod(mnvTA + 180, 360).
             CacheState("mnvTA", mnvTA). 
             OutInfo("dvNeeded: " + dvNeeded[0]).
-            Breakpoint().
+
             SetRunmode(6).
         }
         else
@@ -217,7 +216,7 @@ until doneFlag
         {
             outMsg("Skipping arrival burn").
             OutInfo("dvNeeded: " + dvNeeded[1]).
-            Breakpoint().
+
             SetRunmode(10).
         }
         else
