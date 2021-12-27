@@ -119,20 +119,20 @@ if InitRunmode() = 0
         set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
         set dvNeeded to list(dv1, dv2).
     }
+    ///THIS ONE vvvvv
     else if not raiseAp and not raisePe
     {
         print "lower rAp and lower rPe" at (2, 25).
-        set mnvTA to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
-        set tgtVal_0 to tgtAp.
-        set tgtVal_1 to tgtPe.
-        set compMode to "pe".
+        set tgtVal_0 to tgtPe.
+        set tgtVal_1 to tgtAp.
+        set compMode to "ap".
         set xfrAlt   to tgtAp. // choose tgtAp if compMode = "ap" else tgtPe.
-        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
-        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[2].
-        set dvNeeded to list(dv1, -dv2).
-        print dvNeeded at (2, 25).
+        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
+        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[1].
+        set dvNeeded to list(dv1, dv2).
     }
 
     // Write to cache
@@ -154,7 +154,7 @@ print "tgtVal_1: " + tgtVal_1 at (2, 31).
 print "mvnTA   : " + mnvTA AT (2, 32).
 print "compMode: " + compMode at (2, 33).
 print "runmode : " + ReadCache("runmode") at (2, 35).
-Breakpoint().
+
 // Transfer burn
 until doneFlag
 {
@@ -166,7 +166,7 @@ until doneFlag
             set mnvTA to mod(mnvTA + 180, 360).
             CacheState("mnvTA", mnvTA). 
             OutInfo("dvNeeded: " + dvNeeded[0]).
-            Breakpoint().
+
             SetRunmode(6).
         }
         else
@@ -217,7 +217,7 @@ until doneFlag
         {
             outMsg("Skipping arrival burn").
             OutInfo("dvNeeded: " + dvNeeded[1]).
-            Breakpoint().
+
             SetRunmode(10).
         }
         else
