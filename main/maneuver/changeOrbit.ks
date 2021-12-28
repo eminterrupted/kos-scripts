@@ -123,7 +123,7 @@ if InitRunmode() = 0
     else if not raiseAp and not raisePe
     {
         print "lower rAp and lower rPe" at (2, 25).
-        set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
         set tgtVal_0 to tgtPe.
