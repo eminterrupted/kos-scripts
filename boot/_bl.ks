@@ -1,5 +1,5 @@
 @lazyGlobal off. 
-wait 1.
+wait until ship:loaded.
 
 if exists("1:/vessel.json") set ship:name to readJson("1:/vessel.json")[0].
 

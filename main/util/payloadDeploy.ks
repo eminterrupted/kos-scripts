@@ -62,7 +62,7 @@ for p in ship:parts {
     if p:tag = "" untaggedParts:add(p).
 }
 deployPayloadId(untaggedParts, "Untagged").
-wait 5. 
+wait 2.5. 
 OutMsg("Deployment completed").
 
 
