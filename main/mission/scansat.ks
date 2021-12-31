@@ -1,7 +1,6 @@
 @lazyGlobal off.
 clearScreen.
 
-// [0] Direction to lock steering to
 parameter params to list().
 
 runOncePath("0:/lib/scansat").
@@ -13,17 +12,24 @@ runOncePath("0:/lib/util").
 DispMain(scriptPath()).
 
 local orientation to "pro-sun".
+
 if params:length > 0 
 {
     set orientation to params[0].
 }
-local scanner to ship:partsDubbedPattern("scansat")[0].
 
 local sVal to ship:facing.
+local scanList to ship:modulesNamed("scansat").
+local scanner to scanlist[0]:part.
+
 lock steering to sVal.
 
-ScansatActivate(scanner).
+for scnSat in scanList 
+{
+    ScansatActivate(scnSat:part).
+}
 
+//space constraints means we can only display the first scanner 
 until false
 {
     set sVal to GetSteeringDir(orientation).
