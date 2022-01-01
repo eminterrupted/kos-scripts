@@ -8,8 +8,10 @@ parameter params to list().
 
 DispMain(scriptPath(), false).
 
-local line to 9.
 local eIdx to 0.
+local randR to random().
+local randG to random().
+local randB to random().
 
 //0 "Red"
 //1 "Magenta"
@@ -24,6 +26,10 @@ local eIdx to 0.
 
 local eHighlight to "".
 local pHighlight to "".
+
+local turnOff to false.
+local rainbow to false.
+
 print eHighlight.
 print pHighlight.
 
@@ -32,33 +38,59 @@ OutMsg("Vessel: " + ship:name).
 if params:length > 0
 {
     set eIdx to params[0].
+
+    if (eIdx:typename = "string")
+    {
+        if (eIdx = "off")
+        {
+            set eIdx to 0.
+            set turnOff to true.
+        }
+        else if (eIdx = "random")
+        {
+            set eIdx to 1 + floor(9*random()).
+        }
+        else if (eIdx = "rainbow")
+        {
+            set eIdx to 0.
+            set rainbow to true.
+        }
+    }
 }
 
-for e in ship:elements 
+if (not rainbow)
 {
+    for e in ship:elements 
+    {
+        set eHighlight to highlight(e, ColorLex[ColorLex:keys[eIdx]]).
+    }
+}
+else 
+{
+    for p in ship:parts
+    {
+        //use curated list of colors
+        // set eIdx to 1 + floor(9*random()).
+        // set eHighlight to highlight(p, ColorLex[ColorLex:keys[eIdx]]).
 
-    print "Name   : " + e:name at (2, crl()).
-    print "Idx    : " + eIdx at (2, crl()).
-    print "Color  : " + ColorLex:keys[eIdx] at (2, crl()).
-    crl().
-
-    set eHighlight to highlight(e, ColorLex[ColorLex:keys[eIdx]]).
+        //assign truly random colors, at random!
+        set randR to random().
+        set randG to random().
+        set randB to random().
+        set eHighlight to highlight(p, rgb(randR, randG, randB)).
+    }
 }
 
-OutInfo("Root Part: " + ship:rootpart).
 set pHighlight to highlight(ship:rootPart, white).
 
-Breakpoint().
-
-for e in ship:elements
+if (turnOff)
 {
-    set eHighlight to highlight(e, black).
-    set eHighlight:enabled to false. 
-}
-set pHighlight:enabled to false.
+    for e in ship:elements
+    {
+        set eHighlight to highlight(e, black).
+        set eHighlight:enabled to false. 
+    }
+    set pHighlight:enabled to false.   
 
-local function crl
-{
-    set line to line + 1.
-    return line. 
+    set turnOff to false.  
 }
