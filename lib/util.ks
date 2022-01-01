@@ -68,7 +68,7 @@ global function PlaySFX
     from { local idx to 0.} until idx = sfxId:length step { set idx to idx + 1.} do
     {
         v0:play(sfxId[idx]).
-        wait 0.05.
+        wait 0.13.
     }
 }
 // #endregion

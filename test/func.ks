@@ -9,8 +9,7 @@ runOncePath("0:/lib/launch").
 
 parameter p0, p1 is 0.
 
-print "Testing signedVAng".
-print "signed vAng: " + signedVAng(ship, p0, p1).
+PlaySFX(0).
 
 // print "Testing BurnDurFunc".
 // print "-------------------".
