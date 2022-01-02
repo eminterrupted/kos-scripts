@@ -59,6 +59,8 @@ local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")
 local core2 to "".
 
 OutTee("Hi I AM SpIcY AF", 0, 2.5).
+wait 1.
+OutHUD("Hello SpIcY AF, I am MiSs SuPeR SpIcE", 2).
 
 // Begin  
 LaunchPadGen(true).
