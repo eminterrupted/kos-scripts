@@ -92,7 +92,7 @@ until false
 if tgtLAN > -1
 {
     // We need to retract Soyuz launch pad elements if present before handing off to launchIntoLAN
-    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzFuelGantry().
+    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzGantry().
     runPath("0:/util/launchIntoLAN", tgtInc, tgtLAN).
 }
 else
