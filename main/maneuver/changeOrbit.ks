@@ -128,10 +128,10 @@ if InitRunmode() = 0
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
-        set compMode to "ap".
-        set xfrAlt   to tgtAp. // choose tgtAp if compMode = "ap" else tgtPe.
-        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
-        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[1].
+        set compMode to "pe".
+        set xfrAlt   to tgtPe. // choose tgtAp if compMode = "ap" else tgtPe.
+        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[0].
+        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
         set dvNeeded to list(dv1, dv2).
     }
 

@@ -45,7 +45,7 @@ global function LaunchCountdown
     FallbackRetract(1).
     CrewArmRetract().
     RetractSoyuzFuelArm().
-    
+
     until countdown >= -10 
     {
         OutMsg("COUNTDOWN: " + round(countdown, 1)).
@@ -260,24 +260,29 @@ global function PadROFI
 // Launch Escape System - Arm Jettison
 global function ArmLESJettison
 {
+    local lesList to list().
     for p in ship:parts
     {
         if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
         {
-            when ship:altitude >= 80000 then
-            {
-                p:activate.
-                wait 0.01. 
-                if p:thrust > 0 
-                {
-                    p:getModule("ModuleDecouple"):doEvent("Decouple").
-                    OutInfo("LES Tower Jettisoned").
-                }
-                else
-                {
-                    OutInfo("CAUTION: LES Engines Failed").
-                }
-            }
+            lesList:add(p).
+        }
+    }
+
+    local p to lesList[0].
+    
+    when ship:altitude >= 80000 then
+    {
+        p:activate.
+        wait 0.01. 
+        if p:thrust > 0 
+        {
+            p:getModule("ModuleDecouple"):doEvent("Decouple").
+            OutInfo("LES Tower Jettisoned").
+        }
+        else
+        {
+            OutInfo("CAUTION: LES Engines Failed").
         }
     }
 }
