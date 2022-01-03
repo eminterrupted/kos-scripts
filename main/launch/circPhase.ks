@@ -78,7 +78,7 @@ until time:seconds >= burnEta
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
     OutInfo("Burn Dur: " + round(fullDur, 1) + "s   ").
-    OutInfo2("Burn ETA: " + round(burnEta - time:seconds, 1) + "s     ").
+    OutInfo2("Burn ETA: " + timespan(round(burnEta - time:seconds, 1)):full).
     DispTelemetry().
     wait 0.01.
 }
