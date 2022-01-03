@@ -115,7 +115,7 @@ else
         wait 0.05.
     }
     // Retract Soyuz launch pad elements if present AFTER user presses enter (avoids long wait times)
-    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzFuelGantry().
+    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzGantry().
 }
 clearScreen.
 DispMain(scriptPath(), false).
