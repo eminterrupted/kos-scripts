@@ -44,6 +44,8 @@ global function LaunchCountdown
 
     FallbackRetract(1).
     CrewArmRetract().
+    RetractSoyuzFuelArm().
+
     until countdown >= -10 
     {
         OutMsg("COUNTDOWN: " + round(countdown, 1)).
@@ -258,42 +260,46 @@ global function PadROFI
 // Launch Escape System - Arm Jettison
 global function ArmLESJettison
 {
+    local lesList to list().
     for p in ship:parts
     {
         if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
         {
-            when ship:altitude >= 80000 then
-            {
-                p:activate.
-                wait 0.01. 
-                if p:thrust > 0 
-                {
-                    p:getModule("ModuleDecouple"):doEvent("Decouple").
-                    OutInfo("LES Tower Jettisoned").
-                }
-                else
-                {
-                    OutInfo("CAUTION: LES Engines Failed").
-                }
-            }
+            lesList:add(p).
+        }
+    }
+
+    local p to lesList[0].
+    
+    when ship:altitude >= 80000 then
+    {
+        p:activate.
+        wait 0.01. 
+        if p:thrust > 0 
+        {
+            p:getModule("ModuleDecouple"):doEvent("Decouple").
+            OutInfo("LES Tower Jettisoned").
+        }
+        else
+        {
+            OutInfo("CAUTION: LES Engines Failed").
         }
     }
 }
 
-// Retracts MLP Soyuz Gantry and Fuel arms and waits for retraction to complete
-global function RetractSoyuzFuelGantry
+// Retracts MLP Soyuz-style Gantry arms and waits for retraction to complete
+global function RetractSoyuzGantry
 {
     local pList to list().
     for p in ship:parts
     {
         if p:name:contains("SoyuzLaunchBaseGantry") pList:add(p).
-        else if p:name:contains("SoyuzLaunchBaseArm") pList:add(p).
     }
 
     if pList:length > 0
     {
         local gMod to "".
-        OutMsg("Retracting fuel and gantry arms").
+        OutMsg("Retracting gantry arms").
         for p in pList
         {
             for m in p:modulesNamed("ModuleAnimateGenericExtra")
@@ -303,7 +309,6 @@ global function RetractSoyuzFuelGantry
                     set gMod to m.
                     DoEvent(m, "retract gantry arms").
                 }
-                DoEvent(m, "retract arm").
             }
         }
 
@@ -312,6 +317,27 @@ global function RetractSoyuzFuelGantry
             wait 0.1.
         }
         OutMsg("Retraction complete").
+    }
+}
+
+// Retract MLP Soyuz-style fuel arms
+global function RetractSoyuzFuelArm
+{
+    local pList to list().
+    for p in ship:parts
+    {
+        if p:name:contains("SoyuzLaunchBaseArm") pList:add(p).
+    }
+
+    if pList:length > 0
+    {
+        for p in pList
+        {
+            for m in p:modulesNamed("ModuleAnimateGenericExtra")
+            {
+                DoEvent(m, "retract arm").
+            }
+        }
     }
 }
 

@@ -24,7 +24,9 @@ local sepList to list(
     "B9.Engine.T2A.SRBS",
     "B9.Engine.T2.SRBS.Jr",
     "B9.Engine.T2A.SRBS.Jr",
-    "nesdIntRcsSep"
+    "nesdIntRcsSep",
+    "creiNesdIntRcsSepJr",
+    "creiNesdIntRcsSepMini"
 ).
 // #endregion
 // #endregion

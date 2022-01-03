@@ -1,5 +1,8 @@
 @lazyGlobal off. 
 wait until ship:loaded.
+local ts to time:seconds + 5.
+print "Starting up..." at (0, 0).
+wait until Addons:RT:HasKscConnection(ship) or Time:Seconds >= ts.
 
 if exists("1:/vessel.json") set ship:name to readJson("1:/vessel.json")[0].
 
