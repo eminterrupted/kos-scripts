@@ -64,7 +64,7 @@ global function PlaySFX
     parameter sfxId to 0.
 
     if sfxId = 0 set sfxId to readJson("0:/sfx/ZeldaUnlock.json").
-    local v0 to getVoice(0).
+    local v0 to getVoice(9).
     from { local idx to 0.} until idx = sfxId:length step { set idx to idx + 1.} do
     {
         v0:play(sfxId[idx]).
@@ -544,7 +544,7 @@ global function GetEventFromModule
         {
             if a:contains(event)
             {
-                return a:replace("(callable) ", ""):replace(", is KSPEvent", "").
+                return a:replace("(callable) ", ""):replace(", is KSPAction", "").
             }
         }
     }
