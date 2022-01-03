@@ -268,21 +268,24 @@ global function ArmLESJettison
             lesList:add(p).
         }
     }
-
-    local p to lesList[0].
     
-    when ship:altitude >= 80000 then
+    if (lesList:length > 0)
     {
-        p:activate.
-        wait 0.01. 
-        if p:thrust > 0 
+        local p to lesList[0].
+    
+        when ship:altitude >= 80000 then
         {
-            p:getModule("ModuleDecouple"):doEvent("Decouple").
-            OutInfo("LES Tower Jettisoned").
-        }
-        else
-        {
-            OutInfo("CAUTION: LES Engines Failed").
+            p:activate.
+            wait 0.01. 
+            if p:thrust > 0 
+            {
+                p:getModule("ModuleDecouple"):doEvent("Decouple").
+                OutInfo("LES Tower Jettisoned").
+            }
+            else
+            {
+                OutInfo("CAUTION: LES Engines Failed").
+            }
         }
     }
 }
