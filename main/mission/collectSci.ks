@@ -108,9 +108,14 @@ local function PerformMultiscan
     {
         local biomeList to list().
         local curBiome  to "".
+        local line to 17.
+        local biomePath to path("sciBiomes.json").
 
+        print "Biomes researched: " at (0, line).
         OutHUD("Press End to terminate Science mission").
-
+        if exists(biomePath) {
+            set biomeList to readJson(biomePath).
+        }
         until CheckInputChar(terminal:input:endCursor)
         {
             set curBiome to addons:scansat:getBiome(ship:body, ship:geoposition).
@@ -122,20 +127,20 @@ local function PerformMultiscan
                 DeploySciList(sciList).
                 RecoverSciList(sciList, sciAction).
                 biomeList:add(curBiome).
+                writeJson(biomeList, biomePath).
             }
             else
             {
                 OutInfo("Current biome " + curBiome + "    ").
-
-                local line to 17.
-                print "Biomes researched: " at (0, line).
+                set line to 18.
                 for b in biomeList
                 {
+                    print "- " + b + "          " at (0, line).
                     set line to line + 1.
-                    print b + "          " at (2, line).
                 }
             }
             wait 1.
         }
+        deletePath(biomePath).
     }
 }
