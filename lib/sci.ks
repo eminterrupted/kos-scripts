@@ -8,6 +8,7 @@ global function GetSciModules
     for m in ship:modulesNamed("ModuleScienceExperiment")           sciList:add(m).
     for m in ship:modulesNamed("DMModuleScienceAnimate")            sciList:add(m).
     for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
