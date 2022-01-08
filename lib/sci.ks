@@ -57,6 +57,7 @@ global function RecoverSciList
                     else if m:data[0]:scienceValue > 0
                     {
                         CollectSci().
+                        if m:hasEvent("transfer data") ResetSci(m).
                     }
                     else 
                     {
