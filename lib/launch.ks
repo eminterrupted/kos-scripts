@@ -353,8 +353,11 @@ global function ArmFairingJettison
         {
             for module in ship:modulesnamed("ModuleProceduralFairing")
             {
-                module:doevent("deploy").
-                wait 0.05.
+                if module:part:tag = ""
+                {
+                    module:doevent("deploy").
+                    wait 0.05.
+                }
             }
         }
     }

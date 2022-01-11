@@ -1,7 +1,8 @@
 @lazyGlobal off. 
-wait until ship:loaded.
+ClearScreen.
+wait until ship:unpacked.
 local ts to time:seconds + 5.
-print "Starting up..." at (0, 0).
+print "Starting up...".
 wait until Addons:RT:HasKscConnection(ship) or Time:Seconds >= ts.
 
 if exists("1:/vessel.json") set ship:name to readJson("1:/vessel.json")[0].
@@ -43,9 +44,15 @@ set mp to readJson(runPlan).
 
 until mp:length = 0
 {
+    ClearScreen.
     local scr to path("0:/main/" + mp[0]).
     local param to mp[1].
 
+    if not Addons:RT:HasKscConnection(ship)
+    {
+        print "Waiting for connection to KSC...".
+        wait until Addons:RT:HasKscConnection(ship).
+    }
     runPath(scr, param).
     mp:remove(1).
     mp:remove(0).

@@ -39,57 +39,14 @@ global function DispTimeFormat
     parameter ts,
               format is "ts".
 
-    set ts to abs(ts).
-    local tsMod to 0.
-
-    local y  to 0.
-    local d  to 0.
-    local h  to 0.
-    local m  to 0.
-    local s  to 0.
-    local ms to 0.
+    set ts to TimeSpan(abs(ts)).
     
-    local secsPerDay  to kuniverse:hoursperday * 3600.
-    local secsPerYear to kerbin:orbit:period.
-
-    if ts >= secsPerYear
-    {
-        set tsMod to mod(ts, secsPerYear).
-        set y to ts - tsMod.
-        set y to y / secsPerYear.
-        set ts to tsMod.
-    }
-    if ts >= secsPerDay
-    {
-        set tsMod to mod(ts, secsPerDay).
-        set d to ts - tsMod.
-        set d to d / secsPerDay.
-        set ts to tsMod.
-    }
-    if ts >= 3600
-    {
-        set tsMod to mod(ts, 3600).
-        set h to ts - tsMod.
-        set h to h / 3600.
-        set ts to tsMod.
-    }
-    if ts >= 60
-    {
-        set tsMod to mod(ts, 60).
-        set m to ts - tsMod.
-        set m to m / 60.
-        set ts to tsMod.
-    }
-    if ts >= 1 
-    {
-        set tsMod to mod(ts, 1).
-        set s to ts - tsMod.
-        set ts to tsMod.
-    }
-    if ts > 0 
-    {
-        set ms to round(ts, 2).
-    }
+    local y  to ts:Year.
+    local d  to ts:Day.
+    local h  to ts:Hour.
+    local m  to ts:Minute.
+    local s  to ts:Second.
+    local ms to ts:Seconds:ToString:Split(".")[1]:SubString(0, 3):ToNumber. // round(mod(ts:seconds, round(ts:seconds)), 3).
 
     if format = "ts"
     {
@@ -98,28 +55,18 @@ global function DispTimeFormat
         local tsH  to choose h  if h  >= 10 else choose "0" + h  if h  >= 0 else "00".
         local tsM  to choose m  if m  >= 10 else choose "0" + m  if m  >= 0 else "00".
         local tsS  to choose s  if s  >= 10 else choose "0" + s  if s  >= 0 else "00".
-        local tsMS to "00".
-        if ms > 0
-        {
-            set tsMS to choose ms if ms >= 10 else "0" + ms.
-            if tsMS:contains(".") set tsMS to tsMs:toString:split(".")[1].
-        }
+        local tsMS to ms.
         
         return tsY + "y, " + tsD + "d T" + tsH + ":" + tsM + ":" + tsS + "." + tsMS.
     }
     else if format = "dateTime"
     {
         local dtY  to choose y  if y >= 1000 else choose "0" + y if y >= 100 else choose "00" + y if y >= 10 else "000" + y.
-        local dtD  to choose d  if d  >= 10 else choose "0" + d  if d  >= 0 else "00".
+        local dtD  to choose d  if d  >= 100 else choose "0" + d  if d  >= 10 else "00" + d.
         local dtH  to choose h  if h  >= 10 else choose "0" + h  if h  >= 0 else "00".
         local dtM  to choose m  if m  >= 10 else choose "0" + m  if m  >= 0 else "00".
         local dtS  to choose s  if s  >= 10 else choose "0" + s  if s  >= 0 else "00".
-        local dtMS to choose ms if ms >= .1 else choose "0" + ms if ms >= .01 else "00".
-        if ms > 0 
-        {
-            if dtMS:typename = "Scalar" set dtMS to dtMS:toString.
-            if dtMS:contains(".") set dtMS to dtMS:toString:split(".")[1].
-        }
+        local dtMS to ms.
         
         return dtY + "-" + dtD + "T" + dtH + ":" + dtM + ":" + dtS + "." + dtMS.
     }
@@ -382,7 +329,8 @@ global function DispLanding
 // Generic API for printing a telemetry section, takes a list of header strings / values
 global function DispGeneric
 {
-    parameter dispList, stLine is 22.
+    parameter dispList, 
+              stLine is 22.
 
     set line to stLine.
     
@@ -403,6 +351,25 @@ global function DispGeneric
             cr().
         }
     }
+}
+
+// Provides a readout for /main/mission/gps
+global function DispGPS
+{
+    parameter gpsModuleStatus, 
+              orientation.
+
+    set line to 10.
+
+    print "GPS MISSION" at (0, line).
+    print "-----------" at (0, cr()).
+    print "GPS NODE         : " + Ship:Name:Split(" ")[1] at (0, cr()).
+    print "GPS STATUS       : " + gpsModuleStatus:ToUpper at (0, cr()).
+    print "TRACKING DIR     : " + orientation:ToUpper at (0, cr()).
+    cr().
+    print "ALTITUDE         : " + round(Ship:Altitude) + "m " at (0, cr()).
+    //print "ORBITAL PERIOD   : " + TimeSpan(Ship:Orbit:Period):Full at (0, cr()).
+    print "ORBITAL PERIOD   : " + DispTimeFormat(Ship:Orbit:Period, "dateTime") at (0, cr()).
 }
 
 // Provides a readout of pid values and output against tgt val
