@@ -24,16 +24,9 @@ local orbitTS to time:seconds + orbitTime.
 local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
 
-local termChar to "".
-when terminal:input:hasChar then
-{
-    set termChar to terminal:input:getChar.
-}
-
 if orbitTime > 0
 {
-    OutTee("Orbiting until " + timestamp(orbitTS):full).
-    //InitWarp(OrbitTS, "orbit script termination").
+    OutTee("Orbiting until " + TimeStamp(orbitTS):full).
 }
 else
 {
