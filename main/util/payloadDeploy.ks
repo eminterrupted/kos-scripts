@@ -45,62 +45,28 @@ else
 }
 
 local maxDeployStep to 0.
-for p in ship:partstaggedpattern("payloadDeploy.*")
+local partsToDeploy to ship:partstaggedpattern("payloadDeploy.*").
+if partsToDeploy:length > 0
 {
-    if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
+    for p in partsToDeploy
+    {
+        if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
+    }
+    OutMsg("Deploying orbital apparatus.").
+    from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do {
+        OutInfo("Step: " + idx).
+        DeployPayloadParts(ship:partsTaggedPattern("payloadDeploy." + idx)).
+        wait 2.
+    }
+    wait 2.5.
 }
-
-from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do {
-    deployPayloadId(ship:partsTaggedPattern("payloadDeploy." + idx), idx).
-    wait 2.
-}
-wait 2.5.
 OutInfo().
-OutInfo("Deploying all remaining").
 local unTaggedParts to list().
 for p in ship:parts { 
     if p:tag = "" untaggedParts:add(p).
 }
-deployPayloadId(untaggedParts, "Untagged").
+OutInfo("Untagged").
+DeployPayloadParts(untaggedParts).
 wait 2.5. 
+OutInfo().
 OutMsg("Deployment completed").
-
-
-// Local functions
-// deployPayloadId :: <parts>, <int> | <none>
-// Runs a step on the parts passed in
-local function deployPayloadId
-{
-    parameter partsList,
-            sequenceIdx.
-    
-    OutMsg("Deploying orbital apparatus.").
-    OutInfo("Step: " + sequenceIdx).
-    
-    for p in partsList
-    {
-        if p:hasModule("ModuleAnimateGeneric")
-        {
-            local m to p:getModule("ModuleAnimateGeneric").
-            DoEvent(m, "open").
-        }
-        
-        if p:hasModule("ModuleRTAntenna")
-        {
-            local m to p:getModule("ModuleRTAntenna").
-            DoEvent(m, "activate").
-        }
-
-        if p:hasModule("ModuleDeployableSolarPanel")
-        {
-            local m to p:getModule("ModuleDeployableSolarPanel").
-            DoAction(m, "extend solar panel", true).
-        }
-
-        if p:hasModule("ModuleDeployablePart")
-        {
-            local m to p:getModule("ModuleDeployablePart").
-            DoEvent(m, "extend").
-        }
-    }
-}
