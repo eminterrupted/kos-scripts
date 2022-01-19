@@ -121,11 +121,17 @@ clearScreen.
 DispMain(scriptPath(), false).
 
 // Booster check
-for p in ship:parts
+for p in ship:partsTaggedPattern("booster.")
 {
-    if p:tag:contains("booster") 
+    local pIdx to -1.
+    local pAct to "".
+
+    local tagParts to p:tag:split(".").
+    if tagParts:length > 1 set pIdx to p:tag:split(".")[1]:tonumber(-1).
+    if tagParts:length > 2 set pAct to p:tag:split(".")[2].
+
+    if pIdx > -1 and p:istype("decoupler")
     {
-        local pIdx to p:tag:split(".")[1]:tonumber.
         set hasBoosters to true.
         if boosterLex:hasKey(pIdx) 
         {
@@ -136,33 +142,83 @@ for p in ship:parts
             set boosterLex[pIdx] to list(p).
         }
     }
+
+    if tagParts:length > 2
+    {
+        if boosterLex:hasKey(pAct)
+        {
+            if boosterLex[pAct]:hasKey(pIdx)
+            {
+                boosterLex[pAct][pIdx]:add(p).
+            }
+            else 
+            {
+                set boosterLex[pAct][pIdx] to list(p).
+            }
+        }
+        else
+        {
+            set boosterLex[pAct] to lex(pIdx, list(p)).
+        }
+    }
 }
 
-// Arm staging and LES
-ArmAutoStaging(stageLimit).
-ArmLESJettison().
-ArmFairingJettison().
+// local termX to terminal:width.
+// local termY to terminal:height.
+// set terminal:width to 180.
+// set terminal:height to 60.
+// print "boosterLex" at (0, 12).
+// print boosterLex at (0, 13).
+// Breakpoint().
+// set terminal:width to termX.
+// set terminal:height to termY.
 
+// Arm systems
+ArmAutoStaging(stageLimit).
+ArmLESJettison(82500).
+ArmFairingJettison().
+set g_abortSystemArmed to SetupAbortGroup(Ship:RootPart).
+
+// Booster Sep
 if hasBoosters
 {
     for idx in boosterLex:keys
     {
-        local bIdx to idx.
-        when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
+        if idx:isType("Scalar") 
         {
-            OutInfo("Detaching Booster: " + bIdx).
-            for dc in boosterLex[bIdx]
+            local bIdx to idx.
+            when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
             {
-                if dc:partsDubbedPattern("sep"):length > 0 
+                OutInfo("Detaching Booster: " + bIdx).
+                for dc in boosterLex[bIdx]
                 {
-                    for sep in dc:partsDubbedPattern("sep") sep:activate.
+                    if dc:partsDubbedPattern("sep"):length > 0 
+                    {
+                        for sep in dc:partsDubbedPattern("sep") sep:activate.
+                    }
+                    local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                    if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
                 }
-                local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
-                if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
+                wait 1.
+                OutInfo().
+                //if bIdx = 1 stage.
+
+                // Check the boosterLex to see if there are any motors in the stage to airstart
+                // Start them if yes
+                if boosterLex:hasKey("airstart")
+                {
+                    if boosterLex["airstart"]:hasKey(bIdx + 1) 
+                    {
+                        for b in boosterLex["airstart"][bIdx + 1] 
+                        {
+                            if not b:ignition 
+                            {
+                                b:activate.
+                            }
+                        }
+                    }
+                }
             }
-            wait 1.
-            OutInfo().
-            if bIdx = 1 stage.
         }
     }
 }
@@ -187,9 +243,11 @@ if core2 <> ""
 OutInfo().
 OutInfo2().
 
+
 OutMsg("Vertical Ascent").
 until ship:altitude >= 150
 {
+    if g_abortSystemArmed and abort InitiateLaunchAbort().
     DispTelemetry().
     wait 0.01.
 }
@@ -198,6 +256,7 @@ OutInfo("Roll Program").
 set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 {
+    if g_abortSystemArmed and abort InitiateLaunchAbort().
     DispTelemetry().
     wait 0.01.
 }
@@ -205,6 +264,7 @@ OutInfo().
 
 until ship:altitude >= altStartTurn or ship:verticalspeed >= spdStartTurn 
 {
+    if g_abortSystemArmed and abort InitiateLaunchAbort().
     DispTelemetry().
     wait 0.01.
 }
@@ -212,7 +272,8 @@ set altStartTurn to ship:altitude.
 
 OutMsg("Pitch Program").
 until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:apoapsis >= tgtAp * 0.975
-{
+{   
+    if g_abortSystemArmed and abort InitiateLaunchAbort().
     set sVal to heading(l_az_calc(azCalcObj), LaunchAngForAlt(altGravTurn, altStartTurn, 0), rVal).
     DispTelemetry().
     wait 0.01.
@@ -221,6 +282,7 @@ until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:ap
 OutMsg("Horizontal Velocity Program").
 until ship:apoapsis >= tgtAp * 0.9995
 {
+    if g_abortSystemArmed and abort InitiateLaunchAbort().
     local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
     local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
     set sVal to heading(l_az_calc(azCalcObj), adjAng, rVal).

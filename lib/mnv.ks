@@ -1,26 +1,23 @@
-@lazyGlobal off.
+@LazyGlobal off.
 
 // Dependencies
 // #include "0:/lib/globals"
 // #include "0:/lib/burnCalc"
 // #include "0:/lib/disp"
-// #include "0:/lib/nav".
+// #include "0:/lib/nav"
 // #include "0:/lib/util"
+// #include "0:/lib/vessel"
 
 // *~ Variables ~* //
 
 
 // *~ Functions ~* //
-// #region
 
 // ExecNodeBurn :: <node> -> <none>
 // Given a node object, executes it
 global function ExecNodeBurn
 {
-    parameter mnvNode is node(),
-              showVec is false.
-
-    local magVec to v(0, 0, 0).
+    parameter mnvNode is node().
 
     local dv to mnvNode:deltaV:mag.
     if dv <= 0.1 
@@ -30,33 +27,33 @@ global function ExecNodeBurn
     else
     {
         local burnDur to CalcBurnDur(dv).
-        local fullDur to burnDur[1].
+        local fullDur to burnDur[0].
         local halfDur to burnDur[3].
 
         local burnEta to mnvNode:time - halfDur. 
         set g_MECO    to burnEta + fullDur.
         lock dvRemaining to abs(mnvNode:burnVector:mag).
 
-        lock rVal to r(0, 0, ship:facing:roll).
         local sVal to lookDirUp(mnvNode:burnvector, sun:position).
         local tVal to 0.
         lock steering to sVal.
         lock throttle to tVal.
 
         ArmAutoStaging().
-        
-        if showVec
-        {
-            set magVec to vecDraw(ship:position, mnvNode:burnvector, purple, "BurnVector", 2.5, true, 0.25, true).
-            set magVec:vectorUpdater to { return mnvNode:burnvector.}.
-        }
 
         InitWarp(burnEta, "Burn ETA").
 
         until time:seconds >= burnEta
         {
+            set g_termChar to GetInputChar().
+
+            if g_termChar = Terminal:Input:Enter
+            {
+                InitWarp(burnEta, "Burn ETA", 15, true).
+                Terminal:Input:Clear.
+            }
             set sVal to lookDirUp(mnvNode:burnvector, sun:position).
-            DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
+            DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
         }
 
         local dv0 to mnvNode:deltav.
@@ -78,18 +75,14 @@ global function ExecNodeBurn
             {
                 set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
             }
-            DispBurn(burnEta - time:seconds, dvRemaining, g_MECO - burnEta).
+            DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
             wait 0.01.
         }
 
         OutTee("Maneuver Complete!").
         wait 1.
-        clrDisp().
-        if showVec
-        {
-            set magVec:vectorUpdater to DONOTHING.
-            set magVec:show to false.
-        }
+        ClrDisp().
+
         unlock steering.
     }
     remove mnvNode.
@@ -135,7 +128,7 @@ global function IncMatchBurn
     if nearestNode 
     {
         set burn_utc to time:seconds + ETAtoTA(burnVesObt, node_ta).
-        if burn_utc > ship:orbit:period / 2 
+        if burn_utc > time:seconds + ship:orbit:period / 2 
         {
             set node_ta to mod(node_ta + 180, 360).
             set burn_utc to time:seconds + ETAtoTA(burnVes:obt, node_ta).
@@ -162,5 +155,3 @@ global function IncMatchBurn
     
     return list(burn_utc, burn_mag * burn_unit, mnv_node, burn_mag, burn_unit).
 }
-
-// #endregion

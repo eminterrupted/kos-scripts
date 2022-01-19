@@ -24,13 +24,15 @@ set timeToLAN to mod((360 + tgtEffectiveLAN - ship:orbit:LAN) * (body:rotationpe
 set launchWindow to time:seconds + timeToLAN.
 OutTee("Waiting for launch window").
 
-if ship:orbit:lan < tgtEffectiveLAN - tgtLaunchBuffer or ship:orbit:lan >= tgtEffectiveLAN + tgtLaunchBuffer
-{
-    InitWarp(launchWindow, "Launch Window").
-}
-
 until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN - tgtLaunchBuffer, tgtEffectiveLAN + tgtLaunchBuffer)
 {
+    set g_termChar to GetInputChar().
+
+    if g_termChar = Terminal:Input:Enter
+    {
+        InitWarp(launchWindow, "Launch Window", 15, true).
+        Terminal:Input:Clear.
+    }
     DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
     wait 0.01.
 }

@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 // Dependencies
+runOncePath("0:/lib/disp").
 
 // *~ Variables ~* //
 //#region
@@ -559,31 +560,61 @@ global function ToggleBayDoor
               doors is "all",
               action is "toggle".
 
-    local usBay to bay:hasModule("USAnimateGeneric").
-    local aniMod to choose "USAnimateGeneric" if usBay else "ModuleAnimateGeneric".
-    local pEvent to "deploy primary bays".
-    local sEvent to "deploy secondary bays".
-
-    if action = "open" and not usBay
+    local usBay to bay:HasModule("USAnimateGeneric").
+    local bayMod to choose bay:GetModule("USAnimateGeneric") if usBay else bay:GetModule("ModuleAnimateGeneric").
+    local priCloseEvent to "close".
+    local priOpenEvent to "open".
+    if usBay
     {
-        set pEvent to "open".
-    }
-    else if action = "close" and not usBay
-    {
-        set pEvent to "close".
-    }
-    else if not usBay
-    {
-        set pEvent to choose "open" if bay:getModule(aniMod):hasEvent("open") else "close".
+        set priCloseEvent to "retract primary bays".
+        set priOpenEvent to "deploy primary bays".
     }
 
-    if doors = "all" or doors = "primary"
+    if bayMod:HasEvent(priCloseEvent) or bayMod:HasEvent(priOpenEvent)
     {
-        DoEvent(bay:getModule(aniMod), pEvent).
-    }
-    if usBay and (doors = "all" or doors = "secondary")
-    {
-        DoEvent(bay:getModule(aniMod), sEvent).
+        local secCloseEvent to "retract secondary bays".
+        local secOpenEvent to "deploy secondary bays".
+        local eventList to list().
+
+        if doors = "all" or doors = "primary"
+        {
+            if action = "toggle" 
+            {
+                if bayMod:HasEvent(priOpenEvent) DoEvent(bayMod, priOpenEvent).
+                else if DoEvent(bayMod, priOpenEvent).
+            }
+            else if action = "open"
+            {
+                DoEvent(bayMod, priOpenEvent).
+            }
+            else if action = "close"
+            {
+                DoEvent(bayMod, priCloseEvent).
+            }
+        }
+
+        if doors = "all" or doors = "secondary"
+        {
+            print doors at (2, 25).
+            if action = "toggle" 
+            {
+                if bayMod:HasEvent(secOpenEvent) eventList:add(secOpenEvent).
+                else if eventList:add(secCloseEvent).
+            }
+            else if action = "open"
+            {
+                if bayMod:HasEvent(secOpenEvent) eventList:add(secOpenEvent).
+            }
+            else if action = "close"
+            {
+                DoEvent(bayMod, secCloseEvent). 
+            }
+        }
+        wait 0.07.
+        until bayMod:GetField("status") = "Locked"
+        {
+            wait 0.01.
+        }
     }
 }
 
@@ -634,31 +665,42 @@ global function SetGrappleHook
 // Performs a deployment function on a set of parts 
 global function DeployPayloadParts
 {
-    parameter partsList.
+    parameter partsList, action is "deploy".
     
     for p in partsList
     {
         if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Bays
         {
-            ToggleBayDoor(p, "all", "open").
+            if action = "deploy" ToggleBayDoor(p, "all", "open").
+            else ToggleBayDoor(p, "all", "close").
         }
         
         if p:hasModule("ModuleRTAntenna")   // RT Antennas
         {
             local m to p:getModule("ModuleRTAntenna").
-            DoEvent(m, "activate").
+            if action = "deploy" DoEvent(m, "activate").
+            else DoEvent(m, "retract").
         }
 
         if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
         {
             local m to p:getModule("ModuleDeployableSolarPanel").
-            DoAction(m, "extend solar panel", true).
+            if action = "deploy" DoAction(m, "extend solar panel", true).
+            else DoAction(m, "retract solar panel", true).
+        }
+
+        if p:hasModule("ModuleResourceConverter") // Fuel Cells
+        {
+            local m to p:getModule("ModuleResourceConverter").
+            if action = "deploy" DoEvent(m, "start fuel cell").
+            else DoEvent(m, "stop fuel cell").
         }
 
         if p:hasModule("ModuleDeployablePart")  // Not sure?
         {
             local m to p:getModule("ModuleDeployablePart").
-            DoEvent(m, "extend").
+            if action = "deploy" DoEvent(m, "extend").
+            else DoEvent(m, "retract").
         }
     }
 }
@@ -699,7 +741,7 @@ global function InitWarp
     }
 }
 
-// Smooths out a warp down by either altitude or timestamp
+// Smooths out a warp down by altitude
 global function WarpToAlt
 {
     parameter tgtAlt.
@@ -709,23 +751,23 @@ global function WarpToAlt
     if dir = "down"
     {
         if ship:altitude <= tgtAlt * 1.01 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.15 set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.35 set warp to 2.
+        else if ship:altitude <= tgtAlt * 1.25 set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
         else if ship:altitude <= tgtAlt * 4 set warp to 3.
         else if ship:altitude <= tgtAlt * 8 set warp to 4.
-        else if ship:altitude <= tgtAlt * 16 set warp to 5.
-        else if ship:altitude <= tgtAlt * 24 set warp to 6.
+        else if ship:altitude <= tgtAlt * 24 set warp to 5.
+        else if ship:altitude <= tgtAlt * 72 set warp to 6.
         else set warp to 7.
     }
     else if dir = "up"
     {
         if ship:altitude >= tgtAlt * 0.99 set warp to 0.
-        else if ship:altitude >= tgtAlt * 0.95 set warp to 1.
-        else if ship:altitude >= tgtAlt * 0.80 set warp to 2.
-        else if ship:altitude >= tgtAlt * 0.70 set warp to 3.
-        else if ship:altitude >= tgtAlt * 0.35 set warp to 4.
-        else if ship:altitude >= tgtAlt * 0.20 set warp to 5.
-        else if ship:altitude >= tgtAlt * 0.05 set warp to 6.
+        else if ship:altitude >= tgtAlt * 0.90 set warp to 1.
+        else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
+        else if ship:altitude >= tgtAlt * 0.60 set warp to 3.
+        else if ship:altitude >= tgtAlt * 0.40 set warp to 4.
+        else if ship:altitude >= tgtAlt * 0.25 set warp to 5.
+        else if ship:altitude >= tgtAlt * 0.10 set warp to 6.
         else set warp to 7.
     }
 }

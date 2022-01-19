@@ -51,7 +51,7 @@ local tVal to 0.
 lock steering to sVal.
 lock throttle to tVal.
 
-// Arm staging
+// Arm Systems
 ArmAutoStaging(payloadStage + 1).
 
 // Calculations
@@ -60,9 +60,9 @@ local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis,
 local burnDur   to CalcBurnDur(dv).
 
 local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
-local burnEta   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
+local burnETA   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
 local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
-set g_MECO      to burnEta + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
+set g_MECO      to burnETA + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
 //local l_MECO    to burnEta + burnDur[1].        // Expected cutoff point with full duration and staging estimates
 
 // Uncomment below to see the maneuver that will be executed in map view assumed you have the ability in career mode
@@ -73,12 +73,11 @@ set g_MECO      to burnEta + fullDur.           // Expected cutoff point with fu
 // }
 
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
-InitWarp(burnEta, "Circularization Burn").
-until time:seconds >= burnEta 
+InitWarp(burnETA, "Circularization Burn").
+until time:seconds >= burnETA 
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
-    OutInfo("Burn Dur: " + round(fullDur, 1) + "s   ").
-    OutInfo2("Burn ETA: " + timespan(round(burnEta - time:seconds, 1)):full).
+    DispBurn(dv, burnEta - time:seconds, fullDur).
     DispTelemetry().
     wait 0.01.
 }
@@ -91,6 +90,7 @@ wait 0.05.
 
 until time:seconds >= g_MECO
 {
+    if g_abortSystemArmed and ship:periapsis < body:atm:height and abort InitiateLaunchAbort().
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
     OutInfo("Est time to g_MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
     DispTelemetry().

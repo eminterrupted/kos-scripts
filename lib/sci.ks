@@ -117,7 +117,11 @@ local function DeploySci
 
     if not m:hasData
     {
-        m:deploy().
+        if m:HasSuffix("deploy") m:deploy().
+        else 
+        {
+            DoEvent("start laser altimeter measurements").
+        }
         local ts to time:seconds + 10.
         wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
@@ -128,18 +132,24 @@ local function DeployUSSci
 {
     parameter m.
 
-    local deployList  to list("log", "observe", "conduct").
+    local deployList  to list("log", "observe", "conduct", "open service door", "take a picture").
 
     for action in m:allActions
     {
         for validAction in deployList
         {
-            if action:contains(validAction) 
+            local trimmedAction to action:replace("(callable) ", ""):replace(", is KSPAction", "").
+            if trimmedAction:contains(validAction) 
             {
-                m:doAction(action:replace("(callable) ", ""):replace(", is KSPAction", ""), true).
+                m:doAction(trimmedAction, true).
                 local ts to time:seconds + 5.
                 wait until m:hasData or time:seconds >= ts .
                 if addons:career:available addons:career:closeDialogs.
+            }
+
+            if trimmedAction = "deploy service door"
+            {
+                wait 2.
             }
         }
     }
