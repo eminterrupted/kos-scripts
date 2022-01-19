@@ -16,8 +16,6 @@ local tgt to ship.
 local orientation to "pro-sun".
 
 local runmode to 0.
-local warpFlag to true.
-
 
 if hasTarget 
 {
@@ -38,20 +36,13 @@ until runmode = -1
     {
         if tgt <> ship 
         {
-            set runmode to 5.
+            set runmode to 10.
         }
         else
         {
             OutTee("Already in SOI", 1).
             break.
         }
-    }
-
-    else if runmode = 5
-    {
-        InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 5).
-        set warpFlag to true.
-        set runmode to 10.
     }
 
     else if runmode = 10
@@ -67,15 +58,14 @@ until runmode = -1
         }    
         else 
         {
-            if warp = 0 and not warpFlag
+            set g_termChar to GetInputChar().
+
+            if g_termChar = Terminal:Input:Enter
             {
-                set runmode to 5.
+                InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 5, true).
             }
-            else
-            {
-                local soiDispData to DispSOIData.
-                DispGeneric(soiDispData, 10).
-            }
+            local soiDispData to DispSOIData.
+            DispGeneric(soiDispData, 10).
         }
     }
     else if runmode = 15
@@ -97,4 +87,3 @@ local function DispSOIData
     }
     return paramList.
 }
-    

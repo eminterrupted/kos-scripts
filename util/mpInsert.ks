@@ -1,3 +1,5 @@
+clearScreen. 
+
 parameter valToPush, 
           idx is 0, 
           popFirst is false.
@@ -10,14 +12,16 @@ if mpPath:toString:split("/")[1] <> ""
 {
     if exists(mpPath) 
     {
+        if popFirst runPath("0:/util/mpPop", idx).
+     
         local mp to readJson(mpPath).
         
-        if popFirst runPath("0:/util/mpPop", idx).
-                
         mp:insert(0, valToPush[1]).
         mp:insert(0, valToPush[0]).
 
         writeJson(mp, mpPath).
+        print "Post-insert plan:".
+        print mp.
     }
     else
     {

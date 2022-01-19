@@ -218,7 +218,7 @@ global function DispMain
     parameter scrPlan is scriptPath():name,
               showTerminal is true.
 
-    if showTerminal dispTerm().
+    if showTerminal DispTerm().
 
     print "Mission Controller v2.0.1" at (0, 0).
     print "=========================" at (0, 1).
@@ -229,21 +229,21 @@ global function DispMain
 // Mnv details
 global function DispBurn
 {
-    parameter burnEta, dvToGo is 0, burnDur is 0.
+    parameter dvToGo, burnETA, burnDur is 0.
 
-    OutMsg("MNV DELTAV TO GO: " + round(dvToGo, 2)). 
-    if burnEta >= 0 
+    OutMsg("DV REMAINING    : " + round(dvToGo, 2)). 
+    if burnETA >= 0 
     {
-        set burnEta to abs(burnEta).
-        if burnEta > 60
+        set burnETA to abs(burnETA).
+        if burnETA > 60
         {
-            set burnEta to timeSpan(burnEta):full.
+            set burnETA to timeSpan(burnETA):full.
         }
         else
         {
-            set burnEta to round(burnEta, 2).
+            set burnETA to round(burnETA, 2).
         }
-        OutInfo("BURN ETA        : " + burnEta).
+        OutInfo("BURN ETA        : " + burnETA).
         OutInfo2("BURN DURATION   : " + round(burnDur, 2) + "s     ").
     }
     else

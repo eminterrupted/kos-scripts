@@ -158,9 +158,12 @@ until false
         local warpFlag to false.
         until ship:altitude <= startAlt 
         {
-            if CheckInputChar(terminal:input:enter) 
+            if terminal:input:hasChar set g_termChar to terminal:input:getChar.
+            if g_termChar = terminal:input:enter
             {
                 set warpFlag to true.
+                OutInfo("Warping to startAlt: " + startAlt).
+                terminal:input:clear.
             }
             if warpFlag 
             {
@@ -170,6 +173,7 @@ until false
             DispTelemetry().
             wait 0.01. 
         }
+        set warpFlag to false.
         break.
     }
 }

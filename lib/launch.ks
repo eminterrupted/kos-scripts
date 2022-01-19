@@ -1,6 +1,7 @@
 @lazyGlobal off.
 
 //-- Dependencies
+runOncePath("0:/lib/globals").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 
@@ -157,6 +158,7 @@ global function CrewArmRetract
     for m in ship:modulesNamed("ModuleAnimateGenericExtra")  // Swing arms that are not crew arms
     {
         if m:part:name:contains("CrewArm") animateMod:add(m).
+        if m:part:name:contains("CrewWalkwayMercury") animateMod:add(m).
     }
         
     if animateMod:length > 0
@@ -164,10 +166,9 @@ global function CrewArmRetract
         OutInfo("Retracting crew arm").
         for m in animateMod
         {
-            if not DoEvent(m, "retract arm").
-            {
-                DoEvent(m, "retract crew arm").
-            }
+            DoEvent(m, "retract arm").
+            DoEvent(m, "retract crew arm").
+            DoEvent(m, "raise walkway").
         }
     }
 }
@@ -260,6 +261,8 @@ global function PadROFI
 // Launch Escape System - Arm Jettison
 global function ArmLESJettison
 {
+    parameter jettAlt.
+
     local lesList to list().
     for p in ship:parts
     {
@@ -273,7 +276,7 @@ global function ArmLESJettison
     {
         local p to lesList[0].
     
-        when ship:altitude >= 80000 then
+        when ship:altitude >= jettAlt then
         {
             p:activate.
             wait 0.01. 
@@ -281,6 +284,8 @@ global function ArmLESJettison
             {
                 p:getModule("ModuleDecouple"):doEvent("Decouple").
                 OutInfo("LES Tower Jettisoned").
+                g_abortGroup:remove("LES").
+                g_abortGroup:remove("LESDecouple").
             }
             else
             {
@@ -363,3 +368,105 @@ global function ArmFairingJettison
     }
 }
 //#endregion
+
+// #region -- Abort
+// SetupAbortGroup -- <part> -> <bool>
+// Creates a global lex of parts / actions involved in a launch abort sequence
+// Provide the command module part to abort with, returns a bool if abort system is present
+global function SetupAbortGroup
+{
+    parameter cmdPod. // Part which we want to save in case of abort (i.e., command module with crew)
+    
+    local LESList to list().
+    abort off.
+
+    for p in ship:parts
+    {
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
+        {
+            LESList:add(p).
+            if p:hasModule("ModuleDecouple") 
+            {
+                set g_abortGroup["LESDecoupler"] to p:getModule("ModuleDecouple").
+            }
+        }
+        else if p:hasModule("TacSelfDestruct")
+        {
+            set g_abortGroup["TerminationSystem"] to p:getModule("TacSelfDestruct").
+            g_abortGroup["TerminationSystem"]:SetField("time delay", 3).
+        }
+    }
+    if LESList:length > 0 set g_abortGroup["LES"] to LESList.
+
+    for p in cmdPod:children 
+    {
+        if p:hasModule("ModuleHeatshield")
+        {
+            for c in p:children
+            {
+                if c:hasModule("ModuleDecouple")
+                {
+                    set g_abortGroup["StackDecoupler"] to c:getModule("ModuleDecouple").
+                }
+            }
+        }
+    }
+
+    return g_abortGroup:Keys:Length > 0.
+}
+
+// LaunchAbortSequence -- <none> -> <bool>
+global function InitiateLaunchAbort
+{
+    if g_abortSystemArmed and ship:body = Body("Kerbin") and ship:periapsis <= ship:body:atm:height / 2
+    {
+        OutInfo().
+        OutInfo2().
+        OutTee("MASTER ALARM", 0, 2, 0.5).
+        if g_abortGroup:HasKey("TerminationSystem") 
+        {
+            DoEvent(g_abortGroup:TerminationSystem, "self destruct!").
+        }
+        if g_abortGroup:HasKey("LES")
+        {
+            for eng in g_abortGroup:LES
+            {
+                eng:activate.
+            }
+        }
+        unlock Steering.
+        DoEvent(g_abortGroup:StackDecoupler, "decouple").
+        
+        until ship:availableThrust < 0.1
+        {
+            OutTee("ABORT SEQUENCE ACTIVATED", 0, 2, 1).
+            wait 0.5.
+            OutTee("MASTER ALARM", 0, 2, 1).
+            wait 0.5.
+        }
+
+        until ship:verticalspeed <= 20
+        {
+            OutTee("ABORT SEQUENCE ACTIVATED", 0, 2, 1).
+            wait 0.5.
+            OutTee("MASTER ALARM", 0, 2, 1).
+            wait 0.5.
+        }
+        lock Steering to ship:SrfRetrograde.
+        if g_abortGroup:hasKey("LESDecoupler") 
+        {
+            DoEvent(g_abortGroup:LESDecoupler, "decouple").
+        } 
+        wait 0.5.
+        for m in ship:ModulesNamed("RealChuteModule")
+        {
+            DoEvent(m, "arm parachute").
+        }
+
+        until false
+        {
+            OutTee("MASTER ALARM", 0, 2, 1).
+            wait 0.5.
+        }
+    }
+}

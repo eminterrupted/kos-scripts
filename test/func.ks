@@ -3,13 +3,22 @@ clearScreen.
 
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/disp").
+runOncePath("0:/lib/globals").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/launch").
 
-parameter p0, p1 is 0.
+DispMain(ScriptPath(), false).
 
-PlaySFX(0).
+abort off.
+local abortSequence to SetupAbortGroup(Ship:RootPart).
+if abortSequence outMsg("Abort sequence armed").
+
+until false
+{
+    OutInfo("Abort Group Disabled").
+    if abort LaunchAbortSequence().
+}
 
 // print "Testing BurnDurFunc".
 // print "-------------------".

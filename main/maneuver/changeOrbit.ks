@@ -86,7 +86,7 @@ if InitRunmode() = 0
         set tgtVal_0 to tgtAp.
         set tgtVal_1 to tgtPe.
         set compMode to "ap".
-        set xfrAlt   to choose tgtAp if compMode = "ap" else tgtPe.
+        set xfrAlt   to tgtAp.
         set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
         set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[1].
         set dvNeeded to list(dv1, dv2).
@@ -113,10 +113,10 @@ if InitRunmode() = 0
         set stAp     to AltAtTA(ship:orbit, mnvTA).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
-        set compMode to "ap".
-        set xfrAlt   to tgtAp. // choose tgtAp if compMode = "ap" else tgtPe.
-        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[1].
-        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[0].
+        set compMode to "pe".
+        set xfrAlt   to tgtPe. 
+        set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[0].
+        set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
         set dvNeeded to list(dv1, dv2).
     }
     ///THIS ONE vvvvv
@@ -124,12 +124,12 @@ if InitRunmode() = 0
     {
         print "lower rAp and lower rPe" at (2, 25).
         set mnvTA    to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
-        set stPe     to AltAtTA(ship:orbit, mnvTA).
-        set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
+        set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
+        set stAp     to AltAtTA(ship:orbit, mnvTA).
         set tgtVal_0 to tgtPe.
         set tgtVal_1 to tgtAp.
         set compMode to "pe".
-        set xfrAlt   to tgtPe. // choose tgtAp if compMode = "ap" else tgtPe.
+        set xfrAlt   to tgtPe. 
         set dv1 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "pe")[0].
         set dv2 to CalcDvBE(stPe, stAp, tgtPe, tgtAp, xfrAlt, Ship:Body, "ap")[1].
         set dvNeeded to list(dv1, dv2).
@@ -155,12 +155,17 @@ print "mvnTA   : " + mnvTA AT (2, 32).
 print "compMode: " + compMode at (2, 33).
 print "runmode : " + ReadCache("runmode") at (2, 35).
 
+// print "mnvTA: " + mnvTA at (2, 37).
+// print "stPe : " + stPe at (2, 38).
+// print "stAp : " + stAp at (2, 39).
+// print "xfrAlt : " + xfrAlt at (2, 40).
+
 // Transfer burn
 until doneFlag
 {
     if InitRunmode() = 2
     {
-        if CheckValRange(dvNeeded[0], -0.2, 0.2)
+        if CheckValRange(dvNeeded[0], -1, 1)
         {
             OutMsg("Skipping Transfer Burn").
             set mnvTA to mod(mnvTA + 180, 360).

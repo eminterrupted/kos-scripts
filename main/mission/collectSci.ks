@@ -36,6 +36,8 @@ ag10 off.
 panels on.
 DispMain(scriptPath():name).
 
+DeployPayloadParts(Ship:PartsTaggedPattern("scienceDeploy"), "deploy").
+
 if multiScan
 {
     PerformMultiscan().
@@ -143,4 +145,6 @@ local function PerformMultiscan
         }
         deletePath(biomePath).
     }
+
+    DeployPayloadParts(Ship:PartsTaggedPattern("scienceDeploy"), "retract").
 }
