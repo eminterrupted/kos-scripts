@@ -216,13 +216,13 @@ set sVal to body:position.
 OutMsg("Waiting until staging altitude: " + stagingAlt).
 until ship:altitude <= stagingAlt.
 {
-    set sVal to body:position.
+    set sVal to GetSteeringDir("body-sun").
     DispTelemetry().
 }
 
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
-set sVal to body:position + r(0, 0, rVal).
+set sVal to GetSteeringDir("body-sun").
 wait 1.
 
 OutMsg("Staging").
@@ -231,9 +231,13 @@ until stage:number <= 1
     stage.
     wait 2.
 }
-wait 5.
 OutMsg("Waiting for reentry interface").
-set sVal to ship:retrograde + r(0, 0, rVal).
+local ts to time:seconds + 5.
+until time:seconds > ts or ship:altitude <= body:atm:height + 5000
+{
+    set sVal to ship:retrograde + r(0, 0, rVal).
+    DispTelemetry().
+}
 
 until ship:altitude <= body:atm:height
 {
@@ -249,7 +253,7 @@ for m in ship:modulesNamed("ModuleRTAntenna")
 until ship:groundspeed <= 1500 and ship:altitude <= 30000
 {
     set sVal to ship:srfRetrograde + r(0, 0, rVal).
-    DispTelemetry().
+    DispTelemetry(false). // False: simulate telemetry blackout
 }
 for m in ship:modulesNamed("ModuleRTAntenna")
 {
