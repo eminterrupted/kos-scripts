@@ -74,6 +74,7 @@ DispMain(ScriptPath(), false).
     local burnUTC to time:seconds + ETAtoTA(ship:orbit, burnTA).
     local mnvNode to node(burnUTC, 0, 0, dv1).
     add mnvNode.
+    wait 1.
     if not mnvNode:orbit:hasnextpatch 
     {
         set mnvNode to IterateMnvNode(mnvNode, "escSoi", list(list(0, 0, 0, 1))).

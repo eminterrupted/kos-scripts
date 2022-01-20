@@ -135,7 +135,8 @@ if retroFire and ship:periapsis > reentryTgt
         until time:seconds > ts
         {
             set ship:control:roll to -1.
-            DispTelemetry().wait 0.01.
+            DispTelemetry().
+            wait 0.01.
             set ship:control:neutralize to true.
         }
     }
@@ -155,25 +156,17 @@ until false
     else 
     {
         OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
-        local warpFlag to false.
         until ship:altitude <= startAlt 
         {
-            if terminal:input:hasChar set g_termChar to terminal:input:getChar.
-            if g_termChar = terminal:input:enter
+            if CheckWarpKey().
             {
-                set warpFlag to true.
                 OutInfo("Warping to startAlt: " + startAlt).
-                terminal:input:clear.
-            }
-            if warpFlag 
-            {
                 WarpToAlt(startAlt).
             }
             set sVal to lookDirUp(ship:retrograde:vector, sun:position) + r(0, 0, rVal).
             DispTelemetry().
             wait 0.01. 
         }
-        set warpFlag to false.
         break.
     }
 }
@@ -232,9 +225,14 @@ until stage:number <= 1
     wait 2.
 }
 OutMsg("Waiting for reentry interface").
-local ts to time:seconds + 5.
+set ts to time:seconds + 5.
 until time:seconds > ts or ship:altitude <= body:atm:height + 5000
 {
+    if CheckWarpKey().
+    {
+        OutInfo("Warping to startAlt: " + startAlt).
+        WarpToAlt(body:atm:height + 1000).
+    }
     set sVal to ship:retrograde + r(0, 0, rVal).
     DispTelemetry().
 }
@@ -245,6 +243,8 @@ until ship:altitude <= body:atm:height
     DispTelemetry().
 }
 OutMsg("Reentry interface, signal lost").
+clrDisp().
+
 for m in ship:modulesNamed("ModuleRTAntenna")
 {
     DoEvent(m, "Deactivate").
@@ -255,11 +255,13 @@ until ship:groundspeed <= 1500 and ship:altitude <= 30000
     set sVal to ship:srfRetrograde + r(0, 0, rVal).
     DispTelemetry(false). // False: simulate telemetry blackout
 }
+
 for m in ship:modulesNamed("ModuleRTAntenna")
 {
     DoEvent(m, "Activate").
 }
 OutMsg("Signal reacquired").
+clrDisp().
 wait 1.
 
 unlock steering.
