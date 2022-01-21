@@ -709,6 +709,19 @@ global function DeployPayloadParts
 
 // -- Warp
 // #region
+// CheckWarpKey :: <none> -> <bool>
+// Checks if the designated warp key (Enter) is pressed.
+global function CheckWarpKey
+{
+    if Terminal:Input:HasChar set g_termChar to Terminal:Input:GetChar.
+    if g_termChar = Terminal:Input:Enter
+    {
+        Terminal:Input:Clear.
+        return true.
+    }
+    return false.
+}
+
 // Creates a trigger to warp to a timestamp using AG10
 global function InitWarp
 {

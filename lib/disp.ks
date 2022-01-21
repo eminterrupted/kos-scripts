@@ -394,30 +394,62 @@ global function DispPIDReadout
 // General telemetry for flight
 global function DispTelemetry
 {
+    parameter hasConnection to true.
+    
     set line to 10.
 
     print "TELEMETRY" at (0, line).
     print "---------" at (0, cr()).
-    print "ALTITUDE         : " + round(ship:altitude)              + "m      " at (0, cr()).
-    print "APOAPSIS         : " + round(ship:apoapsis)              + "m      " at (0, cr()).
-    print "PERIAPSIS        : " + round(ship:periapsis)             + "m      " at (0, cr()).
-    cr().
-    print "THROTTLE         : " + round(throttle * 100)             + "%      " at (0, cr()).
-    print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
-    print "MAX ACCELERATION : " + round(ship:availableThrust / ship:mass, 2) + "m/s   " at (0, cr()).
-    cr().
-    if body:atm:exists and ship:altitude < body:atm:height
+
+    if hasConnection
     {
-        print "SURFACE SPEED    : " + round(ship:velocity:surface:mag)  + "m/s   " at (0, cr()).
-        print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 7) + "   " at (0, cr()).
-        print "Q                : " + round(ship:q, 7) + "     " at (0, cr()).
+        local altStr            to round(ship:altitude):ToString.
+        local apStr             to round(ship:apoapsis):ToString.
+        local peStr             to round(ship:periapsis):ToString.
+        local throtStr          to round(Throttle * 100):ToString.
+        local availThrStr       to round(ship:availablethrust, 2).
+        local maxAccStr         to round(Ship:AvailableThrust / Ship:Mass, 2):ToString.
+        local srfSpdStr         to round(ship:velocity:surface:mag):ToString.
+        local kpaStr            to round(body:atm:altitudePressure(ship:altitude) * constant:AtmToKpa, 7):ToString.
+        local qStr              to round(ship:q, 7):ToString.
+        local orbSpdStr         to round(ship:velocity:orbit:mag):ToString.
+
+        print "ALTITUDE         : " + altStr        + "m      " at (0, cr()).
+        print "APOAPSIS         : " + apStr         + "m      " at (0, cr()).
+        print "PERIAPSIS        : " + peStr         + "m      " at (0, cr()).
+        cr().
+        print "THROTTLE         : " + throtStr      + "%      " at (0, cr()).
+        print "AVAIL THRUST     : " + availThrStr   + "kN     " at (0, cr()).
+        print "MAX ACCELERATION : " + maxAccStr     + "m/s   " at (0, cr()).
+        cr().
+        if (Body:Atm:Exists) and ship:altitude < body:atm:height
+        {
+            print "SURFACE SPEED    : " + srfSpdStr + "m/s   " at (0, cr()).
+            print "PRESSURE (KPA)   : " + kpaStr    + "   " at (0, cr()).
+            print "Q                : " + qStr      + "     " at (0, cr()).
+        }
+        else
+        {
+            print "ORBITAL SPEED    : " + orbSpdStr + "m/s   " at (0, cr()).
+            print "                                               " at (0, cr()).
+            print "                                               " at (0, cr()).
+            print "                                               " at (0, cr()).
+        }
     }
     else
     {
-        print "ORBITAL SPEED    : " + round(ship:velocity:orbit:mag)    + "m/s   " at (0, cr()).
-        print "                                               " at (0, cr()).
-        print "                                               " at (0, cr()).
-        print "                                               " at (0, cr()).
+        cr().
+        cr().
+        print "*** TELEMETRY LOST ***" at (13, cr()).
+        cr().
+        if (mod(time:seconds, 2) > 1) 
+        {
+            print "*** WAITING FOR SIGNAL REACQUISITION ***" at (4, cr()).
+        }
+        else
+        {
+            print "                                        " at (4, cr()).
+        }
     }
 }
 

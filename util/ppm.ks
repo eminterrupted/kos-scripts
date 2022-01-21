@@ -1,34 +1,43 @@
 @lazyGlobal off.
 
-parameter part. 
-
-local line is 5.
+parameter part is "".
 
 clearScreen. 
-print "MODULES FOR PART: " + part:name.
-print "----------------------------------------------------".
-print " ".
 
-from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do 
+if part = ""
 {
-    local m is part:getModuleByIndex(n).
+    print "ERROR: No valid part provided!".
+    print "Must provide param value with typename: 'Part'".
+}
+else
+{
+    print "MODULES FOR PART: " + part:name.
+    print "----------------------------------------------------".
+    print " ".
 
-    if line < terminal:height - 35 
+    local line is 5.
+
+    from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do 
     {
-        set line to line + 1.
-        print "MODULE(" + m:name + "):".
+        local m is part:getModuleByIndex(n).
 
-        set line to line + 1 + m:allactions:length + m:allevents:length + m:allfields:length.
-        print m.
+        if line < terminal:height - 35 
+        {
+            set line to line + 1.
+            print "MODULE(" + m:name + "):".
 
-        set line to line + 1.
-        print " ".
-    }
-    else 
-    {
-        print "** [press any key] **" at ( terminal:width - 30, terminal:height - 5).
-        terminal:input:getChar().
-        clearScreen.
-        set line to 0.
+            set line to line + 1 + m:allactions:length + m:allevents:length + m:allfields:length.
+            print m.
+
+            set line to line + 1.
+            print " ".
+        }
+        else 
+        {
+            print "** [press any key] **" at ( terminal:width - 30, terminal:height - 5).
+            terminal:input:getChar().
+            clearScreen.
+            set line to 0.
+        }
     }
 }
