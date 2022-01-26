@@ -246,7 +246,7 @@ global function HolddownRetract
 // ROFI sparklers
 global function PadROFI
 {
-    local rofiList to ship:partsNamed("AM_MLP_GeneralROFI").
+    local rofiList to ship:partsNamedPattern("ROFI").
 
     if rofiList:length > 0 
     {
