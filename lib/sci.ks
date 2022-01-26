@@ -122,7 +122,7 @@ local function DeploySci
         {
             DoEvent("start laser altimeter measurements").
         }
-        local ts to time:seconds + 10.
+        local ts to time:seconds + 5.
         wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
     }

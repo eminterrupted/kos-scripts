@@ -73,12 +73,17 @@ set g_MECO      to burnETA + fullDur.           // Expected cutoff point with fu
 // }
 
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
-InitWarp(burnETA, "Circularization Burn").
 until time:seconds >= burnETA 
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
     DispBurn(dv, burnEta - time:seconds, fullDur).
     DispTelemetry().
+    
+    if CheckWarpKey()
+    {
+        InitWarp(burnEta, "Burn ETA", 15, true).
+        Terminal:Input:Clear.
+    }
     wait 0.01.
 }
 

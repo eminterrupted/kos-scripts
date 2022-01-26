@@ -713,11 +713,17 @@ global function DeployPayloadParts
 // Checks if the designated warp key (Enter) is pressed.
 global function CheckWarpKey
 {
-    if Terminal:Input:HasChar set g_termChar to Terminal:Input:GetChar.
-    if g_termChar = Terminal:Input:Enter
+    if Terminal:Input:HasChar 
     {
-        Terminal:Input:Clear.
-        return true.
+        until not Terminal:Input:HasChar
+        {
+            set g_termChar to Terminal:Input:GetChar.
+            if g_termChar = Terminal:Input:Enter
+            {
+                return true.
+            }
+        }
+        return false.
     }
     return false.
 }

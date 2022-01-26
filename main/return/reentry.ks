@@ -207,10 +207,16 @@ if parachutes:length > 0
 
 set sVal to body:position.
 OutMsg("Waiting until staging altitude: " + stagingAlt).
-until ship:altitude <= stagingAlt.
+until ship:altitude <= stagingAlt
 {
     set sVal to GetSteeringDir("body-sun").
     DispTelemetry().
+    if CheckWarpKey()
+    {
+        OutInfo("Warping to near staging altitude: " + stagingAlt).
+        WarpToAlt(stagingAlt + 10000).
+        terminal:input:clear.
+    }
 }
 
 if warp > 0 set warp to 0.
@@ -226,15 +232,16 @@ until stage:number <= 1
 }
 OutMsg("Waiting for reentry interface").
 set ts to time:seconds + 5.
-until time:seconds > ts or ship:altitude <= body:atm:height + 5000
+until ship:altitude <= body:atm:height + 1000
 {
-    if CheckWarpKey().
-    {
-        OutInfo("Warping to startAlt: " + startAlt).
-        WarpToAlt(body:atm:height + 1000).
-    }
     set sVal to ship:retrograde + r(0, 0, rVal).
     DispTelemetry().
+    if CheckWarpKey()
+    {
+        OutInfo("Warping to atmospheric reentry: " + body:atm:height).
+        WarpToAlt(body:atm:height + 1000).
+        terminal:input:clear.
+    }
 }
 
 until ship:altitude <= body:atm:height
@@ -250,7 +257,7 @@ for m in ship:modulesNamed("ModuleRTAntenna")
     DoEvent(m, "Deactivate").
 }
 
-until ship:groundspeed <= 1500 and ship:altitude <= 30000
+until ship:groundspeed <= 1350 and ship:altitude <= 30000
 {
     set sVal to ship:srfRetrograde + r(0, 0, rVal).
     DispTelemetry(false). // False: simulate telemetry blackout
