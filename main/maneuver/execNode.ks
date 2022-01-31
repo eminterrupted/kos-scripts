@@ -1,6 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
+parameter params is list().
+
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/mnv").
