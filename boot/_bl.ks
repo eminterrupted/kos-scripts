@@ -60,6 +60,9 @@ until mp:length = 0
     if addons:rt:hasKscConnection(ship) writeJson(mp, archivePlan).
 }
 
+ClearScreen.
+print "Mission plan complete!".
+set Core:BootFileName to "".
 deletePath(archivePlan).
 
 // Local functions
