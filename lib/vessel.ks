@@ -47,6 +47,10 @@ global function GetSteeringDir
     {
         return lookDirUp(ship:prograde:vector, sun:position).
     }
+    else if orientation = "facing-sun"
+    {
+        return lookDirUp(ship:facing:vector, sun:position).
+    }
     else if orientation = "pro-body"
     {
         return lookDirUp(ship:prograde:vector, body:position).
@@ -75,13 +79,13 @@ global function GetSteeringDir
     {
         return lookDirUp(kerbin:position, sun:position).
     }
-    else if orientation = "facing-sun"
-    {
-        return lookDirUp(ship:facing:vector, sun:position).
-    }
     else if orientation = "radOut-sun"
     {
         return lookDirUp(-body:position, sun:position).
+    }
+    else if orientation = "srfRetro-sun"
+    {
+        return lookDirUp(Ship:SrfRetrograde:Vector, Sun:Position).
     }
     else
     {
