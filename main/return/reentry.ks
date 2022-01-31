@@ -147,6 +147,7 @@ lock steering to sVal.
 
 OutMsg("Waiting until altitude <= " + startAlt).
 local dir to choose "down" if startAlt <= ship:altitude else "up".
+Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from an old keypress
 until false
 {
     if ship:altitude <= startAlt 
@@ -158,7 +159,7 @@ until false
         OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
         until ship:altitude <= startAlt 
         {
-            if CheckWarpKey().
+            if CheckWarpKey()
             {
                 OutInfo("Warping to startAlt: " + startAlt).
                 WarpToAlt(startAlt).
@@ -211,12 +212,6 @@ until ship:altitude <= stagingAlt
 {
     set sVal to GetSteeringDir("body-sun").
     DispTelemetry().
-    if CheckWarpKey()
-    {
-        OutInfo("Warping to near staging altitude: " + stagingAlt).
-        WarpToAlt(stagingAlt + 10000).
-        terminal:input:clear.
-    }
 }
 
 if warp > 0 set warp to 0.

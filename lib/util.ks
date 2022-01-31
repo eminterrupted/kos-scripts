@@ -661,47 +661,67 @@ global function SetGrappleHook
     return DoEvent(m, event).
 }
 
-// DeployPayloadParts :: <parts> | <none>
+// DeployPartSet :: <parts> | <none>
 // Performs a deployment function on a set of parts 
-global function DeployPayloadParts
+global function DeployPartSet
 {
-    parameter partsList, action is "deploy".
+    parameter setTag is "", action is "deploy".
     
-    for p in partsList
+    local maxDeployStep to 0.
+
+    if setTag = "" 
     {
-        if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Bays
+        set maxDeployStep to 0.
+    }
+    else 
+    {
+        for p in Ship:PartsTaggedPattern(setTag)
         {
-            if action = "deploy" ToggleBayDoor(p, "all", "open").
-            else ToggleBayDoor(p, "all", "close").
+            if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
         }
-        
-        if p:hasModule("ModuleRTAntenna")   // RT Antennas
+    }
+
+    from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do 
+    {
+        local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTagged(setTag + "." + idx).
+        for p in idxStepList
         {
-            local m to p:getModule("ModuleRTAntenna").
-            if action = "deploy" DoEvent(m, "activate").
-            else DoEvent(m, "retract").
+            if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Bays
+            {
+                if action = "deploy" ToggleBayDoor(p, "all", "open").
+                else ToggleBayDoor(p, "all", "close").
+            }
+            
+            if p:hasModule("ModuleRTAntenna")   // RT Antennas
+            {
+                local m to p:getModule("ModuleRTAntenna").
+                if action = "deploy" DoEvent(m, "activate").
+                else DoEvent(m, "retract").
+            }
+
+            if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
+            {
+                local m to p:getModule("ModuleDeployableSolarPanel").
+                if action = "deploy" DoAction(m, "extend solar panel", true).
+                else DoAction(m, "retract solar panel", true).
+            }
+
+            if p:hasModule("ModuleResourceConverter") // Fuel Cells
+            {
+                local m to p:getModule("ModuleResourceConverter").
+                if action = "deploy" DoEvent(m, "start fuel cell").
+                else DoEvent(m, "stop fuel cell").
+            }
+
+            if p:hasModule("ModuleDeployablePart")  // Not sure?
+            {
+                local m to p:getModule("ModuleDeployablePart").
+                if action = "deploy" DoEvent(m, "extend").
+                else DoEvent(m, "retract").
+            }
         }
 
-        if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
-        {
-            local m to p:getModule("ModuleDeployableSolarPanel").
-            if action = "deploy" DoAction(m, "extend solar panel", true).
-            else DoAction(m, "retract solar panel", true).
-        }
-
-        if p:hasModule("ModuleResourceConverter") // Fuel Cells
-        {
-            local m to p:getModule("ModuleResourceConverter").
-            if action = "deploy" DoEvent(m, "start fuel cell").
-            else DoEvent(m, "stop fuel cell").
-        }
-
-        if p:hasModule("ModuleDeployablePart")  // Not sure?
-        {
-            local m to p:getModule("ModuleDeployablePart").
-            if action = "deploy" DoEvent(m, "extend").
-            else DoEvent(m, "retract").
-        }
+        wait 1.
     }
 }
 //#endregion
