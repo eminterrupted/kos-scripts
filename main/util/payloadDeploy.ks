@@ -44,29 +44,16 @@ else
     wait 0.25.
 }
 
-local maxDeployStep to 0.
 local partsToDeploy to ship:partstaggedpattern("payloadDeploy.*").
 if partsToDeploy:length > 0
 {
-    for p in partsToDeploy
-    {
-        if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
-    }
-    OutMsg("Deploying orbital apparatus.").
-    from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do {
-        OutInfo("Step: " + idx).
-        DeployPayloadParts(ship:partsTaggedPattern("payloadDeploy." + idx)).
-        wait 2.
-    }
-    wait 2.5.
+    DeployPartSet("payloadDeploy", "deploy").
 }
 OutInfo().
-local unTaggedParts to list().
-for p in ship:parts { 
-    if p:tag = "" untaggedParts:add(p).
-}
-OutInfo("Untagged").
-DeployPayloadParts(untaggedParts).
+
+// When called with no param, it deploys the untagged parts
+DeployPartSet().
+
 wait 2.5. 
 OutInfo().
 OutMsg("Deployment completed").
