@@ -23,6 +23,7 @@ if ship:partsTaggedPattern("srfSciDeploy."):length > 0
 }
 
 local sciList to GetSciModules().
+ClearSciList(sciList).
 DeploySciList(sciList).
 RecoverSciList(sciList, sciAction).
 
