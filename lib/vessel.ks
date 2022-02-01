@@ -47,6 +47,10 @@ global function GetSteeringDir
     {
         return lookDirUp(ship:prograde:vector, sun:position).
     }
+    else if orientation = "retro-sun"
+    {
+        return lookDirUp(Ship:Retrograde:Vector, Sun:Position).
+    }
     else if orientation = "facing-sun"
     {
         return lookDirUp(ship:facing:vector, sun:position).
@@ -91,7 +95,18 @@ global function GetSteeringDir
     {
         return ship:facing.
     }
-    
+}
+
+global function SrfRetroSafe 
+{
+    if Ship:VerticalSpeed < 0 
+    {
+        return list(GetSteeringDir("srfRetro-sun"), "srfRetro_Locked").
+    }
+    else
+    {
+        return list(GetSteeringDir("radOut-pro"), "upPos_Override").
+    }
 }
 
 // global function GetRollDegrees

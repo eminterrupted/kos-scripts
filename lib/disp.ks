@@ -308,22 +308,28 @@ global function DispImpact
 // Simple landing telemetry
 global function DispLanding
 {
-    parameter tti is 0, 
+    parameter program is 0,
+              tgtAlt is 0,
+              tgtSpd is 0,
+              tti is 0, 
               burnDur is 0.
 
     set line to 10.
 
     print "LANDING TELEMETRY" at (0, line).
     print "-----------------" at (0, cr()).
-    print "BODY           : " + ship:body:name   + "      " at (0, cr()).
-    print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
-    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, cr()).
-    print "SURFACE SPD    : " + round(ship:groundspeed, 2) + "m/s   " at (0, cr()).
-    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, cr()).
+    print "PROGRAM        : " + program + "  " at (0, cr()).
+    print "TARGET ALT     : " + tgtAlt + "m   " at (0, cr()).
+    print "TARGET SPD     : " + tgtSpd + "m/s   " at (0, cr()).
     cr().
-    print "THROTTLE       : " + round(throttle * 100)            + "%  " at (0, cr()).
-    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
-    print "BURN DURATION  : " + round(burnDur, 2)          + "s   " at (0, cr()).
+    print "ALTITUDE       : " + round(ship:altitude)                + "m     " at (0, cr()).
+    print "RADAR ALT      : " + round(ship:bounds:bottomaltradar)   + "m     " at (0, cr()).
+    print "SURFACE SPD    : " + round(ship:groundspeed, 2)          + "m/s   " at (0, cr()).
+    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2)        + "m/s   " at (0, cr()).
+    cr().
+    print "THROTTLE       : " + round(throttle * 100)               + "%  " at (0, cr()).
+    if tti > 0      print "TIME TO IMPACT : " + round(tti, 2)                       + "s   " at (0, cr()).
+    if burnDur > 0  print "BURN DURATION  : " + round(burnDur, 2)                   + "s   " at (0, cr()).
 }
 
 // Generic API for printing a telemetry section, takes a list of header strings / values
