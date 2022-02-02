@@ -1,3 +1,4 @@
+clearScreen. 
 parameter idx to 0.
 
 local mpPath to path().
