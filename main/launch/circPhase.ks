@@ -42,7 +42,6 @@ set lp to readJson(lpPath).
 local tgtPe         to lp[0].
 local payloadStage to choose cTag[1] if cTag:length > 1 else 0.
 
-local rVal to 0 - ship:facing:roll.
 local sVal to ship:facing.
 local tVal to 0.
 
@@ -75,7 +74,7 @@ set g_MECO      to burnETA + fullDur.           // Expected cutoff point with fu
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
 until time:seconds >= burnETA 
 {
-    set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
+    set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
     DispBurn(dv, burnEta - time:seconds, fullDur).
     DispTelemetry().
     
@@ -96,7 +95,7 @@ wait 0.05.
 until time:seconds >= g_MECO
 {
     if g_abortSystemArmed and ship:periapsis < body:atm:height and abort InitiateLaunchAbort().
-    set sVal to heading(compass_for(ship, ship:prograde), 0, rVal).
+    set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
     OutInfo("Est time to g_MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
     DispTelemetry().
     wait 0.01.
