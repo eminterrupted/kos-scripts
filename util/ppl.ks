@@ -5,11 +5,11 @@ parameter inObj.
 local dCol to 2. 
 local dLine to 20.
 
-if inObj:typename = "ListValue`1" 
+if inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
 {
     print_list().
 } 
-else if inObj:typename = "Lexicon" 
+else if inObj:TypeName = "Lexicon" 
 {
     print_lex().
 }
