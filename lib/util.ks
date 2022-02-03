@@ -615,9 +615,44 @@ global function ToggleBayDoor
         {
             wait 0.01.
         }
+
+        if bay:Tag:MatchesPattern("bay\.") 
+        {
+            local idx to bay:Tag:Split(".")[1].
+            ToggleLights(Ship:PartsTaggedPattern("bayLight." + idx)).
+        }
     }
 }
 
+// ToggleLights :: List<parts>, <str> | <none>
+// Toggles / Activates / Deactivates a provided set of lights
+global function ToggleLights
+{
+    parameter lightList, 
+              action is "Toggle".
+
+    if lightList:length > 0
+    {
+        for p in lightList 
+        {
+            if action = "Toggle" 
+            {
+                DoAction(p:GetModule("ModuleLight"), "toggle light").
+            }
+            else if action = "Activate"
+            {
+                DoEvent(p:GetModule("ModuleLight"), "lights on").
+            }
+            else if action = "Deactivate"
+            {
+                DoEvent(p:GetModule("ModuleLight"), "lights off").
+            }
+        }
+    }
+}
+
+// InitCapacitorDischarge
+// Discharges all capacitors on vessel
 global function InitCapacitorDischarge
 {
     local ecMon to 0.
@@ -686,10 +721,18 @@ global function DeployPartSet
         local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTagged(setTag + "." + idx).
         for p in idxStepList
         {
-            if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Bays
+            if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Generic and bays
             {
-                if action = "deploy" ToggleBayDoor(p, "all", "open").
-                else ToggleBayDoor(p, "all", "close").
+                if p:name:contains("Shroud") or p:name:contains("Bay") or p:tag:contains("bay") // Bays
+                {
+                    if action = "deploy" ToggleBayDoor(p, "all", "open").
+                    else ToggleBayDoor(p, "all", "close").
+                }
+                else    // Everything else
+                {
+                    local m to p:getModule("ModuleAnimateGeneric").
+                    DoEvent(m, "deploy").
+                }
             }
             
             if p:hasModule("ModuleRTAntenna")   // RT Antennas

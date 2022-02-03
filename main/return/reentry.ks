@@ -80,7 +80,7 @@ if retroFire and ship:periapsis > reentryTgt
             set ts to time:seconds + settleTime.
         }
         
-        OutInfo("Settle time remaining: " + round(settleTime, 2)).
+        OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
         DispTelemetry().
         wait 0.05.
     }
