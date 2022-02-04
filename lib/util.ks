@@ -832,7 +832,7 @@ global function WarpToAlt
 
     if dir = "down"
     {
-        if ship:altitude <= tgtAlt * 1.01 set warp to 0.
+        if ship:altitude <= tgtAlt * 1.05 set warp to 0.
         else if ship:altitude <= tgtAlt * 1.25 set warp to 1.
         else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
         else if ship:altitude <= tgtAlt * 4 set warp to 3.
@@ -843,7 +843,7 @@ global function WarpToAlt
     }
     else if dir = "up"
     {
-        if ship:altitude >= tgtAlt * 0.99 set warp to 0.
+        if ship:altitude >= tgtAlt * 0.95 set warp to 0.
         else if ship:altitude >= tgtAlt * 0.90 set warp to 1.
         else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
         else if ship:altitude >= tgtAlt * 0.60 set warp to 3.
