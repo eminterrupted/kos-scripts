@@ -170,6 +170,23 @@ global function DispAvionics
     print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 5) + "   " at (0, cr()).
 }
 
+// Display for inclination burn details
+global function DispIncChange
+{
+    parameter shipOrbit,
+              tgtOrbit.
+
+    set line to 10.
+
+    print "INCLINATION CHANGE PARAMETERS" at (0, line).
+    print "-----------------------------" at (0, cr()).
+    print "              CURRENT  |   TARGET" at (0, cr()).
+    print "INCLINATION :  " + round(shipOrbit:Inclination, 1) at (0, cr()).
+        print round(tgtOrbit:Inclination, 1) at (28, line).
+    print "LAN         :  " + round(shipOrbit:LAN, 1) at (0, cr()). 
+        print round(tgtOrbit:LAN, 1) at (28, line).
+}
+
 // Displays the launch plan prior to launching
 global function DispLaunchPlan
 {

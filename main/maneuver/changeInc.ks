@@ -39,6 +39,7 @@ local tgtObt to createOrbit(
 
 local mnvNode to IncMatchBurn(ship, ship:orbit, tgtObt, burnAtNearestNode)[2].
 add mnvNode.
+DispIncChange(ship:orbit, tgtObt).
 ExecNodeBurn(mnvNode).
 
 OutHUD("Change Inclination Burn Complete").
