@@ -13,8 +13,8 @@ DispMain(ScriptPath(), false).
 
 local orientation       to "retro-sun".
 local srfDir            to "".
-local tgtDescentAlt     to list(10000, 7500, 5000, 2500, 1000, 500, 250, 100, 25, 10, 0).
-local tgtSrfSpd         to list(  300,  225,  150,  125,  75,  50,  25,  10,  5,  3, 1).
+local tgtDescentAlt     to list(10000, 7500, 5000, 2500, 1250, 750, 500, 250, 100,  75, 10, 3, 0).
+local tgtSrfSpd         to list(  300,  225,  150,  125,  100,  75,  50,  25,  10, 7.5,  5, 2, 1).
 
 // Parse the params
 if params:Length > 0
