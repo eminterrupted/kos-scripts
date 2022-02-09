@@ -3,9 +3,13 @@ clearScreen.
 
 parameter orientation is "pro-sun".
 
+runOncePath("0:/lib/globals").
+runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/disp").
+runOncePath("0:/lib/mnv").
 runOncePath("0:/lib/nav").
 runOncePath("0:/lib/util").
+runOncePath("0:/lib/vessel").
 
 DispMain(ScriptPath(), false).
 
@@ -78,14 +82,37 @@ DispMain(ScriptPath(), false).
     if not mnvNode:orbit:hasnextpatch 
     {
         set mnvNode to IterateMnvNode(mnvNode, "escSoi", list(list(0, 0, 0, 1))).
+        add mnvNode.
     }
 
     cr().
-    print "Waiting indefinitely" at (0, cr()).
-    until false
+    print "Press Enter to begin node execution routine" at (0, cr()).
+    print "Press End to terminate script" at (0, cr()).
+    Terminal:Input:Clear.
+    local char to "".
+    local doneFlag to false.
+    until doneFlag
     {
-        wait 1.
+        if Terminal:Input:HasChar
+        {
+            set char to Terminal:Input:GetChar.
+            if char = Terminal:Input:Enter
+            {
+                ExecNodeBurn(mnvNode).
+                set doneFlag to true.
+            }
+            else if char = Terminal:Input:EndCursor
+            {
+                set doneFlag to true.
+            }
+            else
+            {
+                set char to "".
+            }
+        }
     }
+
+    print ScriptPath() + "complete!" at (0, cr()).
 
     local function IterateMnvNode
     {
@@ -102,7 +129,7 @@ DispMain(ScriptPath(), false).
             // If we are already escaping, just return true.
             if mnv:Orbit:HasNextPatch
             {
-                return true.
+                return mnv.
             }
             else
             {
@@ -114,7 +141,11 @@ DispMain(ScriptPath(), false).
                         remove mnv. // Remove the mnv node to work with it
                         set mnv to node(mnv:Time + i[0], mnv:RadialOut + i[1], mnv:Normal + i[2], mnv:Prograde + i[3]). // Add the paramers to the node values
                         add mnv. // Add it again so we can see the results.
-                        if mnv:Orbit:HasNextPatch return true. // Return true if we've accomplished our mission.
+                        if mnv:Orbit:HasNextPatch 
+                        {
+                            remove mnv.
+                            return mnv. // Return true if we've accomplished our mission.
+                        }
                     }
                 }
                 // Return false if we've exhausted all iteration parameters and the loop bailed for some reason
