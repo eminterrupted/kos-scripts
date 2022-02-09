@@ -180,6 +180,7 @@ global function DispIncChange
 
     print "INCLINATION CHANGE PARAMETERS" at (0, line).
     print "-----------------------------" at (0, cr()).
+    cr().
     print "              CURRENT  |   TARGET" at (0, cr()).
     print "INCLINATION :  " + round(shipOrbit:Inclination, 1) at (0, cr()).
         print round(tgtOrbit:Inclination, 1) at (28, line).
