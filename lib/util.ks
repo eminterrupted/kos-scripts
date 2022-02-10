@@ -828,28 +828,26 @@ global function WarpToAlt
 {
     parameter tgtAlt.
     
-    local dir to choose "down" if ship:altitude > tgtAlt else "up".
-
-    if dir = "down"
+    if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.05 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.25 set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
+        if ship:altitude <= tgtAlt * 1.20 set warp to 0.
+        else if ship:altitude <= tgtAlt * 1.35 set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.50 set warp to 2.
         else if ship:altitude <= tgtAlt * 4 set warp to 3.
         else if ship:altitude <= tgtAlt * 8 set warp to 4.
         else if ship:altitude <= tgtAlt * 24 set warp to 5.
         else if ship:altitude <= tgtAlt * 72 set warp to 6.
         else set warp to 7.
     }
-    else if dir = "up"
+    else
     {
-        if ship:altitude >= tgtAlt * 0.95 set warp to 0.
-        else if ship:altitude >= tgtAlt * 0.90 set warp to 1.
+        if ship:altitude >= tgtAlt * 0.90 set warp to 0.
+        else if ship:altitude >= tgtAlt * 0.85 set warp to 1.
         else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
-        else if ship:altitude >= tgtAlt * 0.60 set warp to 3.
-        else if ship:altitude >= tgtAlt * 0.40 set warp to 4.
-        else if ship:altitude >= tgtAlt * 0.25 set warp to 5.
-        else if ship:altitude >= tgtAlt * 0.10 set warp to 6.
+        else if ship:altitude >= tgtAlt * 0.50 set warp to 3.
+        else if ship:altitude >= tgtAlt * 0.25 set warp to 4.
+        else if ship:altitude >= tgtAlt * 0.10 set warp to 5.
+        else if ship:altitude >= tgtAlt * 0.05 set warp to 6.
         else set warp to 7.
     }
 }

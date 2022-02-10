@@ -55,6 +55,7 @@ until ship:verticalspeed < 0
         {
             OutInfo("Immediate reentry procedure mode").
             OutInfo2().
+            wait 0.5.
             break.
         }
     }
@@ -65,10 +66,11 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Beginning Reentry Procedure").
+wait 1.
 
 if retroFire and ship:periapsis > reentryTgt
 {
-    OutMsg("Aligning retrograde for retro fire").
+    OutMsg("Aligning for retro fire").
     set sVal to ship:retrograde.
     local settleTime to 3.
     set ts to time:seconds + settleTime.
@@ -77,9 +79,13 @@ if retroFire and ship:periapsis > reentryTgt
         if not CheckSteering() 
         {
             set ts to time:seconds + settleTime.
+            OutInfo().
         }
-        
-        OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
+        else
+        {
+            OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
+        }
+
         DispTelemetry().
         wait 0.05.
     }
@@ -216,7 +222,7 @@ until ship:altitude <= stagingAlt
 if warp > 0 set warp to 0.
 wait until kuniverse:timewarp:issettled.
 set sVal to GetSteeringDir("body-sun").
-wait 1.
+wait 5.
 
 OutMsg("Staging").
 until stage:number <= 1 
