@@ -16,8 +16,8 @@ if mpPath:toString:split("/")[1] <> ""
      
         local mp to readJson(mpPath).
         
-        mp:insert(0, valToPush[1]).
-        mp:insert(0, valToPush[0]).
+        mp:insert(idx, valToPush[1]).
+        mp:insert(idx, valToPush[0]).
 
         writeJson(mp, mpPath).
         print "Post-insert plan:".
