@@ -79,7 +79,7 @@ if retroFire and ship:periapsis > reentryTgt
         if not CheckSteering() 
         {
             set ts to time:seconds + settleTime.
-            OutInfo().
+            OutInfo("Alignment in progress...").
         }
         else
         {
@@ -243,6 +243,7 @@ until ship:altitude <= body:atm:height + 1000
         terminal:input:clear.
     }
 }
+OutInfo().
 
 until ship:altitude <= body:atm:height
 {

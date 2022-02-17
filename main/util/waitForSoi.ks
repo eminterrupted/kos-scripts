@@ -17,14 +17,16 @@ local orientation to "pro-sun".
 
 local runmode to 0.
 
-if hasTarget 
-{
-    set tgt to target.
-}
-else if param:length > 0 
+if param:length > 0 
 {
     set tgt to GetOrbitable(param[0]).
-    if param:length > 1 set orientation to GetOrbitable(param[1]).
+    if param:length > 1 set orientation to param[1].
+}
+
+// If we haven't yet supplied a target, and we have a target in the system, use it
+if hasTarget and tgt = ship
+{
+    set tgt to target.
 }
 
 local sVal to GetSteeringDir(orientation).
@@ -32,6 +34,8 @@ lock steering to sVal.
 
 until runmode = -1
 {
+    set sVal to GetSteeringDir(orientation).
+    
     if runmode = 0 
     {
         if tgt <> ship 
@@ -62,9 +66,10 @@ until runmode = -1
 
             if g_termChar = Terminal:Input:Enter
             {
-                InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 5, true).
+                InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 3, true).
             }
-            local soiDispData to DispSOIData.
+                
+            local soiDispData to DispSOIData().
             DispGeneric(soiDispData, 10).
         }
     }
@@ -84,6 +89,13 @@ local function DispSOIData
         paramList:add(ship:orbit:nextPatch:body:name).
         paramList:add("ETA").
         paramList:add(timeSpan(ship:orbit:nextpatcheta):full).
+    }
+    else
+    {
+        paramList:add("Next").
+        paramList:add("NONE").
+        paramList:add("ETA").
+        paramList:add("INF").
     }
     return paramList.
 }

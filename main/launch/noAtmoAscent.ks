@@ -3,7 +3,7 @@ clearScreen.
 
 // #include "0:/boot/_bl.ks"
 
-parameter lPlan to list().
+parameter param to list().
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/launch").
@@ -24,18 +24,15 @@ local tgtLAN    to -1.
 local tgtRoll   to 0.
 
 // If the launch plan was passed in via param, override manual values
-if lPlan:length > 0
+if param:length > 0
 {
-    set tgtPe to lPlan[0].
-    set tgtAp to lPlan[1].
-    set tgtInc to lPlan[2].
-    set tgtLAN to lPlan[3].
-    set tgtRoll to lPlan[4]. 
+    set tgtPe to param[0].
+    set tgtAp to param[1].
+    set tgtInc to param[2].
+    set tgtLAN to param[3].
+    set tgtRoll to param[4]. 
 }
-else 
-{
-    set lPlan to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
-}
+
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 
 // Turn params
@@ -117,7 +114,7 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:altitude >= altStartTurn
+until ship:bounds:bottomRadarAlt >= altStartTurn
 {
     DispTelemetry().
     wait 0.01.
@@ -132,7 +129,7 @@ until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 }
 OutInfo().
 
-until ship:altitude >= altStartTurn
+until ship:bottomRadarAlt >= altStartTurn
 {
     DispTelemetry().
     wait 0.01.

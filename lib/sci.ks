@@ -11,6 +11,7 @@ global function GetSciModules
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
+    for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
     return sciList.
 }
 

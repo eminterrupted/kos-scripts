@@ -830,9 +830,9 @@ global function WarpToAlt
     
     if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.20 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.35 set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.50 set warp to 2.
+        if ship:altitude <= tgtAlt * 1.10 set warp to 0.
+        else if ship:altitude <= tgtAlt * 1.50 set warp to 1.
+        else if ship:altitude <= tgtAlt * 2 set warp to 2.
         else if ship:altitude <= tgtAlt * 4 set warp to 3.
         else if ship:altitude <= tgtAlt * 8 set warp to 4.
         else if ship:altitude <= tgtAlt * 24 set warp to 5.

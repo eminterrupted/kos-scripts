@@ -14,6 +14,7 @@ DispMain(ScriptPath(), false).
 local orientation       to "retro-sun".
 local srfDir            to "".
 local tgtDescentAlt     to list(10000, 7500, 5000, 2500, 1250, 750, 500, 250, 100,  75, 10, 3, 0).
+local tgtSpd            to 0.
 local tgtSrfSpd         to list(  300,  225,  150,  125,  100,  75,  50,  25,  10, 7.5,  5, 2, 1).
 
 // Parse the params
@@ -63,17 +64,16 @@ else
             Gear On.
             Lights on.
         }
-
-        until Alt:Radar <= tgtDescentAlt[i] or Ship:Status = "LANDED"
+        set tgtSpd to choose tgtSrfSpd[i] / 2 if Ship:Body = Body("Minmus") and tgtSrfSpd[i] > 10 else tgtSrfSpd[i].                    // Select the sirection for sVal.
+        until Ship:Bounds:BottomAltRadar <= tgtDescentAlt[i]
         {
-            set srfDir to SrfRetroSafe().                 // Returns either a list containing direction depending on verticalSpeed & directionName
+            set srfDir to SrfRetroSafe(). // Returns either a list containing direction depending on verticalSpeed & directionName
             set sVal to srfDir[0].
-            local tgtSpd to choose tgtSrfSpd[i] / 2 if Ship:Body = Body("Minmus") else tgtSrfSpd[i].                    // Select the sirection for sVal.
-            if Ship:Velocity:Surface:Mag > tgtSpd * 1.075   // If we are above target speed for this altitude, burn
+            if Ship:Velocity:Surface:Mag > tgtSpd * 1.025   // If we are above target speed for this altitude, burn
             {
                 if tVal <> 1 set tVal to 1.
             }
-            else if Ship:Velocity:Surface:Mag <= tgtSpd * 0.925    // If we are below target speed for this altitude, cut throttle
+            else if Ship:Velocity:Surface:Mag <= tgtSpd * 0.975    // If we are below target speed for this altitude, cut throttle
             {
                 if tVal <> 0 set tVal to 0.
             }
@@ -82,6 +82,28 @@ else
         }
     }
 
+    set tgtSpd to -0.5.
+    until Ship:Status = "LANDED"
+    {
+        set srfDir to SrfRetroSafe().
+        set sVal to srfDir[0].
+        if Ship:VerticalSpeed <= tgtSpd
+        {
+            set tVal to 1.
+        }
+        else
+        {
+            set tVal to 0.
+        }
+        DispLanding(70, 0, tgtSpd).
+        OutInfo("SrfRetroSafe mode: " + srfDir[1]).
+    }
+    set tVal to 0.
+
+    for eng in GetEnginesByStage(stage:number)
+    {
+        eng:shutdown.
+    }
     OutInfo().
     OutInfo2().
     unlock Steering.

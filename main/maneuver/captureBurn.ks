@@ -22,6 +22,9 @@ if param:length > 0
     set tgtAp to param[0].
 }
 
+local sVal to Ship:Facing.
+lock steering to sVal.
+
 // Main
 DispMain(scriptPath()).
 

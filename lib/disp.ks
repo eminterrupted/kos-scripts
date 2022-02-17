@@ -515,3 +515,28 @@ global function DispResTransfer
     print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
     cr().
 }
+
+
+// DispScope - Displays info about a telescope and it's target
+global function DispScope
+{
+    set line to 10.
+
+    local obtPeriod to TimeSpan(ship:orbit:period).
+
+    print "SCOPE TELEMETRY" at (0, line).
+    print "---------------" at (0, cr()).
+    print "SCOPE    : " + ship:name at (0, cr()).
+    print "BODY     : " + body:name at (0, cr()).
+    print "ALT      : " + round(ship:altitude) at (0, cr()).
+    print "AP       : " + round(ship:apoapsis) at (0, cr()).
+    print "PE       : " + round(ship:periapsis) at (0, cr()).
+    print "PER      : " + TimeSpan(mod(obtPeriod:seconds, ship:body:rotationperiod)):Full at (0, cr()).
+    
+    if HasTarget
+    {
+        cr().
+        print "TARGET   : " + target:name at (0, cr()).
+        print "DISTANCE : " + round(target:position:mag) + "m      " at (0, cr()).
+    }
+}
