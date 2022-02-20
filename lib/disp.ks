@@ -328,7 +328,8 @@ global function DispLanding
 {
     parameter program is 0,
               tgtAlt is 0,
-              tgtSpd is 0,
+              tgtSrfSpd is 0,
+              tgtVertSpd is 0,
               tti is 0, 
               burnDur is 0.
 
@@ -338,7 +339,8 @@ global function DispLanding
     print "-----------------" at (0, cr()).
     print "PROGRAM        : " + program + "  " at (0, cr()).
     print "TARGET ALT     : " + tgtAlt + "m   " at (0, cr()).
-    print "TARGET SPD     : " + tgtSpd + "m/s   " at (0, cr()).
+    print "TARGET SRF SPD : " + tgtSrfSpd + "m/s   " at (0, cr()).
+    print "TARGET VERT SPD: " + tgtVertSpd + "m/s  " at (0, cr()).
     cr().
     print "ALTITUDE       : " + round(ship:altitude)                + "m     " at (0, cr()).
     print "RADAR ALT      : " + round(ship:bounds:bottomaltradar)   + "m     " at (0, cr()).

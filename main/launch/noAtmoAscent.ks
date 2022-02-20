@@ -114,7 +114,7 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:bounds:bottomRadarAlt >= altStartTurn
+until ship:bounds:BottomAltRadar >= altStartTurn
 {
     DispTelemetry().
     wait 0.01.
@@ -129,7 +129,7 @@ until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 }
 OutInfo().
 
-until ship:bottomRadarAlt >= altStartTurn
+until ship:BottomAltRadar >= altStartTurn
 {
     DispTelemetry().
     wait 0.01.
