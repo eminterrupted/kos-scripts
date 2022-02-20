@@ -170,6 +170,24 @@ global function DispAvionics
     print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 5) + "   " at (0, cr()).
 }
 
+// Display for inclination burn details
+global function DispIncChange
+{
+    parameter shipOrbit,
+              tgtOrbit.
+
+    set line to 10.
+
+    print "INCLINATION CHANGE PARAMETERS" at (0, line).
+    print "-----------------------------" at (0, cr()).
+    cr().
+    print "              CURRENT  |   TARGET" at (0, cr()).
+    print "INCLINATION :  " + round(shipOrbit:Inclination, 1) at (0, cr()).
+        print round(tgtOrbit:Inclination, 1) at (28, line).
+    print "LAN         :  " + round(shipOrbit:LAN, 1) at (0, cr()). 
+        print round(tgtOrbit:LAN, 1) at (28, line).
+}
+
 // Displays the launch plan prior to launching
 global function DispLaunchPlan
 {
@@ -310,7 +328,8 @@ global function DispLanding
 {
     parameter program is 0,
               tgtAlt is 0,
-              tgtSpd is 0,
+              tgtSrfSpd is 0,
+              tgtVertSpd is 0,
               tti is 0, 
               burnDur is 0.
 
@@ -320,7 +339,8 @@ global function DispLanding
     print "-----------------" at (0, cr()).
     print "PROGRAM        : " + program + "  " at (0, cr()).
     print "TARGET ALT     : " + tgtAlt + "m   " at (0, cr()).
-    print "TARGET SPD     : " + tgtSpd + "m/s   " at (0, cr()).
+    print "TARGET SRF SPD : " + tgtSrfSpd + "m/s   " at (0, cr()).
+    print "TARGET VERT SPD: " + tgtVertSpd + "m/s  " at (0, cr()).
     cr().
     print "ALTITUDE       : " + round(ship:altitude)                + "m     " at (0, cr()).
     print "RADAR ALT      : " + round(ship:bounds:bottomaltradar)   + "m     " at (0, cr()).
@@ -496,4 +516,29 @@ global function DispResTransfer
     print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
     print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
     cr().
+}
+
+
+// DispScope - Displays info about a telescope and it's target
+global function DispScope
+{
+    set line to 10.
+
+    local obtPeriod to TimeSpan(ship:orbit:period).
+
+    print "SCOPE TELEMETRY" at (0, line).
+    print "---------------" at (0, cr()).
+    print "SCOPE    : " + ship:name at (0, cr()).
+    print "BODY     : " + body:name at (0, cr()).
+    print "ALT      : " + round(ship:altitude) at (0, cr()).
+    print "AP       : " + round(ship:apoapsis) at (0, cr()).
+    print "PE       : " + round(ship:periapsis) at (0, cr()).
+    print "PER      : " + TimeSpan(mod(obtPeriod:seconds, ship:body:rotationperiod)):Full at (0, cr()).
+    
+    if HasTarget
+    {
+        cr().
+        print "TARGET   : " + target:name at (0, cr()).
+        print "DISTANCE : " + round(target:position:mag) + "m      " at (0, cr()).
+    }
 }

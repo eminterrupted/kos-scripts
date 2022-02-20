@@ -72,6 +72,7 @@ set g_MECO      to burnETA + fullDur.           // Expected cutoff point with fu
 // }
 
 OutMsg("DV Needed: " + round(dv, 1) + "m/s").
+Terminal:Input:Clear.
 until time:seconds >= burnETA 
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).

@@ -269,7 +269,26 @@
     }
 //#endregion
 
+// Propellant usage
+// #region
 
+    // TODO 
+    // GetBurnPropellantUsage :: <lex> -> <lexicon>
+    // Given a lex of dv by stage, returns a lex of amount of propellant used by stage
+    // global function GetBurnPropellantUsage
+    // {
+    //     parameter burnStageObj.
+
+    //     local burnProp to 0.
+
+    //     for stg in burnStageObj:keys
+    //     {
+    //         local stgIsp to GetTotalIsp(GetEnginesByStage(stg)).
+    //     }
+
+    // }
+
+// #endregion
 
 // Available dV Calculations
 // #region

@@ -42,7 +42,7 @@ local dv2           to 0.
 local dvNeeded      to list().
 local mnvEta        to 0.
 local mnvNode       to node(0, 0, 0, 0).
-local mnvTA         to 0.
+local mnvTA         to -1.
 local mnvTime       to Time:Seconds + ETAtoTA(Ship:Orbit, argPe).
 local stAp          to Ship:Apoapsis.
 local stPe          to Ship:Periapsis.
@@ -142,18 +142,18 @@ if InitRunmode() = 0
     SetRunmode(2).
 }
 
-// Read values from state file
-set compMode    to ReadCache("compMode").
-set dvNeeded    to ReadCache("dvNeeded").
-set mnvTA       to ReadCache("mnvTA").
+// Read values from state file if not already set
+if compMode = ""        set compMode    to ReadCache("compMode").
+if dvNeeded:Length = 0  set dvNeeded    to ReadCache("dvNeeded").
+if mnvTA = -1           set mnvTA       to ReadCache("mnvTA").
 
-print "dv1     : " + round(dvNeeded[0], 3) at (2, 27).
-print "dv2     : " + round(dvNeeded[1], 3) at (2, 28).
-print "tgtVal_0: " + tgtVal_0 at (2, 30).
-print "tgtVal_1: " + tgtVal_1 at (2, 31).
-print "mvnTA   : " + mnvTA AT (2, 32).
-print "compMode: " + compMode at (2, 33).
-print "runmode : " + ReadCache("runmode") at (2, 35).
+// print "dv1     : " + round(dvNeeded[0], 3) at (2, 27).
+// print "dv2     : " + round(dvNeeded[1], 3) at (2, 28).
+// print "tgtVal_0: " + tgtVal_0 at (2, 30).
+// print "tgtVal_1: " + tgtVal_1 at (2, 31).
+// print "mvnTA   : " + mnvTA AT (2, 32).
+// print "compMode: " + compMode at (2, 33).
+// print "runmode : " + ReadCache("runmode") at (2, 35).
 
 // print "mnvTA: " + mnvTA at (2, 37).
 // print "stPe : " + stPe at (2, 38).
