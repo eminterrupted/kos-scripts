@@ -539,6 +539,6 @@ global function DispScope
     {
         cr().
         print "TARGET   : " + target:name at (0, cr()).
-        print "DISTANCE : " + round(target:position:mag) + "m      " at (0, cr()).
+        print "DISTANCE : " + round(target:position:mag / 1000, 2) + "km      " at (0, cr()).
     }
 }
