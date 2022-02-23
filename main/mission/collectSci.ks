@@ -80,19 +80,10 @@ local function PerformMultiscan
     // Manually runs a crew report every 15 seconds
     local function manual_sci_report 
     {
-        ag10 off.
-        until ag10
+        until false
         {
             set sVal to GetSteeringDir(orientation).
-            local sciInterval to time:seconds + 15.
-            until time:seconds >= sciInterval 
-            {   
-                set sVal to GetSteeringDir(orientation).
-                OutMsg("Next science report in " + round(sciInterval - time:seconds) + "s").
-                DispOrbit().
-                wait 0.1.
-            }
-            if warp > 0 set warp to 0.
+            if warp > 3 set warp to 3.
             OutMsg("Collecting science report").
             DeploySciList(sciList).
             RecoverSciList(sciList, sciAction).
@@ -102,6 +93,14 @@ local function PerformMultiscan
                 {
                     break.
                 }
+            }
+            local sciInterval to time:seconds + 60.
+            until time:seconds >= sciInterval 
+            {   
+                set sVal to GetSteeringDir(orientation).
+                OutMsg("Next science report in " + round(sciInterval - time:seconds) + "s").
+                DispOrbit().
+                wait 0.1.
             }
         }
     }
