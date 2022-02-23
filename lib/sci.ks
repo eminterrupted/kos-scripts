@@ -65,17 +65,17 @@ global function RecoverSciList
                 {
                     if m:data[0]:transmitValue > 0 and m:data[0]:transmitValue = m:data[0]:scienceValue
                     {
-                        local transmitFlag to false.
-                        until transmitFlag
-                        {
-                            local ecValidation to ValidateECForTransmit(m).
-                            if ecValidation[0] = 0
-                            {
-                                OutMsg("Validating EC for science transmission").
-                                OutInfo("EC Required: " + ecValidation[1]).
-                                set transmitFlag to true.
-                            }
-                        }
+                        // local transmitFlag to false.
+                        // until transmitFlag
+                        // {
+                        //     local ecValidation to ValidateECForTransmit(m).
+                        //     if ecValidation[0] = 0
+                        //     {
+                        //         OutMsg("Validating EC for science transmission").
+                        //         OutInfo("EC Required: " + ecValidation[1]).
+                        //         set transmitFlag to true.
+                        //     }
+                        // }
                         TransmitSci(m).
                     }
                     else if m:data[0]:scienceValue > 0
