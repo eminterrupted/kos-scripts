@@ -159,6 +159,7 @@ global function CrewArmRetract
     {
         if m:part:name:contains("CrewArm") animateMod:add(m).
         if m:part:name:contains("CrewWalkwayMercury") animateMod:add(m).
+        if m:part:name:contains("CrewElevatorMiniArm") animateMod:add(m).
     }
         
     if animateMod:length > 0
@@ -206,15 +207,18 @@ global function LaunchPadGen
     local genList   to ship:modulesNamed("ModuleGenerator").
     for g in genList
     {
-        if powerOn 
+        if not g:part:name:contains("rtg") or not g:part:title:contains("rtg")
         {
-            OutInfo("Vehicle on external power").
-            DoEvent(g, "activate generator").
-        }
-        else 
-        {
-            OutInfo("Vehicle on internal power").
-            DoEvent(g, "shutdown generator").
+            if powerOn 
+            {
+                OutInfo("Vehicle on external power").
+                DoEvent(g, "activate generator").
+            }
+            else 
+            {
+                OutInfo("Vehicle on internal power").
+                DoEvent(g, "shutdown generator").
+            }
         }
     }
 }
