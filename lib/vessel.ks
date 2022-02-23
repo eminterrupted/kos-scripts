@@ -427,7 +427,7 @@ global function ArmAutoStaging
         SafeStage().
         wait 0.25.
         local endTime to time:seconds.
-        set g_MECO to g_MECO + (endTime - startTime).
+        //set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }
 }
@@ -444,7 +444,7 @@ global function SafeStage
     {
         until stage:ready
         {
-            wait 0.25.
+            wait 0.05.
         }
         stage.
         break.

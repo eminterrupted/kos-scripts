@@ -174,7 +174,7 @@
 
         if stgObj["Full"]:keys:length > 1 
         {
-            local stageWaitTime to 1.
+            local stageWaitTime to 2.5.
             from { local stg to stage:number - 1.} until stg = 0 step { set stg to stg - 1.} do
             {
                 if stgObj["Full"]:hasKey(stg) set fullDurWithStaging to fullDurWithStaging + stageWaitTime.
