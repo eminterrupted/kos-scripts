@@ -756,7 +756,14 @@ global function DeployPartSet
                 else DoEvent(m, "stop fuel cell").
             }
 
-            if p:hasModule("ModuleDeployablePart")  // Not sure?
+            if p:hasModule("ModuleGenerator") // RTGs
+            {
+                local m to p:getModule("ModuleGenerator").
+                if action = "deploy" DoAction(m, "activate generator").
+                else DoAction(m, "shutdown generator").
+            }
+
+            if p:hasModule("ModuleDeployablePart")  // Science parts / misc
             {
                 local m to p:getModule("ModuleDeployablePart").
                 if action = "deploy" DoEvent(m, "extend").
