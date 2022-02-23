@@ -129,7 +129,7 @@ until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 }
 OutInfo().
 
-until ship:BottomAltRadar >= altStartTurn
+until ship:bounds:BottomAltRadar >= altStartTurn
 {
     DispTelemetry().
     wait 0.01.
