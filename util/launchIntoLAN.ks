@@ -11,7 +11,7 @@ runOncePath("0:/lib/util").
 
 DispMain(scriptPath()).
 
-if hasTarget set tgtLaunchLAN to target:orbit:lan.
+//if hasTarget set tgtLaunchLAN to target:orbit:lan.
 local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + 90, 360) if tgtInc <= 90 and tgtInc >= -90 else abs(mod(360 + tgtLaunchLAN + 90, 360)).
 
 local tgtLaunchBuffer to 1.0.
