@@ -102,8 +102,7 @@ local function TMI
     wait 1.
     if not hasNode
     {
-        set target to tgtBody.
-        lock currentPhase to mod(360 + KSNavPhaseAng(), 360).
+        lock currentPhase to mod(360 + KSNavPhaseAng(tgtBody), 360).
 
         // Calculate the ideal phase angle for transfer
         set transferPhase to GetTransferPhase(tgtBody, Ship:Orbit:SemiMajorAxis - Ship:Body:Radius).
