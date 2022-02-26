@@ -158,9 +158,9 @@ global function StageMass
     
     local stgEngs to GetEnginesByStage(stg).
     local engResUsed to list().
-    for e in stgEngs
+    for eng in stgEngs
     {
-        for k in e:consumedResources:keys 
+        for k in eng:consumedResources:keys 
         {
             if not engResUsed:contains(k) engResUsed:add(k:replace(" ", "")).
         }
@@ -184,12 +184,12 @@ global function StageMass
 
         if p:decoupledIn = stg - 1 and p:resources:length > 0 
         {
-            for r in p:resources
+            for res in p:resources
             {
-                if engResUsed:contains(r:name) 
+                if engResUsed:contains(res:name) 
                 {
-                    // print "Calculating: " + r:name.
-                    set stgFuelMass to stgFuelMass + (r:amount * r:density).
+                    // print "Calculating: " + res:name.
+                    set stgFuelMass to stgFuelMass + (res:amount * res:density).
                 }
             }
         }
@@ -213,29 +213,29 @@ global function GetEngines
     
     if engState = "active"  
     {
-        for e in engs
+        for eng in engs
         {
             if includeSep
             {
-                if e:ignition and not e:flameout engList:add(e).
+                if eng:ignition and not eng:flameout engList:add(eng).
             }
-            else if not sepList:contains(e) or e:tag = ""
+            else if not sepList:contains(eng) or eng:tag = ""
             {
-                if e:ignition and not e:flameout engList:add(e).
+                if eng:ignition and not eng:flameout engList:add(eng).
             }
         }
     }
     else if engState = "off"
     {
-        for e in engs
+        for eng in engs
         {
             if includeSep
             {
-                if not e:ignition engList:add(e).
+                if not eng:ignition engList:add(eng).
             }
-            else if not sepList:contains(e) or e:tag = ""
+            else if not sepList:contains(eng) or eng:tag = ""
             {
-                if not e:ignition engList:add(e).
+                if not eng:ignition engList:add(eng).
             }
         }
     }
@@ -243,11 +243,11 @@ global function GetEngines
     {
         if not includeSep
         {
-            for e in engs
+            for eng in engs
             {
-                if not sepList:contains(e) or e:tag = ""
+                if not sepList:contains(eng) or eng:tag = ""
                 {
-                    engList:add(e).
+                    engList:add(eng).
                 }
             }
         }
@@ -267,17 +267,17 @@ global function GetEnginesByStage
     local engList to buildList("engines").
     local stgEngs to list().
 
-    for e in engList
+    for eng in engList
     {
-        if e:stage = stg
+        if eng:stage = stg
         {
             if not includeSep
             {
-                if not sepList:contains(e:name) stgEngs:add(e).
+                if not sepList:contains(eng:name) stgEngs:add(eng).
             }
             else
             {
-                stgEngs:add(e).
+                stgEngs:add(eng).
             }
         }
     }
@@ -295,26 +295,26 @@ global function GetStageThrust
     local stgThr to 0.
     local engList to buildList("engines").
 
-    for e in engList
+    for eng in engList
     {
-        if e:stage = stg
+        if eng:stage = stg
         {
             if not includeSep
             {
-                if not sepList:contains(e:name)
+                if not sepList:contains(eng:name)
                 {
-                    if thrType = "curr"         set stgThr to stgThr + e:thrust.
-                    else if thrType = "max"     set stgThr to stgThr + e:maxThrust.
-                    else if thrType = "avail"   set stgThr to stgThr + e:availableThrust.
-                    else if thrType = "poss"    set stgThr to stgThr + e:possibleThrust.
+                    if thrType = "curr"         set stgThr to stgThr + eng:thrust.
+                    else if thrType = "max"     set stgThr to stgThr + eng:maxThrust.
+                    else if thrType = "avail"   set stgThr to stgThr + eng:availableThrust.
+                    else if thrType = "poss"    set stgThr to stgThr + eng:possibleThrust.
                 }
             }
             else
             {
-                if thrType = "curr"         set stgThr to stgThr + e:thrust.
-                else if thrType = "max"     set stgThr to stgThr + e:maxThrust.
-                else if thrType = "avail"   set stgThr to stgThr + e:availableThrust.
-                else if thrType = "poss"    set stgThr to stgThr + e:possibleThrust.
+                if thrType = "curr"         set stgThr to stgThr + eng:thrust.
+                else if thrType = "max"     set stgThr to stgThr + eng:maxThrust.
+                else if thrType = "avail"   set stgThr to stgThr + eng:availableThrust.
+                else if thrType = "poss"    set stgThr to stgThr + eng:possibleThrust.
             }
         }
     }
@@ -334,19 +334,19 @@ global function GetTotalThrust
     {
         if thrType = "curr"
         {
-            for e in engList set totThr to totThr + e:thrust.
+            for eng in engList set totThr to totThr + eng:thrust.
         }
         else if thrType = "max" 
         {
-            for e in engList set totThr to totThr + e:maxThrust.
+            for eng in engList set totThr to totThr + eng:maxThrust.
         }
         else if thrType = "avail" 
         {
-            for e in engList set totThr to totThr + e:availableThrust.
+            for eng in engList set totThr to totThr + eng:availableThrust.
         }
         else if thrType = "poss"
         {
-            for e in engList set totThr to totThr + e:possibleThrust.
+            for eng in engList set totThr to totThr + eng:possibleThrust.
         }
         return totThr.
     }
@@ -354,6 +354,19 @@ global function GetTotalThrust
     {
         return 0.
     }
+}
+
+// GetTWRForCurrentStage :: <scalar> -> <scalar>
+// Returns the TWR for a given stage
+// TODO: Implent TWR Projection for future stages (currently only active stage)
+global function GetTWRForStage
+{
+    parameter stg is Stage:Number.
+
+    local stgThr to GetStageThrust(stg, "poss", true).
+    local stgMass to StageMass(stg)["ship"].
+
+    return stgThr / (stgMass * Ship:Body:Mu).
 }
 
 // GetTotalISP :: (<list>Engines) -> <scalar>
@@ -367,18 +380,18 @@ global function GetTotalIsp
     local totThr to 0.
 
     local engIsp to { 
-        parameter e. 
-        if mode = "vac" return e:visp.
-        if mode = "sl" return e:slisp.
-        if mode = "cur" return e:ispAt(body:atm:altitudePressure(ship:altitude)).
+        parameter eng. 
+        if mode = "vac" return eng:visp.
+        if mode = "sl" return eng:slisp.
+        if mode = "cur" return eng:ispAt(body:atm:altitudePressure(ship:altitude)).
     }.
 
     if engList:length > 0 
     {
-        for e in engList
+        for eng in engList
         {
-            set totThr to totThr + e:possibleThrust.
-            set relThr to relThr + (e:possibleThrust / engIsp(e)).
+            set totThr to totThr + eng:possibleThrust.
+            set relThr to relThr + (eng:possibleThrust / engIsp(eng)).
         }
 
         // clrDisp(30).
@@ -412,6 +425,20 @@ global function GetExhVel
 }
 // #endregion
 
+// -- Local gravity
+// #region
+
+// GetLocalGravityOnVessel -- ([<ship>], [<body>]) -> <scalar>
+// Returns the local force of gravity on a vessel given ship and body
+global function GetLocalGravityOnVessel
+{
+    parameter _ves is ship,
+              _body is ship:body.
+
+    return (Constant:G * _body:Mass) / (_ves:Body:Radius + _ves:Altitude)^2.
+}
+// #endregion
+
 // -- Ship Staging
 // #region
 
@@ -423,10 +450,12 @@ global function ArmAutoStaging
     
     when ship:availablethrust <= 0.01 and throttle > 0 then
     {
+        OutInfo2("Staging:" + Stage:Number).
         local startTime to time:seconds.
         SafeStage().
         wait 0.25.
         local endTime to time:seconds.
+        OutInfo2("Staging time: " + round(endTime - startTime, 2)).
         //set g_MECO to g_MECO + (endTime - startTime).
         if stage:number > stopAtStg preserve.
     }

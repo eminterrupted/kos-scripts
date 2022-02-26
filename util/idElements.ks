@@ -16,15 +16,15 @@ print pHighlight.
 
 OutMsg("Vessel: " + ship:name).
 
-for e in ship:elements 
+for el in ship:elements 
 {
 
-    print "Name   : " + e:name at (2, crl()).
+    print "Name   : " + el:name at (2, crl()).
     print "Idx    : " + eIdx at (2, crl()).
     print "Color  : " + ColorLex:keys[eIdx] at (2, crl()).
     crl().
 
-    set eHighlight to highlight(e, ColorLex[ColorLex:keys[eIdx]]).
+    set eHighlight to highlight(el, ColorLex[ColorLex:keys[eIdx]]).
     set eIdx to eIdx + 1.
 }
 
@@ -33,9 +33,9 @@ set pHighlight to highlight(ship:rootPart, white).
 
 Breakpoint().
 
-for e in ship:elements
+for el in ship:elements
 {
-    set eHighlight to highlight(e, black).
+    set eHighlight to highlight(el, black).
     set eHighlight:enabled to false. 
 }
 set pHighlight:enabled to false.
