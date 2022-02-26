@@ -364,10 +364,10 @@ global function AltAtTA
 
     local sma is obtIn:semimajoraxis.
     local ecc is obtIn:eccentricity.
-    local r is sma * (1 - ecc ^ 2) / (1 + ecc * cos(trueAnom)).
+    local r0 is sma * (1 - ecc ^ 2) / (1 + ecc * cos(trueAnom)).
 
     // Subtract the body radius from the resulting SMA to get alt
-    return r - obtIn:body:radius.
+    return r0 - obtIn:body:radius.
 }
 
 // Converts a true anomaly to the mean anomaly. 

@@ -60,9 +60,9 @@ if params:length > 0
 
 if (not rainbow)
 {
-    for e in ship:elements 
+    for el in ship:elements 
     {
-        set eHighlight to highlight(e, ColorLex[ColorLex:keys[eIdx]]).
+        set eHighlight to highlight(el, ColorLex[ColorLex:keys[eIdx]]).
     }
 }
 else 
@@ -85,9 +85,9 @@ set pHighlight to highlight(ship:rootPart, white).
 
 if (turnOff)
 {
-    for e in ship:elements
+    for el in ship:elements
     {
-        set eHighlight to highlight(e, black).
+        set eHighlight to highlight(el, black).
         set eHighlight:enabled to false. 
     }
     set pHighlight:enabled to false.   

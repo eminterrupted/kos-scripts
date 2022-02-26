@@ -255,9 +255,9 @@ global function PadROFI
     if rofiList:length > 0 
     {
         OutInfo("Igniting ROFI system").
-        for r in rofiList 
+        for rofi in rofiList 
         {
-            r:activate.
+            rofi:activate.
         }
     }
 }

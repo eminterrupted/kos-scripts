@@ -27,10 +27,10 @@ local tgtRoll   to 0.
 if param:length > 0
 {
     set tgtPe to param[0].
-    set tgtAp to param[1].
-    set tgtInc to param[2].
-    set tgtLAN to param[3].
-    set tgtRoll to param[4]. 
+    if param:length > 1 set tgtAp to param[1].
+    if param:length > 2 set tgtInc to param[2].
+    if param:length > 3 set tgtLAN to param[3].
+    if param:length > 4 set tgtRoll to param[4]. 
 }
 
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
@@ -39,10 +39,10 @@ local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 local altStartTurn to 2500.
 local altGravTurn   to min(tgtAp / 2, 10000).
 
-
 // Controls
 local sVal to ship:facing.
 local tVal to 0.
+sas off.
 
 // Core tag
 local cTag to core:tag.
@@ -129,7 +129,7 @@ until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 }
 OutInfo().
 
-until ship:bounds:BottomAltRadar >= altStartTurn
+until ship:bounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
 {
     DispTelemetry().
     wait 0.01.

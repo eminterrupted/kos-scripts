@@ -29,30 +29,30 @@
   function cast {
     parameter a,
               b,
-              r is 0.
+              _r is 0.
     
     if a:typename = b return a.
     
     if b = "List" { 
-      set r to list(). 
-      for i in a r:add(i). 
+      set _r to list(). 
+      for i in a _r:add(i). 
 
-      return r.
+      return _r.
     }
 
     if b = "Queue" { 
-      set r to queue(). 
-      for i in a r:push(i). 
+      set _r to queue(). 
+      for i in a _r:push(i). 
 
-      return r.
+      return _r.
     }
 
     if b="Stack"{
       local l is stack().
 
-      set r to stack(). 
-      for i in a r:push(i).
-      for i in r l:push(i). 
+      set _r to stack(). 
+      for i in a _r:push(i).
+      for i in _r l:push(i). 
       
       return l.
     }
@@ -95,11 +95,11 @@
   function count {
     parameter l,
               c,
-              r is 0. 
+              _r is 0. 
     
-    for i in l if c(i) set r to r+1. 
+    for i in l if c(i) set _r to r+1. 
 
-    return r.
+    return _r.
   }.
 
   function each { 
@@ -159,49 +159,49 @@
   function group_by { 
     parameter l,
               t,
-              r is lex(). 
+              _r is lex(). 
     
     for i in l {
       local u is t(i). 
       
-      if r:haskey(u) {
-        r[u]:add(i). 
+      if _r:haskey(u) {
+        _r[u]:add(i). 
       }
       
       else {
-        set r[u] to list(i). 
+        set _r[u] to list(i). 
       }
     }
 
-    for k in r:keys set r[k] to cast(r[k], l:typename). 
-    return r. 
+    for k in _r:keys set _r[k] to cast(_r[k], l:typename). 
+    return _r. 
   }.
 
   function map {
     parameter l,
               t,
-              r is list(). 
+              _r is list(). 
     
     for i in to_l(l) {
-      r:add(t(i)).
+      _r:add(t(i)).
     }
 
-    return cast(r, l:typename).
+    return cast(_r, l:typename).
   }.
 
   function map_with_index { 
     parameter l,
               t,
-              r is list(), 
+              _r is list(), 
               i is 0, 
               c is to_l(l).
 
     until i=c:length { 
-      r:add(t(c[i], i + 1)). 
+      _r:add(t(c[i], i + 1)). 
       set i to i + 1. 
     }
 
-    return cast(r, l:typename). 
+    return cast(_r, l:typename). 
   }.
 
   function _max {
@@ -210,13 +210,13 @@
     
     if c:length = 0 return n.
     
-    local r is c[0]. 
+    local r0 is c[0]. 
     
     for i in c {
 
-      if i > r set r to i. 
+      if i > r0 set r0 to i. 
     }
-    return r.
+    return r0.
   }.
 
   function _min {
@@ -225,39 +225,39 @@
     
     if c:length = 0 return n.
 
-    local r is c[0].
+    local r0 is c[0].
 
     for i in c {
       
-      if i < r {
-        set r to i. 
+      if i < r0 {
+        set r0 to i. 
       }
     }
 
-    return r. 
+    return r0. 
   }.
 
   function partition { 
     parameter l, 
               o, 
               c is to_l(l), 
-              r is list(list(), list()).
+              _r is list(list(), list()).
 
     for i in c { 
 
       if o(i) {
-        r[0]:add(i). 
+        _r[0]:add(i). 
       }
       
       else {
-        r[1]:add(i). 
+        _r[1]:add(i). 
       }
     }
 
-    set r[0] to cast(r[0], l:typename). 
-    set r[1] to cast(r[1], l:typename).
+    set _r[0] to cast(_r[0], l:typename). 
+    set _r[1] to cast(_r[1], l:typename).
 
-    return r.
+    return _r.
   }.
 
   function reduce { 
@@ -275,44 +275,44 @@
   function reject { 
     parameter l, 
               c, 
-              r is list().
+              _r is list().
 
     for i in to_l(l) {
 
       if not c(i) {
-        r:add(i). 
+        _r:add(i). 
       }
     }
     
-    return cast(r, l:typename). 
+    return cast(_r, l:typename). 
   }.
 
   function reverse { 
     parameter l, 
-              r is stack().
+              _r is stack().
 
-    for i in l r:push(i).
+    for i in l _r:push(i).
     
-    return cast(r, l:typename). 
+    return cast(_r, l:typename). 
   }.
 
   function select {
     parameter l, 
               c, 
-              r is list().
+              _r is list().
 
     for i in to_l(l) {
       
-      if c(i) r:add(i). 
+      if c(i) _r:add(i). 
     }
     
-    return cast(r,l:typename).
+    return cast(_r,l:typename).
   }
 
   function sort {
     parameter l, 
               c, 
-              r is to_l(l):copy.
+              _r is to_l(l):copy.
 
     function qs {
       parameter A, 
@@ -355,7 +355,7 @@
       }
     }
     
-    qs(r, 0, r:length - 1).
+    qs(_r, 0, _r:length - 1).
     
-    return cast(r, l:typename).
+    return cast(_r, l:typename).
   }

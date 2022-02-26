@@ -204,9 +204,9 @@ function kslib_nav_avg_isp {
     local burnEngines is list().
     list engines in burnEngines.
     local massBurnRate is 0.
-    for e in burnEngines {
-        if e:ignition {
-            set massBurnRate to massBurnRate + e:availableThrust/(e:ISP * constant:g0).
+    for eng in burnEngines {
+        if eng:ignition {
+            set massBurnRate to massBurnRate + eng:availableThrust/(eng:ISP * constant:g0).
         }
     }
     local isp is -1.

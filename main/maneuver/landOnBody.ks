@@ -64,7 +64,8 @@ else
         OutMsg("[P" + program + "]: Running descent routine").
         if i = 6 
         {
-            Gear On.
+            Gear on.
+            Lights off.
             Lights on.
         }
         set tgtSrfSpd to choose aSrfSpeed[i] / 2 if Ship:Body = Body("Minmus") and aSrfSpeed[i] > 10 else aSrfSpeed[i].

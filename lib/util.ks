@@ -74,7 +74,6 @@ global function PlaySFX
 }
 // #endregion
 
-
 // -- Vessel Cache / State
 // #region
 
@@ -531,21 +530,21 @@ global function GetEventFromModule
               event,
               searchActions to true.
 
-    for e in m:allEvents
+    for _e in m:allEvents
     {
-        if e:contains(event)
+        if _e:contains(event)
         {
-            return e:replace("(callable) ", ""):replace(", is KSPEvent", "").
+            return _e:replace("(callable) ", ""):replace(", is KSPEvent", "").
         }
     }
 
     if searchActions
     {
-        for a in m:allActions
+        for _a in m:allActions
         {
-            if a:contains(event)
+            if _a:contains(event)
             {
-                return a:replace("(callable) ", ""):replace(", is KSPAction", "").
+                return _a:replace("(callable) ", ""):replace(", is KSPAction", "").
             }
         }
     }
@@ -769,6 +768,12 @@ global function DeployPartSet
                 if action = "deploy" DoEvent(m, "extend").
                 else DoEvent(m, "retract").
             }
+
+            if p:hasModule("ModuleRoboticServoHinge")
+            {
+                local m to p:getModule("ModuleRoboticServoHinge").
+                DoAction(m, "Toggle Hinge").
+            }
         }
 
         wait 1.
@@ -837,18 +842,18 @@ global function WarpToAlt
     
     if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.10 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.50 set warp to 1.
-        else if ship:altitude <= tgtAlt * 2 set warp to 2.
-        else if ship:altitude <= tgtAlt * 4 set warp to 3.
-        else if ship:altitude <= tgtAlt * 8 set warp to 4.
-        else if ship:altitude <= tgtAlt * 24 set warp to 5.
-        else if ship:altitude <= tgtAlt * 72 set warp to 6.
+        if ship:altitude <= tgtAlt * 1.25 set warp to 0.
+        else if ship:altitude < tgtAlt * 2.5 set warp to 1.
+        else if ship:altitude < tgtAlt * 5 set warp to 2.
+        else if ship:altitude < tgtAlt * 10 set warp to 3.
+        else if ship:altitude < tgtAlt * 25 set warp to 4.
+        else if ship:altitude < tgtAlt * 50 set warp to 5.
+        else if ship:altitude < tgtAlt * 75 set warp to 6.
         else set warp to 7.
     }
     else
     {
-        if ship:altitude >= tgtAlt * 0.90 set warp to 0.
+        if ship:altitude >= tgtAlt * 0.95 set warp to 0.
         else if ship:altitude >= tgtAlt * 0.85 set warp to 1.
         else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
         else if ship:altitude >= tgtAlt * 0.50 set warp to 3.
