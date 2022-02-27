@@ -159,7 +159,7 @@
 // Burn Duration / Stages
 // #region
 
-    // BurnDur :: (<scalar>) -> <list>scalar [Full, Half]
+    // CalcBurnDur :: (<scalar>) -> <list>scalar [Full, Half]
     // Returns the time to burn a given dV, including the halfway burn dur for burn start timing
     // Also returns values with staging time included
     global function CalcBurnDur
@@ -174,7 +174,7 @@
 
         if stgObj["Full"]:keys:length > 1 
         {
-            local stageWaitTime to 2.5.
+            local stageWaitTime to 1.
             from { local stg to stage:number - 1.} until stg = 0 step { set stg to stg - 1.} do
             {
                 if stgObj["Full"]:hasKey(stg) set fullDurWithStaging to fullDurWithStaging + stageWaitTime.
