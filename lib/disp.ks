@@ -142,8 +142,27 @@ global function OutWait
     }
 }
 
+// RoundDistance - Rounds a distance to the given precision.
+// TODO - Implement precision options. Currently only Float is available, which 
+// will simply adjust the denominator to 'nnn,nnn<unit>', whatever that unit ends
+// up being
+local function RoundDistance
+{
+    parameter dist,
+              precision is "float".
+
+    if precision = "float"
+    {
+        if dist <= 999999 return round(dist):ToString + "m".
+        else if dist <= 999999999 return round(dist / 1000):ToString + "Km".
+        else if dist <= 999999999999 return round(dist / 1000000):ToString + "Mm".
+        else if dist <= 999999999999999 return round(dist / 1000000000):ToString + "Gm".
+        else return round(dist / 1000000000000):ToString + "Tm".
+    }
+}
+
 // Sets up the terminal
-global function DispTerm
+global function ShowTerm
 {
     set terminal:height to 50.
     set terminal:width to 60.
@@ -236,7 +255,7 @@ global function DispMain
     parameter scrPlan is scriptPath():name,
               showTerminal is true.
 
-    if showTerminal DispTerm().
+    if showTerminal ShowTerm().
 
     print "Mission Controller v2.0.1" at (0, 0).
     print "=========================" at (0, 1).
@@ -267,7 +286,6 @@ global function DispBurn
     else
     {
         OutInfo("BURN DURATION   : " + round(burnDur, 2) + "s     ").
-        OutInfo2().
     }
 }
 
@@ -494,14 +512,14 @@ global function DispResTransfer
     local srcAmt to 0.
     local tgtAmt to 0.
 
-    for r in src:resources
+    for res in src:resources
     {
-        if r:name = resName set srcAmt to r:amount.
+        if res:name = resName set srcAmt to res:amount.
     }
 
-    for r in tgt:resources
+    for res in tgt:resources
     {
-        if r:name = resName set tgtAmt to r:amount.
+        if res:name = resName set tgtAmt to res:amount.
     }
 
     print "RESOURCE TRANSFER" at (0, line).
@@ -539,6 +557,12 @@ global function DispScope
     {
         cr().
         print "TARGET   : " + target:name at (0, cr()).
-        print "DISTANCE : " + round(target:position:mag / 1000, 2) + "km      " at (0, cr()).
+        print "DISTANCE : " + RoundDistance(Target:Position:Mag) + "      " at (0, cr()).
+    }
+    else
+    {
+        cr().
+        clr(cr()).
+        clr(cr()).
     }
 }

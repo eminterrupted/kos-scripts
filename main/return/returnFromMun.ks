@@ -89,25 +89,25 @@ DispMain(ScriptPath(), false).
     print "Press Enter to begin node execution routine" at (0, cr()).
     print "Press End to terminate script" at (0, cr()).
     Terminal:Input:Clear.
-    local char to "".
+    local _char to "".
     local doneFlag to false.
     until doneFlag
     {
         if Terminal:Input:HasChar
         {
-            set char to Terminal:Input:GetChar.
-            if char = Terminal:Input:Enter
+            set _char to Terminal:Input:GetChar.
+            if _char = Terminal:Input:Enter
             {
                 ExecNodeBurn(mnvNode).
                 set doneFlag to true.
             }
-            else if char = Terminal:Input:EndCursor
+            else if _char = Terminal:Input:EndCursor
             {
                 set doneFlag to true.
             }
             else
             {
-                set char to "".
+                set _char to "".
             }
         }
     }

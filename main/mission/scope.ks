@@ -8,7 +8,7 @@ RunOncePath("0:/lib/vessel").
 
 DispMain(ScriptPath(), false).
 
-local maxTorque to "0.000005".
+local maxTorque to 0.000005.
 local tgtBody to Ship:Body.
 
 if param:length > 0 
@@ -19,9 +19,9 @@ if param:length > 0
 local sVal to GetSteeringDir("facing-sun").
 
 OutMsg("Calibrating Telescope").
-OutInfo("Setting Steering Manager to: " + maxTorque).
+OutInfo("Setting Steering Manager to: " + maxTorque:ToString).
 
-set SteeringManager:TorqueEpsilonMax to maxTorque:ToNumber(0.0005).
+set SteeringManager:TorqueEpsilonMax to maxTorque.
 wait 1.
 
 lock steering to sVal.
@@ -32,6 +32,7 @@ until false
 {
     set sVal to GetTargetDir().
     DispScope().
+    wait 0.01.
 }
 
 local function GetTargetDir

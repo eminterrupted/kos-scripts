@@ -7,6 +7,61 @@ runOncePath("0:/lib/util").
 
 //-- Functions
 
+// -- Arming functions
+// #region
+
+// ArmBoosterSeparation :: <lexicon> :: <none>
+// Sets up a trigger to separate boosters in the boosterLex param when fuel is nearly depleted.
+// Works with SRBs and liquid boosters, assuming the liquid booster tank immediately attached 
+// to the tagged decoupler does not leak!
+global function ArmBoosterSeparation
+{
+    parameter boosterLex.
+
+    if boosterLex:keys:length > 0
+    {
+        for idx in boosterLex:keys
+        {
+            if idx:isType("Scalar") 
+            {
+                local bIdx to idx.
+                when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
+                {
+                    OutInfo("Detaching Booster: " + bIdx).
+                    for dc in boosterLex[bIdx]
+                    {
+                        if dc:partsDubbedPattern("sep"):length > 0 
+                        {
+                            for sep in dc:partsDubbedPattern("sep") sep:activate.
+                        }
+                        local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                        if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
+                    }
+                    wait 1.
+                    OutInfo().
+
+                    // Check the boosterLex to see if there are any motors in the stage to airstart
+                    // Start them if yes
+                    if boosterLex:hasKey("airstart")
+                    {
+                        if boosterLex["airstart"]:hasKey(bIdx + 1) 
+                        {
+                            for b in boosterLex["airstart"][bIdx + 1] 
+                            {
+                                if not b:ignition 
+                                {
+                                    b:activate.
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+// #endregion
+
 //#region -- Ascent functions
 // Set pitch by deviation from a reference pitch
 global function LaunchAngForAlt

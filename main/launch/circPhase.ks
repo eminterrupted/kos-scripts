@@ -19,7 +19,7 @@ local lp to list().
 local lpPath to "".
 
 local volIdx to 1.
-until false 
+until false
 {
     if exists(volIdx + ":/lp.json") 
     {
@@ -113,8 +113,3 @@ ag9 off.
 deletePath("1:/lp.json").
 
 OutMsg("Launch complete").
-
-if param:length > 0 
-{
-    if param[0] = "deploy" runPath("0:/main/util/payloadDeploy").
-}

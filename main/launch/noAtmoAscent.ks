@@ -17,8 +17,10 @@ DispMain(scriptPath(), false).
 
 // Vars
 // Launch params
-local tgtPe     to 1250000.
-local tgtAp     to 1250000.
+local stageAtLaunch to false.
+
+local tgtPe     to 100000.
+local tgtAp     to 100000.
 local tgtInc    to 0.
 local tgtLAN    to -1.
 local tgtRoll   to 0.
@@ -28,19 +30,20 @@ if param:length > 0
 {
     set tgtPe to param[0].
     if param:length > 1 set tgtAp to param[1].
-    if param:length > 2 set tgtInc to param[2].
-    if param:length > 3 set tgtLAN to param[3].
-    if param:length > 4 set tgtRoll to param[4]. 
+    if param:length > 2 set stageAtLaunch to param[2].
+    if param:length > 3 set tgtInc to param[3].
+    if param:length > 4 set tgtLAN to param[4].
+    if param:length > 5 set tgtRoll to param[5]. 
 }
+local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll, stageAtLaunch).
 
-local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
-
-// Turn params
-local altStartTurn to 2500.
-local altGravTurn   to min(tgtAp / 2, 10000).
+// Variables
+local altStartTurn  to 500.
+local altGravTurn   to min(tgtAp / 2, 2500).
+local boosterObj    to lex().
 
 // Controls
-local sVal to ship:facing.
+local sVal to LookDirUp(ship:up:vector, Sun:Position).
 local tVal to 0.
 sas off.
 
@@ -57,14 +60,14 @@ DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper)).
 local volIdx to 1. 
 until false
 {
-    writeJson(list(tgtPe), volIdx + ":/lp.json").
+    writeJson(list(tgtPe, tgtInc), volIdx + ":/lp.json").
     if exists(volIdx + ":/lp.json") 
     {
         break.
     }
     else if volIdx = ship:modulesNamed("kOSProcessor"):length 
     {
-        writeJson(list(tgtPe), "0:/data/lp.json").
+        writeJson(list(tgtPe, tgtInc), "0:/data/lp.json").
         break.
     }
     else
@@ -95,9 +98,13 @@ else
 clearScreen.
 DispMain(scriptPath(), false).
 
+// Get boosters on ship, if any
+set boosterObj to GetBoosters().
 
 // Arm systems
 ArmAutoStaging(stageLimit).
+ArmBoosterSeparation(boosterObj).
+ArmDropTanks().
 
 // Calculate AZ here, write to disk for circularization. 
 // We will write this to disk along with tgtPe and boost stage at launch
@@ -107,6 +114,10 @@ local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 LaunchCountdown(10).
 
 // Launch commit
+if stageAtLaunch 
+{
+    stage.
+}
 set tVal to 1.
 lock throttle to tVal.
 
@@ -114,7 +125,7 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:bounds:BottomAltRadar >= altStartTurn
+until ship:bounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
@@ -122,14 +133,14 @@ until ship:bounds:BottomAltRadar >= altStartTurn
 
 OutInfo("Roll Program").
 set sVal to heading(l_az_calc(azCalcObj), 90, 0).
-until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
+until (steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1) or ship:altitude >= altStartTurn or ship:apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
 }
 OutInfo().
 
-until ship:bounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
+until ship:bounds:BottomAltRadar >= altStartTurn or ship:apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.

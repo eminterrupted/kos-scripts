@@ -45,7 +45,7 @@ global function GetSteeringDir
 
     if orientation = "pro-sun"
     {
-        return lookDirUp(ship:prograde:vector, sun:position).
+        return lookDirUp(ship:prograde:vector, Sun:Position).
     }
     else if orientation = "retro-sun"
     {
@@ -53,7 +53,7 @@ global function GetSteeringDir
     }
     else if orientation = "facing-sun"
     {
-        return lookDirUp(ship:facing:vector, sun:position).
+        return lookDirUp(ship:facing:vector, Sun:Position).
     }
     else if orientation = "pro-body"
     {
@@ -69,23 +69,23 @@ global function GetSteeringDir
     }
     else if orientation = "body-sun"
     {
-        return lookDirUp(body:position, sun:position).
+        return lookDirUp(body:position, Sun:Position).
     }
     else if orientation = "sun-pro" 
     {
-        return lookDirUp(sun:position, ship:prograde:vector).
+        return lookDirUp(Sun:Position, ship:prograde:vector).
     }
     else if orientation = "target-sun"
     {
-        return lookDirUp(target:position, sun:position).
+        return lookDirUp(target:position, Sun:Position).
     }
     else if orientation = "home-sun"
     {
-        return lookDirUp(kerbin:position, sun:position).
+        return lookDirUp(kerbin:position, Sun:Position).
     }
     else if orientation = "radOut-sun"
     {
-        return lookDirUp(-body:position, sun:position).
+        return lookDirUp(-body:position, Sun:Position).
     }
     else if orientation = "srfRetro-sun"
     {
@@ -517,4 +517,129 @@ global function SafeStage
     }
 }
 // #endregion
+
+// -- Drop tanks
+// #region
+
+// ArmDropTanks :: <[string]]> -> <bool>
+// Arms drop tanks on the vessel to be decoupled when empty. 
+// Defaults to parts tagged "dropTank.*", but can be overridden with 
+// optional param (ex: "munAscentDropTanks.*")
+global function ArmDropTanks
+{
+    parameter tankSet to "dropTanks".
+
+    local tankDecouplers to ship:partsTaggedPattern(tankSet + ".*").
+    local tankLex to lex().
+
+    if tankDecouplers:length > 0 
+    {
+        // Setup tankLex, which contains decouplers in lists ordered by idx key
+        for p in tankDecouplers
+        {
+            // Make sure it's a decoupler!
+            if p:IsType("Decoupler")
+            {
+                local pIdx to p:Tag:Split(".")[1].
+                if tankLex:HasKey(pIdx)
+                {
+                    tankLex[pIdx]:add(p).
+                }
+                else 
+                {
+                    set tankLex[pIdx] to list(p).
+                }
+            }
+        }
+
+        for idx in tankLex:Keys
+        {
+            // Make sure the idx is a number to avoid crashes
+            if idx:IsType("Scalar")
+            {
+                // For some reason, need to assign the idx to a local var so the trigger works correctly
+                local dtIdx to idx.
+
+                // Now we define the triggers for each idx
+                // The trigger monitors the first child part for resource exhaustion
+                when tankLex[dtIdx][0]:Children[0]:Resources[0]:Amount <= 0.1 then
+                {
+                    // Iterate through the decouplers for the idx key
+                    for dc in tankLex[dtIdx]
+                    {
+                        // Are there any separation motors that are child parts of the decoupler?
+                        // If so, activate them. This is to ensure clean separation of heavy tanks.
+                        if dc:partsDubbedPattern("sep"):length > 0 
+                        {
+                            for sep in dc:partsDubbedPattern("sep") sep:activate.
+                        }
+                        // Get the correct decoupler module
+                        local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                        // Decouple
+                        if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
+                    }
+                    OutInfo("Drop tanks [idx:" + dtIdx + "] detached").
+                    wait 1.
+                    OutInfo().
+                }
+            }
+        }
+
+    }
+}
+// #endregion
+
+
+// -- Parts Lists / Lexicons
+// #region
+
+// GetBoosters :: <[scalar]> -> <lexicon>
+// Checks for detachable boosters on the vessel.
+// By default, checks all stages, but can be overridden by param to stop 
+// at a given stage.
+global function GetBoosters
+{
+    parameter stopAtStg is 0.
+
+    local boosterLex to lex().
+    local boosterList to ship:partsTaggedPattern("booster.").
+
+    // Did we find any boosters?
+    if boosterList:length > 0
+    {
+        for p in boosterList
+        {
+            // Stage check - makes sure that boosters being assigned to the lexicon 
+            // are within the stages we want
+            if p:stage >= stopAtStg
+            {
+                local pIdx to -1.
+                local pAct to "".
+
+                // Parse the tag
+                local tagParts to p:tag:split(".").
+                if tagParts:length > 1 set pIdx to p:tag:split(".")[1]:tonumber(-1).
+                if tagParts:length > 2 set pAct to p:tag:split(".")[2].
+
+                // Since booster tags are applied to decouplers and not the tanks / SRBs themselves,
+                // check that the part is a decoupler and that it has a valid idx in the tag
+                if pIdx > -1 and p:istype("decoupler")
+                {
+                    if boosterLex:hasKey(pIdx) 
+                    {
+                        boosterLex[pIdx]:add(p).
+                    }
+                    else
+                    {
+                        set boosterLex[pIdx] to list(p).
+                    }
+                }
+            }
+        }
+    }
+    
+    return boosterLex.
+}
+// #endregion
+
 // #endregion
