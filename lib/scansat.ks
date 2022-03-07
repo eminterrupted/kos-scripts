@@ -59,10 +59,10 @@ global function ScansatCoverage
 // A display for scansat scripts
 global function DispScansat
 {
-    parameter scanner.
+    parameter scanList.
     
-    local scanCov to ScansatCoverage(scanner).
     local line to 10.
+    local covStrList to list().
 
     local function lcr
     {
@@ -70,23 +70,30 @@ global function DispScansat
         return line.
     }
 
-    print "SCANSAT"                                                       at (0, line).
-    print "-------"                                                       at (0, lcr()).
-    print "SCANNER    : " + scanner:title                                 at (0, lcr()).
-    print "SCAN TYPE  : " + scanDelegates:scanType(scanner)               at (0, lcr()).
-    print "ALT RANGE  : " + scanDelegates:scanAlt(scanner)                at (0, lcr()).
+    print "SCANSAT"                                                             at (0, line).
+    print "-------"                                                             at (0, lcr()).
+    print "DAYLIGHT   : " + scanDelegates:scanDaylight(scanList[0]) + "     "   at (0, lcr()).
     lcr().
-    print "STATUS     : " + scanDelegates:scanStatus(scanner)   + "     " at (0, lcr()).
-    print "SCAN FOV   : " + scanDelegates:scanFov(scanner)      + "     " at (0, lcr()). 
-    print "SCAN POWER : " + scanDelegates:scanPower(scanner)    + "     " at (0, lcr()).
-    print "DAYLIGHT   : " + scanDelegates:scanDaylight(scanner) + "     " at (0, lcr()).
-    lcr().
-
-    print "COVERAGE"                                                      at (0, lcr()).
-    print "--------"                                                      at (0, lcr()).
-    for key in scanCov:keys
+    for scanner in scanList
     {
-        print key:trim + " : " + round(scanCov[key], 2)                        at (0, lcr()).
+        print "  -------"                                                             at (0, lcr()).
+        lcr().
+        local scanCov to ScansatCoverage(scanner).
+        print "  SCANNER    : " + scanner:title                                   at (0, lcr()).
+        print "  SCAN TYPE  : " + scanDelegates:scanType(scanner)                 at (0, lcr()).
+        print "  ALT RANGE  : " + scanDelegates:scanAlt(scanner)                  at (0, lcr()).
+        lcr().
+        print "  STATUS     : " + scanDelegates:scanStatus(scanner)   + "     "   at (0, lcr()).
+        print "  SCAN FOV   : " + scanDelegates:scanFov(scanner)      + "     "   at (0, lcr()). 
+        print "  SCAN POWER : " + scanDelegates:scanPower(scanner)    + "     "   at (0, lcr()).
+        // lcr().
+        for key in scanCov:keys
+        {
+            covStrList:add(key:trim + " - " + round(scanCov[key], 2)).
+        }
+        print "  COVERAGE   : " + covStrList:Join("; ") + "     "                 at (0, lcr()).
+        lcr().
+        covStrList:clear().
     }
 }
 

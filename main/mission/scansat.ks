@@ -20,7 +20,13 @@ if params:length > 0
 
 local sVal to ship:facing.
 local scanList to ship:modulesNamed("scansat").
-local scanner to scanlist[0]:part.
+//local scanner to scanlist[0]:part.
+local scanParts to list().
+for scanner in scanList 
+{
+    scanParts:add(scanner:part).
+}
+    
 
 lock steering to sVal.
 
@@ -34,6 +40,6 @@ until false
 {
     set sVal to GetSteeringDir(orientation).
 
-    DispScansat(scanner).
+    DispScansat(scanParts).
     wait 0.01.
 }
