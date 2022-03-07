@@ -44,8 +44,7 @@ local altGravTurn  to 50000.
 local spdStartTurn to 75.
 
 // Boosters
-local boosterLex to lex().
-local hasBoosters to false.
+local boosterObj to lex().
 
 // Controls
 local rVal to tgtRoll.
@@ -54,12 +53,12 @@ local tVal to 0.
 
 // Core tag
 local cTag to core:tag.
-local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1]:tonumber.
+local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1]:toNumber(0).
 // Optional second core
 local core2 to "".
 
 OutTee("Hi I AM SpIcY AF", 0, 2.5).
-wait 1.
+wait 0.25.
 OutHUD("Hello SpIcY AF, I am MiSs SuPeR SpIcE", 2).
 
 // Begin  
@@ -68,18 +67,19 @@ lock steering to sVal.
 
 DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper)).
 
-// Write tgtPe to the local drive. If write fails, iterate through volumes. If no other volumes, write to archive.
+// Write tgtPe and tgtInc to the local drive. 
+// If write fails, iterate through volumes. If no other volumes, write to archive.
 local volIdx to 1. 
 until false
 {
-    writeJson(list(tgtPe), volIdx + ":/lp.json").
+    writeJson(list(tgtPe, tgtInc), volIdx + ":/lp.json").
     if exists(volIdx + ":/lp.json") 
     {
         break.
     }
     else if volIdx = ship:modulesNamed("kOSProcessor"):length 
     {
-        writeJson(list(tgtPe), "0:/data/lp.json").
+        writeJson(list(tgtPe, tgtInc), "0:/data/lp.json").
         break.
     }
     else
@@ -114,117 +114,26 @@ else
         }
         wait 0.05.
     }
-    // Retract Soyuz launch pad elements if present AFTER user presses enter (avoids long wait times)
+    // Retract Soyuz launch pad elements if present AFTER user presses enter 
+    // (avoids long wait times while gantry retracts)
     if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzGantry().
 }
+
+// Setup the terminal
 clearScreen.
 DispMain(scriptPath(), false).
 
-// Booster check
-for p in ship:partsTaggedPattern("booster.")
-{
-    local pIdx to -1.
-    local pAct to "".
-
-    local tagParts to p:tag:split(".").
-    if tagParts:length > 1 set pIdx to p:tag:split(".")[1]:tonumber(-1).
-    if tagParts:length > 2 set pAct to p:tag:split(".")[2].
-
-    if pIdx > -1 and p:istype("decoupler")
-    {
-        set hasBoosters to true.
-        if boosterLex:hasKey(pIdx) 
-        {
-            boosterLex[pIdx]:add(p).
-        }
-        else
-        {
-            set boosterLex[pIdx] to list(p).
-        }
-    }
-
-    if tagParts:length > 2
-    {
-        if boosterLex:hasKey(pAct)
-        {
-            if boosterLex[pAct]:hasKey(pIdx)
-            {
-                boosterLex[pAct][pIdx]:add(p).
-            }
-            else 
-            {
-                set boosterLex[pAct][pIdx] to list(p).
-            }
-        }
-        else
-        {
-            set boosterLex[pAct] to lex(pIdx, list(p)).
-        }
-    }
-}
-
-// local termX to terminal:width.
-// local termY to terminal:height.
-// set terminal:width to 180.
-// set terminal:height to 60.
-// print "boosterLex" at (0, 12).
-// print boosterLex at (0, 13).
-// Breakpoint().
-// set terminal:width to termX.
-// set terminal:height to termY.
+// Get booster on vessel, if any
+set boosterObj to GetBoosters().
 
 // Arm systems
 ArmAutoStaging(stageLimit).
 ArmLESJettison(82500).
 ArmFairingJettison().
+set g_boosterSystemArmed to ArmBoosterSeparation(boosterObj).
 set g_abortSystemArmed to SetupAbortGroup(Ship:RootPart).
 
-// Booster Sep
-if hasBoosters
-{
-    for idx in boosterLex:keys
-    {
-        if idx:isType("Scalar") 
-        {
-            local bIdx to idx.
-            when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
-            {
-                OutInfo("Detaching Booster: " + bIdx).
-                for dc in boosterLex[bIdx]
-                {
-                    if dc:partsDubbedPattern("sep"):length > 0 
-                    {
-                        for sep in dc:partsDubbedPattern("sep") sep:activate.
-                    }
-                    local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
-                    if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
-                }
-                wait 1.
-                OutInfo().
-                //if bIdx = 1 stage.
-
-                // Check the boosterLex to see if there are any motors in the stage to airstart
-                // Start them if yes
-                if boosterLex:hasKey("airstart")
-                {
-                    if boosterLex["airstart"]:hasKey(bIdx + 1) 
-                    {
-                        for b in boosterLex["airstart"][bIdx + 1] 
-                        {
-                            if not b:ignition 
-                            {
-                                b:activate.
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Calculate AZ here, write to disk for circularization. 
-// We will write this to disk along with tgtPe and boost stage at launch
+// Calculate AZ here
 local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
 
 // Countdown to launch
@@ -235,14 +144,14 @@ set tVal to 1.
 lock throttle to tVal.
 HolddownRetract().
 if missionTime <= 0.01 stage.  // Release launch clamps at T-0.
+
 if core2 <> "" 
 {
-    SendMsg(core2, "CountdownComplete").
-}.    // A flag used for other scripts to denote that launch has occured
+    SendMsg(core2, "CountdownComplete"). // A flag used for other scripts to denote that launch has occured
+}
 
 OutInfo().
 OutInfo2().
-
 
 OutMsg("Vertical Ascent").
 until ship:altitude >= 150

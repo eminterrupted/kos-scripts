@@ -34,7 +34,7 @@ global function ExecNodeBurn
         set g_MECO    to burnEta + fullDur.
         lock dvRemaining to abs(mnvNode:burnVector:mag).
 
-        local sVal to lookDirUp(mnvNode:burnvector, sun:position).
+        local sVal to lookDirUp(mnvNode:burnvector, Sun:Position).
         local tVal to 0.
         lock steering to sVal.
         lock throttle to tVal.
@@ -52,7 +52,7 @@ global function ExecNodeBurn
                 InitWarp(burnEta, "Burn ETA", 15, true).
                 Terminal:Input:Clear.
             }
-            set sVal to lookDirUp(mnvNode:burnvector, sun:position).
+            set sVal to lookDirUp(mnvNode:burnvector, Sun:Position).
             DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
         }
 
@@ -63,7 +63,7 @@ global function ExecNodeBurn
         OutInfo().
         OutInfo2().
         set tVal to 1.
-        set sVal to lookDirUp(mnvNode:burnVector, sun:position).
+        set sVal to lookDirUp(mnvNode:burnVector, Sun:Position).
         until false
         {
             if vdot(dv0, mnvNode:deltaV) <= 0.01

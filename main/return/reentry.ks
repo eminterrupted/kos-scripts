@@ -70,16 +70,29 @@ wait 1.
 
 if retroFire and ship:periapsis > reentryTgt
 {
-    OutMsg("Aligning for retro fire").
     set sVal to ship:retrograde.
     local settleTime to 3.
+    local progCounter to 0.
+    local progTimer to time:seconds + 5.
+    local progMarker to "".
     set ts to time:seconds + settleTime.
     until time:seconds >= ts
     {
         if not CheckSteering() 
         {
             set ts to time:seconds + settleTime.
-            OutInfo("Alignment in progress...").
+            set progCounter to round(progTimer - time:seconds).
+            if progCounter <= 0 
+            {
+                set progMarker to "".
+                set progTimer to time:seconds + 5.
+            }
+            else if progCounter >= 4 set progMarker to "".
+            else if progCounter >= 3 set progMarker to ".".
+            else if progCounter >= 2 set progMarker to "..".
+            else if progCounter >= 1 set progMarker to "...".
+            OutMsg("Retro alignment in progress" + progMarker).
+            set progCounter to 0.
         }
         else
         {
@@ -147,7 +160,7 @@ if retroFire and ship:periapsis > reentryTgt
     }
 }
 
-set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
 lock steering to sVal.
 
 OutMsg("Waiting until altitude <= " + startAlt).
@@ -169,7 +182,7 @@ until false
                 OutInfo("Warping to startAlt: " + startAlt).
                 WarpToAlt(startAlt).
             }
-            set sVal to lookDirUp(ship:retrograde:vector, sun:position).
+            set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
             DispTelemetry().
             wait 0.01. 
         }
