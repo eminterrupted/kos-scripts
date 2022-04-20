@@ -1,6 +1,9 @@
 @lazyGlobal off.
 clearScreen.
 
+parameter p0 to "".
+
+
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/globals").
@@ -8,157 +11,83 @@ runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/launch").
 
-DispMain(ScriptPath(), false).
+// local testFile to Path("0:/test/runFiles/testFile.ks").
+// if exists(testFile) deletePath(testFile).
+// log "print " + funcToTest + "." to testFile.
 
-abort off.
-local abortSequence to SetupAbortGroup(Ship:RootPart).
-if abortSequence outMsg("Abort sequence armed").
+print "FUNCTIONAL TEST SCRIPT    v0.000001a".
+print "====================================".
+print " ".
+print "Testing function: GetPartSetCount()".
+print CheckPartSet(p0).
 
-until false
+//runPath(testFile).
+
+// -- cleanup --//
+//deletePath(testFile).
+
+//print CheckPartSet(params:join(""",""")).
+
+local function GetPartSetCount
 {
-    OutInfo("Abort Group Disabled").
-    if abort LaunchAbortSequence().
+    parameter setTag is "".
+
+    local pCount to 0.
+    local pList to list().
+    local stepCount to 0.
+
+    if setTag = ""
+    {
+        set pList to ship:parts.
+    }
+    else
+    {
+        set pList to ship:partsTaggedPattern(setTag + ".*\.{1}\d+").
+    }
+
+    for p in pList
+    {
+        local parsedTag to p:Tag:Split(".").
+        //local stepIdx to p:tag:LastIndexOf(".").
+        //local step to p:Tag:Substring(stepIdx + 1, p:tag:length - stepIdx - 1).
+        if parsedTag:length > 0 
+        {
+            local step to parsedTag[parsedTag:length - 1]:toNumber(0).
+            set stepCount to max(stepCount, step).
+        }
+        if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Generic and bays
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleRTAntenna")   // RT Antennas
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleResourceConverter") // Fuel Cells
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleGenerator") // RTGs
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleDeployablePart")  // Science parts / misc
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleRoboticServoHinge")
+        {
+            set pCount to pCount + 1.
+        }
+        else if p:hasModule("ModuleRoboticServoRotor")
+        {
+            set pCount to pCount + 1.
+        }
+    }
+
+    return list(pCount, stepCount).
 }
-
-// print "Testing BurnDurFunc".
-// print "-------------------".
-// print "input".
-// print "dV: " + p0.
-// print " ".
-// print "-- CalcBurnDur --".
-// local burnDur to CalcBurnDur(p0).
-// print "output (s): " + burnDur:join(";").
-// print " ".
-// print "-- BurnStagesUsed --".
-// local burnStg to BurnStagesUsed(p0).
-// for k0 in burnStg:keys {
-//     print k0.
-//     for k1 in burnStg[k0]:keys
-//     {
-//         print k1 + ": " + burnStg[k0][k1].
-//     }
-// }
-
-
-// print "FUNCTIONAL TEST SCRIPT    v0.000001a".
-// print "====================================".
-
-// local charList to list(" ", ".", "-", "_", ":").
-
-// print "Mission name: " + p0.
-
-// local str to p0.
-
-// local strLex to lex().
-// for c in charList
-// {
-//     print "-----------------------------------------------".
-//     print "Parsing by char [" + c + "]".
-//     print " ".
-//     local strSplit to str:split(c).
-//     print strSplit:length + " part(s)".
-//     local partsStr to " ".
-//     if strSplit:length > 1 
-//     {
-//         set strLex[c] to strSplit.
-//         for spl in strSplit
-//         {
-//             for ch in charList
-//             {
-//                 local spl2 to spl:split(ch).
-//                 if spl2:length > 1 
-//                 {
-//                     from { local idx to 0.} until idx > spl2:length - 1 step { set idx to idx + 1.} do 
-//                     {
-//                         set partsStr to partsStr + ch + "[" + spl2[idx] + "]".
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     else set partsStr to partsStr + " [" + strSplit[0] + "].".
-//     set partsStr to "Parts         : " + partsStr:remove(0, 1).
-//     print partsStr.
-// }
-
-
-
-
-
-// for char in list(" ", ".")
-// {
-//     print "-----------------------------------------------".
-//     print "Parsing by char [" + char + "]".
-//     print " ".
-//     local parsedName to parseMissionName(p0, char).
-//     print "Count of parts: " + parsedName["parts"]:length.
-//     local str to "Parts         : ".
-//     for strPart in parsedName["parts"]
-//     {
-//         set str to str + "[" + strPart + "].".
-//     }
-//     set str to str:remove(str:length - 1, 1).
-//     print str. 
-//     print "Core name     : " + parsedName["core"].
-//     print "Branch name   : " + parsedName["branch"].
-//     print "-----------------------------------------------".
-//     print " ".
-// }
-
-// local function parseMissionName
-// {
-//     parameter str, splitChar.
-    
-//     local splitList to str:split(splitChar).
-//     local branchName to "".
-//     local coreName to "".
-    
-//     if splitList:length > 1 set branchName to splitList[1].
-    
-//     local idx to 0.
-//     for splStr in splitList
-//     {
-//         print "Loop start: idx[" + idx + "]".
-//         for c in charList
-//         {
-//             local splStr_1 to splStr:split(c).
-//             if idx = 0 and splStr_1:length = 1
-//             {
-//                 if coreName = "" 
-//                 {
-//                     set coreName to splStr_1[0].
-//                     print "set core name  : " + coreName.
-//                 }
-//             }
-//             else if splStr_1:length > 1 
-//             {
-
-//                 if idx = 0 
-//                 {
-//                     if coreName = "" 
-//                     {
-//                         set coreName to splStr_1[0].
-//                         print "set core name  : " + coreName.
-//                     }
-//                     if branchName = "" 
-//                     {
-//                         set branchName to splStr_1[1].
-//                         print "set branch name: " + branchName.
-//                     }
-//                 }
-
-//                 else if idx = 1
-//                 {
-                    
-//                     set branchName to splStr_1[0].
-//                     print "set branch name: " + splStr_1[0].
-//                 }
-//             }
-//         }
-//         print "Loop end: idx[" + idx + "]".
-//         print " ".
-//         set idx to idx + 1.
-//     }
-
-//     return lex("branch", branchName, "core", coreName, "parts", splitList).
-// }

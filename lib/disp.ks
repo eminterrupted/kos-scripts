@@ -207,10 +207,31 @@ global function DispIncChange
         print round(tgtOrbit:LAN, 1) at (28, line).
 }
 
+// Display for orbit changes
+global function DispOrbitChange
+{
+    parameter tgtPe,
+              tgtAp,
+              tgtApe.
+
+    set line to 10.
+
+    print "ORBIT CHANGE PARAMETERS" at (0, line).
+    print "-----------------------" at (0, cr()).
+    cr().
+    print "              CURRENT  |   TARGET" at (0, cr()).
+    print "APOAPSIS  :    " + round(ship:orbit:apoapsis) at (0, cr()).
+        print round(tgtAp) at (28, line).
+    print "PERIAPSIS :    " + round(ship:orbit:periapsis) at (0, cr()). 
+        print round(tgtPe) at (28, line).
+    print "ARG PE    :    " + round(ship:orbit:argumentofperiapsis, 1) at (0, cr()).
+        print round(tgtApe, 1) at (28, line).
+}
+
 // Displays the launch plan prior to launching
 global function DispLaunchPlan
 {
-    parameter launchPlan, planName.
+    parameter launchPlan, planName, noAtmoStageAtLaunch is 0.
     
     set line to 10.
 
@@ -226,6 +247,7 @@ global function DispLaunchPlan
     print "INCLINATION         : " + launchPlan[2] at (0, cr()).
     print "LAUNCH LAN          : " + launchPlan[3] at (0, cr()).
     cr().
+    if noAtmoStageAtLaunch <> 0 print "STAGE AT LAUNCH     : " + noAtmoStageAtLaunch at (0, cr()).
     //print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
 }
 
@@ -565,4 +587,25 @@ global function DispScope
         clr(cr()).
         clr(cr()).
     }
+}
+
+// DispTargetData - Displays details about a provided vessel.
+global function DispTargetData
+{
+    parameter _tgtVes.
+
+    set line to 10.
+    
+    print "TARGET DATA" at (0, line).
+    print "-----------" at (0, cr()).
+    
+    print "TARGET ORBITABLE     : " + _tgtVes:Name                                   at (0, cr()).
+    print "REFERENCE BODY       : " + _tgtVes:Body:Name                              at (0, cr()).
+    cr().
+    print "ALTITUDE             : " + round(_tgtVes:Altitude)        + "m     "      at (0, cr()).
+    print "APOAPSIS             : " + round(_tgtVes:Orbit:Apoapsis)  + "m     "      at (0, cr()).
+    print "PERIAPSIS            : " + round(_tgtVes:Orbit:Periapsis) + "m     "      at (0, cr()).
+    cr().
+    print "DISTANCE             : " + round(_tgtVes:Position:Mag)    + "m     "      at (0, cr()).
+    print "PHASE ANGLE          : " + round(kslib_nav_phase_angle(_tgtVes, Ship), 2) at (0, cr()).
 }

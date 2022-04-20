@@ -16,6 +16,7 @@ local tgtEffectiveLAN to choose mod((360 + tgtLaunchLAN) + 90, 360) if tgtInc <=
 
 local tgtLaunchBuffer to 1.0.
 
+local launchNow to false.
 local launchWindow to 0.
 local timeToLAN to 0.
 
@@ -23,6 +24,7 @@ local timeToLAN to 0.
 set timeToLAN to mod((360 + tgtEffectiveLAN - ship:orbit:LAN) * (body:rotationperiod / 360), body:rotationPeriod).
 set launchWindow to time:seconds + timeToLAN.
 OutTee("Waiting for launch window").
+OutInfo("Enter to warp to launch, End to launch now").
 
 until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN - tgtLaunchBuffer, tgtEffectiveLAN + tgtLaunchBuffer)
 {
@@ -31,21 +33,48 @@ until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN - tgtLaunchBuffer, tgtEffect
     if g_termChar = Terminal:Input:Enter
     {
         InitWarp(launchWindow, "Launch Window", 15, true).
-        Terminal:Input:Clear.
     }
+    else if g_termChar = Terminal:Input:Endcursor
+    {
+        set launchNow to true.
+    }
+        
+    // set g_termChar to GetInputChar().
+    // if g_termChar = "" 
+    // {
+    //     OutInfo().
+    // }
+    // else
+    // {
+    //     OutInfo("Current Keypress: " + g_termChar).
+    // }
+
+    // if g_termChar = Terminal:Input:Enter
+    // {
+    //     InitWarp(launchWindow, "Launch Window", 15, true).
+    //     Terminal:Input:Clear.
+    // }
     DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
-    wait 0.01.
+    if launchNow break.
+    wait 0.1.
 }
 if warp > 0 kuniverse:timewarp:cancelwarp.
 wait until kuniverse:timewarp:issettled.
 
-until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN, tgtEffectiveLAN + 10)
+if launchNow
 {
-    DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
-    wait 0.01.
+    OutMsg("Immediate launch mode activated").
 }
-if warp > 0 kuniverse:timewarp:cancelwarp.
-wait until kuniverse:timewarp:issettled.
+else
+{
+    until CheckValRange(ship:orbit:LAN, tgtEffectiveLAN, tgtEffectiveLAN + 10)
+    {
+        DispLaunchWindow(tgtInc, tgtLaunchLAN, tgtEffectiveLAN, launchWindow).
+        wait 0.01.
+    }
+    if warp > 0 kuniverse:timewarp:cancelwarp.
+    wait until kuniverse:timewarp:issettled.
+}
 OutInfo().
 OutInfo2().
 OutTee("Launch is GO!").

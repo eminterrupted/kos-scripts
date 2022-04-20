@@ -6,6 +6,22 @@ runOncePath("0:/lib/disp").
 // *~ Variables ~* //
 //#region
 
+// -- Local
+// #region
+local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
+local deployModules to list(
+    "ModuleAnimateGeneric"
+    ,"USAnimateGeneric"
+    ,"ModuleRTAntenna"
+    ,"ModuleDeployableSolarPanel"
+    ,"ModuleResourceConverter"
+    ,"ModuleGenerator"
+    ,"ModuleDeployablePart"
+    ,"ModuleRoboticServoHinge"
+    ,"ModuleRoboticServoRotor"
+).
+// #endregion
+
 // -- Global
 // #region
 global BodyInfo to lex(
@@ -28,11 +44,6 @@ global ColorLex to lex(
     ,"White", white
     ,"Black", black
 ).
-// #endregion
-
-// -- Local
-// #region
-local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
 global StateFile to dataDisk + "state.json".
 // #endregion
 //#endregion
@@ -594,7 +605,6 @@ global function ToggleBayDoor
 
         if doors = "all" or doors = "secondary"
         {
-            print doors at (2, 25).
             if action = "toggle" 
             {
                 if bayMod:HasEvent(secOpenEvent) eventList:add(secOpenEvent).
@@ -695,88 +705,146 @@ global function SetGrappleHook
     return DoEvent(m, event).
 }
 
-// DeployPartSet :: <parts> | <none>
-// Performs a deployment function on a set of parts 
+// DeployPartList :: parts<list>, action<string> | <none>
+// Performs a deployment action on a provided list of parts
+global function DeployPartList
+{
+    parameter pList,
+              action is "deploy".
+
+    
+}
+
+// CheckPartSet :: setTag<string> | <bool>
+// Checks if parts tagged with the provided setTag are present on the vessel
+// Parts specified by their deployment tag type (i.e., "launch", "payload")
+// Example deployment tag formats: "deploy.launch.0" || "launchDeploy.0"
+global function CheckPartSet
+{
+    parameter setTag is "".
+
+    if setTag = "" 
+    {
+        return false.
+    }
+    else
+    {
+        local regEx to setTag + ".*\.{1}\d+".
+        if ship:partsTaggedPattern(regEx):length > 0 return true.
+    }
+}
+
+// DeployPartSet :: setTag<string>, action<string> | <none>
+// Performs a deployment action on a set of parts
+// Parts specified by their deployment tag type (i.e., "launch", "payload")
+// Example deployment tag formats: "deploy.launch.0" || "launchDeploy.0"
 global function DeployPartSet
 {
     parameter setTag is "", action is "deploy".
     
     local maxDeployStep to 0.
-
-    if setTag = "" 
+    local regEx to setTag + ".*\.{1}\d+".
+    if setTag <> "" 
     {
-        set maxDeployStep to 0.
-    }
-    else 
-    {
-        for p in Ship:PartsTaggedPattern(setTag)
+        for p in Ship:PartsTaggedPattern(regEx)
         {
-            if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
+            // if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
+            local pTag to p:Tag:Split(".").
+            set maxDeployStep to max(pTag[pTag:Length - 1]:ToNumber(0), maxDeployStep).
         }
     }
 
     from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do 
     {
-        local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTagged(setTag + "." + idx).
+        OutInfo("Step: " + idx:ToString).
+        local regEx2 to regEx:Remove(regEx:length - 3, 3) + idx:ToString.
+        local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTaggedPattern(regEx2).
         for p in idxStepList
         {
-            if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Generic and bays
+            for m in p:AllModules
             {
-                if p:name:contains("Shroud") or p:name:contains("Bay") or p:tag:contains("bay") // Bays
+                if deployModules:Contains(m)
                 {
-                    if action = "deploy" ToggleBayDoor(p, "all", "open").
-                    else ToggleBayDoor(p, "all", "close").
+                    DeployPart(p, action).
+                    wait 0.05.
                 }
-                else    // Everything else
-                {
-                    local m to p:getModule("ModuleAnimateGeneric").
-                    DoEvent(m, "deploy").
-                }
-            }
-            
-            if p:hasModule("ModuleRTAntenna")   // RT Antennas
-            {
-                local m to p:getModule("ModuleRTAntenna").
-                if action = "deploy" DoEvent(m, "activate").
-                else DoEvent(m, "retract").
-            }
-
-            if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
-            {
-                local m to p:getModule("ModuleDeployableSolarPanel").
-                if action = "deploy" DoAction(m, "extend solar panel", true).
-                else DoAction(m, "retract solar panel", true).
-            }
-
-            if p:hasModule("ModuleResourceConverter") // Fuel Cells
-            {
-                local m to p:getModule("ModuleResourceConverter").
-                if action = "deploy" DoEvent(m, "start fuel cell").
-                else DoEvent(m, "stop fuel cell").
-            }
-
-            if p:hasModule("ModuleGenerator") // RTGs
-            {
-                local m to p:getModule("ModuleGenerator").
-                if action = "deploy" DoAction(m, "activate generator").
-                else DoAction(m, "shutdown generator").
-            }
-
-            if p:hasModule("ModuleDeployablePart")  // Science parts / misc
-            {
-                local m to p:getModule("ModuleDeployablePart").
-                if action = "deploy" DoEvent(m, "extend").
-                else DoEvent(m, "retract").
-            }
-
-            if p:hasModule("ModuleRoboticServoHinge")
-            {
-                local m to p:getModule("ModuleRoboticServoHinge").
-                DoAction(m, "Toggle Hinge").
             }
         }
-
         wait 1.
+    }
+}
+
+// DeployPart :: <part>, action<string> -> <none>
+// Given a part, performs the specified action on it
+global function DeployPart
+{
+    parameter p, 
+              action is "deploy".
+
+    if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Generic and bays
+    {
+        if p:name:contains("Shroud") or p:name:contains("Bay") or p:tag:contains("bay") // Bays
+        {
+            if action = "deploy" ToggleBayDoor(p, "all", "open").
+            else ToggleBayDoor(p, "all", "close").
+        }
+        else    // Everything else
+        {
+            local m to p:getModule("ModuleAnimateGeneric").
+            DoEvent(m, "deploy").
+        }
+    }
+    
+    if p:hasModule("ModuleRTAntenna")   // RT Antennas
+    {
+        local m to p:getModule("ModuleRTAntenna").
+        if action = "deploy" DoEvent(m, "activate").
+        else DoEvent(m, "retract").
+    }
+
+    if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
+    {
+        local m to p:getModule("ModuleDeployableSolarPanel").
+        if action = "deploy" DoAction(m, "extend solar panel", true).
+        else DoAction(m, "retract solar panel", true).
+    }
+
+    if p:hasModule("ModuleResourceConverter") // Fuel Cells
+    {
+        local m to p:getModule("ModuleResourceConverter").
+        if action = "deploy" DoEvent(m, "start fuel cell").
+        else DoEvent(m, "stop fuel cell").
+    }
+
+    if p:hasModule("ModuleGenerator") // RTGs
+    {
+        local m to p:getModule("ModuleGenerator").
+        if action = "deploy" DoAction(m, "activate generator").
+        else DoAction(m, "shutdown generator").
+    }
+
+    if p:hasModule("ModuleDeployablePart")  // Science parts / misc
+    {
+        local m to p:getModule("ModuleDeployablePart").
+        if action = "deploy" DoEvent(m, "extend").
+        else DoEvent(m, "retract").
+    }
+
+    if p:hasModule("ModuleRoboticServoHinge")
+    {
+        local m to p:getModule("ModuleRoboticServoHinge").
+        if m:getField("locked") m:setField("locked", false). 
+        wait 0.1.
+        DoAction(m, "Toggle Hinge").
+    }
+
+    if p:hasModule("ModuleRoboticServoRotor")
+    {
+        local m to p:getModule("ModuleRoboticServoRotor").
+        if m:getField("locked") m:setField("locked", false). 
+        wait 0.01.
+        if not m:getField("motor") m:setField("motor", true).
+        m:setField("torque limit(%)", 25).
     }
 }
 //#endregion
@@ -842,25 +910,25 @@ global function WarpToAlt
     
     if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.25 set warp to 0.
-        else if ship:altitude < tgtAlt * 2.5 set warp to 1.
-        else if ship:altitude < tgtAlt * 5 set warp to 2.
-        else if ship:altitude < tgtAlt * 10 set warp to 3.
-        else if ship:altitude < tgtAlt * 25 set warp to 4.
-        else if ship:altitude < tgtAlt * 50 set warp to 5.
-        else if ship:altitude < tgtAlt * 75 set warp to 6.
-        else set warp to 7.
+        if ship:altitude <= tgtAlt * 1.015 set warp to 0.
+        else if ship:altitude <= tgtAlt * 1.1 set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
+        else if ship:altitude <= tgtAlt * 2.5 set warp to 3.
+        else if ship:altitude <= tgtAlt * 5 set warp to 4.
+        else if ship:altitude <= tgtAlt * 10 set warp to 5.
+        else if ship:altitude <= tgtAlt * 100 set warp to 6.
+        //else set warp to 7.
     }
     else
     {
-        if ship:altitude >= tgtAlt * 0.95 set warp to 0.
+        if ship:altitude >= tgtAlt * 0.975 set warp to 0.
         else if ship:altitude >= tgtAlt * 0.85 set warp to 1.
         else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
-        else if ship:altitude >= tgtAlt * 0.50 set warp to 3.
-        else if ship:altitude >= tgtAlt * 0.25 set warp to 4.
-        else if ship:altitude >= tgtAlt * 0.10 set warp to 5.
-        else if ship:altitude >= tgtAlt * 0.05 set warp to 6.
-        else set warp to 7.
+        else if ship:altitude >= tgtAlt * 0.625 set warp to 3.
+        else if ship:altitude >= tgtAlt * 0.500 set warp to 4.
+        else if ship:altitude >= tgtAlt * 0.250 set warp to 5.
+        else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
+        //else set warp to 7.
     }
 }
 // #endregion
@@ -868,7 +936,7 @@ global function WarpToAlt
 // -- Vector Math
 // #region
 // Signs the angle between two vectors relative to the velocity of the vessel
-global function signedVAng
+global function SignedVAng
 {
     parameter ves,
               vec1, 
@@ -890,7 +958,7 @@ global function signedVAng
 
 // StepList
 // Helper function for from loop in list sorting. 
-local function stepList
+local function StepList
 {
     parameter c,
               sortDir.

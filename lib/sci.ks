@@ -9,9 +9,12 @@ global function GetSciModules
     for m in ship:modulesNamed("DMModuleScienceAnimate")            sciList:add(m).
     for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
+    for m in ship:modulesNamed("DMSeismicSensor")                   sciList:add(m).
+    for m in ship:modulesNamed("DMSeismicHammer")                   sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
     for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
+    for m in ship:modulesNamed("ModuleSpyExperiment")               sciList:add(m).
     return sciList.
 }
 
@@ -25,6 +28,14 @@ global function DeploySciList
         if m:name:startsWith("US")
         {
             DeployUSSci(m).
+        }
+        else if m:name:startsWith("DM")
+        {
+            DeployDMSci(m).
+        }
+        else if m:name = "ModuleSpyExperiment"
+        {
+            DeploySpySci(m).
         }
         else
         {
@@ -163,6 +174,53 @@ local function DeploySci
     }
 }
 
+local function DeployDMSci
+{
+    parameter m.
+
+    if m:HasData
+    {
+        return false.
+    }
+    else
+    {
+        if m:name = "DMSeismicSensor"
+        {
+            DoAction(m, "Arm Pod").
+            if m:Part:HasModule("ModuleAnchoredDecoupler")
+            {
+                DoEvent(m:Part:GetModule("ModuleAnchoredDecoupler"), "decouple").
+            }
+        }
+        else if m:name = "DMSeismicHammer"
+        {
+            m:toggle.
+            wait 4.
+            DoAction(m, "Arm Hammer").
+            wait 1.
+            DoAction(m, "Collect Seismic Data").
+            wait until m:hasData.
+        }
+        else
+        {
+            m:toggle.
+            wait 1.
+            m:deploy.
+            wait until m:hasData.
+        }
+        if addons:career:available addons:career:closeDialogs.
+    }
+}
+
+local function DeploySpySci
+{
+    parameter m.
+
+    DoAction(m, "scan target").
+    wait 0.1. 
+    if addons:available("Career") addons:career:closeDialogs().
+}
+
 local function DeployUSSci
 {
     parameter m.
@@ -187,6 +245,8 @@ local function DeployUSSci
                 wait 2.
             }
         }
+        wait 0.05. 
+        if addons:available("Career") addons:career:closeDialogs().
     }
 }
 

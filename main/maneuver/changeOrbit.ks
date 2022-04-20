@@ -164,7 +164,8 @@ if mnvTA = -1           set mnvTA       to ReadCache("mnvTA").
 until doneFlag
 {
     if InitRunmode() = 2
-    {
+    {   
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if CheckValRange(dvNeeded[0], -1, 1)
         {
             OutMsg("Skipping Transfer Burn").
@@ -188,6 +189,7 @@ until doneFlag
 
     else if InitRunmode() = 4
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if not hasNode 
         {
             SetRunmode(2).
@@ -218,6 +220,7 @@ until doneFlag
     // Arrival burn
     else if InitRunmode() = 6
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if CheckValRange(dvNeeded[1], -0.2, 0.2)
         {
             outMsg("Skipping arrival burn").
@@ -241,6 +244,7 @@ until doneFlag
 
     else if InitRunmode() = 8
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if not hasNode
         {
             SetRunmode(6).
@@ -262,6 +266,7 @@ until doneFlag
 
     else if InitRunmode() = 10
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         set doneFlag to true.
     }
 }

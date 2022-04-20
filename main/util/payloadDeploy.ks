@@ -10,7 +10,6 @@ runOncePath("0:/lib/vessel").
 DispMain(scriptPath()).
 
 local autoStage to true.
-local deployType to "payloadDeploy".
 local payloadStage to 0.
 
 if ship:rootPart:tag:split("|"):length > 1 
@@ -21,8 +20,7 @@ if ship:rootPart:tag:split("|"):length > 1
 if params:length > 0
 {
     set autoStage to params[0].
-    if params:length > 1 set deployType to params[1].
-    if params:length > 2 set payloadStage to params[2].
+    if params:length > 1 set payloadStage to params[1].
 }
 
 lock steering to ship:facing.
@@ -46,17 +44,7 @@ else
     wait 0.25.
 }
 
-local partsToDeploy to ship:partstaggedpattern(deployType + ".*").
-if partsToDeploy:length > 0
-{
-    OutMsg("Deploying parts tagged: " + deployType).
-    DeployPartSet(deployType, "deploy").
-}
 OutInfo().
-
-// When called with no param, it deploys the untagged parts
-OutMsg("Deploying untagged parts").
-DeployPartSet().
 
 wait 1. 
 OutInfo().

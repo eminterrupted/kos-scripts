@@ -43,65 +43,83 @@ global function GetSteeringDir
 {
     parameter orientation.
 
-    if orientation = "pro-sun"
-    {
-        return lookDirUp(ship:prograde:vector, Sun:Position).
-    }
-    else if orientation = "retro-sun"
-    {
-        return lookDirUp(Ship:Retrograde:Vector, Sun:Position).
-    }
-    else if orientation = "facing-sun"
-    {
-        return lookDirUp(ship:facing:vector, Sun:Position).
-    }
-    else if orientation = "pro-body"
-    {
-        return lookDirUp(ship:prograde:vector, body:position).
-    }
-    else if orientation = "pro-radOut"
-    {
-        return lookDirUp(ship:prograde:vector, -body:position).
-    }
-    else if orientation = "body-pro"
-    {
-        return lookDirUp(body:position, ship:prograde:vector).
-    }
-    else if orientation = "body-sun"
-    {
-        return lookDirUp(body:position, Sun:Position).
-    }
-    else if orientation = "sun-pro" 
-    {
-        return lookDirUp(Sun:Position, ship:prograde:vector).
-    }
-    else if orientation = "target-sun"
-    {
-        return lookDirUp(target:position, Sun:Position).
-    }
-    else if orientation = "home-sun"
-    {
-        return lookDirUp(kerbin:position, Sun:Position).
-    }
-    else if orientation = "radOut-sun"
-    {
-        return lookDirUp(-body:position, Sun:Position).
-    }
-    else if orientation = "srfRetro-sun"
-    {
-        return lookDirUp(Ship:SrfRetrograde:Vector, Sun:Position).
-    }
-    else
-    {
-        return ship:facing.
-    }
+    local dirLookup to lex(
+        "pro",          Ship:Prograde:Vector
+        ,"sun",         Sun:Position
+        ,"retro",       Ship:Retrograde:Vector
+        ,"facing",      Ship:Facing:Vector
+        ,"body",        Body:Position
+        ,"radOut",      -Body:Position
+        ,"home",        Body("Kerbin"):Position
+        ,"srfRetro",    Ship:SrfRetrograde:Vector
+        ,"up",          vcrs(ship:body:position - ship:position, ship:velocity:orbit):normalized
+    ).
+    if HasTarget set dirLookup["target"] to Target:Position.
+    return lookDirUp(dirLookup[orientation:split("-")[0]], dirLookup[orientation:split("-")[1]]).
+
+    // if orientation = "pro-sun"
+    // {
+    //     return lookDirUp(Ship:Prograde:Vector, Sun:Position).
+    // }
+    // else if orientation = "retro-sun"
+    // {
+    //     return lookDirUp(Ship:Retrograde:Vector, Sun:Position).
+    // }
+    // else if orientation = "facing-sun"
+    // {
+    //     return lookDirUp(Ship:facing:vector, Sun:Position).
+    // }
+    // else if orientation = "pro-body"
+    // {
+    //     return lookDirUp(Ship:Prograde:Vector, Body:Position).
+    // }
+    // else if orientation = "pro-radOut"
+    // {
+    //     return lookDirUp(Ship:Prograde:Vector, -Body:Position).
+    // }
+    // else if orientation = "body-pro"
+    // {
+    //     return lookDirUp(Body:Position, Ship:Prograde:Vector).
+    // }
+    // else if orientation = "body-sun"
+    // {
+    //     return lookDirUp(Body:Position, Sun:Position).
+    // }
+    // else if orientation = "sun-pro" 
+    // {
+    //     return lookDirUp(Sun:Position, Ship:Prograde:Vector).
+    // }
+    // else if orientation = "target-sun"
+    // {
+    //     return lookDirUp(target:Position, Sun:Position).
+    // }
+    // else if orientation = "home-sun"
+    // {
+    //     return lookDirUp(Body("Kerbin"):Position, Sun:Position).
+    // }
+    // else if orientation = "radOut-sun"
+    // {
+    //     return lookDirUp(-Body:Position, Sun:Position).
+    // }
+    // else if orientation = "srfRetro-sun"
+    // {
+    //     return lookDirUp(Ship:SrfRetrograde:Vector, Sun:Position).
+    // }
+    // else
+    // {
+    //     return Ship:facing.
+    // }
 }
 
 global function SrfRetroSafe 
 {
-    if Ship:VerticalSpeed < 0 
+    if Ship:Bounds:BottomAltRadar > 100 
     {
-        return list(GetSteeringDir("srfRetro-sun"), "srfRetro_Locked").
+        return list(GetSteeringDir("srfRetro-radOut"), "srfRetro_Locked1").
+    }
+    else if Ship:VerticalSpeed < 0 
+    {
+        return list(GetSteeringDir("srfRetro-radOut"), "srfRetro_Locked2").
     }
     else
     {
@@ -111,7 +129,7 @@ global function SrfRetroSafe
 
 // global function GetRollDegrees
 // {
-//     local rollAng to ship:facing:roll - ship:prograde:roll.
+//     local rollAng to Ship:facing:roll - Ship:prograde:roll.
 // }
 // #endregion
 
@@ -129,9 +147,9 @@ global function GetECDraw
 
     if checkType = "sample" 
     {
-        set charge to ship:resources:ec.
+        set charge to Ship:Resources:EC.
         wait 1.
-        set draw to charge - ship:resources:ec.
+        set draw to charge - Ship:Resources:EC.
     }
 
     print draw.
@@ -160,35 +178,35 @@ global function StageMass
     local engResUsed to list().
     for eng in stgEngs
     {
-        for k in eng:consumedResources:keys 
+        for k in eng:ConsumedResources:Keys 
         {
-            if not engResUsed:contains(k) engResUsed:add(k:replace(" ", "")).
+            if not engResUsed:Contains(k) engResUsed:Add(k:replace(" ", "")).
         }
     }
 
-    for p in ship:parts
+    for p in Ship:parts
     {
         if p:typeName = "Decoupler" 
         {
-            if p:stage <= stg set stgShipMass to stgShipMass + p:mass.
-            if p:stage = stg set stgMass to stgMass + p:mass.
+            if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
+            if p:Stage = stg set stgMass to stgMass + p:Mass.
         }
-        else if p:decoupledIn <= stg
+        else if p:DecoupledIn <= stg
         {
-            set stgShipMass to stgShipMass + p:mass.
-            if p:decoupledIn = stg 
+            set stgShipMass to stgShipMass + p:Mass.
+            if p:DecoupledIn = stg 
             {
-                set stgMass to stgMass + p:mass.
+                set stgMass to stgMass + p:Mass.
             }
         }
 
-        if p:decoupledIn = stg - 1 and p:resources:length > 0 
+        if p:DecoupledIn = stg - 1 and p:Resources:Length > 0 
         {
-            for res in p:resources
+            for res in p:Resources
             {
-                if engResUsed:contains(res:name) 
+                if engResUsed:Contains(res:Name) 
                 {
-                    // print "Calculating: " + res:name.
+                    // print "Calculating: " + res:Name.
                     set stgFuelMass to stgFuelMass + (res:amount * res:density).
                 }
             }
@@ -217,11 +235,11 @@ global function GetEngines
         {
             if includeSep
             {
-                if eng:ignition and not eng:flameout engList:add(eng).
+                if eng:Ignition and not eng:FlameOut engList:Add(eng).
             }
-            else if not sepList:contains(eng) or eng:tag = ""
+            else if not sepList:Contains(eng) or eng:Tag = ""
             {
-                if eng:ignition and not eng:flameout engList:add(eng).
+                if eng:Ignition and not eng:FlameOut engList:Add(eng).
             }
         }
     }
@@ -231,11 +249,11 @@ global function GetEngines
         {
             if includeSep
             {
-                if not eng:ignition engList:add(eng).
+                if not eng:Ignition engList:Add(eng).
             }
-            else if not sepList:contains(eng) or eng:tag = ""
+            else if not sepList:Contains(eng) or eng:Tag = ""
             {
-                if not eng:ignition engList:add(eng).
+                if not eng:Ignition engList:Add(eng).
             }
         }
     }
@@ -245,9 +263,9 @@ global function GetEngines
         {
             for eng in engs
             {
-                if not sepList:contains(eng) or eng:tag = ""
+                if not sepList:Contains(eng) or eng:Tag = ""
                 {
-                    engList:add(eng).
+                    engList:Add(eng).
                 }
             }
         }
@@ -269,15 +287,15 @@ global function GetEnginesByStage
 
     for eng in engList
     {
-        if eng:stage = stg
+        if eng:Stage = stg
         {
             if not includeSep
             {
-                if not sepList:contains(eng:name) stgEngs:add(eng).
+                if not sepList:Contains(eng:Name) stgEngs:Add(eng).
             }
             else
             {
-                stgEngs:add(eng).
+                stgEngs:Add(eng).
             }
         }
     }
@@ -297,24 +315,24 @@ global function GetStageThrust
 
     for eng in engList
     {
-        if eng:stage = stg
+        if eng:Stage = stg
         {
             if not includeSep
             {
-                if not sepList:contains(eng:name)
+                if not sepList:Contains(eng:Name)
                 {
-                    if thrType = "curr"         set stgThr to stgThr + eng:thrust.
-                    else if thrType = "max"     set stgThr to stgThr + eng:maxThrust.
-                    else if thrType = "avail"   set stgThr to stgThr + eng:availableThrust.
-                    else if thrType = "poss"    set stgThr to stgThr + eng:possibleThrust.
+                    if thrType = "curr"         set stgThr to stgThr + eng:Thrust.
+                    else if thrType = "max"     set stgThr to stgThr + eng:MaxThrust.
+                    else if thrType = "avail"   set stgThr to stgThr + eng:AvailableThrust.
+                    else if thrType = "poss"    set stgThr to stgThr + eng:PossibleThrust.
                 }
             }
             else
             {
-                if thrType = "curr"         set stgThr to stgThr + eng:thrust.
-                else if thrType = "max"     set stgThr to stgThr + eng:maxThrust.
-                else if thrType = "avail"   set stgThr to stgThr + eng:availableThrust.
-                else if thrType = "poss"    set stgThr to stgThr + eng:possibleThrust.
+                if thrType = "curr"         set stgThr to stgThr + eng:Thrust.
+                else if thrType = "max"     set stgThr to stgThr + eng:MaxThrust.
+                else if thrType = "avail"   set stgThr to stgThr + eng:AvailableThrust.
+                else if thrType = "poss"    set stgThr to stgThr + eng:PossibleThrust.
             }
         }
     }
@@ -330,23 +348,23 @@ global function GetTotalThrust
 
     local totThr to 0.
 
-    if engList:length > 0
+    if engList:Length > 0
     {
         if thrType = "curr"
         {
-            for eng in engList set totThr to totThr + eng:thrust.
+            for eng in engList set totThr to totThr + eng:Thrust.
         }
         else if thrType = "max" 
         {
-            for eng in engList set totThr to totThr + eng:maxThrust.
+            for eng in engList set totThr to totThr + eng:MaxThrust.
         }
         else if thrType = "avail" 
         {
-            for eng in engList set totThr to totThr + eng:availableThrust.
+            for eng in engList set totThr to totThr + eng:AvailableThrust.
         }
         else if thrType = "poss"
         {
-            for eng in engList set totThr to totThr + eng:possibleThrust.
+            for eng in engList set totThr to totThr + eng:PossibleThrust.
         }
         return totThr.
     }
@@ -381,17 +399,17 @@ global function GetTotalIsp
 
     local engIsp to { 
         parameter eng. 
-        if mode = "vac" return eng:visp.
-        if mode = "sl" return eng:slisp.
-        if mode = "cur" return eng:ispAt(body:atm:altitudePressure(ship:altitude)).
+        if mode = "vac" return eng:VISP.
+        if mode = "sl" return eng:SLISP.
+        if mode = "cur" return eng:ispAt(body:ATM:AltitudePressure(Ship:Altitude)).
     }.
 
-    if engList:length > 0 
+    if engList:Length > 0 
     {
         for eng in engList
         {
-            set totThr to totThr + eng:possibleThrust.
-            set relThr to relThr + (eng:possibleThrust / engIsp(eng)).
+            set totThr to totThr + eng:PossibleThrust.
+            set relThr to relThr + (eng:PossibleThrust / engIsp(eng)).
         }
 
         // clrDisp(30).
@@ -421,7 +439,7 @@ global function GetExhVel
 {
     parameter engList, mode is "vac".
 
-    return constant:g0 * GetTotalIsp(engList, mode).
+    return Constant:g0 * GetTotalIsp(engList, mode).
 }
 // #endregion
 
@@ -433,7 +451,7 @@ global function GetExhVel
 global function GetLocalGravityOnVessel
 {
     parameter _ves is ship,
-              _body is ship:body.
+              _body is Ship:body.
 
     return (Constant:G * _body:Mass) / (_ves:Body:Radius + _ves:Altitude)^2.
 }
@@ -446,18 +464,30 @@ global function GetLocalGravityOnVessel
 // Creates a trigger for staging, with optional param to unregister at a stage number
 global function ArmAutoStaging
 {
-    parameter stopAtStg is 0.
+    parameter stopAtStg is -1.
     
-    when ship:availablethrust <= 0.01 and throttle > 0 then
+    if stopAtStg = -1 
+    {
+        if Core:Tag:Split("|"):Length > 0 set stopAtStg to Core:Tag:Split("|")[1]:ToNumber(0).
+    }
+    else
+    {
+        set stopAtStg to 0.
+    }
+
+    when Ship:Availablethrust <= 0.01 and throttle > 0 then
     {
         OutInfo2("Staging:" + Stage:Number).
-        local startTime to time:seconds.
+        local startTime to Time:Seconds.
         SafeStage().
+        local endTime to Time:Seconds.
+        local stgTime to endTime - startTime.
+        set g_stagingTime to g_stagingTime + stgTime.
         wait 0.25.
-        local endTime to time:seconds.
-        OutInfo2("Staging time: " + round(endTime - startTime, 2)).
+        OutInfo2("Staging time: " + round(g_stagingTime, 2)).
+        if Ship:Availablethrust >= 0.01 set g_stagingTime to 0.
         //set g_MECO to g_MECO + (endTime - startTime).
-        if stage:number > stopAtStg preserve.
+        if Stage:Number > stopAtStg preserve.
     }
 }
 
@@ -471,7 +501,7 @@ global function SafeStage
     wait 0.5. 
     until false
     {
-        until stage:ready
+        until Stage:Ready
         {
             wait 0.05.
         }
@@ -479,14 +509,14 @@ global function SafeStage
         break.
     }
     // Check for special conditions
-    local engList to GetEnginesByStage(stage:number, true).
-    if engList:length > 0
+    local engList to GetEnginesByStage(Stage:Number, true).
+    if engList:Length > 0
     {
-        if ship:availableThrust > 0
+        if Ship:AvailableThrust > 0
         {
             for eng in engList
             {
-                if not sepList:contains(eng:name)
+                if not sepList:Contains(eng:Name)
                 {
                     set onlySep to false.
                 }
@@ -497,26 +527,77 @@ global function SafeStage
                 until false
                 {
                     wait 0.50.
-                    if stage:ready break.
+                    if Stage:Ready break.
                 }
                 stage.
             }
         }
         wait 0.25.
 
-        if engList:length > 0 
+        if engList:Length > 0 
         {
             for eng in engList
             {
                 if eng:hasModule("ModuleDeployableEngine") 
                 {
-                    wait until eng:thrust > 0.
+                    wait until eng:Thrust > 0.
                 }
             }
         }
     }
 }
 // #endregion
+
+// -- Fairings
+// #region
+
+// 🎅 Seasons Yeetings Fairings 🎄--
+// ArmFairingJettison :: <string>, <scalar>, <string> -> <none>
+// Arms fairings that are tagged 
+global function ArmFairingJettison
+{
+    parameter mode is "alt+", 
+              jettisonAlt is body:atm:height - 10000,
+              deployTag is "".
+
+    if deployTag:length > 0
+    {
+        set deployTag to "fairing." + deployTag.
+    }
+
+    if (ship:modulesnamed("ModuleProceduralFairing"):length > 0)
+    {
+        if mode = "alt+"
+        {
+            when ship:altitude >= jettisonAlt then
+            {
+                for module in ship:modulesnamed("ModuleProceduralFairing")
+                {
+                    if module:part:tag = deployTag
+                    {
+                        module:doevent("deploy").
+                        wait 0.05.
+                    }
+                }
+            }
+        }
+        else if mode = "alt-"
+        {
+            when ship:altitude <= jettisonAlt then
+            {
+                for module in ship:modulesnamed("ModuleProceduralFairing")
+                {
+                    if module:part:tag = deployTag
+                    {
+                        module:doevent("deploy").
+                        wait 0.05.
+                    }
+                }
+            }
+        }
+        // TODO - Deployment based on atmo pressure
+    }
+}
 
 // -- Drop tanks
 // #region
@@ -529,10 +610,10 @@ global function ArmDropTanks
 {
     parameter tankSet to "dropTanks".
 
-    local tankDecouplers to ship:partsTaggedPattern(tankSet + ".*").
+    local tankDecouplers to Ship:PartsTaggedPattern(tankSet + ".*").
     local tankLex to lex().
 
-    if tankDecouplers:length > 0 
+    if tankDecouplers:Length > 0 
     {
         // Setup tankLex, which contains decouplers in lists ordered by idx key
         for p in tankDecouplers
@@ -543,7 +624,7 @@ global function ArmDropTanks
                 local pIdx to p:Tag:Split(".")[1].
                 if tankLex:HasKey(pIdx)
                 {
-                    tankLex[pIdx]:add(p).
+                    tankLex[pIdx]:Add(p).
                 }
                 else 
                 {
@@ -569,14 +650,14 @@ global function ArmDropTanks
                     {
                         // Are there any separation motors that are child parts of the decoupler?
                         // If so, activate them. This is to ensure clean separation of heavy tanks.
-                        if dc:partsDubbedPattern("sep"):length > 0 
+                        if dc:PartsDubbedPattern("sep"):Length > 0 
                         {
-                            for sep in dc:partsDubbedPattern("sep") sep:activate.
+                            for sep in dc:PartsDubbedPattern("sep") sep:activate.
                         }
                         // Get the correct decoupler module
-                        local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                        local m to choose "ModuleDecouple" if dc:ModulesNamed("ModuleDecoupler"):Length > 0 else "ModuleAnchoredDecoupler".
                         // Decouple
-                        if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
+                        if dc:modules:Contains(m) DoEvent(dc:GetModule(m), "decouple").
                     }
                     OutInfo("Drop tanks [idx:" + dtIdx + "] detached").
                     wait 1.
@@ -602,36 +683,60 @@ global function GetBoosters
     parameter stopAtStg is 0.
 
     local boosterLex to lex().
-    local boosterList to ship:partsTaggedPattern("booster.").
+    local boosterList to Ship:PartsTaggedPattern("booster.").
 
     // Did we find any boosters?
-    if boosterList:length > 0
+    if boosterList:Length > 0
     {
         for p in boosterList
         {
             // Stage check - makes sure that boosters being assigned to the lexicon 
             // are within the stages we want
-            if p:stage >= stopAtStg
+            if p:Stage >= stopAtStg
             {
                 local pIdx to -1.
                 local pAct to "".
 
-                // Parse the tag
-                local tagParts to p:tag:split(".").
-                if tagParts:length > 1 set pIdx to p:tag:split(".")[1]:tonumber(-1).
-                if tagParts:length > 2 set pAct to p:tag:split(".")[2].
+                // Parse the tag.
+                // [0]   - Identifies it as a booster
+                // [1]   - Identifies the booster separation group number (0 = first)
+                // <[2]> - Potential action. Currently only 'as'/'airstart' are supported
+                local tagParts to p:Tag:Split(".").
+                if tagParts:Length > 1 set pIdx to p:Tag:Split(".")[1]:ToNumber(-1).
+                if tagParts:Length > 2 set pAct to p:Tag:Split(".")[2].
 
                 // Since booster tags are applied to decouplers and not the tanks / SRBs themselves,
                 // check that the part is a decoupler and that it has a valid idx in the tag
-                if pIdx > -1 and p:istype("decoupler")
+                if pIdx > -1 and p:IsType("decoupler")
                 {
-                    if boosterLex:hasKey(pIdx) 
+                    if boosterLex:HasKey(pIdx) 
                     {
-                        boosterLex[pIdx]:add(p).
+                        boosterLex[pIdx]:Add(p).
                     }
                     else
                     {
                         set boosterLex[pIdx] to list(p).
+                    }
+                }
+
+                // Look for any boosters with airstart actions
+                if pAct = "as" or pAct = "airstart" and p:IsType("engine")
+                {
+                    // Add it to the object under "airstart"
+                    if boosterLex:HasKey("airstart")
+                    {
+                        if boosterLex["airstart"]:HasKey(pIdx) 
+                        {
+                            boosterLex["airstart"][pIdx]:Add(p).
+                        }
+                        else
+                        {
+                            set boosterLex["airstart"][pIdx] to list(p).
+                        }
+                    }
+                    else
+                    {
+                        set boosterLex["airstart"] to lex(pIdx, list(p)).
                     }
                 }
             }

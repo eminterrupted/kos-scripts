@@ -147,6 +147,9 @@ function kslib_nav_ang_to_rel_desc_node {
 // Orbital phase angle with assumed target
 // Positive when you are behind the target, negative when ahead
 function kslib_nav_phase_angle {
+    parameter tgtVes,
+              thisVes is Ship.
+
     local common_ancestor is 0.
     local my_ancestors is list().
     local your_ancestors is list().

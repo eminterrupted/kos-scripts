@@ -40,7 +40,7 @@ global function ArmBoosterSeparation
                     wait 1.
                     OutInfo().
 
-                    // Check the boosterLex to see if there are any motors in the stage to airstart
+                    // Check the boosterLex to see if there are any motors in the stage to airstart after previous booster separation
                     // Start them if yes
                     if boosterLex:hasKey("airstart")
                     {
@@ -130,7 +130,7 @@ global function LaunchCountdown
 
     if ship:status = "PRELAUNCH" 
     {
-        IgnitionSequenceStart(launchTime).
+        if LfoEngineCheck() IgnitionSequenceStart(launchTime).
         set tVal to 1.
     }
     OutInfo2().
@@ -144,6 +144,19 @@ global function LaunchCountdown
         wait 0.01.
     }
     unlock countdown.
+}
+
+// Checks if boost stage is a LFO or SRB stage
+local function LfoEngineCheck
+{
+    for eng in GetEnginesByStage(stage:number - 1)
+    {
+        if not (eng:ConsumedResources:Keys:Contains("Solid Fuel"))
+        {
+            return true.
+        } 
+    }
+    return false.
 }
 
 // Engine startup sequence
@@ -403,25 +416,6 @@ global function RetractSoyuzFuelArm
             for m in p:modulesNamed("ModuleAnimateGenericExtra")
             {
                 DoEvent(m, "retract arm").
-            }
-        }
-    }
-}
-
-// 🎅 Seasons Yeetings Fairings 🎄--
-global function ArmFairingJettison
-{
-    if (ship:modulesnamed("ModuleProceduralFairing"):length > 0)
-    {
-        when ship:altitude >= body:atm:height then
-        {
-            for module in ship:modulesnamed("ModuleProceduralFairing")
-            {
-                if module:part:tag = ""
-                {
-                    module:doevent("deploy").
-                    wait 0.05.
-                }
             }
         }
     }

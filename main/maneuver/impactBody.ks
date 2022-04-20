@@ -11,14 +11,8 @@ runOncePath("0:/lib/vessel").
 
 DispMain(ScriptPath(), false).
 
-local orientation       to "retro-body".
+local orientation       to "retro-radOut".
 local srfDir            to "".
-local tgtSrfSpd         to 0.
-local tgtVertSpd        to 0.
-
-local aSrfSpeed         to list(  300,  225,  150,  125,  100,  75,  50,  25,  10,  7.5,  5,  2,  1).
-local aVertSpd          to list( -150, -125, -100,  -75,  -65, -55, -40, -20, -10, -7.5, -5, -2, -1).
-local aDescentAlt       to list(10000, 7500, 5000, 2500, 1250, 750, 500, 250, 100,   75, 10,  3,  0).
 
 // Vars for logging. Will log start values and resulting distance to waypoint after touchdown.
 local logPath       to Path("0:/data/landingResults/minmus/_distResults.csv").
@@ -27,8 +21,6 @@ local startDist     to 0.
 local startRadarAlt to 0.
 local startTWR      to 0.
 local wp to "".
-
-//local topDir to choose "body" if Ship:Crew():Length > 0 else "sun".
 
 // Parse the params
 if params:Length > 0

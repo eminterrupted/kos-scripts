@@ -5,7 +5,7 @@
 		}
 	],
 	"settings": {
-		"editor.fontFamily": "Cascadia Code",
+		"editor.fontFamily": "Cascadia Cove, CaskaydiaCove Nerd Font",
 		"files.autoSave": "afterDelay",
 		"files.autoSaveDelay": 600000,
 		"files.trimFinalNewlines": true,

@@ -113,3 +113,16 @@ ag9 off.
 deletePath("1:/lp.json").
 
 OutMsg("Launch complete").
+
+wait 1.
+
+if CheckPartSet("launch")
+{
+    OutMsg("Deploying 'launch' partSet").
+    DeployPartSet("launch").
+}
+
+OutMsg("Deploying untagged partSet").
+DeployPartSet().
+
+OutMsg("Deployment complete").
