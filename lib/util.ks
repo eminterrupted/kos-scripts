@@ -26,9 +26,9 @@ local deployModules to list(
 // #region
 global BodyInfo to lex(
     "altForSci", lex(
-        "Kerbin", 250000,
-        "Mun", 60000,
-        "Minmus", 30000
+        "Kerbin", 625000,
+        "Mun", 150000,
+        "Minmus", 75000
     )
 ).
 
@@ -705,16 +705,6 @@ global function SetGrappleHook
     return DoEvent(m, event).
 }
 
-// DeployPartList :: parts<list>, action<string> | <none>
-// Performs a deployment action on a provided list of parts
-global function DeployPartList
-{
-    parameter pList,
-              action is "deploy".
-
-    
-}
-
 // CheckPartSet :: setTag<string> | <bool>
 // Checks if parts tagged with the provided setTag are present on the vessel
 // Parts specified by their deployment tag type (i.e., "launch", "payload")
@@ -731,6 +721,20 @@ global function CheckPartSet
     {
         local regEx to setTag + ".*\.{1}\d+".
         if ship:partsTaggedPattern(regEx):length > 0 return true.
+    }
+}
+
+// DeployParts :: partList<list>, action<string> | <none>
+// Performs a deployment action on a set of parts
+// Parts are provided as a list
+global function DeployPartList
+{
+    parameter partsToDeploy is list().
+
+    if partsToDeploy:length = 0
+    {
+        OutMsg("DeployPartList: No parts provided!").
+        
     }
 }
 
@@ -915,8 +919,9 @@ global function WarpToAlt
         else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
         else if ship:altitude <= tgtAlt * 2.5 set warp to 3.
         else if ship:altitude <= tgtAlt * 5 set warp to 4.
-        else if ship:altitude <= tgtAlt * 10 set warp to 5.
-        else if ship:altitude <= tgtAlt * 100 set warp to 6.
+        else if ship:altitude <= tgtAlt * 25 set warp to 5.
+        else set warp to 6.
+        //else if ship:altitude <= tgtAlt * 100 set warp to 6.
         //else set warp to 7.
     }
     else
@@ -927,7 +932,8 @@ global function WarpToAlt
         else if ship:altitude >= tgtAlt * 0.625 set warp to 3.
         else if ship:altitude >= tgtAlt * 0.500 set warp to 4.
         else if ship:altitude >= tgtAlt * 0.250 set warp to 5.
-        else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
+        else set warp to 6.
+        //else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
         //else set warp to 7.
     }
 }

@@ -11,9 +11,9 @@ DispMain(scriptPath()).
 
 // Declare params
 local payloadStage to 0.
-local deployParts to false.
-local deployType to "".
-
+local deployParts to true.
+local deployType to "payload".
+local rcsOn to false.
 
 if ship:rootPart:tag:split("|"):length > 1 
 {
@@ -23,10 +23,24 @@ if ship:rootPart:tag:split("|"):length > 1
 if params:length > 0
 {
     set payloadStage to params[0].
-    if params:length > 1 set deployType to params[1].
+    if params:length > 1 set deployParts to params[1].
+    if params:length > 2 set deployType to params[2].
+    if params:length > 3 set rcsOn to params[3].
 }
 
 if deployType:length > 0 set deployParts to true.
+if rcsOn 
+{
+    for m in ship:ModulesNamed("ModuleRCSFX")
+    {
+        m:SetField("rcs", true).
+    }
+    rcs on.
+}
+else
+{
+    rcs off.
+}
 
 lock steering to ship:facing.
 

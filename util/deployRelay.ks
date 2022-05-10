@@ -9,6 +9,9 @@ local setupScript to path("0:/_plan/relay/setup_deployed.ks").
 local stageTag to stage:number.
 local variantTag to "".
 
+set Ship:Type to "Relay".
+Core:Part:ControlFrom().
+
 OutMsg("Parsing core tag: " + core:tag).
 if core:tag:split(":"):length > 2 
 {
@@ -54,13 +57,13 @@ OutInfo().
 OutInfo2().
 OutMsg("Core tag parsed: " + core:tag).
 
-copyPath("0:/boot/_bl.ks", "/boot/_bl.ks").
+copyPath("0:/boot/_bl_test.ks", "/boot/_bl.ks").
 set core:bootfilename to "/boot/_bl.ks".
 runPath(setupScript).
 
-for p in ship:partsTagged("doNotDeploy") set p:tag to "".
+//for p in ship:partsTagged("doNotDeploy") set p:tag to "".
 
-set ship:name to ship:name:replace(" probe", "") + variantTag.
-writeJson(list(ship:name), "vessel.json").
+set ship:name to ship:name:replace(" probe", ""):replace(variantTag,"") + variantTag.
+writeJson(ship:name, "vessel.json").
 
 reboot.

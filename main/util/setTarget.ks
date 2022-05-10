@@ -9,7 +9,7 @@ RunOncePath("0:/lib/vessel").
 
 DispMain(ScriptPath()).
 
-set tgt to GetOrbitable(tgt).
+set tgt to GetOrbitable("Moho").
 
 OutMsg("Setting target: " + tgt:name).
 Set Target to tgt.

@@ -9,35 +9,32 @@ runOncePath("0:/lib/vessel").
 
 DispMain(scriptPath()).
 
-local deployList to list().
-local deployStr to "".
-local partsToDeploy to list().
+local deploySet to "".
+local deployType to "deploy".
 
 if params:length > 0
 {
-    set deployList to params[0].
+    set deploySet to params[0].
+    if params:length > 1 set deployType to params[1].
 }
 
 lock steering to ship:facing.
 
-for deployType in deployList
+if deploySet = "" 
 {
-    if deployType = "" 
+    // When called with no param, it deploys the untagged parts
+    OutMsg("Deploying untagged parts").
+    DeployPartSet().
+}
+else
+{
+    local regEx to deploySet + ".*\.{1}\d+".
+    if Ship:PartsTaggedPattern(regEx):Length > 0
     {
-        // When called with no param, it deploys the untagged parts
-        OutMsg("Deploying untagged parts").
-        DeployPartSet().
+        OutMsg("Deploying '" + deploySet + "' partSet").
+        DeployPartSet(deploySet, deployType).
     }
-    else
-    {
-        local regEx to deployType + ".*\.{1}\d+".
-        if Ship:PartsTaggedPattern(regEx):Length > 0
-        {
-            OutMsg("Deploying '" + deployType + "' partSet").
-            DeployPartSet(deployType, "deploy").
-        }
-        OutInfo().
-    }
+    OutInfo().
 }
 
 wait 1. 

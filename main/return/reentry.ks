@@ -11,9 +11,9 @@ DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
 local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
-local reentryTgt to (ship:body:atm:height * 0.45).
+local reentryTgt to (ship:body:atm:height * 0.425).
 local retroFire to false.
-local retroStage to 4.
+local retroStage to payloadStage.
 local spinStab to false.
 local stagingAlt to ship:body:atm:height + 25000.
 local ts to time:seconds.
@@ -39,9 +39,9 @@ if params:length > 0
 }
 local startAlt to stagingAlt + 10000.
 
-OutMsg("Press Enter to warp to Ap, Home to warp to Pe").
-OutInfo("Press Down to wait until descent, Up to wait until ascent").
-OutInfo2("Press End to begin reentry procedures now").
+OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
+OutInfo("Down: Wait until descent | Up: Wait until ascent").
+OutInfo2("End: Begin reentry procedures now | PageDown: Skip reentry burn").
 local mode to "".
 local doneFlag to false.
 
@@ -50,6 +50,7 @@ until doneFlag
     local charToCheck to GetInputChar().
     if charToCheck <> ""
     {
+        OutInfo2("retroFire: " + retroFire).
         if charToCheck = terminal:input:enter
         {
             InitWarp(time:seconds + eta:apoapsis, "apoapsis").
@@ -74,6 +75,11 @@ until doneFlag
             OutInfo("Immediate reentry procedure mode").
             OutInfo2().
             wait 0.5.
+        }
+        else if charToCheck = terminal:input:PageDownCursor
+        {
+            set retroFire to false.
+            OutInfo2("retroFire: " + retroFire).
         }
     }
     if mode = "descent" 

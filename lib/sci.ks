@@ -1,4 +1,11 @@
+@lazyGlobal off. 
+
 // Science library
+
+// Dependencies
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/util").
+
 
 // Functions 
 // Modules
@@ -27,18 +34,22 @@ global function DeploySciList
     {
         if m:name:startsWith("US")
         {
+            OutTee("Running US science experiment for: " + m:part:title + " (" + m:name + ")").
             DeployUSSci(m).
         }
         else if m:name:startsWith("DM")
         {
+            OutTee("Running DM science experiment for: " + m:part:title + " (" + m:name + ")").
             DeployDMSci(m).
         }
         else if m:name = "ModuleSpyExperiment"
         {
+            OutTee("Running Spy Experiment for: " + m:part:title + " (" + m:name + ")").
             DeploySpySci(m).
         }
         else
         {
+            OutTee("Running generic science experiment for: " + m:part:title + " (" + m:name + ")").
             DeploySci(m).
         }
     }
@@ -69,7 +80,15 @@ global function RecoverSciList
                             set transmitFlag to true.
                         }
                     }
-                    TransmitSci(m).
+                    OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
+                    if TransmitSci(m) 
+                    {
+                        OutTee("Transmission successful!").
+                    }
+                    else 
+                    {
+                        OutTee("Transmission failed!", 0, 2).
+                    }
                 }
                 else if mode = "ideal"
                 {
@@ -86,20 +105,34 @@ global function RecoverSciList
                         //         set transmitFlag to true.
                         //     }
                         // }
-                        TransmitSci(m).
+                        OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
+                        if TransmitSci(m)
+                        {
+                            OutTee("Transmission successful!").
+                        }
+                        else 
+                        {
+                            OutTee("Transmission failed!", 0, 2).
+                        }
                     }
                     else if m:data[0]:scienceValue > 0
                     {
                         CollectSci().
-                        if m:hasEvent("transfer data") ResetSci(m).
+                        if m:hasEvent("transfer data") 
+                        {
+                            OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
+                            ResetSci(m).
+                        }
                     }
                     else 
                     {
+                        OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
                         ResetSci(m).
                     }
                 }
                 else if mode = "collect"
                 {
+                    OutTee("Collecting experiment results from module: " + m:name + " (Part: " + m:part:title + ")").
                     CollectSci().
                 }
             }
@@ -155,6 +188,7 @@ local function CollectSci
     }
     return false.
 }
+
 
 // Deploy
 local function DeploySci
@@ -282,13 +316,33 @@ local function RetractSci
     }
 }
 
+// TO-DO 
+// Transfer science from a given module to a target container. 
+// Defaults to first container in list
+// local function TransferSci
+// {
+//     parameter m,
+//               sciBox is ship:modulesNamed("ModuleScienceContainer")[0].
+
+    
+// }
+
 // Transmit
 local function TransmitSci
 {
     parameter m.
 
-    m:transmit().
-    wait until not m:hasData.
+    if m:hasData
+    {
+        m:transmit().
+        wait until not m:hasData.
+        wait 0.01.
+        return true.
+    }
+    else
+    {
+        return false.
+    }
 }
 
 local function ValidateECForTransmit

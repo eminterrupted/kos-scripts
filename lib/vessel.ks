@@ -45,8 +45,10 @@ global function GetSteeringDir
 
     local dirLookup to lex(
         "pro",          Ship:Prograde:Vector
+        ,"prograde",    Ship:Prograde:Vector
         ,"sun",         Sun:Position
         ,"retro",       Ship:Retrograde:Vector
+        ,"retrograde",  Ship:Retrograde:Vector
         ,"facing",      Ship:Facing:Vector
         ,"body",        Body:Position
         ,"radOut",      -Body:Position
@@ -558,7 +560,7 @@ global function ArmFairingJettison
 {
     parameter mode is "alt+", 
               jettisonAlt is body:atm:height - 10000,
-              deployTag is "".
+              deployTag is "descent".
 
     if deployTag:length > 0
     {
@@ -573,7 +575,7 @@ global function ArmFairingJettison
             {
                 for module in ship:modulesnamed("ModuleProceduralFairing")
                 {
-                    if module:part:tag = deployTag
+                    if module:part:tag:matchesPattern(deployTag)
                     {
                         module:doevent("deploy").
                         wait 0.05.
@@ -587,7 +589,7 @@ global function ArmFairingJettison
             {
                 for module in ship:modulesnamed("ModuleProceduralFairing")
                 {
-                    if module:part:tag = deployTag
+                    if module:part:tag.matchesPattern(deployTag)
                     {
                         module:doevent("deploy").
                         wait 0.05.

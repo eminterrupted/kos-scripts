@@ -130,8 +130,11 @@ global function LaunchCountdown
 
     if ship:status = "PRELAUNCH" 
     {
-        if LfoEngineCheck() IgnitionSequenceStart(launchTime).
-        set tVal to 1.
+        if LfoEngineCheck() 
+        {
+            IgnitionSequenceStart(launchTime).
+            set tVal to 1.
+        }
     }
     OutInfo2().
 
@@ -156,6 +159,7 @@ local function LfoEngineCheck
             return true.
         } 
     }
+    OutMsg("Solid first stage detected, disabling throttle-up").
     return false.
 }
 

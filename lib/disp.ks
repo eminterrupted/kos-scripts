@@ -106,10 +106,15 @@ global function OutInfo2
 // Print a string to the msg line
 global function OutMsg
 {
-    parameter str is "".
-    //print "MSG  : " + str + "          " at (0, 6).
-    clr(6).    
-    print str at (0, 6).
+    parameter str is "", errLvl is 0.
+
+    local msgType to "".
+    if errLvl = 1 set msgType to "WARN: ".
+    else if errLvl = 2 set msgType to "ERR: ".
+
+    clr(6).
+    
+    print msgType + str at (0, 6).
 }
 
 // Prints to both hud and msg line
@@ -164,9 +169,10 @@ local function RoundDistance
 // Sets up the terminal
 global function ShowTerm
 {
-    set terminal:height to 50.
-    set terminal:width to 60.
-    core:doAction("open terminal", true).
+    ClearScreen.
+    set Terminal:Height to 50.
+    set Terminal:Width to 60.
+    Core:DoAction("open terminal", true).
 }
 
 //-- Main Displays
@@ -187,6 +193,25 @@ global function DispAvionics
     print "AVAIL THRUST     : " + round(ship:availablethrust, 2)    + "kN     " at (0, cr()).
     cr().
     print "PRESSURE (KPA)   : " + round(body:atm:altitudePressure(ship:altitude) * constant:atmtokpa, 5) + "   " at (0, cr()).
+}
+
+// Display for a Flyby of a body
+global function DispFlyBy
+{
+    set line to 10.
+
+    local sciSitu to choose "High" if ship:altitude >= BodyInfo:altForSci[Body:Name] else "Low".
+
+    print "FLYBY DATA" at (0, line).
+    print "----------" at (0, cr()).
+    print "ALTITUDE     : " + round(ship:altitude) at (0, cr()).
+    print "RDR ALTITUDE : " + round(ship:bounds:bottomaltradar) at (0, cr()).
+    print "SRF SPEED    : " + round(ship:velocity:surface:mag, 1) at (0, cr()).
+    print "SITUATION    : " + Body:Name + ": " + sciSitu + " over " + addons:scansat:getBiome(ship:body, ship:geoposition) at (0, cr()).
+    cr().
+    print "APPROACH" at (0, cr()).
+    print "APPROACH ALT : " + round(ship:periapsis) at (0, cr()).
+    print "APPROACH ETA : " + TimeSpan(eta:periapsis):full at (0, cr()).
 }
 
 // Display for inclination burn details
@@ -270,19 +295,42 @@ global function DispLaunchWindow
     print "TIME TO LAUNCH   : " + dispTimeFormat(time:seconds - launchTime) at (0, cr()).
 }
 
+// DispBoot :: <none> | <none>
+global function DispBoot
+{
+    ShowTerm().
+
+    print "CREI-KASA Boot Loader v2.0b".
+    print "===========================".
+    print "MISSION          : " + ship:name.
+    print "CURRENT STATUS   : " + ship:status.
+    print "COMM STATUS      : " + Addons:RT:HasKscConnection(ship).
+    if Addons:Available:RT
+    {
+        print "COMM STATUS      : " + Addons:RT:HasKscConnection(ship).
+    }
+    else
+    {
+        print "COMM STATUS      : N/A".
+    }
+    wait 0.25.
+}
 
 // A display header for mission control
 global function DispMain
 {
     parameter scrPlan is scriptPath():name,
               showTerminal is true.
+    
+    if showTerminal
+    {
+        ShowTerm().
+    }
 
-    if showTerminal ShowTerm().
-
-    print "Mission Controller v2.0.1" at (0, 0).
-    print "=========================" at (0, 1).
-    print "MISSION : " + ship:name    at (0, 3).
-    print "PLAN    : " + scrPlan         at (0, 4).
+    print "Mission Controller v2.0.1".// at (0, 0).
+    print "=========================".// at (0, 1).
+    print "MISSION : " + ship:name.//    at (0, 3).
+    print "PLAN    : " + scrPlan.//         at (0, 4).
 }
 
 // Mnv details
@@ -336,6 +384,8 @@ global function DispMnvScore
 // Simple orbital telemetry
 global function DispOrbit
 {
+    parameter orientation is "".
+
     set line to 10.
     
     print "ORBIT" at (0, line).
@@ -344,6 +394,15 @@ global function DispOrbit
     print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, cr()).
     print "APOAPSIS     : " + round(ship:apoapsis)  + "m      " at (0, cr()).
     print "PERIAPSIS    : " + round(ship:periapsis) + "m      " at (0, cr()).
+    if orientation = "" 
+    {
+        return.
+    } 
+    else
+    {
+        cr().
+        print "ORIENTATION  : " + orientation + "     " at (0, cr()).
+    }
 }
 
 // Impact telemetry

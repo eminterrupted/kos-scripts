@@ -47,7 +47,7 @@ until runmode = -1
 
     if runmode = 0 
     {
-        if tgt <> ship 
+        if tgt <> ship
         {
             set runmode to 10.
         }
@@ -60,7 +60,7 @@ until runmode = -1
 
     else if runmode = 10
     {
-        if ship:body:name = tgt:name
+        if ship:body:name = tgt:name or (tgt:isType("Vessel") and ship:body:name = tgt:body:name)
         {
             set runmode to 15.
         }

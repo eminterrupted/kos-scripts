@@ -20,6 +20,16 @@ local aSrfSpeed         to list(  300,  225,  150,  125,  100,  75,  50,  25,  1
 local aVertSpd          to list( -150, -125, -100,  -75,  -65, -55, -40, -20, -10, -7.5, -5, -2, -1).
 local aDescentAlt       to list(10000, 7500, 5000, 2500, 1250, 750, 500, 250, 100,   75, 10,  3,  0).
 
+local kP to 1.0.
+local kI to 0.
+local kD to 0.
+local plMinOut to 0.
+local plMaxOut to 1.
+local plSetpoint to 0.
+
+local tPid          to PidLoop(kP, kI, kD, plMinOut, plMaxOut).
+set tPid:Setpoint to plSetpoint.
+
 // Vars for logging. Will log start values and resulting distance to waypoint after touchdown.
 local logPath       to Path("0:/data/landingResults/minmus/_distResults.csv").
 local startAlt      to 0.

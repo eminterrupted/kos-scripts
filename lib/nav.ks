@@ -97,9 +97,9 @@ global function GetOrbitable
 {
     parameter tgtStr.
 
-    if tgtStr:typename = "vessel" or tgtStr:typeName = "body" 
+    if tgtStr:IsType("Vessel") or tgtStr:IsType("Body") 
     {
-        return tgtStr. 
+        return tgtStr.
     }
     
     local vList to list().

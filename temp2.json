@@ -1,0 +1,4 @@
+{
+    "value": "\nmaneuver/changeOrbit;125000,125000,60;\nmission/relay;;",
+    "$type": "kOS.Safe.Encapsulation.StringValue"
+}

@@ -91,7 +91,7 @@ local function tagCores
 
 global function ParseMissionTags
 {
-    parameter c.
+    parameter c is core.
 
     local fragList to list().
     local pipeSplit to c:tag:split("|").

@@ -12,12 +12,13 @@ DispMain(scriptPath(), false).
 local parachutes to ship:modulesnamed("RealChuteModule").
 local hsStage to choose 1 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
 
-local armFairings       to false.
-local fairingTag        to "".
-local fairingAlt        to ship:body:atm:height * 0.15.
-local reentryTgt        to ship:body:atm:height * 0.40.
+local armFairings       to true.
+local fairingTag        to "descent".
+local fairingAlt        to ship:body:atm:height / 16.
+local reentryTgt        to ship:body:atm:height / 2.5.
 local retroFire         to false.
 local retroStage        to 4.
+local shellSepAlt       to 2500.
 local spinStab          to false.
 local stagingAlt        to ship:body:atm:height + 25000.
 local ts                to time:seconds.
@@ -47,6 +48,7 @@ if params:typename = "lexicon"
             else if key = "retroStage"  set retroStage to params[key].
             else if key = "spinStab"    set spinStab to params[key].
             else if key = "stagingAlt"  set stagingAlt to params[key].
+            else if key = "shellSepAlt"    set shellSepAlt to params[key].
         }
     }
 }
@@ -60,6 +62,7 @@ else if params:typename = "list"
     if params:length > 5 set armFairings to params[5].
     if params:length > 6 set fairingTag to params[6].
     if params:length > 7 set fairingAlt to params[7].
+    if params:length > 8 set shellSepAlt to params[8].
 }
 local startAlt to stagingAlt + 25000.
 
