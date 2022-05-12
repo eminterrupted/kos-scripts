@@ -16,7 +16,7 @@ DispMain(scriptPath(), false).
 local tgtPe to 0.
 local tgtAp to 0.
 local argPe to Ship:Orbit:ArgumentOfPeriapsis.
-local orientation to "pro-sun".
+local orientation to "facing-sun".
 local resetState to false.
 
 if params:length > 0 
@@ -79,7 +79,7 @@ if InitRunmode() = 0
     OutMsg("Calculating burn data").
     if raiseAp and raisePe 
     {
-        print "raise rAp and raise rPe" at (2, 25).
+        //print "raise rAp and raise rPe" at (2, 25).
         set mnvTA to mod((360 + argPe) - Ship:Orbit:ArgumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
@@ -93,7 +93,7 @@ if InitRunmode() = 0
     }
     else if raiseAp and not raisePe 
     {
-        print "raise rAp and lower rPe" at (2, 25).
+        //print "raise rAp and lower rPe" at (2, 25).
         set mnvTA to mod((360 + argPe) - Ship:Orbit:ArgumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
@@ -107,7 +107,7 @@ if InitRunmode() = 0
     }
     else if not raiseAp and raisePe
     {
-        print "lower rAp and raise rPe" at (2, 25).
+        //print "lower rAp and raise rPe" at (2, 25).
         set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
         set stAp     to AltAtTA(ship:orbit, mnvTA).
@@ -122,7 +122,7 @@ if InitRunmode() = 0
     ///THIS ONE vvvvv
     else if not raiseAp and not raisePe
     {
-        print "lower rAp and lower rPe" at (2, 25).
+        //print "lower rAp and lower rPe" at (2, 25).
         set mnvTA    to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
         set stAp     to AltAtTA(ship:orbit, mnvTA).
@@ -164,7 +164,8 @@ if mnvTA = -1           set mnvTA       to ReadCache("mnvTA").
 until doneFlag
 {
     if InitRunmode() = 2
-    {
+    {   
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if CheckValRange(dvNeeded[0], -1, 1)
         {
             OutMsg("Skipping Transfer Burn").
@@ -188,6 +189,7 @@ until doneFlag
 
     else if InitRunmode() = 4
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if not hasNode 
         {
             SetRunmode(2).
@@ -218,6 +220,7 @@ until doneFlag
     // Arrival burn
     else if InitRunmode() = 6
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if CheckValRange(dvNeeded[1], -0.2, 0.2)
         {
             outMsg("Skipping arrival burn").
@@ -241,6 +244,7 @@ until doneFlag
 
     else if InitRunmode() = 8
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         if not hasNode
         {
             SetRunmode(6).
@@ -262,6 +266,7 @@ until doneFlag
 
     else if InitRunmode() = 10
     {
+        DispOrbitChange(tgtPe, tgtAp, argPe).
         set doneFlag to true.
     }
 }

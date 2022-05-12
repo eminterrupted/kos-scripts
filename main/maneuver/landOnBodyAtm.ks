@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter params is list().
+parameter params is lex().
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/vessel").
@@ -10,13 +10,18 @@ runOncePath("0:/lib/util").
 DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
-local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
-local reentryTgt to (ship:body:atm:height * 0.425).
-local retroFire to false.
-local retroStage to payloadStage.
-local spinStab to false.
-local stagingAlt to ship:body:atm:height + 25000.
-local ts to time:seconds.
+local hsStage to choose 1 if core:tag:split("|"):length < 2 else choose core:tag:split("|")[2]:tonumber if core:tag:split("|"):length > 2 else core:tag:split("|")[1]:tonumber.
+
+local armFairings       to true.
+local fairingTag        to "descent".
+local fairingAlt        to ship:body:atm:height / 10.
+local reentryTgt        to ship:body:atm:height / 2.5.
+local retroFire         to false.
+local retroStage        to 4.
+local shellSepAlt       to 2500.
+local spinStab          to false.
+local stagingAlt        to ship:body:atm:height + 25000.
+local ts                to time:seconds.
 
 local sVal to ship:facing.
 lock steering to sVal.
@@ -24,24 +29,46 @@ lock steering to sVal.
 local tVal to 0.
 lock throttle to tVal.
 
-
 ///Params
 //retroFire: bool, fire rockets to deorbit
 //spinStab: bool, stages to fire spin stablization motors
-//stagingAlt:scalar, altitude of CSM jetison 
+//stagingAlt:scalar, meters above atmosphere of CSM jetison 
 //retroStage:scalar, stage number of the retro rocket fire
-if params:length > 0 
+if params:typename = "lexicon"
 {
-    set stagingAlt to params[0].
+    if params:keys:length > 0 
+    {
+        for key in params:keys
+        {
+            if key = "armFairings" set armFairings to params[key].
+            else if key = "fairingTag"  set fairingTag to params[key].
+            else if key = "fairingAlt"  set fairingAlt to params[key].
+            else if key = "reentryTgt"  set reentryTgt to params[key].
+            else if key = "retroFire"   set retroFire to params[key]. 
+            else if key = "retroStage"  set retroStage to params[key].
+            else if key = "spinStab"    set spinStab to params[key].
+            else if key = "stagingAlt"  set stagingAlt to params[key].
+            else if key = "shellSepAlt"    set shellSepAlt to params[key].
+        }
+    }
+}
+else if params:typename = "list"
+{
+    set stagingAlt to Max(Body:Atm:Height + 10000, params[0]).
     if params:length > 1 set retroFire to params[1].
     if params:length > 2 set retroStage to params[2].
-    if params:length > 3 set spinStab to params[3].
+    if params:length > 3 set reentryTgt to params[3].
+    if params:length > 4 set spinStab to params[4].
+    if params:length > 5 set armFairings to params[5].
+    if params:length > 6 set fairingTag to params[6].
+    if params:length > 7 set fairingAlt to params[7].
+    if params:length > 8 set shellSepAlt to params[8].
 }
 local startAlt to stagingAlt + 10000.
 
-OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
-OutInfo("Down: Wait until descent | Up: Wait until ascent").
-OutInfo2("End: Begin reentry procedures now | PageDown: Skip reentry burn").
+OutMsg("Press Enter to warp to Ap, Home to warp to Pe").
+OutInfo("Press Down to wait until descent, Up to wait until ascent").
+OutInfo2("Press End to begin reentry procedures now").
 local mode to "".
 local doneFlag to false.
 
@@ -50,7 +77,6 @@ until doneFlag
     local charToCheck to GetInputChar().
     if charToCheck <> ""
     {
-        OutInfo2("retroFire: " + retroFire).
         if charToCheck = terminal:input:enter
         {
             InitWarp(time:seconds + eta:apoapsis, "apoapsis").
@@ -75,11 +101,6 @@ until doneFlag
             OutInfo("Immediate reentry procedure mode").
             OutInfo2().
             wait 0.5.
-        }
-        else if charToCheck = terminal:input:PageDownCursor
-        {
-            set retroFire to false.
-            OutInfo2("retroFire: " + retroFire).
         }
     }
     if mode = "descent" 
@@ -147,18 +168,6 @@ if retroFire and ship:periapsis > reentryTgt
         wait 0.05.
     }
     OutInfo().
-
-    // if stage:number > payloadStage
-    // {
-    //     OutMsg("[" + stage:number + "] Staging to payloadStage [" + payloadStage + "] for retro fire").
-    //     until false 
-    //     {
-    //         if stage:number = payloadStage break.
-    //         wait 0.50.
-    //         if stage:ready stage.
-    //         wait 0.50.
-    //     }
-    // }
     
     if spinStab
     {
@@ -181,14 +190,10 @@ if retroFire and ship:periapsis > reentryTgt
         stage.
         wait until stage:ready.
     }
-    wait 0.02.
+    wait 0.1.
     until GetTotalThrust(GetEngines("active"), "curr") <= 0.1 or ship:periapsis <= reentryTgt
     {
         if stage = 1 set tVal to 0.
-        else if ship:periapsis <= reentryTgt + 10000
-        {
-            set tVal to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
-        }
         DispTelemetry().
     }
     set tVal to 0.
@@ -234,7 +239,7 @@ until false
             }
             if warpFlag
             {
-                WarpToAlt(startAlt).
+                WarpToAlt(startAlt + 25000).
                 If ship:altitude <= startAlt
                 {
                     set warpFlag to false.
@@ -281,6 +286,14 @@ if parachutes:length > 0
         }
     }
 }
+wait 0.25.
+
+if armFairings
+{
+    OutMsg("Arming Fairings").
+    ArmFairingJettison("alt-", fairingAlt, fairingTag).
+}
+wait 0.25.
 
 set sVal to body:position.
 OutMsg("Waiting until staging altitude: " + stagingAlt).
@@ -296,7 +309,7 @@ set sVal to GetSteeringDir("body-sun").
 wait 5.
 
 OutMsg("Staging").
-until stage:number <= 1 
+until stage:number <= hsStage
 {
     stage.
     wait 2.
@@ -324,10 +337,10 @@ until ship:altitude <= body:atm:height
 OutMsg("Reentry interface, signal lost").
 clrDisp().
 
-for m in ship:modulesNamed("ModuleRTAntenna")
-{
-    DoEvent(m, "Deactivate").
-}
+// for m in ship:modulesNamed("ModuleRTAntenna")
+// {
+//     DoEvent(m, "Deactivate").
+// }
 
 until ship:groundspeed <= 1350 and ship:altitude <= 30000
 {
@@ -335,24 +348,34 @@ until ship:groundspeed <= 1350 and ship:altitude <= 30000
     DispTelemetry(false). // False: simulate telemetry blackout
 }
 
-for m in ship:modulesNamed("ModuleRTAntenna")
-{
-    DoEvent(m, "Activate").
-}
+// for m in ship:modulesNamed("ModuleRTAntenna")
+// {
+//     DoEvent(m, "Activate").
+// }
 OutMsg("Signal reacquired").
 clrDisp().
 wait 1.
 
 unlock steering.
 OutMsg("Control released").
+wait 1.
 
-until alt:radar <= 2500
+OutMsg("Awaiting chute deployment").
+until alt:radar <= 1000
 {
     DispTelemetry().
 }
-OutMsg("Chute deploy").
+OutMsg("Heatshield Deploy").
+until stage <= 1
+{
+    stage.
+    wait 1.
+}
 
-until alt:radar <= 5
+// Deploy landing legs / gear
+gear on.
+
+until alt:radar <= 1
 {
     DispTelemetry().
 }

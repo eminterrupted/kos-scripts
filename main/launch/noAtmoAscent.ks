@@ -28,9 +28,9 @@ local tgtRoll   to 0.
 // If the launch plan was passed in via param, override manual values
 if param:length > 0
 {
-    set tgtPe to param[0].
-    if param:length > 1 set tgtAp to param[1].
-    if param:length > 2 set stageAtLaunch to param[2].
+    set stageAtLaunch to param[0].
+    if param:length > 1 set tgtPe to param[1].
+    if param:length > 2 set tgtAp to param[2].
     if param:length > 3 set tgtInc to param[3].
     if param:length > 4 set tgtLAN to param[4].
     if param:length > 5 set tgtRoll to param[5]. 
@@ -38,8 +38,8 @@ if param:length > 0
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll, stageAtLaunch).
 
 // Variables
-local altStartTurn  to 500.
-local altGravTurn   to min(tgtAp / 2, 2500).
+local altStartTurn  to 250.
+local altGravTurn   to min(tgtAp / 2, 1000).
 local boosterObj    to lex().
 
 // Controls
@@ -54,7 +54,7 @@ local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")
 // Begin  
 lock steering to sVal. 
 
-DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper)).
+DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper), stageAtLaunch).
 
 // Write tgtPe to the local drive. If write fails, iterate through volumes. If no other volumes, write to archive.
 local volIdx to 1. 
@@ -106,6 +106,14 @@ ArmAutoStaging(stageLimit).
 ArmBoosterSeparation(boosterObj).
 ArmDropTanks().
 
+if not stageAtLaunch 
+{
+    for eng in GetEnginesByStage(stage:number)
+    {
+        eng:activate.
+    }
+}
+
 // Calculate AZ here, write to disk for circularization. 
 // We will write this to disk along with tgtPe and boost stage at launch
 local azCalcObj to l_az_calc_init(tgtAp, tgtInc).
@@ -117,6 +125,13 @@ LaunchCountdown(10).
 if stageAtLaunch 
 {
     stage.
+}
+else
+{
+    for eng in GetEnginesByStage(stage:number)
+    {
+        eng:activate.
+    }
 }
 set tVal to 1.
 lock throttle to tVal.
@@ -131,16 +146,18 @@ until ship:bounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
     wait 0.01.
 }
 
+if gear gear off.
+
 OutInfo("Roll Program").
 set sVal to heading(l_az_calc(azCalcObj), 90, 0).
-until (steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1) or ship:altitude >= altStartTurn or ship:apoapsis >= tgtAp
+until (steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1) or Ship:Bounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
 }
 OutInfo().
 
-until ship:bounds:BottomAltRadar >= altStartTurn or ship:apoapsis >= tgtAp
+until Ship:Bounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.

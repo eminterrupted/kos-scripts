@@ -102,7 +102,7 @@ else
     {
         if CheckInputChar(terminal:input:enter) break.
         local msgs to CheckMsgQueue().
-        if msgs:contains("launchCommit") 
+        if msgs:contains("launchCommit")
         {
             set core2 to msgs[1].
             break.
@@ -129,7 +129,7 @@ set boosterObj to GetBoosters().
 // Arm systems
 ArmAutoStaging(stageLimit).
 ArmLESJettison(82500).
-ArmFairingJettison().
+ArmFairingJettison("ascent", body:atm:height - 5000, "launch").
 set g_boosterSystemArmed to ArmBoosterSeparation(boosterObj).
 set g_abortSystemArmed to SetupAbortGroup(Ship:RootPart).
 

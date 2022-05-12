@@ -8,7 +8,7 @@ wait until Addons:RT:HasKscConnection(ship) or Time:Seconds >= ts.
 if exists("1:/vessel.json") set ship:name to readJson("1:/vessel.json")[0].
 
 global mp to list().
-global planTags to parseMissionTags(core).
+global planTags to ParseMissionTags(core).
 global plan to planTags[0].
 global branch to choose planTags[1] if planTags:length > 1 else "".
 global missionName to ship:name:replace(" ", "_").
@@ -16,6 +16,8 @@ global missionName to ship:name:replace(" ", "_").
 local localPlan to "1:/mp.json".
 local archivePlan to "0:/_plan/" + plan + "/mp_" + missionName + ".json".
 local runPlan to localPlan.
+
+sas off.
 
 if ship:status = "PRELAUNCH" 
 {
@@ -87,9 +89,9 @@ local function tagCores
     }
 }
 
-local function parseMissionTags
+global function ParseMissionTags
 {
-    parameter c.
+    parameter c is core.
 
     local fragList to list().
     local pipeSplit to c:tag:split("|").

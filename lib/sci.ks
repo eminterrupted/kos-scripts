@@ -1,4 +1,11 @@
+@lazyGlobal off. 
+
 // Science library
+
+// Dependencies
+runOncePath("0:/lib/disp").
+runOncePath("0:/lib/util").
+
 
 // Functions 
 // Modules
@@ -10,9 +17,14 @@ global function GetSciModules
     for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
     for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
+    for m in ship:modulesNamed("DMSeismicSensor")                   sciList:add(m).
+    for m in ship:modulesNamed("DMSeismicHammer")                   sciList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
     for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageSoilMoisture")    sciList:add(m).
+    for m in ship:modulesNamed("ModuleSpyExperiment")               sciList:add(m).
     return sciList.
 }
 
@@ -23,12 +35,26 @@ global function DeploySciList
 
     for m in sciList
     {
+        OutInfo().
+        OutInfo2().
         if m:name:startsWith("US")
         {
+            OutTee("Running US science experiment for: " + m:part:title + " (" + m:name + ")").
             DeployUSSci(m).
+        }
+        else if m:name:startsWith("DM")
+        {
+            OutTee("Running DM science experiment for: " + m:part:title + " (" + m:name + ")").
+            DeployDMSci(m).
+        }
+        else if m:name = "ModuleSpyExperiment"
+        {
+            OutTee("Running Spy Experiment for: " + m:part:title + " (" + m:name + ")").
+            DeploySpySci(m).
         }
         else
         {
+            OutTee("Running generic science experiment for: " + m:part:title + " (" + m:name + ")").
             DeploySci(m).
         }
     }
@@ -59,7 +85,15 @@ global function RecoverSciList
                             set transmitFlag to true.
                         }
                     }
-                    TransmitSci(m).
+                    OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
+                    if TransmitSci(m) 
+                    {
+                        OutTee("Transmission successful!").
+                    }
+                    else 
+                    {
+                        OutTee("Transmission failed!", 0, 2).
+                    }
                 }
                 else if mode = "ideal"
                 {
@@ -76,20 +110,34 @@ global function RecoverSciList
                         //         set transmitFlag to true.
                         //     }
                         // }
-                        TransmitSci(m).
+                        OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
+                        if TransmitSci(m)
+                        {
+                            OutTee("Transmission successful!").
+                        }
+                        else 
+                        {
+                            OutTee("Transmission failed!", 0, 2).
+                        }
                     }
                     else if m:data[0]:scienceValue > 0
                     {
                         CollectSci().
-                        if m:hasEvent("transfer data") ResetSci(m).
+                        if m:hasEvent("transfer data") 
+                        {
+                            OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
+                            ResetSci(m).
+                        }
                     }
                     else 
                     {
+                        OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
                         ResetSci(m).
                     }
                 }
                 else if mode = "collect"
                 {
+                    OutTee("Collecting experiment results from module: " + m:name + " (Part: " + m:part:title + ")").
                     CollectSci().
                 }
             }
@@ -146,6 +194,7 @@ local function CollectSci
     return false.
 }
 
+
 // Deploy
 local function DeploySci
 {
@@ -162,6 +211,63 @@ local function DeploySci
         wait until m:hasData or time:seconds >= ts.
         if addons:career:available addons:career:closeDialogs.
     }
+}
+
+local function DeployDMSci
+{
+    parameter m.
+
+    if m:HasData
+    {
+        return false.
+    }
+    else
+    {
+        if m:name = "DMSeismicSensor"
+        {
+            DoAction(m, "Arm Pod").
+            if m:Part:HasModule("ModuleAnchoredDecoupler")
+            {
+                DoEvent(m:Part:GetModule("ModuleAnchoredDecoupler"), "decouple").
+            }
+        }
+        else if m:name = "DMSeismicHammer"
+        {
+            m:toggle.
+            wait 4.
+            DoAction(m, "Arm Hammer").
+            wait 1.
+            DoAction(m, "Collect Seismic Data").
+            wait until m:hasData.
+        }
+        else
+        {
+            m:deploy.
+            local ts to time:seconds + 10.
+            until m:hasData
+            {
+                if time:seconds > ts
+                {
+                    OutInfo2("WARN: Science Experiment timeout").
+                    break.
+                }
+                else if m:hasData 
+                {
+                    OutInfo2("Data collected!").
+                }
+            }
+        }
+        if addons:career:available addons:career:closeDialogs.
+    }
+}
+
+local function DeploySpySci
+{
+    parameter m.
+
+    DoAction(m, "scan target").
+    wait 0.1. 
+    if addons:available("Career") addons:career:closeDialogs().
 }
 
 local function DeployUSSci
@@ -188,6 +294,8 @@ local function DeployUSSci
                 wait 2.
             }
         }
+        wait 0.05. 
+        if addons:available("Career") addons:career:closeDialogs().
     }
 }
 
@@ -200,7 +308,8 @@ local function ResetSci
     if m:name <> "TSTChemCam" 
     {
         m:reset().
-        wait until not m:hasData.
+        local ts to time:seconds + 5.
+        wait until time:seconds > ts or not m:hasData.
     }
     RetractSci(m).
 }
@@ -223,13 +332,33 @@ local function RetractSci
     }
 }
 
+// TO-DO 
+// Transfer science from a given module to a target container. 
+// Defaults to first container in list
+// local function TransferSci
+// {
+//     parameter m,
+//               sciBox is ship:modulesNamed("ModuleScienceContainer")[0].
+
+    
+// }
+
 // Transmit
 local function TransmitSci
 {
     parameter m.
 
-    m:transmit().
-    wait until not m:hasData.
+    if m:hasData
+    {
+        m:transmit().
+        wait until not m:hasData.
+        wait 0.01.
+        return true.
+    }
+    else
+    {
+        return false.
+    }
 }
 
 local function ValidateECForTransmit

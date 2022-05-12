@@ -1,0 +1,60 @@
+{
+    "items": [
+        {
+            "value": "util/deployPayload",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": 0,
+                    "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                },
+                {
+                    "value": true,
+                    "$type": "kOS.Safe.Encapsulation.BooleanValue"
+                },
+                {
+                    "value": "payload",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                },
+                {
+                    "value": true,
+                    "$type": "kOS.Safe.Encapsulation.BooleanValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        },
+        {
+            "value": "maneuver/changeOrbit",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": 6700459.0933659039,
+                    "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
+                },
+                {
+                    "value": 6700459.0933659039,
+                    "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        },
+        {
+            "value": "mission/relay",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                {
+                    "value": "body-pro",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}

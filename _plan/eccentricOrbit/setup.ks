@@ -6,8 +6,6 @@ set mp to list(
     "util/idElements", list(1)
     ,"launch/boostPhase", list(150000, 150000, 17.0, -1, 0)
     ,"launch/circPhase", list()
-    //deploy everything but don't stage b/c we need to burn again later
-    ,"util/payloadDeploy", list(false)
     ,"mission/collectSci", list("transmit", false, "pro-sun")
     //DEC 19, YEAR OF OUR LORD TWENTY TWENTY ONE: BATTLE!!! 🔪🗡️ WILL AP BE 
     //MORE THAN 250KM GIVEN JUST A PE OF 150 AND ECC OF .20???????

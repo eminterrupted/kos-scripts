@@ -32,13 +32,22 @@ if hasTarget and tgt = ship
 local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
 
+Terminal:Input:Clear.
 until runmode = -1
 {
     set sVal to GetSteeringDir(orientation).
     
+    set g_termChar to GetInputChar().
+
+    if g_termChar = terminal:input:endcursor
+    {
+        OutTee("Terminating WaitForSOI").
+        set runmode to -1.
+    }
+
     if runmode = 0 
     {
-        if tgt <> ship 
+        if tgt <> ship
         {
             set runmode to 10.
         }
@@ -51,7 +60,7 @@ until runmode = -1
 
     else if runmode = 10
     {
-        if ship:body:name = tgt:name
+        if ship:body:name = tgt:name or (tgt:isType("Vessel") and ship:body:name = tgt:body:name)
         {
             set runmode to 15.
         }
@@ -62,8 +71,6 @@ until runmode = -1
         }    
         else 
         {
-            set g_termChar to GetInputChar().
-
             if g_termChar = Terminal:Input:Enter
             {
                 InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 3, true).
@@ -78,6 +85,7 @@ until runmode = -1
         OutMsg("Target SOI Reached").
         set runmode to -1.
     }
+    set g_termChar to "".
 }
 
 local function DispSOIData

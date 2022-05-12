@@ -5,6 +5,7 @@ clearScreen.
 parameter param is list().
 
 runOncePath("0:/lib/disp").
+runOncePath("0:/lib/globals").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
 
@@ -19,7 +20,6 @@ if param:length > 0
     if param:length > 1 set orientation to param[1].
 }
 local orbitTS to time:seconds + orbitTime.
-
 
 local sVal to GetSteeringDir(orientation).
 lock steering to sVal.
@@ -62,6 +62,6 @@ until false
         set tsStr to (tsStr:year - 1) + "y, " + (tsStr:day - 1) + "d " + tsStr:clock.
         OutInfo("Time remaining: " + tsStr).
     }
-    DispOrbit().
+    DispOrbit(orientation).
     wait 0.1.
 }
