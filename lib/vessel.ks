@@ -571,7 +571,7 @@ global function ArmFairingJettison
     {
         if mode = "alt+"
         {
-            when ship:altitude >= jettisonAlt then
+            when ship:altitude > jettisonAlt then
             {
                 for module in ship:modulesnamed("ModuleProceduralFairing")
                 {
@@ -585,7 +585,7 @@ global function ArmFairingJettison
         }
         else if mode = "alt-"
         {
-            when ship:altitude <= jettisonAlt then
+            when ship:altitude < jettisonAlt then
             {
                 for module in ship:modulesnamed("ModuleProceduralFairing")
                 {

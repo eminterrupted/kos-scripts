@@ -10,11 +10,11 @@ runOncePath("0:/lib/util").
 DispMain(scriptPath(), false).
 
 local parachutes to ship:modulesnamed("RealChuteModule").
-local hsStage to choose 1 if core:tag:split("|"):length < 2 else core:tag:split("|")[1]:tonumber.
+local hsStage to choose 1 if core:tag:split("|"):length < 2 else choose core:tag:split("|")[2]:tonumber if core:tag:split("|"):length > 2 else core:tag:split("|")[1]:tonumber.
 
 local armFairings       to true.
 local fairingTag        to "descent".
-local fairingAlt        to ship:body:atm:height / 16.
+local fairingAlt        to ship:body:atm:height / 10.
 local reentryTgt        to ship:body:atm:height / 2.5.
 local retroFire         to false.
 local retroStage        to 4.
@@ -54,7 +54,7 @@ if params:typename = "lexicon"
 }
 else if params:typename = "list"
 {
-    set stagingAlt to Max(Body:Atm:Height + 10000, Body:Atm:Height + params[0]).
+    set stagingAlt to Max(Body:Atm:Height + 10000, params[0]).
     if params:length > 1 set retroFire to params[1].
     if params:length > 2 set retroStage to params[2].
     if params:length > 3 set reentryTgt to params[3].
@@ -64,7 +64,7 @@ else if params:typename = "list"
     if params:length > 7 set fairingAlt to params[7].
     if params:length > 8 set shellSepAlt to params[8].
 }
-local startAlt to stagingAlt + 25000.
+local startAlt to stagingAlt + 10000.
 
 OutMsg("Press Enter to warp to Ap, Home to warp to Pe").
 OutInfo("Press Down to wait until descent, Up to wait until ascent").

@@ -18,9 +18,11 @@ global function GetSciModules
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
     for m in ship:modulesNamed("DMSeismicSensor")                   sciList:add(m).
     for m in ship:modulesNamed("DMSeismicHammer")                   sciList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
     for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
     for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
     for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageSoilMoisture")    sciList:add(m).
     for m in ship:modulesNamed("ModuleSpyExperiment")               sciList:add(m).
     return sciList.
 }
@@ -32,6 +34,8 @@ global function DeploySciList
 
     for m in sciList
     {
+        OutInfo().
+        OutInfo2().
         if m:name:startsWith("US")
         {
             OutTee("Running US science experiment for: " + m:part:title + " (" + m:name + ")").
@@ -237,10 +241,20 @@ local function DeployDMSci
         }
         else
         {
-            m:toggle.
-            wait 1.
             m:deploy.
-            wait until m:hasData.
+            local ts to time:seconds + 10.
+            until m:hasData
+            {
+                if time:seconds > ts
+                {
+                    OutInfo2("WARN: Science Experiment timeout").
+                    break.
+                }
+                else if m:hasData 
+                {
+                    OutInfo2("Data collected!").
+                }
+            }
         }
         if addons:career:available addons:career:closeDialogs.
     }
@@ -293,7 +307,8 @@ local function ResetSci
     if m:name <> "TSTChemCam" 
     {
         m:reset().
-        wait until not m:hasData.
+        local ts to time:seconds + 5.
+        wait until time:seconds > ts or not m:hasData.
     }
     RetractSci(m).
 }
