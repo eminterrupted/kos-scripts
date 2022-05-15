@@ -19,6 +19,7 @@ local deployModules to list(
     ,"ModuleDeployablePart"
     ,"ModuleRoboticServoHinge"
     ,"ModuleRoboticServoRotor"
+    ,"ModuleDeployableReflector"
 ).
 // #endregion
 
@@ -802,54 +803,42 @@ global function DeployPart
     
     if p:hasModule("ModuleRTAntenna")   // RT Antennas
     {
-        local m to p:getModule("ModuleRTAntenna").
-        if action = "deploy" DoEvent(m, "activate").
-        else DoEvent(m, "retract").
+        DeployRTAntenna(p, action).
     }
 
     if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
     {
-        local m to p:getModule("ModuleDeployableSolarPanel").
-        if action = "deploy" DoAction(m, "extend solar panel", true).
-        else DoAction(m, "retract solar panel", true).
+        DeploySolarPanel(p, action).
     }
 
     if p:hasModule("ModuleResourceConverter") // Fuel Cells
     {
-        local m to p:getModule("ModuleResourceConverter").
-        if action = "deploy" DoEvent(m, "start fuel cell").
-        else DoEvent(m, "stop fuel cell").
+        DeployFuelCell(p, action).
     }
 
     if p:hasModule("ModuleGenerator") // RTGs
     {
-        local m to p:getModule("ModuleGenerator").
-        if action = "deploy" DoAction(m, "activate generator").
-        else DoAction(m, "shutdown generator").
+        DeployRTG(p, action).
     }
 
     if p:hasModule("ModuleDeployablePart")  // Science parts / misc
     {
-        local m to p:getModule("ModuleDeployablePart").
-        if action = "deploy" DoEvent(m, "extend").
-        else DoEvent(m, "retract").
+        DeploySciMisc(p, action).
     }
 
     if p:hasModule("ModuleRoboticServoHinge")
     {
-        local m to p:getModule("ModuleRoboticServoHinge").
-        if m:getField("locked") m:setField("locked", false). 
-        wait 0.1.
-        DoAction(m, "Toggle Hinge").
+        DeployRoboHinge(p, action).
     }
 
     if p:hasModule("ModuleRoboticServoRotor")
     {
-        local m to p:getModule("ModuleRoboticServoRotor").
-        if m:getField("locked") m:setField("locked", false). 
-        wait 0.01.
-        if not m:getField("motor") m:setField("motor", true).
-        m:setField("torque limit(%)", 25).
+        DeployRoboRotor(p, action).
+    }
+
+    if p:hasModule("ModuleDeployableReflector")
+    {
+        DeployReflector(p, action).
     }
 }
 //#endregion
@@ -963,6 +952,7 @@ global function SignedVAng
 // -- Local
 // #region
 
+// #region -- Misc
 // StepList
 // Helper function for from loop in list sorting. 
 local function StepList
@@ -973,6 +963,220 @@ local function StepList
     if sortDir = "desc" return c - 1.
     else return c + 1.
 }
+// #endregion
+
+// #region -- Part deployment helpers
+// Fuel cells
+local function DeployFuelCell
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleResourceConverter").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "start fuel cell") DoEvent(m, "stop fuel cell").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "start fuel cell").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "stop fuel cell").
+    }
+}
+
+
+// Antenna Reflectors
+local function DeployReflector
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleDeployableReflector").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "extend reflector") DoEvent(m, "retract reflector").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend reflector").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract reflector").
+    }
+}
+
+// Robotics - Hinges
+local function DeployRoboHinge
+{
+    parameter p,
+              action.
+
+    local lockFlag to false.
+    local m to p:getModule("ModuleResourceConverter").
+    if m:getField("locked") 
+    {
+        set lockFlag to true.
+        m:setField("locked", false). 
+    }
+    wait 0.05.
+    
+    if action = "toggle"
+    {
+        DoAction(m, "Toggle Hinge").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "Toggle Hinge").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "Toggle Hinge").
+    }
+
+    if lockFlag 
+    {
+        m:setField("locked", true).
+    }
+}
+
+// Robotics - Rotors
+local function DeployRoboRotor
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleRoboticServoRotor").
+
+    if m:getField("locked") 
+    {
+        m:setField("locked", false). 
+    }
+    wait 0.05.
+
+    if action = "toggle"
+    {
+        if not m:getField("motor") 
+        {
+            m:setField("motor", true).
+            m:setField("torque limit(%)", 25).
+        }
+        else
+        {
+            m:setField("motor", false).
+            m:setField("torque limit(%)", 0).
+        }
+    }
+    else if action = "deploy"
+    {
+        m:setField("motor", true).
+        m:setField("torque limit(%)", 25).
+    }
+    else if action = "retract"
+    {
+        m:setField("motor", false).
+        m:setField("torque limit(%)", 0).
+    }
+
+    if not m:getField("motor")
+    {
+        m:setField("locked", true).
+    }
+}
+
+// RemoteTech Antennas
+local function DeployRTAntenna
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleRTAntenna").
+
+    if action = "toggle"
+    {
+        if not DoAction(m, "activate", true) DoAction(m, "deactivate", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "activate").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "deactivate").
+    }
+}
+
+// RTGs
+local function DeployRTG
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleGenerator").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "activate generator") DoEvent(m, "shutdown generator").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "activate generator").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "shutdown generator").
+    }
+}
+
+// Science / miscellaneous
+local function DeploySciMisc
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleDeployablePart").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "extend") DoEvent(m, "retract").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "deploy").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract").
+    }
+}
+
+// Solar Panels
+local function DeploySolarPanel
+{
+    parameter p, 
+              action.
+    
+    local m to p:getModule("ModuleDeployableSolarPanel").
+    if action = "toggle"
+    {
+        if not DoAction(m, "extend solar panel", true) DoAction(m, "retract solar panel", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend solar panel").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract solar panel").
+    }
+}
+// #endregion
+
 // #endregion
 
 // #endregion
