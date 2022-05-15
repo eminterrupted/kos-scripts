@@ -28,7 +28,8 @@ global BodyInfo to lex(
     "altForSci", lex(
         "Kerbin", 625000,
         "Mun", 150000,
-        "Minmus", 75000
+        "Minmus", 75000,
+        "Moho", 100000
     )
 ).
 
