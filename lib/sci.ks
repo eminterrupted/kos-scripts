@@ -77,7 +77,7 @@ global function RecoverSciList
                     local transmitFlag to false.
                     until transmitFlag
                     {
-                        local ecValidation to ValidateECForTransmit(m).
+                        local ecValidation to list(0, 0, 0).//ValidateECForTransmit(m).
                         if ecValidation[0] = 0
                         {
                             OutMsg("Validating EC for science transmission").
