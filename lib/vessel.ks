@@ -589,7 +589,7 @@ global function ArmFairingJettison
             {
                 for module in ship:modulesnamed("ModuleProceduralFairing")
                 {
-                    if module:part:tag.matchesPattern(deployTag)
+                    if module:part:tag:matchesPattern(deployTag)
                     {
                         module:doevent("deploy").
                         wait 0.05.
