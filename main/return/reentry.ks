@@ -114,6 +114,7 @@ wait 1.
 
 if retroFire and ship:periapsis > reentryTgt
 {
+    OutInfo2("Target reentry alt: " + round(reentryTgt) + " (" + round(ship:periapsis) + ")").
     set sVal to ship:retrograde.
     local settleTime to 5.
     local progCounter to 0.
@@ -181,7 +182,7 @@ if retroFire and ship:periapsis > reentryTgt
         stage.
         wait until stage:ready.
     }
-    wait 0.02.
+    wait 0.05.
     until GetTotalThrust(GetEngines("active"), "curr") <= 0.1 or ship:periapsis <= reentryTgt
     {
         if stage = 1 set tVal to 0.
@@ -206,6 +207,7 @@ if retroFire and ship:periapsis > reentryTgt
             set ship:control:neutralize to true.
         }
     }
+    OutInfo2().
 }
 
 set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
