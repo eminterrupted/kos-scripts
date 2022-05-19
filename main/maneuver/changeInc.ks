@@ -25,7 +25,6 @@ if params:length > 0
 }
 
 if tgtInc = -1 set tgtInc to ship:orbit:inclination.
-if tgtLAN = -1 set tgtLAN to ship:orbit:LAN.
 
 OutTee("Hi I AM IN YOUR ROCKETS A-CHANGIN URE THINGS >:D", 0, 2.5).
 
