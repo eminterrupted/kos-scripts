@@ -836,6 +836,11 @@ global function DeployPart
         DeployRoboRotor(p, action).
     }
 
+    if p:hasModule("ModuleDeployableRadiator")
+    {
+        DeployRadiator(p, action).
+    }
+
     if p:hasModule("ModuleDeployableReflector")
     {
         DeployReflector(p, action).
@@ -985,6 +990,28 @@ local function DeployFuelCell
     else if action = "retract"
     {
         DoEvent(m, "stop fuel cell").
+    }
+}
+
+// Radiators
+local function DeployRadiator
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleDeployableRadiator").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "extend radiator") DoEvent(m, "retract radiator").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend radiator").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract radiator").
     }
 }
 
