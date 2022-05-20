@@ -198,6 +198,8 @@ global function DispAvionics
 // Display for a Flyby of a body
 global function DispFlyBy
 {
+    parameter radarAlt to Ship:Altitude - Ship:GeoPosition:TerrainHeight.
+    
     set line to 10.
 
     local sciSitu to choose "High" if ship:altitude >= BodyInfo:altForSci[Body:Name] else "Low".
@@ -205,13 +207,13 @@ global function DispFlyBy
     print "FLYBY DATA" at (0, line).
     print "----------" at (0, cr()).
     print "ALTITUDE     : " + round(ship:altitude) at (0, cr()).
-    print "RDR ALTITUDE : " + round(ship:bounds:bottomaltradar) at (0, cr()).
+    print "RDR ALTITUDE : " + round(radarAlt) at (0, cr()).
     print "SRF SPEED    : " + round(ship:velocity:surface:mag, 1) at (0, cr()).
     print "SITUATION    : " + Body:Name + ": " + sciSitu + " over " + addons:scansat:getBiome(ship:body, ship:geoposition) at (0, cr()).
     cr().
     print "APPROACH" at (0, cr()).
-    print "APPROACH ALT : " + round(ship:periapsis) at (0, cr()).
-    print "APPROACH ETA : " + TimeSpan(eta:periapsis):full at (0, cr()).
+    print "EST APPROACH ALT : " + round(ship:periapsis) at (0, cr()).
+    print "EST APPROACH ETA : " + TimeSpan(eta:periapsis):full at (0, cr()).
 }
 
 // Display for inclination burn details
@@ -408,7 +410,8 @@ global function DispOrbit
 // Impact telemetry
 global function DispImpact
 {
-    parameter tti is 0.
+    parameter tti is -1,
+              radarAlt is Ship:Altitude - Ship:GeoPosition:TerrainHeight.
 
     set line to 10.
 
@@ -416,9 +419,20 @@ global function DispImpact
     print "-----------------" at (0, cr()).
     print "BODY           : " + ship:body:name   + "      " at (0, cr()).
     print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
-    print "RADAR ALT      : " + round(ship:altitude - ship:geoposition:terrainheight)        + "m     " at (0, cr()).
+    print "RADAR ALT      : " + round(radarAlt)        + "m     " at (0, cr()).
     print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, cr()).
-    print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
+    if tti > 0.25
+    {
+        print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
+    }
+    else if tti > -1
+    {
+        print "IMPACT!                             " at (0, cr()).
+    }
+    else
+    {
+        print "                                    " at (0, cr()).
+    }
 }
 
 
@@ -429,8 +443,9 @@ global function DispLanding
               tgtAlt is 0,
               tgtSrfSpd is 0,
               tgtVertSpd is 0,
-              tti is 0, 
-              burnDur is 0.
+              radarAlt is Ship:Altitude - Ship:GeoPosition:TerrainHeight,
+              tti is -1, 
+              burnDur is -1.
 
     set line to 10.
 
@@ -441,14 +456,14 @@ global function DispLanding
     print "TARGET SRF SPD : " + tgtSrfSpd + "m/s   " at (0, cr()).
     print "TARGET VERT SPD: " + tgtVertSpd + "m/s  " at (0, cr()).
     cr().
-    print "ALTITUDE       : " + round(ship:altitude)                + "m     " at (0, cr()).
-    print "RADAR ALT      : " + round(ship:bounds:bottomaltradar)   + "m     " at (0, cr()).
-    print "SURFACE SPD    : " + round(ship:groundspeed, 2)          + "m/s   " at (0, cr()).
-    print "VERTICAL SPD   : " + round(ship:verticalspeed, 2)        + "m/s   " at (0, cr()).
+    print "ALTITUDE       : " + round(Ship:Altitude)                + "m     " at (0, cr()).
+    print "RADAR ALT      : " + round(radarAlt)       + "m     " at (0, cr()).
+    print "SURFACE SPD    : " + round(Ship:GroundSpeed, 2)          + "m/s   " at (0, cr()).
+    print "VERTICAL SPD   : " + round(Ship:VerticalSpeed, 2)        + "m/s   " at (0, cr()).
     cr().
     print "THROTTLE       : " + round(throttle * 100)               + "%  " at (0, cr()).
-    if tti > 0      print "TIME TO IMPACT : " + round(tti, 2)                       + "s   " at (0, cr()).
-    if burnDur > 0  print "BURN DURATION  : " + round(burnDur, 2)                   + "s   " at (0, cr()).
+    if tti > -1      print "TIME TO IMPACT : " + round(tti, 2)                       + "s   " at (0, cr()).
+    if burnDur > -1  print "BURN DURATION  : " + round(burnDur, 2)                   + "s   " at (0, cr()).
 }
 
 // Generic API for printing a telemetry section, takes a list of header strings / values
@@ -519,7 +534,8 @@ global function DispPIDReadout
 // General telemetry for flight
 global function DispTelemetry
 {
-    parameter hasConnection to true.
+    parameter hasConnection to true, 
+              radarAlt to Round(Ship:Altitude - Ship:GeoPosition:TerrainHeight).
     
     set line to 10.
 
@@ -540,6 +556,7 @@ global function DispTelemetry
         local orbSpdStr         to round(ship:velocity:orbit:mag):ToString.
 
         print "ALTITUDE         : " + altStr        + "m      " at (0, cr()).
+        print "RADAR ALTITUDE   : " + radarAlt      + "m      " at (0, cr()).
         print "APOAPSIS         : " + apStr         + "m      " at (0, cr()).
         print "PERIAPSIS        : " + peStr         + "m      " at (0, cr()).
         cr().

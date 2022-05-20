@@ -123,7 +123,7 @@ if retroFire and ship:periapsis > reentryTgt
     set ts to time:seconds + settleTime.
     until time:seconds >= ts
     {
-        if not CheckSteering("angle", 0.050) 
+        if not CheckSteering(0.050) 
         {
             set ts to time:seconds + settleTime.
             set progCounter to progTimer - time:seconds.

@@ -51,6 +51,7 @@ global function GetSteeringDir
         ,"retrograde",  Ship:Retrograde:Vector
         ,"facing",      Ship:Facing:Vector
         ,"body",        Body:Position
+        ,"bodyOut",     -Body:Position
         ,"radOut",      -Body:Position
         ,"home",        Body("Kerbin"):Position
         ,"srfRetro",    Ship:SrfRetrograde:Vector
@@ -115,7 +116,9 @@ global function GetSteeringDir
 
 global function SrfRetroSafe 
 {
-    if Ship:Bounds:BottomAltRadar > 100 
+    parameter radarAlt.
+    
+    if radarAlt > 100
     {
         return list(GetSteeringDir("srfRetro-radOut"), "srfRetro_Locked1").
     }
@@ -485,7 +488,8 @@ global function ArmAutoStaging
         local endTime to Time:Seconds.
         local stgTime to endTime - startTime.
         set g_stagingTime to g_stagingTime + stgTime.
-        wait 0.25.
+        set g_staged to true.
+        wait 0.1.
         OutInfo2("Staging time: " + round(g_stagingTime, 2)).
         if Ship:Availablethrust >= 0.01 set g_stagingTime to 0.
         //set g_MECO to g_MECO + (endTime - startTime).
@@ -547,6 +551,13 @@ global function SafeStage
             }
         }
     }
+}
+
+// Check for staging via g_staged var. If true, reset vBounds.
+global function ResetStagedStatus
+{
+    set g_staged to false.
+    return Ship:Bounds.
 }
 // #endregion
 

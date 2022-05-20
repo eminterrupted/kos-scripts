@@ -30,6 +30,8 @@ local plSetpoint to 0.
 local tPid          to PidLoop(kP, kI, kD, plMinOut, plMaxOut).
 set tPid:Setpoint to plSetpoint.
 
+local vBounds to Ship:Bounds.
+
 // Vars for logging. Will log start values and resulting distance to waypoint after touchdown.
 local logPath       to Path("0:/data/landingResults/minmus/_distResults.csv").
 local startAlt      to 0.
@@ -90,7 +92,7 @@ else
     {
         set startDist     to round(vxcl(ship:up:vector, wp:position):mag, 2).
         set startAlt      to round(ship:altitude, 1).
-        set startRadarAlt to round(Ship:Bounds:BottomAltRadar, 1).
+        set startRadarAlt to round(vBounds:BottomAltRadar, 1).
         set startTWR      to round(GetTWRForStage(), 1).
     }
 
@@ -108,8 +110,12 @@ else
         set tgtSrfSpd to choose aSrfSpeed[i] / 2 if Ship:Body = Body("Minmus") and aSrfSpeed[i] > 10 else aSrfSpeed[i].
         set tgtVertSpd to choose aVertSpd[i] / 2 if Ship:Body = Body("Minmus") and aVertSpd[i] > 5 else aVertSpd[i].
 
-        until Ship:Bounds:BottomAltRadar <= aDescentAlt[i]
+        until vBounds:BottomAltRadar <= aDescentAlt[i]
         {
+            if g_staged
+            {
+                set vBounds to ResetStagedStatus().
+            }
             set srfDir to SrfRetroSafe(). // Returns either a list containing direction depending on verticalSpeed & directionName
             set sVal to srfDir[0].
             if Ship:Velocity:Surface:Mag > tgtSrfSpd * 1.025 //or Ship:VerticalSpeed > tgtVertSpd // If we are above target speed for this altitude, burn
@@ -120,7 +126,7 @@ else
             {
                 if tVal <> 0 set tVal to 0.
             }
-            DispLanding(program, aDescentAlt[i], tgtSrfSpd, tgtVertSpd).
+            DispLanding(program, aDescentAlt[i], tgtSrfSpd, tgtVertSpd, vBounds:BottomAltRadar).
             OutInfo("SrfRetroSafe mode: " + srfDir[1]).
         }
     }

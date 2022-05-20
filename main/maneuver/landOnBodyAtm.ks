@@ -14,7 +14,7 @@ local hsStage to choose 1 if core:tag:split("|"):length < 2 else choose core:tag
 
 local armFairings       to true.
 local fairingTag        to "descent".
-local fairingAlt        to ship:body:atm:height / 10.
+local fairingAlt        to 5000.
 local reentryTgt        to ship:body:atm:height / 2.5.
 local retroFire         to false.
 local retroStage        to 4.
@@ -143,7 +143,7 @@ if retroFire and ship:periapsis > reentryTgt
     set ts to time:seconds + settleTime.
     until time:seconds >= ts
     {
-        if not CheckSteering("angle", 0.050) 
+        if not CheckSteering(0.050) 
         {
             set ts to time:seconds + settleTime.
             set progCounter to progTimer - time:seconds.
@@ -366,7 +366,7 @@ until alt:radar <= 1000
     DispTelemetry().
 }
 OutMsg("Heatshield Deploy").
-until stage <= 1
+until stage:number <= 1
 {
     stage.
     wait 1.

@@ -15,3 +15,4 @@ global g_MECO to 0.
 global g_orientation to "pro-sun".
 global g_termChar to "".
 global g_stagingTime to 0.
+global g_staged to false.

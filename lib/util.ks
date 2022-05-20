@@ -308,8 +308,8 @@ global function CheckMnvDelegate
 // returns a bool if steeringManager values are within the optional zero-centered range
 global function CheckSteering
 {
-    parameter axis is "angle",
-              accRange to 0.025.
+    parameter accRange is 0.025, 
+              axis is "angle".
 
     if axis = "angle" 
     {
@@ -907,26 +907,34 @@ global function WarpToAlt
 {
     parameter tgtAlt.
     
+    local warpFactor to 1.
+
+    if tgtAlt > 1000000 set warpFactor to 1.
+    else if tgtAlt > 500000 set warpFactor to 1.15.
+    else if tgtAlt > 100000 set warpFactor to 1.25.
+    else if tgtAlt > 10000 set warpFactor to 1.5.
+    else set warpFactor to 2.
+
     if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.015 set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.1 set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.5 set warp to 2.
-        else if ship:altitude <= tgtAlt * 2.5 set warp to 3.
-        else if ship:altitude <= tgtAlt * 5 set warp to 4.
-        else if ship:altitude <= tgtAlt * 25 set warp to 5.
+        if ship:altitude <= tgtAlt * 1.015 * warpFactor set warp to 0.
+        else if ship:altitude <= tgtAlt * 1.1 * warpFactor set warp to 1.
+        else if ship:altitude <= tgtAlt * 1.5 * warpFactor set warp to 2.
+        else if ship:altitude <= tgtAlt * 2.5 * warpFactor set warp to 3.
+        else if ship:altitude <= tgtAlt * 5 * warpFactor set warp to 4.
+        else if ship:altitude <= tgtAlt * 25 * warpFactor set warp to 5.
         else set warp to 6.
         //else if ship:altitude <= tgtAlt * 100 set warp to 6.
         //else set warp to 7.
     }
     else
     {
-        if ship:altitude >= tgtAlt * 0.975 set warp to 0.
-        else if ship:altitude >= tgtAlt * 0.85 set warp to 1.
-        else if ship:altitude >= tgtAlt * 0.75 set warp to 2.
-        else if ship:altitude >= tgtAlt * 0.625 set warp to 3.
-        else if ship:altitude >= tgtAlt * 0.500 set warp to 4.
-        else if ship:altitude >= tgtAlt * 0.250 set warp to 5.
+        if ship:altitude >= tgtAlt * 0.975 * warpFactor set warp to 0.
+        else if ship:altitude >= tgtAlt * 0.85 * warpFactor set warp to 1.
+        else if ship:altitude >= tgtAlt * 0.75 * warpFactor set warp to 2.
+        else if ship:altitude >= tgtAlt * 0.625 * warpFactor set warp to 3.
+        else if ship:altitude >= tgtAlt * 0.500 * warpFactor set warp to 4.
+        else if ship:altitude >= tgtAlt * 0.250 * warpFactor set warp to 5.
         else set warp to 6.
         //else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
         //else set warp to 7.
@@ -1003,15 +1011,30 @@ local function DeployRadiator
 
     if action = "toggle"
     {
-        if not DoEvent(m, "extend radiator") DoEvent(m, "retract radiator").
+        if not DoEvent(m, "extend radiator") 
+        {
+            if not DoEvent(m, "activate radiator")
+            {
+                if not DoEvent(m, "retract radiator")
+                {
+                    DoEvent(m, "shutdown radiator").
+                }
+            }
+        }
     }
     else if action = "deploy"
     {
-        DoEvent(m, "extend radiator").
+        if not DoEvent(m, "extend radiator").
+        {
+            DoEvent(m, "activate radiator").
+        }
     }
     else if action = "retract"
     {
-        DoEvent(m, "retract radiator").
+        if not DoEvent(m, "retract radiator")
+        {
+            DoEvent(m, "shutdown radiator").
+        }
     }
 }
 

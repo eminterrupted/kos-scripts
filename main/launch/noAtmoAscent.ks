@@ -140,7 +140,9 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:bounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
+local vBounds to ship:bounds. 
+
+until vBounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
@@ -150,14 +152,14 @@ if gear gear off.
 
 OutInfo("Roll Program").
 set sVal to heading(l_az_calc(azCalcObj), 90, 0).
-until (steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1) or Ship:Bounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
+until (steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1) or vBounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
 }
 OutInfo().
 
-until Ship:Bounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
+until vBounds:BottomAltRadar >= altStartTurn or Ship:Apoapsis >= tgtAp
 {
     DispTelemetry().
     wait 0.01.
