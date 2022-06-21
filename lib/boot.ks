@@ -36,19 +36,19 @@ global function CopyArchivePlan
 
 global function ParseMissionTags
 {
-    parameter c.
+    parameter c is core.
 
-    local fragmentList to list().
-    local pipeSplit to c:tag:split("|").
-    for word in pipeSplit
+    local fragmentlist to list().
+    local pipesplit to c:tag:split("|").
+    for word in pipesplit
     {
-        local colonSplit to word:split(":").
-        for frag in colonSplit
+        local colonsplit to word:split(":").
+        for frag in colonsplit
         {
-            fragmentList:add(frag).
+            fragmentlist:add(frag).
         }
     }
-    return fragmentList.
+    return fragmentlist.
 }
 
 

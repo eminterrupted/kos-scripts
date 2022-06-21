@@ -7,6 +7,7 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/sci").
 runOncePath("0:/lib/vessel").
 runOncePath("0:/lib/util").
+runOncePath("0:/lib/scansat").
 
 //multiscan: 
 /// true: continuosly loop experiment for each biome
@@ -119,7 +120,7 @@ local function PerformMultiscan
         }
         until CheckInputChar(terminal:input:endCursor)
         {
-            set curBiome to addons:scansat:getBiome(ship:body, ship:geoposition).
+            set curBiome to GetBiome().
             set sVal to GetSteeringDir(orientation).
             OutMsg("Scanning for unresearched biomes").
             if not biomeList:contains(curBiome)

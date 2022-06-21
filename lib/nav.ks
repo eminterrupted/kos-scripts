@@ -101,7 +101,11 @@ global function GetOrbitable
     {
         return tgtStr.
     }
-    
+    else if tgtStr:IsType("Part")
+    {
+        return tgtStr:ship.
+    }
+
     local vList to list().
     list targets in vList.
 

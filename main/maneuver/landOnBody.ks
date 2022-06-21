@@ -128,12 +128,13 @@ else
             }
             DispLanding(program, aDescentAlt[i], tgtSrfSpd, tgtVertSpd, vBounds:BottomAltRadar).
             OutInfo("SrfRetroSafe mode: " + srfDir[1]).
+            if Ship:Status = "LANDED" break.
         }
     }
 
     set tgtSrfSpd to 0.5.
     set tgtVertSpd to -0.5.
-    until Ship:Status = "LANDED"
+    until Ship:Status = "LANDED" or CheckInputChar(Terminal:Input:EndCursor)
     {
         set srfDir to SrfRetroSafe().
         set sVal to srfDir[0].
@@ -164,11 +165,11 @@ else
 
 wait 1.
 
-local partsToDeploy to Ship:PartsTaggedPattern("srfDeploy.*").
+local partsToDeploy to Ship:PartsTaggedPattern("deploy.land.*").
 if partsToDeploy:length > 0
 {
-    OutMsg("srfDeploy in progress.").
-    DeployPartSet("srfDeploy", "deploy").
+    OutMsg("Deploy Land Group in progress.").
+    DeployPartSet("land", "deploy").
     OutMsg("Deployments complete").
 }
 wait 1.

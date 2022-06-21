@@ -4,7 +4,7 @@
 runOncePath("0:/lib/globals.ks").
 
 //-- Variables --//
-local line to 10.
+// global g_line to 10. // moved to lib/globals/ks
 
 //-- Functions --//
 
@@ -13,7 +13,9 @@ local line to 10.
 global function clr
 {
     parameter clrLine.
-    print "                                                            " at (0, clrLine).
+    
+    local str to "{0, " + -terminal:width + "}".
+    print str:format("") at (0, clrLine).
 }
 
 global function clrDisp
@@ -26,11 +28,18 @@ global function clrDisp
     }
 }
 
+// Clears display and resets g_line
+global function ResetDisp
+{
+    clrDisp().
+    set g_line to 10.
+}
+
 // Local function for incrementing ln
 global function cr
 {
-    set line to line + 1.
-    return line.
+    set g_line to g_line + 1.
+    return g_line.
 }
 
 // Formats a timestamp into one of a few format strings
@@ -103,6 +112,17 @@ global function OutInfo2
     print str at (0, 8).
 }
 
+// Prints the input value to the mission log
+global function OutLog
+{
+    parameter logStr is "",
+              errLvl is 0,
+              screenTee is false.
+
+    
+}
+
+
 // Print a string to the msg line
 global function OutMsg
 {
@@ -130,6 +150,7 @@ global function OutTee
     else if pos = 2 OutInfo2(str).
     OutHUD(str, errLvl, screenTime).
 }
+
 
 global function OutWait
 {
@@ -179,9 +200,9 @@ global function ShowTerm
 // A display for airplane flights
 global function DispAvionics
 {
-    set line to 10.
+    set g_line to 10.
     
-    print "AVIONICS" at (0, line).
+    print "AVIONICS" at (0, g_line).
     print "---------" at (0, cr()).
     print "ALTITUDE         : " + round(ship:altitude)              + "m      " at (0, cr()).
     cr().
@@ -200,11 +221,11 @@ global function DispFlyBy
 {
     parameter radarAlt to Ship:Altitude - Ship:GeoPosition:TerrainHeight.
     
-    set line to 10.
+    set g_line to 10.
 
     local sciSitu to choose "High" if ship:altitude >= BodyInfo:altForSci[Body:Name] else "Low".
 
-    print "FLYBY DATA" at (0, line).
+    print "FLYBY DATA" at (0, g_line).
     print "----------" at (0, cr()).
     print "ALTITUDE     : " + round(ship:altitude) at (0, cr()).
     print "RDR ALTITUDE : " + round(radarAlt) at (0, cr()).
@@ -222,16 +243,58 @@ global function DispIncChange
     parameter shipOrbit,
               tgtOrbit.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "INCLINATION CHANGE PARAMETERS" at (0, line).
+    print "INCLINATION CHANGE PARAMETERS" at (0, g_line).
     print "-----------------------------" at (0, cr()).
     cr().
     print "              CURRENT  |   TARGET" at (0, cr()).
     print "INCLINATION :  " + round(shipOrbit:Inclination, 1) at (0, cr()).
-        print round(tgtOrbit:Inclination, 1) at (28, line).
+        print round(tgtOrbit:Inclination, 1) at (28, g_line).
     print "LAN         :  " + round(shipOrbit:LAN, 1) at (0, cr()). 
-        print round(tgtOrbit:LAN, 1) at (28, line).
+        print round(tgtOrbit:LAN, 1) at (28, g_line).
+}
+
+// Display mission plan
+global function DispMissionPlan
+{
+    parameter mPlan is list(),
+              titleStr is "Mission plan".
+
+    ResetDisp().
+    if mPlan:length = 0
+    {
+        if exists("mp.json")
+        {
+            set mPlan to readJson("mp.json").
+        }
+        else
+        {
+            OutMsg("ERROR: Cannot display mission plan").
+            OutInfo("       No mission plan provided or exists on disk").
+            return 1.
+        }
+    }
+
+    local titleBar to "".
+    for i in range(0, titleStr:length - 1, 1)
+    {
+        set titleBar to titleBar + "-".
+    }
+    print titleStr:toUpper at (0, g_line).
+    print titleBar at (0, cr()).
+    from { local i to 0. local dLine to g_line.} until i >= mPlan:length - 1 step { set i to i + 2. set dLine to dLine + 1.} do
+    {
+        if dLine >= Terminal:Height - 5
+        {
+            ResetDisp().
+            print titleStr:toUpper at (0, g_line).
+            print titleBar at (0, cr()).
+            set dLine to g_line.
+        }
+        
+        print ("{0, -3}  {1, -15}  ({2})"):format(i, mPlan[i], mPlan[i + 1]:join(",")) at (0, cr()).
+    }
 }
 
 // Display for orbit changes
@@ -241,18 +304,18 @@ global function DispOrbitChange
               tgtAp,
               tgtApe.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "ORBIT CHANGE PARAMETERS" at (0, line).
+    print "ORBIT CHANGE PARAMETERS" at (0, g_line).
     print "-----------------------" at (0, cr()).
     cr().
     print "              CURRENT  |   TARGET" at (0, cr()).
     print "APOAPSIS  :    " + round(ship:orbit:apoapsis) at (0, cr()).
-        print round(tgtAp) at (28, line).
+        print round(tgtAp) at (28, g_line).
     print "PERIAPSIS :    " + round(ship:orbit:periapsis) at (0, cr()). 
-        print round(tgtPe) at (28, line).
+        print round(tgtPe) at (28, g_line).
     print "ARG PE    :    " + round(ship:orbit:argumentofperiapsis, 1) at (0, cr()).
-        print round(tgtApe, 1) at (28, line).
+        print round(tgtApe, 1) at (28, g_line).
 }
 
 // Displays the launch plan prior to launching
@@ -260,9 +323,9 @@ global function DispLaunchPlan
 {
     parameter launchPlan, planName, noAtmoStageAtLaunch is 0.
     
-    set line to 10.
+    set g_line to 10.
 
-    print "LAUNCH PLAN OVERVIEW" at (0, line).
+    print "LAUNCH PLAN OVERVIEW" at (0, g_line).
     print "--------------------" at (0, cr()).
     cr().
     print "PLAN USED           : " + planName[0] at (0, cr()).
@@ -282,9 +345,9 @@ global function DispLaunchWindow
 {
     parameter tgtInc, tgtLAN, tgtEffectiveLAN, launchTime.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "LAUNCH WINDOW" at (0, line).
+    print "LAUNCH WINDOW" at (0, g_line).
     print "-------------" at (0, cr()).
     cr().
     if hasTarget 
@@ -295,6 +358,28 @@ global function DispLaunchWindow
     cr().
     print "CURRENT LAN      : " + round(ship:orbit:lan, 3) at (0, cr()).
     print "TIME TO LAUNCH   : " + dispTimeFormat(time:seconds - launchTime) at (0, cr()).
+}
+
+global function DispLaunchWindow2
+{
+    parameter launchTime, tgtInc, tgtLAN, srfSpd, lanAdjust, tgtEffectiveLAN.
+
+    set g_line to 10.
+
+    print "LAUNCH WINDOW 2" at (0, g_line).
+    print "---------------" at (0, cr()).
+    cr().
+    if hasTarget 
+    print "TARGET           : " + target at (0, cr()).
+    print "OBT VEL AT LAT   : " + round(srfSpd, 2) + "m/s " at (0, cr()).
+    cr().
+    print "TARGET INC       : " + round(tgtInc, 1) at (0, cr()).
+    print "TARGET LAN       : " + round(tgtLAN, 3) at (0, cr()).
+    print " + LAN ADJUST    : " + round(lanAdjust, 3)  at (0, cr()).
+    print "TGT EFFECTIVE LAN: " + round(tgtEffectiveLAN, 3) at (0, cr()).
+    cr().
+    print "CURRENT LAN      : " + round(ship:orbit:lan, 3) at (0, cr()).
+    print "TIME TO LAUNCH   : " + dispTimeFormat(launchTime ) at (0, cr()).
 }
 
 // DispBoot :: <none> | <none>
@@ -371,9 +456,9 @@ global function DispMnvScore
               result,
               score.
 
-    set line to 10.
+    set g_line to 10.
     
-    print "NODE OPTIMIZATION"               at (0, line).
+    print "NODE OPTIMIZATION"               at (0, g_line).
     print "-----------------"               at (0, cr()).
     print "TARGET BODY   : " + tgtBody      at (0, cr()).
     print "TARGET VAL    : " + tgtVal       at (0, cr()).
@@ -388,9 +473,9 @@ global function DispOrbit
 {
     parameter orientation is "".
 
-    set line to 10.
+    set g_line to 10.
     
-    print "ORBIT" at (0, line).
+    print "ORBIT" at (0, g_line).
     print "---------" at (0, cr()).
     print "BODY         : " + ship:body:name        + "       " at (0, cr()).
     print "ALTITUDE     : " + round(ship:altitude)  + "m      " at (0, cr()).
@@ -413,9 +498,9 @@ global function DispImpact
     parameter tti is -1,
               radarAlt is Ship:Altitude - Ship:GeoPosition:TerrainHeight.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "LANDING TELEMETRY" at (0, line).
+    print "LANDING TELEMETRY" at (0, g_line).
     print "-----------------" at (0, cr()).
     print "BODY           : " + ship:body:name   + "      " at (0, cr()).
     print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
@@ -447,9 +532,9 @@ global function DispLanding
               tti is -1, 
               burnDur is -1.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "LANDING TELEMETRY" at (0, line).
+    print "LANDING TELEMETRY" at (0, g_line).
     print "-----------------" at (0, cr()).
     print "PROGRAM        : " + program + "  " at (0, cr()).
     print "TARGET ALT     : " + tgtAlt + "m   " at (0, cr()).
@@ -472,24 +557,44 @@ global function DispGeneric
     parameter dispList, 
               stLine is 22.
 
-    set line to stLine.
+    set g_line to stLine.
     
     from { local idx is 0.} until idx >= dispList:length step { set idx to idx + 1.} do 
     {
         if idx = 0 
         {
-            print dispList[idx] at (0, line).
+            print dispList[idx] at (0, g_line).
             print "--------------" at (0, cr()).
             cr().
         }
         else
         {
-            print dispList[idx]:toUpper at (0, line).
-            print ":     " at (16, line).
+            print dispList[idx]:toUpper at (0, g_line).
+            print ":     " at (16, g_line).
             set idx to idx + 1.
-            print dispList[idx] at (18, line).
+            print dispList[idx] at (18, g_line).
             cr().
         }
+    }
+}
+
+global function DispFileList
+{
+    parameter itemList,
+              stLine to 10.
+
+    set g_line to stLine.
+
+    local iCurrent to itemList:iterator.
+    local iType to "".
+    print "Choose Item by index" at (2, g_line).
+    cr().
+    print ("{0, -3}  {1, -10}  {2}"):format("Idx", "Item Type", "Item") at (2, cr()).
+    print ("{0, -3}  {1, -10}  {2}"):format("---", "---------", "----") at (2, cr()).
+    until not iCurrent:next
+    {
+        set iType to choose "File" if iCurrent:value:isFile else "Directory".
+        print ("{0, 3}  {1, -10}  {2}"):format(iCurrent:index, iType, iCurrent:value) at (2, cr()).
     }
 }
 
@@ -499,9 +604,9 @@ global function DispGPS
     parameter gpsModuleStatus, 
               orientation.
 
-    set line to 10.
+    set g_line to 10.
 
-    print "GPS MISSION" at (0, line).
+    print "GPS MISSION" at (0, g_line).
     print "-----------" at (0, cr()).
     print "GPS NODE         : " + Ship:Name:Split(" ")[1] at (0, cr()).
     print "GPS STATUS       : " + gpsModuleStatus:ToUpper at (0, cr()).
@@ -517,9 +622,9 @@ global function DispPIDReadout
 {
     parameter pidName, pid, tgtVal is 0, curVal is 0.
 
-    set line to 25.
+    set g_line to 25.
 
-    print "PIDTYPE: " + pidName at (0, line).
+    print "PIDTYPE: " + pidName at (0, g_line).
     print "TGTVAL : " + round(tgtVal, 5) + "     " at (0, cr()).
     print "CURVAL : " + round(curVal, 5) + "      " at (0, cr()).
     print "ERROR  : " + round(curVal - tgtVal, 5) + "     " at (0, cr()).
@@ -537,9 +642,9 @@ global function DispTelemetry
     parameter hasConnection to true, 
               radarAlt to Round(Ship:Altitude - Ship:GeoPosition:TerrainHeight).
     
-    set line to 10.
+    set g_line to 10.
 
-    print "TELEMETRY" at (0, line).
+    print "TELEMETRY" at (0, g_line).
     print "---------" at (0, cr()).
 
     if hasConnection
@@ -595,8 +700,82 @@ global function DispTelemetry
     }
 }
 
+global function DispLaunchTelemetry
+{
+    parameter tgtAp, 
+              tgtPe,
+              tgtVel.
+    
+    set g_line to 10.
+
+    print "TELEMETRY" at (0, g_line).
+    print "---------" at (0, cr()).
+
+    print "{0,-18}: {1, -15}":format("ALTITUDE", round(ship:altitude)) at (0, cr()).
+    print "{0,-18}: {1, -15}":format("RADAR ALTITUDE", round(Ship:Altitude - Ship:GeoPosition:TerrainHeight)) at (0, cr()).
+    print "{0,-18}: {1, -15} {2, -15}":format("APOAPSIS", round(ship:apoapsis), tgtAp) at (0, cr()).
+    print "{0,-18}: {1, -15} {2, -15}":format("PERIAPSIS", round(ship:periapsis), tgtPe) at (0, cr()).
+    cr().
+    print "{0,-18}: {1, -15}":format("THROTTLE", round(throttle * 100)) at (0, cr()).
+    // print "{0,-18}: {1, -15}":format("CUR THRUST", round(0)) at (0, cr()).
+    print "{0,-18}: {1, -15}":format("AVAIL THRUST", round(Ship:AvailableThrust, 2)) at (0, cr()).
+    print "{0,-18}: {1, -15}":format("TWR", round(Ship:AvailableThrust * tConstants:KnToKg)) at (0, cr()).
+    print "{0,-18}: {1, -15}":format("MAX ACCELERATION", round(Ship:AvailableThrust / Ship:Mass, 2)) at (0, cr()).
+    cr().
+    if (Body:Atm:Exists) and ship:altitude < body:atm:height
+    {
+        print "{0,-18}: {1, -15}":format("SURFACE SPEED", round(ship:velocity:surface:mag)) at (0, cr()). 
+        print "{0,-18}: {1, -15}":format("PRESSURE (KPA)", round(body:atm:altitudePressure(ship:altitude) * constant:AtmToKpa, 7)) at (0, cr()).
+        print "{0,-18}: {1, -15}":format("PRESSURE (ATM)", round(body:atm:altitudePressure(ship:altitude), 7)) at (0, cr()).
+        print "{0,-18}: {1, -15}":format("PRESSURE (Q)",   round(ship:q, 7)) at (0, cr()).
+    }
+    else
+    {
+        print "{0,-18}: {1, -15} {2, -15}":format("ORBITAL SPEED", round(ship:velocity:orbit:mag), tgtVel) at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+    }
+}
+
 // Resource transfer readout
 global function DispResTransfer
+{
+    parameter src,
+              tgt,
+              srcRes,
+              xfrAmt.
+
+    set g_line to 10.
+
+    local srcAmt to srcRes:amount.
+    local finalAmt to 0.
+    local tgtRes to srcRes:amount.
+    
+    for res in tgt:resources
+    {
+        if res:name = srcRes:name 
+        {
+            set tgtRes to res. 
+        }
+    }
+    set finalAmt to Min(tgtRes:Capacity, tgtRes:Amount + xfrAmt).
+
+    print "RESOURCE TRANSFER" at (0, g_line).
+    print "-----------------" at (0, cr()).
+    print "RESOURCE             : " + srcRes:name at (0, cr()).
+    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
+    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtRes:amount), 2) * 100 + "%   " at (0, cr()).
+    cr().
+    print "SOURCE ELEMENT       : " + src:name at (0, cr()).
+    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcRes:Capacity, 1) at (0, cr()).
+    cr().
+    print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
+    print "TARGET AMOUNT / CAP  : " + round(tgtRes:amount, 2) + " / " + round(tgtRes:Capacity, 1) at (0, cr()).
+    cr().
+}
+
+global function DispResTransfer2
 {
     parameter resName, 
               src,
@@ -605,7 +784,7 @@ global function DispResTransfer
               tgtCap,
               xfrAmt.
 
-    set line to 10.
+    set g_line to 10.
 
     local srcAmt to 0.
     local tgtAmt to 0.
@@ -620,7 +799,7 @@ global function DispResTransfer
         if res:name = resName set tgtAmt to res:amount.
     }
 
-    print "RESOURCE TRANSFER" at (0, line).
+    print "RESOURCE TRANSFER" at (0, g_line).
     print "-----------------" at (0, cr()).
     print "RESOURCE             : " + resName at (0, cr()).
     print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
@@ -638,11 +817,11 @@ global function DispResTransfer
 // DispScope - Displays info about a telescope and it's target
 global function DispScope
 {
-    set line to 10.
+    set g_line to 10.
 
     local obtPeriod to TimeSpan(ship:orbit:period).
 
-    print "SCOPE TELEMETRY" at (0, line).
+    print "SCOPE TELEMETRY" at (0, g_line).
     print "---------------" at (0, cr()).
     print "SCOPE    : " + ship:name at (0, cr()).
     print "BODY     : " + body:name at (0, cr()).
@@ -670,9 +849,9 @@ global function DispTargetData
 {
     parameter _tgtVes.
 
-    set line to 10.
+    set g_line to 10.
     
-    print "TARGET DATA" at (0, line).
+    print "TARGET DATA" at (0, g_line).
     print "-----------" at (0, cr()).
     
     print "TARGET ORBITABLE     : " + _tgtVes:Name                                   at (0, cr()).

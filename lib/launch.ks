@@ -96,6 +96,12 @@ global function LaunchCountdown
     local launchTime to time:seconds + s.
     lock countdown to time:seconds - launchTime. 
     
+    if ship:modulesNamed("ModuleCryoTank"):length > 0 
+    {
+        OutInfo("Setting CryoTank States").
+        RestoreTankCooling().
+    }
+
     OutInfo("Countdown initiated").
 
     FallbackRetract(1).
@@ -205,7 +211,10 @@ global function LaunchArmRetract
             {
                 if not DoEvent(m, "drop umbilical")
                 {
-                    DoEvent(m, "retract arm").
+                    if not DoEvent(m, "retract arm")
+                    {
+                        DoEvent(m, "retract arms").
+                    }
                 }
             }
             else if m:part:name:contains("swingarm")
@@ -214,7 +223,10 @@ global function LaunchArmRetract
                 {
                     if not DoEvent(m, "retract arm right").
                     {
-                        DoEvent(m, "retract arm").
+                        if not DoEvent(m, "retract arm")
+                        {
+                            DoEvent(m, "retract arms").
+                        }
                     }
                 }
             }
@@ -342,7 +354,7 @@ global function ArmLESJettison
     local lesList to list().
     for p in ship:parts
     {
-        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES" 
         {
             lesList:add(p).
         }
@@ -422,6 +434,70 @@ global function RetractSoyuzFuelArm
                 DoEvent(m, "retract arm").
             }
         }
+    }
+}
+
+// RestoreTankCooling :: <none> -> <obj>
+// Restores cryotanks back to the state found in the cache file (usually what was set in VAB)
+global function RestoreTankCooling
+{
+    local stateCache to path("0:/data/" + ship:name:replace(" ", "_") + "__tankCache.json").
+    local cryoTanks to ship:modulesNamed("ModuleCryoTank").
+    local cryoState to lex().
+
+    if exists(stateCache)
+    {
+        set cryoState to readJson(stateCache).
+        if cryoState:keys:length > 0
+        {
+            for m in cryoTanks
+            {
+                if cryoState:keys:contains(m:part:uid)
+                {
+                    SetTankCooling(m, cryoState[m:part:uid]).
+                }
+            }
+        }
+    }
+    deletePath(stateCache).
+    return cryoState.
+}
+
+// SetTankCooling :: <none> -> <obj>
+// Sets the current state of CryoTank active insulation modules in the cache, and returns the data as an object
+global function CacheTankCooling
+{
+    local stateCache to path("0:/data/" + ship:name:replace(" ", "_") + "__tankCache.json").
+    local cryoTanks to ship:modulesNamed("ModuleCryoTank").
+    local cryoState to lex().
+    
+    for t in cryoTanks
+    {
+        if t:hasEvent("disable cooling") set cryoState[t:part:uid] to true.
+        else if t:hasEvent("enable cooling") set cryoState[t:part:uid] to false.
+    }
+    
+    if not exists(stateCache) 
+    {
+        writeJson(cryoState, stateCache).
+    }
+    return cryoState.
+}
+
+// ToggleTankCooling :: <module>, <bool> -> <bool>
+// Enables / Disables a CryoTank cooling module based on flag. Returns operation success
+global function SetTankCooling
+{
+    parameter m,
+              state.
+
+    if state 
+    {
+        return DoEvent(m, "enable cooling").
+    }
+    else
+    {
+        return DoEvent(m, "disable cooling").
     }
 }
 //#endregion

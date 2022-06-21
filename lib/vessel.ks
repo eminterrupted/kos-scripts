@@ -116,7 +116,7 @@ global function GetSteeringDir
 
 global function SrfRetroSafe 
 {
-    parameter radarAlt.
+    parameter radarAlt is Ship:Altitude - Ship:GeoPosition:TerrainHeight.
     
     if radarAlt > 100
     {
@@ -131,6 +131,47 @@ global function SrfRetroSafe
         return list(GetSteeringDir("radOut-pro"), "upPos_Override").
     }
 }
+
+// TranslateToVec :: (Desired position<vector>) -> (CurrentError<scalar>)
+// Given a vector, will try to use translation to move the vessel into position
+global function TranslateToVec
+{
+    parameter tgtVec.
+
+    set ship:control:translation to tgtVec.
+    return round(tgtVec:mag, 5).
+}
+
+// Approach a docking port
+global function TranslateToDockingPort
+{
+    parameter tgtPort,
+              ctrlPort,
+              dist,
+              spd.
+
+    ctrlPort:controlFrom().
+
+    lock distOffset to tgtPort:portFacing:vector * dist.
+    lock approachVec to tgtPort:nodePosition - ctrlPort:nodePosition + distOffset.
+    lock relVel to ship:velocity:orbit - tgtPort:ship:velocity:orbit.
+    lock steering to -tgtPort:facing:vector.
+
+    OutMsg("Translating to TgtPort (" + tgtPort:name + "|" + tgtPort:UID + ")").
+    OutInfo("Target Distance: " + dist).
+    until ctrlPort:state <> "ready" 
+    {
+        TranslateToVec((approachVec:normalized * spd) - relVel).
+        local distVec to (tgtPort:nodePosition - ctrlPort:nodePosition).
+        if vang(ctrlPort:portFacing:vector, distVec) < 2 and abs(dist - distVec:mag) < 0.1 
+        {
+            break.
+        }
+        wait 0.01.
+        OutInfo2("Current distance: " + round(target:position:mag, 1)).
+    }
+}
+
 
 // global function GetRollDegrees
 // {

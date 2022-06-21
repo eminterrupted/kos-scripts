@@ -19,7 +19,7 @@ local runPlan to localPlan.
 
 sas off.
 
-if ship:status = "PRELAUNCH" 
+if ship:status = "PRELAUNCH" or MissionTime = 0
 {
     global lp to list().
     runPath("0:/main/setup/setupPlan").

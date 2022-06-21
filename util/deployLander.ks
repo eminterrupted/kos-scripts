@@ -1,7 +1,7 @@
 @lazyGlobal off.
 ClearScreen.
 
-parameter doReturn is true.
+parameter doReturn is false.
 
 RunOncePath("0:/lib/disp").
 

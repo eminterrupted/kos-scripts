@@ -39,7 +39,7 @@ if Ship:Periapsis > impactAlt
     until false
     {
         set g_termChar to GetInputChar().
-        if CheckChar(g_termChar, Terminal:Input:Enter)
+        if CheckChar(Terminal:Input:Enter)
         {
             break.
         }
@@ -50,7 +50,7 @@ if Ship:Periapsis > impactAlt
     wait 0.1.
 
     OutMsg("Aligning for P1 impact burn").
-    until CheckSteering(0.100)
+    until CheckSteering(1)
     {
         OutInfo("Steering error: " + round(steeringManager:angleError, 5)).
         DispTelemetry().

@@ -1,17 +1,22 @@
-@lazyGlobal off.
-clearScreen.
+@LazyGlobal off.
+ClearScreen.
+DispMain(ScriptPath():name).
 
 parameter params is list().
 
-runOncePath("0:/lib/globals").
-runOncePath("0:/lib/burnCalc").
-runOncePath("0:/lib/disp").
-runOncePath("0:/lib/mnv").
-runOncePath("0:/lib/nav").
-runOncePath("0:/lib/util").
-runOncePath("0:/lib/vessel").
+// Dependencies
+RunOncePath("0:/lib/loadDep").
+RunOncePath("0:/lib/burnCalc").
+RunOncePath("0:/lib/mnv").
 
-DispMain(ScriptPath(), false).
+// Declare Variables
+
+
+// Parse Params
+// if params:length > 0 
+// {
+//   set foo to params[0].
+// }
 
 // Calculate retrograde velocity parallel to planet velocity
 

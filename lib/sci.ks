@@ -68,25 +68,84 @@ global function RecoverSciList
 
     for m in sciList
     {
-        if m:hasSuffix("HASDATA")
+        RecoverSciMod(m, mode).
+    }
+    OutInfo().
+    OutMsg("SciList Recovery Completed").
+}
+
+global function RecoverSciList2
+{
+    parameter sciList,
+              mode is "ideal".
+
+    local allowedVals to list("ideal", "collect", "transmit", "tx", "txAll", "txForce").
+    for m in sciList
+    {
+        local mTag to m:part:tag:split(".").
+        if mTag[0] = "science"
         {
-            if m:hasData
+            if allowedVals:contains(mTag[1]) 
             {
-                if mode = "transmit"
+                set mode to mTag[1].
+            }
+        }
+        
+        RecoverSciMod(m, mode).
+    }
+    OutInfo().
+    OutMsg("SciList Recovery Completed").
+}
+
+global function RecoverSciMod
+{
+    parameter sciMod,
+              mode is "ideal".
+
+    if sciMod:hasSuffix("HASDATA")
+    {
+        if sciMod:hasData
+        {
+            if mode = "transmit" or mode = "tx"
+            {
+                local transmitFlag to false.
+                until transmitFlag
                 {
-                    local transmitFlag to false.
-                    until transmitFlag
+                    local ecValidation to list(0, 0, 0).//ValidateECForTransmit(m).
+                    if ecValidation[0] = 0
                     {
-                        local ecValidation to list(0, 0, 0).//ValidateECForTransmit(m).
-                        if ecValidation[0] = 0
-                        {
-                            OutMsg("Validating EC for science transmission").
-                            OutInfo("EC Required: " + ecValidation[1]).
-                            set transmitFlag to true.
-                        }
+                        OutMsg("Validating EC for science transmission").
+                        OutInfo("EC Required: " + ecValidation[1]).
+                        set transmitFlag to true.
                     }
-                    OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
-                    if TransmitSci(m) 
+                }
+                OutTee("Transmitting data from " + sciMod:part:title + " (" + sciMod:name + ")").
+                if TransmitSci(sciMod) 
+                {
+                    OutTee("Transmission successful!").
+                }
+                else 
+                {
+                    OutTee("Transmission failed!", 0, 2).
+                }
+            }
+            else if mode = "ideal"
+            {
+                if sciMod:data[0]:transmitValue > 0 and sciMod:data[0]:transmitValue = sciMod:data[0]:scienceValue
+                {
+                    // local transmitFlag to false.
+                    // until transmitFlag
+                    // {
+                    //     local ecValidation to ValidateECForTransmit(m).
+                    //     if ecValidation[0] = 0
+                    //     {
+                    //         OutMsg("Validating EC for science transmission").
+                    //         OutInfo("EC Required: " + ecValidation[1]).
+                    //         set transmitFlag to true.
+                    //     }
+                    // }
+                    OutTee("Transmitting data from " + sciMod:part:title + " (" + sciMod:name + ")").
+                    if TransmitSci(sciMod)
                     {
                         OutTee("Transmission successful!").
                     }
@@ -95,51 +154,25 @@ global function RecoverSciList
                         OutTee("Transmission failed!", 0, 2).
                     }
                 }
-                else if mode = "ideal"
+                else if sciMod:data[0]:scienceValue > 0
                 {
-                    if m:data[0]:transmitValue > 0 and m:data[0]:transmitValue = m:data[0]:scienceValue
-                    {
-                        // local transmitFlag to false.
-                        // until transmitFlag
-                        // {
-                        //     local ecValidation to ValidateECForTransmit(m).
-                        //     if ecValidation[0] = 0
-                        //     {
-                        //         OutMsg("Validating EC for science transmission").
-                        //         OutInfo("EC Required: " + ecValidation[1]).
-                        //         set transmitFlag to true.
-                        //     }
-                        // }
-                        OutTee("Transmitting data from " + m:part:title + " (" + m:name + ")").
-                        if TransmitSci(m)
-                        {
-                            OutTee("Transmission successful!").
-                        }
-                        else 
-                        {
-                            OutTee("Transmission failed!", 0, 2).
-                        }
-                    }
-                    else if m:data[0]:scienceValue > 0
-                    {
-                        CollectSci().
-                        if m:hasEvent("transfer data") 
-                        {
-                            OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
-                            ResetSci(m).
-                        }
-                    }
-                    else 
-                    {
-                        OutTee("Resetting science module: " + m:name + " (Part: " + m:part:title + ")").
-                        ResetSci(m).
-                    }
-                }
-                else if mode = "collect"
-                {
-                    OutTee("Collecting experiment results from module: " + m:name + " (Part: " + m:part:title + ")").
                     CollectSci().
+                    if sciMod:hasEvent("transfer data") 
+                    {
+                        OutTee("Resetting science module: " + sciMod:name + " (Part: " + sciMod:part:title + ")").
+                        ResetSci(sciMod).
+                    }
                 }
+                else 
+                {
+                    OutTee("Resetting science module: " + sciMod:name + " (Part: " + sciMod:part:title + ")").
+                    ResetSci(sciMod).
+                }
+            }
+            else if mode = "collect"
+            {
+                OutTee("Collecting experiment results from module: " + sciMod:name + " (Part: " + sciMod:part:title + ")").
+                CollectSci().
             }
         }
     }
@@ -202,8 +235,11 @@ local function DeploySci
 
     if not m:hasData
     {
-        if m:HasSuffix("deploy") m:deploy().
-        else 
+        if m:HasSuffix("deploy") and not m:inoperable
+        {
+            m:deploy().
+        }
+        else if m:hasEvent("start laser altimeter measurements")
         {
             DoEvent("start laser altimeter measurements").
         }

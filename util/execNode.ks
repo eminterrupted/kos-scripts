@@ -6,8 +6,9 @@ runOncePath("0:/lib/disp").
 runOncePath("0:/lib/mnv").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/vessel").
-
 runOncePath("0:/lib/globals").
+
+sas off.
 
 DispMain(scriptPath(), false).
 

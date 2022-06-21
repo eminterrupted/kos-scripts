@@ -43,7 +43,7 @@ local altGravTurn   to min(tgtAp / 2, 1000).
 local boosterObj    to lex().
 
 // Controls
-local sVal to LookDirUp(ship:up:vector, Sun:Position).
+local sVal to Ship:Facing.
 local tVal to 0.
 sas off.
 

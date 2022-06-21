@@ -39,9 +39,11 @@ else
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 
 // Turn params
-local altStartTurn to 750.
-local altGravTurn  to 50000.
-local spdStartTurn to 75.
+//local boundsBox     to ship:bounds.
+local altRoll       to ship:altitude + 250.
+local altStartTurn  to 750.
+local altGravTurn   to 50000.
+local spdStartTurn  to 75.
 
 // Boosters
 local boosterObj to lex().
@@ -154,7 +156,7 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:altitude >= 150
+until ship:altitude >= altRoll
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
     DispTelemetry().
