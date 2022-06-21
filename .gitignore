@@ -12,3 +12,5 @@ _plan/*/*
 data/relayPlanner/*
 data/*
 tmp/*
+main/maneuver/vessel.json
+data/lp.json
