@@ -5,6 +5,10 @@ runOncePath("0:/lib/globals.ks").
 
 //-- Variables --//
 // global g_line to 10. // moved to lib/globals/ks
+local d_tHeight to 50.
+local d_tWidth to 60.
+// local tel_Height to 101.
+// local tel_Width to 86.
 
 //-- Functions --//
 
@@ -31,15 +35,48 @@ global function clrDisp
 // Clears display and resets g_line
 global function ResetDisp
 {
+    parameter resetSize is false.
+
     clrDisp().
     set g_line to 10.
+    if resetSize 
+    {
+        InitTerm().
+    }
 }
 
-// Local function for incrementing ln
+// Helper function that increments g_line then clears that line for cleaner printing.
+global function clrCR
+{
+    parameter fromLine to g_line.
+
+    set g_line to fromLine + 1.
+    clr(g_line).
+    return g_line.
+}
+
+// Local function for incrementing g_line
 global function cr
 {
-    set g_line to g_line + 1.
+    parameter fromLine to g_line.
+
+    set g_line to fromLine + 1.
     return g_line.
+}
+
+global function DispPatchList
+{
+    parameter line to g_line.
+
+    print "{0, 10}   {1, 10}   {2}":format("PATCH IDX", "PATCH SOI", "ETA") at (0, line).
+    from { local i to 0. local o to ship:orbit. } until not o:hasNextPatch step { set i to i + 1. set o to o:nextPatch. } do
+    {
+        local len to i:toString():length.
+        local padUp to round((10 - len) / 2) - 1.
+        local padFlr to floor((10 - len) / 2) - 1.
+        set str to "[{0, " + padUp + "}{1}{0, " + padFlr + "}]  {1, 10}   {2}".
+        print str:format("", i, o:body:name).
+    }
 }
 
 // Formats a timestamp into one of a few format strings
@@ -187,12 +224,28 @@ local function RoundDistance
     }
 }
 
+// PrettyDur :: [<scalar>Seconds] -> <string>
+local function PrettyDur
+{
+    parameter _dur to 0.
+
+    set _dur to timespan(_dur).
+    local dayStr to "".
+    local yearStr to "".
+
+    if _dur:day > 0 set dayStr to "{0,2}d ":format(_dur:day).
+    if _dur:year > 0 set yearStr to "{0,2}y ":format(_dur:year).
+    local timeStr to "{0:0,2}h {1:0,2}m {2:0,2}s":format(_dur:hour, _dur:minute, _dur:second).
+    return yearStr + dayStr + timeStr.
+}
+
+
 // Sets up the terminal
-global function ShowTerm
+global function InitTerm
 {
     ClearScreen.
-    set Terminal:Height to 50.
-    set Terminal:Width to 60.
+    set Terminal:Height to d_tHeight.
+    set Terminal:Width to d_tWidth.
     Core:DoAction("open terminal", true).
 }
 
@@ -259,9 +312,10 @@ global function DispIncChange
 global function DispMissionPlan
 {
     parameter mPlan is list(),
-              titleStr is "Mission plan".
+              titleStr is ship:name + " Mission plan".
 
     ResetDisp().
+    
     if mPlan:length = 0
     {
         if exists("mp.json")
@@ -277,23 +331,26 @@ global function DispMissionPlan
     }
 
     local titleBar to "".
-    for i in range(0, titleStr:length - 1, 1)
+    for rIdx in range(0, titleStr:length - 1, 1)
     {
         set titleBar to titleBar + "-".
     }
     print titleStr:toUpper at (0, g_line).
     print titleBar at (0, cr()).
-    from { local i to 0. local dLine to g_line.} until i >= mPlan:length - 1 step { set i to i + 2. set dLine to dLine + 1.} do
+    from { local i to 0. local line to g_line.} until i >= mPlan:length - 1 step { set i to i + 2. set line to line + 1.} do
     {
-        if dLine >= Terminal:Height - 5
+        local scr to mPlan[i].
+        local prm to mPlan[i + 1].
+        
+        if line >= Terminal:Height - 5
         {
             ResetDisp().
             print titleStr:toUpper at (0, g_line).
             print titleBar at (0, cr()).
-            set dLine to g_line.
+            set line to g_line.
         }
         
-        print ("{0, -3}  {1, -15}  ({2})"):format(i, mPlan[i], mPlan[i + 1]:join(",")) at (0, cr()).
+        print ("{0, -3} | {1, -25} | ({2, -50})"):format(i, scr, prm:join(";")) at (0, cr()).
     }
 }
 
@@ -385,7 +442,7 @@ global function DispLaunchWindow2
 // DispBoot :: <none> | <none>
 global function DispBoot
 {
-    ShowTerm().
+    InitTerm().
 
     print "CREI-KASA Boot Loader v2.0b".
     print "===========================".
@@ -407,11 +464,11 @@ global function DispBoot
 global function DispMain
 {
     parameter scrPlan is scriptPath():name,
-              showTerminal is true.
+              initTerm is true.
     
-    if showTerminal
+    if initTerm
     {
-        ShowTerm().
+        InitTerm().
     }
 
     print "Mission Controller v2.0.1".// at (0, 0).
@@ -543,36 +600,86 @@ global function DispLanding
     cr().
     print "ALTITUDE       : " + round(Ship:Altitude)                + "m     " at (0, cr()).
     print "RADAR ALT      : " + round(radarAlt)       + "m     " at (0, cr()).
-    print "SURFACE SPD    : " + round(Ship:GroundSpeed, 2)          + "m/s   " at (0, cr()).
+    print "SURFACE SPD    : " + round(Ship:Velocity:Surface:Mag, 2)          + "m/s   " at (0, cr()).
+    print "GROUND SPD     : " + round(Ship:Groundspeed, 2) + "m/s  " at (0, cr()).
     print "VERTICAL SPD   : " + round(Ship:VerticalSpeed, 2)        + "m/s   " at (0, cr()).
     cr().
     print "THROTTLE       : " + round(throttle * 100)               + "%  " at (0, cr()).
+    print "TWR            : " + round(GetTWRForStage(), 2) + "     " at (0, cr()).
     if tti > -1      print "TIME TO IMPACT : " + round(tti, 2)                       + "s   " at (0, cr()).
     if burnDur > -1  print "BURN DURATION  : " + round(burnDur, 2)                   + "s   " at (0, cr()).
 }
 
+
+// DispSOIData :: [<Body>Target] -> <int>Status Code
+global function DispSOIData
+{
+    parameter tgtBody is ship:body.
+
+    set g_line to 10.
+    
+    print "SOI INFO" at (0, cr()).
+    print "--------" at (0, cr()).
+    print "CURRENT      : " + ship:body:name at (0, cr()).
+    local soiRad to choose round(ship:body:soiradius / 1000) + "km " if ship:body <> Sun else "UKN          ".
+    print "SOI RADIUS   : " + soiRad at (0, cr()).
+    cr().
+    if tgtBody <> ship:body
+    {
+        local _t to GetSoiEta(tgtBody).
+        set _t to choose PrettyDur(_t) if _t > -1 else "N/A".
+        print "TARGET      : " + tgtBody:name at (0, cr()).
+        print "ETA         : " + _t + " " at (0, cr()).
+        cr().
+    }
+    cr().
+    print "PATCH INFO" at (0, cr()).
+    print "----------" at (0, cr()).
+    if ship:orbit:hasnextpatch 
+    {
+        print "NUM PATCHES : " + ship:patches:length + " " at (0, cr()).
+        if ship:patches:length > 0
+        {
+            print "NEXT PATCH  : " + ship:patches[1]:body:name + " " at (0, cr()).
+            cr().
+            local interceptPatch to GetInterceptPatchIndex(tgtBody).
+            if interceptPatch > -1 
+            {
+                print "INTERCEPT PATCH: " + interceptPatch + " " at (0, clrCR()).
+                print "ETA TO SOI  : " + PrettyDur(ship:orbit:nextpatcheta) + " " at (0, clrCR()).
+            }
+            else
+            {
+                print "*** NO INTERCEPT DETECTED ***" at (0, clrCR()).
+            }
+        }
+    }
+    return 0.
+}
+
+
 // Generic API for printing a telemetry section, takes a list of header strings / values
 global function DispGeneric
 {
-    parameter dispList, 
+    parameter dispElements, 
               stLine is 22.
 
     set g_line to stLine.
     
-    from { local idx is 0.} until idx >= dispList:length step { set idx to idx + 1.} do 
+    from { local idx is 0.} until idx >= dispElements:length step { set idx to idx + 1.} do 
     {
         if idx = 0 
         {
-            print dispList[idx] at (0, g_line).
+            print dispElements[idx] at (0, g_line).
             print "--------------" at (0, cr()).
             cr().
         }
         else
         {
-            print dispList[idx]:toUpper at (0, g_line).
+            print dispElements[idx]:toUpper at (0, g_line).
             print ":     " at (16, g_line).
             set idx to idx + 1.
-            print dispList[idx] at (18, g_line).
+            print dispElements[idx] at (18, g_line).
             cr().
         }
     }
@@ -863,4 +970,143 @@ global function DispTargetData
     cr().
     print "DISTANCE             : " + round(_tgtVes:Position:Mag)    + "m     "      at (0, cr()).
     print "PHASE ANGLE          : " + round(kslib_nav_phase_angle(_tgtVes, Ship), 2) at (0, cr()).
+}
+
+
+// Pretty print functions
+global function DispLex 
+{
+    parameter inObj, 
+              tip is "PRETTY PRINT LEXICON".
+
+    local stCol to 0.
+    local stLine to 2.
+
+    local numCols to 2.
+    local lineLim to terminal:height - 5.
+    local colSize to terminal:width / numCols.
+    local colLim to colSize * (numCols - 1).
+    local maxKeyLen to 3.
+    local maxValLen to 30.
+
+    if tip = ""
+    {
+        if inObj:hasKey("<tip>") set tip to inObj["<tip>"]:replace("<tip>","").
+    }
+
+    local titleDiv to { local div to "". from { local i to 0.} until i = tip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.            
+
+    set g_col to stCol.
+    set g_line to stLine.
+
+    clearScreen. 
+    
+    for key in inObj:keys 
+    {
+        set maxKeyLen to max(maxKeyLen, key:tostring:length).
+        set maxValLen to max(maxValLen, colSize - maxKeyLen - 5).
+    }
+    
+    for key in inObj:keys
+    {
+        if g_line = stLine 
+        {
+                print tip at (g_col, g_line).
+                print titleDiv:call() at (g_col, cr()).
+                cr().
+        }
+        print "[{0,10}] [{1,-25}]":format(key, inObj[key]) at (g_col, g_line).
+        
+        if g_line < lineLim
+        {
+            set g_line to cr().
+        } 
+        else if g_col < colLim
+        {
+            set g_col to g_col + colSize.
+            set g_line to stLine + 2.   
+        }
+        else
+        {
+            Breakpoint().
+            clearScreen.
+            set g_col to stCol.
+            set g_line to stLine.
+        }
+    }
+}
+
+// Pretty-prints a list
+global function DispList
+{
+    parameter inObj, 
+              tip is "PRETTY PRINT LIST".
+
+    local stCol to 0.
+    local stLine to 2.
+
+    local numCols to 2.
+    local colSize to terminal:width / numCols.
+    local colLim to colSize * (numCols - 1).
+    local lineLim to terminal:height - 5.
+
+    local titleDiv to { local div to "". from { local i to 0.} until i = tip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.    
+    set g_col to stCol.
+    set g_line to stLine.
+
+    clearScreen. 
+
+    from { local n is 0.} until n = inObj:length step { set n to n + 1.} do 
+    {
+        if g_line = stLine 
+        {
+                print tip at (g_col, g_line).
+                print titleDiv:call() at (g_col, cr()).
+                cr().
+        }
+
+        if g_line < lineLim
+        {
+            print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, g_line).
+            set g_line to g_line + 1.
+        } 
+        else if g_col < colLim
+        {
+            set g_col to g_col + colSize.
+            set g_line to stLine + 2.
+            print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, g_line).
+            set g_line to g_line + 1.
+        } 
+        else 
+        {
+            Breakpoint().
+            clearScreen.
+            set g_col to stCol.
+            set g_line to stLine.
+        }
+    }
+}
+
+// DispPagedList :: <list>, [<str> UI Tip], [<int> itemsPerPage ] -> <none>
+// Pages a list
+global function DispPagedList
+{
+    parameter inList,
+              uiTip is "Paged List",
+              itemsPerPage is min(Terminal:Height - 12 - 5, 50). // Trimming 12 lines from the top, 5 from the bottom
+
+    local curPage to list().
+    local doneFlag to false.
+    local pageIdx to 0.
+    local pointer to 0.
+
+    local pageCount to round(inList:length + 0.01 / itemsPerPage).
+
+    until doneFlag
+    {
+        set pointer to pageIdx * itemsPerPage.
+        set curPage to inList:sublist(pointer, itemsPerPage).
+        DispList(curPage, "{0} [{1}/{2}]":format(uiTip, pageIdx, pageCount)).
+        
+    }
 }

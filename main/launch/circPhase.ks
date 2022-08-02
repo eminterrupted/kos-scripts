@@ -13,6 +13,15 @@ runOncePath("0:/lib/globals").
 
 DispMain(scriptPath()).
 
+local peOverride to false.
+local tgtPe to -1.
+
+if param:length > 0 
+{
+    set tgtPe to param[0].
+    set peOverride to true.
+}
+
 // Vars
 local cTag to core:tag:split("|").
 local lp to list().
@@ -38,8 +47,10 @@ until false
 }
 set lp to readJson(lpPath).
 
-
-local tgtPe         to lp[0].
+if not peOverride
+{
+    set tgtPe to lp[0].
+}
 local payloadStage to choose cTag[1] if cTag:length > 1 else 0.
 
 local sVal to ship:facing.

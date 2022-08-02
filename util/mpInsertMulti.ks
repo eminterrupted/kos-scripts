@@ -8,7 +8,12 @@ runOncePath("0:/lib/loadDep").
 
 DispMain(scriptPath()).
 
+local deleteFlag to false.
+local endFlag to false.
+local nextFlag to false.
+local doneFlag to false.
 local flags to initFlags(list("next")).
+
 local newPlan to list().
 
 if fileList:IsType("lexicon") 
@@ -16,7 +21,7 @@ if fileList:IsType("lexicon")
     set fileList to choose fileList["main"]:lex if fileList:keys:contains("main") else fileList.
 }
 
-from { local scriptIdx to 0.} until flags["end"] step { set scriptIdx to scriptIdx + 1.} do
+from { local scriptIdx to 0.} until endFlag step { set scriptIdx to scriptIdx + 1.} do
 {
     local selectedItem to PromptFileSelect("Choose item", fileList).
     if selectedItem:IsFile
@@ -29,29 +34,27 @@ from { local scriptIdx to 0.} until flags["end"] step { set scriptIdx to scriptI
     
     OutInfo("Parameters").
     local paramList to list().
-    until flags["end"] 
-    {
-        ResetDisp().
-        
 
+    until endFlag
+    {
         getChoice().
-        if flags["next"] or flags["delete"]
+        if nextFlag or deleteFlag
         {
             local param to "".
             cr().
-            if flags["next"]
+            if nextFlag
             {
                 set param to PromptTextEntry("Enter parameter").
                 if param:length > 0
                 {
-                    if param:toNumber(-1234567890) = -1234567890
+                    if param:toNumber(-9999) = -9999
                     {
                         set param to param:toNumber().
                     }
                     paramList:add(param).
                 }
                 set param to "".
-                set flags["next"] to false.
+                set nextFlag to false.
             }
             else
             {
@@ -59,15 +62,18 @@ from { local scriptIdx to 0.} until flags["end"] step { set scriptIdx to scriptI
                 {
                     paramList:remove(paramList:length - 1).
                 }
-                set flags["delete"] to false.
+                set deleteFlag to false.
             }
         }
+        ResetDisp().
+        // Print out the params here
+        from { local i to 0.} until i >= paramList:length step { set i to i + 1.} do 
+        {
+            print ("{0, -1}  {1}"):format(i, paramList[i]) at (2, cr()).
+        }
     }
-    // Print out the params here
-    from { local i to 0.} until i >= paramList:length step { set i to i + 1.} do 
-    {
-        print ("{0, -1}  {1}"):format(i, paramList[i]) at (2, cr()).
-    }
+    set endFlag to false.
+
     newPlan:add(paramList).
 
     ResetDisp().
@@ -76,11 +82,11 @@ from { local scriptIdx to 0.} until flags["end"] step { set scriptIdx to scriptI
     OutMsg("Add another script?").
     
     getChoice().
-    if flags["end"]
+    if endFlag
     {
         break.
     }
-    else if flags["delete"]
+    else if deleteFlag
     {
         newPlan:remove(scriptIdx + 1).  // Remove the params
         newPlan:remove(scriptIdx).      // Remove the script
@@ -88,18 +94,26 @@ from { local scriptIdx to 0.} until flags["end"] step { set scriptIdx to scriptI
     }
 }
 
-local mp to choose readJson("mp.json") if exists("mp.json") else list().
-if resetMP set mp to list().
-from { local i to newPlan:length - 1.} until i <= 0 step { set i to i - 2.} do
+local mpUpdate to choose readJson("mp.json") if exists("mp.json") else list().
+if resetMP
 {
-    mp:insert(insertAt, newPlan[i]).
+    set mpUpdate to list().
+    set insertAt to 0.
 }
-writeJson(mp, "mp.json").
+
+from { local i to newPlan:length - 1.} until i <= 0 step { set i to i - 1.} do
+{
+    mpUpdate:insert(insertAt, newPlan[i]).
+}
+
+DispList(mpUpdate).
+
+writeJson(mpUpdate, "mp.json").
 OutMsg("mpInsertMulti complete").
 OutInfo().
 OutInfo2().
 
-DispMissionPlan(mp, "Updated plan:").
+DispMissionPlan(mpUpdate, "Updated plan:").
 
 // End
 
@@ -118,18 +132,18 @@ local function getChoice
         if g_termChar = Terminal:Input:Enter
         {
             set choiceMade to true.
-            set flags["next"] to true.
+            set nextFlag to true.
             //set flags["done"] to true.
         }
         else if g_termChar = Terminal:Input:EndCursor
         {
             set choiceMade to true.
-            set flags["end"] to true.
+            set endFlag to true.
         }
         else if g_termChar = Terminal:Input:DeleteRight or g_termChar = Terminal:Input:Backspace
         {
             set choiceMade to true.
-            set flags["delete"] to true.
+            set deleteFlag to true.
         }
     }
     wait 1.
@@ -140,20 +154,43 @@ local function initFlags
 {
     parameter presetFlags to list().
 
-    local flagLex to lex(
-        "next", false
-        ,"done", false
-        ,"delete", false
-        ,"end", false
-    ).
+    set deleteFlag to false.
+    set doneFlag to false.
+    set endFlag to false.
+    set nextFlag to false.
+
+    // local flagLex to lex(
+    //     "delete",   false
+    //     ,"done",    false
+    //     ,"end",     false
+    //     ,"next",    false
+    // ).
 
     for f in presetFlags
     {
-        if f = "next"           set flagLex[f] to true.
-        else if f = "done"      set flagLex[f] to true.
-        else if f = "delete"    set flagLex[f] to true.
-        else if f = "end"       set flagLex[f] to true.
+        if f = "next"
+        {
+            // set flagLex[f] to true.
+            set nextFlag to true.
+        }
+        else if f = "done"
+        {
+            // set flagLex[f] to true.
+            set doneFlag to true.
+        }
+        else if f = "delete"
+        {
+            // set flagLex[f] to true.
+            set deleteFlag to true.
+        }
+        else if f = "end"
+        {
+            // set flagLex[f] to true.
+            set endFlag to true.
+        }
     }
 
-    return flagLex.
+    return list(deleteFlag, doneFlag, endFlag, nextFlag).
+
+    // return flagLex.
 }

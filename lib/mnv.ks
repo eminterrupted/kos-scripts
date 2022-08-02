@@ -64,21 +64,14 @@ global function ExecNodeBurn
         OutInfo2().
         set tVal to 1.
         set sVal to lookDirUp(mnvNode:burnVector, Sun:Position).
-        until false
+        until vdot(dv0, mnvNode:deltaV) <= 0.01
         {
-            if vdot(dv0, mnvNode:deltaV) <= 0.01
-            {
-                set tVal to 0.
-                break.
-            }
-            else
-            {
-                set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
-            }
+            set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
             DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
             wait 0.01.
         }
-
+        set tVal to 0.
+        
         OutTee("Maneuver Complete!").
         wait 1.
         ClrDisp().

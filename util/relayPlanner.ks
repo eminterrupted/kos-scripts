@@ -4,7 +4,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter tgtOrbitPhase is 90.
+parameter tgtOrbitPhase is 60.
 
 runOncePath("0:/lib/nav").
 runOncePath("0:/lib/util").

@@ -10,7 +10,7 @@ runOncePath("0:/lib/launch").
 runOncePath("0:/lib/nav").
 runOncePath("0:/lib/util").
 
-DispMain(scriptPath()).
+DispMain(scriptPath(), false).
 
 //if hasTarget set tgtLaunchLAN to target:orbit:lan.
 local spdFactor to 2.92.

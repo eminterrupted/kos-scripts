@@ -56,6 +56,7 @@ global function GetSteeringDir
         ,"home",        Body("Kerbin"):Position
         ,"srfRetro",    Ship:SrfRetrograde:Vector
         ,"up",          vcrs(ship:body:position - ship:position, ship:velocity:orbit):normalized
+        ,"north",       north:vector
     ).
     if HasTarget set dirLookup["target"] to Target:Position.
     return lookDirUp(dirLookup[orientation:split("-")[0]], dirLookup[orientation:split("-")[1]]).
@@ -265,6 +266,17 @@ global function StageMass
 
 // -- Engines
 // #region
+
+// Methods
+global function ArmEngCutoff
+{
+    when ship:availablethrust <= 0.1 and stage:number <= g_stopStage then
+    {
+        set Ship:Control:PilotMainThrottle to 0.
+        lock throttle to 0.
+        set g_engBurnout to true.
+    }
+}
 
 // GetEngines :: ([<string>]) -> <list>Engines
 // Returns engines by state (any, active)
@@ -611,45 +623,68 @@ global function ResetStagedStatus
 global function ArmFairingJettison
 {
     parameter mode is "alt+", 
-              jettisonAlt is body:atm:height - 10000,
+              jettisonVal is body:atm:height - 10000,
               deployTag is "descent".
 
-    if deployTag:length > 0
-    {
-        set deployTag to "fairing." + deployTag.
-    }
 
-    if (ship:modulesnamed("ModuleProceduralFairing"):length > 0)
+    if (ship:ModulesNamed("ModuleProceduralFairing"):length > 0)
     {
-        if mode = "alt+"
+        local fairingsToArm to list().
+
+        if deployTag:length > 0
         {
-            when ship:altitude > jettisonAlt then
+            set deployTag to "fairing." + deployTag.
+        }
+
+        for m in ship:modulesNamed("ModuleProceduralFairing")
+        {
+            if m:part:tag:MatchesPattern(deployTag) fairingsToArm:add(m).
+        }
+
+        if fairingsToArm:length > 0 
+        {
+            if mode = "alt+"
             {
-                for module in ship:modulesnamed("ModuleProceduralFairing")
+                when ship:altitude > jettisonVal then
                 {
-                    if module:part:tag:matchesPattern(deployTag)
+                    for m in fairingsToArm
                     {
-                        module:doevent("deploy").
-                        wait 0.05.
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            else if mode = "alt-"
+            {
+                when ship:altitude < jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            // TODO - Deployment based on atmo pressure
+            else if mode = "pres+"
+            {
+                when body:atm:altitudepressure(ship:altitude) > jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            else if mode = "pres-"
+            {
+                when body:atm:altitudepressure(ship:altitude) > jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
                     }
                 }
             }
         }
-        else if mode = "alt-"
-        {
-            when ship:altitude < jettisonAlt then
-            {
-                for module in ship:modulesnamed("ModuleProceduralFairing")
-                {
-                    if module:part:tag:matchesPattern(deployTag)
-                    {
-                        module:doevent("deploy").
-                        wait 0.05.
-                    }
-                }
-            }
-        }
-        // TODO - Deployment based on atmo pressure
     }
 }
 

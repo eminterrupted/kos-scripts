@@ -25,12 +25,68 @@ local deployModules to list(
 
 // -- Global
 // #region
+global alphaNumDict to list(
+    "0","1"
+    ,"2","3"
+    ,"4","5"
+    ,"6","7"
+    ,"8","9"
+    ,"a","A"
+    ,"b","B"
+    ,"c","C"
+    ,"d","D"
+    ,"e","E"
+    ,"f","F"
+    ,"g","G"
+    ,"h","H"
+    ,"i","I"
+    ,"j","J"
+    ,"k","K"
+    ,"l","L"
+    ,"m","M"
+    ,"n","N"
+    ,"o","O"
+    ,"p","P"
+    ,"q","Q"
+    ,"r","R"
+    ,"s","S"
+    ,"t","T"
+    ,"u","U"
+    ,"v","V"
+    ,"w","W"
+    ,"x","X"
+    ,"y","Y"
+    ,"z","Z"
+    ,".",","
+    ,"'","`"
+    ,"[","]"
+    ,"{","}"
+    ,"(",")"
+    ," ","~"
+    ,"-","_"
+    ,"=","+"
+    ,"!","@"
+    ,"#","$"
+    ,"%","^"
+    ,"&","*"
+).
+
 global BodyInfo to lex(
     "altForSci", lex(
-        "Kerbin", 625000,
-        "Mun", 150000,
-        "Minmus", 75000,
-        "Moho", 100000
+        "Kerbin", 625000
+        ,"Mun", 150000
+        ,"Minmus", 75000
+        ,"Moho", 200000
+        ,"Eve", 1000000
+        ,"Gilly", 15000
+        ,"Duna", 350000
+        ,"Ike", 125000
+        ,"Jool", 10000000
+        ,"Laythe", 500000
+    )
+    ,"atmAltForSci", lex(
+        "Kerbin", 18000
+        ,"Eve", 18000
     )
 ).
 
@@ -47,6 +103,52 @@ global ColorLex to lex(
     ,"Black", black
 ).
 
+global situMask to lex(
+    0, "000000"
+    ,1, "000001"
+    ,2, "000010"
+    ,3, "000011"
+    ,7, "000111"
+    ,12,"001100"
+    ,16,"010000"
+    ,31,"011111"
+    ,32,"100000"
+    ,48,"110000"
+    ,51,"110011"
+    ,56,"111000"
+    ,60,"111100"
+    ,61,"111101"
+    ,63,"111111"
+    ,"def", lex(
+        0,"InSpaceHigh"
+        ,1,"InSpaceLow"
+        ,2,"FlyingHigh"
+        ,3,"FlyingLow"
+        ,4,"SrfSplashed"
+        ,5,"SrfLanded"
+    )
+).
+
+global expReqMask to lex(
+    -1,"0000"
+    ,0,"1111"
+    ,1,"0001"
+    ,2,"0010"
+    ,3,"0011"
+    ,4,"0100"
+    ,5,"0101"
+    ,6,"0110"
+    ,7,"0111"
+    ,8,"1000"
+    ,"def", lex(
+        0,"ScientistCrew",
+        1,"CrewInPart",
+        2,"CrewInVessel",
+        3,"VesselControl"
+    )
+).
+
+
 global tConstants to lex(
     "KnToKg", 0.00980665
     ,"KgToKn", 101.97162
@@ -57,6 +159,8 @@ global StateFile to dataDisk + "state.json".
 global FuelCellResources to lex(
     "USFuelCellMedium", list("Hydrogen", "Oxygen")
 ).
+
+global verbose to true.
 // #endregion
 //#endregion
 
@@ -119,6 +223,61 @@ global FuelCellResources to lex(
     // Basic Utilities
     // #region
 
+    // Hash :: [<val>Any value to hash] :: <string>Hash
+    // Returns a hash given an object. What exactly is hashed is dependent on the object type
+    // String: The string itself
+    // Scalar: The value
+    // List: Summed and Averaged representation of all items in the list
+    global function Hash
+    {
+        parameter val.
+
+        local result to "".
+
+        local valStr to choose val if val:IsType("String") else val:toString.
+
+        for char in valStr
+        {
+            local pIdx to alphaNumDict:indexOf(char).
+            local newChar to alphaNumDict[round(mod(pIdx + ((alphaNumDict:length - pIdx) / 2), alphaNumDict:Length - 1))].
+            set result to result + newChar.
+        }
+
+        return result.
+    }
+
+    // MakeArray :: [<int>Length, <val>StartingValue, <functionDelegate>] :: <List>Items
+    global function MakeArray
+    {
+        parameter tLen,
+                  stVal,
+                  funcDel.
+
+        local arr to list(stVal).
+        local nextVal to stVal.
+        from { local i to 1.} until i = tLen step { set i to i + 1.} do 
+        {
+            set nextVal to funcDel:call(nextVal).
+            arr:add(nextVal).
+        }
+        return arr.
+    }
+
+    // MakeDict :: [<list>Keys, <list>Values] -> <lexicon>
+    global function MakeDict
+    {
+        parameter _keys,
+                  _vals.
+
+        local retLex to lexicon().
+        from { local i to 0.} until i = _keys:length step { set i to i + 1.} do
+        {
+            set retLex[_keys[i]] to _vals[i].
+        }
+        return retLex.
+    }
+
+
     // GenerateList :: [start value<Scalar>, end value<Scalar>, step value<Scalar>] -> : List<Scalar>
     // Generates a list of numbers starting at the low range, and incrementing up to the max range
     global function GenerateList
@@ -134,6 +293,20 @@ global FuelCellResources to lex(
             wrkList:add(fVar).
         }
         return wrkList.
+    }
+
+    // GetUnique :: [<list>] -> <list>
+    // Returns only unique values from the source list
+    global function GetUnique
+    {
+        parameter srcList.
+
+        local outSet to uniqueSet().
+        for i in srcList
+        {
+            outSet:add(i).
+        }
+        return outSet.
     }
 
     // Sound
@@ -152,6 +325,105 @@ global FuelCellResources to lex(
             v0:play(sfxId[idx]).
             wait 0.13.
         }
+    }
+    // #endregion
+
+    // Situation / Experiment decoding and checking
+    // #region
+
+    // CheckCurrentSituation :: [<int>situMask] -> <bool>
+    // Checks if the vessel currently satisfies the provided situ mask
+    global function CheckCurrentSituation
+    {
+        parameter maskInt.
+
+        local curSitu to GetCurrentSituation().
+        local situStr to GetSituationFromMask(maskInt).
+        
+        return situStr:contains(curSitu).
+    }
+
+        // CheckCurrentSituation :: [<int>situMask] -> <bool>
+    // Checks if the vessel currently satisfies the provided situ mask
+    global function CheckCurrentSituationDetailed
+    {
+        parameter maskObj.
+
+        local bitMask to 0.
+        
+        local curSitu to GetCurrentSituation().
+        local situStr to GetSituationFromMask(maskObj[0]).
+        local biomeStr to GetSituationFromMask(maskObj[1]).
+        
+
+        if situStr.Contains(curSitu) 
+        {
+            set bitMask to bitMask + 1.
+            if biomeStr.Contains(curSitu) 
+            {
+                set bitMask to bitMask + 1.
+            }
+        }
+
+        if maskObj[2] = -1
+        {
+            if atm:exists 
+            {
+                set bitMask to 0.
+            }
+        }
+
+        else if maskObj[2] = 1
+        {
+            if not atm:exists
+            {
+                set bitMask to 0.
+            }
+        }
+
+        return bitmask.
+    }
+
+    // GetCurrentSituationMask :: <int> -> string
+    // Returns a semicolon-delimited string of situations indicated by mask
+    global function GetCurrentSituation
+    {
+        local curSitu to "".
+
+        if list("SUBORBITAL", "ORBITING", "ESCAPING"):contains(ship:status)
+        {
+            set terminal:height to 120.
+            set terminal:width to 300.
+            set curSitu to choose situMask:def[0] if ship:altitude >= BodyInfo:altForSci[Body:Name] else situMask:def[1].
+        }
+        else if list("FLYING"):contains(ship:status)
+        {
+            set curSitu to choose situMask:def[2] if ship:altitude >= BodyInfo:atmAltForSci[Body:Name] else situMask:def[3].
+        }
+        else 
+        {
+            set curSitu to choose situMask:def[4] if ship:status = "SPLASHED" else situMask:def[5].
+        }
+        return curSitu.
+    }
+
+    // GetSituationFromMask :: <int> -> string
+    // Returns a semicolon-delimited string of situations indicated by mask
+    global function GetSituationFromMask
+    {
+        parameter maskInt.
+
+        local bitmask to situMask[maskInt].
+        local situStr to "".
+        if bitmask:length = 6 
+        {
+                        
+            from { local bitIdx to 0.} until bitIdx = bitmask:length step { set bitIdx to bitIdx + 1.} do 
+            {
+                if bitmask[bitIdx] = "1" set situStr to "{0};{1}":format(situStr, situMask:Def[bitIdx]).
+            }
+        }
+        return situStr.
     }
     // #endregion
 
@@ -402,7 +674,7 @@ global function CheckMnvDelegate
 // returns a bool if steeringManager values are within the optional zero-centered range
 global function CheckSteering
 {
-    parameter accRange is 0.25, 
+    parameter accRange is 0.50, 
               axis is "angle".
 
     if axis = "angle" 

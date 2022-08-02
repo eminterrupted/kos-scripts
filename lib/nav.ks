@@ -21,6 +21,70 @@ global function GetActiveWP
 }
 
 //#region -- Patch handling
+
+// GetInterceptPatchIndex :: [<body>] -> <int>
+// Returns the 0-indexed patch ID where the current vessel intersects the target body
+global function GetInterceptPatchIndex
+{
+    parameter _tgtBody.
+              
+    local curPatch to ship:orbit.
+    from { local i to 0.} until not curPatch:hasNextPatch step { set i to i + 1.} do
+    {
+        if curPatch:body = _tgtBody return i.
+        set curPatch to curPatch:NextPatch.
+    }
+    return -1. // Default value indicates no intercept found
+}
+
+// GetPatchByIndex :: [<int>PatchIdx] -> <orbit> 
+global function GetPatchByIndex
+{
+    parameter _pIdx.
+
+    local curPatch to ship:orbit.
+    from { local i to 0.} until i = _pIdx step { set i to i + 1.} do
+    {
+        if curPatch:hasNextPatch 
+        {
+            set curPatch to curPatch:NextPatch.
+        }
+        else
+        {
+            return ship:orbit.
+        }
+    }
+    return curPatch.
+}
+
+// GetPatches :: [<ship>Ship] -> List<Orbit>
+// Returns all orbits (current and future) identified in the flight path
+global function GetSoiEta
+{
+    parameter _tgtBody,
+              _obj is ship.
+
+    local _eta to 0.
+    local o to _obj:patches[0].
+    until o:body = _tgtBody
+    {
+        if o:body = _tgtBody
+        {
+            return _eta.
+        }
+        else if o:hasNextPatch
+        {
+            set _eta to _eta + o:nextpatcheta.
+            set o to o:nextPatch.
+        }
+        else
+        {
+            return -1.
+        }
+    }
+    return _eta.
+}
+
 // Returns the last patch for a given node
 global function LastPatchForNode
 {

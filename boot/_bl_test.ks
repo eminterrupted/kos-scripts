@@ -32,7 +32,7 @@ local mpDone to "1:/done.json".
 
 if cx
 {
-    runOncePath("0:/lib/dependencyLoader").
+    runOncePath("0:/lib/loadDep").
     DispBoot().
     if ship:status = "PRELAUNCH" runPath("0:/_plan/init").
     set aPlan to "0:/_plan/" + plan + "/mp_" + missionName:Replace(" ","_") + ".json".

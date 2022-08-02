@@ -103,5 +103,6 @@ global function ParseMissionTags
             fragList:add(frag).
         }
     }
+    fragList:add(pipeSplit[1]:ToNumber()).
     return fragList.
 }

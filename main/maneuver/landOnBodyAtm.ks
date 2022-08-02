@@ -54,7 +54,7 @@ if params:typename = "lexicon"
 }
 else if params:typename = "list"
 {
-    set stagingAlt to Max(Body:Atm:Height + 10000, params[0]).
+    set stagingAlt to Max(Body:Atm:Height + 25000, params[0]).
     if params:length > 1 set retroFire to params[1].
     if params:length > 2 set retroStage to params[2].
     if params:length > 3 set reentryTgt to params[3].

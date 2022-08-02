@@ -40,9 +40,27 @@ local tgtObt to createOrbit(
     tgtBody
 ).
 
+until false
+{
+    if hasNode
+    {
+        remove nextNode.
+    }
+    else
+    {
+        break.
+    }
+}
+
+
 local mnvNode to IncMatchBurn(ship, ship:orbit, tgtObt, burnAtNearestNode)[2].
 add mnvNode.
-DispIncChange(ship:orbit, tgtObt).
-ExecNodeBurn(mnvNode).
-
-OutHUD("Change Inclination Burn Complete").
+if round(mnvNode:deltaV:mag, 1) > 1.0
+{   DispIncChange(ship:orbit, tgtObt).
+    ExecNodeBurn(mnvNode).
+    OutHUD("Change Inclination Burn Complete").
+}
+else
+{
+    OutHUD("Skipping changeInc, vessel is already close to target inc").
+}

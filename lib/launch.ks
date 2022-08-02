@@ -63,8 +63,28 @@ global function ArmBoosterSeparation
 // #endregion
 
 //#region -- Ascent functions
-// Set pitch by deviation from a reference pitch
+// Set pitch by deviation from a reference pitch for orbital launches
 global function LaunchAngForAlt
+{
+    parameter turnAlt,
+              startAlt,
+              endPitch,
+              pitchLim is 5.
+    
+    // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
+    local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
+    // local pg to ship:srfprograde:vector.
+
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.01 else ship:prograde:vector.
+    local pgPitch   to 90 - vang(ship:up:vector, pg).
+    //set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
+    // Calculate the effective pitch with a 5 degree limiter
+    local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
+    return effPitch.
+}.
+
+// Set pitch by deviation from a reference pitch
+global function SuborbitalAscentProfile
 {
     parameter turnAlt,
               startAlt,

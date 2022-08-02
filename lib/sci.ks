@@ -6,25 +6,250 @@
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 
+// Globals
+global SciExpSituMap to lex(
+
+    // ExperimentId         (SituMask, BiomeMask, RequiresAtmosphere)
+    
+    // Stock
+    "crewReport",           list(63, 23, 0)
+    ,"evaReport",           list(59, 3, 0)
+    ,"mysteryGoo",          list(63, 3, 0)
+    ,"surfaceSample",       list(3,  3, 0)
+    ,"mobileMaterialsLab",  list(63, 3, 0)
+    ,"temperatureScan",     list(63, 7, 0)
+    ,"barometerScan",       list(31, 3, 0)
+    ,"seismicScan",         list(1,  1, 0)
+    ,"gravityScan",         list(51, 51, 0)
+    ,"atmosphereAnalysis",  list(13, 13, 1)
+    ,"asteroidSample",      list(63, 7, 0)
+    ,"cometSample_short",   list(63, 7, 0)
+    ,"cometSample_intermediate", list(63, 7, 0)
+    ,"cometSample_long",    list(63, 7, 0)
+    ,"cometSample_interstellar", list(63, 7, 0)
+    ,"infraredTelescope",   list(32, 0, 0)
+    ,"magentometer",        list(51, 1, 0)
+    ,"evaScience",          list(63, 0, 0)
+    
+    // DMagic
+    ,"AnomalyScan",         list(0, 0, 0)
+    ,"dmAsteroidScan",      list(0, 0, 0)
+    ,"dmbiodrillscan",      list(1, 1, 1)
+    ,"dmImagingPlatform",   list(48, 16, 0)
+    ,"dmlaserblastscan",    list(3, 3, 0)
+    ,"dmNAlbedoScan",       list(1, 1, 0)
+    ,"dmReconScan",         list(16, 0, 0)
+    ,"dmRadiometerScan",    list(32, 0, -1)
+    ,"dmseismicHammer",     list(1, 1, 0)
+    ,"dmSIGINT",            list(16, 0, 0)
+    ,"dmSoilMoisture",      list(16, 0, 0)
+    ,"dmSolarParticles",    list(48, 0, -1)
+    ,"dmXRayDiffract",      list(1, 1, 0)
+    ,"rpwsScan",            list(48, 0, 0)
+    ,"scopeScan",           list(48, 16, 0)
+
+    // KURS
+    ,"TargetScanning",      list(63, 31, 0)
+    
+    // Kiwi Kerbalism
+    // ,"kiwi_gasAnalyzer",    list(63, 3)
+    // ,"kiwi_hydrometer",     list(63, 7)
+    // ,"kiwi_photometry",     list(63, 7)
+    // ,"kiwi_photopolarimeter",list(63, 7)
+    // ,"kiwi_gammaRay",       list(48, 1)
+    // ,"kiwi_cosmicRay",      list(48, 1)
+    // ,"kiwi_IRspec",         list(48, 1)
+    // ,"kiwi_ionElec",        list(24, 1)
+    // ,"kiwi_UVspec",         list(48, 1)
+    // ,"kiwi_solarWind",      list(32, 1)
+    // ,"kiwi_soilScoop",      list(3, 3)
+
+    // Scansat
+    ,"SCANsatAltimetryLoRes",   list(0, 0, 0)
+    ,"SCANsatAltimetryHiRes",   list(0, 0, 0)
+    ,"SCANsatBiomeAnomaly",   list(0, 0, 0)
+    ,"SCANsatResources",    list(0, 0, 0)
+    ,"SCANsatVisual",       list(0, 0, 0)
+
+    // SSPX
+    ,"sspxFishStudy",       list(51, 0, 0)
+    ,"sspxPlantGrowth",     list(51, 0, 0)
+    ,"sspxVisualObservation", list(51, 7, 0)
+    ,"sspxTelescopeObservation", list(51, 7, 0)
+
+
+    // Tantares
+    // ,"insectStorage",       list(56, 0, 0)
+    ,"tantares_laser_reflector", list(63, 7, 0)
+    ,"tantares_visible_light_camera", list(63, 7, 0)
+    ,"tantares_visible_light_camera_0", list(63, 7, 0)
+    ,"tantares_visible_light_camera_2", list(63, 7, 0)
+    ,"tantares_ultraviolet_light_camera", list(63, 7, 0)
+    ,"tantares_ultraviolet_light_camera_0", list(63, 7, 0)
+    ,"tantares_ultraviolet_light_camera_2", list(63, 7, 0)
+    ,"tantares_infrared_light_camera", list(63, 7, 0)
+    ,"tantares_infrared_light_camera_0", list(63, 7, 0)
+    ,"tantares_infrared_light_camera_2", list(63, 7, 0)
+    ,"tantares_sp_ion_trap", list(63, 7, 0)
+    ,"tantares_sp_photometer", list(63, 7, 0)
+    ,"tantares_sp_laser_reflector", list(63, 7, 0)
+    ,"tantares_sp_cosmic_ray_detector", list(63, 7, 0)
+    ,"tantares_sp_xray_spectrometer", list(63, 7, 0)
+    ,"tantares_sp_gamma_ray_spectrometer", list(63, 7, 0)
+
+    // TST
+    ,"TarsierSpaceTech.SpaceTelescope", list(48, 7, 0)
+    ,"TarsierSpaceTech.ChemCam", list(1, 1, 0)
+
+    // US2 Science
+    ,"USmapCam",            list(16, 7, 0)
+    ,"USlaserAltimeter",    list(16, 7, 0)
+    ,"USCameraPicture",     list(48, 16, 0)
+
+    // Misc
+    ,"kdex",                list(63, 21, 0)
+    ,"telemetryReport",     list(63, 15, 0)
+).
+
+global SciParReqMap to lex(
+    "dmUS2GoreSat", 8
+    ,"dmUS2Scope", 8
+).
+
+global SciExpIdMap to lex(
+    // experimentId, action String
+    "Crew Report",                          "crewReport"
+    ,"EVA Report",                          "evaReport"
+    ,"Observe Mystery Goo",                 "mysteryGoo"
+    ,"Take Surface Sample",                 "surfaceSample"
+    ,"Conduct Materials Study",             "mobileMaterialsLab"
+    ,"Log Temperature",                     "temperatureScan"
+    ,"Log Pressure Data",                   "barometerScan"
+    ,"Log Seismic Data",                    "seismicScan"
+    ,"Log Gravity Data",                    "gravityScan"
+    ,"Run Atmosphere Analysis",             "atmosphereAnalysis"
+    ,"Log Observation Data",                "infraredTelescope"
+    ,"Run Magnetometer Report",             "magentometer"
+    ,"Perform EVA Science",                 "evaScience"
+
+    // DMagic           
+    ,"Collect Anomalous Data",              "AnomalyScan"
+    ,"Collect Core Sample",                 "dmbiodrillscan"
+    ,"Log Imaging Data",                    "dmImagingPlatform"
+    ,"Collect Laser Data",                  "dmlaserblastscan"
+    ,"Collect Hydrogen Data",               "dmNAlbedoScan"
+    ,"Collect Stereo Recon Data",           "dmReconScan"
+    ,"Log Irradiance Scan",                 "dmRadiometerScan"
+    ,"Collect Seismic Data",                "dmseismicHammer"
+    ,"Collect Radio Data",                  "dmSIGINT"
+    ,"Collect Soil Moisture Data",          "dmSoilMoisture"
+    ,"Collect Solar Particles",             "dmSolarParticles"
+    ,"Collect X-Ray Data",                  "dmXRayDiffract"
+    ,"Log Radio Plasma Wave Data",          "rpwsScan"
+    ,"Log Visual Observations",             "scopeScan"
+
+    // KURS         
+    ,"Scan Target",                         "TargetScanning"
+
+    // SSPX         
+    ,"Observe Species",                     "sspxFishStudy"
+    ,"Observe Plant Growth",                "sspxPlantGrowth"
+    ,"Visual Scan",                         "sspxVisualObservation"
+    ,"Observe Local Space",                 "sspxTelescopeObservation"
+
+
+    // Tantares
+    // ,"insectStorage",       list(56, 0)
+    ,"Log Laser Reflector Data",            "tantares_laser_reflector"
+    ,"Log Visible Light Data",              "tantares_visible_light_camera"
+    ,"Log Ultraviolet Light Data",          "tantares_ultraviolet_light_camera"
+    ,"Log Infrared Light Data",             "tantares_infrared_light_camera"
+    ,"Log Charged Particles Data",          "tantares_sp_ion_trap"
+    ,"Log Light Data",                      "tantares_sp_photometer"
+    ,"Log Measurements Data",               "tantares_sp_laser_reflector"
+    ,"Log Cosmic Ray Data",                 "tantares_sp_cosmic_ray_detector"
+    ,"Log X-Ray Data",                      "tantares_sp_xray_spectrometer"
+    ,"Log Gamma Ray Data",                  "tantares_sp_gamma_ray_spectrometer"
+
+    // US2 Science
+    ,"Take a picture",                      "USmapCam"
+    ,"Start Laser Altimeter Measurements",  "USlaserAltimeter"
+    ,"Take a picture",                      "USCameraPicture"
+
+    // Misc             
+    ,"Run Dust Analysis",                   "kdex"
+    ,"Telemetry Report",                    "telemetryReport"
+).
 
 // Functions 
+
 // Modules
 global function GetSciModules
 {
     local sciList to list().
     for m in ship:modulesNamed("ModuleScienceExperiment")           sciList:add(m).
     for m in ship:modulesNamed("DMModuleScienceAnimate")            sciList:add(m).
-    for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
     for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageScience")         sciList:add(m).
-    for m in ship:modulesNamed("DMSeismicSensor")                   sciList:add(m).
-    for m in ship:modulesNamed("DMSeismicHammer")                   sciList:add(m).
-    for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
-    for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
-    for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
-    for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
     for m in ship:modulesNamed("DMUniversalStorageSoilMoisture")    sciList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    sciList:add(m).
+    for m in ship:modulesNamed("DMRoverGooMat")                     sciList:add(m).
+    for m in ship:modulesNamed("USSimpleScience")                   sciList:add(m).
+//    for m in ship:modulesNamed("DMSeismicSensor")                   sciList:add(m).
+    for m in ship:modulesNamed("DMXrayDiffract")                    sciList:add(m).
+    for m in ship:modulesNamed("USAdvancedScience")                 sciList:add(m).
     for m in ship:modulesNamed("ModuleSpyExperiment")               sciList:add(m).
+    for m in ship:modulesNamed("DMSeismicHammer")                   sciList:add(m).
+    return sciList.
+}
+
+// GetSciModulesForSituation
+global function GetSciModulesForCurrentSituation
+{
+    local sciList to list().
+    local stepList to list().
+
+    for m in ship:modulesNamed("ModuleScienceExperiment")           stepList:add(m).   
+    for m in ship:modulesNamed("DMModuleScienceAnimate")            stepList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    stepList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageScience")         stepList:add(m).
+    for m in ship:modulesNamed("DMUniversalStorageSoilMoisture")    stepList:add(m).
+    for m in ship:modulesNamed("DMSoilMoisture")                    stepList:add(m).
+    for m in ship:modulesNamed("DMRoverGooMat")                     stepList:add(m).
+    for m in ship:modulesNamed("USSimpleScience")                   stepList:add(m).
+    for m in ship:modulesNamed("DMXrayDiffract")                    stepList:add(m).
+    for m in ship:modulesNamed("USAdvancedScience")                 stepList:add(m).
+    for m in ship:modulesNamed("ModuleSpyExperiment")               stepList:add(m).
+    for m in ship:modulesNamed("DMSeismicHammer")                   stepList:add(m).
+
+    local trackedIds to uniqueSet().
+
+    for m in stepList
+    {
+        for a in m:allActions
+        {
+            local aSani to a:Substring(11, a:length - 11 - 14).
+            if SciExpIdMap:Keys:Contains(aSani)
+            {
+                local expId to SciExpIdMap[aSani].
+                if not trackedIds:contains(expId)
+                {
+                    local expSitu to SciExpSituMap[expId].
+                    if CheckCurrentSituationDetailed(expSitu) > 0
+                    {
+                        sciList:add(m).
+                        trackedIds:add(expId).
+                    }
+                }
+            }
+            else
+            {
+                OutInfo2("aSani miss: " + aSani).
+                wait 0.25.
+            }
+        }
+    }
+
     return sciList.
 }
 
@@ -249,6 +474,30 @@ local function DeploySci
     }
 }
 
+local function DeployDMHammer
+{
+    parameter m.
+
+    local podList to ship:modulesNamed("DMSeismicSensor").
+    for pod in podList
+    {
+        DoAction(pod, "Arm Pod").
+        if pod:Part:HasModule("ModuleAnchoredDecoupler")
+        {
+            DoEvent(pod:Part:GetModule("ModuleAnchoredDecoupler"), "decouple").
+        }
+    }
+
+    wait 5.
+    
+    m:toggle.
+    wait 4.
+    DoAction(m, "Arm Hammer").
+    wait 1.
+    DoAction(m, "Collect Seismic Data").
+    wait until m:hasData.
+}
+
 local function DeployDMSci
 {
     parameter m.
@@ -259,24 +508,12 @@ local function DeployDMSci
     }
     else
     {
-        if m:name = "DMSeismicSensor"
+        if m:name = "DMSeismicHammer"
         {
-            DoAction(m, "Arm Pod").
-            if m:Part:HasModule("ModuleAnchoredDecoupler")
-            {
-                DoEvent(m:Part:GetModule("ModuleAnchoredDecoupler"), "decouple").
-            }
+            OutTee ("Running DM Seismic Hammer Experiment").
+            DeployDMHammer(m).
         }
-        else if m:name = "DMSeismicHammer"
-        {
-            m:toggle.
-            wait 4.
-            DoAction(m, "Arm Hammer").
-            wait 1.
-            DoAction(m, "Collect Seismic Data").
-            wait until m:hasData.
-        }
-        else
+        else if m:name <> "DMSeismicPod"
         {
             m:deploy.
             local ts to time:seconds + 10.

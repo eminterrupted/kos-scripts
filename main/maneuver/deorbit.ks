@@ -43,16 +43,16 @@ if Ship:Periapsis > impactAlt
         {
             break.
         }
-        OutInfo("Steering error: " + round(steeringManager:angleError, 5)).
+        OutInfo("Steering error: " + round(steeringManager:angleError, 3)).
         DispTelemetry().
     }
     OutInfo().
     wait 0.1.
 
     OutMsg("Aligning for P1 impact burn").
-    until CheckSteering(1)
+    until CheckSteering(5)
     {
-        OutInfo("Steering error: " + round(steeringManager:angleError, 5)).
+        OutInfo("Steering error: " + round(steeringManager:angleError, 3)).
         DispTelemetry().
     }
     OutInfo().
@@ -68,7 +68,7 @@ wait 0.1.
 set orientation to "body-pro".
 
 OutMsg("Aligning to Body-Prograde").
-until CheckSteering(0.100)
+until CheckSteering(5)
 {
     set radarAlt    to vBounds:BottomAltRadar.
     set tti         to TimeToImpact(Ship:VerticalSpeed, radarAlt).
