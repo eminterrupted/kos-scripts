@@ -8,7 +8,7 @@ print "CREI-KASA BootLoader v2.0b".
 print "Mission: " + Ship:Name.
 
 local cx to false.
-local commCheck to { if addons:rt:hasKscConnection(ship) return true. else return false.}.
+local commCheck to homeConnection:isConnected.
 
 local ts to time:seconds + 3.
 until commCheck() or time:seconds > ts

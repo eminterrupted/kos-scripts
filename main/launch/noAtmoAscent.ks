@@ -43,8 +43,8 @@ local altGravTurn   to min(tgtAp / 2, 1000).
 local boosterObj    to lex().
 
 // Controls
-local sVal to Ship:Facing.
-local tVal to 0.
+set sVal to Ship:Facing.
+set tVal to 0.
 sas off.
 
 // Core tag
@@ -60,14 +60,14 @@ DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper), stageAtLaunch).
 local volIdx to 1. 
 until false
 {
-    writeJson(list(tgtPe, tgtInc), volIdx + ":/lp.json").
+    writeJson(lpCache, volIdx + ":/lp.json").
     if exists(volIdx + ":/lp.json") 
     {
         break.
     }
     else if volIdx = ship:modulesNamed("kOSProcessor"):length 
     {
-        writeJson(list(tgtPe, tgtInc), "0:/data/lp.json").
+        writeJson(lpCache, "0:/data/lp.json").
         break.
     }
     else
@@ -148,7 +148,7 @@ until vBounds:BottomAltRadar >= altStartTurn or ship:altitude >= tgtAp
     wait 0.01.
 }
 
-if gear gear off.
+gear off.
 
 OutInfo("Roll Program").
 set sVal to heading(l_az_calc(azCalcObj), 90, 0).

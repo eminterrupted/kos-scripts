@@ -9,6 +9,13 @@ runOncePath("0:/lib/disp").
 // -- Local
 // #region
 local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
+
+// local _logLine to 0.
+// local _arcLogPath to "0:/log/" + core:part:ship:name:replace(" ","_") + "/archived.log".
+//     set _arcLogPath to choose Path(_arcLogPath) if exists(Path(_arcLogPath)) else Create(_arcLogPath).
+// local _locLogPath to GetLogVol():keys[0] + ":/log/local.log".
+//     set _locLogPath to choose Path(_locLogPath) if exists(Path(_locLogPath)) else Create(_locLogPath).
+
 local deployModules to list(
     "ModuleAnimateGeneric"
     ,"USAnimateGeneric"
@@ -184,8 +191,218 @@ global verbose to true.
     }
     // #endregion
 
+    // Alarm / Caution / Warning
+    // #region
+
+    // Master alarm
+    // By default, simply shows the alarm string via OutTee
+    // Can be configured via params to block script execution and play audible alarm
+    // Can also show warning and information
+    global function MasterAlarm
+    {
+        parameter str,
+                  _errLvl is 0,
+                  blocking is false,
+                  soundOn is false.
+
+        set errLvl to _errLvl.
+        local alarmInterval to 2.
+        local errTypeStr to choose "ALARM" if errLvl = 0
+            else choose "WARNING" if errLvl = 1
+            else "CAUTION".
+        local errStr to "[*{0}*] {1}":format(errTypeStr, str).
+
+        // Show alarm on interval
+        if g_alarmTimer > time:seconds
+        {
+            OutTee(errStr, 0, 0, alarmInterval).
+            set g_alarmTimer to time:seconds + alarmInterval.
+        }
+        
+        // If the alarm should block further script execution, check for dismissal.
+        // Return true to indicate alarm is dismissed / non-blocking
+        // Return false to indicate alarm has not been dismissed
+        if blocking
+        {
+            if CheckInputChar(terminal:input:endcursor) 
+            {
+                return true.
+            }
+            else
+            {
+                return false.
+            }
+        }
+        return true.
+    }
+    // #endregion
+
+    // Log
+    // #region
+
+    // GetLogVol :: [<ship>] -> Path()
+    // Returns a path of a log file after finding the best location (has most space that is not this volume if multiple available, and is not ever staged off)
+    // 
+    local function GetLogVol
+    {
+        parameter ves is ship.
+
+        local bestVol to core:volume.
+        local maxSpace to 0.
+        for cpu in ves:modulesNamed("kOSProcessor")
+        {
+            if cpu:volume:freeSpace > maxSpace and cpu:part:decoupledIn <= g_stopStage 
+            {
+                set bestVol to cpu:volume.
+                set maxSpace to cpu:volume:freeSpace.
+                
+            }
+        }
+        return lex(buildList("volumes"):find(bestVol), bestVol).
+    }
+
+
+    // Prints the input value to the mission log
+    global function OutLog
+    {
+        parameter str is "",
+                _errLvl is 0.
+
+
+        set errLvl to _errLvl.
+        set _logLine to mod(_logLine + 1, 10).
+        
+        local locLog to open(_locLogPath).
+
+        if errLvl = 0 
+        {
+            set str to "[{0,0:00}][INFO] {1}{2}":format(round(missionTime, 2), str, char(10)).
+        }
+        else if errLvl = 1 
+        {
+            set str to "[{0,0:00}][WARN] {1}{2}":format(round(missionTime, 2), str, char(10)).
+        }
+        else if errLvl = 2 
+        {
+            set str to "[{0,0:00}][ERR*] * {1} *{2}":format(round(missionTime, 2), str, char(10)).
+        }
+        else 
+        {
+            set str to "{0} *** {1}{2}":format("":padLeft(missionTime:toString():length + 7), str, char(10)).
+        }
+
+
+        if homeConnection:isConnected
+        {
+            if _logLine > 0 and _locLogPath:volume:freeSpace > str:length
+            {
+                set errLvl to choose 0 if locLog:write(str + char(10)) else 1.
+            }
+            else if _logLine = 0 or _locLogPath:volume:freeSpace <= (str:length + 1)
+            {
+                local arcLog to open("0:/log/" + ship:name:replace(" ","_") + "/archive.log").
+                set errLvl to choose 0 if arcLog:write(locLog:readAll:string + char(10)) else 1.
+                locLog:clear.
+                return errLvl.
+            }
+        }
+    }
+
+    global function OutLogTee
+    {
+        parameter str,
+                pos is "-0",
+                _errLvl is 0.
+
+        set errLvl to _errLvl.
+        if pos[1] = "1" OutHUD().
+        if pos[0]:toNumber(-1) > 0 OutMsg(str, errLvl, pos).
+        if not OutLog(str, errLvl)
+        {
+
+        }
+    }
+    // #endregion
+
     // Flow Control
     // #region
+
+    // Stk :: <none> -> <int>
+    // Increments a Stk pointer to a value in the Stk
+    global function Stk
+    {
+        parameter _val,
+                  _op to "+".
+
+        if _op = "=" {
+            if _val:isType("scalar") 
+            {
+                g_stack[_val].
+                return _val.
+            }
+            else 
+            {
+                local _valIdx to g_stack:values:indexOf(_val).
+                g_stack:remove(_valIdx).
+                return _valIdx.
+            }
+        }
+        else if _op = "=v"
+        {
+            local _valIdx to g_stack:values:indexOf(_val).
+            g_stack:remove(_valIdx).
+            return _valIdx.
+        }
+        else if _op = "+" 
+        {
+            set g_stack[g_stack] to _val.
+            set g_stack to 
+            {
+                if g_stack:length > 0
+                {
+                    local minNum to g_stack[0].
+                    for num in g_stack
+                    {
+                        if num < minNum
+                        {
+                            set minNum to num.
+                        }
+                    }
+                    g_stack:remove(g_stack:indexOf(minNum)).
+                    return minNum.
+                }
+                return g_stack + 1.
+            }.
+        }
+        else if _op = "-" 
+        {
+            if _val:isType("scalar") 
+            {
+                g_stack:remove(_val).
+                if _val = g_stack
+                {
+                    set g_stack to g_stack - 1.   
+                }
+                else
+                {
+                    g_stack:add(_val).
+                }
+            }
+            else
+            {
+                local _valIdx to g_stack:values:indexOf(_val).
+                g_stack:remove(_valIdx).
+                if _valIdx = g_stack
+                {
+                    set g_stack to g_stack - 1.   
+                }
+                else
+                {
+                    g_stack:add(_valIdx).
+                }
+            }
+        }
+    }
 
     // Pause :: [[Time to continue]<int>] -> <none>
     // Pauses the script. Script can continue after "Enter" input.
@@ -275,24 +492,6 @@ global verbose to true.
             set retLex[_keys[i]] to _vals[i].
         }
         return retLex.
-    }
-
-
-    // GenerateList :: [start value<Scalar>, end value<Scalar>, step value<Scalar>] -> : List<Scalar>
-    // Generates a list of numbers starting at the low range, and incrementing up to the max range
-    global function GenerateList
-    {
-        parameter stVal,
-                  endVal,
-                  stepVal.
-
-        local wrkList to list().
-
-        from { local fVar to stVal.} until fVar > endVal step { set fVar to fVar + stepVal.} do
-        {
-            wrkList:add(fVar).
-        }
-        return wrkList.
     }
 
     // GetUnique :: [<list>] -> <list>
@@ -624,29 +823,44 @@ global function SetRunmode
 
 // -- List
 // #region
-// Sorts a list of parts by stage
-// Possible sortDir values: asc, desc
-global function OrderPartsByStageNumber
-{
-    parameter inList,
-              sortDir is "desc".
 
-    local outList    to list().
-    local startCount to choose -1 if sortDir = "asc" else stage:number.
-    local endCount   to choose stage:number if sortDir = "asc" else -2.
-
-    from { local c to startCount.} until c = endCount step { set c to stepList(c, sortDir). } do
+    // Local Helpers
+    // #region
+    // StepList
+    // Helper function for from loop in list sorting. 
+    local function StepList
     {
-        for p in inList 
+        parameter c,
+                sortDir.
+
+        if sortDir = "desc" return c - 1.
+        else return c + 1.
+    }
+    // #endregion
+
+    // Sorts a list of parts by stage
+    // Possible sortDir values: asc, desc
+    global function OrderPartsByStageNumber
+    {
+        parameter inList,
+                sortDir is "desc".
+
+        local outList    to list().
+        local startCount to choose -1 if sortDir = "asc" else stage:number.
+        local endCount   to choose stage:number if sortDir = "asc" else -2.
+
+        from { local c to startCount.} until c = endCount step { set c to stepList(c, sortDir). } do
         {
-            if p:stage = c
+            for p in inList 
             {
-                outList:add(p).
+                if p:stage = c
+                {
+                    outList:add(p).
+                }
             }
         }
+        return outList.
     }
-    return outList.
-}
 // #endregion
 
 
@@ -751,10 +965,19 @@ global function CheckValDeviation
 {
     parameter val,
               tgtCenter,
-              maxDeviation.
+              maxDeviation,
+              maxVal to -1.
 
-    if val >= tgtCenter - maxDeviation and val <= tgtCenter + maxDeviation return true.
-    else return false.
+    if maxVal = -1 
+    {
+        if val >= tgtCenter - maxDeviation and val <= tgtCenter + maxDeviation return true.
+        else return false.
+    }
+    else 
+    {
+        if val >= Mod(maxVal + tgtCenter - maxDeviation, maxVal) and val <= Mod(maxVal + tgtCenter + maxDeviation, maxVal) return true.
+        else return false.
+    }
 }
 
 // Checks if the character matches the variable value passed in
@@ -792,7 +1015,6 @@ global function GetInputChar
 {
     if terminal:input:hasChar
     {
-        wait 0.01.
         set g_termChar to terminal:input:getChar.
         terminal:input:clear.
         return g_termChar.
@@ -1094,12 +1316,125 @@ global function PromptFileSelect
     }
 }
 
-// <PromptSelect> :: [<str>] promptID (used in cache key)], [<str> prompt string], [<list> list of choices] -> <selected item>
+// PromptInput 
+global function PromptInput
+{
+    parameter promptStr,
+              cacheInput is false,
+              promptId is "TextEntry",
+              inputType is "",
+              limit is false.
+
+    if limit:isType("Boolean")
+    {
+        if not limit:isType(inputType)
+        {
+            local MET to round(missionTime, 2).
+            OutLogTee("[{0,0:00}][ERR] Provided limit does not equal inputType!":format(MET, "011")).
+            OutLogTee("{0} (lib/util/PromptInput) limitType: {1} reqType: {2}":format("":padLeft(MET:length + 7, limit:typename, inputType), "011")).
+            return 1 / 0.
+        }
+    }
+
+
+    clrDisp().
+    set g_line to 10.
+
+    local userStr to "".
+
+    print promptStr + ": " at (0, g_line).
+    until false
+    {
+        set g_termChar to GetInputChar().
+        if g_termChar = Terminal:Input:Enter
+        {
+            print "VALUE ENTERED: [" + userStr + "]                 " at (0, g_line).
+            wait 1.
+            clrDisp().
+            if cacheInput
+            {
+                CacheState(promptId, promptStr).
+            }
+            return userStr.
+        }
+        else if g_termChar = terminal:input:endcursor
+        {
+            // print "CANCELLING                            " at (0, g_line).
+            // wait 1.
+            clrDisp().
+            break.
+        }
+        else if g_termChar = terminal:input:backspace
+        {
+            if userStr:length > 0
+            {
+                set userStr to userStr:remove(userStr:length - 1, 1).
+            }
+        }
+        else
+        {
+            set userStr to userStr + g_termChar.
+        }
+        print promptStr + ": " + userStr + " " at (0, g_line).
+    }
+    return "".
+}
+
+// PromptItemMultiSelect :: [<list|lex> Items to select, [<scalar> itemLimit]] -> <Lexicon> Selections
+global function PromptItemMultiSelect 
+{
+    parameter _items,
+              _promptStr, 
+              _iterFunc,
+              _itemLimit is -1,
+              _cacheState is false,
+              _cacheKey is "".
+
+    local _itemSelections to lexicon().
+    if _items:isType("list")
+    {
+        if _itemLimit < 1 set _itemLimit to _items:length.
+        from { local i to 0.} until i = _itemLimit step { set i to i + 1. } do
+        {
+            local _item to PromptItemSelect(_items, _promptStr).
+            cr().
+            local confirmStr to "* Press ENTER to confirm selection / DELETE to cancel *".
+            print confirmStr at (max(0, (terminal:width - confirmStr:length) / 2), g_line).
+            until false 
+            {
+                set g_termChar to GetInputChar().
+                if g_termChar = terminal:input:enter
+                {
+                    _iterFunc:call().
+                }
+                else if g_termChar = terminal:input:deleteCursor
+                {
+                   set errLvl to _itemSelections:remove(_itemSelections:keys[_itemSelections:values:indexOf(_item)]).
+                   if errLvl = 1 OutLog("Failed to move {0} from _itemSelections to _items":format(_item)).
+                   else 
+                   {
+                    OutLog("Successfully moved {0} from _itemSelections to _items":format(_item)).
+                    Stk(_item, "-").
+
+                   _items:add(_item).
+                   }
+                }
+            }
+        }
+    }
+    else if _items:isType("Lexicon")
+    {
+
+    }
+    return _itemSelections.
+}
+// <PromptSelect> :: [<list> list of choices], [<str> prompt string], [<bool> cache option on], [<string> cacheId] -> <selected item>
 global function PromptItemSelect
 {
-    parameter promptId,
+    parameter choices,
               promptStr,
-              choices.
+              cacheItem is false,
+              promptId is "prmpt".
 
     clrDisp().
     set g_line to 10.
@@ -1109,7 +1444,7 @@ global function PromptItemSelect
     local timeout to 15.
     local tBreak to time:seconds + timeout.
     
-    CacheState("PromptSelect", lex(promptId, -1)).
+    CacheState(promptId, lex(promptId, -1)).
 
     if choices:length > 0 
     {
@@ -1298,59 +1633,339 @@ global function PromptPartSelect
     }
 }
 
-global function PromptTextEntry
+global function PromptScalarEntry
 {
-    parameter promptStr,
-              cacheInput is false,
-              promptId is "TextEntry".
+    parameter _range is -1.
 
-    clrDisp().
-    set g_line to 10.
 
-    local userStr to "".
-
-    print promptStr + ": " at (0, g_line).
-    until false
-    {
-        set g_termChar to GetInputChar().
-        if g_termChar = Terminal:Input:Enter
-        {
-            print "VALUE ENTERED: [" + userStr + "]                 " at (0, g_line).
-            wait 1.
-            clrDisp().
-            if cacheInput
-            {
-                CacheState(promptId, promptStr).
-            }
-            return userStr.
-        }
-        else if g_termChar = terminal:input:endcursor
-        {
-            // print "CANCELLING                            " at (0, g_line).
-            // wait 1.
-            clrDisp().
-            break.
-        }
-        else if g_termChar = terminal:input:backspace
-        {
-            if userStr:length > 0
-            {
-                set userStr to userStr:remove(userStr:length - 1, 1).
-            }
-        }
-        else
-        {
-            set userStr to userStr + g_termChar.
-        }
-        print promptStr + ": " + userStr + " " at (0, g_line).
-    }
-    return "".
 }
+
 // #endregion
 // #endregion
 
 // -- Part Modules
-//#region
+// #region
+
+// #region -- Part deployment helpers
+// Fresh air makers
+local function DeployAirMaker
+{
+    parameter p,
+              action is "toggle".
+
+    local m to p:getModule("SnacksConverter").
+
+    if  action = "toggle"
+    {
+        DoAction(m, "toggle converter", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "start air maker").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "stop air maker").
+    }
+}
+
+// Crystallisation Facilities
+local function DeployCrystalization
+{
+    parameter p, 
+              action is "deploy".
+
+    local m to p:getModule("ModuleSystemHeatConverter").
+    
+    if action = "deploy"
+    {
+        DoAction(m, "Start Crystallisation [Cr]", true).
+    }
+    else if action = "retract"
+    {
+        DoAction(m, "Stop Crystallisation [Cr]", true).
+    }
+    else if action = "toggle"
+    {
+        DoAction(m, "toggle converter (cyrstal)", true).
+    }
+}
+
+// Fuel cells
+local function DeployFuelCell
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleResourceConverter").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "start fuel cell") DoEvent(m, "stop fuel cell").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "start fuel cell").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "stop fuel cell").
+    }
+}
+
+// Radiators
+local function DeployRadiator
+{
+    parameter p,
+              action.
+
+    local m to "". 
+    local eDeploy to "".
+    local eRetract to "".
+
+    if p:hasModule("ModuleSystemHeatRadiator")
+    {
+        set m to p:getModule("ModuleSystemHeatRadiator").
+        set eDeploy to "activate radiator".
+        set eRetract to "shutdown radiator".
+    } 
+    else if p:hasModule("ModuleDeployableRadiator")
+    {
+        set m to p:getModule("ModuleDeployableRadiator").
+        set eDeploy to "extend radiator".
+        set eRetract to "retract radiator".
+    }
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, eDeploy) 
+        {
+            DoEvent(m, eRetract).
+        }
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, eDeploy).
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, eRetract).
+    }
+}
+
+
+// Antenna Reflectors
+local function DeployReflector
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleDeployableReflector").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "extend reflector") DoEvent(m, "retract reflector").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend reflector").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract reflector").
+    }
+}
+
+// Robotics - Hinges
+local function DeployRoboHinge
+{
+    parameter p,
+              action.
+
+    local lockFlag to false.
+    local m to p:getModule("ModuleRoboticServoHinge").
+    if m:getField("locked") 
+    {
+        set lockFlag to true.
+        m:setField("locked", false). 
+    }
+    wait 0.05.
+    
+    if action = "toggle"
+    {
+        DoAction(m, "Toggle Hinge").
+    }
+    else if action = "deploy"
+    {
+        DoAction(m, "Toggle Hinge").
+    }
+    else if action = "retract"
+    {
+        DoAction(m, "Toggle Hinge").
+    }
+
+    if lockFlag 
+    {
+        m:setField("locked", true).
+    }
+}
+
+// Robotics - Rotors
+local function DeployRoboRotor
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleRoboticServoRotor").
+
+    if m:getField("locked") 
+    {
+        m:setField("locked", false). 
+    }
+    wait 0.05.
+
+    if action = "toggle"
+    {
+        if not m:getField("motor") 
+        {
+            m:setField("motor", true).
+            m:setField("torque limit(%)", 25).
+        }
+        else
+        {
+            m:setField("motor", false).
+            m:setField("torque limit(%)", 0).
+        }
+    }
+    else if action = "deploy"
+    {
+        m:setField("motor", true).
+        m:setField("torque limit(%)", 25).
+    }
+    else if action = "retract"
+    {
+        m:setField("motor", false).
+        m:setField("torque limit(%)", 0).
+    }
+
+    if not m:getField("motor")
+    {
+        m:setField("locked", true).
+    }
+}
+
+// RemoteTech Antennas
+local function DeployRTAntenna
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleRTAntenna").
+
+    if action = "toggle"
+    {
+        if not DoAction(m, "activate", true) DoAction(m, "deactivate", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "activate").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "deactivate").
+    }
+}
+
+// RTGs
+local function DeployRTG
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleGenerator").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "activate generator") DoEvent(m, "shutdown generator").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "activate generator").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "shutdown generator").
+    }
+}
+
+// Science / miscellaneous
+local function DeploySciMisc
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleDeployablePart").
+
+    if action = "toggle"
+    {
+        if not DoEvent(m, "extend") DoEvent(m, "retract").
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "deploy").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract").
+    }
+}
+
+// Solar Panels
+local function DeploySolarPanel
+{
+    parameter p, 
+              action.
+    
+    local m to p:getModule("ModuleDeployableSolarPanel").
+    if action = "toggle"
+    {
+        if not DoAction(m, "extend solar panel", true) DoAction(m, "retract solar panel", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend solar panel").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract solar panel").
+    }
+}
+
+// TST Space Telescope
+local function DeployTSTScope
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("TSTSpaceTelescope").
+    if action = "toggle"
+    {
+        if not DoEvent(m, "open camera", true) DoAction(m, "opencamera", true).
+        wait 0.01.
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "open camera").
+        wait 0.01.
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "close camera").
+        wait 0.01.
+    }
+}
+// #endregion
+
 // Checks for an action and executes if found
 global function DoAction
 {
@@ -1494,24 +2109,24 @@ global function ToggleBayDoor
     local bayMod to choose bay:GetModule("USAnimateGeneric") if usBay else bay:GetModule("ModuleAnimateGeneric").
     local priCloseEvent to "close".
     local priOpenEvent to "open".
+    local hasSecondary to false.
+    local secCloseEvent to "retract secondary bays".
+    local secOpenEvent to "deploy secondary bays".
+
     if usBay
     {
         set priCloseEvent to "retract primary bays".
         set priOpenEvent to "deploy primary bays".
+        if (bayMod:hasEvent(secOpenEvent) or bayMod:hasEvent(secCloseEvent)) set hasSecondary to true.
     }
 
     if bayMod:HasEvent(priCloseEvent) or bayMod:HasEvent(priOpenEvent)
     {
-        local secCloseEvent to "retract secondary bays".
-        local secOpenEvent to "deploy secondary bays".
-        local eventList to list().
-
         if doors = "all" or doors = "primary"
         {
             if action = "toggle" 
             {
-                if bayMod:HasEvent(priOpenEvent) DoEvent(bayMod, priOpenEvent).
-                else if DoEvent(bayMod, priOpenEvent).
+                if not DoEvent(bayMod, priOpenEvent) DoEvent(bayMod, priCloseEvent).
             }
             else if action = "open"
             {
@@ -1523,16 +2138,16 @@ global function ToggleBayDoor
             }
         }
 
-        if doors = "all" or doors = "secondary"
+        if (doors = "all" or doors = "secondary") and hasSecondary
         {
             if action = "toggle" 
             {
-                if bayMod:HasEvent(secOpenEvent) eventList:add(secOpenEvent).
-                else if eventList:add(secCloseEvent).
+                if not DoEvent(bayMod, secOpenEvent)
+                DoEvent(bayMod, secCloseEvent).
             }
             else if action = "open"
             {
-                if bayMod:HasEvent(secOpenEvent) eventList:add(secOpenEvent).
+                DoEvent(bayMod, secOpenEvent).
             }
             else if action = "close"
             {
@@ -1754,7 +2369,7 @@ global function DeployPart
         DeployRoboRotor(p, action).
     }
 
-    if p:hasModule("ModuleDeployableRadiator")
+    if p:hasModule("ModuleDeployableRadiator") or p:hasModule("ModuleSystemHeatRadiator")
     {
         DeployRadiator(p, action).
     }
@@ -1762,6 +2377,24 @@ global function DeployPart
     if p:hasModule("ModuleDeployableReflector")
     {
         DeployReflector(p, action).
+    }
+
+    if p:hasModule("SnacksConverter")
+    {
+        if p:getModule("SnacksConverter"):hasField("air maker") DeployAirMaker(p, action).
+    }
+    
+    if p:hasModule("TSTSpaceTelescope")
+    {
+        DeployTSTScope(p, action).
+    }
+
+    if p:hasModule("ModuleSystemHeatConverter")
+    {
+        if p:name:contains("crystals")
+        {
+            DeployCrystalization(p, action).
+        }
     }
 }
 //#endregion
@@ -1841,9 +2474,9 @@ global function WarpToAlt
         else if ship:altitude <= tgtAlt * 1.75 * warpFactor set warp to 3.
         else if ship:altitude <= tgtAlt * 5 * warpFactor set warp to 4.
         else if ship:altitude <= tgtAlt * 25 * warpFactor set warp to 5.
-        else set warp to 6.
-        //else if ship:altitude <= tgtAlt * 100 set warp to 6.
-        //else set warp to 7.
+        else if ship:altitude <= tgtAlt * 250 set warp to 6.
+        else set warp to 7.
+        //else set warp to 6.
     }
     else
     {
@@ -1880,271 +2513,7 @@ global function SignedVAng
 //#endregion
 
 
-// -- Local
+// -- Misc Local
 // #region
-
-// #region -- Misc
-// StepList
-// Helper function for from loop in list sorting. 
-local function StepList
-{
-    parameter c,
-              sortDir.
-
-    if sortDir = "desc" return c - 1.
-    else return c + 1.
-}
-// #endregion
-
-// #region -- Part deployment helpers
-// Fuel cells
-local function DeployFuelCell
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleResourceConverter").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "start fuel cell") DoEvent(m, "stop fuel cell").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "start fuel cell").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "stop fuel cell").
-    }
-}
-
-// Radiators
-local function DeployRadiator
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleDeployableRadiator").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "extend radiator") 
-        {
-            if not DoEvent(m, "activate radiator")
-            {
-                if not DoEvent(m, "retract radiator")
-                {
-                    DoEvent(m, "shutdown radiator").
-                }
-            }
-        }
-    }
-    else if action = "deploy"
-    {
-        if not DoEvent(m, "extend radiator").
-        {
-            DoEvent(m, "activate radiator").
-        }
-    }
-    else if action = "retract"
-    {
-        if not DoEvent(m, "retract radiator")
-        {
-            DoEvent(m, "shutdown radiator").
-        }
-    }
-}
-
-
-// Antenna Reflectors
-local function DeployReflector
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleDeployableReflector").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "extend reflector") DoEvent(m, "retract reflector").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "extend reflector").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract reflector").
-    }
-}
-
-// Robotics - Hinges
-local function DeployRoboHinge
-{
-    parameter p,
-              action.
-
-    local lockFlag to false.
-    local m to p:getModule("ModuleRoboticServoHinge").
-    if m:getField("locked") 
-    {
-        set lockFlag to true.
-        m:setField("locked", false). 
-    }
-    wait 0.05.
-    
-    if action = "toggle"
-    {
-        DoAction(m, "Toggle Hinge").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "Toggle Hinge").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "Toggle Hinge").
-    }
-
-    if lockFlag 
-    {
-        m:setField("locked", true).
-    }
-}
-
-// Robotics - Rotors
-local function DeployRoboRotor
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleRoboticServoRotor").
-
-    if m:getField("locked") 
-    {
-        m:setField("locked", false). 
-    }
-    wait 0.05.
-
-    if action = "toggle"
-    {
-        if not m:getField("motor") 
-        {
-            m:setField("motor", true).
-            m:setField("torque limit(%)", 25).
-        }
-        else
-        {
-            m:setField("motor", false).
-            m:setField("torque limit(%)", 0).
-        }
-    }
-    else if action = "deploy"
-    {
-        m:setField("motor", true).
-        m:setField("torque limit(%)", 25).
-    }
-    else if action = "retract"
-    {
-        m:setField("motor", false).
-        m:setField("torque limit(%)", 0).
-    }
-
-    if not m:getField("motor")
-    {
-        m:setField("locked", true).
-    }
-}
-
-// RemoteTech Antennas
-local function DeployRTAntenna
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleRTAntenna").
-
-    if action = "toggle"
-    {
-        if not DoAction(m, "activate", true) DoAction(m, "deactivate", true).
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "activate").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "deactivate").
-    }
-}
-
-// RTGs
-local function DeployRTG
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleGenerator").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "activate generator") DoEvent(m, "shutdown generator").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "activate generator").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "shutdown generator").
-    }
-}
-
-// Science / miscellaneous
-local function DeploySciMisc
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleDeployablePart").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "extend") DoEvent(m, "retract").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "deploy").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract").
-    }
-}
-
-// Solar Panels
-local function DeploySolarPanel
-{
-    parameter p, 
-              action.
-    
-    local m to p:getModule("ModuleDeployableSolarPanel").
-    if action = "toggle"
-    {
-        if not DoAction(m, "extend solar panel", true) DoAction(m, "retract solar panel", true).
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "extend solar panel").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract solar panel").
-    }
-}
-// #endregion
-
-// #endregion
 
 // #endregion

@@ -16,32 +16,57 @@ runOncePath("0:/lib/setup").
 // if exists(testFile) deletePath(testFile).
 // log "print " + funcToTest + "." to testFile.
 
-local p0 to "HASH THIS".
+// local p0 to "HASH THIS".
 
-local kMut to { parameter p. return p + 1.}. 
-local vMut to { parameter p. if p:length < 20 { return p:tostring + "-".} else { return "".}}.
-if params:length > 0 
-{
-    set p0 to params[0].
-    if params:length > 1 set p1 to params[1].
-    if params:length > 2 set p2 to params[2].   
-}
+// local kMut to { parameter p. return p + 1.}. 
+// local vMut to { parameter p. if p:length < 20 { return p:tostring + "-".} else { return "".}}.
+// if params:length > 0 
+// {
+//     set p0 to params[0].
+//     if params:length > 1 set p1 to params[1].
+//     if params:length > 2 set p2 to params[2].   
+// }
 
 set g_line to 0.
+local _walkList to list().
 
-print "PERFORMANCE TEST SCRIPT     v0.000001b" at (0, g_line).
+print "FUNCTION TEST SCRIPT     v0.000001b" at (0, g_line).
 print "======================================" at (0, cr()).
 cr().
-print "Hash function test" at (0, cr()).
+print "Function: GetPatchesForNode" at (0, cr()).
 cr().
-print "Input string : " + p0 at (0, cr()).
-local ts to time:seconds.
-local hashStr to Hash(p0).
-local et to time:seconds - ts.
-print "Hashed output: " + hashStr at (0, cr()).
-print "Proc time    : " + et at (0, cr()).
-print " " at (0, cr()).
+print GetPatchesForNode(nextNode) at (0, cr()).
+print "*** END OF TEST ***" at (0, cr()).
 
+// GetChildPartTree :: <part>Part, [<string>SearchString], [<int>Stage] -> List<Parts>
+
+
+
+// GetPartTree :: <part>Part, List<Parts>, [<int>Stage] -> List<Parts>
+// Returns the part tree starting from the provided part with optional stage limiter to stop 
+// from walking too far
+local function GetPartTree
+{
+    parameter _parent,
+              _treeList,
+              _stgLim to -1.
+   
+    for p in _parent:children
+    {
+        if p:decoupledIn >= _stgLim
+        {
+            _treeList:add(p).
+            if p:children:length > 0 
+            {
+                for c in p:children 
+                {
+                    _treeList:add(GetPartTree(c, _treeList)).
+                }
+            }
+        }
+    }
+    return _treeList.
+}
 
 //DispList(MakeArray(len, startVal, kMut@), tip).
 

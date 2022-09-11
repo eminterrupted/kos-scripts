@@ -3,7 +3,7 @@
 // #include "0:/lib/globals"
 // #include "0:/lib/boot"
 
-runOncePath("0:/lib/util").
+runOncePath("0:/lib/loadDep").
 
 writeJson(Ship:Name, "vessel.json").
 local planPath to path("0:/_plan/" + plan + "/mp_" + missionName + ".json").

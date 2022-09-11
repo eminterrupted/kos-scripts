@@ -410,9 +410,16 @@ global function ClearSciList
 
     for m in sciList
     {
-        m:reset().
-        local ts to time:seconds + 5.
-        wait until not m:HasData or time:seconds > ts.
+        if m:inoperable
+        {
+            //OutLog("Cannot reset module [{0}] for part: {1}; experiment is inoperable":format(m:name, m:part:name)).
+        }
+        else
+        {
+            m:reset().
+            local ts to time:seconds + 5.
+            wait until not m:HasData or time:seconds > ts.
+        }
     }
 }
 

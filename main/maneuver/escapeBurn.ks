@@ -1,6 +1,5 @@
 @LazyGlobal off.
 ClearScreen.
-DispMain(ScriptPath():name).
 
 parameter params is list().
 
@@ -8,6 +7,8 @@ parameter params is list().
 RunOncePath("0:/lib/loadDep").
 RunOncePath("0:/lib/burnCalc").
 RunOncePath("0:/lib/mnv").
+
+DispMain(ScriptPath():name).
 
 // Declare Variables
 
@@ -20,15 +21,16 @@ RunOncePath("0:/lib/mnv").
 
 // Calculate retrograde velocity parallel to planet velocity
 
-    // Get Moon Velocity Vector and magnitude
-    local vMoon to Body:Orbit:Velocity:Orbit:Mag.
-    print "vMoon        : " + round(vMoon, 2) at (0, 10).
-    // Get velocity of transfer orbit at Moon
-    local vTransE to sqrt(body:body:mu * ((2 / GetTransferSma(Body:Body:Radius, Body:Orbit:SemiMajorAxis - (Ship:Orbit:SemiMajorAxis) / 2) - (1 / Body:Orbit:SemiMajorAxis)))).
+    // Get Body Velocity Vector and magnitude
+    local vBody to Body:Orbit:Velocity:Orbit:Mag.
+    print "vBody        : " + round(vBody, 2) at (0, 10).
+
+    // Get velocity of transfer orbit at Body
+    local vTransE to sqrt(body:body:mu * ((2 / GetTransferSma(Body:Orbit:SemiMajorAxis - 5000000000, Body:Orbit:SemiMajorAxis - (Ship:Orbit:SemiMajorAxis) / 2) - (1 / Body:Orbit:SemiMajorAxis)))).
     print "vTransE      : " + round(vTransE, 2) at (0, cr()).
 
     // Hyperbolic Escape Velocity
-    local vHyp to abs(vTransE - vMoon).
+    local vHyp to abs(vTransE - vBody).
     print "vHyp         : " + round(vHyp, 2) at (0, cr()).
 
     // Get Sma of hyperbolic escape trajectory
@@ -44,7 +46,8 @@ RunOncePath("0:/lib/mnv").
     print "Departure angle: " + round(depAng, 2) at (0, cr()).
 
     // DeltaV to burn at vPe
-    local dv1 to abs((vPe - (sqrt(Body:Mu / Ship:Orbit:SemiMajorAxis) / 2))).
+    //local dv1 to abs((vPe - (sqrt(Body:Mu / Ship:Orbit:SemiMajorAxis) / 2))).
+    local dv1 to round(abs(vTransE - vBody)).
     print "dv1            : " + round(dv1, 2) at (0, cr()).
     cr().
     
@@ -86,7 +89,7 @@ RunOncePath("0:/lib/mnv").
     wait 1.
     if not mnvNode:orbit:hasnextpatch 
     {
-        set mnvNode to IterateMnvNode(mnvNode, "escSoi", list(list(0, 0, 0, 1))).
+        set mnvNode to IterateMnvNode(mnvNode, "parentSoi", list(list(0, 0, 0, 1))).
         add mnvNode.
     }
 
@@ -155,6 +158,34 @@ RunOncePath("0:/lib/mnv").
                 }
                 // Return false if we've exhausted all iteration parameters and the loop bailed for some reason
                 return false.
+            }
+        }
+        else if desiredResult = "parentSoi"
+        {
+            // If we have a patch that already is in the sun's SOI, return true.
+            local interPatch to GetInterceptPatchIndex(Ship:Body:Body). 
+            if interPatch > -1 
+            {
+                return nextNode.
+            }
+            else
+            {
+                until false
+                {
+                    for i in iterationParams
+                    {
+                        remove mnv. // Remove the mnv node to work with it
+                        set mnv to node(mnv:Time + i[0], mnv:RadialOut + i[1], mnv:Normal + i[2], mnv:Prograde + i[3]). // Add the paramers to the node values
+                        add mnv. // Add it again so we can see the results.
+                        DispMnvPatchList(mnv, 22).
+                        set interPatch to GetInterceptPatchIndex(Ship:Body:Body, mnv:orbit).
+                        if interPatch > -1
+                        {
+                            remove mnv.
+                            return mnv.
+                        }
+                    }
+                }
             }
         }
     }

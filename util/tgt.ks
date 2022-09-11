@@ -30,7 +30,7 @@ if hitList:length > 0
     OutMsg("Results: {0}":format(hitCount)).
     if setTgt
     {
-        set Target to GetOrbitable(PromptItemSelect("tgt", "Select target", hitList)).
+        set Target to GetOrbitable(PromptItemSelect(hitList, "Select target", true, "tgt")).
         OutMsg("Selected target: {0}":format(Target:name)).
     }
 }

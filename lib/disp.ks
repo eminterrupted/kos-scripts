@@ -64,18 +64,40 @@ global function cr
     return g_line.
 }
 
-global function DispPatchList
+global function DispMnvPatchList
 {
-    parameter line to g_line.
+    parameter _mnv,
+              line is 10.
+
+    set g_line to line.
 
     print "{0, 10}   {1, 10}   {2}":format("PATCH IDX", "PATCH SOI", "ETA") at (0, line).
-    from { local i to 0. local o to ship:orbit. } until not o:hasNextPatch step { set i to i + 1. set o to o:nextPatch. } do
+    local patchList to GetPatchesForNode(_mnv).
+    from { local i to 0. } until i = patchList:length step { set i to i + 1. } do
     {
         local len to i:toString():length.
         local padUp to round((10 - len) / 2) - 1.
         local padFlr to floor((10 - len) / 2) - 1.
-        set str to "[{0, " + padUp + "}{1}{0, " + padFlr + "}]  {1, 10}   {2}".
-        print str:format("", i, o:body:name).
+        local str to "[{0, " + padUp + "}{1}{0, " + padFlr + "}]  {1, 10}   {2}".
+        print str:format("", i, patchList[i]:body:name) at (0, cr()).
+    }
+}
+
+global function DispPatchList
+{
+    parameter tgtVes is ship,
+              line is 10.
+
+    set g_line to line.
+
+    print "{0, 10}   {1, 10}   {2}":format("PATCH IDX", "PATCH SOI", "ETA") at (0, line).
+    from { local i to 0. local o to ship:orbit. } until i = tgtVes:patches:length step { set i to i + 1. if o:hasNextPatch set o to o:nextPatch. } do
+    {
+        local len to i:toString():length.
+        local padUp to round((10 - len) / 2) - 1.
+        local padFlr to floor((10 - len) / 2) - 1.
+        local str to "[{0, " + padUp + "}{1}{0, " + padFlr + "}]  {1, 10}   {2}".
+        print str:format("", i, o:body:name) at (0, cr()).
     }
 }
 
@@ -149,29 +171,19 @@ global function OutInfo2
     print str at (0, 8).
 }
 
-// Prints the input value to the mission log
-global function OutLog
-{
-    parameter logStr is "",
-              errLvl is 0,
-              screenTee is false.
-
-    
-}
-
-
 // Print a string to the msg line
 global function OutMsg
 {
-    parameter str is "", errLvl is 0.
+    parameter 
+        str is "", 
+        errLvl is 0,
+        pos is 0.
 
     local msgType to "".
     if errLvl = 1 set msgType to "WARN: ".
     else if errLvl = 2 set msgType to "ERR: ".
-
-    clr(6).
-    
-    print msgType + str at (0, 6).
+    clr(6 + pos).
+    print msgType + str at (0, 6 + pos).
 }
 
 // Prints to both hud and msg line
@@ -182,12 +194,12 @@ global function OutTee
               errLvl is 0,
               screenTime is 15.
 
+    if pos:isType("Scalar")
     if pos = 0 OutMsg(str).
     else if pos = 1 OutInfo(str).
     else if pos = 2 OutInfo2(str).
     OutHUD(str, errLvl, screenTime).
 }
-
 
 global function OutWait
 {
@@ -229,14 +241,21 @@ local function PrettyDur
 {
     parameter _dur to 0.
 
-    set _dur to timespan(_dur).
-    local dayStr to "".
-    local yearStr to "".
+    if _dur = 0
+    {
+        return " N/A".
+    }
+    else
+    {
+        set _dur to timespan(_dur).
+        local dayStr to "".
+        local yearStr to "".
 
-    if _dur:day > 0 set dayStr to "{0,2}d ":format(_dur:day).
-    if _dur:year > 0 set yearStr to "{0,2}y ":format(_dur:year).
-    local timeStr to "{0:0,2}h {1:0,2}m {2:0,2}s":format(_dur:hour, _dur:minute, _dur:second).
-    return yearStr + dayStr + timeStr.
+        if _dur:day > 0 set dayStr to "{0,2}d ":format(_dur:day).
+        if _dur:year > 0 set yearStr to "{0,2}y ":format(_dur:year).
+        local timeStr to "{0:0,2}h {1:0,2}m {2:0,2}s":format(_dur:hour, _dur:minute, _dur:second).
+        return yearStr + dayStr + timeStr.
+    }
 }
 
 
@@ -398,6 +417,85 @@ global function DispLaunchPlan
     //print "WAIT FOR LAN WINDOW : " + launchPlan:waitForLAN at (0, cr()).
 }
 
+// A special version of DispTelemetry with desired target info
+global function DispLaunchTelemetry
+{
+    parameter _lp.
+    
+    local tgtPe to round(ship:apoapsis).
+    local tgtAp to round(ship:apoapsis).
+    local tgtInc to 0.
+    local tgtLAN to -1.
+    
+    if _lp:length > 0 
+    {
+        set tgtPe to round(_lp[0]).
+        if _lp:length > 1 
+        {
+            set tgtAp to round(_lp[1]).
+            if _lp:length > 2 
+            {
+                set tgtInc to round(_lp[2], 2).
+                if _lp:length > 3 
+                {
+                    set tgtLAN to round(_lp[3], 2).
+                }
+            }
+        }
+    }
+    
+    set g_line to 10.
+
+    print "LAUNCH TELEMETRY" at (0, g_line).
+    print "----------------" at (0, cr()).
+    cr().
+    local altStr            to round(ship:altitude):ToString.
+    local apStr             to round(ship:apoapsis):ToString.
+    local peStr             to round(ship:periapsis):ToString.
+    local incStr            to round(ship:orbit:inclination, 3):ToString.
+    local lanStr            to round(ship:orbit:LAN, 3):ToString.
+    local throtStr          to round(Throttle * 100):ToString.
+    local availThrStr       to round(ship:availablethrust, 2).
+    local maxAccStr         to round(Ship:AvailableThrust / Ship:Mass, 2):ToString.
+    local srfSpdStr         to round(ship:velocity:surface:mag):ToString.
+    local kpaStr            to round(body:atm:altitudePressure(ship:altitude) * constant:AtmToKpa, 7):ToString.
+    local qStr              to round(ship:q, 7):ToString.
+    local orbSpdStr         to round(ship:velocity:orbit:mag):ToString.
+
+    local apPctTgt          to round((ship:apoapsis / tgtAp) * 100, 2).
+    local pePctTgt          to round((ship:periapsis / tgtPe) * 100, 2).
+    local incPctTgt         to 100 - round(((ship:orbit:inclination - tgtInc) / 90) * 100, 2).
+    local LANPctTgt         to choose 100 if tgtLAN < 0 else round((max(0.0000001, ship:orbit:LAN) / max(0.0000001, tgtLAN)) * 100, 2).
+
+    print "ORBITAL INFO:" at (0, cr()).
+    print "{0,18}: {1,-10}":format("ALTITUDE", altStr + "m ") at (0, cr()).
+    print "{0,18}: {1,-10}":format("RADAR ALTITUDE", round(alt:radar)      + "m ") at (0, cr()).
+    cr().
+    print "{0,18}: {1,-10} | {2, -10} | {3}%  ":format("APOAPSIS", apStr + "m ", tgtAp + "m ", apPctTgt) at (0, cr()).
+    print "{0,18}: {1,-10} | {2, -10} | {3}%  ":format("PERIAPSIS", peStr + "m ", tgtPe + "m ", pePctTgt) at (0, cr()).
+    cr().  
+    print "{0,18}: {1,-10} | {2, -10} | {3}%  ":format("INCLINATION", incStr + char(176) + " ", tgtInc + char(176) + " ", incPctTgt) at (0, cr()).
+    print "{0,18}: {1,-10} | {2, -10} | {3}%  ":format("LONG OF ASC NODE", lanStr + char(176) + " ", tgtLAN + char(176) + " ", LANPctTgt) at (0, cr()).
+    cr().  
+    print "{0,18}: {1,-25}":format("THROTTLE", throtStr + "% ") at (0, cr()).
+    print "{0,18}: {1,-25}":format("AVAIL THRUST", availThrStr + "kN ") at (0, cr()).
+    print "{0,18}: {1,-25}":format("MAX ACCELERATION", maxAccStr + "m/s ") at (0, cr()).
+    cr().
+    if (Body:Atm:Exists) and ship:altitude < body:atm:height
+    {
+        print "{0,18}: {1,-25}":format("SURFACE SPEED", srfSpdStr + "m/s ") at (0, cr()).
+        print "{0,18}: {1,-25}":format("PRESSURE (KPA)", kpaStr + " ") at (0, cr()).
+        print "{0,18}: {1,-25}":format("PRESSURE (Q)", qStr + " ") at (0, cr()).
+    }  
+    else  
+    {  
+        print "{0,18}: {1,-25}":format("ORBITAL SPEED", orbSpdStr + "m/s ") at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+    }
+}
+
 global function DispLaunchWindow
 {
     parameter tgtInc, tgtLAN, tgtEffectiveLAN, launchTime.
@@ -448,10 +546,10 @@ global function DispBoot
     print "===========================".
     print "MISSION          : " + ship:name.
     print "CURRENT STATUS   : " + ship:status.
-    print "COMM STATUS      : " + Addons:RT:HasKscConnection(ship).
+    print "COMM STATUS      : " + homeConnection:isConnected.
     if Addons:Available:RT
     {
-        print "COMM STATUS      : " + Addons:RT:HasKscConnection(ship).
+        print "COMM STATUS      : " + homeConnection:isConnected.
     }
     else
     {
@@ -464,12 +562,9 @@ global function DispBoot
 global function DispMain
 {
     parameter scrPlan is scriptPath():name,
-              initTerm is true.
+              init is true.
     
-    if initTerm
-    {
-        InitTerm().
-    }
+    if init InitTerm().
 
     print "Mission Controller v2.0.1".// at (0, 0).
     print "=========================".// at (0, 1).
@@ -557,7 +652,7 @@ global function DispImpact
 
     set g_line to 10.
 
-    print "LANDING TELEMETRY" at (0, g_line).
+    print "IMPACT TELEMETRY" at (0, g_line).
     print "-----------------" at (0, cr()).
     print "BODY           : " + ship:body:name   + "      " at (0, cr()).
     print "ALTITUDE       : " + round(ship:altitude)    + "m     " at (0, cr()).
@@ -565,7 +660,7 @@ global function DispImpact
     print "VERTICAL SPD   : " + round(ship:verticalspeed, 2) + "m/s   " at (0, cr()).
     if tti > 0.25
     {
-        print "TIME TO IMPACT : " + round(tti, 2)              + "s   " at (0, cr()).
+        print "TIME TO IMPACT : {0} ":format(PrettyDur(tti)) at (0, cr()).
     }
     else if tti > -1
     {
@@ -633,27 +728,34 @@ global function DispSOIData
         cr().
     }
     cr().
-    print "PATCH INFO" at (0, cr()).
-    print "----------" at (0, cr()).
-    if ship:orbit:hasnextpatch 
+    print "PATCH DETAILS" at (0, cr()).
+    print "-------------" at (0, cr()).
+    cr().
+    local patchesLex to GetOrderedPatches(ship).
+    print "  IDX   BODY       SOI ETA          DISTANCE" at (0, cr()).
+    print "  ---   ----       -------          --------" at (0, cr()).
+    for pKey in patchesLex:keys
     {
-        print "NUM PATCHES : " + ship:patches:length + " " at (0, cr()).
-        if ship:patches:length > 0
-        {
-            print "NEXT PATCH  : " + ship:patches[1]:body:name + " " at (0, cr()).
-            cr().
-            local interceptPatch to GetInterceptPatchIndex(tgtBody).
-            if interceptPatch > -1 
-            {
-                print "INTERCEPT PATCH: " + interceptPatch + " " at (0, clrCR()).
-                print "ETA TO SOI  : " + PrettyDur(ship:orbit:nextpatcheta) + " " at (0, clrCR()).
-            }
-            else
-            {
-                print "*** NO INTERCEPT DETECTED ***" at (0, clrCR()).
-            }
-        }
+        print "   {0}  {1, 8}    {2, -16}   {3, -10}":format(pKey, patchesLex[pKey][0], PrettyDur(patchesLex[pKey][1]), RoundDistance(patchesLex[pKey][2])) at (0, cr()).
     }
+    // if ship:patches:length > 0
+    // {
+        //print "PLAN PATCHES : " + ship:patches:length + " " at (0, cr()).
+        // print "NEXT PATCH SOI    : " + ship:patches[1]:body:name + " " at (0, cr()).
+        // print "ETA TO SOI        : " + PrettyDur(ship:orbit:nextpatcheta) + " " at (0, clrCR()).
+        // cr().
+        // local interceptPatch to GetInterceptPatchIndex(tgtBody).
+        // local patchLex to GetOrderedPatches(ship).
+        // if interceptPatch > 0
+        // {
+        //     print "INTERCEPT PATCH   : " + interceptPatch + " " at (0, clrCR()).
+        //     print "INTERCEPT ETA     : " + GetPatchByIndex(interceptPatch - 1).
+        // }
+        // else
+        // {
+        //     print "*** NO INTERCEPT DETECTED ***" at (0, clrCR()).
+        // }
+    // }
     return 0.
 }
 
@@ -807,43 +909,43 @@ global function DispTelemetry
     }
 }
 
-global function DispLaunchTelemetry
-{
-    parameter tgtAp, 
-              tgtPe,
-              tgtVel.
+// global function DispLaunchTelemetry
+// {
+//     parameter tgtAp, 
+//               tgtPe,
+//               tgtVel.
     
-    set g_line to 10.
+//     set g_line to 10.
 
-    print "TELEMETRY" at (0, g_line).
-    print "---------" at (0, cr()).
+//     print "TELEMETRY" at (0, g_line).
+//     print "---------" at (0, cr()).
 
-    print "{0,-18}: {1, -15}":format("ALTITUDE", round(ship:altitude)) at (0, cr()).
-    print "{0,-18}: {1, -15}":format("RADAR ALTITUDE", round(Ship:Altitude - Ship:GeoPosition:TerrainHeight)) at (0, cr()).
-    print "{0,-18}: {1, -15} {2, -15}":format("APOAPSIS", round(ship:apoapsis), tgtAp) at (0, cr()).
-    print "{0,-18}: {1, -15} {2, -15}":format("PERIAPSIS", round(ship:periapsis), tgtPe) at (0, cr()).
-    cr().
-    print "{0,-18}: {1, -15}":format("THROTTLE", round(throttle * 100)) at (0, cr()).
-    // print "{0,-18}: {1, -15}":format("CUR THRUST", round(0)) at (0, cr()).
-    print "{0,-18}: {1, -15}":format("AVAIL THRUST", round(Ship:AvailableThrust, 2)) at (0, cr()).
-    print "{0,-18}: {1, -15}":format("TWR", round(Ship:AvailableThrust * tConstants:KnToKg)) at (0, cr()).
-    print "{0,-18}: {1, -15}":format("MAX ACCELERATION", round(Ship:AvailableThrust / Ship:Mass, 2)) at (0, cr()).
-    cr().
-    if (Body:Atm:Exists) and ship:altitude < body:atm:height
-    {
-        print "{0,-18}: {1, -15}":format("SURFACE SPEED", round(ship:velocity:surface:mag)) at (0, cr()). 
-        print "{0,-18}: {1, -15}":format("PRESSURE (KPA)", round(body:atm:altitudePressure(ship:altitude) * constant:AtmToKpa, 7)) at (0, cr()).
-        print "{0,-18}: {1, -15}":format("PRESSURE (ATM)", round(body:atm:altitudePressure(ship:altitude), 7)) at (0, cr()).
-        print "{0,-18}: {1, -15}":format("PRESSURE (Q)",   round(ship:q, 7)) at (0, cr()).
-    }
-    else
-    {
-        print "{0,-18}: {1, -15} {2, -15}":format("ORBITAL SPEED", round(ship:velocity:orbit:mag), tgtVel) at (0, cr()).
-        print "                                               " at (0, cr()).
-        print "                                               " at (0, cr()).
-        print "                                               " at (0, cr()).
-    }
-}
+//     print "{0,-18}: {1, -15}":format("ALTITUDE", round(ship:altitude)) at (0, cr()).
+//     print "{0,-18}: {1, -15}":format("RADAR ALTITUDE", round(Ship:Altitude - Ship:GeoPosition:TerrainHeight)) at (0, cr()).
+//     print "{0,-18}: {1, -15} {2, -15}":format("APOAPSIS", round(ship:apoapsis), tgtAp) at (0, cr()).
+//     print "{0,-18}: {1, -15} {2, -15}":format("PERIAPSIS", round(ship:periapsis), tgtPe) at (0, cr()).
+//     cr().
+//     print "{0,-18}: {1, -15}":format("THROTTLE", round(throttle * 100)) at (0, cr()).
+//     // print "{0,-18}: {1, -15}":format("CUR THRUST", round(0)) at (0, cr()).
+//     print "{0,-18}: {1, -15}":format("AVAIL THRUST", round(Ship:AvailableThrust, 2)) at (0, cr()).
+//     print "{0,-18}: {1, -15}":format("TWR", round(Ship:AvailableThrust * tConstants:KnToKg)) at (0, cr()).
+//     print "{0,-18}: {1, -15}":format("MAX ACCELERATION", round(Ship:AvailableThrust / Ship:Mass, 2)) at (0, cr()).
+//     cr().
+//     if (Body:Atm:Exists) and ship:altitude < body:atm:height
+//     {
+//         print "{0,-18}: {1, -15}":format("SURFACE SPEED", round(ship:velocity:surface:mag)) at (0, cr()). 
+//         print "{0,-18}: {1, -15}":format("PRESSURE (KPA)", round(body:atm:altitudePressure(ship:altitude) * constant:AtmToKpa, 7)) at (0, cr()).
+//         print "{0,-18}: {1, -15}":format("PRESSURE (ATM)", round(body:atm:altitudePressure(ship:altitude), 7)) at (0, cr()).
+//         print "{0,-18}: {1, -15}":format("PRESSURE (Q)",   round(ship:q, 7)) at (0, cr()).
+//     }
+//     else
+//     {
+//         print "{0,-18}: {1, -15} {2, -15}":format("ORBITAL SPEED", round(ship:velocity:orbit:mag), tgtVel) at (0, cr()).
+//         print "                                               " at (0, cr()).
+//         print "                                               " at (0, cr()).
+//         print "                                               " at (0, cr()).
+//     }
+// }
 
 // Resource transfer readout
 global function DispResTransfer
@@ -884,41 +986,139 @@ global function DispResTransfer
 
 global function DispResTransfer2
 {
-    parameter resName, 
-              src,
-              srcCap,
+    parameter src,
+              srcRes,
               tgt,
-              tgtCap,
-              xfrAmt.
+              tgtRes,
+              xfrAmt,
+              srcBaseline,
+              xfrStatus.
 
     set g_line to 10.
 
-    local srcAmt to 0.
-    local tgtAmt to 0.
 
-    for res in src:resources
-    {
-        if res:name = resName set srcAmt to res:amount.
-    }
+    local srcAmt to srcRes:amount.
+    local srcCap to abs(srcRes:capacity).
+    local srcPct to round(srcAmt / srcCap) * 100.
 
-    for res in tgt:resources
-    {
-        if res:name = resName set tgtAmt to res:amount.
-    }
+    local tgtAmt to tgtRes:amount.
+    local tgtCap to abs(tgtRes:capacity).
+    local tgtPct to round(tgtAmt / tgtCap) * 100.
 
+    local resName to srcRes:name.
+    local curAmt to abs(round(srcBaseline - srcAmt, 2)).
+    local curPct to round(curAmt / xfrAmt) * 100.
+    
     print "RESOURCE TRANSFER" at (0, g_line).
     print "-----------------" at (0, cr()).
     print "RESOURCE             : " + resName at (0, cr()).
-    print "TRANSFER AMOUNT      : " + round(xfrAmt, 2) at (0, cr()).
-    print "TRANSFER PROGRESS    : " + round(1 - (xfrAmt / tgtAmt), 2) * 100 + "%   " at (0, cr()).
+    print "TRANSFER STATUS      : " + xfrStatus at (0, cr()).
+    print "TRANSFER PROGRESS    : {0}/{1} ({2,3}%)":format(curAmt, xfrAmt, curPct) at (0, cr()).
     cr().
     print "SOURCE ELEMENT       : " + src:name at (0, cr()).
-    print "SOURCE AMOUNT / CAP  : " + round(srcAmt, 2) + " / " + round(srcCap) at (0, cr()).
+    print "SOURCE AMOUNT / CAP  : {0}/{1} ({2,3}%)":format(srcAmt, srcCap, srcPct) at (0, cr()).
     cr().
     print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
-    print "TARGET AMOUNT / CAP  : " + round(tgtAmt, 2) + " / " + round(tgtCap) at (0, cr()).
+    print "TARGET AMOUNT / CAP  : {0}/{1} ({2,3}%)":format(tgtAmt, tgtCap, tgtPct) at (0, cr()).
     cr().
 }
+
+local function DecToDegrees
+{
+    parameter _val.
+
+    local denom to 360.
+    set _val to mod(_val, denom).
+
+    local degrees to floor(_val).
+    local degMod to choose 1 if degrees = 0 else degrees.
+    local minutes to mod(_val, degMod) / (1 / 60).
+    local minMod to choose 1 if floor(minutes) = 0 else floor(minutes).
+    local seconds to mod(minutes, minMod)/ (1 / 60). 
+    set minutes to floor(minutes). 
+    set seconds to floor(seconds).
+
+    return "{0,3}{1} {2,2}{3} {4,2}{5}":format(degrees, char(176), floor(minutes), char(34), floor(seconds), char(39)).
+}
+
+// DispSci - Displays information pertaining to science experimentation
+global function DispSci
+{
+    parameter _mode,
+              _sciAction,
+              _status,
+              _biomeReport to list(list(),list()).
+
+    set g_line to 10.
+
+    local prntList to list(
+        "MODE", _mode
+        ,"SCI ACTION", _sciAction
+        ,"",""
+        ,"STATUS",    _status
+        ,"SITUATION", ship:status
+        ,"CUR BIOME", GetBiome()
+        ,"LATITUDE",  DecToDegrees(ship:latitude)
+        ,"LONGITUDE", DecToDegrees(ship:longitude)
+    ).
+
+    print "SCIENCE REPORT" at (0, g_line).
+    print "--------------" at (0, cr()).
+
+    if _mode = "biome"
+    {
+        prntList:add("").
+        prntList:add("").
+        prntList:add("REMAINING BIOMES").
+        prntList:add("").
+        for _b in _biomeReport[0]
+        {
+            prntList:add("-").
+            prntList:add(_b). 
+        }
+        prntList:add("").
+        prntList:add("").
+        prntList:add("BIOMES RESEARCHED").
+        prntList:add("").
+        for _b in _biomeReport[1]
+        {
+            prntList:add("-").
+            prntList:add(_b). 
+        }
+    }
+    else if _mode = "full"
+    {
+        prntList:add("").
+        prntList:add("").
+        prntList:add("BIOMES RESEARCHED").
+        prntList:add("").
+        for _b in _biomeReport[0]
+        {
+            prntList:add("-").
+            prntList:add(_b). 
+        }
+    }
+
+    // print prntList at (2, 25).
+    // Breakpoint().
+
+    from { local labelIdx to 0. local valIdx to 1.} until labelIdx >= prntList:length step { set labelIdx to labelIdx + 2. set valIdx to valIdx + 2.} do
+    {
+        if prntList[labelIdx] = "" 
+        {
+            cr().
+        }
+        else if prntList[labelIdx] = "-"
+        {
+            print " {0} {1, -40}":format(prntList[labelIdx], prntList[valIdx]) at (0, cr()).
+        }
+        else
+        {
+            print "{0, -18}: {1, -40}":format(prntList[labelIdx], prntList[valIdx]) at (0, cr()).
+        }
+    }
+}
+
 
 
 // DispScope - Displays info about a telescope and it's target

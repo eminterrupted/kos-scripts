@@ -17,7 +17,7 @@ DispMain(scriptPath(), false).
 
 // Vars
 // Launch params
-local tgtPe     to 25000.
+local tgtPe     to 42500.
 local tgtAp     to 250000.
 local tgtInc    to -45.
 local tgtLAN    to -1.
@@ -26,8 +26,8 @@ local tgtRoll   to 180.
 // If the launch plan was passed in via param, override manual values
 if lPlan:length > 0
 {
-    set tgtPe to lPlan[0].
-    set tgtAp to lPlan[1].
+    set tgtAp to lPlan[0].
+    set tgtPe to lPlan[1].
     set tgtInc to lPlan[2].
     set tgtLAN to lPlan[3].
     set tgtRoll to lPlan[4]. 
@@ -42,25 +42,23 @@ local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 //local boundsBox     to ship:bounds.
 local altRoll       to ship:altitude + 250.
 local altStartTurn  to ship:altitude + 750.
-local altGravTurn   to 50000.
+local altGravTurn   to 45000.
 local altFlatTrajectory to ship:body:atm:height * 0.80.
 local spdStartTurn  to 75.
 
-// Boosters / Engines
+// Vessel systems / control
 local boosterObj to lex().
-
-// Controls
 local rVal to tgtRoll.
+local stageLimit to g_stopStage.
+local ts to 0.
 
-// Core tag
-local cTag to core:tag.
-local stageLimit to choose 0 if cTag:split("|"):length <= 1 else cTag:split("|")[1]:toNumber(0).
+// Mission vars
+local objective to false.
+
 // Optional second core
 local core2 to "".
 
-OutTee("Hi I AM SpIcY AF", 0, 2.5).
-wait 0.25.
-OutHUD("Hello SpIcY AF, I am MiSs SuPeR SpIcE", 2).
+OutHUD("Launch plan validation", 0, 2.5).
 
 // Begin  
 LaunchPadGen(true).
@@ -98,7 +96,7 @@ if tgtLAN > -1
 }
 else
 {
-    local ts to time:seconds.
+    set ts to time:seconds.
     until false
     {
         if CheckInputChar(terminal:input:enter) break.
@@ -110,7 +108,7 @@ else
         }
         else if time:seconds >= ts
         {
-            OutTee("Press Enter in terminal to launch", 0, 2.5).
+            OutTee("Press Enter in terminal to confirm launch", 0, 2.5).
             set ts to time:seconds + 5.
         }
         wait 0.05.
@@ -129,7 +127,7 @@ set boosterObj to GetBoosters().
 
 // Arm systems
 ArmAutoStaging(stageLimit).
-ArmLESJettison(82500).
+ArmLESJettison(62500).
 ArmFairingJettison("ascent", body:atm:height - 5000, "launch").
 set g_boosterSystemArmed to ArmBoosterSeparation(boosterObj).
 set g_abortSystemArmed to SetupAbortGroup(Ship:RootPart).
@@ -194,9 +192,8 @@ OutMsg("Horizontal Velocity Program").
 until ship:apoapsis >= tgtAp * 0.9995 or (g_engBurnout and stage:number = g_stopStage)
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    //local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
-    //local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
-    local adjAng to 84.
+    local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
+    local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
     set sVal to heading(l_az_calc(azCalcObj), adjAng, rVal).
     DispTelemetry().
     wait 0.01.
@@ -205,31 +202,54 @@ until ship:apoapsis >= tgtAp * 0.9995 or (g_engBurnout and stage:number = g_stop
 until ship:periapsis >= tgtPe or (g_engBurnout and stage:number = g_stopStage)
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    //local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
-    //local adjAng to lAng - ((ship:altitude - altGravTurn) / 1000).
-    local adjAng to 84.
+    local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
+    local adjAng to lAng - ((ship:altitude - altGravTurn) / 1000).
     set sVal to heading(l_az_calc(azCalcObj), adjAng, rVal).
     DispTelemetry().
     wait 0.01.
 }
 set tVal to 0.
 OutInfo("Engine Cutoff").
+wait 1.
 
-OutMsg("Boost phase complete").
-
-local coastStage to choose 1 if core:tag:split("|"):length <= 1 else core:tag:split("|")[1].
-local ts to time:seconds + 10.
-
-local orientation to "pro-body".
-lock steering to sVal.
-
-OutMsg("Waiting for booster staging").
-until time:seconds >= ts
+set g_orientation to "pro-body".
+if ship:apoapsis > ship:body:atm:height
 {
-    set sVal to GetSteeringDir(orientation).
-    DispTelemetry().
-    wait 0.01.
+    OutMsg("Coasting to space").
+    until ship:altitude > ship:body:atm:height
+    {
+        set sVal to GetSteeringDir(g_orientation).
+        DispTelemetry().
+        wait 0.01.
+    }
+    OutMsg("Coasting to staging altitude").
+    until ship:altitude >= ship:body:atm:height
+    {
+        set sVal to GetSteeringDir(g_orientation).
+        DispTelemetry().
+        wait 0.01.
+    }
 }
+else
+{
+    until MasterAlarm("Apoapsis still in atmosphere!", 0, true)
+    {
+        set sVal to GetSteeringDir(g_orientation).
+        DispTelemetry().
+        wait 0.01.
+    }
+    OutMsg("Waiting for booster staging").
+    set ts to time:seconds + 10.
+    until time:seconds >= ts or time:seconds > ship:apoapsis:eta - 5
+    {
+        set sVal to GetSteeringDir(g_orientation).
+        DispTelemetry().
+        wait 0.01.
+    }
+}
+
+OutMsg("Booster staging").
+local coastStage to g_stopStage.
 until stage:number = coastStage
 {
     wait until stage:ready.
@@ -261,12 +281,12 @@ if ship:crew:length > 0
 }
 else
 {
-    OutMsg("Coasting to apoapsis in retrograde").
-    set ts to time:seconds + eta:apoapsis.
+    OutMsg("Coasting to apoapsis").
+    set ts to time:seconds + eta:apoapsis - 30.
     InitWarp(ts, "near apoapsis").
     until time:seconds >= ts
     {
-        set sVal to GetSteeringDir(orientation).
+        set sVal to GetSteeringDir(g_orientation).
         DispTelemetry().
         wait 0.01.
     }
@@ -278,5 +298,5 @@ until time:seconds >= ts
     wait 0.01.
 }
 sas off.
-OutMsg("Suborbital script complete, preparing for reentry").
+OutMsg("Suborbital script complete").
 wait 2.5.

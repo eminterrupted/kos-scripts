@@ -3,6 +3,11 @@
 //-- Dependencies --//
 
 //-- Variables --//
+global KSCGeoPos to lex(
+    "Launchpad", Body("Kerbin"):geoPositionLatLng(0,-74.5862)
+    ,"TSC-39B", Body("Kerbin"):geoPositionLatLng(-0.00626,-74.5862)
+).
+
 
 //-- Functions --//
 
@@ -26,15 +31,40 @@ global function GetActiveWP
 // Returns the 0-indexed patch ID where the current vessel intersects the target body
 global function GetInterceptPatchIndex
 {
-    parameter _tgtBody.
+    parameter _tgtBody,
+              _curPatch is ship:orbit.
               
-    local curPatch to ship:orbit.
-    from { local i to 0.} until not curPatch:hasNextPatch step { set i to i + 1.} do
+    from { local i to 0.} until not _curPatch:hasNextPatch step { set i to i + 1.} do
     {
-        if curPatch:body = _tgtBody return i.
-        set curPatch to curPatch:NextPatch.
+        if _curPatch:body = _tgtBody return i.
+        set _curPatch to _curPatch:NextPatch.
+        wait 0.01.
     }
     return -1. // Default value indicates no intercept found
+}
+
+// GetOrderedPatches :: [<vessel>Ship] -> <lexicon>
+// Returns a different view of the vessel's patches, with nextPatchETA joined to the patch it belongs to
+global function GetOrderedPatches
+{
+    parameter ves is ship.
+
+    local patchLex to lexicon().
+    if ves:patches:length > 1 
+    {
+        local patchList to ves:patches.
+        from { local i to 0.} until i >= patchList:length step { set i to i + 1.} do
+        {
+            local patch to patchList[i].
+            local patchETA to choose patchList[i -1]:nextPatchEta if i > 0 else 0.
+            set patchLex[i] to list(patch:body:name, round(patchETA), round(patch:body:distance)).
+        }
+        return patchLex.
+    }
+    else
+    {
+        return lex(0, list(body:name, -1, round(body:distance))).
+    }
 }
 
 // GetPatchByIndex :: [<int>PatchIdx] -> <orbit> 
@@ -85,6 +115,21 @@ global function GetSoiEta
     return _eta.
 }
 
+// Returns all patches for a given maneuver node
+global function GetPatchesForNode
+{
+    parameter _node is nextNode.
+
+    local curPatch to _node:orbit.
+    local patchList to list(curPatch).
+    until not curPatch:hasNextPatch
+    {
+        set curPatch to curPatch:nextPatch.
+        patchList:add(curPatch).
+    }
+    return patchList.
+}
+
 // Returns the last patch for a given node
 global function LastPatchForNode
 {
@@ -109,7 +154,6 @@ global function NextPatchForNode
     {
         set curPatch to curPatch:nextPatch.
     }
-
     return curPatch.
 }
 //#endregion
@@ -169,18 +213,23 @@ global function GetOrbitable
     {
         return tgtStr:ship.
     }
-
-    local vList to list().
-    list targets in vList.
-
-    for vs in vList 
+    else
     {
-        if vs:name = tgtStr
+        local iList to buildList("targets").
+        for b in buildList("bodies")
         {
-            return vessel(tgtStr).
+            iList:add(b).
+        }
+
+        from { local idx to 0.} until idx = iList:length step { set idx to idx + 1.} do
+        {
+            if iList[idx]:name = tgtStr
+            {
+                if iList[idx]:typeName = "body" return Body(tgtStr).
+                else return Vessel(tgtStr).
+            }
         }
     }
-    return body(tgtStr).
 }
 
 // GetTransferPhase :: <orbitable / string>, <scalar> -> <scalar>
@@ -648,6 +697,18 @@ global function VelocityAtTA
     local etaToAnomaly to time:seconds + ETAtoTA(orbitIn, anomaly).
     return velocityAt(ves, etaToAnomaly):orbit:mag.
 }
+
+// Orbital velocity on the surface of a planet by latitude
+global function GetOrbitalVelocityByGeoPos
+{
+    parameter _pos is ship:GeoPosition.
+
+    local _re to _pos:body:radius.
+    local _lat to _pos:lat.
+    local _sd to _pos:body:rotationperiod.
+
+    return (2 * constant:pi * _re * cos(_lat)) / _sd.
+}
 //#endregion
 
 // GetHyperAsymptoteAng :: <none> -> <scalar>
@@ -713,3 +774,4 @@ global function GetVelAtRadius
 
     return sqrt(body:mu * ((2 / radius) - (1 / ves:orbit:semimajoraxis))).
 }
+// #endregion

@@ -47,6 +47,8 @@ global function GetSteeringDir
         "pro",          Ship:Prograde:Vector
         ,"prograde",    Ship:Prograde:Vector
         ,"sun",         Sun:Position
+        ,"-sun",        -Sun:Position
+        ,"sunOut",      -Sun:Position
         ,"retro",       Ship:Retrograde:Vector
         ,"retrograde",  Ship:Retrograde:Vector
         ,"facing",      Ship:Facing:Vector
@@ -173,6 +175,69 @@ global function TranslateToDockingPort
     }
 }
 
+global function ToggleControlSurfaces
+{
+    parameter _ves is ship,
+              _action is "deploy".
+
+    for m in _ves:modulesNamed("ModuleControlSurface")
+    {
+        if _action = "deploy"
+        {
+            if m:part:tag:length = 0
+            {
+                DoAction(m, "Activate Pitch Control").
+                DoAction(m, "Activate Yaw Control").
+                DoAction(m, "Activate Roll Control").
+            }
+            else
+            {
+                if m:part:tag[0] = "1"
+                {
+                    DoAction(m, "Activate Pitch Control").
+                }
+                if m:part:tag[1] = "1"
+                {
+                    DoAction(m, "Activate Yaw Control").
+                }
+                if m:part:tag[2] = "1"
+                {
+                    DoAction(m, "Activate Roll Control").
+                }
+            }
+        }
+        else if _action = "stow"
+        {
+            local tagStr to 0.
+            if m:getField("pitch") 
+            {
+                set tagStr to tagStr + 100.
+                DoAction(m, "deactivate pitch control").
+            }
+            if m:getField("yaw") 
+            {
+                set tagStr to tagStr + 10.
+                DoAction(m, "deactivate yaw control").
+            }
+            if m:getField("roll") 
+            {
+                set tagStr to tagStr + 1.
+                DoAction(m, "deactivate roll control").
+            }
+
+            if tagStr:toString:length = 1
+            {
+                set tagStr to "00" + tagStr:toString.
+            }
+            else if tagStr:toString:length = 2
+            {
+                set tagStr to "0" + tagStr:toString.
+            }
+            set m:part:tag to tagStr.
+        }
+    }
+}
+
 
 // global function GetRollDegrees
 // {
@@ -202,6 +267,46 @@ global function GetECDraw
     print draw.
 
     return false.
+}
+
+// ParseResource :: (<any>, <parts<list>|ship|element>) -> <resource>
+// Returns the resource object on the provided ship or element by name or direct resource
+// Can convert string into resource as well as accept an actual resource
+global function ParseResourceParam
+{
+    parameter resParam,
+              resElement is ship.
+
+    local _itemSelections to lex().
+    local srcElement to "".
+    if resElement = "" or resElement:IsType("Vessel")
+    {
+        local _items to ship:elements.
+        local itemSelectDel to {
+            parameter _i.
+            
+            set _itemSelections[Stk(_i, "=v")] to _i.
+            set errLvl to _items:remove(_items:indexOf(_i)).
+            if errLvl = 1 OutLog("Failed to move _item: {0}":format(_i)).
+            else OutLog("Successfully moved item: {0}":format(_i)).
+        }.
+        return PromptItemMultiSelect(ship:elements, "Pick Resource Source Object", itemSelectDel@, -1, true, "srcElement").
+    }
+
+    if resParam:isType("Resource") return resParam.
+    else if resParam:isType("String") 
+    {
+        for res in srcElement:resources
+        {
+            if resParam = res:name 
+            {
+
+            }
+        }
+        
+        OutTee("No resource named {0} in source element: {1}":format(resParam, srcElement:name), 0, 2).
+        return "".
+    }
 }
 // #endregion
 
@@ -835,5 +940,23 @@ global function GetBoosters
     return boosterLex.
 }
 // #endregion
+
+// Tag Functions
+// Primarily parses core tags
+
+// ParseTag :: [<string>Tag] -> Lex<String, Number>
+// Splits a tag string by ':' and returns the resulting list
+// Default tag is the current core
+global function ParseTag
+{
+    parameter _tag to core:tag.
+
+    local tagLex to lexicon().
+    local tagSplit to _tag:split("|").
+    set tagLex["Mission"] to tagSplit[0]:split(":").
+    set tagLex["StageLimit"] to tagSplit[1]:ToNumber(0).
+
+    return tagLex.
+}
 
 // #endregion

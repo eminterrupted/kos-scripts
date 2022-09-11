@@ -177,7 +177,7 @@ wait 2.
 
 OutMsg("Uploading log to archive").
 OutInfo("Waiting for KSC connection to upload log").
-wait until addons:rt:hasKscConnection(ship).
+wait until homeConnection:isConnected.
 OutInfo("Connection established").
 
 OutMsg("Uploading log to " + arcLog).

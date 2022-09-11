@@ -30,9 +30,9 @@ global function ArmBoosterSeparation
                     OutInfo("Detaching Booster: " + bIdx).
                     for dc in boosterLex[bIdx]
                     {
-                        if dc:partsDubbedPattern("sep"):length > 0 
+                        if dc:partsDubbedPattern("(sep|pc.nose|pc_nose)"):length > 0
                         {
-                            for sep in dc:partsDubbedPattern("sep") sep:activate.
+                            for sep in dc:partsDubbedPattern("(sep|pc.nose|pc_nose)") sep:activate.
                         }
                         local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
                         if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
@@ -126,7 +126,6 @@ global function LaunchCountdown
 
     FallbackRetract(1).
     CrewArmRetract().
-    RetractSoyuzFuelArm().
 
     until countdown >= -10 
     {
@@ -215,7 +214,7 @@ global function LaunchArmRetract
     
     for m in ship:modulesNamed("ModuleAnimateGenericExtra")  // Swing arms that are not crew arms
     {
-        if not m:part:name:contains("CrewArm") animateMod:add(m).
+        if not m:part:name:matchesPattern("(CrewArm|Crane|DamperArm)") animateMod:add(m).
     }
     
     for m in ship:modulesNamed("ModuleAnimateGeneric")  // Add Umbilicals
@@ -239,15 +238,26 @@ global function LaunchArmRetract
             }
             else if m:part:name:contains("swingarm")
             {
-                if not DoEvent(m, "toggle").
+                if m:part:tag:length = 0 
                 {
-                    if not DoEvent(m, "retract arm right").
+                    if not DoEvent(m, "toggle").
                     {
-                        if not DoEvent(m, "retract arm")
+                        if not DoEvent(m, "retract arm right").
                         {
-                            DoEvent(m, "retract arms").
+                            if not DoEvent(m, "retract arm")
+                            {
+                                DoEvent(m, "retract arms").
+                            }
                         }
                     }
+                }
+                else if m:part:tag = "left"
+                {
+                    DoAction(m, "toggle arm left").
+                }
+                else if m:part:tag = "right"
+                {
+                    DoAction(m, "toggle arm right").
                 }
             }
         }
@@ -271,9 +281,19 @@ global function CrewArmRetract
         OutInfo("Retracting crew arm").
         for m in animateMod
         {
-            DoEvent(m, "retract arm").
-            DoEvent(m, "retract crew arm").
-            DoEvent(m, "raise walkway").
+            if not DoEvent(m, "retract arm")
+            {
+                if not DoEvent(m, "retract crew arm")
+                {
+                    if not DoEvent(m, "raise walkway")
+                    {
+                        if m:part:tag = "extendOkay" 
+                        {
+                            DoAction(m, "toggle crew arm", true).
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -403,56 +423,77 @@ global function ArmLESJettison
     }
 }
 
-// Retracts MLP Soyuz-style Gantry arms and waits for retraction to complete
-global function RetractSoyuzGantry
+// Retracts the special Titan / Saturn V parts
+global function RetractAuxPadStructures
 {
-    local pList to list().
-    for p in ship:parts
-    {
-        if p:name:contains("SoyuzLaunchBaseGantry") pList:add(p).
-    }
+    parameter partList, 
+              waitUntilComplete is false.
 
-    if pList:length > 0
+    local modLex to lex().
+    local ceList to list().
+    local armList to list().
+    local craneList to list().
+    local auxPartRegex to list("AM.MLP.*(CrewElevatorGemini){1}", "AM.MLP.(Saturn){1}.*(Crane){1}", "AM.MLP.(Saturn){1}.*(DamperArm){1}", "SoyuzLaunchBaseGantry", "SoyuzLaunchBaseArm").
+
+    for p in partList
     {
-        local gMod to "".
-        OutMsg("Retracting gantry arms").
-        for p in pList
+        local pModList to p:modules.
+        from { local i to 0.} until i = pModList:length step { set i to i + 1.} do
         {
-            for m in p:modulesNamed("ModuleAnimateGenericExtra")
+            local m to p:getModuleByIndex(i).
+            if m:name:matchesPattern("ModuleAnimateGeneric")
             {
-                if m:hasEvent("retract gantry arms") 
-                {
-                    set gMod to m.
-                    DoEvent(m, "retract gantry arms").
-                }
+                if m:hasAction("toggle front white panels") set modLex[m] to list("retract front white panels", "toggle front white panels").
+                else if m:hasAction("toggle tower") set modLex[m] to list("lower tower", "toggle tower").
+                else if m:hasAction("toggle crane rotation") set modLex[m] to list("rotate crane", "toggle crane location").
+                else if m:hasAction("toggle damper arm") set modLex[m] to list("raise arm", "toggle damper arm").
+                else if m:hasEvent("retract gantry arms") set modLex[m] to list("retract gantry arms", "toggle gantry arms").
+                else if m:hasEvent("retract arm") set modLex[m] to list("retract arm", "toggle arm").
             }
         }
+    }
 
-        until gMod:GetField("status") = "locked"
+    MovePadAuxGear(modLex).
+    wait 0.01.
+
+    if waitUntilComplete
+    {
+        OutMsg("Waiting for Aux Pad Gear Retraction").
+        local moveFlag to false.
+        if modLex:keys:length > 0 
         {
-            wait 0.1.
+            until false
+            {
+                for m in modLex:keys
+                {
+                    if m:hasField("Status")
+                    {
+                        if m:getField("Status"):contains("Moving") 
+                        {
+                            set moveFlag to true.
+                        }
+                        else 
+                        {
+                            set moveFlag to false.
+                        }
+                    }
+                }
+                if not moveFlag break.
+            }
         }
-        OutMsg("Retraction complete").
     }
 }
 
-// Retract MLP Soyuz-style fuel arms
-global function RetractSoyuzFuelArm
+// MovePadAuxGear :: 
+local function MovePadAuxGear 
 {
-    local pList to list().
-    for p in ship:parts
-    {
-        if p:name:contains("SoyuzLaunchBaseArm") pList:add(p).
-    }
+    parameter _modLex.
 
-    if pList:length > 0
+    if _modLex:keys:length > 0 
     {
-        for p in pList
+        for m in _modLex:keys
         {
-            for m in p:modulesNamed("ModuleAnimateGenericExtra")
-            {
-                DoEvent(m, "retract arm").
-            }
+            DoEvent(m, _modLex[m][0]).// DoAction(m, _modLex[m][1], true).
         }
     }
 }

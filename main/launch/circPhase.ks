@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter param is list().
+parameter params is list().
 
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/launch").
@@ -14,17 +14,24 @@ runOncePath("0:/lib/globals").
 DispMain(scriptPath()).
 
 local peOverride to false.
-local tgtPe to -1.
 
-if param:length > 0 
+local tgtPe to max(ship:orbit:apoapsis, ship:orbit:periapsis).
+local tgtAp to max(ship:orbit:apoapsis, ship:orbit:periapsis).
+local tgtInc to 0.
+local tgtLAN to -1.
+local tgtRoll to 0.
+
+if params:length > 0
 {
-    set tgtPe to param[0].
-    set peOverride to true.
+    set tgtAp to params[0].
+    set tgtPe to params[1].
+    set tgtInc to params[2].
+    set tgtLAN to params[3].
+    set tgtRoll to params[4]. 
 }
 
 // Vars
 local cTag to core:tag:split("|").
-local lp to list().
 local lpPath to "".
 
 local volIdx to 1.
@@ -45,7 +52,14 @@ until false
         set volIdx to volIdx + 1.
     }
 }
-set lp to readJson(lpPath).
+if exists(lpPath)
+{
+    set lp to readJson(lpPath).
+}
+else
+{
+    set lp to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
+}
 
 if not peOverride
 {
@@ -53,8 +67,8 @@ if not peOverride
 }
 local payloadStage to choose cTag[1] if cTag:length > 1 else 0.
 
-local sVal to ship:facing.
-local tVal to 0.
+set sVal to ship:facing.
+set tVal to 0.
 
 // local avgStageWaitTime to 1.02.
 
@@ -88,7 +102,7 @@ until time:seconds >= burnETA
 {
     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
     DispBurn(dv, burnEta - time:seconds, fullDur).
-    DispTelemetry().
+    DispLaunchTelemetry(lp).
     
     if CheckWarpKey()
     {
@@ -109,7 +123,7 @@ until time:seconds >= g_MECO
     if g_abortSystemArmed and ship:periapsis < body:atm:height and abort InitiateLaunchAbort().
     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
     OutInfo("Est time to g_MECO: " + round(g_MECO - time:seconds, 1) + "s   ").
-    DispTelemetry().
+    DispLaunchTelemetry(lp).
     wait 0.01.
 }
 set tVal to 0.
