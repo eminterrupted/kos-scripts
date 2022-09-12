@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter orientation is "pro-sun".
+parameter params is list().
 
 runOncePath("0:/lib/globals").
 runOncePath("0:/lib/burnCalc").
@@ -98,7 +98,7 @@ DispMain(ScriptPath(), false).
             set _char to Terminal:Input:GetChar.
             if _char = Terminal:Input:Enter
             {
-                ExecNodeBurn(mnvNode).
+                ExecNodeBurn(nextNode).
                 set doneFlag to true.
             }
             else if _char = Terminal:Input:EndCursor

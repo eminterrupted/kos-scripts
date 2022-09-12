@@ -31,6 +31,15 @@ DispMain(scriptPath()).
 // Arm staging
 ArmAutoStaging(0).
 
+// If there's already a captureBurn node, remove it
+if HasNode 
+{
+    until not HasNode
+    {
+        remove NextNode.
+    }
+}
+
 // Calculations
 OutMsg("Calculating Burn Parameters").
 local dv to CalcDvHyperCapture(ship, ship:periapsis, tgtAp, ship:body).

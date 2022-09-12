@@ -6,6 +6,22 @@
 
 local scanDelegates to ScansatDelegates().
 
+//#region -- Scansat Function Access
+// Functions for accessing scansat addon suffixes safely in scripts
+
+// Returns the current biome, if scanned
+global function GetBiome
+{
+    parameter geoPos is ship:geoPosition.
+              
+    if addons:available("scansat")
+    {
+        return addons:scansat:getBiome(geoPos:Body, geoPos).
+    }
+    else return false.
+}
+//#endregion
+
 //#region -- Actions
 // Functions for the SCANsat addon from here: https://github.com/JonnyOThan/Kos-Scansat
 global function ScansatActivate

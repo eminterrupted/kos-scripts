@@ -24,15 +24,26 @@ local scanList to ship:modulesNamed("scansat").
 local scanParts to list().
 for scanner in scanList 
 {
-    scanParts:add(scanner:part).
+    if scanner:part:tag = "DoNotActivate" 
+    {
+        OutMsg("Bypassing: " + scanner:part:name).
+    }
+    else
+    {
+        scanParts:add(scanner:part).
+    }
 }
+OutMsg().
     
 
 lock steering to sVal.
 
 for scnSat in scanList 
 {
-    ScansatActivate(scnSat:part).
+    If scnSat:part:tag <> "DoNotActivate" 
+    {
+        ScansatActivate(scnSat:part).
+    }
 }
 
 //space constraints means we can only display the first scanner 

@@ -9,7 +9,7 @@ RunOncePath("0:/lib/vessel").
 DispMain(ScriptPath(), false).
 
 local maxTorque to 0.000005.
-local tgtBody to Ship:Body.
+local tgtBody to Body("Sun").
 
 if param:length > 0 
 {

@@ -76,8 +76,8 @@ until runmode = -1
                 InitWarp(time:seconds + ship:orbit:nextpatcheta, "SOI Change", 3, true).
             }
                 
-            local soiDispData to DispSOIData().
-            DispGeneric(soiDispData, 10).
+            DispSOIData(tgt).
+            //DispGeneric(soiDispData, 10).
         }
     }
     else if runmode = 15
@@ -86,24 +86,4 @@ until runmode = -1
         set runmode to -1.
     }
     set g_termChar to "".
-}
-
-local function DispSOIData
-{
-    local paramList to list("SOI Information", "Current", ship:body:name, "Target", tgt:name).
-    if ship:orbit:hasnextpatch
-    {
-        paramList:add("Next").
-        paramList:add(ship:orbit:nextPatch:body:name).
-        paramList:add("ETA").
-        paramList:add(timeSpan(ship:orbit:nextpatcheta):full).
-    }
-    else
-    {
-        paramList:add("Next").
-        paramList:add("NONE").
-        paramList:add("ETA").
-        paramList:add("INF").
-    }
-    return paramList.
 }

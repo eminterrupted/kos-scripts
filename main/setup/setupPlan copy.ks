@@ -38,7 +38,7 @@ local function GetPlanPaths
      else
      {
           ClearScreen.
-          ShowTerm().
+          InitTerm().
           print "No core tag on CPU!" at (0, 0).
           wait 1.
           print "Please input a core tag. Press 'Enter' to submit." at (0, 2).

@@ -30,9 +30,9 @@ global function ArmBoosterSeparation
                     OutInfo("Detaching Booster: " + bIdx).
                     for dc in boosterLex[bIdx]
                     {
-                        if dc:partsDubbedPattern("sep"):length > 0 
+                        if dc:partsDubbedPattern("(sep|pc.nose|pc_nose)"):length > 0
                         {
-                            for sep in dc:partsDubbedPattern("sep") sep:activate.
+                            for sep in dc:partsDubbedPattern("(sep|pc.nose|pc_nose)") sep:activate.
                         }
                         local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
                         if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
@@ -63,8 +63,28 @@ global function ArmBoosterSeparation
 // #endregion
 
 //#region -- Ascent functions
-// Set pitch by deviation from a reference pitch
+// Set pitch by deviation from a reference pitch for orbital launches
 global function LaunchAngForAlt
+{
+    parameter turnAlt,
+              startAlt,
+              endPitch,
+              pitchLim is 5.
+    
+    // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
+    local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
+    // local pg to ship:srfprograde:vector.
+
+    local pg        to choose ship:srfPrograde:vector if ship:body:atm:altitudepressure(ship:altitude) * constant:atmtokpa > 0.01 else ship:prograde:vector.
+    local pgPitch   to 90 - vang(ship:up:vector, pg).
+    //set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
+    // Calculate the effective pitch with a 5 degree limiter
+    local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
+    return effPitch.
+}.
+
+// Set pitch by deviation from a reference pitch
+global function SuborbitalAscentProfile
 {
     parameter turnAlt,
               startAlt,
@@ -96,11 +116,16 @@ global function LaunchCountdown
     local launchTime to time:seconds + s.
     lock countdown to time:seconds - launchTime. 
     
+    if ship:modulesNamed("ModuleCryoTank"):length > 0 
+    {
+        OutInfo("Setting CryoTank States").
+        RestoreTankCooling().
+    }
+
     OutInfo("Countdown initiated").
 
     FallbackRetract(1).
     CrewArmRetract().
-    RetractSoyuzFuelArm().
 
     until countdown >= -10 
     {
@@ -189,7 +214,7 @@ global function LaunchArmRetract
     
     for m in ship:modulesNamed("ModuleAnimateGenericExtra")  // Swing arms that are not crew arms
     {
-        if not m:part:name:contains("CrewArm") animateMod:add(m).
+        if not m:part:name:matchesPattern("(CrewArm|Crane|DamperArm)") animateMod:add(m).
     }
     
     for m in ship:modulesNamed("ModuleAnimateGeneric")  // Add Umbilicals
@@ -205,17 +230,34 @@ global function LaunchArmRetract
             {
                 if not DoEvent(m, "drop umbilical")
                 {
-                    DoEvent(m, "retract arm").
+                    if not DoEvent(m, "retract arm")
+                    {
+                        DoEvent(m, "retract arms").
+                    }
                 }
             }
             else if m:part:name:contains("swingarm")
             {
-                if not DoEvent(m, "toggle").
+                if m:part:tag:length = 0 
                 {
-                    if not DoEvent(m, "retract arm right").
+                    if not DoEvent(m, "toggle").
                     {
-                        DoEvent(m, "retract arm").
+                        if not DoEvent(m, "retract arm right").
+                        {
+                            if not DoEvent(m, "retract arm")
+                            {
+                                DoEvent(m, "retract arms").
+                            }
+                        }
                     }
+                }
+                else if m:part:tag = "left"
+                {
+                    DoAction(m, "toggle arm left").
+                }
+                else if m:part:tag = "right"
+                {
+                    DoAction(m, "toggle arm right").
                 }
             }
         }
@@ -239,9 +281,19 @@ global function CrewArmRetract
         OutInfo("Retracting crew arm").
         for m in animateMod
         {
-            DoEvent(m, "retract arm").
-            DoEvent(m, "retract crew arm").
-            DoEvent(m, "raise walkway").
+            if not DoEvent(m, "retract arm")
+            {
+                if not DoEvent(m, "retract crew arm")
+                {
+                    if not DoEvent(m, "raise walkway")
+                    {
+                        if m:part:tag = "extendOkay" 
+                        {
+                            DoAction(m, "toggle crew arm", true).
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -342,7 +394,7 @@ global function ArmLESJettison
     local lesList to list().
     for p in ship:parts
     {
-        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES" 
         {
             lesList:add(p).
         }
@@ -371,57 +423,142 @@ global function ArmLESJettison
     }
 }
 
-// Retracts MLP Soyuz-style Gantry arms and waits for retraction to complete
-global function RetractSoyuzGantry
+// Retracts the special Titan / Saturn V parts
+global function RetractAuxPadStructures
 {
-    local pList to list().
-    for p in ship:parts
-    {
-        if p:name:contains("SoyuzLaunchBaseGantry") pList:add(p).
-    }
+    parameter partList, 
+              waitUntilComplete is false.
 
-    if pList:length > 0
+    local modLex to lex().
+    local ceList to list().
+    local armList to list().
+    local craneList to list().
+    local auxPartRegex to list("AM.MLP.*(CrewElevatorGemini){1}", "AM.MLP.(Saturn){1}.*(Crane){1}", "AM.MLP.(Saturn){1}.*(DamperArm){1}", "SoyuzLaunchBaseGantry", "SoyuzLaunchBaseArm").
+
+    for p in partList
     {
-        local gMod to "".
-        OutMsg("Retracting gantry arms").
-        for p in pList
+        local pModList to p:modules.
+        from { local i to 0.} until i = pModList:length step { set i to i + 1.} do
         {
-            for m in p:modulesNamed("ModuleAnimateGenericExtra")
+            local m to p:getModuleByIndex(i).
+            if m:name:matchesPattern("ModuleAnimateGeneric")
             {
-                if m:hasEvent("retract gantry arms") 
-                {
-                    set gMod to m.
-                    DoEvent(m, "retract gantry arms").
-                }
+                if m:hasAction("toggle front white panels") set modLex[m] to list("retract front white panels", "toggle front white panels").
+                else if m:hasAction("toggle tower") set modLex[m] to list("lower tower", "toggle tower").
+                else if m:hasAction("toggle crane rotation") set modLex[m] to list("rotate crane", "toggle crane location").
+                else if m:hasAction("toggle damper arm") set modLex[m] to list("raise arm", "toggle damper arm").
+                else if m:hasEvent("retract gantry arms") set modLex[m] to list("retract gantry arms", "toggle gantry arms").
+                else if m:hasEvent("retract arm") set modLex[m] to list("retract arm", "toggle arm").
             }
         }
+    }
 
-        until gMod:GetField("status") = "locked"
+    MovePadAuxGear(modLex).
+    wait 0.01.
+
+    if waitUntilComplete
+    {
+        OutMsg("Waiting for Aux Pad Gear Retraction").
+        local moveFlag to false.
+        if modLex:keys:length > 0 
         {
-            wait 0.1.
+            until false
+            {
+                for m in modLex:keys
+                {
+                    if m:hasField("Status")
+                    {
+                        if m:getField("Status"):contains("Moving") 
+                        {
+                            set moveFlag to true.
+                        }
+                        else 
+                        {
+                            set moveFlag to false.
+                        }
+                    }
+                }
+                if not moveFlag break.
+            }
         }
-        OutMsg("Retraction complete").
     }
 }
 
-// Retract MLP Soyuz-style fuel arms
-global function RetractSoyuzFuelArm
+// MovePadAuxGear :: 
+local function MovePadAuxGear 
 {
-    local pList to list().
-    for p in ship:parts
-    {
-        if p:name:contains("SoyuzLaunchBaseArm") pList:add(p).
-    }
+    parameter _modLex.
 
-    if pList:length > 0
+    if _modLex:keys:length > 0 
     {
-        for p in pList
+        for m in _modLex:keys
         {
-            for m in p:modulesNamed("ModuleAnimateGenericExtra")
+            DoEvent(m, _modLex[m][0]).// DoAction(m, _modLex[m][1], true).
+        }
+    }
+}
+
+// RestoreTankCooling :: <none> -> <obj>
+// Restores cryotanks back to the state found in the cache file (usually what was set in VAB)
+global function RestoreTankCooling
+{
+    local stateCache to path("0:/data/" + ship:name:replace(" ", "_") + "__tankCache.json").
+    local cryoTanks to ship:modulesNamed("ModuleCryoTank").
+    local cryoState to lex().
+
+    if exists(stateCache)
+    {
+        set cryoState to readJson(stateCache).
+        if cryoState:keys:length > 0
+        {
+            for m in cryoTanks
             {
-                DoEvent(m, "retract arm").
+                if cryoState:keys:contains(m:part:uid)
+                {
+                    SetTankCooling(m, cryoState[m:part:uid]).
+                }
             }
         }
+    }
+    deletePath(stateCache).
+    return cryoState.
+}
+
+// SetTankCooling :: <none> -> <obj>
+// Sets the current state of CryoTank active insulation modules in the cache, and returns the data as an object
+global function CacheTankCooling
+{
+    local stateCache to path("0:/data/" + ship:name:replace(" ", "_") + "__tankCache.json").
+    local cryoTanks to ship:modulesNamed("ModuleCryoTank").
+    local cryoState to lex().
+    
+    for t in cryoTanks
+    {
+        if t:hasEvent("disable cooling") set cryoState[t:part:uid] to true.
+        else if t:hasEvent("enable cooling") set cryoState[t:part:uid] to false.
+    }
+    
+    if not exists(stateCache) 
+    {
+        writeJson(cryoState, stateCache).
+    }
+    return cryoState.
+}
+
+// ToggleTankCooling :: <module>, <bool> -> <bool>
+// Enables / Disables a CryoTank cooling module based on flag. Returns operation success
+global function SetTankCooling
+{
+    parameter m,
+              state.
+
+    if state 
+    {
+        return DoEvent(m, "enable cooling").
+    }
+    else
+    {
+        return DoEvent(m, "disable cooling").
     }
 }
 //#endregion

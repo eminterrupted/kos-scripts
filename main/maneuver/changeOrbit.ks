@@ -27,6 +27,7 @@ if params:length > 0
     if params:length > 3 set orientation to params[3].
     if params:length > 4 set resetState to params[4].
 }
+if argPe = -1 set argPe to Ship:Orbit:ArgumentOfPeriapsis.
 
 // Old code below
 // #region

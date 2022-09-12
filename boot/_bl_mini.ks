@@ -8,7 +8,7 @@ print "CREI-KASA BootLoader v2.0b".
 print "Mission: " + Ship:Name.
 
 local cx to false.
-local commCheck to { if addons:rt:hasKscConnection(ship) return true. else return false.}.
+local commCheck to homeConnection:isConnected.
 
 local ts to time:seconds + 3.
 until commCheck() or time:seconds > ts
@@ -30,7 +30,7 @@ local runPlan to lPlan.
 
 if cx
 {
-    runOncePath("0:/lib/dependencyLoader").
+    runOncePath("0:/lib/loadDep").
     DispBoot().
     if ship:status = "PRELAUNCH" runPath("0:/_plan/init").
     set aPlan to "0:/_plan/" + plan + "/mp_" + missionName:Replace(" ","_") + ".json".

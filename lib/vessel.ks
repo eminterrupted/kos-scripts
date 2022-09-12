@@ -47,14 +47,18 @@ global function GetSteeringDir
         "pro",          Ship:Prograde:Vector
         ,"prograde",    Ship:Prograde:Vector
         ,"sun",         Sun:Position
+        ,"-sun",        -Sun:Position
+        ,"sunOut",      -Sun:Position
         ,"retro",       Ship:Retrograde:Vector
         ,"retrograde",  Ship:Retrograde:Vector
         ,"facing",      Ship:Facing:Vector
         ,"body",        Body:Position
+        ,"bodyOut",     -Body:Position
         ,"radOut",      -Body:Position
         ,"home",        Body("Kerbin"):Position
         ,"srfRetro",    Ship:SrfRetrograde:Vector
         ,"up",          vcrs(ship:body:position - ship:position, ship:velocity:orbit):normalized
+        ,"north",       north:vector
     ).
     if HasTarget set dirLookup["target"] to Target:Position.
     return lookDirUp(dirLookup[orientation:split("-")[0]], dirLookup[orientation:split("-")[1]]).
@@ -115,7 +119,9 @@ global function GetSteeringDir
 
 global function SrfRetroSafe 
 {
-    if Ship:Bounds:BottomAltRadar > 100 
+    parameter radarAlt is Ship:Altitude - Ship:GeoPosition:TerrainHeight.
+    
+    if radarAlt > 100
     {
         return list(GetSteeringDir("srfRetro-radOut"), "srfRetro_Locked1").
     }
@@ -128,6 +134,110 @@ global function SrfRetroSafe
         return list(GetSteeringDir("radOut-pro"), "upPos_Override").
     }
 }
+
+// TranslateToVec :: (Desired position<vector>) -> (CurrentError<scalar>)
+// Given a vector, will try to use translation to move the vessel into position
+global function TranslateToVec
+{
+    parameter tgtVec.
+
+    set ship:control:translation to tgtVec.
+    return round(tgtVec:mag, 5).
+}
+
+// Approach a docking port
+global function TranslateToDockingPort
+{
+    parameter tgtPort,
+              ctrlPort,
+              dist,
+              spd.
+
+    ctrlPort:controlFrom().
+
+    lock distOffset to tgtPort:portFacing:vector * dist.
+    lock approachVec to tgtPort:nodePosition - ctrlPort:nodePosition + distOffset.
+    lock relVel to ship:velocity:orbit - tgtPort:ship:velocity:orbit.
+    lock steering to -tgtPort:facing:vector.
+
+    OutMsg("Translating to TgtPort (" + tgtPort:name + "|" + tgtPort:UID + ")").
+    OutInfo("Target Distance: " + dist).
+    until ctrlPort:state <> "ready" 
+    {
+        TranslateToVec((approachVec:normalized * spd) - relVel).
+        local distVec to (tgtPort:nodePosition - ctrlPort:nodePosition).
+        if vang(ctrlPort:portFacing:vector, distVec) < 2 and abs(dist - distVec:mag) < 0.1 
+        {
+            break.
+        }
+        wait 0.01.
+        OutInfo2("Current distance: " + round(target:position:mag, 1)).
+    }
+}
+
+global function ToggleControlSurfaces
+{
+    parameter _ves is ship,
+              _action is "deploy".
+
+    for m in _ves:modulesNamed("ModuleControlSurface")
+    {
+        if _action = "deploy"
+        {
+            if m:part:tag:length = 0
+            {
+                DoAction(m, "Activate Pitch Control").
+                DoAction(m, "Activate Yaw Control").
+                DoAction(m, "Activate Roll Control").
+            }
+            else
+            {
+                if m:part:tag[0] = "1"
+                {
+                    DoAction(m, "Activate Pitch Control").
+                }
+                if m:part:tag[1] = "1"
+                {
+                    DoAction(m, "Activate Yaw Control").
+                }
+                if m:part:tag[2] = "1"
+                {
+                    DoAction(m, "Activate Roll Control").
+                }
+            }
+        }
+        else if _action = "stow"
+        {
+            local tagStr to 0.
+            if m:getField("pitch") 
+            {
+                set tagStr to tagStr + 100.
+                DoAction(m, "deactivate pitch control").
+            }
+            if m:getField("yaw") 
+            {
+                set tagStr to tagStr + 10.
+                DoAction(m, "deactivate yaw control").
+            }
+            if m:getField("roll") 
+            {
+                set tagStr to tagStr + 1.
+                DoAction(m, "deactivate roll control").
+            }
+
+            if tagStr:toString:length = 1
+            {
+                set tagStr to "00" + tagStr:toString.
+            }
+            else if tagStr:toString:length = 2
+            {
+                set tagStr to "0" + tagStr:toString.
+            }
+            set m:part:tag to tagStr.
+        }
+    }
+}
+
 
 // global function GetRollDegrees
 // {
@@ -157,6 +267,46 @@ global function GetECDraw
     print draw.
 
     return false.
+}
+
+// ParseResource :: (<any>, <parts<list>|ship|element>) -> <resource>
+// Returns the resource object on the provided ship or element by name or direct resource
+// Can convert string into resource as well as accept an actual resource
+global function ParseResourceParam
+{
+    parameter resParam,
+              resElement is ship.
+
+    local _itemSelections to lex().
+    local srcElement to "".
+    if resElement = "" or resElement:IsType("Vessel")
+    {
+        local _items to ship:elements.
+        local itemSelectDel to {
+            parameter _i.
+            
+            set _itemSelections[Stk(_i, "=v")] to _i.
+            set errLvl to _items:remove(_items:indexOf(_i)).
+            if errLvl = 1 OutLog("Failed to move _item: {0}":format(_i)).
+            else OutLog("Successfully moved item: {0}":format(_i)).
+        }.
+        return PromptItemMultiSelect(ship:elements, "Pick Resource Source Object", itemSelectDel@, -1, true, "srcElement").
+    }
+
+    if resParam:isType("Resource") return resParam.
+    else if resParam:isType("String") 
+    {
+        for res in srcElement:resources
+        {
+            if resParam = res:name 
+            {
+
+            }
+        }
+        
+        OutTee("No resource named {0} in source element: {1}":format(resParam, srcElement:name), 0, 2).
+        return "".
+    }
 }
 // #endregion
 
@@ -221,6 +371,17 @@ global function StageMass
 
 // -- Engines
 // #region
+
+// Methods
+global function ArmEngCutoff
+{
+    when ship:availablethrust <= 0.1 and stage:number <= g_stopStage then
+    {
+        set Ship:Control:PilotMainThrottle to 0.
+        lock throttle to 0.
+        set g_engBurnout to true.
+    }
+}
 
 // GetEngines :: ([<string>]) -> <list>Engines
 // Returns engines by state (any, active)
@@ -485,7 +646,8 @@ global function ArmAutoStaging
         local endTime to Time:Seconds.
         local stgTime to endTime - startTime.
         set g_stagingTime to g_stagingTime + stgTime.
-        wait 0.25.
+        set g_staged to true.
+        wait 0.1.
         OutInfo2("Staging time: " + round(g_stagingTime, 2)).
         if Ship:Availablethrust >= 0.01 set g_stagingTime to 0.
         //set g_MECO to g_MECO + (endTime - startTime).
@@ -548,6 +710,13 @@ global function SafeStage
         }
     }
 }
+
+// Check for staging via g_staged var. If true, reset vBounds.
+global function ResetStagedStatus
+{
+    set g_staged to false.
+    return Ship:Bounds.
+}
 // #endregion
 
 // -- Fairings
@@ -559,45 +728,68 @@ global function SafeStage
 global function ArmFairingJettison
 {
     parameter mode is "alt+", 
-              jettisonAlt is body:atm:height - 10000,
+              jettisonVal is body:atm:height - 10000,
               deployTag is "descent".
 
-    if deployTag:length > 0
-    {
-        set deployTag to "fairing." + deployTag.
-    }
 
-    if (ship:modulesnamed("ModuleProceduralFairing"):length > 0)
+    if (ship:ModulesNamed("ModuleProceduralFairing"):length > 0)
     {
-        if mode = "alt+"
+        local fairingsToArm to list().
+
+        if deployTag:length > 0
         {
-            when ship:altitude > jettisonAlt then
+            set deployTag to "fairing." + deployTag.
+        }
+
+        for m in ship:modulesNamed("ModuleProceduralFairing")
+        {
+            if m:part:tag:MatchesPattern(deployTag) fairingsToArm:add(m).
+        }
+
+        if fairingsToArm:length > 0 
+        {
+            if mode = "alt+"
             {
-                for module in ship:modulesnamed("ModuleProceduralFairing")
+                when ship:altitude > jettisonVal then
                 {
-                    if module:part:tag:matchesPattern(deployTag)
+                    for m in fairingsToArm
                     {
-                        module:doevent("deploy").
-                        wait 0.05.
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            else if mode = "alt-"
+            {
+                when ship:altitude < jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            // TODO - Deployment based on atmo pressure
+            else if mode = "pres+"
+            {
+                when body:atm:altitudepressure(ship:altitude) > jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
+                    }
+                }
+            }
+            else if mode = "pres-"
+            {
+                when body:atm:altitudepressure(ship:altitude) > jettisonVal then
+                {
+                    for m in fairingsToArm
+                    {
+                        m:DoEvent("deploy").
                     }
                 }
             }
         }
-        else if mode = "alt-"
-        {
-            when ship:altitude < jettisonAlt then
-            {
-                for module in ship:modulesnamed("ModuleProceduralFairing")
-                {
-                    if module:part:tag.matchesPattern(deployTag)
-                    {
-                        module:doevent("deploy").
-                        wait 0.05.
-                    }
-                }
-            }
-        }
-        // TODO - Deployment based on atmo pressure
     }
 }
 
@@ -748,5 +940,23 @@ global function GetBoosters
     return boosterLex.
 }
 // #endregion
+
+// Tag Functions
+// Primarily parses core tags
+
+// ParseTag :: [<string>Tag] -> Lex<String, Number>
+// Splits a tag string by ':' and returns the resulting list
+// Default tag is the current core
+global function ParseTag
+{
+    parameter _tag to core:tag.
+
+    local tagLex to lexicon().
+    local tagSplit to _tag:split("|").
+    set tagLex["Mission"] to tagSplit[0]:split(":").
+    set tagLex["StageLimit"] to tagSplit[1]:ToNumber(0).
+
+    return tagLex.
+}
 
 // #endregion

@@ -63,7 +63,7 @@ print "Results logged to: " + logPath.
 print " ".
 
 print "Waiting for KSC connection to upload log...".
-wait until addons:rt:hasKscConnection(ship).
+wait until homeConnection:isConnected.
 print "Connection established".
 
 copyPath(logPath, arcLog).

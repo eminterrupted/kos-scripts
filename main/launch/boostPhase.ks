@@ -26,8 +26,8 @@ local tgtRoll   to 0.
 // If the launch plan was passed in via param, override manual values
 if lPlan:length > 0
 {
-    set tgtPe to lPlan[0].
-    set tgtAp to lPlan[1].
+    set tgtAp to lPlan[0].
+    set tgtPe to lPlan[1].
     set tgtInc to lPlan[2].
     set tgtLAN to lPlan[3].
     set tgtRoll to lPlan[4]. 
@@ -39,17 +39,19 @@ else
 local lpCache to list(tgtPe, tgtAp, tgtInc, tgtLAN, tgtRoll).
 
 // Turn params
-local altStartTurn to 750.
-local altGravTurn  to 50000.
-local spdStartTurn to 75.
+//local boundsBox     to ship:bounds.
+local altRoll       to ship:altitude + 250.
+local altStartTurn  to 750.
+local altGravTurn   to 50000.
+local spdStartTurn  to 75.
 
 // Boosters
 local boosterObj to lex().
 
 // Controls
 local rVal to tgtRoll.
-local sVal to ship:facing.
-local tVal to 0.
+set sVal to ship:facing.
+set tVal to 0.
 
 // Core tag
 local cTag to core:tag.
@@ -67,32 +69,26 @@ lock steering to sVal.
 
 DispLaunchPlan(lpCache, list(plan:toupper, branch:toupper)).
 
-// Write tgtPe and tgtInc to the local drive. 
+
+// Write the launch plan to the local drive. 
 // If write fails, iterate through volumes. If no other volumes, write to archive.
-local volIdx to 1. 
-until false
+from { local volIdx to 1.} until volIdx > buildList("volumes"):length step { set volIdx to volIdx + 1.} do
 {
-    writeJson(list(tgtPe, tgtInc), volIdx + ":/lp.json").
-    if exists(volIdx + ":/lp.json") 
-    {
-        break.
-    }
-    else if volIdx = ship:modulesNamed("kOSProcessor"):length 
-    {
-        writeJson(list(tgtPe, tgtInc), "0:/data/lp.json").
-        break.
-    }
-    else
-    {
-        set volIdx to volIdx + 1.
-    }
+    writeJson(lPlan, volIdx + ":/lp.json").
+    writeJson(lPlan, "0:/data/lp.json").
+    if exists(volIdx + ":/lp.json") break.
+}
+
+// Gets any special saturn or soyuz auxiliary launch pad parts that need special early handling
+local padAuxParts to ship:partsNamedPattern("AM.MLP.*(Crane|DamperArm|CrewElevatorGemini|SoyuzLaunchBaseGantry|SoyuzLaunchBaseArm)").
+if padAuxParts:length > 0 
+{
+    RetractAuxPadStructures(padAuxParts, true).
 }
 
 // Wait for specific LAN goes here
 if tgtLAN > -1
 {
-    // We need to retract Soyuz launch pad elements if present before handing off to launchIntoLAN
-    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzGantry().
     runPath("0:/util/launchIntoLAN", tgtInc, tgtLAN).
 }
 else
@@ -114,9 +110,7 @@ else
         }
         wait 0.05.
     }
-    // Retract Soyuz launch pad elements if present AFTER user presses enter 
-    // (avoids long wait times while gantry retracts)
-    if ship:partsDubbedPattern("mlp.soyuz"):length > 0 RetractSoyuzGantry().
+
 }
 
 // Setup the terminal
@@ -129,7 +123,7 @@ set boosterObj to GetBoosters().
 // Arm systems
 ArmAutoStaging(stageLimit).
 ArmLESJettison(82500).
-ArmFairingJettison("ascent", body:atm:height - 5000, "launch").
+ArmFairingJettison("alt+", body:atm:height - 5000, "ascent").
 set g_boosterSystemArmed to ArmBoosterSeparation(boosterObj).
 set g_abortSystemArmed to SetupAbortGroup(Ship:RootPart).
 
@@ -154,10 +148,10 @@ OutInfo().
 OutInfo2().
 
 OutMsg("Vertical Ascent").
-until ship:altitude >= 150
+until ship:altitude >= altRoll
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispTelemetry().
+    DispLaunchTelemetry(lpCache).
     wait 0.01.
 }
 
@@ -166,7 +160,7 @@ set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispTelemetry().
+    DispLaunchTelemetry(lpCache).
     wait 0.01.
 }
 OutInfo().
@@ -174,7 +168,7 @@ OutInfo().
 until ship:altitude >= altStartTurn or ship:verticalspeed >= spdStartTurn 
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispTelemetry().
+    DispLaunchTelemetry(lpCache).
     wait 0.01.
 }
 set altStartTurn to ship:altitude.
@@ -184,7 +178,7 @@ until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:ap
 {   
     if g_abortSystemArmed and abort InitiateLaunchAbort().
     set sVal to heading(l_az_calc(azCalcObj), LaunchAngForAlt(altGravTurn, altStartTurn, 0), rVal).
-    DispTelemetry().
+    DispLaunchTelemetry(lpCache).
     wait 0.01.
 }
 
@@ -195,7 +189,7 @@ until ship:apoapsis >= tgtAp * 0.9995
     local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
     local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
     set sVal to heading(l_az_calc(azCalcObj), adjAng, rVal).
-    DispTelemetry().
+    DispLaunchTelemetry(lpCache).
     wait 0.01.
 }
 set tVal to 0.

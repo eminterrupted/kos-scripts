@@ -52,6 +52,10 @@ until time:seconds >= timeToPe
 }
 clrDisp().
 
+local caAlt     to Ship:Altitude.
+local caRdr     to Ship:Bounds:BottomAltRadar.
+local caVelo    to Ship:Orbit:Velocity:Orbit:Mag.
+
 OutInfo("Closest approach: " + ship:altitude).
 OutInfo2("Ground Periapsis: " + ship:bounds:bottomaltradar).
 wait 2.5.

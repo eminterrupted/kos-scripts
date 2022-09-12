@@ -14,7 +14,7 @@ local hsStage to choose 1 if core:tag:split("|"):length < 2 else choose core:tag
 
 local armFairings       to true.
 local fairingTag        to "descent".
-local fairingAlt        to ship:body:atm:height / 10.
+local fairingAlt        to 6500.
 local reentryTgt        to ship:body:atm:height / 2.5.
 local retroFire         to false.
 local retroStage        to 4.
@@ -23,10 +23,10 @@ local spinStab          to false.
 local stagingAlt        to ship:body:atm:height + 25000.
 local ts                to time:seconds.
 
-local sVal to ship:facing.
+set sVal to ship:facing.
 lock steering to sVal.
 
-local tVal to 0.
+set tVal to 0.
 lock throttle to tVal.
 
 ///Params
@@ -54,7 +54,7 @@ if params:typename = "lexicon"
 }
 else if params:typename = "list"
 {
-    set stagingAlt to Max(Body:Atm:Height + 10000, params[0]).
+    set stagingAlt to Max(Body:Atm:Height + 25000, params[0]).
     if params:length > 1 set retroFire to params[1].
     if params:length > 2 set retroStage to params[2].
     if params:length > 3 set reentryTgt to params[3].
@@ -143,7 +143,7 @@ if retroFire and ship:periapsis > reentryTgt
     set ts to time:seconds + settleTime.
     until time:seconds >= ts
     {
-        if not CheckSteering("angle", 0.050) 
+        if not CheckSteering(0.050) 
         {
             set ts to time:seconds + settleTime.
             set progCounter to progTimer - time:seconds.
@@ -295,30 +295,34 @@ if armFairings
 }
 wait 0.25.
 
-set sVal to body:position.
-OutMsg("Waiting until staging altitude: " + stagingAlt).
-until ship:altitude <= stagingAlt
+if stagingAlt > -1 and stage:number > hsStage
 {
+    set sVal to body:position.
+    OutMsg("Waiting until staging altitude: " + stagingAlt).
+    until ship:altitude <= stagingAlt
+    {
+        set sVal to GetSteeringDir("body-sun").
+        DispTelemetry().
+    }
+
+    if warp > 0 set warp to 0.
+    wait until kuniverse:timewarp:issettled.
     set sVal to GetSteeringDir("body-sun").
-    DispTelemetry().
+    wait 5.
+
+    OutMsg("Staging").
+    until stage:number <= hsStage
+    {
+        stage.
+        wait 2.
+    }
 }
 
-if warp > 0 set warp to 0.
-wait until kuniverse:timewarp:issettled.
-set sVal to GetSteeringDir("body-sun").
-wait 5.
-
-OutMsg("Staging").
-until stage:number <= hsStage
-{
-    stage.
-    wait 2.
-}
 OutMsg("Waiting for reentry interface").
 set ts to time:seconds + 5.
 until ship:altitude <= body:atm:height + 1000
 {
-    set sVal to ship:retrograde.
+    set sVal to GetSteeringDir("retro-sun").
     DispTelemetry().
     if CheckWarpKey()
     {
@@ -366,7 +370,7 @@ until alt:radar <= 1000
     DispTelemetry().
 }
 OutMsg("Heatshield Deploy").
-until stage <= 1
+until stage:number <= 1
 {
     stage.
     wait 1.

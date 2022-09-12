@@ -12,23 +12,22 @@ runOncePath("0:/lib/vessel").
 DispMain(ScriptPath(), false).
 
 local orientation       to "retro-body".
-local srfDir            to "".
+
+// Parse the params
+if params:Length > 0
+{
+    set orientation to params[0].
+}
+
+// Variables
+local tgtAlt            to 0.
 local tgtSrfSpd         to 0.
 local tgtVertSpd        to 0.
+local srfDir            to "".
+local tDescent          to list().
 
-local aSrfSpeed         to list(  300,  225,  150,  125,  100,  75,  50,  25,  10,  7.5,  5,  2,  1).
-local aVertSpd          to list( -150, -125, -100,  -75,  -65, -55, -40, -20, -10, -7.5, -5, -2, -1).
-local aDescentAlt       to list(10000, 7500, 5000, 2500, 1250, 750, 500, 250, 100,   75, 10,  3,  0).
-
-local kP to 1.0.
-local kI to 0.
-local kD to 0.
-local plMinOut to 0.
-local plMaxOut to 1.
-local plSetpoint to 0.
-
-local tPid          to PidLoop(kP, kI, kD, plMinOut, plMaxOut).
-set tPid:Setpoint to plSetpoint.
+local vBounds to Ship:Bounds.
+local gearFlag to true.
 
 // Vars for logging. Will log start values and resulting distance to waypoint after touchdown.
 local logPath       to Path("0:/data/landingResults/minmus/_distResults.csv").
@@ -38,19 +37,32 @@ local startRadarAlt to 0.
 local startTWR      to 0.
 local wp to "".
 
-//local topDir to choose "body" if Ship:Crew():Length > 0 else "sun".
-
-// Parse the params
-if params:Length > 0
-{
-    set orientation to params[0].
-}
-
-local sVal to GetSteeringDir(orientation).
 lock Steering to sVal.
-
-local tVal to 0.
 lock Throttle to tVal.
+
+// The descent table for each body
+local descentTable to lex(
+    Body("Gilly"):Name, lex(
+        "SrfSpd",   list(   25,     15,   10,  7.5,    5,   2.5,   1)
+        ,"VSpd",    list(  -25,    -15,  -10, -7.5,   -5,  -2.5,  -1)
+        ,"Alt",     list( 1000,    250,  100,   50,    25, 12.5,   5)
+    )
+    ,Body("Ike"):Name, lex(
+        "SrfSpd",   list(   200,  125,   75,   50,   25,   10,    5,  2.5,   1)
+        ,"VSpd",    list(  -200, -100,  -75,  -25,  -10,  -10,   -5, -2.5,  -1)
+        ,"Alt",     list( 10000, 5000, 2500, 1000,  500,  250,   50,   10,   5)
+    )
+    ,Body("Mun"):Name, lex(
+        "SrfSpd",   list(  375,    250,  150,  125,  100,    75,  50,  25,  10,  7.5,  5,  2)
+        ,"VSpd",    list( -150,   -125, -100,  -75,  -65,   -55, -40, -20, -10, -7.5, -5, -2)
+        ,"Alt",     list(10000,   7500, 5000, 2500, 1250,   750, 500, 250, 100,   75, 10,  3)
+    )
+    ,Body("Minmus"):Name, lex(
+        "SrfSpd",   list(  150, 122.5,  100,    50,    25,   10,     5,  2.5)
+        ,"VSpd",    list( -100,   -75,  -50,   -25, -12.5,   -5,  -7.5,   -5)
+        ,"Alt",     list( 7500,  5000,  2500,  500,   100,   25,    10,    5)
+    )
+).
 
 if Ship:Status = "LANDED"
 {
@@ -62,6 +74,9 @@ else
 {   
     ArmAutoStaging().
     lock steering to sVal.
+
+    set tDescent to descentTable[Ship:Body:Name].
+
     if ship:periapsis > 0 
     {
         OutMsg("[P55]: Press Enter to begin landing sequence").
@@ -73,7 +88,7 @@ else
                 OutMsg().
                 break.
             }
-            DispLanding(55).
+            DispLanding(55, tDescent:Alt[0], tDescent:SrfSpd[0], tDescent:VSpd[0]).
         }
     }
 
@@ -90,28 +105,50 @@ else
     {
         set startDist     to round(vxcl(ship:up:vector, wp:position):mag, 2).
         set startAlt      to round(ship:altitude, 1).
-        set startRadarAlt to round(Ship:Bounds:BottomAltRadar, 1).
+        set startRadarAlt to round(vBounds:BottomAltRadar, 1).
         set startTWR      to round(GetTWRForStage(), 1).
     }
 
     // Main loop - iterate through the tgtDescentAlt phases, matching the tgtSrfSpd to the corresponding tgtDescentAlt
-    from { local i to 0.} until i + 1 > aDescentAlt:Length step { set i to i + 1.} do 
+    from { local i to 0.} until i + 1 > tDescent:Alt:Length step { set i to i + 1.} do 
     {
         local program to i + 60.
+        
         OutMsg("[P" + program + "]: Running descent routine").
-        if i = 6 
+        
+
+        if i > (tDescent:Alt:Length / 2) and gearFlag
         {
             Gear on.
             Lights off.
             Lights on.
+            set gearFlag to false.
         }
-        set tgtSrfSpd to choose aSrfSpeed[i] / 2 if Ship:Body = Body("Minmus") and aSrfSpeed[i] > 10 else aSrfSpeed[i].
-        set tgtVertSpd to choose aVertSpd[i] / 2 if Ship:Body = Body("Minmus") and aVertSpd[i] > 5 else aVertSpd[i].
 
-        until Ship:Bounds:BottomAltRadar <= aDescentAlt[i]
+        local tgtAlt    to tDescent:Alt[i].
+        local tgtSrfSpd to tDescent:SrfSpd[i].
+        local tgtVSpd   to tDescent:VSpd[i].
+
+        until vBounds:BottomAltRadar <= tgtAlt
         {
+            if g_staged
+            {
+                set vBounds to ResetStagedStatus().
+            }
             set srfDir to SrfRetroSafe(). // Returns either a list containing direction depending on verticalSpeed & directionName
             set sVal to srfDir[0].
+
+            if GetInputChar() = Terminal:Input:HomeCursor
+            {
+                OutInfo2("Throttle unlocked for manual control").
+                unlock throttle.
+            }
+            else if g_termChar = Terminal:Input:EndCursor
+            {
+                OutInfo2("Throttle locked to autopilot").
+                lock throttle to tVal.
+            }
+            
             if Ship:Velocity:Surface:Mag > tgtSrfSpd * 1.025 //or Ship:VerticalSpeed > tgtVertSpd // If we are above target speed for this altitude, burn
             {
                 if tVal <> 1 set tVal to 1.
@@ -120,14 +157,16 @@ else
             {
                 if tVal <> 0 set tVal to 0.
             }
-            DispLanding(program, aDescentAlt[i], tgtSrfSpd, tgtVertSpd).
+
+            DispLanding(program, tgtAlt, tgtSrfSpd, tgtVertSpd, vBounds:BottomAltRadar).
             OutInfo("SrfRetroSafe mode: " + srfDir[1]).
+            if Ship:Status = "LANDED" break.
         }
     }
 
     set tgtSrfSpd to 0.5.
     set tgtVertSpd to -0.5.
-    until Ship:Status = "LANDED"
+    until Ship:Status = "LANDED" or CheckInputChar(Terminal:Input:EndCursor)
     {
         set srfDir to SrfRetroSafe().
         set sVal to srfDir[0].
@@ -158,11 +197,11 @@ else
 
 wait 1.
 
-local partsToDeploy to Ship:PartsTaggedPattern("srfDeploy.*").
+local partsToDeploy to Ship:PartsTaggedPattern("deploy.land.*").
 if partsToDeploy:length > 0
 {
-    OutMsg("srfDeploy in progress.").
-    DeployPartSet("srfDeploy", "deploy").
+    OutMsg("Deploy Land Group in progress.").
+    DeployPartSet("land", "deploy").
     OutMsg("Deployments complete").
 }
 wait 1.
