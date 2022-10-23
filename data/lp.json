@@ -1,11 +1,11 @@
 {
     "items": [
         {
-            "value": 525000,
+            "value": 500000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
-            "value": 525000,
+            "value": 500000,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
@@ -17,7 +17,7 @@
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
-            "value": 0,
+            "value": 180,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         }
     ],

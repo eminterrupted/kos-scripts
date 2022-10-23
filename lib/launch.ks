@@ -147,7 +147,7 @@ global function LaunchCountdown
     }
     LaunchPadGen(false).
 
-    until countdown >= -4.25
+    until countdown >= -2.35
     {
         OutMsg("COUNTDOWN T" + round(countdown, 1)).
         wait 0.1.

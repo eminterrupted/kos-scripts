@@ -62,28 +62,26 @@ global function ParseTags
 {
     parameter _t is core:tag.
 
-    set _t to "csat:ctag[duna;28355;21514;17;324.6;181.4]|0".
-
+    // Sample of _t value: "csat:ctag[duna;28355;21514;17;324.6;181.4]|0"
+    
     if not (defined paramLex) global paramLex to lex().
     local  fragmentList to list().
 
     local pipeSplit to _t:split("|").
-    for word in pipeSplit[0]
+    local colonSplit to pipeSplit[0]:split(":").
+
+    for fragment in colonSplit
     {
-        local colonSplit to word:split(":").
-        for fragment in colonSplit
+        if fragment:matchespattern("\[.*\]")
         {
-            if fragment:matchespattern("\[.*\]")
-            {
-                local isoFrag to fragment:substring(0, fragment:find("[")).
-                fragmentList:add(isoFrag).
-                local isoPrm to fragment:replace(isoFrag + "[", ""):replace("]", "").
-                set paramLex[isoFrag] to isoPrm:split(";").
-            }
-            else
-            {
-                fragmentList:add(fragment).
-            }
+            local isoFrag to fragment:substring(0, fragment:find("[")).
+            fragmentList:add(isoFrag).
+            local isoPrm to fragment:replace(isoFrag + "[", ""):replace("]", "").
+            set paramLex[isoFrag] to isoPrm:split(";").
+        }
+        else
+        {
+            fragmentList:add(fragment).
         }
     }
     return list(fragmentList, pipeSplit[1]).

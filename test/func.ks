@@ -35,21 +35,16 @@ set g_line to 0.
 print "FUNCTION TEST SCRIPT     v0.000001b" at (0, g_line).
 print "======================================" at (0, cr()).
 cr().
-print "ManageReactor(reactorPart, action, optPrm0, optPrm1)".
+print "PlaySFX(id)".
 
-if params[1] = "deploy"
+local idx to 0.
+
+if params:length > 0
 {
-    local rx to ManageReactor(params[0], params[1]).
-    DispReactor(params[0], rx).
+    set idx to params[0].
 }
 
-
-until false
-{
-    DispReactor(params[0]).
-}
-
-
+PlaySFX(idx).
 
 
 
