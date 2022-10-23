@@ -62,29 +62,31 @@ global function ParseTags
 {
     parameter _t is core:tag.
 
-    if not (defined paramLex) global paramLex to lex().
-    local  fragList to list().
+    set _t to "csat:ctag[duna;28355;21514;17;324.6;181.4]|0".
 
-    local aSplit to _t:split("|").
-    for word in aSplit[0]
+    if not (defined paramLex) global paramLex to lex().
+    local  fragmentList to list().
+
+    local pipeSplit to _t:split("|").
+    for word in pipeSplit[0]
     {
-        local bSplit to word:split(":").
-        for frag in bSplit
+        local colonSplit to word:split(":").
+        for fragment in colonSplit
         {
-            if frag:matchespattern("\[.*\]")
+            if fragment:matchespattern("\[.*\]")
             {
-                local isoFrag to frag:substring(0, frag:find("[")).
-                fragList:add(isoFrag).
-                local isoPrm to frag:replace(isoFrag + "[", ""):replace("]", "").
+                local isoFrag to fragment:substring(0, fragment:find("[")).
+                fragmentList:add(isoFrag).
+                local isoPrm to fragment:replace(isoFrag + "[", ""):replace("]", "").
                 set paramLex[isoFrag] to isoPrm:split(";").
             }
             else
             {
-                fragList:add(frag).
+                fragmentList:add(fragment).
             }
         }
     }
-    return list(fragList, aSplit[1]).
+    return list(fragmentList, pipeSplit[1]).
 }
 
 global function ParseMissionTags
