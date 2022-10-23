@@ -21,7 +21,7 @@ if params:length > 0
 
 // Assumption: match velocities at closest approach
 // Relative velocity to target: ship:orbit:velocity:orbit:mag - target:orbit:velocity:orbit:mag
-local ts to ts + timeInterval.
+local ts to time:seconds.
 local tsNext to ts + timeInterval.
 
 lock pos_Us_TS          to positionAt(ship, ts).
