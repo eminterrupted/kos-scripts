@@ -62,7 +62,7 @@ global function ParseTags
 {
     parameter _t is core:tag.
 
-    global paramLex     to lex().
+    if not (defined paramLex) global paramLex to lex().
     local  fragList to list().
 
     local aSplit to _t:split("|").
