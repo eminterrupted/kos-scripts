@@ -62,13 +62,13 @@ set burnETA to ETAtoTA(ship:orbit, burnTA).
 //set burnDV to CalcDvHoh(ship:periapsis, ship:apoapsis, circTgt, ship:body, circAt).
 //set burnDv to CalcDvBE(ship:periapsis, ship:apoapsis, circTgt, circTgt, ship:apoapsis, ship:body, circAt).
 set burnDv to CalcDvBE(ship:periapsis, ship:apoapsis, circTgt, circTgt, circTgt, Ship:Body, "pe").
-print burnDv at (2, 25).
+//print burnDv at (2, 25).
 set mnvDv to choose burnDv[1] if circAt = "ap" else -burnDv[0].
-wait 0.25.
-
 add node(TimeSpan(burnETA), 0, 0, mnvDv).
+wait 0.25.
+//Breakpoint().
 
-Breakpoint(). 
+
 
 ExecNodeBurn(nextNode).
 

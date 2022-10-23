@@ -6,7 +6,187 @@ runOncePath("0:/lib/nav").
 // *~ Variables ~* //
 // #region
 
+// -- Globals
+// #region
+// global avlThr to 0.
+// global avlThrPres to 0.
+// global curThr to 0.
+// global maxThr to 0.
+// global maxThrPres to 0.
+// global posThr to 0.
+// global posThrPres to 0.
+// #endregion
+
 // -- Local
+// #region
+// #endregion
+
+// -- Anonymous -- //
+//        
+// #region
+
+// -- GetEngineThrustData() helpers
+// These are anonymous functions used with the GetEngineThrustData() function, 
+// defined here so as to not require redefinition on each call
+    // // 1111: current, max, available, possible
+    // global thrDel_all to {   
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    //     set avlThr      to avlThr   + eng:AvailableThrust.
+    //     set posThr      to posThr   + eng:PossibleThrust.
+    // }.
+
+    // // 1000: current
+    // global thrDel_cur to {   
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    // }.
+
+    // // 1100: current, max
+    // global thrDel_cur_max to {   
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    //     set maxThr      to maxThr   + eng:MaxThrust.     
+    // }.
+
+    // // 1110: current, max, available
+    // global thrDel_cur_max_avl to {   
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    //     set avlThr      to avlThr   + eng:AvailableThrust.    
+    // }.
+
+    // // 1010: current, available
+    // global thrDel_cur_avl to {   
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    //     set avlThr      to avlThr   + eng:AvailableThrust.
+    // }.
+
+    // // 1011: current, available, possible
+    // global thrDel_cur_avl_pos to {   
+    //     parameter eng.
+
+    //     set curThr     to curThr   + eng:Thrust.
+    //     set avlThr     to avlThr   + eng:AvailableThrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 1011: current, available, possible
+    // global thrDel_cur_max_pos to {   
+    //     parameter eng.
+
+    //     set curThr     to curThr   + eng:Thrust.
+    //     set maxThr     to maxThr   + eng:MaximumThrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 1001: current, possible
+    // global thrDel_cur_pos to {
+    //     parameter eng.
+
+    //     set curThr      to curThr   + eng:Thrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 0100: max
+    // global thrDel_max to {
+    //     parameter eng.
+
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    // }.
+
+    // // 0100: max with pressure
+    // global thrDel_maxpres to {
+    //     parameter eng,
+    //               atmPres is 0.
+
+    //     set maxThrPres to maxThrPres + eng:MaxThrustAt(atmPres).
+    // }.
+
+    // // 0110: max, available
+    // global thrDel_max_avl to {
+    //     parameter eng.
+
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    //     set avlThr      to avlThr   + eng:AvailableThrust.
+    // }.
+
+    // // 0111: max, available, possible
+    // global thrDel_max_avl_pos to {
+    //     parameter eng.
+
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    //     set avlThr      to avlThr   + eng:AvailableThrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 0101: max, possible
+    // global thrDel_max_pos to {
+    //     parameter eng.
+
+    //     set maxThr      to maxThr   + eng:MaxThrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 0010: available
+    // global thrDel_avl to {
+    //     parameter eng.
+
+    //     set avlThr      to avlThr   + eng:AvailableThrust.    
+    // }.
+
+    // // 0010: available with pressure
+    // global thrDel_avlpres to {
+    //     parameter eng,
+    //               atmPres is 0.
+
+    //     set avlThrPres to avlThrPres + eng:AvailableThrustAt(atmPres).
+    // }.
+
+    // // 0011: available, possible
+    // global thrDel_avl_pos to {
+    //     parameter eng.
+
+    //     set avlThr      to avlThr   + eng:AvailableThrust.
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 0001: possible
+    // global thrDel_pos to {
+    //     parameter eng.
+
+    //     set posThr     to posThr  + eng:PossibleThrust.
+    // }.
+
+    // // 0001: possible with pressure
+    // global thrDel_pospres to {
+    //     parameter eng,
+    //               atmPres is 0.
+
+    //     set posThrPres to posThrPres + eng:PossibleThrustAt(atmPres).
+    // }.
+
+    // // A grouped function for all pressure-dependent readings
+    // global thrDel_allpres to {
+    //     parameter eng,
+    //               atmPres.
+
+    //     thrDel_all:call(eng).
+    //     set maxThrPres to thrDel_maxpres:call(eng, atmPres).
+    //     set avlThrPres to thrDel_avlpres:call(eng, atmPres).
+    //     set posThrPres to thrDel_pospres:call(eng, atmPres).
+    // }.
+// #endregion
+
+// -- Local Lists / Lexicons
 // #region
 local resList to list(
     "LiquidFuel",
@@ -29,6 +209,18 @@ local sepList to list(
     "creiNesdIntRcsSepMini"
 ).
 // #endregion
+
+// local thrDelLex to lex(
+//     "all", thrDel_all@
+//     ,"allPres", thrDel_allpres@
+//     ,"cur", thrDel_cur@
+//     ,"avl", thrDel_avl@
+//     ,"max", thrDel_max@
+//     ,"pos", thrDel_pos@
+//     ,"avlPres", thrDel_avlPres@
+//     ,"maxPres", thrDel_maxpres@
+//     ,"posPres", thrDel_pospres@
+// ).
 // #endregion
 
 
@@ -43,6 +235,8 @@ global function GetSteeringDir
 {
     parameter orientation.
 
+    local tgtDir to { if hasTarget { return target:position.} else { return ship:facing.}}.
+    
     local dirLookup to lex(
         "pro",          Ship:Prograde:Vector
         ,"prograde",    Ship:Prograde:Vector
@@ -59,8 +253,9 @@ global function GetSteeringDir
         ,"srfRetro",    Ship:SrfRetrograde:Vector
         ,"up",          vcrs(ship:body:position - ship:position, ship:velocity:orbit):normalized
         ,"north",       north:vector
+        ,"tgt",         tgtDir:call()
+        ,"target",      tgtDir:call()
     ).
-    if HasTarget set dirLookup["target"] to Target:Position.
     return lookDirUp(dirLookup[orientation:split("-")[0]], dirLookup[orientation:split("-")[1]]).
 
     // if orientation = "pro-sun"
@@ -438,6 +633,152 @@ global function GetEngines
     return engList.
 }
 
+// GetEnginesLex :: ([<string>]) -> <Lex>Engines
+// Returns engines given state, grouped by any parameter
+global function GetEnginesLex
+{
+    parameter engState is "any", 
+              groupBy is "stg",
+              includeSep is true.
+
+    local engLex to lex().
+    local engList to list().
+    
+    local engHit to false.
+
+    local checkActive to { parameter _eng. return (_eng:ignition and not _eng:flameout).}.
+    local checkOff to { parameter _eng. return not _eng:ignition.}.
+    local checkSep to { parameter _eng. return sepList:contains(_eng).}.
+
+    if groupBy = "stg"
+    {
+        set engLex to lex(
+            "engaged", lex()
+            ,"decoupledIn", lex()
+            ,"combi", lex()
+        ).
+    }
+    else if groupBy = "sep"
+    {
+        set engLex to lex(
+            "sepMotors", list()
+            ,"mainEngines", list()
+        ).
+    }
+
+    for eng in ship:engines
+    {
+        set engHit to false.
+        if includeSep or (not sepList:contains(eng:name) or eng:tag <> "")
+        {
+            if engState = "active"
+            {
+                if checkActive:call(eng) 
+                {
+                    engList:add(eng).
+                    set engHit to true.
+                }
+            }
+            else if engState = "off"
+            {
+                if checkOff:call(eng) 
+                {
+                    engList:add(eng).
+                    set engHit to true.
+                }
+            }
+            else if engState = "sep"
+            {
+                if checkSep:call(eng) 
+                {
+                    engList:add(eng).
+                    set engHit to true.
+                }
+            }
+            else if engState = "any"
+            {
+                engList:add(eng).
+                set engHit to true.
+            }
+        }
+
+        if engHit
+        {
+            if groupBy = "stg"
+            {
+                local engCombiTag to "{0}|{1}":format(eng:stage, eng:decoupledIn).
+
+                if engLex["engaged"]:hasKey(eng:stage) 
+                {
+                    engLex["engaged"][eng:stage]:add(eng).
+                }
+                else
+                {
+                    set engLex["engaged"][eng:stage] to list(eng).
+                }
+                
+                if engLex["decoupledIn"]:hasKey(eng:decoupledIn) 
+                {
+                    engLex["decoupledIn"][eng:decoupledIn]:add(eng).
+                }
+                else
+                {
+                    set engLex["decoupledIn"][eng:decoupledIn] to list(eng).
+                }
+
+                if engLex["combi"]:hasKey(engCombiTag) 
+                {
+                    engLex["combi"][engCombiTag]:add(eng).
+                }
+                else
+                {
+                        set engLex["combi"][engCombiTag] to list(eng).
+                }
+            }
+            else if groupBy = "type"
+            {
+                if engLex:hasKey(eng:name)
+                {
+                    engLex[eng:name]:add(eng).
+                }
+                else
+                {
+                    set engLex[eng:name] to list(eng).
+                }
+            }
+            else if groupBy = "sep"
+            {
+                if not engLex:hasKey("sep")
+                {
+                    set engLex to lex("sep", list(), "main", list()).
+                }
+
+                if sepList:contains(eng:name)
+                {
+                    engLex["sep"]:add(eng).
+                }
+                else
+                {
+                    engLex["main"]:add(eng).
+                }
+            }
+            else if groupBy = "flat"
+            {
+                if not engLex:hasKey("engs")
+                {
+                    set engLex["engs"] to list(eng).
+                }
+                else
+                {
+                    engLex["engs"]:add(eng).
+                }
+            }
+        }
+    }
+    
+    return engLex.
+}
+
 // GetEnginesByStage :: (<int>, [bool]) -> <list>Engines
 // Returns engines for a given stage number
 global function GetEnginesByStage
@@ -465,12 +806,191 @@ global function GetEnginesByStage
     return stgEngs.
 }
 
+// GetEnginePerfData :: (<list>Engines, [<string>]Functionality Bitmask) -> Lexicon()
+// Returns performance data according to input bitmask. 
+global function GetEnginesPerfData 
+{
+    parameter _engList to GetEngines("active"),
+              _funcMask to "1010:10",
+              altPres to ship:body:atm:altitudePressure(ship:altitude),
+              includeSep to false.
+    
+    local retThr        to false.
+    local retThrCur     to false.
+    local retThrMax     to false.
+    local retThrAvl     to false.
+    local retThrPos     to false.
+    local retThrPres    to false.
+
+    local retFlow       to false.
+    local retFlowFuel   to false.
+    local retFlowMass   to false.
+
+    local avlThr        to 0.
+    local avlThrPres    to 0.
+    local curThr        to 0.
+    local maxThr        to 0.
+    local maxThrPres    to 0.
+    local posThr        to 0.
+    local posThrPres    to 0.
+    local fuelFlow      to 0.
+    local fuelFlowMax   to 0.
+    local massFlow      to 0.
+    local massFlowMax   to 0.
+
+    local retObj to lex().
+    local thrObj to lex().
+    local flowObj to lex().
+
+    set _funcMask to _funcMask:split(":").
+    // Thrust loop
+    if _funcMask[0]:toNumber(0) > 0 
+    {
+        set retThr to true.
+        if _funcMask[0][0] = "1" set retThrCur to true.
+        if _funcMask[0][1] = "1" set retThrMax to true.
+        if _funcMask[0][2] = "1" set retThrAvl to true.
+        if _funcMask[0][3] = "1" set retThrPos to true.
+        if altPres > 0         set retThrPres to true.
+    }
+
+    if _funcMask:length > 1 {
+        if _funcMask[1]:toNumber(0) > 0 
+        {
+            set retFlow to true.
+            if _funcMask[1][0] = "1" set retFlowFuel to true.
+            if _funcMask[1][1] = "1" set retFlowMass to true.
+        }
+    }
+
+    for thisEng in _engList
+    {
+        if includeSep or (not includeSep and not sepList:Contains(thisEng:name))
+        {
+            // Thrust data
+            if retThr
+            {
+                // Thrust
+                // Current
+                if retThrCur set curThr to curThr + thisEng:thrust.
+                // Max
+                if retThrMax set maxThr to maxThr + thisEng:maxThrust.
+                // Available
+                if retThrAvl set avlThr to avlThr + thisEng:availableThrust.
+                // Possible
+                if retThrPos set posThr to posThr + thisEng:possibleThrust.
+                // Atmospheric
+                if retThrPres
+                {
+                    if retThrAvl set avlThrPres to avlThrPres + thisEng:availableThrustAt(altPres).
+                    if retThrMax set maxThrPres to maxThrPres + thisEng:maxThrustAt(altPres).
+                    if retThrPos set posThrPres to posThrPres + thisEng:possibleThrustAt(altPres).
+                }
+            }
+
+            // Fuel Flow Data
+            if retFlow
+            {
+                if retFlowFuel
+                {
+                    set fuelFlow to fuelFlow + thisEng:fuelFlow.
+                    set fuelFlowMax to fuelFlowMax + thisEng:maxFuelFlow.
+                }
+                if retFlowMass
+                {
+                    set massFlow to massFlow + thisEng:massFlow.
+                    set massFlowMax to massFlowMax + thisEng:maxMassFlow.
+                }
+            }
+        }
+    }
+
+    if retThr
+    {
+        set retObj["thr"] to thrObj.
+        if not retThrPres 
+        {
+            set maxThrPres to maxThr.
+            set avlThrPres to avlThr.
+            set posThrPres to posThr.
+        }
+        if retThrCur set thrObj["cur"] to curThr.
+        if retThrMax 
+        {
+            set thrObj["max"] to maxThr.
+            set thrObj["maxPres"] to maxThrPres.
+        }
+        if retThrAvl 
+        {
+            set thrObj["avl"] to avlThr.
+            set thrObj["avlPres"] to avlThrPres.
+        }
+        if retThrPos 
+        {
+            set thrObj["pos"] to posThr.
+            set thrObj["posPres"] to posThrPres.
+        }
+    }
+    if retFlow
+    {
+        if retFlowFuel 
+        {
+            set flowObj["fuel"] to fuelFlow.
+            set flowObj["fuelMax"] to fuelFlowMax.
+        }
+        if retFlowMass 
+        {
+            set flowObj["mass"] to massFlow.
+            set flowObj["massMax"] to massFlowMax.
+        }
+        set retObj["flow"] to flowObj.
+    }
+
+    return retObj.
+}
+
+// If EngineIgnitor is installed, return ignition info for engine
+global function GetEngineIgnitionInfo
+{
+    parameter eng,
+              bitMask is "1111".
+
+    //if bitMask:isType("Scalar") set bitMask to bitMask:toString().
+    local engLex to lex().
+    if eng:hasModule("ModuleEngineIgnitor")
+    {
+        local m to eng:getModule("ModuleEngineIgnitor").
+        if bitMask[0] = "1"
+        {
+            local ig to m:getField("ignitions"):replace(" ]",""):split("[ ")[1].
+            set engLex["ignitions"] to ig.
+            set engLex["igRemaining"] to ig:split("/")[0]:toNumber(0).
+        }
+        if bitMask[1] = "1"
+        {
+            set engLex["fuelStability"] to m:getField("fuel flow").
+        }
+        if bitMask[2] = "1"
+        {
+            set engLex["engStatus"] to m:getField("engine state").
+        }
+        if bitMask[3] = "1"
+        {
+            local autoIg to m:getField("auto-ignite").
+            set engLex["autoIgnite"] to autoIg.
+            set engLex["engTemp"] to autoIg:split("/")[0].
+            set engLex["autoIgniteThresh"] to autoIg:split("/")[1].
+        }
+    }
+    return engLex.
+}
+
 // GetStageThrust :: (<list>Engines, [<string>]) -> <scalar>
 // Returns summed thrust of a given type for a given stage
 global function GetStageThrust
 {
     parameter stg,
-              thrType is "curr",
+              thrType is "cur",
               includeSep is false.
 
     local stgThr to 0.
@@ -484,7 +1004,7 @@ global function GetStageThrust
             {
                 if not sepList:Contains(eng:Name)
                 {
-                    if thrType = "curr"         set stgThr to stgThr + eng:Thrust.
+                    if thrType = "cur"         set stgThr to stgThr + eng:Thrust.
                     else if thrType = "max"     set stgThr to stgThr + eng:MaxThrust.
                     else if thrType = "avail"   set stgThr to stgThr + eng:AvailableThrust.
                     else if thrType = "poss"    set stgThr to stgThr + eng:PossibleThrust.
@@ -492,7 +1012,7 @@ global function GetStageThrust
             }
             else
             {
-                if thrType = "curr"         set stgThr to stgThr + eng:Thrust.
+                if thrType = "cur"         set stgThr to stgThr + eng:Thrust.
                 else if thrType = "max"     set stgThr to stgThr + eng:MaxThrust.
                 else if thrType = "avail"   set stgThr to stgThr + eng:AvailableThrust.
                 else if thrType = "poss"    set stgThr to stgThr + eng:PossibleThrust.
@@ -501,6 +1021,253 @@ global function GetStageThrust
     }
     return stgThr.
 }
+
+
+// GetStageThrustData :: (<list>Engines, [<bool>IncludeSeperationMotors], [<double>AltPressure]) -> <lex>
+// Returns a lexicon of thrust values based on the passed-in bitmask for values to include
+// "1111" : Current, Max, Available, Possible
+// If provided an altitudePressure value higher than 0, will also get those values, otherwise these will be set to non-pressure versions
+global function GetStageEnginePerfData
+{
+    parameter stg is stage:number,
+              valMaskStr is "1111:1111:11",
+              includeSep is false,
+              altPres is 0.
+
+    local retThr        to false.
+    local retThrCur     to false.
+    local retThrMax     to false.
+    local retThrAvl     to false.
+    local retThrPos     to false.
+    local retThrPres    to false.
+
+    local retFlow       to false.
+    local retFlowFuel   to false.
+    local retFlowMass   to false.
+    local retFlowEng    to false.
+    local retFlowRes    to false.
+
+    local retRes        to false.
+    local retResSum     to false.
+    local retResEng     to false.
+
+    local thrObj     to lex().
+    local flowObj    to lex().
+    local resObj    to lex().
+
+    local retObj        to lex().
+
+    local valMask to choose valMaskStr:split(":") if valMaskStr:isType("string") else valMaskStr:toString:split(":").    
+    local engList to GetEnginesByStage(stg).
+
+    // Choose the delegate. Lots of code here, but it means we only check this once per call vs. once with every engine
+    // local thrDel to choose thrDel_all@   if valMask = "1111" else 
+    //     choose thrDel_cur@               if valMask = "1000" else 
+    //     choose thrDel_cur_avl@           if valMask = "1010" else
+    //     choose thrDel_cur_max@           if valMask = "1100" else 
+    //     choose thrDel_cur_pos@           if valMask = "1001" else
+    //     choose thrDel_cur_max_avl@       if valMask = "1110" else 
+    //     choose thrDel_cur_max_pos@       if valMask = "1101" else
+    //     choose thrDel_cur_avl_pos@       if valMask = "1011" else 
+    //     choose thrDel_avl@               if valMask = "0010" else 
+    //     choose thrDel_avl_pos@           if valMask = "0011" else 
+    //     choose thrDel_max@               if valMask = "0100" else 
+    //     choose thrDel_max_avl@           if valMask = "0110" else 
+    //     choose thrDel_max_avl_pos@       if valMask = "0111" else 
+    //     choose thrDel_max_pos@           if valMask = "0101" else 
+    //     thrDel_pos@.
+
+    // Thrust loop
+    if valMask[0]:toNumber(0) > 0 // Thrust values
+    {
+        set retThr to true.
+        if valMask[0][0] = "1" set retThrCur to true.
+        if valMask[0][1] = "1" set retThrMax to true.
+        if valMask[0][2] = "1" set retThrAvl to true.
+        if valMask[0][3] = "1" set retThrPos to true.
+        if altPres > 0         set retThrPres to true.
+    }
+
+    if valMask:length > 1  // Fuel flow rates
+    {
+        if valMask[1]:toNumber(0) > 0 
+        {
+            set retFlow to true.
+            if valMask[1][0] = "1" set retFlowFuel to true.
+            if valMask[1][1] = "1" set retFlowMass to true.
+            if valMask[1][2] = "1" set retFlowEng to true.
+            if valMask[1][3] = "1" set retFlowRes to true.
+        }
+        
+        if valMask:length > 2  // Resource objects
+        {
+            if valMask[2]:toNumber(0) > 0 
+            {
+                set retRes to true.
+                if valMask[2][0] = "1" set retResSum to true.
+                if valMask[2][1] = "1" set retResEng to true.
+            }
+        }
+    }
+
+    local avlThrPres    to 0.
+    local avlThr        to 0.
+    local curThr        to 0.
+    local maxThr        to 0.
+    local maxThrPres    to 0.
+    local posThr        to 0.
+    local posThrPres    to 0.
+    local fuelFlow      to 0.
+    local fuelFlowMax   to 0.
+    local massFlow      to 0.
+    local massFlowMax   to 0.
+
+    
+    for thisEng in engList
+    {        
+        if includeSep or (not includeSep and not sepList:Contains(thisEng:name))
+        {
+            // Thrust data
+            if retThr
+            {
+                // Thrust
+                // Current
+                if retThrCur set curThr to curThr + thisEng:thrust.
+                // Max
+                if retThrMax set maxThr to maxThr + thisEng:maxThrust.
+                // Available
+                if retThrAvl set avlThr to avlThr + thisEng:availableThrust.
+                // Possible
+                if retThrPos set posThr to posThr + thisEng:possibleThrust.
+                // Atmospheric
+                if retThrPres
+                {
+                    if retThrAvl set avlThrPres to avlThrPres + thisEng:availableThrustAt(altPres).
+                    if retThrMax set maxThrPres to maxThrPres + thisEng:maxThrustAt(altPres).
+                    if retThrPos set posThrPres to posThrPres + thisEng:possibleThrustAt(altPres).
+                }
+            }
+
+            // Fuel Flow Data
+            if retFlow
+            {
+                if retFlowFuel
+                {
+                    set fuelFlow to fuelFlow + thisEng:fuelFlow.
+                    set fuelFlowMax to fuelFlowMax + thisEng:maxFuelFlow.
+                }
+                if retFlowMass
+                {
+                    set massFlow to massFlow + thisEng:massFlow.
+                    set massFlowMax to massFlowMax + thisEng:maxMassFlow.
+                }
+                if retFlowEng
+                {
+                    if flowObj:hasKey("eng")
+                    {
+                        if not flowObj:hasKey(stg)
+                        {
+                            set flowObj[stg] to lex().
+                        }
+                    }
+                    else
+                    {
+                        set flowObj[stg] to lex().
+                    }
+                    set flowObj[stg][thisEng:cid] to lex(
+                        "FuelFlow", thisEng:fuelFlow
+                        ,"MaxFuelFlow", thisEng:maxFuelFlow
+                        ,"MassFlow", thisEng:massFlow
+                        ,"MaxMassFlow", thisEng:maxMassFlow
+                    ).
+                }
+                if retFlowRes
+                {
+                    if not flowObj:hasKey(stg) set flowObj[stg] to lex(thisEng:cid, lex()).
+                    set flowObj[stg][thisEng:cid]["RESOBJ"] to thisEng:consumedResources.
+                }
+            }
+
+        // Resource Data
+            if retRes
+            {
+                for res in thisEng:consumedResources:values
+                {
+                    local resLex to lex().
+
+                    if retResSum
+                    {
+                        set resLex to choose resObj[res:name] if resObj:hasKey(res:name) else lex(
+                            "FuelFlow", 0
+                            ,"MaxFuelFlow", 0
+                            ,"MassFlow", 0
+                            ,"MaxMassFlow", 0
+                            ,"Density", res:density
+                            ,"Ratio", res:ratio
+                            ,"Amount", res:amount
+                            ,"Capacity", res:capacity
+                        ).
+
+                        set resLex["FuelFlow"]       to resLex["FuelFlow"]    + res:fuelFlow.
+                        set resLex["MaxFuelFlow"]    to resLex["MaxFuelFlow"] + res:maxFuelFlow.
+                        set resLex["MassFlow"]       to resLex["MassFlow"]    + res:massFlow.
+                        set resLex["MaxMassFlow"]    to resLex["MaxMassFlow"] + res:maxMassFlow.
+                    }
+
+                    if retResEng
+                    {
+                        if not resObj:hasKey("EngData") set resObj["EngData"] to lex().
+
+                        set resObj["EngData"][thisEng:cid] to lex(
+                            "FuelFlow", res:fuelFlow
+                            ,"MaxFuelFlow", res:maxFuelFlow
+                            ,"MassFlow", res:massFlow
+                            ,"MaxMassFlow", res:maxMassFlow
+                        ).
+                    }
+
+                    set resObj[res:name] to resLex.
+                }
+            }
+        }
+    }
+
+    if retThr 
+    {
+        if retThrCur set thrObj["cur"] to curThr.
+        if retThrMax set thrObj["max"] to maxThr.
+        if retThrAvl set thrObj["avl"] to avlThr.
+        if retThrPos set thrObj["pos"] to posThr.
+        if retThrPres 
+        {
+            set thrObj["maxPres"] to maxThrPres.
+            set thrObj["avlPres"] to avlThrPres.
+            set thrObj["posPres"] to posThrPres.
+        }
+        set retObj["thr"] to thrObj.
+    }
+    if retFlow
+    {
+        if retFlowFuel 
+        {
+            set flowObj["fuel"] to fuelFlow.
+            set flowObj["fuelMax"] to fuelFlowMax.
+        }
+        if retFlowMass 
+        {
+            set flowObj["mass"] to massFlow.
+            set flowObj["massMax"] to massFlowMax.
+        }
+        set retObj["flow"] to flowObj.
+    }
+    if retRes
+    {
+        set retObj["res"] to resObj.
+    }
+    
+    return retObj.
+}
+
 
 // GetTotalThrust :: (<list>Engines, [<string>]) -> <scalar>
 // Returns summed thrust of a given type for a list of engines
@@ -624,7 +1391,7 @@ global function GetLocalGravityOnVessel
 // #region
 
 // ArmAutoStaging :: (<scalar>) -> <none>
-// Creates a trigger for staging, with optional param to unregister at a stage number
+// Creates a trigger for staging based on engine thrust, with optional param to unregister at a stage number
 global function ArmAutoStaging
 {
     parameter stopAtStg is -1.
@@ -653,6 +1420,139 @@ global function ArmAutoStaging
         //set g_MECO to g_MECO + (endTime - startTime).
         if Stage:Number > stopAtStg preserve.
     }
+}
+
+// ArmAutoStaging_next :: (<scalar>) -> <none>
+// Creates a trigger for staging based on fuel flow, with optional param to unregister at a stage number
+global function ArmAutoStaging_Next
+{
+    parameter stopAtStg is -1.
+    
+    if stopAtStg = -1 
+    {
+        if Core:Tag:Split("|"):Length > 0 set stopAtStg to Core:Tag:Split("|")[1]:ToNumber(0).
+    }
+    else
+    {
+        set stopAtStg to 0.
+    }
+    
+    global stgTrk to stage:number.
+    global g_engs to GetEngines().
+    global g_actEngs to GetEngines("Active").
+    global g_flowRate to GetEnginesFuelFlow(g_actEngs).
+    
+    local flowThresh to 0.
+
+    when throttle > 0 then
+    {
+        if stgTrk > stage:number 
+        {
+            set g_engs to GetEngines("Active,Next").
+            set g_flowRate to GetEnginesFuelFlow(g_actEngs).
+            set flowThresh to g_flowRate[1] * 0.001.
+            set stgTrk to stage:number.
+        }
+        else
+        {
+            set g_flowRate to GetEnginesFuelFlow(g_actEngs).
+        }
+
+        if g_flowRate <= flowThresh and throttle > 0
+        {
+            OutInfo2("Staging:" + Stage:Number).
+            local startTime to Time:Seconds.
+
+            SafeStage().
+            local endTime to Time:Seconds.
+            local stgTime to endTime - startTime.
+            set g_stagingTime to g_stagingTime + stgTime.
+            set g_staged to true.
+            wait 0.02.
+            OutInfo2("Staging time: " + round(g_stagingTime, 2)).
+            if g_flowRate > 0 set g_stagingTime to 0.
+            //set g_MECO to g_MECO + (endTime - startTime).
+        }
+
+        if Stage:Number > stopAtStg 
+        {
+            preserve.
+        }
+    }
+}
+
+local function GetEnginesFuelFlow
+{
+    parameter engList.
+
+    if engList:length > 0 
+    {
+        local fuelFlow      to 0.
+        local fuelFlowMax   to 0.
+        local fuelFlowPct   to 0.
+        local massFlow      to 0.
+        local massFlowMax   to 0.
+        local massFlowPct   to 0.
+
+        for eng in engList
+        {
+            set fuelFlow    to fuelFlow + eng:fuelFlow.
+            set fuelFlowMax to fuelFlowMax + eng:maxFuelFlow.
+            set fuelFlowPct to round(fuelFlow / fuelFlowMax, 5).
+            set massFlow    to massFlow + eng:massFlow.
+            set massFlowMax to massFlowMax + eng:maxMassFlow.
+        }
+
+        return list(fuelFlow, fuelFlowMax, fuelFlowPct, massFlow, massFlowMax, massFlowPct).
+    }
+    return list().
+}
+
+local function GetStageFuelFlow
+{
+    parameter stg to stage:number.
+
+    local fuelFlow to 0.
+    
+    local engList to GetEnginesByStage(stg).
+    for eng in engList
+    {
+        set fuelFlow to fuelFlow + eng:fuelFlow.
+    }
+    return fuelFlow.
+}
+
+local function GetStageFuelFlowMax
+{
+    parameter stg to stage:number.
+
+    local fuelFlow to 0.
+    local fuelFlowMax to 0.
+    
+    local engList to GetEnginesByStage(stg).
+    for eng in engList
+    {
+        set fuelFlow to fuelFlow + eng:fuelFlow.
+        set fuelFlowMax to fuelFlowMax + eng:maxFuelFlow.
+    }
+    return list(fuelFlow, fuelFlowMax).
+}
+
+local function GetStageMassFlow
+{
+    parameter stg to stage:number.
+
+    local massFlow to 0.
+    local massFlowMax to 0.
+
+    local engList to GetEnginesByStage(stg).
+    for eng in engList
+    {
+        set massFlow to massFlow + eng:massFlow.
+        set massFlowMax to massFlowMax + eng:maxMassFlow.
+    }
+
+    return list(massFlow, massFlowMax).
 }
 
 // SafeStage :: <string> -> <scalar>
@@ -729,7 +1629,7 @@ global function ArmFairingJettison
 {
     parameter mode is "alt+", 
               jettisonVal is body:atm:height - 10000,
-              deployTag is "descent".
+              deployTag is "ascent".
 
 
     if (ship:ModulesNamed("ModuleProceduralFairing"):length > 0)

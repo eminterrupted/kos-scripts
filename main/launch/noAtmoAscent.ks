@@ -19,8 +19,8 @@ DispMain(scriptPath(), false).
 // Launch params
 local stageAtLaunch to false.
 
-local tgtPe     to 100000.
-local tgtAp     to 100000.
+local tgtPe     to 25000.
+local tgtAp     to 25000.
 local tgtInc    to 0.
 local tgtLAN    to -1.
 local tgtRoll   to 0.

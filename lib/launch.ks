@@ -147,22 +147,26 @@ global function LaunchCountdown
     }
     LaunchPadGen(false).
 
-    until countdown >= -1.5
+    until countdown >= -4.25
     {
         OutMsg("COUNTDOWN T" + round(countdown, 1)).
         wait 0.1.
     }
 
-    if ship:status = "PRELAUNCH" 
+    if ship:status = "PRELAUNCH"
     {
         if LfoEngineCheck() 
         {
             IgnitionSequenceStart(launchTime).
-            set tVal to 1.
         }
     }
     OutInfo2().
 
+    until countdown >= 0.1
+    {
+        OutMsg("COUNTDOWN T" + round(countdown, 1)).
+        wait 0.01.
+    }
     LaunchArmRetract().
     FallbackRetract(2).
 
@@ -171,20 +175,26 @@ global function LaunchCountdown
         OutMsg("COUNTDOWN T" + round(countdown, 1)).
         wait 0.01.
     }
+
     unlock countdown.
 }
 
 // Checks if boost stage is a LFO or SRB stage
 local function LfoEngineCheck
 {
-    for eng in GetEnginesByStage(stage:number - 1)
+    local engList to GetEnginesByStage(stage:number - 1).
+    for eng in GetEngines("Active")
+    {
+        engList:add(eng).
+    }
+    for eng in engList
     {
         if not (eng:ConsumedResources:Keys:Contains("Solid Fuel"))
         {
             return true.
         } 
     }
-    OutMsg("Solid first stage detected, disabling throttle-up").
+    OutMsg("All-solid first stage detected, disabling throttle-up").
     return false.
 }
 
@@ -193,18 +203,45 @@ global function IgnitionSequenceStart
 {
     parameter cdEngStart.
 
-    local tVal to 0.25.
+    set tVal to 0.25.
     lock throttle to tVal.
-    
-    stage.
-    until tVal >= .99
+    local engList to GetEngines("active").
+    for eng in GetEnginesByStage(stage:number - 1)
     {
-        OutMsg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
-        OutInfo("Engine Start Sequence").
-        OutInfo2("Throttle: " + round(tVal * 100) + "% ").
-        set tVal to tVal + 0.0275.
-        wait 0.025.
+        engList:add(eng).
     }
+
+    //stage.
+
+    local ts_engThrAbort to time:seconds + 5.
+    
+    local thrObj to GetEnginesPerfData(engList, "1010")["thr"].
+    local curThr to thrObj["cur"].
+    local avlThr to thrObj["avlPres"].
+
+    until tVal >= .99 and (curThr / avlThr) > 0.995
+    {
+
+        set thrObj to GetEnginesPerfData(engList, "1010")["thr"].
+        set curThr to thrObj["cur"].
+        set avlThr to thrObj["avlPres"].
+
+        if time:seconds > ts_engThrAbort
+        {
+            set g_abort to true.
+            PadAbort(). // TODO - for now, will crash, and that's acceptable
+        }
+        else
+        {
+            OutMsg("COUNTDOWN T" + round(time:seconds - cdEngStart, 1)).
+            OutInfo("Engine Start Sequence").
+            OutInfo2("Stage Thrust: {0}kn / {1}kn  ({2}%)":format( round(thrObj["cur"], 2), round(thrObj["avlPres"], 2), round(Max(0.0000000001, (thrObj["cur"]) / max(0.0000000001, thrObj["avlPres"])) * 100, 2))).
+            set tVal to tVal + 0.05.
+            wait 0.01.
+        }
+    }
+
+    set tVal to 1.
 }
 
 // Drops umbilicals and retracts swing arms
@@ -391,29 +428,49 @@ global function ArmLESJettison
 {
     parameter jettAlt.
 
+    local les to "".
+    local lesDC to "".
     local lesList to list().
+
     for p in ship:parts
     {
-        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES" 
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
         {
             lesList:add(p).
+            set les to p.
         }
     }
-    
-    if (lesList:length > 0)
+
+    local lesDCList to ship:partsTagged("LES.DC").
+
+    set lesDC to choose les if lesDCList:length = 0 else lesDCList.
+
+
+    if lesDCList:length > 0
     {
-        local p to lesList[0].
+        lesList:add(ship:partsTagged("LES.DC")[0]).
+        set lesDC to ship:partsTagged("LES.DC")[0].
+    }
     
+    if les <> ""
+    {
         when ship:altitude >= jettAlt then
         {
-            p:activate.
+            les:activate.
             wait 0.01. 
-            if p:thrust > 0 
+            if les:thrust > 0 
             {
-                p:getModule("ModuleDecouple"):doEvent("Decouple").
-                OutInfo("LES Tower Jettisoned").
-                g_abortGroup:remove("LES").
-                g_abortGroup:remove("LESDecouple").
+                if lesDC:hasModule("ModuleDecouple")
+                {
+                    lesDC:getModule("ModuleDecouple"):doEvent("Decouple").
+                    OutInfo("LES Tower Jettisoned").
+                    g_abortGroup:remove("LES").
+                    g_abortGroup:remove("LESDecouple").
+                }
+                else
+                {
+                    OutTee("CAUTION: LES Jettison failure!", 0, 1).
+                }
             }
             else
             {
@@ -574,14 +631,27 @@ global function SetupAbortGroup
     local LESList to list().
     abort off.
 
+    local lesDCFlag to true.
+
     for p in ship:parts
     {
-        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag = "LES"
+        if p:name = "LaunchEscapeSystem" or p:name = "restock-engine-les-2" or p:tag:contains("LES")
         {
-            LESList:add(p).
-            if p:hasModule("ModuleDecouple") 
+            if p:tag = "LES" 
+            {
+                LESList:add(p).
+                if lesDCFlag
+                {
+                    set g_abortGroup["LESDecoupler"] to p:getModule("ModuleDecouple").    
+                }
+            }
+            else if p:tag = "LES.Decoupler"
             {
                 set g_abortGroup["LESDecoupler"] to p:getModule("ModuleDecouple").
+                set lesDCFlag to false.
+            }
+            else 
+            {
             }
         }
         else if p:hasModule("TacSelfDestruct")

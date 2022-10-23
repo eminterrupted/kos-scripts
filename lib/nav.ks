@@ -213,23 +213,36 @@ global function GetOrbitable
     {
         return tgtStr:ship.
     }
-    else
+    else if tgtStr:IsType("string") 
     {
-        local iList to buildList("targets").
-        for b in buildList("bodies")
+        if tgtStr:matchesPattern("^active")
         {
-            iList:add(b).
+            return "active-vessel".
         }
-
-        from { local idx to 0.} until idx = iList:length step { set idx to idx + 1.} do
+        else if tgtStr = ""
         {
-            if iList[idx]:name = tgtStr
+            return "no-target".
+        }
+        else
+        {
+            local iList to buildList("targets").
+            for b in buildList("bodies")
             {
-                if iList[idx]:typeName = "body" return Body(tgtStr).
-                else return Vessel(tgtStr).
+                iList:add(b).
+            }
+
+            from { local idx to 0.} until idx = iList:length step { set idx to idx + 1.} do
+            {
+                if iList[idx]:name = tgtStr
+                {
+                    if iList[idx]:typeName = "body" return Body(tgtStr).
+                    else return Vessel(tgtStr).
+                }
             }
         }
     }
+
+    return tgtStr.
 }
 
 // GetTransferPhase :: <orbitable / string>, <scalar> -> <scalar>

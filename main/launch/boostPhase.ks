@@ -17,8 +17,8 @@ DispMain(scriptPath(), false).
 
 // Vars
 // Launch params
-local tgtPe     to 1250000.
 local tgtAp     to 1250000.
+local tgtPe     to 1250000.
 local tgtInc    to 0.
 local tgtLAN    to -1.
 local tgtRoll   to 0.
@@ -151,7 +151,7 @@ OutMsg("Vertical Ascent").
 until ship:altitude >= altRoll
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispLaunchTelemetry(lpCache).
+    DispLaunchTelemetry2(lpCache).
     wait 0.01.
 }
 
@@ -160,7 +160,7 @@ set sVal to heading(l_az_calc(azCalcObj), 90, rVal).
 until steeringManager:rollerror <= 0.1 and steeringManager:rollerror >= -0.1
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispLaunchTelemetry(lpCache).
+    DispLaunchTelemetry2(lpCache).
     wait 0.01.
 }
 OutInfo().
@@ -168,7 +168,7 @@ OutInfo().
 until ship:altitude >= altStartTurn or ship:verticalspeed >= spdStartTurn 
 {
     if g_abortSystemArmed and abort InitiateLaunchAbort().
-    DispLaunchTelemetry(lpCache).
+    DispLaunchTelemetry2(lpCache).
     wait 0.01.
 }
 set altStartTurn to ship:altitude.
@@ -178,7 +178,7 @@ until (ship:altitude >= altGravTurn and ship:apoapsis >= tgtAp * 0.5) or ship:ap
 {   
     if g_abortSystemArmed and abort InitiateLaunchAbort().
     set sVal to heading(l_az_calc(azCalcObj), LaunchAngForAlt(altGravTurn, altStartTurn, 0), rVal).
-    DispLaunchTelemetry(lpCache).
+    DispLaunchTelemetry2(lpCache).
     wait 0.01.
 }
 
@@ -189,7 +189,7 @@ until ship:apoapsis >= tgtAp * 0.9995
     local lAng to LaunchAngForAlt(altGravTurn, altStartTurn, 0).
     local adjAng to max(0, lAng - ((ship:altitude - altGravTurn) / 1000)).
     set sVal to heading(l_az_calc(azCalcObj), adjAng, rVal).
-    DispLaunchTelemetry(lpCache).
+    DispLaunchTelemetry2(lpCache).
     wait 0.01.
 }
 set tVal to 0.

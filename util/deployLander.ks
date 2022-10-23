@@ -24,10 +24,10 @@ copyPath("0:/boot/_bl.ks", "/boot/_bl.ks").
 set core:bootfilename to "/boot/_bl.ks".
 runPath(setupScript).
 
-if core:tag:split(":"):length > 3 
-{
-    set ship:name to ship:name + " (" + core:tag:split(":")[3] + ")".
-}
+// if core:tag:split(":"):length > 3 
+// {
+//     set ship:name to ship:name + " (" + core:tag:split(":")[3] + ")".
+// }
 writeJson(list(ship:name), "vessel.json").
 
 reboot.

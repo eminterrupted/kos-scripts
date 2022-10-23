@@ -1,11 +1,11 @@
 @lazyGlobal off.
+clearScreen.
 
-parameter inObj.
+parameter inObj,
+          tip is "".
 
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
-
-local tip to "".
 
 if inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
 {

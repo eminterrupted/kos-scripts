@@ -3,18 +3,59 @@ clearScreen.
 
 parameter params is list().
 
-runOncePath("0:/lib/globals").
+runOncePath("0:/lib/loadDep").
 runOncePath("0:/lib/burnCalc").
-runOncePath("0:/lib/disp").
 runOncePath("0:/lib/mnv").
 runOncePath("0:/lib/nav").
-runOncePath("0:/lib/util").
-runOncePath("0:/lib/vessel").
 
 DispMain(ScriptPath(), false).
 
-// Calculate retrograde velocity parallel to planet velocity
+    until not hasNode
+    {
+        remove nextNode.
+        wait 0.01.
+    }
 
+    local mnvNode to GetReturnNode().
+    add mnvNode.
+    cr().
+    print "Press Enter to begin node execution routine" at (0, cr()).
+    print "Press Home to recalculate transfer node" at (0, cr()).
+    print "Press End to terminate script" at (0, cr()).
+    Terminal:Input:Clear.
+    local doneFlag to false.
+    until doneFlag
+    {
+        GetInputChar().
+        
+        if g_termChar = Terminal:Input:Enter
+        {
+            ExecNodeBurn(nextNode).
+            set doneFlag to true.
+            set g_termChar to "".
+        }
+        else if g_termChar = Terminal:Input:HomeCursor
+        {
+            remove nextNode.
+            add GetReturnNode().
+            set g_termChar to "".
+        }
+        else if g_termChar = Terminal:Input:EndCursor
+        {
+            set doneFlag to true.
+        }
+        Terminal:Input:Clear.
+        wait 0.01.
+    }
+
+    print ScriptPath() + "complete!" at (0, cr()).
+
+
+
+
+// Calculate retrograde velocity parallel to planet velocity
+local function GetReturnNode
+{
     // Get Moon Velocity Vector and magnitude
     local vMoon to Body:Orbit:Velocity:Orbit:Mag.
     print "vMoon        : " + round(vMoon, 2) at (0, 10).
@@ -76,45 +117,21 @@ DispMain(ScriptPath(), false).
     //).
 
     local burnUTC to time:seconds + ETAtoTA(ship:orbit, burnTA).
-    local mnvNode to node(burnUTC, 0, 0, dv1).
-    add mnvNode.
+    local _retNode to node(burnUTC, 0, 0, dv1).
+    add _retNode.
     wait 1.
-    if not mnvNode:orbit:hasnextpatch 
+    if not _retNode:orbit:hasnextpatch 
     {
-        set mnvNode to IterateMnvNode(mnvNode, "escSoi", list(list(0, 0, 0, 1))).
-        add mnvNode.
+        set _retNode to IterateMnvNode(_retNode, "escSoi", list(list(0, 0, 0, 1))).
+        add _retNode.
     }
+    remove _retNode.
 
-    cr().
-    print "Press Enter to begin node execution routine" at (0, cr()).
-    print "Press End to terminate script" at (0, cr()).
-    Terminal:Input:Clear.
-    local _char to "".
-    local doneFlag to false.
-    until doneFlag
-    {
-        if Terminal:Input:HasChar
-        {
-            set _char to Terminal:Input:GetChar.
-            if _char = Terminal:Input:Enter
-            {
-                ExecNodeBurn(nextNode).
-                set doneFlag to true.
-            }
-            else if _char = Terminal:Input:EndCursor
-            {
-                set doneFlag to true.
-            }
-            else
-            {
-                set _char to "".
-            }
-        }
-    }
+    return _retNode.
+}
 
-    print ScriptPath() + "complete!" at (0, cr()).
 
-    local function IterateMnvNode
+local function IterateMnvNode
     {
         parameter mnv,
                   desiredResult,

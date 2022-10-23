@@ -15,12 +15,21 @@ writeJson(list(Ship:Name), "vessel.json").
 
 if not (defined planTags)
 {
-     local pTags to ParseMissionTags().
-     set plan to pTags[0].
-     if pTags:length > 1 set branch to pTags[1].
+    local pTags to ParseMissionTags().
+    set plan to pTags[0].
+    if pTags:length > 1 
+    {
+        local t to pTags[1].
+        set branch to choose t:substring(0, t:find("[")) if t:matchesPattern(".*\[.*\]") else t.
+    }
+
+    if pTags:length > 2
+    {
+        set partC to pTags[2].
+    }
 }
 
-local planPath to path("0:/_plan/" + plan + "/mp_" + Ship:Name:Replace(" ","_") + ".json").
+//local planPath to path("0:/_plan/" + plan + "/mp_" + Ship:Name:Replace(" ","_") + ".json").
 local setupPath to path("0:/_plan/" + plan + "/setup.ks").
 if branch <> "" 
 {
@@ -41,4 +50,4 @@ if cryoTankOn
 }
 
 runPath(setupPath).
-writeJson(mp, planPath).
+//writeJson(mp, planPath).

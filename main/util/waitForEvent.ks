@@ -23,14 +23,14 @@ if event = "sciAlt"
 {
     if value = "high" 
     {
-        until ship:altitude >= BodyInfo:altForSci:Moho
+        until ship:altitude >= BodyInfo[Body:Name]:SpaceAltThresh
         {
             DispOrbit().
         }
     }
     else if value = "low"
     {
-        until ship:altitude <= BodyInfo:altForSci:Moho
+        until ship:altitude <= BodyInfo[Body:Name]:SpaceAltThresh
         {
             DispOrbit().
         }

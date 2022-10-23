@@ -30,7 +30,7 @@ lock steering to GetSteeringDir(g_orientation).
 
 // TO-DO: Write code to lower to desired flyby alt
 
-if ship:altitude >= BodyInfo:altForSci[Body:Name]
+if ship:altitude >= BodyInfo[Body:Name]:SpaceAltThresh
 {
     if doSci and (sciSitu = "all" or sciSitu = "high")
     {

@@ -85,6 +85,8 @@ else
     TMI().
 }
 
+//Breakpoint("EOF").
+
 //
 // Main function: Trans Munar Injection maneuver
 local function TMI
@@ -100,6 +102,7 @@ local function TMI
     // Main
     if hasNode and not Ship:Orbit:HasNextPatch remove nextNode.
     wait 1.
+    //BreakPoint("Pre Node Eval").
     if not hasNode
     {
         lock currentPhase to mod(360 + KSNavPhaseAng(tgtBody), 360).
@@ -136,6 +139,8 @@ local function TMI
         set mnv to node(burnAt, 0, 0, dv[0]).
         add mnv.
     }
+    
+    //BreakPoint("Pre Node Exec").
 
     if hasNode
     {

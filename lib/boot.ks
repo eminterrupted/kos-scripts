@@ -1,27 +1,51 @@
-// #include "0:/boot/_bl_mini"
+// #include "0:/boot/_bl"
 ParseMissionTags(core).
 
 // Bootloader functions
 global function TagCores
 {
-    set core:volume:name to "PLX0".
-    
-    local idx to 1.
+    local idx to 2.
     for c in ship:modulesNamed("kOSProcessor")
     {
-        if c:tag = "" 
+        if c:volume:exists("mp.json") or c:volume:exists("mp")
         {
-            set c:tag to "PCX" + idx.
-            set c:volume:name to "PLX" + idx.
+            set c:volume:name to "{0}_MP1":format(core:part:uid).
+        }
+        else if c:tag = "" 
+        {
+            set c:tag to "{0}:CX{1}":format(c:part:uid, idx).
+            set c:volume:name to "{0}_VX{1}":format(c:part:uid, idx).
             set idx to idx + 1.
         }
         else if c:volume:name = ""
         {
-            set c:volume:name to "PLX" + idx.
+            set c:volume:name to "{0}_VX{1}":format(c:part:uid, idx).
             set idx to idx + 1.
         }
     }
 }
+
+
+// global function TagCores
+// {
+//     set core:volume:name to "PLX0".
+    
+//     local idx to 1.
+//     for c in ship:modulesNamed("kOSProcessor")
+//     {
+//         if c:tag = "" 
+//         {
+//             set c:tag to "PCX" + idx.
+//             set c:volume:name to "PLX" + idx.
+//             set idx to idx + 1.
+//         }
+//         else if c:volume:name = ""
+//         {
+//             set c:volume:name to "PLX" + idx.
+//             set idx to idx + 1.
+//         }
+//     }
+// }
 
 global function CopyArchivePlan
 {
@@ -34,21 +58,40 @@ global function CopyArchivePlan
     }
 }
 
+global function ParseTags
+{
+    parameter _t is core:tag.
+
+    global paramLex     to lex().
+    local  fragList to list().
+
+    local aSplit to _t:split("|").
+    for word in aSplit[0]
+    {
+        local bSplit to word:split(":").
+        for frag in bSplit
+        {
+            if frag:matchespattern("\[.*\]")
+            {
+                local isoFrag to frag:substring(0, frag:find("[")).
+                fragList:add(isoFrag).
+                local isoPrm to frag:replace(isoFrag + "[", ""):replace("]", "").
+                set paramLex[isoFrag] to isoPrm:split(";").
+            }
+            else
+            {
+                fragList:add(frag).
+            }
+        }
+    }
+    return list(fragList, aSplit[1]).
+}
+
 global function ParseMissionTags
 {
     parameter c is core.
 
-    local fragmentlist to list().
-    local pipesplit to c:tag:split("|").
-    for word in pipesplit
-    {
-        local colonsplit to word:split(":").
-        for frag in colonsplit
-        {
-            fragmentlist:add(frag).
-        }
-    }
-    return fragmentlist.
+    return ParseTags(c:tag)[0].
 }
 
 

@@ -27,6 +27,12 @@ local deployModules to list(
     ,"ModuleRoboticServoHinge"
     ,"ModuleRoboticServoRotor"
     ,"ModuleDeployableReflector"
+    ,"SnacksConverter"
+    ,"ModuleSystemHeatConverter"
+    ,"ModuleSystemHeatFissionEngine"
+    ,"ModuleDeployableRadiator"
+    ,"RetractableLadder"
+    ,"ModuleRoboticServoPiston"
 ).
 // #endregion
 
@@ -79,21 +85,37 @@ global alphaNumDict to list(
 ).
 
 global BodyInfo to lex(
-    "altForSci", lex(
-        "Kerbin", 625000
-        ,"Mun", 150000
-        ,"Minmus", 75000
-        ,"Moho", 200000
-        ,"Eve", 1000000
-        ,"Gilly", 15000
-        ,"Duna", 350000
-        ,"Ike", 125000
-        ,"Jool", 10000000
-        ,"Laythe", 500000
-    )
-    ,"atmAltForSci", lex(
-        "Kerbin", 18000
-        ,"Eve", 18000
+    "Kerbin", lex(
+        "SpaceAltThresh", 625000
+        ,"AtmAltThresh", 18000
+    ),
+    "Mun", lex(
+        "SpaceAltThresh", 150000
+    ),
+    "Minmus", lex(
+        "SpaceAltThresh", 75000
+    ),
+    "Moho", lex(
+        "SpaceAltThresh", 200000
+    ),
+    "Eve", lex(
+        "SpaceAltThresh", 1000000
+        ,"AtmAltThresh", 18000
+    ),
+    "Gilly", lex(
+        "SpaceAltThresh", 15000
+    ),
+    "Duna", lex(
+        "SpaceAltThresh", 350000
+    ),
+    "Ike", lex(
+        "SpaceAltThresh", 125000
+    ),
+    "Jool", lex(
+        "SpaceAltThresh", 10000000
+    ),
+    "Laythe", lex(
+        "SpaceAltThresh", 500000
     )
 ).
 
@@ -185,9 +207,11 @@ global verbose to true.
     // Creates a breakpoint
     global function Breakpoint
     {
-        print "* Press any key to continue *" at (10, terminal:height - 2).
+        parameter _str to "Press any key to continue".
+
+        print "-* {0} *-":format(_str) at (10, terminal:height - 2).
         terminal:input:getChar().
-        print "                             " at (10, terminal:height - 2).
+        print "{0,-50}":format(" ") at (10, terminal:height - 2).
     }
     // #endregion
 
@@ -593,11 +617,11 @@ global verbose to true.
         {
             set terminal:height to 120.
             set terminal:width to 300.
-            set curSitu to choose situMask:def[0] if ship:altitude >= BodyInfo:altForSci[Body:Name] else situMask:def[1].
+            set curSitu to choose situMask:def[0] if ship:altitude >= BodyInfo[Body:Name]:SpaceAltThresh else situMask:def[1].
         }
         else if list("FLYING"):contains(ship:status)
         {
-            set curSitu to choose situMask:def[2] if ship:altitude >= BodyInfo:atmAltForSci[Body:Name] else situMask:def[3].
+            set curSitu to choose situMask:def[2] if ship:altitude >= BodyInfo[Body:Name]:AtmAltThresh else situMask:def[3].
         }
         else 
         {
@@ -951,8 +975,8 @@ global function SendMsg
               msgData.
 
     local cx to processor(sendTo):connection.
-
-    cx:sendMessage(core:part:tag). 
+    
+    cx:sendMessage(core:part:uid). 
     cx:sendMessage(msgData).
 }
 // #endregion
@@ -1019,7 +1043,11 @@ global function GetInputChar
         terminal:input:clear.
         return g_termChar.
     }
-    return "".
+    else
+    {
+        terminal:input:clear.
+        return "".
+    }
 }
 
 global function WaitOnAllInput
@@ -1754,6 +1782,181 @@ local function DeployRadiator
 }
 
 
+// Reactors
+
+local function DeployReactor
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("ModuleSystemHeatFissionEngine").
+    local eDeploy to "enable reactor".
+    local eRetract to "disable reactor".
+    
+    if action = "toggle"
+    {
+        if not DoEvent(m, eDeploy) 
+        {
+            DoEvent(m, eRetract).
+        }
+    }
+    else if action = "deploy"
+    {
+        if m:getField("generation") = "Offline"
+        {
+            DoEvent(m, eDeploy).
+        } 
+    }
+    else if action = "retract"
+    {
+        if m:getField("generation") = "Online"
+        {
+            DoEvent(m, eRetract).
+        }
+    }
+}
+
+global function ManageReactor
+{
+    parameter p,
+              action is "info",
+              data0 is "",
+              data1 is "".
+
+    local safeStartup to choose true if data0:length = 0 else data0.
+
+    local rx to p:getModule("ModuleSystemHeatFissionEngine").
+    local sh to p:getModule("ModuleSystemHeat").
+
+    local lock rxStatus to rx:getField("generation").
+    local lock rxWasteHeat to rx:getField("waste heat").
+    local lock rxCoreTempStr to rx:getField("core temperature").
+    local lock rxCoreTempSet to rxCoreTempStr:replace(" K",""):split("/").
+    local lock rxCoreTemp to rxCoreTempSet[0]:ToNumber().
+    local rxTempSpec to rxCoreTempSet[1]:ToNumber().
+    local lock rxCoreHealth to rx:getField("core health"):replace(" %",""):ToNumber().
+    local lock rxCoreLife to rx:getField("core life"):ToNumber(999999999).
+    local lock rxTjMax to rx:getField("auto-shutdown temp").
+
+    local shId to sh:getField("loop id").
+    local lock shFlux to sh:getField("system flux").
+    local lock shTemp to sh:getField("loop temperature").
+
+    if action = "info"
+    {
+        return lex(
+            "status", rxStatus,
+            "wasteHeat", rxWasteHeat,
+            "tempSpec", rxTempSpec,
+            "tjMax", rxTjMax,
+            "coreTemp", rxCoreTemp,
+            "coreHealth", rxCoreHealth,
+            "coreLife", rxCoreLife,
+            "loopTemp", shTemp,
+            "loopFlux", shFlux,
+            "loopId", shId
+        ).
+    }
+    else if action = "deploy"
+    {
+        OutMsg("[{0}] Initiating Reactor Startup Sequence":format(TimeSpan(missionTime):Full)).
+        
+        local safeToDeploy to true.
+
+        if data0 <> "" set safeStartup to data0.
+        
+        if rxCoreHealth <= 25
+        {
+            OutTee("[WARN]: Reactor health at {0}. Confirm startup?":format(rxCoreHealth, 0, 1)).
+            Breakpoint().
+        }
+        else if safeStartup
+        {
+            OutInfo("SafeStart check: Cooling").
+            for rad in ship:modulesNamed("ModuleSystemHeatRadiator") DeployRadiator(rad:part, "deploy").
+            OutInfo("SafeStart check: Temperature").
+            if rxCoreTemp >= rxTempSpec
+            {
+                set safeToDeploy to false.
+                OutTee("[WARN]: Thermal Throttling! {0} (tjMax: {1}). Aborting startup!":format(round(rxCoreTemp, 2), rxTjMax), 0, 1).
+            }
+            else
+            {
+                OutInfo2("Pass!").
+                
+            }
+            OutInfo("SafeStart check: Health").
+            OutInfo2().
+            if rxCoreHealth <= 5
+            {
+                set safeToDeploy to false.
+                OutTee("[WARN]: Reactor health at {0}. Aborting startup!":format(rxCoreHealth, 0, 1)).
+            }
+            else
+            {
+                OutInf2("Pass!").
+            }
+            OutInfo().
+            OutInfo2().
+        }
+        
+        if safeToDeploy DeployReactor(p, action).
+
+        return lex(
+            "status", rxStatus,
+            "wasteHeat", rxWasteHeat,
+            "tempSpec", rxTempSpec,
+            "tjMax", rxTjMax,
+            "coreTemp", rxCoreTemp,
+            "coreHealth", rxCoreHealth,
+            "coreLife", rxCoreLife,
+            "loopTemp", shTemp,
+            "loopFlux", shFlux,
+            "loopId", shId
+        ).
+    }
+    else if action = "retract"
+    {
+        DeployReactor(p, action).
+
+        return lex(
+            "status", rxStatus,
+            "wasteHeat", rxWasteHeat,
+            "tempSpec", rxTempSpec,
+            "tjMax", rxTjMax,
+            "coreTemp", rxCoreTemp,
+            "coreHealth", rxCoreHealth,
+            "coreLife", rxCoreLife,
+            "loopTemp", shTemp,
+            "loopFlux", shFlux,
+            "loopId", shId
+        ).
+    }
+}
+
+
+// Deploy Ladders
+local function DeployLadder
+{
+    parameter p,
+              action.
+
+    local m to p:getModule("RetractableLadder").
+
+    if action = "toggle"
+    {
+        DoAction(m, "toggle ladder", true).
+    }
+    else if action = "deploy"
+    {
+        DoEvent(m, "extend ladder").
+    }
+    else if action = "retract"
+    {
+        DoEvent(m, "retract ladder").
+    }
+}
+
 // Antenna Reflectors
 local function DeployReflector
 {
@@ -2293,8 +2496,10 @@ global function DeployPartSet
         }
     }
 
-    from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do 
+    local function DeployModule
     {
+        parameter idx.
+        
         OutInfo("Step: " + idx:ToString).
         local regEx2 to regEx:Remove(regEx:length - 3, 3) + idx:ToString.
         local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTaggedPattern(regEx2).
@@ -2310,6 +2515,21 @@ global function DeployPartSet
             }
         }
         wait 1.
+    }
+
+    if action = "deploy"
+    {
+        from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do 
+        {
+            DeployModule(idx).
+        }
+    }
+    else if action = "retract"
+    {
+        from { local idx to maxDeployStep.} until idx < 0 step { set idx to idx - 1.} do 
+        {
+            DeployModule(idx).
+        }
     }
 }
 
@@ -2396,6 +2616,16 @@ global function DeployPart
             DeployCrystalization(p, action).
         }
     }
+
+    if p:hasModule("ModuleSystemHeatFissionEngine")
+    {
+        DeployReactor(p, action).
+    }
+
+    if p:hasModule("RetractableLadder")
+    {
+        DeployLadder(p, action).
+    }
 }
 //#endregion
 
@@ -2439,7 +2669,7 @@ global function InitWarp
         }
         else
         {
-            when CheckInputChar(terminal:input:enter) then
+            when g_termChar(terminal:input:enter) then
             {
                 warpTo(tStamp).
                 wait until kuniverse:timewarp:issettled.
@@ -2468,7 +2698,7 @@ global function WarpToAlt
 
     if ship:altitude > tgtAlt
     {
-        if ship:altitude <= tgtAlt * 1.000625 * warpFactor set warp to 0.
+        if ship:altitude <= tgtAlt * 1.00003125 * warpFactor set warp to 0.
         else if ship:altitude <= tgtAlt * 1.00125 * warpFactor set warp to 1.
         else if ship:altitude <= tgtAlt * 1.025 * warpFactor set warp to 2.
         else if ship:altitude <= tgtAlt * 1.75 * warpFactor set warp to 3.
@@ -2480,8 +2710,8 @@ global function WarpToAlt
     }
     else
     {
-        if ship:altitude >= tgtAlt * 0.975 * warpFactor set warp to 0.
-        else if ship:altitude >= tgtAlt * 0.85 * warpFactor set warp to 1.
+        if ship:altitude >= tgtAlt * 0.999996875 * warpFactor set warp to 0.
+        else if ship:altitude >= tgtAlt * 0.99875 * warpFactor set warp to 1.
         else if ship:altitude >= tgtAlt * 0.75 * warpFactor set warp to 2.
         else if ship:altitude >= tgtAlt * 0.625 * warpFactor set warp to 3.
         else if ship:altitude >= tgtAlt * 0.500 * warpFactor set warp to 4.

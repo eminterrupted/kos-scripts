@@ -41,21 +41,30 @@ wait 2.5.
 OutTee("Waiting for launch window").
 OutInfo("Enter to warp to launch, End to launch now").
 
+local ts to time:seconds + 1.
+
 until CheckValRange(ship:orbit:LAN, tgtBufferLANLow, tgtBufferLANHigh)
 {
     set g_termChar to GetInputChar().
-    if g_termChar = terminal:input:enter print "Enter Pressed" at (0, 30).
-    else if g_termChar = terminal:input:endCursor print "End Pressed  " at (0, 30).
-    if g_termChar = Terminal:Input:Enter
+    wait 0.01.
+
+    if g_termChar <> ""
     {
-        InitWarp(launchWindow, "Launch Window", 15, true).
+        print "[{0}] Keypress: {1}     ":format(TimeSpan(time:seconds):full, g_termChar) at (0, 30).
     }
-    else if g_termChar = Terminal:Input:EndCursor
+
+    if g_termChar = Terminal:Input:EndCursor
     {
+        print "[{0}] Keypress: {1}     ":format(TimeSpan(time:seconds):full, "END") at (0, 30).
         set launchNow to true.
     }
+    else if g_termChar = Terminal:Input:Enter
+    {
+        print "[{0}] Keypress: {1}     ":format(TimeSpan(time:seconds):full, "ENTER") at (0, 30).
+        InitWarp(launchWindow, "Launch Window", 15, true).
+    }
+    
     DispLaunchWindow2(launchETA, tgtInc, tgtLaunchLAN, srfObtVelo, lanAdjust, tgtEffectiveLAN).
-    wait 0.05.
     if launchNow break.
 }
 if warp > 0 kuniverse:timewarp:cancelwarp.

@@ -80,14 +80,14 @@ ArmAutoStaging(payloadStage + 1).
 
 // Calculations
 OutMsg("Calculating Burn Parameters").
-local dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
-local burnDur   to CalcBurnDur(dv).
-
-local mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
-local burnETA   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
-local fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
-set g_MECO      to burnETA + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
+local dv to list().
+local burnDur to list().
+local mnvTime to 0.
+local burnETA to 0.
+local fullDur to 0.
 //local l_MECO    to burnEta + burnDur[1].        // Expected cutoff point with full duration and staging estimates
+
+calcBurnData().
 
 // Uncomment below to see the maneuver that will be executed in map view assumed you have the ability in career mode
 // if career():canMakeNodes
@@ -96,19 +96,27 @@ set g_MECO      to burnETA + fullDur.           // Expected cutoff point with fu
 //    add mnv.
 // }
 
-OutMsg("DV Needed: " + round(dv, 1) + "m/s").
 Terminal:Input:Clear.
 until time:seconds >= burnETA 
 {
+    OutMsg("DV Needed: " + round(dv, 1) + "m/s").
     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
     DispBurn(dv, burnEta - time:seconds, fullDur).
     DispLaunchTelemetry(lp).
     
-    if CheckWarpKey()
+    set g_termChar to GetInputChar().
+    if g_termChar = Terminal:Input:HomeCursor
+    {
+        OutMsg("Recalculating burn data").
+        OutInfo().
+        OutInfo2().
+        calcBurnData().
+    }
+    else if g_termChar = Terminal:Input:Enter
     {
         InitWarp(burnEta, "Burn ETA", 15, true).
-        Terminal:Input:Clear.
     }
+    Terminal:Input:Clear.
     wait 0.01.
 }
 
@@ -151,3 +159,16 @@ OutMsg("Deploying untagged partSet").
 DeployPartSet().
 
 OutMsg("Deployment complete").
+
+
+// Helper function
+local function calcBurnData
+{
+    set dv        to CalcDvBE(ship:periapsis, ship:apoapsis, tgtPe, ship:apoapsis, ship:apoapsis)[1].
+    set burnDur   to CalcBurnDur(dv).
+
+    set mnvTime   to time:seconds + eta:apoapsis. // Since this is a simple circularization, we are just burning at apoapsis.
+    set burnETA   to mnvTime - burnDur[3].        // Uses the value of halfDur - totalStaging time over the half duration
+    set fullDur   to burnDur[0].                  // Full duration, no staging time included (for display only)
+    set g_MECO      to burnETA + fullDur.           // Expected cutoff point with full duration, does not take staging into account (ArmAutoStaging() will do this automatically)
+}

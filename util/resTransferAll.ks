@@ -10,7 +10,7 @@ local _margin to 0.10.
 
 local _resName to params[0].
 local _src is params[1].
-local _tgtElements is choose params[2] if params:length > 2 else list().
+local _tgtElements is choose list(params[2]) if params:length > 2 else list().
 
 // Parse Params
 if params:length > 3
@@ -26,7 +26,7 @@ local _srcIdx to {
 }.
 set _srcIdx to _srcIdx:call().
 
-if _tgtElements:length = 0 
+if ship:elements:length = 0 
 {
   for el in ship:elements
   {

@@ -15,6 +15,7 @@ DispMain(scriptPath(), false).
 
 local tgtPe to 0.
 local tgtAp to 0.
+local tgtLAN to Ship:Orbit:LAN.
 local argPe to Ship:Orbit:ArgumentOfPeriapsis.
 local orientation to "facing-sun".
 local resetState to false.
@@ -24,8 +25,9 @@ if params:length > 0
     set tgtPe to params[0].
     if params:length > 1 set tgtAp to params[1].
     if params:length > 2 set argPe to params[2].
-    if params:length > 3 set orientation to params[3].
-    if params:length > 4 set resetState to params[4].
+    if params:length > 3 set tgtLAN to params[3].
+    if params:length > 4 set orientation to params[4].
+    if params:length > 5 set resetState to params[5].
 }
 if argPe = -1 set argPe to Ship:Orbit:ArgumentOfPeriapsis.
 
@@ -81,7 +83,7 @@ if InitRunmode() = 0
     if raiseAp and raisePe 
     {
         //print "raise rAp and raise rPe" at (2, 25).
-        set mnvTA to mod((360 + argPe) - Ship:Orbit:ArgumentOfPeriapsis, 360).
+        set mnvTA to mod((360 + argPe + tgtLAN) - (Ship:Orbit:ArgumentOfPeriapsis + Ship:Orbit:LAN), 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
         set tgtVal_0 to tgtAp.
@@ -95,7 +97,7 @@ if InitRunmode() = 0
     else if raiseAp and not raisePe 
     {
         //print "raise rAp and lower rPe" at (2, 25).
-        set mnvTA to mod((360 + argPe) - Ship:Orbit:ArgumentOfPeriapsis, 360).
+        set mnvTA to mod((360 + argPe + tgtLAN) - (Ship:Orbit:ArgumentOfPeriapsis + Ship:Orbit:LAN), 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA).
         set stAp     to AltAtTA(ship:orbit, mnvTA + 180).
         set tgtVal_0 to tgtAp.
@@ -109,7 +111,7 @@ if InitRunmode() = 0
     else if not raiseAp and raisePe
     {
         //print "lower rAp and raise rPe" at (2, 25).
-        set mnvTA to mod((360 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set mnvTA to mod((360 + argPe + tgtLAN) - (Ship:Orbit:argumentOfPeriapsis + Ship:Orbit:LAN), 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
         set stAp     to AltAtTA(ship:orbit, mnvTA).
         set tgtVal_0 to tgtPe.
@@ -124,7 +126,7 @@ if InitRunmode() = 0
     else if not raiseAp and not raisePe
     {
         //print "lower rAp and lower rPe" at (2, 25).
-        set mnvTA    to mod((540 + argPe) - Ship:Orbit:argumentOfPeriapsis, 360).
+        set mnvTA    to mod((540 + argPe + tgtLAN) - (Ship:Orbit:argumentOfPeriapsis + Ship:Orbit:LAN), 360).
         set stPe     to AltAtTA(ship:orbit, mnvTA + 180).
         set stAp     to AltAtTA(ship:orbit, mnvTA).
         set tgtVal_0 to tgtPe.

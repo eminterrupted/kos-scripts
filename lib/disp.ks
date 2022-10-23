@@ -5,8 +5,8 @@ runOncePath("0:/lib/globals.ks").
 
 //-- Variables --//
 // global g_line to 10. // moved to lib/globals/ks
-local d_tHeight to 50.
-local d_tWidth to 60.
+local d_tHeight to 55.
+local d_tWidth to 65.
 // local tel_Height to 101.
 // local tel_Width to 86.
 
@@ -24,8 +24,10 @@ global function clr
 
 global function clrDisp
 {
-    parameter clrLine to 10.
-    until clrLine = terminal:height - 1
+    parameter clrLine to 10,
+              endClr to terminal:height - 1.
+
+    until clrLine = endClr
     {
         clr(clrLine).
         set clrLine to clrLine + 1.
@@ -145,13 +147,14 @@ global function OutHUD
 {
     parameter str,
               errLvl is 0,
-              screenTime is 15.
+              screenTime is 15,
+              hudPos is 2.
 
     local color to green.
     if errLvl = 1 set color to yellow.
     if errLvl = 2 set color to red.
 
-    hudtext(str, screenTime, 2, 20, color, false).          
+    hudtext(str, screenTime, hudPos, 20, color, false).          
 }
 
 // Print a string to the info line
@@ -194,11 +197,17 @@ global function OutTee
               errLvl is 0,
               screenTime is 15.
 
+    local hudPos to 2.
+    if pos > 0
+    {
+        set hudPos to 1.
+    }
+    
     if pos:isType("Scalar")
     if pos = 0 OutMsg(str).
     else if pos = 1 OutInfo(str).
     else if pos = 2 OutInfo2(str).
-    OutHUD(str, errLvl, screenTime).
+    OutHUD(str, errLvl, screenTime, hudPos).
 }
 
 global function OutWait
@@ -295,7 +304,7 @@ global function DispFlyBy
     
     set g_line to 10.
 
-    local sciSitu to choose "High" if ship:altitude >= BodyInfo:altForSci[Body:Name] else "Low".
+    local sciSitu to choose "High" if ship:altitude >= BodyInfo[Body:Name]:SpaceAltThresh else "Low".
 
     print "FLYBY DATA" at (0, g_line).
     print "----------" at (0, cr()).
@@ -496,6 +505,108 @@ global function DispLaunchTelemetry
     }
 }
 
+
+// Launch Telemetry VNext
+// A special version of DispTelemetry with desired target info
+global function DispLaunchTelemetry2
+{
+    parameter _lp.
+    
+    local tgtPe to round(ship:periapsis).
+    local tgtAp to round(ship:apoapsis).
+    local tgtInc to 0.
+    local tgtLAN to -1.
+    
+    if _lp:length > 0 
+    {
+        set tgtPe to round(_lp[0]).
+        if _lp:length > 1 
+        {
+            set tgtAp to round(_lp[1]).
+            if _lp:length > 2 
+            {
+                set tgtInc to round(_lp[2], 2).
+                if _lp:length > 3 
+                {
+                    set tgtLAN to round(_lp[3], 2).
+                }
+            }
+        }
+    }
+    
+    set g_line to 10.
+
+    print "LAUNCH TELEMETRY v2" at (0, g_line).
+    print "-------------------" at (0, cr()).
+    cr().
+    //local altStr            to round(ship:altitude):ToString.
+    //local apStr             to round(ship:apoapsis):ToString.
+    //local peStr             to round(ship:periapsis):ToString.
+    //local incStr            to round(ship:orbit:inclination, 3):ToString.
+    //local lanStr            to round(ship:orbit:LAN, 3):ToString.
+    //local throtStr          to round(Throttle * 100):ToString.
+    
+    local atmPres            to body:atm:altitudePressure(altitude).
+    local engPerfObj         to GetEnginesPerfData(GetEngines("active"), "1010:11", atmPres).
+    local engThrObj          to engPerfObj["thr"].
+    local engFlowObj         to engPerfObj["flow"].
+    //local curThr to         to round(engThrObj["cur"], 2).
+    //local availThr          to round(engThrObj["avlAtPres"], 2).
+    //local maxAccStr         to round(engThrObj["avlAtPres"] / Ship:Mass, 2).
+    //local srfSpdStr         to round(ship:velocity:surface:mag):ToString.
+    //ocal kpaStr            to round(atmPres * constant:AtmToKpa, 7):ToString.
+    //local qStr              to round(ship:q, 7):ToString.
+    //local orbSpdStr         to round(ship:velocity:orbit:mag):ToString.
+
+    local apPctTgt          to round((ship:apoapsis / tgtAp) * 100, 2).
+    local pePctTgt          to round((ship:periapsis / tgtPe) * 100, 2).
+    local incPctTgt         to 100 - round(((ship:orbit:inclination - tgtInc) / 90) * 100, 2).
+    local LANPctTgt         to 0.
+    local LANStr            to "".
+
+    if tgtLAN = -1
+    {
+        set LANPctTgt to "-".
+        set LANStr to "{0,-20}: {1,-10} | {2, -10} | {3}%  ":format("LONG OF ASC NODE", " ", " ", " ").
+    }
+    else
+    {
+        set LANPctTgt to round((max(0.0000001, ship:orbit:LAN) / max(0.0000001, tgtLAN)) * 100, 2).
+        set LANStr to "{0,-20}: {1,-10} | {2, -10} | {3}%  ":format("LONG OF ASC NODE", round(ship:orbit:LAN, 3) + char(176) + " ", tgtLAN + char(176) + " ", LANPctTgt).
+    }
+    
+    print "ORBITAL INFO:" at (0, cr()).
+    print "{0,-20}: {1,-10}":format("ALTITUDE", round(ship:altitude) + "m ") at (0, cr()).
+    print "{0,-20}: {1,-10}":format("RADAR ALTITUDE", round(alt:radar)      + "m ") at (0, cr()).
+    cr().
+    print "{0,-20}: {1,-10} | {2, -10} | {3}%  ":format("APOAPSIS", round(ship:apoapsis) + "m ", tgtAp + "m ", apPctTgt) at (0, cr()).
+    print "{0,-20}: {1,-10} | {2, -10} | {3}%  ":format("PERIAPSIS", round(ship:periapsis) + "m ", tgtPe + "m ", pePctTgt) at (0, cr()).
+    cr().  
+    print "{0,-20}: {1,-10} | {2, -10} | {3}%  ":format("INCLINATION", round(ship:orbit:inclination, 3) + char(176) + " ", tgtInc + char(176) + " ", incPctTgt) at (0, cr()).
+    print LANStr at (0, cr()).
+    cr().  
+    print "{0,-20}: {1,-25}":format("THROTTLE", round(Throttle * 100) + "% ") at (0, cr()).
+    print "{0,-20}: {1,-25}":format("MAX ACCELERATION", round(engThrObj["avlPres"] / Ship:Mass, 2) + "m/s ") at (0, cr()).
+    print "{0,-20}: {1, -7}Kn  /  {2, -7}Kn   ({3}%)":format("THRUST    (CUR/AVL)", round(engThrObj["cur"], 2), round(engThrObj["avlPres"], 2), round((max(0.0000000001, engThrObj["cur"]) / max(0.0000000001, engThrObj["avlPres"])) * 100, 2)) at (0, cr()).
+    cr().
+    print "{0,-20}: {1, -7}l/s /  {2, -7}l/s  ({3}%)":format("FUEL FLOW (CUR/MAX)", round(engFlowObj["fuel"], 5), round(engFlowObj["fuelMax"], 5), round((max(0.0000000001, engFlowObj["fuel"]) / max(0.0000000001, engFlowObj["fuelMax"])) * 100, 2)) at (0, cr()).   
+    print "{0,-20}: {1, -7}kg  /  {2, -7}kg   ({3}%)":format("MASS FLOW (CUR/MAX)", round(engFlowObj["mass"], 5), round(engFlowObj["massMax"], 5), round((max(0.0000000001, engFlowObj["mass"]) / max(0.0000000001, engFlowObj["massMax"])) * 100, 2)) at (0, cr()).   
+    cr().
+    if (Body:Atm:Exists) and ship:altitude < body:atm:height
+    {
+        print "{0,-20}: {1,-25}":format("SURFACE SPEED", round(ship:velocity:surface:mag) + "m/s ") at (0, cr()).
+        print "{0,-20}: {1,-25}":format("PRESSURE (KPA)", round(atmPres * constant:AtmToKpa, 7) + " ") at (0, cr()).
+        print "{0,-20}: {1,-25}":format("PRESSURE (Q)", round(ship:q, 7) + " ") at (0, cr()).
+    }  
+    else  
+    {  
+        print "{0,-20}: {1,-25}":format("ORBITAL SPEED", round(ship:velocity:orbit:mag) + "m/s ") at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+        print "                                               " at (0, cr()).
+    }
+}
+
 global function DispLaunchWindow
 {
     parameter tgtInc, tgtLAN, tgtEffectiveLAN, launchTime.
@@ -596,6 +707,29 @@ global function DispBurn
     {
         OutInfo("BURN DURATION   : " + round(burnDur, 2) + "s     ").
     }
+}
+
+// Displays active burn data
+global function DispBurnPerfData
+{
+    parameter dispLine to 20.
+
+    set g_line to dispLine.
+
+    local engList to GetEngines("active").
+    local perfObj to GetEnginesPerfData(engList, "1010:10").
+
+    print "ENGINE PERF DATA" at (0, g_line).
+    print "----------------" at (0, cr()).
+    print "ENGINE COUNT      : " + engList:length at (0, cr()).
+    cr().
+    print "COMBINED:" at (0, cr()).
+    print "  THRUST   : {0}kn / {1}kn  ({2}%)       ":format(round(perfObj["thr"]["cur"], 2), round(perfObj["thr"]["avl"], 2), round(max(0.00000000001, perfObj["thr"]["cur"]) / max(0.000000001, perfObj["thr"]["avl"]) * 100, 2))  at (0, cr()).
+    print "  FUEL FLOW: {0}l/s / {1}l/s  ({2}%)       ":format(round(perfObj["flow"]["fuel"], 4), round(perfObj["flow"]["fuelMax"], 4), round(max(0.00000000001, perfObj["flow"]["fuel"]) / max(0.000000001, perfObj["flow"]["fuelMax"]) * 100, 2))  at (0, cr()).
+    // print   "CURRENT: {0}kn":format(round(perfObj["thr"]["cur"], 2)) at (2, cr()).
+    // print   "AVAIL  : {0}kn":format(round(perfObj["thr"]["avl"], 2)) at (2, cr()).
+    // print   "CURRENT: {0}l/s":format(round(perfObj["flow"]["fuel"], 5)) at (2, cr()).
+    // print   "MAX    : {0}l/s":format(round(perfObj["flow"]["fuelMax"], 5)) at (2, cr()).
 }
 
 
@@ -768,21 +902,21 @@ global function DispGeneric
 
     set g_line to stLine.
     
-    from { local idx is 0.} until idx >= dispElements:length step { set idx to idx + 1.} do 
+    from { local idxLabel is 0. local idxValue is 1.} until idxValue >= dispElements:length step { set idxLabel to idxLabel + 2. set idxValue to idxValue + 2.} do 
     {
-        if idx = 0 
+        if idxLabel = 0 
         {
-            print dispElements[idx] at (0, g_line).
+            print dispElements[idxLabel]:toUpper at (0, g_line).
             print "--------------" at (0, cr()).
+            cr().
+        }
+        else if dispElements[idxLabel] = "<br>"
+        {
             cr().
         }
         else
         {
-            print dispElements[idx]:toUpper at (0, g_line).
-            print ":     " at (16, g_line).
-            set idx to idx + 1.
-            print dispElements[idx] at (18, g_line).
-            cr().
+            print "{0,-15}:   {1,-25}":format(dispElements[idxLabel]:toUpper, dispElements[idxValue]) at (0, cr()).
         }
     }
 }
@@ -996,18 +1130,39 @@ global function DispResTransfer2
 
     set g_line to 10.
 
+    local tgtAmt to 0.
+    local tgtCap to 0.
+    local tgtPct to 0.0.
+    local tgtRefs to list().
 
-    local srcAmt to srcRes:amount.
-    local srcCap to abs(srcRes:capacity).
-    local srcPct to round(srcAmt / srcCap) * 100.
+    if tgtRes:isType("Lexicon")
+    {
+        set tgtAmt to round(tgtRes:amt, 3).
+        set tgtCap to round(tgtRes:cap, 3).
+        set tgtPct to tgtRes:pct.
+        set tgtRefs to tgtRes:resRef.
+    }
+    else if tgtRes:isType("Resource")
+    {
+        set tgtAmt to round(tgtRes:amount, 3).
+        set tgtCap to round(tgtRes:capacity, 3).
+        set tgtPct to round(tgtRes:amount / tgtRes:capacity, 3) * 100.
+        set tgtRefs to list(tgtRes).
+    }
+    else if tgtRes:isType("String")
+    {
+        
+    }
 
-    local tgtAmt to tgtRes:amount.
-    local tgtCap to abs(tgtRes:capacity).
-    local tgtPct to round(tgtAmt / tgtCap) * 100.
+    local srcAmt to round(srcRes:amount, 3).
+    local srcCap to round(abs(srcRes:capacity), 3).
+    local srcPct to round(srcAmt / srcCap, 3) * 100.
 
+    local tgtLabel to choose "[{0}] {1}":format(tgt:parts:length, tgt:name) if tgt:isType("Element") else choose tgt if tgt:isType("String") else choose "[{0}] Part Collection":format(tgt:length) if tgt:isType("List") else "N/A".
+    
     local resName to srcRes:name.
-    local curAmt to abs(round(srcBaseline - srcAmt, 2)).
-    local curPct to round(curAmt / xfrAmt) * 100.
+    local curAmt to abs(round(srcBaseline - srcAmt, 3)).
+    local curPct to round(curAmt / xfrAmt, 3) * 100.
     
     print "RESOURCE TRANSFER" at (0, g_line).
     print "-----------------" at (0, cr()).
@@ -1015,10 +1170,10 @@ global function DispResTransfer2
     print "TRANSFER STATUS      : " + xfrStatus at (0, cr()).
     print "TRANSFER PROGRESS    : {0}/{1} ({2,3}%)":format(curAmt, xfrAmt, curPct) at (0, cr()).
     cr().
-    print "SOURCE ELEMENT       : " + src:name at (0, cr()).
+    print "SOURCE               : " + src:name at (0, cr()).
     print "SOURCE AMOUNT / CAP  : {0}/{1} ({2,3}%)":format(srcAmt, srcCap, srcPct) at (0, cr()).
     cr().
-    print "TARGET ELEMENT       : " + tgt:name at (0, cr()).
+    print "TARGET(S)            : " + tgtLabel at (0, cr()).
     print "TARGET AMOUNT / CAP  : {0}/{1} ({2,3}%)":format(tgtAmt, tgtCap, tgtPct) at (0, cr()).
     cr().
 }
@@ -1254,10 +1409,66 @@ global function DispList
     set g_col to stCol.
     set g_line to stLine.
 
-    clearScreen. 
-
-    from { local n is 0.} until n = inObj:length step { set n to n + 1.} do 
+    if inObj:isType("List")
     {
+        from { local n is 0.} until n = inObj:length step { set n to n + 1.} do 
+        {
+            if g_line = stLine 
+            {
+                    print tip at (g_col, g_line).
+                    print titleDiv:call() at (g_col, cr()).
+            }
+
+            if g_line < lineLim
+            {
+                print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, cr()).
+            } 
+            else if g_col < colLim
+            {
+                set g_col to g_col + colSize.
+                set g_line to stLine + 2.
+                print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, cr()).
+            } 
+            else 
+            {
+                Breakpoint().
+                clearScreen.
+                set g_col to stCol.
+                set g_line to stLine.
+            }
+        }
+    }
+}
+
+
+// Pretty-prints an object, formatting depending on type
+global function DispObj
+{
+    parameter inObj, 
+              tip is "PRETTY PRINT LIST".
+
+    local stCol to 0.
+    local stLine to 2.
+
+    local numCols to 2.
+    local colSize to terminal:width / numCols.
+    local colLim to colSize * (numCols - 1).
+    local lineLim to terminal:height - 5.
+
+    local titleDiv to { local div to "". from { local i to 0.} until i = tip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.    
+    set g_col to stCol.
+    set g_line to stLine.
+
+    local valObj to inObj:copy.
+    local labelDel to { parameter _n. return _n.}.
+    if inObj:isType("lex")
+    {
+        set labelDel to { parameter _n. return inObj:keys[_n].}.
+        set valObj to inObj:values.
+    }
+
+    from { local n is 0.} until n = valObj:length step { set n to n + 1.} do 
+    {   
         if g_line = stLine 
         {
                 print tip at (g_col, g_line).
@@ -1267,14 +1478,16 @@ global function DispList
 
         if g_line < lineLim
         {
-            print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, g_line).
+            local label to labelDel:call(n).
+            print "[{0,3}] [{1,-30}]  ":format(label, valObj[n]) at (g_col, g_line).
             set g_line to g_line + 1.
         } 
         else if g_col < colLim
         {
+            local label to labelDel:call(n).
             set g_col to g_col + colSize.
             set g_line to stLine + 2.
-            print "[{0,3}] [{1,-30}]  ":format(n, inObj[n]) at (g_col, g_line).
+            print "[{0,3}] [{1,-30}]  ":format(label, valObj[n]) at (g_col, g_line).
             set g_line to g_line + 1.
         } 
         else 

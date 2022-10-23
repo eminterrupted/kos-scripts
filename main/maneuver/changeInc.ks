@@ -40,7 +40,7 @@ local tgtObt to createOrbit(
     tgtBody
 ).
 
-until false
+until not hasNode
 {
     if hasNode
     {
@@ -51,7 +51,6 @@ until false
         break.
     }
 }
-
 
 local mnvNode to IncMatchBurn(ship, ship:orbit, tgtObt, burnAtNearestNode)[2].
 add mnvNode.

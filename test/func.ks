@@ -3,7 +3,6 @@ clearScreen.
 
 parameter params to list().
 
-
 runOncePath("0:/lib/burnCalc").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/globals").
@@ -28,17 +27,124 @@ runOncePath("0:/lib/setup").
 // }
 
 set g_line to 0.
-local _walkList to list().
+
+// local state to choose params[0] if params:length > 0 else "any".
+// local groupBy to choose params[1] if params:length > 1 else "stg".
+// local includeSep to choose params[2] if params:length > 2 else false.
 
 print "FUNCTION TEST SCRIPT     v0.000001b" at (0, g_line).
 print "======================================" at (0, cr()).
 cr().
-print "Function: GetPatchesForNode" at (0, cr()).
-cr().
-print GetPatchesForNode(nextNode) at (0, cr()).
-print "*** END OF TEST ***" at (0, cr()).
+print "ManageReactor(reactorPart, action, optPrm0, optPrm1)".
 
+if params[1] = "deploy"
+{
+    local rx to ManageReactor(params[0], params[1]).
+    DispReactor(params[0], rx).
+}
+
+
+until false
+{
+    DispReactor(params[0]).
+}
+
+
+
+
+
+
+
+
+// print "GetEnginesLex(state, groupBy, includeSep)" at (0, cr()).
+// print "GetEnginesLex({0}, {1}, {2})":format(state, groupBy, includeSep) at (0, cr()).
+// cr().
+// local t_line to 15.
+// local doneFlag to false.
+// until doneFlag
+// {
+//     set g_line to t_line.
+//     clrDisp(g_line, 15).
+//     local ts to time:seconds.
+//     local engLex to GetEnginesLex(state, groupBy, includeSep).
+//     set ts to time:seconds - ts.
+//     print "Profile (ms): {0, -4}":format(round(ts, 3)) at (0, cr()).
+//     for key in engLex:keys
+//     {
+//         print "[{0}]:":format(key) at (0, cr()).
+//         from { local i to 0.} until i = engLex[key]:length step { set i to i + 1.} do
+//         {
+//             local col to 2.
+//             if groupBy = "stg"
+//             {
+//                 print "<{0}>:":format(engLex[key]:keys[i]) at (col, cr()).
+//                 set col to col + 2.
+
+//                 local idx to 0.
+//                 for eng in engLex[key][engLex[key]:keys[i]]
+//                 {
+//                     print "[{0}] {1} | {2}":format(idx, eng:name, eng:uid) at (col, cr()).
+//                     set idx to idx + 1.
+//                 }
+//             }
+//             else
+//             {
+//                 print "[{0}] {1} | {2}":format(i, engLex[key][i]:name, engLex[key][i]:uid) at (col, cr()).
+//             }
+//         }
+//         cr().
+//     }
+//     GetInputChar().
+
+//     if g_termChar = terminal:input:endcursor
+//     {
+//         set doneFlag to true.
+//     }
+//     cr().
+// }
+// cr().
+    cr().
+print "*** test complete ***" at (0, cr()).
 // GetChildPartTree :: <part>Part, [<string>SearchString], [<int>Stage] -> List<Parts>
+
+
+// DispReactorStatus
+global function DispReactor
+{
+    parameter p,
+              dispObj to lex(),
+              _line to 10.
+    
+    set g_line to _line.
+
+    if dispObj:isType("Lexicon")
+    {
+        local rx to lex().
+        if dispObj:keys:length > 0 
+        {
+            set rx to dispObj.
+        }
+        else
+        {
+            set rx to ManageReactor(p, "info").
+        }
+
+        cr().
+        print "Reactor data:" at (0, cr()).
+        print "  {0,-15}: {1}":format("STATUS", rx["status"]) at (0, cr()).
+        print "  {0,-15}: {1}":format("WASTE HEAT", rx["wasteHeat"]) at (0, cr()).
+        print "  {0,-15}: {1}":format("TJMAX", rx["tjMax"]) at (0, cr()).
+        print "  {0,-15}: {1}":format("DIST TO TJMAX", round(rx["tjMax"] - rx["coreTemp"], 2)) at (0, cr()).
+        cr().
+        print "  {0,-12}: {1}":format("CORE TEMP", rx["coreTemp"]) at (0, cr()).
+        print "  {0,-12}: {1}":format("CORE HEALTH", rx["coreHealth"]) at (0, cr()).
+        print "  {0,-12}: {1}":format("CORE LIFE", rx["coreLife"]) at (0, cr()).
+        cr().
+        print "  {0,-12}: {1}":format("CLNG LOOP ID", rx["loopId"]) at (0, cr()).
+        print "  {0,-12}: {1}":format("LOOP TEMP", rx["loopTemp"]) at (0, cr()).
+        print "  {0,-12}: {1}":format("LOOP FLUX", rx["loopFlux"]) at (0, cr()).
+    }
+}
 
 
 

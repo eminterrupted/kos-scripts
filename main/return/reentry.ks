@@ -284,31 +284,37 @@ if parachutes:length > 0
     }
 }
 
-set sVal to body:position.
-OutMsg("Waiting until staging altitude: " + stagingAlt).
-until ship:altitude <= stagingAlt
+if stage:number > 1
 {
+    set sVal to body:position.
+    OutMsg("Waiting until staging altitude: " + stagingAlt).
+    until ship:altitude <= stagingAlt
+    {
+        set sVal to GetSteeringDir("body-sun").
+        DispTelemetry().
+    }
+
+    if warp > 0 set warp to 0.
+    wait until kuniverse:timewarp:issettled.
     set sVal to GetSteeringDir("body-sun").
-    DispTelemetry().
+    wait 5.
+
+    OutMsg("Staging").
+    until stage:number <= 1 
+    {
+        stage.
+        wait 2.
+    }
 }
 
-if warp > 0 set warp to 0.
-wait until kuniverse:timewarp:issettled.
-set sVal to GetSteeringDir("body-sun").
-wait 5.
-
-OutMsg("Staging").
-until stage:number <= 1 
-{
-    stage.
-    wait 2.
-}
 OutMsg("Waiting for reentry interface").
 set ts to time:seconds + 5.
 until ship:altitude <= body:atm:height + 1000
 {
-    set sVal to ship:retrograde.
+    set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
     DispTelemetry().
+    
+    // DispGeneric().
     if CheckWarpKey()
     {
         OutInfo("Warping to atmospheric reentry: " + body:atm:height).

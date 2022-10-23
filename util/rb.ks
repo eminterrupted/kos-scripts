@@ -9,6 +9,11 @@ local locBoot to "/boot/_bl.ks".
 
 if core:part:tag <> missionTag set core:part:tag to missionTag.
 
+if exists(Path("/bak/mp.json"))
+{
+    movePath("/bak/mp.json", "1:/mp.json").
+}
+
 copyPath(arcBoot, locBoot).
 set primeCore:bootfilename to locBoot.
 primeCore:activate.

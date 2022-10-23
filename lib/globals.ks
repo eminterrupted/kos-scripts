@@ -8,6 +8,9 @@ global g_stack to lex().
 global g_stackHoles to list().
 global g_stackIdx to 0.
 
+// Math helpers
+global g_safeMin to 0.0000000000000001.
+
 // Parse the tags
 local tagSplit to core:tag:split("|").
 global g_tags is list().
@@ -19,6 +22,8 @@ for t0 in tagSplit[0]:split(":")
 //if tagSplit:length > 1 g_tags:add(tagSplit[1]).
 
 // Boot Loader globals
+if not (defined mpArc)  global mpArc to "".
+if not (defined mpLoc)  global mpLoc to "".
 if not (defined lp)     global lp to list().
 if not (defined plan)   global plan to choose g_tags[0] if g_tags:length > 0 else "".
 if not (defined branch) global branch to choose g_tags[1] if g_tags:length > 1 else "".
@@ -42,6 +47,7 @@ global sVal to ship:facing.
 global tVal to 0.
 
 global g_orientation to "pro-sun".
+global g_abort to abort.
 global g_abortGroup to lexicon().
 global g_abortSystemArmed to false.
 global g_boosterSystemArmed to false.

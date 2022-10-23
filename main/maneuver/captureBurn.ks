@@ -37,6 +37,7 @@ if HasNode
     until not HasNode
     {
         remove NextNode.
+        wait 0.01.
     }
 }
 

@@ -20,40 +20,67 @@ global function ExecNodeBurn
     parameter mnvNode is node().
 
     local dv to mnvNode:deltaV:mag.
+    local burnDur to list(0, 0).
+    local fullDur to 0.
+    local halfDur to 0.
+    local burnEta to 0.
+    lock dvRemaining to abs(mnvNode:burnVector:mag).
+    //Breakpoint("pre DV eval").
+
     if dv <= 0.1 
     {
         OutMsg("No burn necessary").
     }
     else
     {
-        local burnDur to CalcBurnDur(dv).
-        local fullDur to burnDur[0].
-        local halfDur to burnDur[3].
+        set burnDur to CalcBurnDur(dv).
+        set fullDur to burnDur[0].
+        set halfDur to burnDur[3].
 
-        local burnEta to mnvNode:time - halfDur. 
+        set burnEta to mnvNode:time - halfDur. 
         set g_MECO    to burnEta + fullDur.
-        lock dvRemaining to abs(mnvNode:burnVector:mag).
 
-        local sVal to lookDirUp(mnvNode:burnvector, Sun:Position).
-        local tVal to 0.
+        set sVal to lookDirUp(mnvNode:burnvector, Sun:Position).
+        set tVal to 0.
         lock steering to sVal.
         lock throttle to tVal.
 
         ArmAutoStaging().
 
-        InitWarp(burnEta, "Burn ETA").
+        //InitWarp(burnEta, "Burn ETA").
 
         until time:seconds >= burnEta
         {
-            set g_termChar to GetInputChar().
-
-            if g_termChar = Terminal:Input:Enter
+            GetInputChar().
+            wait 0.01.
+            if g_termChar = "" 
+            {
+            }
+            else if g_termChar = Terminal:Input:Enter
             {
                 InitWarp(burnEta, "Burn ETA", 15, true).
-                Terminal:Input:Clear.
+                set g_termChar to "".
             }
+            else if g_termChar = Terminal:Input:HomeCursor
+            {
+                OutTee("Recalculating burn parameters").
+                wait 0.25.
+                set burnDur to CalcBurnDur(mnvNode:deltaV:mag).
+                set fullDur to burnDur[0].
+                set halfDur to burnDur[3].
+
+                set burnEta to mnvNode:time - halfDur. 
+                set g_MECO    to burnEta + fullDur.
+                set g_termChar to "".
+            }
+            else
+            {
+                set g_termChar to "".
+            }
+            
             set sVal to lookDirUp(mnvNode:burnvector, Sun:Position).
             DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
+            
         }
 
         local dv0 to mnvNode:deltav.
@@ -62,12 +89,14 @@ global function ExecNodeBurn
         OutMsg("Executing burn").
         OutInfo().
         OutInfo2().
+        clrDisp(10).
         set tVal to 1.
         set sVal to lookDirUp(mnvNode:burnVector, Sun:Position).
         until vdot(dv0, mnvNode:deltaV) <= 0.01
         {
             set tVal to max(0.02, min(mnvNode:deltaV:mag / maxAcc, 1)).
             DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
+            DispBurnPerfData(10).
             wait 0.01.
         }
         set tVal to 0.
@@ -78,7 +107,21 @@ global function ExecNodeBurn
 
         unlock steering.
     }
+
     remove mnvNode.
+    
+    // local function BurnDurHelper
+    // {
+    //     parameter _dv.
+
+    //     set burnDur to CalcBurnDur(_dv).
+    //     set fullDur to burnDur[0].
+    //     set halfDur to burnDur[3].
+
+    //     set burnEta to mnvNode:time - halfDur. 
+    //     set g_MECO    to burnEta + fullDur.
+    //     lock dvRemaining to abs(mnvNode:burnVector:mag).
+    // }
 }
 
 // MatchIncBurn :: <ship>, <orbit>, <orbit>, [<bool>] -> <list>
@@ -111,10 +154,10 @@ global function IncMatchBurn
     // Pick whichever node of AN or DN is higher in altitude,
     // and thus more efficient. node_ta is AN, so if it's 
     // closest to Pe, then use DN 
-    if node_ta < 90 or node_ta > 270 
-    {
-        set node_ta to mod(node_ta + 180, 360).
-    }
+    // if node_ta < 90 or node_ta > 270 
+    // {
+    //     set node_ta to mod(node_ta + 180, 360).
+    // }
 
     // Get the burn eta. If nearestNode flag is set, choose the node with 
     // soonest ETA. Else, choose the cheapest node.
@@ -129,6 +172,10 @@ global function IncMatchBurn
     }
     else 
     {
+        if node_ta < 90 or node_ta > 270 
+        {
+            set node_ta to mod(node_ta + 180, 360).
+        }
         set burn_utc to time:seconds + ETAtoTA(burnVesObt, node_ta).
     }
 
