@@ -25,35 +25,43 @@ global function ArmBoosterSeparation
             if idx:isType("Scalar") 
             {
                 local bIdx to idx.
-                when boosterLex[bIdx][0]:children[0]:resources[0]:amount <= 0.05 then 
+                when boosterLex[bIdx][0]:children[0]:resources[boosterLex[bIdx][0]:children[0]:resources:length - 1]:amount <= 0.05 then 
                 {
-                    OutInfo("Detaching Booster: " + bIdx).
-                    for dc in boosterLex[bIdx]
+                    set boosterLex to GetBoosters().
+                    if boosterLex:hasKey(bIdx)
                     {
-                        if dc:partsDubbedPattern("(sep|pc.nose|pc_nose)"):length > 0
+                        OutInfo("Detaching Booster: " + bIdx).
+                        for dc in boosterLex[bIdx]
                         {
-                            for sep in dc:partsDubbedPattern("(sep|pc.nose|pc_nose)") sep:activate.
-                        }
-                        local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
-                        if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
-                    }
-                    wait 1.
-                    OutInfo().
-
-                    // Check the boosterLex to see if there are any motors in the stage to airstart after previous booster separation
-                    // Start them if yes
-                    if boosterLex:hasKey("airstart")
-                    {
-                        if boosterLex["airstart"]:hasKey(bIdx + 1) 
-                        {
-                            for b in boosterLex["airstart"][bIdx + 1] 
+                            if dc:partsDubbedPattern("(sep|pc.nose|pc_nose)"):length > 0
                             {
-                                if not b:ignition 
+                                for sep in dc:partsDubbedPattern("(sep|pc.nose|pc_nose)") sep:activate.
+                            }
+                            local m to choose "ModuleDecouple" if dc:modulesNamed("ModuleDecoupler"):length > 0 else "ModuleAnchoredDecoupler".
+                            if dc:modules:contains(m) DoEvent(dc:getModule(m), "decouple").
+                        }
+                        wait 1.
+                        OutInfo().
+
+                        // Check the boosterLex to see if there are any motors in the stage to airstart after previous booster separation
+                        // Start them if yes
+                        if boosterLex:hasKey("airstart")
+                        {
+                            if boosterLex["airstart"]:hasKey(bIdx + 1) 
+                            {
+                                for b in boosterLex["airstart"][bIdx + 1] 
                                 {
-                                    b:activate.
+                                    if not b:ignition 
+                                    {
+                                        b:activate.
+                                    }
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        OutTee("Booster staging failure in bIdx: {0}":format(bIdx), 1, 1).
                     }
                 }
             }
@@ -215,11 +223,11 @@ global function IgnitionSequenceStart
 
     local ts_engThrAbort to time:seconds + 5.
     
-    local thrObj to GetEnginesPerfData(engList, "1010")["thr"].
+    local thrObj to GetEnginesPerfData()["thr"].
     local curThr to thrObj["cur"].
     local avlThr to thrObj["avlPres"].
 
-    until tVal >= .99 and (curThr / avlThr) > 0.995
+    until tVal >= .99 and (max(curThr, 0.001) / max(avlThr, 0.001)) > 0.995
     {
 
         set thrObj to GetEnginesPerfData(engList, "1010")["thr"].

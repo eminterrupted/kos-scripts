@@ -217,6 +217,23 @@ OutMsg("Waiting until altitude <= " + startAlt).
 local dir to choose "down" if startAlt <= ship:altitude else "up".
 local warpFlag to false.
 Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from an old keypress
+// Get Timestamp for target alt
+local tsAlt to ship:orbit:eta:periapsis.
+local shipPos to positionAt(ship, tsAlt).
+local altPos  to shipPos - positionAt(body, tsAlt).
+local warpTS to tsAlt.
+until false
+{
+    set tsAlt to tsAlt - 5.
+    set shipPos to positionAt(ship, tsAlt).
+    set shipPos to positionAt(ship, tsAlt).
+    set altPos  to shipPos - positionAt(body, tsAlt).
+    if CheckValRange(altPos, startAlt, startAlt + 5000)
+    {
+        local warpTS to tsAlt.
+    }
+}
+
 until false
 {
     if ship:altitude <= startAlt 
@@ -226,22 +243,23 @@ until false
     }
     else 
     {
-        OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
+        InitWarp(warpTS).
+        //OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
         until ship:altitude <= startAlt 
         {
-            if CheckWarpKey()
-            {
-                OutInfo("Warping to startAlt: " + startAlt).
-                set warpFlag to true.
-            }
-            if warpFlag
-            {
-                WarpToAlt(startAlt).
-                If ship:altitude <= startAlt
-                {
-                    set warpFlag to false.
-                }
-            }
+            // if CheckWarpKey()
+            // {
+            //     OutInfo("Warping to startAlt: " + startAlt).
+            //     set warpFlag to true.
+            // }
+            // if warpFlag
+            // {
+            //     WarpToAlt(startAlt).
+            //     If ship:altitude <= startAlt
+            //     {
+            //         set warpFlag to false.
+            //     }
+            // }
             set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
             DispTelemetry().
             wait 0.01. 

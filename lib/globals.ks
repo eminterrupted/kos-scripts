@@ -22,14 +22,15 @@ for t0 in tagSplit[0]:split(":")
 //if tagSplit:length > 1 g_tags:add(tagSplit[1]).
 
 // Boot Loader globals
-if not (defined mpArc)  global mpArc to "".
-if not (defined mpLoc)  global mpLoc to "".
-if not (defined lp)     global lp to list().
-if not (defined plan)   global plan to choose g_tags[0] if g_tags:length > 0 else "".
-if not (defined branch) global branch to choose g_tags[1] if g_tags:length > 1 else "".
-if not (defined g_stopStage) global g_stopStage to choose tagSplit[1] if tagSplit:length > 1 else 0.
-if not (defined partC)  global partC to "".
-if not (defined missionName) global missionName to Ship:Name.
+if not (defined mpArc)              global mpArc to "".
+if not (defined mpLoc)              global mpLoc to "".
+if not (defined lp)                 global lp to list().
+if not (defined plan)               global plan to choose g_tags[0] if g_tags:length > 0 else "".
+if not (defined branch)             global branch to choose g_tags[1] if g_tags:length > 1 else "".
+if not (defined g_stopStage)        global g_stopStage to choose tagSplit[1] if tagSplit:length > 1 else 0.
+if not (defined partC)              global partC to "".
+if not (defined missionName)        global missionName to Ship:Name.
+if not (defined paramLex)           global paramLex to lex().
 
 global g_col to 0. // Display horizontal positioning key
 global g_line to 10. // Display vertical positioning key

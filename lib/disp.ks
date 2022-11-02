@@ -901,13 +901,20 @@ global function DispGeneric
               stLine is 22.
 
     set g_line to stLine.
-    
+
+    // Desired result: "---"
+
+
     from { local idxLabel is 0. local idxValue is 1.} until idxValue >= dispElements:length step { set idxLabel to idxLabel + 2. set idxValue to idxValue + 2.} do 
     {
         if idxLabel = 0 
-        {
-            print dispElements[idxLabel]:toUpper at (0, g_line).
-            print "--------------" at (0, cr()).
+        { 
+            local lbl to dispElements[idxLabel]:ToUpper.
+            print lbl at (0, g_line).
+            local sepChar to dispElements[idxValue].
+            local sepStr to "".
+            for _ in range(0, lbl:length) set sepStr to sepStr + sepChar.
+            print sepStr at (0, cr()).
             cr().
         }
         else if dispElements[idxLabel] = "<br>"
@@ -932,7 +939,7 @@ global function DispFileList
     local iType to "".
     print "Choose Item by index" at (2, g_line).
     cr().
-    print ("{0, -3}  {1, -10}  {2}"):format("Idx", "Item Type", "Item") at (2, cr()).
+    print ("{0, -3}  {1, -10}  {2}"):format("-", "Item Type", "Item") at (2, cr()).
     print ("{0, -3}  {1, -10}  {2}"):format("---", "---------", "----") at (2, cr()).
     until not iCurrent:next
     {

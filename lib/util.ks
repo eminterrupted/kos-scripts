@@ -2669,7 +2669,7 @@ global function InitWarp
         }
         else
         {
-            when g_termChar(terminal:input:enter) then
+            when g_termChar = terminal:input:enter then
             {
                 warpTo(tStamp).
                 wait until kuniverse:timewarp:issettled.

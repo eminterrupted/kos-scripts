@@ -139,7 +139,7 @@ local function TMI
         set mnv to node(burnAt, 0, 0, dv[0]).
         add mnv.
     }
-    
+    wait 0.1.
     //BreakPoint("Pre Node Exec").
 
     if hasNode
