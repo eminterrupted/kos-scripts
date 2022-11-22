@@ -1,0 +1,20 @@
+wait until ship:unpacked.
+wait until kuniverse:timewarp:issettled.
+wait 0.25.
+
+if HomeConnection:IsConnected
+{
+    runOncePath("0:/lib/loadDep.ks").
+}
+else
+{
+    local ts to time:seconds + 5.
+    Print "Waiting for connection to KSC...".
+    until HomeConnection:IsConnected 
+    {
+        wait 0.01.
+        if time:seconds > ts break.
+    }
+}
+
+runOncePath("0:/_scr/launch/launchPhase").

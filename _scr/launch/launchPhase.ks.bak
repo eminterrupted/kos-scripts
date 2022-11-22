@@ -1,0 +1,598 @@
+@lazyGlobal off.
+ClearScreen.
+
+parameter params is list().
+
+runOncePath("0:/lib/globals.ks").
+runOncePath("0:/lib/util.ks").
+runOncePath("0:/lib/launch.ks").
+runOncePath("0:/kslib/lib_navball.ks").
+
+DispMain(scriptPath()).
+
+set terminal:width to 72.
+set terminal:height to 48.
+core:doEvent("open terminal").
+
+local ascentType to "maxAlt".
+local tgt_AP    to 425000.
+local tgt_HDG   to 180.
+
+set sVal to ship:facing.
+lock steering to sVal.
+
+local rollCtrlVal to 0.425.
+
+set tVal to 0.
+lock throttle to tVal.
+
+local turnTrig_Alt          to 500.
+local turnTrg_Speed         to 100.
+local turnEnd_Alt           to body:atm:height / 1.75.
+local parsedTag             to ParseCoreTag(core:tag).
+local resPctRemaining       to 0.
+local stageStop             to parsedTag[parsedTag:length - 1].
+local tgt_vAng              to 90.
+local resObj                to lex().
+
+local spinStaged to true.
+
+local doneFlag to false.
+set g_tChar     to "".
+set g_line      to 10.
+
+// Script flags can be added to the global g_scriptFlags object
+local f_spinStabilizationName to "f_spinStabilization".
+local f_spinStabilizationID to "Launch_00".
+local f_spinStabilization   to false.
+
+set g_scriptFlagDelegates[f_spinStabilizationID] to { parameter val. set f_spinStabilization to val.}.
+set g_scriptFlags[f_spinStabilizationID] to f_spinStabilization.
+set g_scriptFlags["Ref"][f_spinStabilizationID] to f_spinStabilizationName.
+
+local f_hotStageName    to "f_hotStage".
+local f_hotStageID      to "Launch_01".
+local f_hotStage        to false.
+
+set g_scriptFlagDelegates[f_hotStageID] to { parameter val. set f_hotStage to val.}.
+set g_scriptFlags[f_hotStageID] to f_hotStage.
+set g_scriptFlags["Ref"][f_hotStageID] to f_hotStageName.
+
+// SetProg(1).
+
+// global g_prog to lex (
+//     0, "NULL",
+//     1, "PRE-LAUNCH"
+// ).
+
+
+OutMsg("Press Enter to Launch").
+
+until doneFlag
+{
+    if terminal:input:hasChar
+    {
+        set g_tChar to terminal:input:getchar.
+    }
+    if g_tChar = terminal:input:enter set doneFlag to true.
+}
+set doneFlag to false.
+OutMsg("Commencing launch countdown").
+
+for dc in ship:decouplers
+{
+    if dc:tag:matchesPattern(".*spinStab.*")
+    {
+        set f_spinStabilization to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_spinStabilization"], true).
+        // set f_spinStabilization to true.
+        // set g_scriptFlags[f_spinStabilizationID] to true.
+        // g_stageInfo["SpinStabilized"]:add(dc:decoupledIn).
+        // OutMsg("spinStabilized: True").
+        // print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
+    }
+    if dc:tag:matchesPattern(".*hotStage.*")
+    {
+        set f_hotStage to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_hotStage"], true).
+        // set f_hotStage to true.
+        // set g_scriptFlags[f_hotStageID] to true.
+        // g_stageInfo["HotStage"]:add(dc:decoupledIn).
+        // OutMsg("HotStage: True").
+        // print "{0,10}: {1}":format("HOT STAGE", f_hotStage) at (40, 4).
+    }
+}
+
+OutMsg("Initializing Engines").
+set g_activeEngines to InitActiveEngines().
+
+// Idk
+on terminal:input:hasChar
+{
+    GetTermChar().
+    
+    if g_tChar = terminal:input:homecursor
+    {
+        set f_spinStabilization to SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
+        set f_spinStabilization to choose false if f_spinStabilization else true.
+        set g_scriptFlags[f_spinStabilizationID] to f_spinStabilization.
+        local str to "[{0}] {1}":format("f_spinStabilization", f_spinStabilization).
+        OutInfo(str).
+        print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
+        //SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
+    }
+    else if g_tChar = terminal:input:endcursor
+    {
+        set f_hotStage to choose false if f_hotStage else true.
+        set g_scriptFlags[f_hotStageID] to f_hotStage.
+        local str to "[{0}] {1}":format("f_hotStage", f_hotStage).
+        OutInfo(str).
+        print "{0,10}: {1}":format("HOT STAGE", f_hotStage) at (40, 5).
+        //SetScriptFlag(f_hotStageID, f_hotStage).
+    }
+    preserve.
+}
+
+set tVal to 1.
+stage.
+OutInfo("Ignition!").
+wait 0.05.
+set g_activeEngines to ActiveEngines().
+
+if ship:status = "PRELAUNCH"
+{
+    local toEng to time:seconds + 7.
+    local launchCommit to false.
+    local thrustPerf to GetEnginePerformance().
+
+    until time:seconds > toEng or launchCommit
+    {
+        set g_activeEngines to ActiveEngines().
+        DispSoundingTelemetry().
+        // set g_activeEngines to ActiveEngines(ship).
+        // set activeThrust to g_activeEngines:thrust.
+        // set availThrust to g_activeEngines:availThrust.
+
+        set thrustPerf to GetEnginePerformance().
+        
+        if thrustPerf > 0.9875
+        {
+            g_cache:remove("AvgThrustPerf").
+            set launchCommit to true.
+        }
+        else
+        {
+            wait 0.01.
+        }
+    }
+    wait 0.01.
+
+    if launchCommit 
+    {
+        stage.
+    }
+    else
+    {
+        set tVal to 0.
+        OutMsg("*** ENGINE UNDERPERF ABORT ***").
+        Breakpoint().
+        print 1 / 0.
+    }
+    //set g_activeEngines to ActiveEngines().
+}
+OutMsg("Liftoff!").
+OutInfo().
+
+ArmAutoStaging(stageStop).
+
+OutInfo("Vertical Ascent").
+until alt:radar > turnTrig_Alt and ship:verticalspeed > turnTrg_Speed
+{
+    set tgt_vAng to GetLaunchAngle(90,1,true).
+
+    DispSoundingTelemetry(list(tgt_vAng)).
+    wait 0.01.
+}
+
+//set g_activeEngines to ActiveEngines(ship).
+set resObj to GetResourcesFromEngines(g_activeEngines:engines).
+set resPctRemaining to resObj:PctRemaining.
+
+OutMsg("Pitch program").
+OutInfo("Initial turn").
+
+if ascentType = "gravityTurn"
+{
+
+    until stage:number <= stageStop
+    {
+        OutInfo("StageNumber: {0} | stageStop: {1}":format(stage:number, stageStop), 1).
+        local nextStage to stage:number - 1.
+        
+        until ship:velocity:surface:mag >= 125
+        {
+            set tgt_vAng    to round(GetLaunchAngle(88, 0.825), 3).
+            set sVal        to heading(tgt_HDG, tgt_vAng, 0).
+            
+            set resObj      to GetResourcesFromEngines(g_activeEngines:engines).
+            set resPctRemaining to resObj:PctRemaining.
+
+            if f_hotStage
+            {
+                if resPctRemaining < 0.025
+                {
+                    HotStage(0.00125).
+                    if g_stageInfo["HotStage"]:contains(stage:number - 1)
+                    {
+                    }
+                    else
+                    {
+                        set f_hotStage to false.
+                    }
+                    //set doneFlag to true.
+                }
+            }
+            
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+        }
+        
+        //if spinStaged unlock steering.
+        until doneFlag or ship:altitude > body:atm:height
+        {
+            set tgt_vAng to round(GetLaunchAngle(88, 0.950), 3).
+            set sVal    to heading(tgt_HDG, tgt_vAng):vector.
+            
+            set resObj to GetResourcesFromEngines(g_activeEngines:engines).
+            set resPctRemaining to resObj:PctRemaining.
+            OutInfo("ResPctRemaining: {0}":format(round(resPctRemaining, 2), 1)).
+
+            if f_spinStabilization
+            {
+                if resPctRemaining < 0.05
+                {
+                    unlock steering.
+                    set ship:control:roll to rollCtrlVal.
+                    g_stageInfo["SpinStabilized"]:remove(nextStage). 
+                    if g_stageInfo["SpinStabilized"]:length = 0 
+                    {
+                        set f_spinStabilization to false.
+                    }
+                }
+            }
+
+            if f_hotStage
+            {
+                if resPctRemaining < 0.025
+                {
+                    HotStage(0.0025).
+                    if g_stageInfo["HotStage"]:contains(stage:number - 1)
+                    {
+                    }
+                    else
+                    {
+                        set f_hotStage to false.
+                    }
+                }
+            }
+            
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+
+            if stage:number = stageStop
+            {
+                set doneFlag to true.
+            }
+        }
+        set ship:control:roll to 0.
+        lock steering to sVal.
+        OutInfo("", 0).
+        OutInfo("", 1).
+        OutInfo("", 2).
+        // set doneFlag to false.
+
+        OutMsg("Continuing pitch program").
+        until (ship:apoapsis >= (tgt_AP * 0.995) and body:atm:altitudepressure(ship:altitude) <= 0.001) or ship:altitude > body:atm:height or doneFlag
+        {
+            set tgt_vAng to round(GetLaunchAngle(88, 1.025), 3).
+            //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
+            //set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+        }
+
+        OutMsg("Flattening trajectory").
+        until ship:altitude > body:atm:height or g_activeEngines:thrust < 0.01
+        {
+            set tgt_vAng  to 0.
+            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+        }
+
+        OutMsg("Burning to stage completion").
+        until g_activeEngines:thrust < 0.01
+        {
+            set tgt_vAng  to 0.
+            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+        }
+
+        OutMsg("Coasting to AP").
+        set doneFlag to false.
+        local curAp to ship:altitude.
+        until doneFlag
+        {
+            set tgt_vAng  to 0.
+            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            DispSoundingTelemetry(list(tgt_vAng)).
+            wait 0.01.
+            if ship:altitude > curAp 
+            {
+                set curAp to ship:altitude.
+            }
+            else
+            {
+                set doneFlag to true.
+            }
+        }
+
+        local peakAlt to round(ship:altitude, 1).
+
+        OutMsg("Apopasis reached").
+        OutInfo("Highest Altitude: {0}m ":format(peakAlt), 1).
+        OutInfo("Staging!").
+        //Breakpoint("ARE YOU SURE?!?").
+        until stage:number = 1 
+        {
+            stage.
+            wait 1.
+        }
+
+        OutInfo("Arming Chutes!").
+        ArmChutes().
+
+        OutMsg("Payload deployed!").
+        OutInfo("", 1).
+        OutInfo("Highest Altitude: {0}m ":format(peakAlt)).
+        wait 3.
+    }
+    //HotStage(0.01).
+    set sVal to ship:facing.
+
+    // set ship:control:pilotRollTrim to 0.
+    // when ship:altitude > body:atm:height then 
+    // {
+    //     OutMsg("Reached space!").
+    //     set ship:control:roll to 0.
+    //     rcs on.
+    //     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
+    //     lock steering to sVal.
+    // }
+
+    set doneFlag to false.
+    OutMsg("Continuing pitch program").
+    until ship:altitude > turnEnd_Alt or doneFlag
+    {
+        set tgt_vAng to max(0, min(90, round(GetLaunchAngle(88, 1.25), 3))).
+        //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
+        //set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        DispSoundingTelemetry(list(tgt_vAng)).
+        wait 0.01.
+    }
+
+    OutMsg("Flattening trajectory").
+    until ship:altitude > body:atm:height or g_activeEngines:thrust < 0.01
+    {
+        set tgt_vAng  to 0.
+        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        DispSoundingTelemetry(list(tgt_vAng)).
+        wait 0.01.
+    }
+
+    OutMsg("Burning to stage completion").
+    until g_activeEngines:thrust < 0.01
+    {
+        set tgt_vAng  to 0.
+        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        DispSoundingTelemetry(list(tgt_vAng)).
+        wait 0.01.
+    }
+
+    OutMsg("Coasting to AP").
+    set doneFlag to false.
+    local curAp to ship:altitude.
+    set ts to time:seconds + eta:apoapsis.
+    until doneFlag
+    {
+        set sVal    to lookDirUp(ship:prograde:vector, -body:position).
+        
+        if ship:altitude > curAp
+        {
+            set curAp to ship:altitude.
+        }
+        else
+        {
+            set doneFlag to true.
+        }
+
+        if time:seconds > ts 
+        {
+            set doneFlag to true.
+        }
+        DispSoundingTelemetry().
+        wait 0.01.
+    }
+
+    local peakAlt to round(ship:altitude, 1).
+
+    OutMsg("Apopasis reached").
+    OutInfo("Highest Altitude: {0}m ":format(peakAlt), 1).
+    OutInfo("Deploying Payload").
+    wait 0.25.
+    //Breakpoint("ARE YOU SURE?!?").
+    until stage:number = 1 
+    {
+        stage.
+        wait 0.5.
+    }
+
+    OutInfo("Arming Chutes!").
+    ArmChutes().
+
+    OutMsg("Payload deployed!").
+    OutInfo("", 1).
+    OutInfo("Highest Altitude: {0}m ":format(peakAlt)).
+    wait 3.
+
+    rcs on.
+    set sVal to lookDirUp(ship:retrograde:vector, -body:position).
+    lock steering to sVal.
+
+    OutInfo().
+    OutMsg("Preparing for reentry").
+    until ship:altitude < 7500 and ship:velocity:surface:mag < 1000
+    {
+        set sVal to lookDirUp(ship:retrograde:vector, -body:position).
+        DispSoundingTelemetry(list(tgt_vAng)).
+        wait 0.01.
+    }
+
+    ClearScreen.
+    OutMsg("Script complete").
+}
+else if ascentType = "maxAlt"
+{
+    OutMsg("Attempting maximum altitude ascent").
+    local maxAlt to ship:altitude.
+    until ship:altitude < maxAlt
+    {
+        set tgt_vAng  to 89.50.
+        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        DispSoundingTelemetry(list(tgt_vAng)).
+        wait 0.01.
+    }
+
+    OutMsg("Maximum altitude reached: {0}":format(round(ship):altitude)).
+    unlock steering.
+    until false
+    {
+        // set tgt_vAng  to 89.50.
+        // set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        DispSoundingTelemetry().
+        wait 0.01.
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+local function GetLaunchAngle
+{ 
+    parameter _keyVal       is 90, 
+              _errFactor    is 1,   // Values > 1 flattens the curve
+              _shortCircuit is false.
+    
+    local _hVec             to v(0, 0, 0).
+    local _hVec_Ang         to 90.
+    local _hVec_AngAvg      to _keyVal.
+    local _hVec_AngAvgVals  to choose g_cache["_hVec_AngAvg"] if g_cache:hasKey("_hVec_AngAvg") else list(_keyVal).
+    local _hVec_AngVal      to 90.
+    local _tgt_Ang          to 90.
+    local _gt_StartAlt      to 500.
+    local _gt_EndAlt        to body:atm:height / 1.5.
+    local _gt_AltDiff       to _gt_EndAlt - _gt_StartAlt.
+
+    if _shortCircuit
+    {
+        set _tgt_Ang to _keyVal.
+        set _hVec_Ang to _keyVal.
+    }
+    else
+    {
+        local _proVeloVec   to choose ship:velocity:surface:vec if ship:altitude <= (body:atm:height / 2) else ship:velocity:orbit:vec.
+        set   _hVec         to vxcl(-body:position, _proVeloVec). //set   _hVec         to vxcl(_proVeloVec, -body:position).
+        set   _hVec_Ang     to min(90, max(-3.0, vAng(_proVeloVec, _hVec))). // _keyVal - vAng(_proVeloVec, _hVec) + _kvDiff. // _keyVal - vAng(ship:prograde:vector, _hVec) + _kvDiff. // _keyVal - vAng(ship:prograde:vector, _hVec). // _keyVal - pitch_for(ship, _hVec).
+        set   _hVec_AngVal  to _hVec_Ang.
+        set   _hVec_AngAvg  to _hVec_AngVal.
+
+        for val in _hVec_AngAvgVals
+        {
+            set _hVec_AngAvg to _hVec_AngAvg + val.
+        }
+        set _hVec_AngAvg to max(0.0001, _hVec_AngAvg) / max(0.0001, (_hVec_AngAvgVals:length + 1)). 
+        set _hVec_AngVal to _hVec_AngAvg.
+        
+        // if _hVec_AngAvgVals:length > 4
+        // {
+        // }
+        // else
+        // {
+        //     set _hVec_AngVal to (_keyVal + _hVec_Ang) / 2.
+        // }
+
+        // OutInfo("_hVecAng: {0}":format(round(_hVecAng, 3)), 2).
+        local apoTrg to (1 - (max(0.00000001, ship:apoapsis) / tgt_AP)) * _errFactor.
+        local altTrg to (1 - (max(0.00000001, ship:altitude - _gt_startAlt) / _gt_AltDiff)) * _errFactor.
+
+        local _tgtAngRaw to mod((90 * ((apoTrg + (altTrg * 2)) / 3)), 90).
+
+        set _tgt_Ang to max(-3.0, max(_hVec_AngVal * 0.925, min(90, min(_hVec_AngVal * 1.075, _tgtAngRaw)))).
+
+        // OutInfo("_tgtAng: {0}":format(round(_tgtAng, 3)), 3).
+        // return _tgtAng.
+    }
+
+    if not g_cache:hasKey("_hVec_AngAvg")
+    {
+        set g_cache["_hVec_AngAvg"] to list().
+    }
+    set _hVec_AngAvgVals to g_cache["_hVec_AngAvg"].
+    _hVec_AngAvgVals:add(_hVec_Ang).
+    
+    if _hVec_AngAvgVals:length > 10
+    {
+        _hVec_AngAvgVals:remove(0).
+        set g_cache["_hVec_AngAvg"] to _hVec_AngAvgVals.
+    }
+
+    return _tgt_Ang.
+}
+
+
+
+
+local function GetEnginePerformance
+{ 
+    parameter _engList is g_activeEngines.
+    
+    local _tp_Avg to 0.
+    local _tp_Cur to max(0.001, max(0.00001, _engList:thrust) / max(0.0001, _engList:availThrust)).
+
+    if g_cache:hasKey("AvgThrustPerfVals")
+    {
+        if g_cache["AvgThrustPerfVals"]:length = 12 
+        { 
+            g_cache["AvgThrustPerfVals"]:remove(0). 
+        }
+    }
+    else
+    {
+        set g_cache["AvgThrustPerfVals"] to list(_tp_Avg).
+    }
+    g_cache["AvgThrustPerfVals"]:add(_tp_Cur). 
+
+    if g_cache["AvgThrustPerfVals"]:length > 12 
+    {
+        g_cache["AvgThrustPerfVals"]:remove(0). 
+    }
+
+    for val in g_cache["AvgThrustPerfVals"] 
+    {
+        set _tp_Avg to _tp_Avg + val.
+    } 
+    set _tp_Avg to round(_tp_Avg / g_cache["AvgThrustPerfVals"]:length, 7).
+    set g_cache["AvgThrustPerf"] to _tp_avg.
+    return _tp_Avg.
+}
