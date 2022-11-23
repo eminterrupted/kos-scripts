@@ -55,13 +55,14 @@ local tgtLex to lexicon(
 local tgtKeyList to list(tgt_ap_key, tgt_hdg_key, tgt_pit_key, tgt_rll_key).
 
 local paramUpdatesMade to false.
-for tgtKeyIdx in tgtKeyList:length
+//for tgtKeyIdx in tgtKeyList:length
+from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do 
 {
-    if tgtLex:HASKEY(tgtKeyList[tgtKeyIdx])
+    if tgtLex:HASKEY(tgtKeyList[i])
     {
-        if tgtLex[tgtKeyList[tgtKeyIdx]]:isType("String")
+        if tgtLex[tgtKeyList[i]]:isType("String")
         {
-            local tgtParamVal to tgtLex[tgtKeyList[tgtKeyIdx]]:TOLOWER().
+            local tgtParamVal to tgtLex[tgtKeyList[i]]:TOLOWER().
             if tgtParamVal:MATCHESPATTERN("^[0-9]+(?:km)*$")
             {
                 if tgtParamVal:ENDSWITH("km") 
@@ -69,7 +70,8 @@ for tgtKeyIdx in tgtKeyList:length
                     set tgtParamVal to tgtParamVal:REPLACE("km", "").
                 }
 
-                set tgtLex[tgtKeyList[tgtKeyIdx]] to tgtParamVal:TONUMBER().
+                set tgtLex[tgtKeyList[i]] to tgtParamVal:TONUMBER().
+                set paramUpdatesMade to true.    
             }
         }
     }
@@ -81,39 +83,40 @@ if paramUpdatesMade
     set tgt_hdg to tgtLex[tgt_hdg_key].
     set tgt_pit to tgtLex[tgt_pit_key].
     set tgt_rll_key to tgtLex[tgt_rll_key].
-
-local tgtLex to lexicon("tgt_ap", tgt_ap, "tgt_hdg", tgt_hdg, "tgt_pit", tgt_pit, "tgt_rll", tgt_rll).
-local i to 0.
-// If we've passed in overrides for defaults, set them here
-for tgt in tgtLex:values
-{
-    print "tgt: {0} ({1})":format(tgt, tgt:typename).
-    Breakpoint().
-    if tgt:isType("string")
-    {
-        if tgtLex:keys[i] = "tgt_hdg" 
-        {
-            set tgt_hdg to tgt:toNumber(90).
-            print "tgt_hdg: {0} ({1})":format(tgt, tgt:typename) at (2, 46).
-        }
-        else if tgtLex:keys[i] = "tgt_pit" 
-        {
-            set tgt_pit to tgt:toNumber(90).
-            print "tgt_pit: {0} ({1})":format(tgt_pit, tgt_pit:typename) at (2, 47).
-        }
-        else if tgtLex:keys[i] = "tgt_rll" 
-        {
-            set tgt_rll to tgt:toNumber(0).
-            print "tgt_rll: {0} ({1})":format(tgt_rll, tgt_rll:typename) at (2, 48).
-        }
-        else if tgtLex:keys[i] = "tgt_ap" 
-        {
-            if tgt:matchesPattern("\d+km") set tgt_ap to tgt_ap:replace("km", "000"):toNumber(body:atm:height * 1.25).
-            print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 49).
-        }
-    }
-    set i to i + 1.
 }
+
+// local tgtLex to lexicon("tgt_ap", tgt_ap, "tgt_hdg", tgt_hdg, "tgt_pit", tgt_pit, "tgt_rll", tgt_rll).
+// local i to 0.
+// If we've passed in overrides for defaults, set them here
+// for tgt in tgtLex:values
+// {
+//     print "tgt: {0} ({1})":format(tgt, tgt:typename).
+//     Breakpoint().
+//     if tgt:isType("string")
+//     {
+//         if tgtLex:keys[i] = "tgt_hdg" 
+//         {
+//             set tgt_hdg to tgt:toNumber(90).
+//             print "tgt_hdg: {0} ({1})":format(tgt, tgt:typename) at (2, 46).
+//         }
+//         else if tgtLex:keys[i] = "tgt_pit" 
+//         {
+//             set tgt_pit to tgt:toNumber(90).
+//             print "tgt_pit: {0} ({1})":format(tgt_pit, tgt_pit:typename) at (2, 47).
+//         }
+//         else if tgtLex:keys[i] = "tgt_rll" 
+//         {
+//             set tgt_rll to tgt:toNumber(0).
+//             print "tgt_rll: {0} ({1})":format(tgt_rll, tgt_rll:typename) at (2, 48).
+//         }
+//         else if tgtLex:keys[i] = "tgt_ap" 
+//         {
+//             if tgt:matchesPattern("\d+km") set tgt_ap to tgt_ap:replace("km", "000"):toNumber(body:atm:height * 1.25).
+//             print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 49).
+//         }
+//     }
+//     set i to i + 1.
+// }
 
 // Check the vessel for decouplers that are tagged for spin stabilization or hot staging
 for dc in ship:decouplers
