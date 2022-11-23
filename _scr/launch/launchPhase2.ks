@@ -43,29 +43,29 @@ local i to 0.
 // If we've passed in overrides for defaults, set them here
 for tgt in tgtLex:values
 {
-    print "tgt: {0} ({1})":format(tgt, tgt:typename).
-    Breakpoint().
+    // print "tgt: {0} ({1})":format(tgt, tgt:typename).
+    // Breakpoint().
     if tgt:isType("string")
     {
         if tgtLex:keys[i] = "tgt_hdg" 
         {
             set tgt_hdg to tgt:toNumber(90).
-            print "tgt_hdg: {0} ({1})":format(tgt, tgt:typename) at (2, 46).
+            // print "tgt_hdg: {0} ({1})":format(tgt, tgt:typename) at (2, 46).
         }
         else if tgtLex:keys[i] = "tgt_pit" 
         {
             set tgt_pit to tgt:toNumber(90).
-            print "tgt_pit: {0} ({1})":format(tgt_pit, tgt_pit:typename) at (2, 47).
+            // print "tgt_pit: {0} ({1})":format(tgt_pit, tgt_pit:typename) at (2, 47).
         }
         else if tgtLex:keys[i] = "tgt_rll" 
         {
             set tgt_rll to tgt:toNumber(0).
-            print "tgt_rll: {0} ({1})":format(tgt_rll, tgt_rll:typename) at (2, 48).
+            // print "tgt_rll: {0} ({1})":format(tgt_rll, tgt_rll:typename) at (2, 48).
         }
         else if tgtLex:keys[i] = "tgt_ap" 
         {
             if tgt:matchesPattern("\d+km") set tgt_ap to tgt_ap:replace("km", "000"):toNumber(body:atm:height * 1.25).
-            print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 49).
+            // print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 49).
         }
     }
     set i to i + 1.
