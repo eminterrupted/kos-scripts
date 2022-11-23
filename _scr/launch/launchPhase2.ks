@@ -9,9 +9,16 @@ runOncePath("0:/lib/loadDep").
 runOncePath("0:/lib/launch").
 
 local tgt_ap    to body:atm:height * 1.5.
+local tgt_ap_key to "tgt_ap".
+
 local tgt_hdg   to 90. // 90 degrees (due east) is most efficient trajectory
+local tgt_hdg_key to "tgt_hdg".
+
 local tgt_pit   to 90. // Needs to be 90 degrees as default to make pointy end stay pointed up
+local tgt_pit_key to "tgt_pit".
+
 local tgt_rll   to 0.
+local tgt_rll_key to "tgt_rll".
 
 if params:length > 0
 {
@@ -37,6 +44,43 @@ local f_hotStageID    to "f_hotStage".
 local f_hotStage        to false.
 set g_scriptFlagDelegates[f_hotStageID] to { parameter val. set f_hotStage to val.}.
 set g_scriptFlags[f_hotStageID] to f_hotStage.
+
+local tgtLex to lexicon(
+    tgt_ap_key, tgt_ap,
+    tgt_hdg_key, tgt_hdg,
+    tgt_pit_key, tgt_pit,
+    tgt_rll_key, tgt_rll
+).
+
+local tgtKeyList to list(tgt_ap_key, tgt_hdg_key, tgt_pit_key, tgt_rll_key).
+
+local paramUpdatesMade to false.
+for tgtKeyIdx in tgtKeyList:length
+{
+    if tgtLex:HASKEY(tgtKeyList[tgtKeyIdx])
+    {
+        if tgtLex[tgtKeyList[tgtKeyIdx]]:isType("String")
+        {
+            local tgtParamVal to tgtLex[tgtKeyList[tgtKeyIdx]]:TOLOWER().
+            if tgtParamVal:MATCHESPATTERN("^[0-9]+(?:km)*$")
+            {
+                if tgtParamVal:ENDSWITH("km") 
+                {
+                    set tgtParamVal to tgtParamVal:REPLACE("km", "").
+                }
+
+                set tgtLex[tgtKeyList[tgtKeyIdx]] to tgtParamVal:TONUMBER().
+            }
+        }
+    }
+}
+
+if paramUpdatesMade 
+{
+    set tgt_ap to tgtLex[tgt_ap_key].
+    set tgt_hdg to tgtLex[tgt_hdg_key].
+    set tgt_pit to tgtLex[tgt_pit_key].
+    set tgt_rll_key to tgtLex[tgt_rll_key].
 
 local tgtLex to lexicon("tgt_ap", tgt_ap, "tgt_hdg", tgt_hdg, "tgt_pit", tgt_pit, "tgt_rll", tgt_rll).
 local i to 0.
