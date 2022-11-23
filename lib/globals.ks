@@ -3,9 +3,10 @@
 global sVal             to ship:facing.
 global tVal             to 0.
 
-global g_tag to lex().
 global g_stopStageCondition to "MAIN".
+global g_stopStageConditionCheckVal to 0.
 global g_stopStage to 9.
+global g_tag to lex().
 
 global g_termChar to "".
 
@@ -27,12 +28,20 @@ global g_partInfo to    lex(
 "Tanks",            lex()
 ).
 
+// local delegates for below
+local reachedAp         to { parameter _tsAP is time:seconds + eta:apoapsis. return time:seconds >= _tsAP.}.
+local reachedPe         to { parameter _tsPE is time:seconds + eta:apoapsis. return time:seconds >= _tsPE.}.
+local reachedReentry    to { parameter _altPad is 25000. return ship:altitude <= body:atm:height + _altPad.}.
+local reachedMECO       to { parameter _ves to ship. return _ves:availableThrust > 0. }.
+
 global g_stopStageLex to lex(
     "REF", lex(
-        "AP",       { parameter _etaAP. return time:seconds >= _etaAP.}
-        ,"PE",      { parameter _etaPE. return time:seconds >= _etaPE.}
-        ,"REENTRY", { parameter _altPad. return ship:altitude <= body:atm:height + _altPad.}
-        ,"MAIN",    { return true.}
-        ,"MECO",    { return ship:availableThrust > 0. }
+        "AP",       reachedAp@
+        ,"PE",      reachedPe@
+        ,"REENTRY", reachedReentry@
+        ,"MAIN",    false
+        ,"MECO",    reachedMECO@
+    )
+    ,"STAGES", lex(
     )
 ).

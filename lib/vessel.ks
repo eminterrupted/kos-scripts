@@ -2,7 +2,6 @@
 // #include "0:/lib/loadDep.ks"
 
 // Variables *****
-global g_activeEngines  to ActiveEngines().
 
 global g_stageInfo to lex(
     "HotStage",         uniqueSet(),
@@ -13,6 +12,8 @@ global g_stageInfo to lex(
 
 
 // Functions *****
+global g_activeEngines to ActiveEngines().
+lock g_activeEngines to ActiveEngines().
 
 // *** Vessel Systems
 // #region
@@ -26,18 +27,29 @@ global g_stageInfo to lex(
         parameter ves is ship,
                   includeSepMotors to false.
 
-        local engList    to list().
-        local actThr     to 0.
-        local avlThr     to 0.
-        local sepflag    to true.
-        local engLex     to lex().
-        
+        local actThr        to 0.
+        local avlThr        to 0.
+        local avlTWR        to 0.
+        local curTWR        to 0.
+        local fuelFlow      to 0.
+        local fuelFlowMax   to 0.
+        local massFlow      to 0.
+        local massFlowMax   to 0.
+        local engLex        to lex().
+        local engList       to list().
+        local sepflag       to true.
+        local localGrav     to constant:g * (ves:body:radius / (ves:body:radius + ship:altitude))^2.
+
         local sumThr_Del_AllEng to { 
             parameter _eng. 
 
             engList:add(_eng). 
             set actThr to actThr + _eng:thrust. 
             set avlThr to avlThr + _eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
+            set fuelFlow to fuelFlow + _eng:fuelFlow.
+            set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
+            set massFlow to massFlow + _eng:massFlow.
+            set massFlowMax to massFlowMax + _eng:maxMassFlow.
         }.
 
         local sumThr_Del_NoSep to
@@ -50,6 +62,10 @@ global g_stageInfo to lex(
                 engList:add(_eng). 
                 set actThr to actThr + _eng:thrust. 
                 set avlThr to avlThr + _eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
+                set fuelFlow to fuelFlow + _eng:fuelFlow.
+                set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
+                set massFlow to massFlow + _eng:massFlow.
+                set massFlowMax to massFlowMax + _eng:maxMassFlow.
             }
         }.
 
@@ -63,7 +79,10 @@ global g_stageInfo to lex(
             }
         }
 
-        return lex("Thrust", actThr, "AvailThrust", avlThr, "Engines", engList, "SepStage", sepFlag).
+        set avlTWR to max(0.00001, avlThr) / (ves:mass * localGrav).
+        set curTWR to max(0.00001, actThr) / (ves:mass * localGrav).
+        
+        return lex("Thrust", actThr, "AvailThrust", avlThr, "TWR", curTWR, "AvailTWR", avlTWR, "Engines", engList, "SepStage", sepFlag).
     }
 
     // TODO Write Engine Perf Module
@@ -73,7 +92,7 @@ global g_stageInfo to lex(
     {
         parameter _engList to ActiveEngines().
 
-        return lexicon("Thrust", _engList:Thrust, "AvailThrust", _engList:AvailThrust, "FuelFlow", 0, "MassFlow", 0).
+        return lexicon("Thrust", _engList["Thrust"], "TWR", _engList["TWR"], "AvailThrust", _engList["AvailThrust"], "AvailTWR", _engList["AvailTWR"], "FuelFlow", 0, "MassFlow", 0).
     }
 
     // GetResourcesFromEngines :: List<Engines> -> Lexicon<resource data>
@@ -107,9 +126,12 @@ global g_stageInfo to lex(
     // Initializes the g_activeEngines variable.
     global function InitActiveEngines
     {
-        if not (defined g_activeEngines) global g_activeEngines to list().
-        set g_activeEngines to ActiveEngines().
-        return g_activeEngines.
+        if not (defined g_activeEngines) 
+        {
+            global lock g_activeEngines to list().
+        }
+        //set g_activeEngines to ActiveEngines().
+        //return g_activeEngines.
     }
 
     // #endregion
@@ -208,7 +230,7 @@ global g_stageInfo to lex(
         {
             set pctRemain to _resObj:PctRemaining.
             set sVal to ship:prograde.
-            DispSoundingTelemetry().
+            DispLaunchTelemetry().
             wait 0.01.
         }
         stage.

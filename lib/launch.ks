@@ -13,7 +13,7 @@
     
     // *- Global
     global g_la_turnAltStart to 500. // Altitude at which the vessel will begin a gravity turn
-    global g_la_turnAltEnd   to body:atm:height * 1.75. // Altitude at which the vessel will begin a gravity turn
+    global g_la_turnAltEnd   to body:atm:height * 0.75. // Altitude at which the vessel will begin a gravity turn
 
 // #endregion
 
@@ -28,7 +28,7 @@
     // Performs the countdown
     global function LaunchCountdown
     {
-        parameter t_engStart to -1.5.
+        parameter t_engStart to -2.75.
 
         local arm_engStartFlag  to true.
         local t_launch          to time:seconds + countdown.
@@ -129,7 +129,7 @@
     // guidance as the vessel ascends. 
     global function GetAscentAngle
     {
-        parameter tgt_alt is body:atm:height * 2,
+        parameter tgt_alt is body:atm:height * 0.86,
                   f_shape is 1. // TODO: Implement this 'shape' factor to provide a way to control the steepness of the trajectory
 
         local tgt_effAng to 90.

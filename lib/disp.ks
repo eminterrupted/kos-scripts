@@ -15,8 +15,8 @@
     // *- Global
     global g_line           to 8.
     global g_tChar          to "".
-    global g_termWidth      to 120.
-    global g_termHeight     to 64.
+    global g_termWidth      to 80.
+    global g_termHeight     to 60.
 
 // #endregion
 
@@ -102,7 +102,7 @@ InitDisp().
     }
 
 
-    global function DispSoundingTelemetry
+    global function DispLaunchTelemetry
     {
         parameter _prmList is list(body:atm:height * 2).
 
@@ -137,6 +137,9 @@ InitDisp().
         print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines:thrust, 2), "kn") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines:availThrust, 2), "kn") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines:thrust) / max(0.00001, g_activeEngines:availThrust ) * 100)), "%") at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("TWR    (CUR)", round( g_activeEngines["TWR"], 2)) at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("TWR    (AVL)", round( g_activeEngines["AvailTWR"], 2)) at (2, cr()).
+
         // cr().
         // if _prmList:length > 0 
         // {

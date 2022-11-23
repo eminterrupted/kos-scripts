@@ -8,19 +8,20 @@ DispMain(ScriptPath()).
 runOncePath("0:/lib/loadDep").
 runOncePath("0:/lib/launch").
 
-local tgt_ap    to body:atm:height * 6.
-local tgt_hdg   to 90.
-local tgt_pit   to 90.
+local tgt_ap    to body:atm:height * 1.5.
+local tgt_hdg   to 90. // 90 degrees (due east) is most efficient trajectory
+local tgt_pit   to 90. // Needs to be 90 degrees as default to make pointy end stay pointed up
 local tgt_rll   to 0.
 
 if params:length > 0
 {
     set tgt_ap to params[0].
-    if params:length > 1 set tgt_hdg to params[1]:toNumber(0).
-    if params:length > 2 set tgt_pit to params[2]:toNumber(0).
-    if params:length > 3 set tgt_rll to params[3]:toNumber(0).
+    if params:length > 1 set tgt_hdg to params[1].
+    if params:length > 2 set tgt_pit to params[2].
+    if params:length > 3 set tgt_rll to params[3].
 }
 
+local gravTurnAlt to body:atm:height * 0.765.
 local f_spinStab to false.
 local f_hotStage to false.
 
@@ -37,17 +38,37 @@ local f_hotStage        to false.
 set g_scriptFlagDelegates[f_hotStageID] to { parameter val. set f_hotStage to val.}.
 set g_scriptFlags[f_hotStageID] to f_hotStage.
 
-// Validate the tgt_ap value
-if tgt_ap:isType("string")
+local tgtLex to lexicon("tgt_ap", tgt_ap, "tgt_hdg", tgt_hdg, "tgt_pit", tgt_pit, "tgt_rll", tgt_rll).
+local i to 0.
+// If we've passed in overrides for defaults, set them here
+for tgt in tgtLex:values
 {
-    if tgt_ap:contains("km") 
+    print "tgt: {0} ({1})":format(tgt, tgt:typename).
+    Breakpoint().
+    if tgt:isType("string")
     {
-        set tgt_ap to tgt_ap:replace("km", "000"):toNumber(0).
+        if tgtLex:keys[i] = "tgt_hdg" 
+        {
+            set tgt_hdg to tgt:toNumber(90).
+            print "tgt_hdg: {0} ({1})":format(tgt, tgt:typename) at (2, 46).
+        }
+        else if tgtLex:keys[i] = "tgt_pit" 
+        {
+            set tgt_pit to tgt:toNumber(90).
+            print "tgt_pit: {0} ({1})":format(tgt_pit, tgt_pit:typename) at (2, 47).
+        }
+        else if tgtLex:keys[i] = "tgt_rll" 
+        {
+            set tgt_rll to tgt:toNumber(0).
+            print "tgt_rll: {0} ({1})":format(tgt_rll, tgt_rll:typename) at (2, 48).
+        }
+        else if tgtLex:keys[i] = "tgt_ap" 
+        {
+            if tgt:matchesPattern("\d+km") set tgt_ap to tgt_ap:replace("km", "000"):toNumber(body:atm:height * 1.25).
+            print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 49).
+        }
     }
-    else
-    {
-        set tgt_ap to tgt_ap:toNumber(0).
-    }
+    set i to i + 1.
 }
 
 // Check the vessel for decouplers that are tagged for spin stabilization or hot staging
@@ -86,7 +107,8 @@ ArmAutoStaging().
 
 until ship:altitude > g_la_turnAltStart
 {
-    DispSoundingTelemetry(list(tgt_ap)).
+    print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 45).
+    DispLaunchTelemetry(list(tgt_ap)).
     // OutInfo("Stage: {0}":format(Stage:Number), 0).
     // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
@@ -94,9 +116,9 @@ until ship:altitude > g_la_turnAltStart
 
 until stage:number = g_stopStage
 {
-    set tgt_pit to GetAscentAngle(tgt_ap).
+    set tgt_pit to GetAscentAngle(gravTurnAlt).
     set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispSoundingTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(list(tgt_ap)).
     // OutInfo("Stage: {0}":format(Stage:Number), 0).
     // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
@@ -105,10 +127,10 @@ until stage:number = g_stopStage
 set g_activeEngines to ActiveEngines().
 until g_activeEngines:Thrust < 0.01 or ship:apoapsis >= tgt_ap
 {
-    set tgt_pit to GetAscentAngle(tgt_ap).
+    set tgt_pit to GetAscentAngle(gravTurnAlt).
     set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
     // if ship:altitude > lastAlt set maxAlt to ship:altitude.
-    DispSoundingTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(list(tgt_ap)).
     // OutInfo("SECO BURN", 0).
     // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     set g_activeEngines to ActiveEngines().
@@ -123,7 +145,7 @@ until time:seconds >= ts
     set ts to time:seconds + eta:apoapsis.
     set sVal to lookDirUp(ship:prograde:vector, -body:position).
     // if ship:altitude > lastAlt set maxAlt to ship:altitude.
-    DispSoundingTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
 OutMsg("Apoapsis reached").
@@ -137,7 +159,7 @@ until doneFlag
     }
     else
     {
-        DispSoundingTelemetry(list(tgt_ap)).
+        DispLaunchTelemetry(list(tgt_ap)).
         wait 0.01.
     }
 }

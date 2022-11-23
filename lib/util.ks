@@ -1,3 +1,4 @@
+// #include "0:/lib/globals.ks"
 // #include "0:/lib/loadDep.ks"
 @lazyGlobal off.
 
@@ -30,6 +31,8 @@
         local actFrmt to "{0," + round((terminal:width - actStr:length) / 2) + "}" + actStr + "{0," + round((terminal:width - actStr:length) / 2) + "}".
         print promptStr at (0, terminal:height - 3).
         print actFrmt:format(" ") at (0, terminal:height - 2).
+        terminal:input:clear.
+        wait 0.01.
         wait until terminal:input:haschar.
     }
 
@@ -150,70 +153,86 @@
     // Parses a core's tag for script execution
     global function ParseCoreTag
     {
-        parameter _tag to core:tag,
-                  _addToGlobals to true.
+        parameter _tag to core:tag.
 
-        local _tagLex        to lex().
-        local _tSplit        to _tag:split(";").
+        local _scriptId     to "".
+        local _scriptStopStage to lex().
+        local _tagLex       to lex().
+        local _tagPrms      to list().
+        local _tagScr       to list().
+        local _tagSet       to "".
+        local _tagStg       to "".
+        local _tagStgCondition to "".
+        local _tagStgLex    to lex().
+        local _tagStgSet    to "".
+        local _tagStgSplit  to list().
+        local _tSplit       to _tag:split(";").
         local _tpSplit      to list().
 
         // from { local i to 0.} until i = _tSplit:length step { set i to i + 1.} do
         // for i in range(0, _tSplit:length, 1)
         from { local i to 0. local _tagFrag to list().} until i = _tSplit:length step { set i to i + 1. } do
         {
-            local _scriptId to "{0}:{1}":format(core:part:uid, i).
-            set _tagFrag to _tSplit[i]:split("|")[1].
+            set _scriptId to "{0}:{1}":format(core:part:uid, i).
+            set _scriptStopStage to lex().
+            set _tagFrag to _tSplit[i]:split("|").
 
-            //local _tagFrag  to _tSplit[i]:split("|").
-            //print _tagFrag   at (2, 38).
-            if _tagFrag:length <= 1
+            set _tagSet   to _tagFrag. // :_tSplit[i]:split("|")[1].
+            // print "_tagSet: ({0})":format(_tagSet) at (2, 25).
+            set _tagStgSet to _tagSet[1].
+            // print "_tagStgSet ({0})":format(_tagStgSet) at (2, 27).
+            if _tagStgSet:matchesPattern("[\[\]]")
             {
-                print _tagFrag at (2, 37).
-                Breakpoint().
-            }
-            else if _tagFrag:length = 2
-            {
-                print _tagFrag at (2, 37).
-                Breakpoint().
-            }
-
-            local _tagStg   to _tagFrag[1]. // :_tSplit[i]:split("|")[1].
-            //Breakpoint().
-            local _tagStgLex  to lexicon().
-
-            if _tagStg:matchesPattern("[\[\]]")
-            {
-                set _tagStg to _tagFrag:replace("[",""):replace("]","").
-                set _tagStg to _tagStg:split(",").
-                if _tagStg:length > 1 
+                // print "Pattern Matched ({0})":format(_tagStgSet) at (2, 30).
+                // wait 0.01.
+                // Breakpoint().
+                set _tagStgSet to _tagStgSet:replace("[",""):replace("]",""):split(",").
+                if _tagStgSet:length > 0 
                 {
-                    for _t in _tagStg 
+                    for _t in _tagStgSet
                     {
+                        // print "_t: [{0}]":format(_t) at (2, 25).
+                        // wait 0.01.
+                        // Breakpoint().
                         set _tpSplit to _t:split(":").
-                        set _tagStgLex[_tpSplit[1]] to _tpSplit[0]:toNumber().
+                        // print "_tpSplit: ({0})":format(_tpSplit) at (2, 31).
+                        // Breakpoint().
+                        set _tagStg to _tpSplit[0].
+                        set _tagStgCondition to _tpSplit[1].
+                        set _scriptStopStage[_tpSplit[0]:ToNumber()] to _tpSplit[1].
                     }
+                }
+                else
+                {
+                    set _scriptStopStage[_tagStg] to "MAIN". //print "_tpSplit <= 1 ({0})":format(_tpSplit) at (2, 40).
                 }
             }
             else
             {
-                set _tagStg to _tagStg:toNumber(0).
-                set _tagStgLex["MAIN"] to _tagStg.
+                // print "Pattern Not Matched ({0})":format(_tagStgSet) at (2, 30).
+                // Breakpoint().
+                set _tpSplit to _tagStgSet:split(":").
+                if _tpSplit:length > 1
+                {
+                    set _tagStg to _tpSplit[0]:toNumber(0).
+                    set _scriptStopStage[_tagStg] to _tpSplit[1].
+                }
+                else
+                {
+                    set _scriptStopStage[_tagStg] to "MAIN". //print "_tpSplit <= 1 ({0})":format(_tpSplit) at (2, 40).
+                }
             }
             
-            local _tagScr    to _tSplit[i]:split("|")[0]:replace("]",""):split("["). 
-            local _tagPrms   to choose _tagScr[1]:split(",") if _tagScr:length > 1 else list().
+            set _tagScr    to _tagFrag[0]:replace("]",""):split("["). 
+            set _tagPrms   to _tagScr[1]:split(":").
             set _tagScr      to _tagScr[0].
-            
-            local _parsedTag to lex("TAG", _tSplit[i], "SCR", _tagScr, "PRM", _tagPrms, "STG", _tagStgLex).
+            local _parsedTag to lex("TAG", _tSplit[i], "SCR", _tagScr, "PRM", _tagPrms, "STG", _scriptStopStage).
             set   _tagLex[_scriptId] to _parsedTag.
-            if _addToGlobals
-            {
-                set g_tag[_scriptId] to _parsedTag.
-                set g_stopStageLex to _tagStgLex.
-            }
-            //set g_stopStageLex to _tagStgLex.
-            SetStopStage().
+            set g_tag[_scriptId] to _parsedTag.
+            set _tagStgLex[_scriptStopStage:keys[i]] to _scriptStopStage.
         }
+        set g_stopStageLex["STPSTG"] to _tagStgLex.
+        SetStopStage().
 
         return _tagLex.
     }
@@ -224,24 +243,38 @@
     {
         parameter setNextValue to false.
 
-        if g_stopStageLex:keys:length > 0
+        // print "g_stopStageLex:keys:length: {0}":format(g_stopStagelex:keys:length) at (2, 33).
+        // print "g_stopStageLex: ({0})":format(g_stopStageLex["STPSTG"]) at (2, 34).
+        if g_stopStageLex:keys:length > 1
         {
-            set g_stopStageCondition to g_stopStageLex:keys[0].
+            local g_thisStage to g_stopStageLex["STPSTG"]:keys[0].
+            // print g_stopStageLex["STPSTG"]:keys[0] at (2, 39).
+            local i to 0.
+            // for k in g_stopStageLex["STPSTG"]:keys
+            // {
+            //     print k at (2, 36 + i).
+            //     set i to i + 1.
+            // }
+            // print g_stopStageLex["STPSTG"]:values[0]:values[0] at (5, 45).
+            local l_stopStageCondition to g_stopStageLex["REF"][g_stopStageLex["STPSTG"]:values[0]:values[0]]@.
+            // print "{0} ({1})":FORMAT(g_thisStage, l_stopStageCondition:call()) at (2, 38).
+
+            //Breakpoint().
             if setNextValue
             {
-                if g_stopStageLex["REF"][g_stopStageCondition]
+                if g_stopStageLex["REF"][l_stopStageCondition:call()]
                 {
-                    g_stopStageLex:remove(g_stopStageLex:keys[0]).
+                    g_stopStageLex:remove(g_stopStageLex["STPSTG"]:keys[0]).
                 }
             }
 
-            if g_stopStageLex:keys:length > 1
+            if g_stopStageLex["STPSTG"]:keys:length > 1
             {
-                set g_stopStage to g_stopStageLex:values[0].
+                set g_stopStage to g_stopStageLex["STPSTG"]:values[0]:values[0].
             }
-            else if g_stopStageLex:keys:length = 1
+            else if g_stopStageLex["STPSTG"]:keys:length = 1
             {
-                set g_stopStage to g_stopStageLex["MAIN"].
+                set g_stopStage to g_stopStageLex["STPSTG"]:keys[0].
             }
             else 
             {
@@ -250,7 +283,8 @@
         }
         else
         {
-            set g_stopStage to 0.
+            //print "[{0}]":format(g_stopStageLex) at (2, 35).
+            // set g_stopStage to 0.
         }
     }
 // #endregion
