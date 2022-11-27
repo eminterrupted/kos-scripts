@@ -1,14 +1,14 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter params to list().
-
-DispMain(ScriptPath()).
+parameter params is list().
 
 runOncePath("0:/lib/loadDep").
 runOncePath("0:/lib/launch").
 
-local tgt_ap    to body:atm:height * 1.5.
+DispMain(scriptPath()).
+
+local tgt_ap    to body:soiradius.
 local tgt_ap_key to "tgt_ap".
 
 local tgt_hdg   to 90. // 90 degrees (due east) is most efficient trajectory
@@ -28,7 +28,7 @@ if params:length > 0
     if params:length > 3 set tgt_rll to params[3].
 }
 
-local gravTurnAlt to body:atm:height * 0.765.
+local gravTurnAlt to tgt_ap.
 local f_spinStab to false.
 local f_hotStage to false.
 
@@ -69,7 +69,7 @@ from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do
                     set tgtParamVal to tgtParamVal:REPLACE("km", "").
                 }
 
-                set tgtLex[tgtKeyList[i]] to tgtParamVal:TONUMBER().
+                set tgtLex[tgtKeyList[i]] to tgtParamVal:TONUMBER(0).
                 set paramUpdatesMade to true.    
             }
         }
@@ -78,10 +78,10 @@ from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do
 
 if paramUpdatesMade 
 {
-    set tgt_ap to tgtLex[tgt_ap_key].
+    set tgt_ap to choose tgtLex[tgt_ap_key] if tgtLex[tgt_ap_key] > 0 else body:soiradius.
     set tgt_hdg to tgtLex[tgt_hdg_key].
     set tgt_pit to tgtLex[tgt_pit_key].
-    set tgt_rll_key to tgtLex[tgt_rll_key].
+    set tgt_rll to tgtLex[tgt_rll_key].
 }
 
 // Check the vessel for decouplers that are tagged for spin stabilization or hot staging
@@ -99,9 +99,15 @@ for dc in ship:decouplers
     }
 }
 
+// TODO DispPreLaunch().
+
+local launchBoosters to GetBoosters().
+if launchBoosters:PRESENT
+{
+    ArmAutoBoosterSeparation(launchBoosters).
+}
+
 OutMsg("Press Enter to begin launch countdown").
-OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg)).
-OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 1).
 until false
 {
     if terminal:input:hasChar
@@ -110,15 +116,10 @@ until false
     }
     if g_tChar = terminal:input:enter break.
 }
-if tgt_ap:isType("String") set tgt_ap to tgt_ap:ToNumber().
-if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
-if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
-if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
-
 lock throttle to tVal.
+set sVal to ship:facing.
 lock steering to sVal.
-OutInfo().
-OutInfo("", 1).
+
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
 set tVal to 1.
@@ -128,60 +129,50 @@ ArmAutoStaging().
 
 until ship:altitude > g_la_turnAltStart
 {
-    print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 45).
     DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("Stage: {0}":format(Stage:Number), 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
 }
+
+OutMsg("P16: Launch Angle ({0})":format(tgt_pit)).
+set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
 
 until stage:number = g_stopStage
 {
-    set tgt_pit to GetAscentAngle(gravTurnAlt).
+    DispLaunchTelemetry(list(tgt_ap)).
+    wait 0.01.
+}
+
+OutMsg("P18: Final Burn").
+OutInfo("     tgt_ap: {0}":format(round(tgt_ap))).
+until ship:availablethrustAt(body:atm:altitudepressure(ship:altitude)) < 0.01 or ship:apoapsis >= tgt_ap * 1.025
+{
     set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("Stage: {0}":format(Stage:Number), 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
 }
-
-set g_activeEngines to ActiveEngines().
-until g_activeEngines["CURTHRUST"] < 0.01 or ship:apoapsis >= tgt_ap
+for eng in g_activeEngines["ENGLIST"]
 {
-    set tgt_pit to GetAscentAngle(gravTurnAlt).
-    set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
-    // if ship:altitude > lastAlt set maxAlt to ship:altitude.
-    DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("SECO BURN", 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
-    set g_activeEngines to ActiveEngines().
-    wait 0.01.
+    eng:shutdown.
 }
-OutMsg("Engine Cutoff").
-// OutInfo().
+OutInfo().
+OutMsg("P20: MECO").
 
-local ts to time:seconds + eta:apoapsis.
-until time:seconds >= ts
+OutInfo("     AP ETA: {0}":format(round(eta:apoapsis))).
+until eta:apoapsis < 1
 {
-    set ts to time:seconds + eta:apoapsis.
-    set sVal to lookDirUp(ship:prograde:vector, -body:position).
-    // if ship:altitude > lastAlt set maxAlt to ship:altitude.
+    set sVal to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
-OutMsg("Apoapsis reached").
-unlock steering.
 
+OutMsg("P21: DESCENT").
 until doneFlag
 {
-    if alt:radar < 2 
-    {
-        set doneFlag to true.
-    }
-    else
-    {
-        DispLaunchTelemetry(list(tgt_ap)).
-        wait 0.01.
-    }
+    set sVal to lookDirUp(ship:retrograde:vector, heading(tgt_hdg, 0):vector).
+    DispLaunchTelemetry(list(tgt_ap)).
+    wait 0.01.
+    if alt:radar <= 1 set doneFlag to true.
 }
-OutMsg("Script complete!").
+
+OutMsg("Script complete").
+wait 1.

@@ -148,8 +148,8 @@ if ship:status = "PRELAUNCH"
         set g_activeEngines to ActiveEngines().
         DispSoundingTelemetry().
         // set g_activeEngines to ActiveEngines(ship).
-        // set activeThrust to g_activeEngines:thrust.
-        // set availThrust to g_activeEngines:availThrust.
+        // set activeThrust to g_activeEngines["CURTHRUST"].
+        // set availThrust to g_activeEngines["AVLTHRUST"].
 
         set thrustPerf to GetEnginePerformance().
         
@@ -300,7 +300,7 @@ if ascentType = "gravityTurn"
         }
 
         OutMsg("Flattening trajectory").
-        until ship:altitude > body:atm:height or g_activeEngines:thrust < 0.01
+        until ship:altitude > body:atm:height or g_activeEngines["CURTHRUST"] < 0.01
         {
             set tgt_vAng  to 0.
             set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
@@ -309,7 +309,7 @@ if ascentType = "gravityTurn"
         }
 
         OutMsg("Burning to stage completion").
-        until g_activeEngines:thrust < 0.01
+        until g_activeEngines["CURTHRUST"] < 0.01
         {
             set tgt_vAng  to 0.
             set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
@@ -381,7 +381,7 @@ if ascentType = "gravityTurn"
     }
 
     OutMsg("Flattening trajectory").
-    until ship:altitude > body:atm:height or g_activeEngines:thrust < 0.01
+    until ship:altitude > body:atm:height or g_activeEngines["CURTHRUST"] < 0.01
     {
         set tgt_vAng  to 0.
         set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
@@ -390,7 +390,7 @@ if ascentType = "gravityTurn"
     }
 
     OutMsg("Burning to stage completion").
-    until g_activeEngines:thrust < 0.01
+    until g_activeEngines["CURTHRUST"] < 0.01
     {
         set tgt_vAng  to 0.
         set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
@@ -568,7 +568,7 @@ local function GetEnginePerformance
     parameter _engList is g_activeEngines.
     
     local _tp_Avg to 0.
-    local _tp_Cur to max(0.001, max(0.00001, _engList:thrust) / max(0.0001, _engList:availThrust)).
+    local _tp_Cur to max(0.001, max(0.00001, _engList:thrust) / max(0.0001, _engList["AVLTHRUST"])).
 
     if g_cache:hasKey("AvgThrustPerfVals")
     {

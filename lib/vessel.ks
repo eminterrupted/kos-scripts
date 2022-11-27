@@ -82,7 +82,171 @@ lock g_activeEngines to ActiveEngines().
         set avlTWR to max(0.00001, avlThr) / (ves:mass * localGrav).
         set curTWR to max(0.00001, actThr) / (ves:mass * localGrav).
         
-        return lex("Thrust", actThr, "AvailThrust", avlThr, "TWR", curTWR, "AvailTWR", avlTWR, "Engines", engList, "SepStage", sepFlag).
+        return lex("CURTHRUST", actThr, "AVLTHRUST", avlThr, "CURTWR", curTWR, "AVLTWR", avlTWR, "ENGLIST", engList, "SEPSTG", sepFlag).
+    }
+
+    // ArmAutoBoosterSeparation :: <Lexicon>BoosterObject -> (none)
+    // Creates a trigger for the boosters to seperate based on resource consumption
+    global function ArmAutoBoosterSeparation
+    {
+        parameter _boosterObj is GetBoosters(ship).
+
+        if _boosterObj:PRESENT
+        {
+            for _stgIdx in _boosterObj["STAGES"]:Keys
+            {   
+                // print "_boosterObj['STAGES']: {0}":format(_boosterObj:hasKey("STAGES")) at (2, 45).
+                // if _boosterObj:hasKey("STAGES") 
+                // {
+                //     print "_boosterObj['STAGES'][{0}]: {1}":format(_stgIdx, _boosterObj["STAGES"]:hasKey(_stgIdx)) at (2, 46).
+                //     if _boosterObj["STAGES"]:hasKey(_stgIdx)
+                //     {
+                //         print "_boosterObj['STAGES'][{0}][{1}]: {2}":format(_stgIdx, "DC", _boosterObj["STAGES"][_stgIdx]:hasKey("DC")) at (2, 47).
+                //         if _boosterObj["STAGES"][_stgIdx]:hasKey("DC")
+                //         {
+                //             print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "DC", _boosterObj["STAGES"][_stgIdx]["DC"]:hasKey("MODULES")) at (2, 48).
+                //         }
+                //     }
+                // }
+                // Breakpoint().
+
+                // if _boosterObj["STAGES"]:hasKey(_stgIdx)
+                // {
+                //     print "_boosterObj['STAGES'][{0}][{1}]: {2}":format(_stgIdx, "RES", _boosterObj["STAGES"][_stgIdx]:hasKey("RES")) at (2, 50).
+                //     if _boosterObj["STAGES"][_stgIdx]:hasKey("RES")
+                //     {
+                        
+                //         print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "RES", "MASS", _boosterObj["STAGES"][_stgIdx]["RES"]:HasKey("MASS")) at (2, 51).
+                //         print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "RES", "PARTLISTS", _boosterObj["STAGES"][_stgIdx]["RES"]:HasKey("PARTLISTS")) at (2, 52).
+                //         print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "RES", "PCT", _boosterObj["STAGES"][_stgIdx]["RES"]:HasKey("PCT")) at (2, 53).
+                //         print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "RES", "TYPES", _boosterObj["STAGES"][_stgIdx]["RES"]:HasKey("TYPES")) at (2, 54).
+                //         print "_boosterObj['STAGES'][{0}][{1}][{2}]: {3}":format(_stgIdx, "RES", "UNITS", _boosterObj["STAGES"][_stgIdx]["RES"]:HasKey("UNITS")) at (2, 55).
+                //     }
+                // }
+                // Breakpoint().
+
+                when (_boosterObj["STAGES"][_stgIdx]["RES"]["PCT"] <= 0.01) or (Ship:Status <> "PRELAUNCH" and (_boosterObj["STAGES"][_stgIdx]["ENG"]["AVLTHRUST"] <= 0.01)) then
+                {
+                    for dc in _boosterObj["STAGES"][_stgIdx]["DC"]["MODULES"]
+                    {
+                        if dc:HasEvent("decouple") dc:DoEvent("decouple").
+                    }
+                }
+            }
+        }
+    }
+
+    // GetBoosters :: [<none>] -> <lexicon>Boosters
+    // Returns any strap-on boosters on the vessel that are tagged with 'booster.<n>'
+    global function GetBoosters
+    {
+        parameter _ves is ship.
+
+        //local b_lex         to lexicon().
+        local boosterID     to "".
+        local stg_lex        to lexicon().
+        local i             to 0.
+        local regex         to "".
+        local stgBoosters   to list().
+        local stgBoosterThr to 0.
+        local stgResPct     to 0.
+        local stgResLex     to lexicon().
+        local stgResMass    to 0.
+        local stgResSet     to uniqueSet().
+        local stgResUnits   to 0.
+        local uniqueBoosterID to uniqueSet().
+
+        local b_lex to lexicon(
+            "PRESENT", false, 
+            "STAGES", lexicon()
+        ).
+
+        for b in _ves:PartsTaggedPattern("booster.\d+")
+        {
+            set boosterID           to b:tag:replace("booster.","").
+            set i                   to boosterID:toNumber(0).
+            set b_lex["PRESENT"]    to true.
+        
+            set regex               to "booster.{0}":format(boosterID).
+            set stgBoosters         to ship:PartsTaggedPattern(regex).
+
+            set stg_lex             to lex().
+            set stgBoosterThr       to 0.
+            set stgResPct           to 0.
+            set stgResLex           to lexicon().
+            set stgResMass          to 0.
+            set stgResSet           to uniqueSet().
+            set stgResUnits         to 0.
+
+            uniqueBoosterID:add(boosterID).
+            if b_lex:HasKey(boosterID)
+            {
+                set stg_lex to b_lex["STAGES"][boosterID].
+            }
+            else
+            {
+                set stg_lex to lexicon(
+                    "DC", lexicon(
+                        "PARTLIST", list(),
+                        "MODULES", list()   
+                    ),
+                    "ENG", lex(
+                        "AVLTHRUST", stgBoosterThr,
+                        "PARTLIST", list()
+                    ),
+                    "PARTLIST", list(b),
+                    "RES", lex(
+                        "PCT", stgResPct,
+                        "MASS", stgResMass,
+                        "TYPES", stgResSet,
+                        "UNITS", stgResUnits,
+                        "PARTLIST", list()
+                    )
+                ).
+            }
+
+            // from { local i to 0.} until i = uniqueBoosterID:length step { set i to i + 1.} do
+            // {
+            for b in stgBoosters
+            {
+                if b:IsType("Decoupler")
+                {
+                    set stg_lex to ProcessBoosterItem(b:TypeName, b, boosterID, stg_lex).
+                }
+                else
+                {
+                    set stg_lex to ProcessBoosterItem(b:TypeName, b:decoupler, boosterID, stg_lex).
+                }
+
+
+                // else if b:IsType("Engine")
+                // {
+                //     set stg_lex to ProcessBoosterItem(b:TypeName, b, boosterID, stg_lex).
+                // }
+                // set stg_lex to ProcessBoosterItem(b:TypeName, b, boosterID, stg_lex).
+                // else
+                // {
+                    // set stg_lex["ENG"] to ProcessBoosterItem("ENGINE", b, stg_lex).
+                    // if stg_lex["ENG"]:length = 0
+                    // {
+                    //     set stg_lex["ENG"] to GetEnginesInTree(b:decoupler).
+                    // }
+                    // else
+                    // {
+                    //     local engTree to GetEnginesInTree(b:decoupler).
+                    //     if engTree:length > 0 
+                    //     {
+                    //         for eng in engTree
+                    //         {
+                    //             stg_lex["ENG"]:add(eng).
+                    //         }
+                    //     }
+                    // }
+                // }
+            }
+            set b_lex["STAGES"][boosterID] to stg_lex.
+        }
+        return b_lex.
     }
 
     // TODO Write Engine Perf Module
@@ -92,7 +256,7 @@ lock g_activeEngines to ActiveEngines().
     {
         parameter _engList to ActiveEngines().
 
-        return lexicon("Thrust", _engList["Thrust"], "TWR", _engList["TWR"], "AvailThrust", _engList["AvailThrust"], "AvailTWR", _engList["AvailTWR"], "FuelFlow", 0, "MassFlow", 0).
+        return lexicon("CURTHRUST", _engList["CURTHRUST"], "CURTWR", _engList["CURTWR"], "AVLTHRUST", _engList["AVLTHRUST"], "AVLTWR", _engList["AVLTWR"], "FUELFLOW", 0, "MASSFLOW", 0).
     }
 
     // GetResourcesFromEngines :: List<Engines> -> Lexicon<resource data>
@@ -163,13 +327,13 @@ lock g_activeEngines to ActiveEngines().
         when ship:availableThrust < 0.0005 then
         {
             SetStopStage(true).
-            if stage:number > g_stopStage
+            if stage:number >= g_stopStage
             {
                 OutMsg("Staging...").
                 SafeStage().
                 wait 0.10.
 
-                if g_activeEngines:SepStage
+                if g_activeEngines:SepStg
                 {
                     OutInfo("Sep motors activated, priming stage engines").
                     wait 0.50.
@@ -179,7 +343,7 @@ lock g_activeEngines to ActiveEngines().
 
                 OutInfo("Engine ignition sequence initiated...").
                 local ts_stg to time:seconds + 2.5.
-                wait until time:seconds >= ts_stg or g_activeEngines:thrust > 0.01.
+                wait until time:seconds >= ts_stg or g_activeEngines["CURTHRUST"] > 0.01.
                 
                 OutMsg("Staging complete...").
                 wait 0.10.
@@ -259,3 +423,318 @@ lock g_activeEngines to ActiveEngines().
     }
     // #endregion
 // #endregion
+
+local function ProcessBoosterItemResource
+{
+    parameter   item is "",
+                obj is lexicon().
+
+    local _stgResMass        to 0.
+    local _stgResPct         to 0.
+    local _stgResUnits       to 0.
+
+    if obj:HasKey("RES") 
+    {
+            if obj["RES"]:HasKey("PARTLIST")
+            {
+               obj["RES"]["PARTLIST"]:Add(item). 
+            }
+            else
+            {
+                set obj["RES"]["PARTLIST"] to list(item).
+            }
+
+            if obj["RES"]:HasKey("TYPES")
+            {
+                obj["RES"]["TYPES"]:Add(item:name).
+            }
+            else
+            {
+                set obj["RES"]["TYPES"] to uniqueSet(item:name).
+            }
+
+            set obj["RES"]["MASS"]  to _stgResMass + (item:amount * item:density).
+            set obj["RES"]["PCT"]   to (_stgResPct + (item:amount / item:capacity)) / obj["RES"]["PARTLIST"]:length.
+            set obj["RES"]["UNITS"] to _stgResUnits + item:amount.
+    }
+    else
+    {
+        set obj["RES"] to lexicon(
+            "PARTLIST", list(item),
+            "MASS", item:amount * item:density,
+            "PARTLIST", list(),
+            "PCT", item:amount / item:capacity,
+            "TYPES", uniqueSet(item:name),
+            "UNITS", item:amount
+        ).
+    }
+    return obj.
+}
+
+// Local Functions
+local function ProcessBoosterItem
+{
+    parameter   type is "",
+                item is "",
+                bID is "",
+                obj is lexicon().
+
+    local _stgBoosterThr     to 0.
+    local _stgResMass        to 0.
+    local _stgResPct         to 0.
+    local _stgResUnits       to 0.
+   
+    if item:IsType("PART")
+    {
+        if item:IsType("ENGINE")
+        {
+            set _stgBoosterThr to _stgBoosterThr + item:AVAILABLETHRUSTAT(Body:Atm:AltitudePressure(Ship:Altitude)).
+            if obj:HasKey("ENG")
+            {
+                if obj["ENG"]:hasKey("AVLTHRUST") {
+                    print "ENG/AVLTHRUST: true" at (2, 55).
+                    set obj["ENG"]["AVLTHRUST"] to _stgBoosterThr.
+                }
+                if obj["ENG"]:HasKey("PARTLIST") obj["ENG"]["PARTLIST"]:add(item).
+            }
+            else
+            {
+                set obj["ENG"] to lexicon(
+                    "AVLTHRUST", _stgBoosterThr
+                ).
+            }
+        }
+        else if type = "DECOUPLER" or type = "SEPARATOR"
+        {
+            if item:hasModule("ModuleDecouple") 
+            {
+                if obj:HasKey("DC")
+                {
+                    obj["DC"]["PARTLIST"]:add(item).
+                    obj["DC"]["MODULES"]:add(item:GetModule("ModuleDecouple")).
+                }
+                else
+                {
+                    set obj["DC"] to lexicon(
+                        "PARTLIST", list(),
+                        "MODULES", list()
+                    ).
+                }
+            }
+        }
+
+        if obj:hassuffix("PARTLIST")
+        {
+            obj["PARTLIST"]:Add(item).
+        }
+        else
+        {
+            set obj["PARTLIST"] to list(item).
+        }
+
+        if item:Resources:Length > 0
+        {
+            if not obj:HasKey("RES")
+            { 
+                set obj["RES"] to lexicon(
+                    "PARTLIST", list(),
+                    "MASS", 0,
+                    "PARTLIST", list(),
+                    "PCT", 0,
+                    "TYPES", uniqueSet(),
+                    "UNITS", 0
+                ).
+            }
+
+            for _i_res in item:Resources
+            {
+                if obj["RES"]:HasKey("RES_PARTS")
+                {
+                    if obj["RES"]["RES_PARTS"]:hasKey(_i_res:name)
+                    {
+                        obj["RES"]["PARTS_BY_RES"][_i_res:name]:add(item:cid).
+                    }
+                    else
+                    {
+                        set obj["RES"]["PARTS_BY_RES"][_i_res:name] to list(item:cid).
+                    }
+                }
+                set obj to ProcessBoosterItemResource(_i_res, obj).
+            }
+        }
+
+        set obj to ProcessBoosterItemChildren(item, bID, obj).
+    }
+    else if item:IsType("RESOURCE")
+    {
+        if obj:HasKey("RES") 
+        {
+                obj["RES"]["PARTLIST"]:Add(item).
+                obj["RES"]["TYPES"]:Add(item:name).
+            set obj["RES"]["MASS"]  to _stgResMass + (item:amount * item:density).
+            set obj["RES"]["PCT"]   to (_stgResPct + (item:amount / item:capacity)) / obj["RES"]["PARTLIST"]:length.
+            set obj["RES"]["UNITS"] to _stgResUnits + item:amount.
+        }
+        else
+        {
+            set obj["RES"] to lexicon(
+                "PARTLIST", list(item),
+                "MASS", item:amount * item:density,
+                "PARTLIST", list(),
+                "PCT", item:amount / item:capacity,
+                "TYPES", uniqueSet(item:name),
+                "UNITS", item:amount
+            ).
+        }
+    }
+    return obj.
+}
+
+// Local Functions
+local function ProcessBoosterItem2
+{
+    parameter   type is "",
+                item is "",
+                bID is "",
+                obj is lexicon().
+
+    local del_stgBoosterItem to ProcessBoosterItem@. // For recursion maybe?
+
+    local _stgBoosterThr     to 0.
+    local _stgResMass        to 0.
+    local _stgResPct         to 0.
+    local _stgResUnits       to 0.
+   
+    if item:IsType("PART")
+    {
+        if item:IsType("ENGINE")
+        {
+            set _stgBoosterThr to _stgBoosterThr + item:AVAILABLETHRUST.
+            if obj:HasKey("ENG")
+            {
+                print "_stgBoosterThr: {0}":format(_stgBoosterThr) at (2, 40).
+                print "item: {0}":format(item) at (2, 41).
+                print "item:THRUST: {0}":format(item:AvailableThrust) at (2, 42).
+                if obj["ENG"]:hasKey("AVLTHRUST") {
+                    print "ENG/AVLTHRUST: true" at (2, 55).
+                    set obj["ENG"]["AVLTHRUST"] to _stgBoosterThr.
+                }
+                if obj["ENG"]:HasKey("PARTLIST") obj["ENG"]["PARTLIST"]:add(item).
+                Breakpoint().
+            }
+            else
+            {
+                set obj["ENG"] to lexicon(
+                    "AVLTHRUST", _stgBoosterThr
+                ).
+            }
+        }
+        else if type = "DECOUPLER" or type = "SEPARATOR"
+        {
+            if item:hasModule("ModuleDecouple") 
+            {
+                if obj:HasKey("DC")
+                {
+                    obj["DC"]["PARTLIST"]:add(item).
+                    obj["DC"]["MODULES"]:add(item:GetModule("ModuleDecouple")).
+                }
+            }
+        }
+
+        if obj:hassuffix("PARTLIST")
+        {
+            obj["PARTLIST"]:Add(item).
+        }
+        else
+        {
+            set obj["PARTLIST"] to list(item).
+        }
+
+        if item:Resources:Length > 0
+        {
+            if not obj:HasKey("RES")
+            { 
+                set obj["RES"] to lexicon(
+                    "PARTLIST", list(),
+                    "MASS", 0,
+                    "PARTLIST", list(),
+                    "PCT", 0,
+                    "TYPES", uniqueSet(),
+                    "UNITS", 0
+                ).
+            }
+
+            for _i_res in item:Resources
+            {
+                if obj["RES"]:HasKey("RES_PARTS")
+                {
+                    if obj["RES"]["RES_PARTS"]:hasKey(_i_res:name)
+                    {
+                        obj["RES"]["PARTS_BY_RES"][_i_res:name]:add(item:cid).
+                    }
+                    else
+                    {
+                        set obj["RES"]["PARTS_BY_RES"][_i_res:name] to list(item:cid).
+                    }
+                }
+                set obj to del_stgBoosterItem:call("RESOURCE", _i_res, bID, obj).
+            }
+        }
+
+        set obj to ProcessBoosterItemChildren(item, bID, obj).
+    }
+    else if item:IsType("RESOURCE")
+    {
+        if obj:HasKey("RES") 
+        {
+                obj["RES"]["PARTLIST"]:Add(item).
+                obj["RES"]["TYPES"]:Add(item:name).
+            set obj["RES"]["MASS"]  to _stgResMass + (item:amount * item:density).
+            set obj["RES"]["PCT"]   to (_stgResPct + (item:amount / item:capacity)) / obj["RES"]["PARTLIST"]:length.
+            set obj["RES"]["UNITS"] to _stgResUnits + item:amount.
+        }
+        else
+        {
+            set obj["RES"] to lexicon(
+                "PARTLIST", list(item),
+                "MASS", item:amount * item:density,
+                "PARTLIST", list(),
+                "PCT", item:amount / item:capacity,
+                "TYPES", uniqueSet(item:name),
+                "UNITS", item:amount
+            ).
+        }
+    }
+    return obj.
+}
+
+
+local function ProcessBoosterItemChildren
+{
+    parameter _item, _bID, _obj.
+
+    local _iChildren to _item:Children.
+    
+    for _child in _iChildren
+    {
+        set _obj to ProcessBoosterItem(_child:typeName, _child, _bID, _obj).
+    }
+    return _obj.
+}
+
+
+local function GetEnginesInTree 
+{ 
+    parameter _p0. 
+    
+    local _engDel to GetEnginesInTree@.
+    local _engList to list().
+    if _p0:IsType("engine") _engList:add(_p0).
+
+    local _p0Children to _p0:children.
+    for _p1 in _p0Children
+    {
+        _engDel:call(_p1).
+    }
+    return _engList.
+}

@@ -194,12 +194,12 @@
                         // print "_t: [{0}]":format(_t) at (2, 25).
                         // wait 0.01.
                         // Breakpoint().
-                        set _tpSplit to _t:split(":").
+                        set _tpSplit to choose _t:split(":") if _t:split(":"):length > 1 else _t:split(",").
                         // print "_tpSplit: ({0})":format(_tpSplit) at (2, 31).
                         // Breakpoint().
                         set _tagStg to _tpSplit[0].
                         set _tagStgCondition to _tpSplit[1].
-                        set _scriptStopStage[_tpSplit[0]:ToNumber()] to _tpSplit[1].
+                        set _scriptStopStage[_tpSplit[0]] to _tpSplit[1].
                     }
                 }
                 else
@@ -224,7 +224,7 @@
             }
             
             set _tagScr    to _tagFrag[0]:replace("]",""):split("["). 
-            set _tagPrms   to _tagScr[1]:split(":").
+            set _tagPrms   to choose _tagScr[1]:split(":") if _tagScr[1]:split(":"):length > 1 else _tagScr[1]:split(",").
             set _tagScr      to _tagScr[0].
             local _parsedTag to lex("TAG", _tSplit[i], "SCR", _tagScr, "PRM", _tagPrms, "STG", _scriptStopStage).
             set   _tagLex[_scriptId] to _parsedTag.
@@ -245,24 +245,43 @@
 
         // print "g_stopStageLex:keys:length: {0}":format(g_stopStagelex:keys:length) at (2, 33).
         // print "g_stopStageLex: ({0})":format(g_stopStageLex["STPSTG"]) at (2, 34).
+        local i to 0.
         if g_stopStageLex:keys:length > 1
         {
-            local g_thisStage to g_stopStageLex["STPSTG"]:keys[0].
+            local g_thisStage to g_stopStageLex["STPSTG"]:keys[i].
             // print g_stopStageLex["STPSTG"]:keys[0] at (2, 39).
-            local i to 0.
             // for k in g_stopStageLex["STPSTG"]:keys
             // {
             //     print k at (2, 36 + i).
             //     set i to i + 1.
             // }
             // print g_stopStageLex["STPSTG"]:values[0]:values[0] at (5, 45).
-            local l_stopStageCondition to g_stopStageLex["REF"][g_stopStageLex["STPSTG"]:values[0]:values[0]]@.
-            // print "{0} ({1})":FORMAT(g_thisStage, l_stopStageCondition:call()) at (2, 38).
+            set g_stopStageCondition to "MAIN".
+            if g_stopStageLex["STPSTG"]:hasKey(g_thisStage)
+            {
+                // set terminal:width to 120.
+                // print g_stopStageLex at (2, 42).
+                local l_thisContext to g_stopStageLex["STPSTG"][g_thisStage]:values[0].
+                print "l_thisContext: [{0}]":format(l_thisContext) at (2, 50).
+                print "g_stopStageCondition: [{0}]":format(g_stopStageCondition) at (2, 51).
+                print "REF Present: {0}":format(g_stopStageLex:hasKey("REF")) at (2, 52).
+                if g_stopStageLex:hasKey("REF")
+                {
+                    print "REF/STPSTG/{0} Present: {1}":format(l_thisContext, g_stopStageLex:hasKey("l_thisContext")) at (2, 53).
+                }
+                else print "REF Present: {1}":format(l_thisContext, false) at (2, 53).
+
+                set g_stopStageCondition to g_stopStageLex["REF"][l_thisContext].
+                // print "{0} ({1})":FORMAT(g_thisStage, g_stopStageLex["STPSTG"][g_thisStage]) at (2, 38).
+                // print l_thisContext at (2, 39).
+                // Breakpoint().
+            }
+
 
             //Breakpoint().
             if setNextValue
             {
-                if g_stopStageLex["REF"][l_stopStageCondition:call()]
+                if g_stopStageCondition
                 {
                     g_stopStageLex:remove(g_stopStageLex["STPSTG"]:keys[0]).
                 }
@@ -271,10 +290,12 @@
             if g_stopStageLex["STPSTG"]:keys:length > 1
             {
                 set g_stopStage to g_stopStageLex["STPSTG"]:values[0]:values[0].
+                OutInfo("g_stopStage set to [{0}]":format(g_stopStage),1).
+                g_stopStageLex["STPSTG"]:values[0]:remove(g_stopStageLex["STPSTG"]:values[0]:key[0]).
             }
             else if g_stopStageLex["STPSTG"]:keys:length = 1
             {
-                set g_stopStage to g_stopStageLex["STPSTG"]:keys[0].
+                set g_stopStage to g_stopStageLex["STPSTG"]:values[0]:values[0].
             }
             else 
             {

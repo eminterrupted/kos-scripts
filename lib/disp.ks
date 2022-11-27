@@ -13,15 +13,13 @@
     local os_ver            to "0.0.1a (ALPO)".
     
     // *- Global
+    global g_col            to 0.
     global g_line           to 8.
     global g_tChar          to "".
     global g_termWidth      to 80.
     global g_termHeight     to 60.
-
+    
 // #endregion
-
-// Library Setup Functions
-InitDisp().
 
 
 // *~ Functions ~* //
@@ -134,9 +132,9 @@ InitDisp().
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
         cr().
         print "ENGINES " at (1, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines:thrust, 2), "kn") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines:availThrust, 2), "kn") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines:thrust) / max(0.00001, g_activeEngines:availThrust ) * 100)), "%") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines["CURTHRUST"], 2), "kn") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines["AVLTHRUST"], 2), "kn") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines["CURTHRUST"]) / max(0.00001, g_activeEngines["AVLTHRUST"] ) * 100)), "%") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("TWR    (CUR)", round( g_activeEngines["TWR"], 2)) at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("TWR    (AVL)", round( g_activeEngines["AvailTWR"], 2)) at (2, cr()).
 
@@ -170,9 +168,9 @@ InitDisp().
         }
         
         print "{0, -25}":format("ENGINE TELEMETRY") at (0, g_line).
-        print " |- {0, -16}: {1}{2}   ":format("ENG THRUST", round(engPerfData:Thrust, 2), "kn") at (0, cr()).
-        print " |- {0, -16}: {1}{2}   ":format("ENG AVL THRUST", round(engPerfData:AvailThrust, 2), "kn") at (0, cr()).
-        print " |- {0, -16}: {1}{2}   ":format("ENG THRUST %", round( (max(0.00001, engPerfData:Thrust) / max(0.00001, engPerfData:AvailThrust ) * 100)), "%") at (0, cr()).
+        print " |- {0, -16}: {1}{2}   ":format("ENG THRUST", round(engPerfData:CURTHRUST, 2), "kn") at (0, cr()).
+        print " |- {0, -16}: {1}{2}   ":format("ENG AVL THRUST", round(engPerfData:AVLTHRUST, 2), "kn") at (0, cr()).
+        print " |- {0, -16}: {1}{2}   ":format("ENG THRUST %", round( (max(0.00001, engPerfData:CURTHRUST) / max(0.00001, engPerfData:AVLTHRUST ) * 100)), "%") at (0, cr()).
     }
 
     // OutScriptFlags
@@ -218,7 +216,27 @@ InitDisp().
 
     
 
+local function PrettyPrintObject
+{
+    parameter _obj.
 
+    if _obj:IsType("Lexicon") 
+    {
+        for k in _obj:keys
+        {
+            OutInfo("Key: {0}   Value: {1}":format(k, _obj[k])).
+            BreakPoint().
+        }
+    }
+    else if _obj:IsType("List")
+    {
+        for k in _obj
+        {
+            OutInfo("Item: {0}":format(k)).
+            Breakpoint().
+        }
+    }
+}
 
 
 

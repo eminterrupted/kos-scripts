@@ -74,7 +74,7 @@
         until time:seconds > t_engPerfAbort or launchCommit
         {
             set g_activeEngines to ActiveEngines().
-            set thrustPerf to g_activeEngines:Thrust / g_activeEngines:AvailThrust.
+            set thrustPerf to g_activeEngines["CURTHRUST"] / g_activeEngines["AVLTHRUST"].
 
             if time:seconds > t_liftoff
             {
