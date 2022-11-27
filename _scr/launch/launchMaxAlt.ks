@@ -28,7 +28,6 @@ if params:length > 0
     if params:length > 3 set tgt_rll to params[3].
 }
 
-local gravTurnAlt to tgt_ap.
 local f_spinStab to false.
 local f_hotStage to false.
 

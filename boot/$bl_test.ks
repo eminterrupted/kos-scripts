@@ -1,1 +1,0 @@
-runPath("0:/test", core:tag).

@@ -12,8 +12,8 @@ global g_stageInfo to lex(
 
 
 // Functions *****
-global g_activeEngines to ActiveEngines().
-lock g_activeEngines to ActiveEngines().
+InitActiveEngines().
+//lock g_activeEngines to ActiveEngines().
 
 // *** Vessel Systems
 // #region
@@ -43,6 +43,11 @@ lock g_activeEngines to ActiveEngines().
         local sumThr_Del_AllEng to { 
             parameter _eng. 
 
+            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) 
+            {
+                set sepFlag to false.
+            }
+
             engList:add(_eng). 
             set actThr to actThr + _eng:thrust. 
             set avlThr to avlThr + _eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
@@ -59,6 +64,7 @@ lock g_activeEngines to ActiveEngines().
             if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name)
             {
                 set sepFlag to false.
+
                 engList:add(_eng). 
                 set actThr to actThr + _eng:thrust. 
                 set avlThr to avlThr + _eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
@@ -67,6 +73,15 @@ lock g_activeEngines to ActiveEngines().
                 set massFlow to massFlow + _eng:massFlow.
                 set massFlowMax to massFlowMax + _eng:maxMassFlow.
             }
+        }.
+
+        // TODO: add delegates for selection no solid rocket engines, and only solid rocket engines
+        local sumThr_Del_NoSolids to {
+
+        }.
+
+        local sumThr_Del_OnlySolids to {
+
         }.
 
         local sumThr_Del to choose sumThr_Del_AllEng@ if includeSepMotors else sumThr_Del_NoSep@.
@@ -286,16 +301,15 @@ lock g_activeEngines to ActiveEngines().
         return _resObj.
     }
 
-    // InitActiveEngines :: none -> List<Engines>
+    // InitActiveEngines :: none -> none
     // Initializes the g_activeEngines variable.
     global function InitActiveEngines
     {
         if not (defined g_activeEngines) 
         {
-            global lock g_activeEngines to list().
+            global g_activeEngines to lexicon().
         }
-        //set g_activeEngines to ActiveEngines().
-        //return g_activeEngines.
+        set g_activeEngines to ActiveEngines().
     }
 
     // #endregion
@@ -326,7 +340,7 @@ lock g_activeEngines to ActiveEngines().
         // Auto-stage
         when ship:availableThrust < 0.0005 then
         {
-            SetStopStage(true).
+            SetStopStage(true). // value of 1 tells the function to increment to the next stage construct in the tag, if present
             if stage:number >= g_stopStage
             {
                 OutMsg("Staging...").

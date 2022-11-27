@@ -1,8 +1,8 @@
-print "Starting...".
+print "Starting".
 core:doEvent("Open Terminal").
 wait until ship:unpacked and kuniverse:timewarp:issettled.
 
-print "Checking home connection...".
+print "Checking home uplink".
 wait until homeConnection:IsConnected.
 
 runOncePath("0:/lib/loadDep").

@@ -16,7 +16,7 @@
     global g_col            to 0.
     global g_line           to 8.
     global g_tChar          to "".
-    global g_termWidth      to 80.
+    global g_termWidth      to 72.
     global g_termHeight     to 60.
     
 // #endregion
@@ -102,7 +102,7 @@
 
     global function DispLaunchTelemetry
     {
-        parameter _prmList is list(body:atm:height * 2).
+        parameter _prmList is list(body:atm:height).
 
         set g_line to 10.
         local label to "LAUNCH TELEMETRY".

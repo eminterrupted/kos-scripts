@@ -13,7 +13,7 @@
     
     // *- Global
     global g_la_turnAltStart to 500. // Altitude at which the vessel will begin a gravity turn
-    global g_la_turnAltEnd   to body:atm:height * 0.75. // Altitude at which the vessel will begin a gravity turn
+    global g_la_turnAltEnd   to body:atm:height * 0.90. // Altitude at which the vessel will begin a gravity turn
 
 // #endregion
 
@@ -24,17 +24,43 @@
 // *- Countdown
 // #region
 
+    // Given a stage number, it will determine if any engines in that stage have engine spool properties
+    global function CheckEngineSpool
+    {
+        parameter stgNum to stage:number - 1.
+
+        local hasSpoolTime to false.
+        local maxSpoolTime to 0.001.
+
+        for _e in ship:engines 
+        {
+            if _e:stage = stgNum
+            {
+                local _m to _e:getModule("ModuleEnginesRF").
+                if _m:hasField("effective spool-up time") 
+                {
+                    set hasSpoolTime to true.
+                    set maxSpoolTime to max(maxSpoolTime, _m:getField("effective spool-up time")).
+                }
+            }
+        }
+        return list(hasSpoolTime, maxSpoolTime).
+    }
+
     // Countdown :: [<scalar>IgnitionSequenceStartSec] -> none
     // Performs the countdown
     global function LaunchCountdown
     {
         parameter t_engStart to -2.75.
 
-        local arm_engStartFlag  to true.
-        local t_launch          to time:seconds + countdown.
-        local launchCommit      to false.
-
-        set t_engStart          to t_launch - abs(t_engStart).
+        local arm_engStartFlag   to true.
+        local t_launch           to time:seconds + countdown.
+        local launchCommit       to false.
+        local engSpool           to CheckEngineSpool(stage:number - 1). 
+        local hasSpool           to engSpool[0].
+        local spoolTime          to engSpool[1].
+        set t_engStart           to t_launch - spoolTime.
+        
         OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_launch, 2))).
 
         until time:seconds >= t_launch or launchCommit
@@ -49,12 +75,14 @@
                 }
                 else
                 {
-                    LaunchCommitValidation(t_launch).
+                    LaunchCommitValidation(t_launch, spoolTime).
                     OutMsg("Liftoff!").
                     OutInfo("",0).
                     OutInfo("",1).
                 }
+                wait 0.01.
             }
+
             OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_launch, 2))).
         }
     }
@@ -62,51 +90,66 @@
     local function LaunchCommitValidation
     {
         parameter t_liftoff to time:seconds,
+                  t_spoolTime to 0.1,
                   launchThrustThreshold to 0.975.
 
+        local launchCommit      to false.
         local t_engPerfAbort    to t_liftoff + 5.
-        local launchCommit to false.
-        
+        local thrustPerf to 0.
+        set t_spoolTime to max(0.09, t_spoolTime).
+
         OutInfo("Validating engine performance...").
         set g_activeEngines to ActiveEngines().
-        local thrustPerf to 0.
         set tVal to 1.
-        until time:seconds > t_engPerfAbort or launchCommit
-        {
-            set g_activeEngines to ActiveEngines().
-            set thrustPerf to g_activeEngines["CURTHRUST"] / g_activeEngines["AVLTHRUST"].
 
-            if time:seconds > t_liftoff
-            {
-                 if thrustPerf > launchThrustThreshold
+        if ship:status = "PRELAUNCH" or ship:status = "LANDED"
+        {
+            until time:seconds > t_engPerfAbort or launchCommit
+            {   
+                if t_spoolTime > 0.1
+                {
+                    set g_activeEngines to ActiveEngines().
+                    set thrustPerf to g_activeEngines["CURTHRUST"] / g_activeEngines["AVLTHRUST"].
+
+                    if time:seconds > t_liftoff
+                    {
+                        if thrustPerf > launchThrustThreshold
+                        {
+                            set launchCommit to true.
+                        }
+                        else
+                        {
+                            DispEngineTelemetry().
+                        }
+                    }
+                }
+                else if time:seconds > t_liftoff
                 {
                     set launchCommit to true.
-                }
-                else
-                {
-                    DispEngineTelemetry().
                     wait 0.01.
                 }
+                OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_liftoff, 2))).
             }
-            wait 0.01.
-            OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_liftoff, 2))).
-        }
-        wait 0.01.
 
-        // If we are good, send it! If not, kill throt and trigger a breakpoint
-        if launchCommit 
-        {
-            stage.
+            // If we are good, send it! If not, kill throt and trigger a breakpoint
+            if launchCommit 
+            {
+                stage.
+            }
+            else
+            {
+                set tVal to 0.
+                OutMsg("*** ENGINE UNDERPERF ABORT ***").
+                OutInfo().
+                Breakpoint().
+                print 1 / 0.
+            }
+            DispClr().
         }
         else
         {
-            set tVal to 0.
-            OutMsg("*** ENGINE UNDERPERF ABORT ***").
-            OutInfo().
-            Breakpoint().
-            print 1 / 0.
+            OutMsg("ERROR: Tried to validate launch, but already airborne!").
         }
-        DispClr().
     }
 
 
