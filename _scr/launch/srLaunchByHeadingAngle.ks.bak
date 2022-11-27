@@ -118,8 +118,8 @@ stage.
 OutMsg("Ignition!").
 wait 0.05.
 set g_activeEngines to ActiveEngines(ship).
-lock activeThrust to g_activeEngines:thrust.
-lock availThrust to g_activeEngines:availThrust.
+lock activeThrust to g_activeEngines["CURTHRUST"].
+lock availThrust to g_activeEngines["AVLTHRUST"].
 
 local thrustPerf to max(0.00001, activeThrust) / max(0.00001, availThrust).
 if ship:status = "PRELAUNCH"
@@ -128,8 +128,8 @@ if ship:status = "PRELAUNCH"
     {
         DispSoundingTelemetry().
         set g_activeEngines to ActiveEngines(ship).
-        // set activeThrust to g_activeEngines:thrust.
-        // set availThrust to g_activeEngines:availThrust.
+        // set activeThrust to g_activeEngines["CURTHRUST"].
+        // set availThrust to g_activeEngines["AVLTHRUST"].
 
         set thrustPerf to max(0.00001, activeThrust) / max(0.00001, availThrust).
     }
