@@ -1,14 +1,14 @@
-print "Starting".
-core:doEvent("Open Terminal").
-wait until ship:unpacked and kuniverse:timewarp:issettled.
-
-print "Checking home uplink".
-wait until homeConnection:IsConnected.
-
-runOncePath("0:/lib/loadDep").
-
-for id in g_tag:keys
-{
-    local sPath to Path("0:/_plan/{0}/setup.ks":format(g_tag[id]:SCR)).
-    runOncePath(sPath, g_tag[id]:PRM).
+lock throttle to 1.
+print "Press any key to launch".
+wait until Terminal:Input:HasChar.
+print "Launch sequence start".
+until VerticalSpeed > 1 {stage. wait 1.}
+until false {
+  if ship:availableThrust < 0.1 {
+    wait until stage:ready.
+	stage.
+	wait 2.
+  }
+  else { print "THRUST: " + round(ship:availableThrust,2) at (2,5).}
+  wait 0.1.
 }

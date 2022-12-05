@@ -58,8 +58,8 @@ set nxtEvtList to parsedDataList[parsedDataList:length - 1].
 set headingRot to heading(0, 0, 0).
 lock steering to headingRot.
 
-set throtValue to 0.
-lock throttle to throtValue.
+set throt_value to 0.
+lock throttle to throt_value.
 
 set startInd to 0.
 
@@ -74,7 +74,7 @@ until xq > xArr[xArr:length - 1] {
 	set yaw to yqList[0].
 	set pitch to yqList[1].
 	set roll to yqList[2].
-	set throtValue to yqList[3].
+	set throt_value to yqList[3].
 	set timeToNextEvt to yqList[4].
 	set curEvtName to curEvtList[startInd].
 	set nxtEvtName to nxtEvtList[startInd].
@@ -104,7 +104,7 @@ until xq > xArr[xArr:length - 1] {
 		horzLine(l).  set l to l + 1.
 		paddedPrintLine(" Commanded Throttle",0,l).  set l to l + 1.
 		horzLine(l).  set l to l + 1.
-		paddedPrintLine("Throttle:   " + padding(throtValue*100, 3, dataNumPlaces) + "%", dataPrintOffset, l).  set l to l + 1.
+		paddedPrintLine("Throttle:   " + padding(throt_value*100, 3, dataNumPlaces) + "%", dataPrintOffset, l).  set l to l + 1.
 				
 		horzLine(l).  set l to l + 1.
 		paddedPrintLine(" Current Orbit",0,l).  set l to l + 1.
@@ -221,14 +221,14 @@ function paddedPrintLine {
 	parameter colOffset.
 	parameter lineNum.
 	
-	print str:padright(terminal:width-colOffset) at (colOffset,lineNum).
+	print str:padright(Terminal:width-colOffset) at (colOffset,lineNum).
 }
 
 function horzLine {
 	parameter lineNum.
 	
 	set hLineStr to "".
-	set hLineStr to hLineStr:padright(terminal:width).
+	set hLineStr to hLineStr:padright(Terminal:width).
 	set hLineStr to hLineStr:replace(" ", "=").
 	
 	paddedPrintLine(hLineStr,0,lineNum).

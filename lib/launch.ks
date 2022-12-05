@@ -75,7 +75,7 @@
                 }
                 else
                 {
-                    LaunchCommitValidation(t_launch, spoolTime).
+                    LaunchCommit_validation(t_launch, spoolTime).
                     OutMsg("Liftoff!").
                     OutInfo("",0).
                     OutInfo("",1).
@@ -87,7 +87,7 @@
         }
     }
 
-    local function LaunchCommitValidation
+    local function LaunchCommit_validation
     {
         parameter t_liftoff to time:seconds,
                   t_spoolTime to 0.1,
@@ -100,7 +100,7 @@
 
         OutInfo("Validating engine performance...").
         set g_activeEngines to ActiveEngines().
-        set tVal to 1.
+        set t_val to 1.
 
         if ship:status = "PRELAUNCH" or ship:status = "LANDED"
         {
@@ -138,7 +138,7 @@
             }
             else
             {
-                set tVal to 0.
+                set t_val to 0.
                 OutMsg("*** ENGINE UNDERPERF ABORT ***").
                 OutInfo().
                 Breakpoint().
@@ -155,7 +155,7 @@
 
     local function EngineIgnitionSequence
     {
-        set tVal to 1.
+        set t_val to 1.
         stage.
         wait 0.05.
         set g_activeEngines to ActiveEngines().

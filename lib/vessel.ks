@@ -13,7 +13,7 @@ global g_stageInfo to lex(
 
 // Functions *****
 InitActiveEngines().
-//lock g_activeEngines to ActiveEngines().
+//lock g_ActiveEnginesLex to ActiveEngines().
 
 // *** Vessel Systems
 // #region
@@ -178,7 +178,7 @@ InitActiveEngines().
 
         for b in _ves:PartsTaggedPattern("booster.\d+")
         {
-            set boosterID           to b:tag:replace("booster.","").
+            set boosterID           to b:Tag:replace("booster.","").
             set i                   to boosterID:toNumber(0).
             set b_lex["PRESENT"]    to true.
         
@@ -302,14 +302,14 @@ InitActiveEngines().
     }
 
     // InitActiveEngines :: none -> none
-    // Initializes the g_activeEngines variable.
+    // Initializes the g_ActiveEnginesLex variable.
     global function InitActiveEngines
     {
-        if not (defined g_activeEngines) 
+        if not (defined g_ActiveEnginesLex) 
         {
-            global g_activeEngines to lexicon().
+            global g_ActiveEnginesLex to lexicon().
         }
-        set g_activeEngines to ActiveEngines().
+        set g_ActiveEnginesLex to ActiveEngines().
     }
 
     // #endregion
@@ -340,14 +340,13 @@ InitActiveEngines().
         // Auto-stage
         when ship:availableThrust < 0.0005 then
         {
-            SetStopStage(true). // value of 1 tells the function to increment to the next stage construct in the tag, if present
             if stage:number >= g_stopStage
             {
                 OutMsg("Staging...").
                 SafeStage().
                 wait 0.10.
 
-                if g_activeEngines:SepStg
+                if g_ActiveEnginesLex:SepStg
                 {
                     OutInfo("Sep motors activated, priming stage engines").
                     wait 0.50.
@@ -357,7 +356,7 @@ InitActiveEngines().
 
                 OutInfo("Engine ignition sequence initiated...").
                 local ts_stg to time:seconds + 2.5.
-                wait until time:seconds >= ts_stg or g_activeEngines["CURTHRUST"] > 0.01.
+                wait until time:seconds >= ts_stg or g_ActiveEnginesLex["CURTHRUST"] > 0.01.
                 
                 OutMsg("Staging complete...").
                 wait 0.10.
@@ -381,10 +380,10 @@ InitActiveEngines().
     {
         parameter _stgPctTrigger to 0.0025.
         
-        //set g_activeEngines   to ActiveEngines(ship).
+        //set g_ActiveEnginesLex   to ActiveEngines(ship).
         
         local _pctTrig  to _stgPctTrigger * 2.
-        local _resObj   to GetResourcesFromEngines(g_activeEngines:engines).
+        local _resObj   to GetResourcesFromEngines(g_ActiveEnginesLex:engines).
         local pctRemain to 0.
         local resStart  to 0.
         local resEnd    to 0.
@@ -407,7 +406,7 @@ InitActiveEngines().
         until pctRemain <= _pctTrig or time:seconds >= ts
         {
             set pctRemain to _resObj:PctRemaining.
-            set sVal to ship:prograde.
+            set s_val to ship:prograde.
             DispLaunchTelemetry().
             wait 0.01.
         }
@@ -421,7 +420,7 @@ InitActiveEngines().
     }
 
     // SafeStage :: none -> none
-    // Function to wait until staging is ready, stage the vessel, then update g_activeEngines
+    // Function to wait until staging is ready, stage the vessel, then update g_ActiveEnginesLex
     global function SafeStage
     {
         local curStage to stage:number.
@@ -432,7 +431,7 @@ InitActiveEngines().
         stage.
         wait 0.25.
         if stage:number < curStage OutInfo("Stage successful!").
-        set g_activeEngines to ActiveEngines(ship, false).
+        set g_ActiveEnginesLex to ActiveEngines(ship, false).
         wait 0.05.
     }
     // #endregion

@@ -10,26 +10,26 @@ runOncePath("0:/kslib/lib_navball.ks").
 
 DispMain(scriptPath()).
 
-set terminal:width to 72.
-set terminal:height to 48.
-core:doEvent("open terminal").
+set Terminal:width to 72.
+set Terminal:height to 48.
+Core:doEvent("open terminal").
 
 local ascentType to "maxAlt".
 local tgt_AP    to 425000.
 local tgt_HDG   to 180.
 
-set sVal to ship:facing.
-lock steering to sVal.
+set s_val to ship:facing.
+lock steering to s_val.
 
 local rollCtrlVal to 0.425.
 
-set tVal to 0.
-lock throttle to tVal.
+set t_val to 0.
+lock throttle to t_val.
 
 local turnTrig_Alt          to 500.
 local turnTrg_Speed         to 100.
 local turnEnd_Alt           to body:atm:height / 1.75.
-local parsedTag             to ParseCoreTag(core:tag).
+local parsedTag             to ParseCoreTag(Core:Tag).
 local resPctRemaining       to 0.
 local stageStop             to parsedTag[parsedTag:length - 1].
 local tgt_vAng              to 90.
@@ -38,7 +38,7 @@ local resObj                to lex().
 local spinStaged to true.
 
 local doneFlag to false.
-set g_tChar     to "".
+set g_TermChar     to "".
 set g_line      to 10.
 
 // Script flags can be added to the global g_scriptFlags object
@@ -70,18 +70,18 @@ OutMsg("Press Enter to Launch").
 
 until doneFlag
 {
-    if terminal:input:hasChar
+    if Terminal:Input:hasChar
     {
-        set g_tChar to terminal:input:getchar.
+        set g_TermChar to Terminal:Input:getchar.
     }
-    if g_tChar = terminal:input:enter set doneFlag to true.
+    if g_TermChar = Terminal:Input:enter set doneFlag to true.
 }
 set doneFlag to false.
 OutMsg("Commencing launch countdown").
 
 for dc in ship:decouplers
 {
-    if dc:tag:matchesPattern(".*spinStab.*")
+    if dc:Tag:matchesPattern(".*spinStab.*")
     {
         set f_spinStabilization to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_spinStabilization"], true).
         // set f_spinStabilization to true.
@@ -90,7 +90,7 @@ for dc in ship:decouplers
         // OutMsg("spinStabilized: True").
         // print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
     }
-    if dc:tag:matchesPattern(".*hotStage.*")
+    if dc:Tag:matchesPattern(".*hotStage.*")
     {
         set f_hotStage to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_hotStage"], true).
         // set f_hotStage to true.
@@ -105,11 +105,11 @@ OutMsg("Initializing Engines").
 set g_activeEngines to InitActiveEngines().
 
 // Idk
-on terminal:input:hasChar
+on Terminal:Input:hasChar
 {
     GetTermChar().
     
-    if g_tChar = terminal:input:homecursor
+    if g_TermChar = Terminal:Input:homecursor
     {
         set f_spinStabilization to SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
         set f_spinStabilization to choose false if f_spinStabilization else true.
@@ -119,7 +119,7 @@ on terminal:input:hasChar
         print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
         //SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
     }
-    else if g_tChar = terminal:input:endcursor
+    else if g_TermChar = Terminal:Input:endcursor
     {
         set f_hotStage to choose false if f_hotStage else true.
         set g_scriptFlags[f_hotStageID] to f_hotStage.
@@ -131,7 +131,7 @@ on terminal:input:hasChar
     preserve.
 }
 
-set tVal to 1.
+set t_val to 1.
 stage.
 OutInfo("Ignition!").
 wait 0.05.
@@ -171,7 +171,7 @@ if ship:status = "PRELAUNCH"
     }
     else
     {
-        set tVal to 0.
+        set t_val to 0.
         OutMsg("*** ENGINE UNDERPERF ABORT ***").
         Breakpoint().
         print 1 / 0.
@@ -210,7 +210,7 @@ if ascentType = "gravityTurn"
         until ship:velocity:surface:mag >= 125
         {
             set tgt_vAng    to round(GetLaunchAngle(88, 0.825), 3).
-            set sVal        to heading(tgt_HDG, tgt_vAng, 0).
+            set s_val        to heading(tgt_HDG, tgt_vAng, 0).
             
             set resObj      to GetResourcesFromEngines(g_activeEngines:engines).
             set resPctRemaining to resObj:PctRemaining.
@@ -239,7 +239,7 @@ if ascentType = "gravityTurn"
         until doneFlag or ship:altitude > body:atm:height
         {
             set tgt_vAng to round(GetLaunchAngle(88, 0.950), 3).
-            set sVal    to heading(tgt_HDG, tgt_vAng):vector.
+            set s_val    to heading(tgt_HDG, tgt_vAng):vector.
             
             set resObj to GetResourcesFromEngines(g_activeEngines:engines).
             set resPctRemaining to resObj:PctRemaining.
@@ -283,7 +283,7 @@ if ascentType = "gravityTurn"
             }
         }
         set ship:control:roll to 0.
-        lock steering to sVal.
+        lock steering to s_val.
         OutInfo("", 0).
         OutInfo("", 1).
         OutInfo("", 2).
@@ -294,7 +294,7 @@ if ascentType = "gravityTurn"
         {
             set tgt_vAng to round(GetLaunchAngle(88, 1.025), 3).
             //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
-            //set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            //set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
             DispSoundingTelemetry(list(tgt_vAng)).
             wait 0.01.
         }
@@ -303,7 +303,7 @@ if ascentType = "gravityTurn"
         until ship:altitude > body:atm:height or g_activeEngines["CURTHRUST"] < 0.01
         {
             set tgt_vAng  to 0.
-            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
             DispSoundingTelemetry(list(tgt_vAng)).
             wait 0.01.
         }
@@ -312,7 +312,7 @@ if ascentType = "gravityTurn"
         until g_activeEngines["CURTHRUST"] < 0.01
         {
             set tgt_vAng  to 0.
-            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
             DispSoundingTelemetry(list(tgt_vAng)).
             wait 0.01.
         }
@@ -323,7 +323,7 @@ if ascentType = "gravityTurn"
         until doneFlag
         {
             set tgt_vAng  to 0.
-            set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+            set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
             DispSoundingTelemetry(list(tgt_vAng)).
             wait 0.01.
             if ship:altitude > curAp 
@@ -357,7 +357,7 @@ if ascentType = "gravityTurn"
         wait 3.
     }
     //HotStage(0.01).
-    set sVal to ship:facing.
+    set s_val to ship:facing.
 
     // set ship:control:pilotRollTrim to 0.
     // when ship:altitude > body:atm:height then 
@@ -365,8 +365,8 @@ if ascentType = "gravityTurn"
     //     OutMsg("Reached space!").
     //     set ship:control:roll to 0.
     //     rcs on.
-    //     set sVal to heading(compass_for(ship, ship:prograde), 0, 0).
-    //     lock steering to sVal.
+    //     set s_val to heading(compass_for(ship, ship:prograde), 0, 0).
+    //     lock steering to s_val.
     // }
 
     set doneFlag to false.
@@ -375,7 +375,7 @@ if ascentType = "gravityTurn"
     {
         set tgt_vAng to max(0, min(90, round(GetLaunchAngle(88, 1.25), 3))).
         //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
-        //set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        //set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
         DispSoundingTelemetry(list(tgt_vAng)).
         wait 0.01.
     }
@@ -384,7 +384,7 @@ if ascentType = "gravityTurn"
     until ship:altitude > body:atm:height or g_activeEngines["CURTHRUST"] < 0.01
     {
         set tgt_vAng  to 0.
-        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
         DispSoundingTelemetry(list(tgt_vAng)).
         wait 0.01.
     }
@@ -393,7 +393,7 @@ if ascentType = "gravityTurn"
     until g_activeEngines["CURTHRUST"] < 0.01
     {
         set tgt_vAng  to 0.
-        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
         DispSoundingTelemetry(list(tgt_vAng)).
         wait 0.01.
     }
@@ -404,7 +404,7 @@ if ascentType = "gravityTurn"
     set ts to time:seconds + eta:apoapsis.
     until doneFlag
     {
-        set sVal    to lookDirUp(ship:prograde:vector, -body:position).
+        set s_val    to lookDirUp(ship:prograde:vector, -body:position).
         
         if ship:altitude > curAp
         {
@@ -445,14 +445,14 @@ if ascentType = "gravityTurn"
     wait 3.
 
     rcs on.
-    set sVal to lookDirUp(ship:retrograde:vector, -body:position).
-    lock steering to sVal.
+    set s_val to lookDirUp(ship:retrograde:vector, -body:position).
+    lock steering to s_val.
 
     OutInfo().
     OutMsg("Preparing for reentry").
     until ship:altitude < 7500 and ship:velocity:surface:mag < 1000
     {
-        set sVal to lookDirUp(ship:retrograde:vector, -body:position).
+        set s_val to lookDirUp(ship:retrograde:vector, -body:position).
         DispSoundingTelemetry(list(tgt_vAng)).
         wait 0.01.
     }
@@ -467,7 +467,7 @@ else if ascentType = "maxAlt"
     until ship:altitude < maxAlt
     {
         set tgt_vAng  to 89.50.
-        set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
         DispSoundingTelemetry(list(tgt_vAng)).
         wait 0.01.
     }
@@ -477,7 +477,7 @@ else if ascentType = "maxAlt"
     until false
     {
         // set tgt_vAng  to 89.50.
-        // set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+        // set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
         DispSoundingTelemetry().
         wait 0.01.
     }

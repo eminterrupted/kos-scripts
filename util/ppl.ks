@@ -7,7 +7,7 @@ parameter inObj,
 runOncePath("0:/lib/disp.ks").
 runOncePath("0:/lib/util.ks").
 
-if inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
+if inObj:TypeName = "List_value`1" or inObj:TypeName = "List"
 {
     if inObj[0]:typename = "string"
     {
@@ -38,9 +38,9 @@ local function DispList
     local stLine to 2.
 
     local numCols to 2.
-    local colSize to terminal:width / numCols.
+    local colSize to Terminal:width / numCols.
     local colLim to colSize * (numCols - 1).
-    local lineLim to terminal:height - 5.
+    local lineLim to Terminal:height - 5.
 
     local titleDiv to { local div to "". from { local i to 0.} until i = _passedTip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.    
     set g_col to stCol.
@@ -88,8 +88,8 @@ global function DispLex
     local stLine to 2.
 
     local numCols to 2.
-    local lineLim to terminal:height - 5.
-    local colSize to terminal:width / numCols.
+    local lineLim to Terminal:height - 5.
+    local colSize to Terminal:width / numCols.
     local colLim to colSize * (numCols - 1).
     local maxKeyLen to 3.
     local maxValLen to 30.

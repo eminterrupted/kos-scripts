@@ -29,21 +29,8 @@ if params:length > 0
 }
 
 local gravTurnAlt to body:atm:height * 0.765.
-local f_spinStab to false.
-local f_hotStage to false.
 
 local doneFlag to false.
-
-// Script flags can be added to the global g_scriptFlags object
-local f_spinStabID to "f_spinStab".
-local f_spinStab   to false.
-set g_scriptFlagDelegates[f_spinStabID] to { parameter val. set f_spinStab to val.}.
-set g_scriptFlags[f_spinStabID] to f_spinStab.
-
-local f_hotStageID    to "f_hotStage".
-local f_hotStage        to false.
-set g_scriptFlagDelegates[f_hotStageID] to { parameter val. set f_hotStage to val.}.
-set g_scriptFlags[f_hotStageID] to f_hotStage.
 
 local tgtLex to lexicon(
     tgt_ap_key, tgt_ap,
@@ -84,44 +71,29 @@ if paramUpdatesMade
     set tgt_rll_key to tgtLex[tgt_rll_key].
 }
 
-// Check the vessel for decouplers that are tagged for spin stabilization or hot staging
-for dc in ship:decouplers
-{
-    if dc:tag:matchesPattern(".*spinStab.*")
-    {
-        set f_spinStab to SetScriptFlag(f_spinStabID, true).
-        OutInfo("Spin Stabilized Stage").
-    }
-    if dc:tag:matchesPattern(".*hotStage.*")
-    {
-        set f_hotStage to SetScriptFlag(f_hotStageID, true).
-        OutInfo("Hot Staging").
-    }
-}
-
 OutMsg("Press Enter to begin launch countdown").
 OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg)).
 OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 1).
 until false
 {
-    if terminal:input:hasChar
+    if Terminal:Input:hasChar
     {
-        set g_tChar to terminal:input:getchar.
+        set g_TermChar to Terminal:Input:getchar.
     }
-    if g_tChar = terminal:input:enter break.
+    if g_TermChar = Terminal:Input:enter break.
 }
 if tgt_ap:isType("String") set tgt_ap to tgt_ap:ToNumber().
 if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
 if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
 if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
 
-lock throttle to tVal.
-lock steering to sVal.
+lock throttle to t_val.
+lock steering to s_val.
 OutInfo().
 OutInfo("", 1).
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
-set tVal to 1.
+set t_val to 1.
 OutMsg("Liftoff!").
 
 ArmAutoStaging().
@@ -138,18 +110,18 @@ until ship:altitude > g_la_turnAltStart
 until stage:number = g_stopStage
 {
     set tgt_pit to GetAscentAngle(gravTurnAlt).
-    set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
+    set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     // OutInfo("Stage: {0}":format(Stage:Number), 0).
     // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
 }
 
-set g_activeEngines to ActiveEngines().
-until g_activeEngines["CURTHRUST"] < 0.01 or ship:apoapsis >= tgt_ap
+set g_activeEnginesLex to ActiveEngines().
+until g_activeEnginesLex["CURTHRUST"] < 0.01 or ship:apoapsis >= tgt_ap
 {
     set tgt_pit to GetAscentAngle(gravTurnAlt).
-    set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
+    set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     // if ship:altitude > lastAlt set maxAlt to ship:altitude.
     DispLaunchTelemetry(list(tgt_ap)).
     // OutInfo("SECO BURN", 0).
@@ -164,7 +136,7 @@ local ts to time:seconds + eta:apoapsis.
 until time:seconds >= ts
 {
     set ts to time:seconds + eta:apoapsis.
-    set sVal to lookDirUp(ship:prograde:vector, -body:position).
+    set s_val to lookDirUp(ship:prograde:vector, -body:position).
     // if ship:altitude > lastAlt set maxAlt to ship:altitude.
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.

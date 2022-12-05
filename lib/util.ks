@@ -28,96 +28,14 @@
         parameter promptStr to "".
 
         local actStr to "*** PRESS ANY KEY TO CONTINUE ***".
-        local actFrmt to "{0," + round((terminal:width - actStr:length) / 2) + "}" + actStr + "{0," + round((terminal:width - actStr:length) / 2) + "}".
-        print promptStr at (0, terminal:height - 3).
-        print actFrmt:format(" ") at (0, terminal:height - 2).
-        terminal:input:clear.
+        local actFrmt to "{0," + round((Terminal:Width - actStr:Length) / 2) + "}" + actStr + "{0," + round((Terminal:Width - actStr:Length) / 2) + "}".
+        print promptStr at (0, Terminal:Height - 3).
+        print actFrmt:format(" ") at (0, Terminal:Height - 2).
+        Terminal:Input:Clear.
         wait 0.01.
-        wait until terminal:input:haschar.
+        wait until Terminal:Input:HasChar.
     }
 
-// #endregion
-
-
-
-// *- Script Flags - For setting, caching, and manipulating flags used in scripts
-// #region
-
-    // InitScriptFlags
-    // Sets up the script flags object
-    global function InitScriptFlags
-    {
-        local iKey to "".
-        local iVar to "".
-        local flagLex to lex("REF", lex("NAME", lex(), "ID", lex())).
-        
-        from { local i to 0.} until i = flagLex["REF"]["ID"]:Keys:Length step { set i to i + 1.} do
-        {
-            local idLex to flagLex["REF"]["ID"].
-            set iKey to idLex:keys[i].
-            set iVar to idLex:values[i].
-            set flagLex["REF"]["NAME"][iVar] to iKey.
-            if flagLex:hasKey(iKey)
-            {
-            }
-            else
-            {
-                set flagLex[iKey] to false.
-            }
-        }
-        
-        return flagLex.
-    }
-
-    // ToggleScriptFlag :: <string>FlagID, [<string>FlagVal] -> <bool>NewFlagValue
-    // Toggles a script flag
-    global function ToggleScriptFlag
-    {
-        parameter _flagID,
-                _flagVal is "toggle".
-
-        local flagCurrent to false.  // Set to false by default as we will toggle on in the next step
-
-        if _flagVal = "toggle"
-        {
-            if g_scriptFlags:hasKey(_flagID) 
-            {
-                set flagCurrent to g_scriptFlags[_flagID].
-            }
-            else 
-            {
-                set flagCurrent to false.  // Set to false by default as we will toggle on in the next step
-            }
-        }
-        else if _flagVal = false or _flagVal = "false"
-        {
-            set flagCurrent to true. 
-        }
-        
-        // Here is where we invert the value, then write to g_scriptFlags.
-        local flagResult  to choose false if flagCurrent else true.
-        set g_scriptFlags[_flagID] to flagResult.
-        local str to "{0}: {1}":format(g_scriptFlags["REF"]["ID"][_flagID], flagResult).
-        OutInfo(str).
-        print str at (40, 4).
-
-        return flagResult.
-    }
-
-    // SetScriptFlag :: <string>FlagID, [<string>FlagVal] -> <bool>NewFlagValue
-    // Sets a script flag to a provided value, and returns it
-    global function SetScriptFlag
-    {
-        parameter _flagID,
-                _flagVal.
-
-        local flagName to g_scriptFlags["Ref"][_flagID].
-        set   g_scriptFlags[_flagID] to _flagVal.
-        OutInfo("[{0}] {1} was set to {2}":format("SetScriptFlag", _flagID, flagName, _flagVal)).
-        OutScriptFlags().
-
-        return _flagVal.
-    }
 // #endregion
 
 // *- Terminal Input
@@ -127,16 +45,16 @@
     // Returns the current character waiting on the terminal stack, if any
     global function GetTermChar
     {
-        if terminal:input:hasChar
+        if Terminal:Input:hasChar
         {
-            set g_termChar to terminal:input:getChar.
+            set g_TermChar to Terminal:Input:getChar.
         }
         else
         {
-            set g_termChar to "".
+            set g_TermChar to "".
         }
-        terminal:input:clear.
-        return g_termChar.
+        Terminal:Input:Clear.
+        return g_TermChar.
     }
 
     // GetTermInput :: Alias for GetTermChar
@@ -150,185 +68,125 @@
 // *- Tag parsing
 // #region
 
-    // Parses a core's tag for script execution
+    // ParseCoreTag :: [<string>Tag To Parse] -> <Lexicon>Parsed Tag Fragments
+    // Parses a provided string (typically a kOS Core part tag) of a specified format
+    // This is designed to work with a specific format to allow for defining mission params in the VAB
+    //
+    // Tag format: '<scriptFolderName>[<scriptIdentifier>,<scriptParam1>,<scriptParam2>,<etc...>]|<stageNumberForAutoStagingStop>'
+    // Example   : 'sounder:simple[325km,90]]|0' will return a lexicon with the following schema:
+    // lex( 
+    //  "PCN", "sounder",           // PCN: Plan Container Name, the folder under _plan the setup script appears in
+    //  "SID", "simple"             // SID: Script Identifier, the name appended to the desired setup script in PCN folder
+    //  "PRM", list("325km","90")   // PRM: Parameters to be passed into the script. Each script will process a different number of params, 
+    //                                      so this is a list for flexibility
+    //  "ASL", 0                    // ASL: Auto-Staging Limiter: Unload the autostaging trigger once we have reached this stage
+    //  )
     global function ParseCoreTag
     {
-        parameter _tag to core:tag.
+        parameter _tag is Core:Tag.
 
-        local _scriptId     to "".
-        local _scriptStopStage to lex().
-        local _tagLex       to lex().
-        local _tagPrms      to list().
-        local _tagScr       to list().
-        local _tagSet       to "".
-        local _tagStg       to 0.
-        local _tagStgCondition to "".
-        local _tagStgLex    to lex().
-        local _tagStgSet    to "".
-        local _tagStgSplit  to list().
-        local _tSplit       to _tag:split(";").
-        local _tpSplit      to list().
+        local _tagLex       to lexicon( // See above comments for definition of this schema
+             "PCN", ""                     
+            ,"SID", ""
+            ,"PRM", list()
+            ,"ASL", 0
+        ).
 
-        // from { local i to 0.} until i = _tSplit:length step { set i to i + 1.} do
-        // for i in range(0, _tSplit:length, 1)
-        from { local i to 0. local _tagFrag to list().} until i = _tSplit:length step { set i to i + 1. } do
+        local _asl              to 0.
+        local _prm              to list().
+        local _sid              to "".
+        local _pcnFrag          to "".
+        local _sidFrag          to "".
+
+        local _tagFragments to _tag:Split("|"). // Split the string at the Pipe symbol to separate the script components from the auto-staging limiter component
+                                                // If formatted correctly, this results in 2 parts. 
+                                                // If we only get one part from this step, the tag is not formatted with a valid stage number defined for the 
+                                                // Auto-Staging Limiter. In this case, default to stage 0 (which is the last possible stage for any ship with at least one stage)
+
+        local _scriptFragments to _tagFragments[0]:Split(":").   // First-token string after the pipe split: "sounder:simple[325km,90]"
+                                                                    // Separate the container ("sounder") from the script details ("simple[325km,90]")
+
+        if _scriptFragments:Length > 1                  // If we have more than one fragment, we know we have the PCN in the first token, and the script details in the second
         {
-            set _scriptId to "{0}:{1}":format(core:part:uid, i).
-            set _scriptStopStage to lex().
-            set _tagFrag to _tSplit[i]:split("|").
-
-            set _tagSet   to _tagFrag. // :_tSplit[i]:split("|")[1].
-            // print "_tagSet: ({0})":format(_tagSet) at (2, 25).
-            set _tagStgSet to _tagSet[1].
-            // print "_tagStgSet ({0})":format(_tagStgSet) at (2, 27).
-            if _tagStgSet:matchesPattern("[\[\]]")
-            {
-                // print "Pattern Matched ({0})":format(_tagStgSet) at (2, 30).
-                // wait 0.01.
-                // Breakpoint().
-                set _tagStgSet to _tagStgSet:replace("[",""):replace("]",""):split(",").
-                if _tagStgSet:length > 0 
-                {
-                    for _t in _tagStgSet
-                    {
-                        // print "_t: [{0}]":format(_t) at (2, 25).
-                        // wait 0.01.
-                        // Breakpoint().
-                        set _tpSplit to choose _t:split(":") if _t:split(":"):length > 1 else _t:split(",").
-                        // print "_tpSplit: ({0})":format(_tpSplit) at (2, 31).
-                        // Breakpoint().
-                        set _tagStg to _tpSplit[0]:toNumber(99).
-                        set _tagStgCondition to _tpSplit[1].
-                        set _scriptStopStage[_tagStg] to _tpSplit[1].
-                    }
-                }
-                else
-                {
-                    set _scriptStopStage[_tagStg] to "MAIN". //print "_tpSplit <= 1 ({0})":format(_tpSplit) at (2, 40).
-                }
-            }
-            else
-            {
-                // print "Pattern Not Matched ({0})":format(_tagStgSet) at (2, 30).
-                // Breakpoint().
-                set _tpSplit to _tagStgSet:split(":").
-                if _tpSplit:length > 1
-                {
-                    set _tagStg to _tpSplit[0]:toNumber(0).
-                    set _scriptStopStage[_tagStg] to _tpSplit[1].
-                }
-                else
-                {
-                    set _scriptStopStage[_tagStg] to "MAIN". //print "_tpSplit <= 1 ({0})":format(_tpSplit) at (2, 40).
-                }
-            }
-            
-            set _tagScr to _tagFrag[0]. // _tagFrag[0]:replace("]",""):split("["). 
-            if _tagScr:matchesPattern("[\[\]]")
-            {
-                local _tagParts to _tagScr:replace("]",""):split("[").
-                set _tagScr     to _tagParts[0].
-                set _tagPrms    to choose _tagParts[1]:split(":") if _tagParts[1]:split(":"):length > 1 else _tagParts[1]:split(",").
-            }
-            
-            local _parsedTag to lex("TAG", _tSplit[i], "SCR", _tagScr, "PRM", _tagPrms, "STG", _scriptStopStage).
-            set   _tagLex[_scriptId] to _parsedTag.
-            set g_tag[_scriptId] to _parsedTag.
-            set _tagStgLex[_scriptStopStage:keys[i]] to _scriptStopStage.
+            set _tagLex["PCN"]  to _scriptFragments[0].  // Should be "sounder"
+            set _sidFrag        to _scriptFragments[1].        // Should now be "simple[325km,90]"
         }
-        set g_stopStageLex["STPSTG"] to _tagStgLex.
-        InitStopStage().
+        else if _scriptFragments:Length > 0
+        {
+            set _pcnFrag        to _scriptFragments[0]:Replace("]",""):Split("[").
+            set _tagLex["PCN"]  to _pcnFrag[0].
+            set _sidFrag        to _pcnFrag[1].
+        }
+        else
+        {
+            print "NO FREAKING FRAGMENTS YO".
+            print 1 / 0.
+        }
+
+        // Parse if we have something, else default to the hardcoded 'setup.ks' script under the PCN
+        if _sidFrag:MatchesPattern("[\[\]]")
+        {
+            local _prmFrag to _sidFrag:Replace("]",""):Split("["). // Cleans up the extraneous delimiter in the string prior to splitting at the point the SID ends and the params begin
+            set _sid to _prmFrag[0].                     // Value here should be "simple"
+
+            if _prmFrag:Length > 1        // More than one fragment means we have parameters to get
+            {
+                for val in _prmFrag[1]:Split(",")       // Parameters are comma-delimited within the square brackets
+                {
+                    _prm:add(val). // This list will be added to _tagLex in the next step
+                }
+            }
+        }
+        else
+        {
+            for val in _sidFrag:Split(",")
+            {
+                _prm:add(val).
+            }
+        }
+        set _tagLex["SID"] to _sid. // This can be an empty string, it will just default to "Setup.ks" under the path
+        set _tagLex["PRM"] to _prm.     // Add the parameters - either an empty list, or ones found above
+
+        // Now set the ASL - AutoStaging Limiter
+        if _tagFragments:Length > 1
+        {
+            set _asl to _tagFragments[1]:ToNumber(-1). // Attempts to convert the string to a scalar.
+                                                    // If it fails because the string is not able to be cast, then defaults to -1
+
+            // if _asl < 0 // Below 0 means -1, so something went wrong
+            // {
+            //     set _asl to _asl. // Making assumptions here that the reason we failed is because a string was using the old '[2:main]' format
+            //                                                                                 // Note that if we still fail for whatever reason, we fallback to 0.
+            // }
+        }
 
         return _tagLex.
     }
 
-    // InitStopStage ::
-    // Does the initial setup of the g_stopStg stuff
-    global function InitStopStage
+
+    // ExpandToNumber :: <string>Number representation -> <scalar>Output number
+    // Given a string that represents a number, will try to parse the string to return a scaled value back with in-line string modifiers applied
+    // Examples: 
+    //          325km -> 325000m
+    //         1250kg -> 1.25t
+    //       1.57km/s -> 1570 m/s
+    global function ExpandToNumber
     {
-        SetStopStage(true, true).
-    }
+        parameter _inString.
 
-    // SetStopStage :: 
-    // Sets the g_stopStage value to the next in the list.
-    global function SetStopStage
-    {
-        parameter setNextValue to false,
-                  _init to false. 
-
-        // print "g_stopStageLex:keys:length: {0}":format(g_stopStagelex:keys:length) at (2, 33).
-        // print "g_stopStageLex: ({0})":format(g_stopStageLex["STPSTG"]) at (2, 34).
-        local i to 0.
-        local g_thisStage to stage:number.
-
-        if g_stopStageLex["STPSTG"]:keys:length > 1
+        if _inString:MatchesPattern("^[\d\.]*([KMGT]+m$)")  // Distance
         {
-            set g_thisStage to g_stopStageLex["STPSTG"]:keys[i].
+            if      _inString:EndsWith("Km") return _inString:Replace("Km",""):ToNumber(-1) * 1000.
+            else if _inString:EndsWith("Mm") return _inString:Replace("Mm",""):ToNumber(-1) * 1000000.
+            else if _inString:EndsWith("Gm") return _inString:Replace("Gm",""):ToNumber(-1) * 1000000000.
+            else if _inString:EndsWith("Tm") return _inString:Replace("Tm",""):ToNumber(-1) * 1000000000000.
         }
-        // print g_stopStageLex["STPSTG"]:keys[0] at (2, 39).
-        // for k in g_stopStageLex["STPSTG"]:keys
-        // {
-        //     print k at (2, 36 + i).
-        //     set i to i + 1.
-        // }
-        // print g_stopStageLex["STPSTG"]:values[0]:values[0] at (5, 45).
-        set g_stopStageCondition to "MAIN".
-        if g_stopStageLex["STPSTG"]:hasKey(g_thisStage)
+        else if _inString:MatchesPattern("^[\d\.]*(Kg?$)")  // Weight
         {
-            // set terminal:width to 120.
-            // print g_stopStageLex at (2, 42).
-            local l_thisContext to g_stopStageLex["STPSTG"][g_thisStage]:values[0].
-            print "l_thisContext: [{0}]":format(l_thisContext) at (2, 50).
-            print "g_stopStageCondition: [{0}]":format(g_stopStageCondition) at (2, 51).
-            print "REF Present: {0}":format(g_stopStageLex:hasKey("REF")) at (2, 52).
-            if g_stopStageLex:hasKey("REF")
-            {
-                print "REF/STPSTG/{0} Present: {1}":format(l_thisContext, g_stopStageLex:hasKey("l_thisContext")) at (2, 53).
-            }
-            else print "REF Present: {1}":format(l_thisContext, false) at (2, 53).
-
-            set g_stopStageCondition to g_stopStageLex["REF"][l_thisContext].
-            // print "{0} ({1})":FORMAT(g_thisStage, g_stopStageLex["STPSTG"][g_thisStage]) at (2, 38).
-            // print l_thisContext at (2, 39).
-            // Breakpoint().
-        }
-        //Breakpoint().
-        if setNextValue
-        {
-            if g_stopStageLex["STPSTG"]:keys:length > 0
-            {
-                if g_stopStageCondition
-                {
-                    g_stopStageLex:remove(g_stopStageLex["STPSTG"]:keys[0]).
-                }
-            }
-            else 
-            {
-
-            }
+            // No need for additional checks now, but will in future if we add more amounts
+            return _inString:Replace("Kg",""):ToNumber(-1) / 1000.
         }
 
-        if g_stopStageLex["STPSTG"]:keys:length > 1
-        {
-            set g_stopStage to g_stopStageLex["STPSTG"]:values[0]:values[0].
-            OutInfo("g_stopStage set to [{0}]":format(g_stopStage),1).
-            g_stopStageLex["STPSTG"]:values[0]:remove(g_stopStageLex["STPSTG"]:values[0]:key[0]).
-        }
-        else if g_stopStageLex["STPSTG"]:keys:length = 1
-        {
-            set g_stopStage to g_stopStageLex["STPSTG"]:values[0]:values[0].
-        }
-        else 
-        {
-            set g_stopStage to 0.
-        }
-        // }
-        // else
-        // {
-        //     OutInfo("Hit the fall-through in SetStopStage()[{0}]":format(_i),2).
-        //     set _i to _i + 1.
-        //     //print "[{0}]":format(g_stopStageLex) at (2, 35).
-        //     // set g_stopStage to 0.
-        // }
+        return _inString. // If we didn't match anything, then return value as-is.
     }
 // #endregion

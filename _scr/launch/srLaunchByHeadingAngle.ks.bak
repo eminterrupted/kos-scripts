@@ -8,18 +8,18 @@ runOncePath("0:/lib/util.ks").
 runOncePath("0:/lib/launch.ks").
 runOncePath("0:/kslib/lib_navball.ks").
 
-set terminal:width to 64.
-set terminal:height to 48.
-core:doEvent("open terminal").
+set Terminal:width to 64.
+set Terminal:height to 48.
+Core:doEvent("open terminal").
 
-set sVal to ship:facing.
-lock steering to sVal.
+set s_val to ship:facing.
+lock steering to s_val.
 
-set tVal to 0.
-lock throttle to tVal.
+set t_val to 0.
+lock throttle to t_val.
 
 local altStartTurn          to 250.
-local parsedTag             to ParseCoreTag(core:tag).
+local parsedTag             to ParseCoreTag(Core:Tag).
 local resPctRemaining       to 0.
 local stageStop             to parsedTag[parsedTag:length - 1].
 local tgt_Hdg               to choose params[0] if params:length > 0 else 90.
@@ -29,7 +29,7 @@ local resObj                to lex().
 local spinStaged to false.
 
 local doneFlag to false.
-set g_tChar     to "".
+set g_TermChar     to "".
 set g_line      to 10.
 
 // Script flags can be added to the global g_scriptFlags object
@@ -57,16 +57,16 @@ OutMsg("Press Enter to Launch").
 
 until doneFlag
 {
-    if terminal:input:hasChar
+    if Terminal:Input:hasChar
     {
-        set g_tChar to terminal:input:getchar.
+        set g_TermChar to Terminal:Input:getchar.
     }
-    if g_tChar = terminal:input:enter set doneFlag to true.
+    if g_TermChar = Terminal:Input:enter set doneFlag to true.
 }
 
 for dc in ship:decouplers
 {
-    if dc:tag:matchesPattern(".*spinStab.*")
+    if dc:Tag:matchesPattern(".*spinStab.*")
     {
         set f_spinStabilization to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_spinStabilization"], true).
         // set f_spinStabilization to true.
@@ -75,7 +75,7 @@ for dc in ship:decouplers
         // OutMsg("spinStabilized: True").
         // print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
     }
-    if dc:tag:matchesPattern(".*hotStage.*")
+    if dc:Tag:matchesPattern(".*hotStage.*")
     {
         set f_hotStage to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_hotStage"], true).
         // set f_hotStage to true.
@@ -87,11 +87,11 @@ for dc in ship:decouplers
 }
 
 // Idk
-on terminal:input:hasChar
+on Terminal:Input:hasChar
 {
     GetTermChar().
     
-    if g_tChar = terminal:input:homecursor
+    if g_TermChar = Terminal:Input:homecursor
     {
         set f_spinStabilization to SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
         set f_spinStabilization to choose false if f_spinStabilization else true.
@@ -101,7 +101,7 @@ on terminal:input:hasChar
         print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
         //SetScriptFlag(f_spinStabilizationID, f_spinStabilization).
     }
-    else if g_tChar = terminal:input:endcursor
+    else if g_TermChar = Terminal:Input:endcursor
     {
         set f_hotStage to choose false if f_hotStage else true.
         set g_scriptFlags[f_hotStageID] to f_hotStage.
@@ -113,7 +113,7 @@ on terminal:input:hasChar
     preserve.
 }
 
-set tVal to 1.
+set t_val to 1.
 stage.
 OutMsg("Ignition!").
 wait 0.05.
@@ -160,7 +160,7 @@ until stage:number = stageStop
     until ship:velocity:surface:mag >= 175
     {
         //set tgt_vAng to max(0, round(get_vAng:call(88, 0.875), 3)).
-        set sVal    to heading(tgt_Hdg, tgt_vAng).
+        set s_val    to heading(tgt_Hdg, tgt_vAng).
         
         set resObj to GetResourcesFromEngines(g_activeEngines:engines).
         set resPctRemaining to resObj:PctRemaining.
@@ -190,7 +190,7 @@ until stage:number = stageStop
     until doneFlag or ship:altitude > body:atm:height
     {
         set tgt_vAng to max(0, round(get_vAng:call(88, 0.875), 3)).
-        set sVal    to heading(90, tgt_vAng).
+        set s_val    to heading(90, tgt_vAng).
         
         if f_hotStage
         {
@@ -210,7 +210,7 @@ until stage:number = stageStop
 }
 //HotStage(0.01).
 set rollCtrlVal to 0.
-set sVal to ship:facing.
+set s_val to ship:facing.
 
 // set ship:control:pilotRollTrim to 0.
 when ship:altitude > body:atm:height then 
@@ -225,7 +225,7 @@ when ship:altitude > body:atm:height then
 // {
 //     set tgt_vAng to max(0, round(get_vAng:call(88), 3)).
 //     //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
-//     //set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+//     //set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
 //     DispSoundingTelemetry(list(tgt_vAng)).
 //     if alt:radar <= 25 set doneFlag to true.
 //     wait 0.01.
@@ -235,7 +235,7 @@ OutMsg("Flattening trajectory").
 until doneFlag
 {
     set tgt_vAng  to 0.
-    set sVal    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
+    set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
     DispSoundingTelemetry(list(tgt_vAng)).
     if alt:radar <= 25 set doneFlag to true.
     wait 0.01.

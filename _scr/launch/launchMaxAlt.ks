@@ -86,12 +86,12 @@ if paramUpdatesMade
 // Check the vessel for decouplers that are tagged for spin stabilization or hot staging
 for dc in ship:decouplers
 {
-    if dc:tag:matchesPattern(".*spinStab.*")
+    if dc:Tag:matchesPattern(".*spinStab.*")
     {
         set f_spinStab to SetScriptFlag(f_spinStabID, true).
         OutInfo("Spin Stabilized Stage").
     }
-    if dc:tag:matchesPattern(".*hotStage.*")
+    if dc:Tag:matchesPattern(".*hotStage.*")
     {
         set f_hotStage to SetScriptFlag(f_hotStageID, true).
         OutInfo("Hot Staging").
@@ -101,19 +101,19 @@ for dc in ship:decouplers
 OutMsg("Press Enter to begin launch countdown").
 until false
 {
-    if terminal:input:hasChar
+    if Terminal:Input:hasChar
     {
-        set g_tChar to terminal:input:getchar.
+        set g_TermChar to Terminal:Input:getchar.
     }
-    if g_tChar = terminal:input:enter break.
+    if g_TermChar = Terminal:Input:enter break.
 }
-lock throttle to tVal.
-set sVal to ship:facing.
-lock steering to sVal.
+lock throttle to t_val.
+set s_val to ship:facing.
+lock steering to s_val.
 
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
-set tVal to 1.
+set t_val to 1.
 OutMsg("Liftoff!").
 
 ArmAutoStaging().
@@ -125,7 +125,7 @@ until ship:altitude > g_la_turnAltStart
 }
 
 OutMsg("P16: Launch Angle ({0})":format(tgt_pit)).
-set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
+set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
 
 until stage:number = g_stopStage
 {
@@ -136,7 +136,7 @@ until stage:number = g_stopStage
 OutMsg("P18: Final Burn").
 until ship:availablethrustAt(body:atm:altitudepressure(ship:altitude)) < 0.01
 {
-    set sVal to heading(tgt_hdg, tgt_pit, tgt_rll).
+    set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
@@ -146,7 +146,7 @@ OutMsg("P20: MECO").
 OutInfo("     AP ETA: {0}":format(round(eta:apoapsis))).
 until eta:apoapsis < 1
 {
-    set sVal to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
+    set s_val to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
@@ -154,7 +154,7 @@ until eta:apoapsis < 1
 OutMsg("P21: DESCENT").
 until doneFlag
 {
-    set sVal to lookDirUp(ship:retrograde:vector, heading(tgt_hdg, 0):vector).
+    set s_val to lookDirUp(ship:retrograde:vector, heading(tgt_hdg, 0):vector).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
     if alt:radar <= 1 set doneFlag to true.

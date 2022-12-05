@@ -46,14 +46,14 @@ local frameCount to 0.
 until doneFlag
 {
     GetTermChar().
-    if g_termChar <> ""
+    if g_TermChar <> ""
     {
-        if g_termChar = terminal:input:endCursor
+        if g_TermChar = Terminal:Input:endCursor
         {
             set doneFlag to true.
             break.
         }
-        else if g_termChar = terminal:input:deleteright
+        else if g_TermChar = Terminal:Input:deleteright
         {
             clearScreen.
             DispTestHeader().
@@ -75,7 +75,7 @@ until doneFlag
     print "[{0}]":format(frameCount) at (15, g_frameCounterLine).
     wait 0.01.
 }
-print "*** Script Complete! ***" at (5, terminal:height - 2).
+print "*** Script Complete! ***" at (5, Terminal:height - 2).
 
 
 

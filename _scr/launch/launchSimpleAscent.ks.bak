@@ -172,21 +172,21 @@ local function AerobeeSafeStage
 
 
 
-// CheckPctRange :: <scalar>_numIn - Numerator; <scalar>_denomIn - Denominator; <scalar>_tgtVal - Value to check against; <scalar>_padVal - optional "slop" value -> <bool>
-// Checks a set of related values for the percentage between the two, and returns a bool based on proximity to the provided _tgtPctVal
+// CheckPctRange :: <scalar>_numIn - Numerator; <scalar>_denomIn - Denominator; <scalar>_tgt_val - Value to check against; <scalar>_padVal - optional "slop" value -> <bool>
+// Checks a set of related values for the percentage between the two, and returns a bool based on proximity to the provided _tgtPct_val
 local function CheckPctRange
 {
     parameter _numIn,
               _denomIn,
-              _tgtPctVal is 1,  // Fractional percentage  (1 = 100%, 0.5 = 50%, etc)
-              _padPctVal is 1.  // Fractional percentage unique value, if set to 1 or higher, that just means "anything that's 
+              _tgtPct_val is 1,  // Fractional percentage  (1 = 100%, 0.5 = 50%, etc)
+              _padPct_val is 1.  // Fractional percentage unique value, if set to 1 or higher, that just means "anything that's 
                                 // positive relative to the tgt value"; Likewise, a number LEQ -1 means any number below the tgt value.
 
     local _pct to max(0.0000000001, _numIn) / max(0.000000000001, _denomIn).
 
-    if _padPctVal >= 1          return _pct >= _tgtPctVal.
-    else if _padPctVal <= -1    return _pct <= _tgtPctVal.
-    else                        return (_pct >= (_tgtPctVal - _padPctVal)) and (_pct <= (_tgtPctVal + _padPctVal)).
+    if _padPct_val >= 1          return _pct >= _tgtPct_val.
+    else if _padPct_val <= -1    return _pct <= _tgtPct_val.
+    else                        return (_pct >= (_tgtPct_val - _padPct_val)) and (_pct <= (_tgtPct_val + _padPct_val)).
 }
 
 

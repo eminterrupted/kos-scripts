@@ -11,13 +11,12 @@
 // #region
     // *- Local
     local os_ver            to "0.0.1a (ALPO)".
+    local  TermWidth      to 72.
+    local  TermHeight     to 60.
     
     // *- Global
     global g_col            to 0.
     global g_line           to 8.
-    global g_tChar          to "".
-    global g_termWidth      to 72.
-    global g_termHeight     to 60.
     
 // #endregion
 
@@ -27,27 +26,35 @@
 
     // *- Display micro functions -* //
     // #region
+
+    // cr :: <none> -> <int> 
+    // increments the global g_line variable by 1, and returns it.
     global function cr
     {
         set g_line to g_line + 1.
         return g_line.
     }
 
+
+    // InitDisp :: <none> -> <none>
+    // Sets the terminal resolution and brings it up
     global function InitDisp
     {
-        set terminal:width to g_termWidth.
-        set terminal:height to g_termHeight.
-        core:doEvent("Open Terminal").
+        set Terminal:width to TermWidth.
+        set Terminal:height to TermHeight.
+        Core:doEvent("Open Terminal").
     }
 
+    // OutMsg :: <string>String -> <none>
+    // Writes a string in a consistent manner (location, formatting)
     global function OutMsg
     {
         parameter str.
 
         local label to choose "[MSG]" if str:length > 0 else "".
-        if str:length > terminal:width - 8
+        if str:length > Terminal:width - 8
         {
-            set str to str:substring(0, terminal:width - 8).
+            set str to str:substring(0, Terminal:width - 8).
         }
         else if str:length < 1
         {
@@ -56,6 +63,9 @@
         print "{0,-6} {1, -60}":format(label, str) at (0, 6).
     }
 
+    // OutInfo :: <string>String, [<int>Position] -> <none>
+    // Like OutMsg, prints a string, but with added flexibility of the pos parameter
+    // pos is a positive offset from the default line it would be printed on if no value was passed
     global function OutInfo
     {
         parameter str is "",
@@ -63,9 +73,9 @@
 
         set pos to max(pos, 1).
         local label to "[INFO]".
-        if str:length > terminal:width - 8
+        if str:length > Terminal:width - 8
         {
-            set str to str:substring(0, terminal:width - 8).
+            set str to str:substring(0, Terminal:width - 8).
         }
         else if str:length < 1
         {
@@ -88,15 +98,15 @@
         parameter _scrPath is "".
 
         print "KUSP Mission Assistant" at (0, 0).
-                print "v: " + os_ver at (g_termWidth - (os_ver:length + 3), 0).
-        from { local i to 0.} until i = g_termWidth step { set i to i + 1.} do 
+                print "v: " + os_ver at (TermWidth - (os_ver:length + 3), 0).
+        from { local i to 0.} until i = TermWidth step { set i to i + 1.} do 
         {
             print "=" at (0 + i, 1).
         }
         print "MISSION  : {0}":format(ship:name) at (0, 2).
         print "MET      : {0}":format(TimeSpan(missionTime):full) at (0, 3).
         print "CURRENT PROGRAM  : {0}" :format(_scrPath) at (0, 4).
-        //print "TAG DETAILS: [{0}][{1}]|[{2}]":format(g_tag[core:part:uid + ":0"]:SCR, g_tag[core:part:uid + ":0"]:PRM:Join(":"), g_stopStage) at (0, 5).
+        //print "TAG DETAILS: [{0}][{1}]|[{2}]":format(g_tag[Core:part:uid + ":0"]:SCR, g_tag[Core:part:uid + ":0"]:PRM:Join(":"), g_stopStage) at (0, 5).
     }
 
 
@@ -132,9 +142,9 @@
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
         cr().
         print "ENGINES " at (1, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines["CURTHRUST"], 2), "kn") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines["AVLTHRUST"], 2), "kn") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines["CURTHRUST"]) / max(0.00001, g_activeEngines["AVLTHRUST"] ) * 100)), "%") at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines["CURTHRUST"], 2), "kn") at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines["AVLTHRUST"], 2), "kn") at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines["CURTHRUST"]) / max(0.00001, g_activeEngines["AVLTHRUST"] ) * 100)), "%") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("TWR    (CUR)", round( g_activeEngines["TWR"], 2)) at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("TWR    (AVL)", round( g_activeEngines["AvailTWR"], 2)) at (2, cr()).
 
@@ -204,9 +214,9 @@
     global function DispClr
     {
         parameter line_start to 10, 
-                  line_end   to terminal:height.
+                  line_end   to Terminal:height.
 
-        local clrLine to "{0," + terminal:width + "}".
+        local clrLine to "{0," + Terminal:width + "}".
         set clrLine to clrLine:format(" ").
         from { local i to line_start.} until i = line_end step { set i to i + 1.} do
         {
