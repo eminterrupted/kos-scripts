@@ -454,6 +454,8 @@ InitActiveEngines().
     // Initializes the g_ActiveEnginesLex variable.
     global function InitActiveEngines
     {
+        SetGlobalShipEnginesObject().
+        
         if not (defined g_ActiveEnginesLex) 
         {
             global g_ActiveEnginesLex to lexicon().
