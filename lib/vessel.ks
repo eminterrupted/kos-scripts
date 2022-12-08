@@ -2,6 +2,7 @@
 // #include "0:/lib/loadDep.ks"
 
 // Variables *****
+global g_ShipEngines to lexicon().
 
 global g_stageInfo to lex(
     "HotStage",         uniqueSet(),
@@ -9,7 +10,6 @@ global g_stageInfo to lex(
     "Engines",          lex(), 
     "Resources",        lex()
 ).
-
 
 // Functions *****
 InitActiveEngines().
@@ -99,6 +99,142 @@ InitActiveEngines().
         
         return lex("CURTHRUST", actThr, "AVLTHRUST", avlThr, "CURTWR", curTWR, "AVLTWR", avlTWR, "ENGLIST", engList, "SEPSTG", sepFlag).
     }
+
+    // GetActiveEngines :: <none> -> <List>Engines
+    // Returns a list of the engines currently active (ignition == true and flameout == false)
+    global function GetActiveEngines
+    {
+        parameter _includeSepMotors is false.
+
+        local engList to list().
+
+        for eng in ship:engines
+        { 
+            if eng:ignition and not eng:flameout
+            {
+                if _includeSepMotors { engList:add(eng). }
+                else if not g_partInfo["Engines"]["SepMotors"]:contains(eng:name) { engList:add(eng). }
+            }
+        }
+        return engList.
+    }
+
+
+    // GetEngineData :: <List>Engines -> <Lexicon>EngineDataObject
+    // Returns detailed lexicon containing data about engines, along with some stage-level engine values (i.e., ullage, fuelstability, etc)
+    global function GetEngineData
+    {
+        parameter _engList is GetActiveEngines().
+
+        local EngDataObj to lexicon().
+
+        local FuelStability to 0.
+        local PressureFed   to false.
+        local UllageFlag    to false.
+        
+        local ActThr        to 0.
+        local AvlThr        to 0.
+        local AvlTWR        to 0.
+        local CurTWR        to 0.
+        local FuelFlow      to 0.
+        local FuelFlowMax   to 0.
+        local MassFlow      to 0.
+        local MassFlowMax   to 0.
+
+        // TODO: Finish GetEngineData by adding additional functions for checking ullage, fuel stability, fuel flow, etc.
+        for eng in _engList
+        {
+            set ActThr to ActThr + eng:thrust. 
+            set AvlThr to AvlThr + eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
+            set FuelFlow to FuelFlow + eng:fuelFlow.
+            set FuelFlowMax to FuelFlowMax + eng:maxFuelFlow.
+            set MassFlow to MassFlow + eng:massFlow.
+            set MassFlowMax to MassFlowMax + eng:maxMassFlow.
+        }
+    }
+
+
+
+    // GetEnginesForStage :: <int>StageNumber -> <List>Engines
+    // Returns the engines associated with a stage number. 
+    // Empty list if no engines in that stage, or if _includeSepMotors is false and the only engines in the stage are sep motors.
+    global function GetEnginesForStage
+    {
+        parameter _stgNum is Stage:Number,
+                  _includeSepMotors is false.
+
+        local engList to list().
+
+        for eng in Ship:Engines
+        {
+            if eng:stage = _stgNum
+            {
+                if _includeSepMotors
+                {
+                    engList:add(eng).
+                }
+                else if not g_partInfo["Engines"]["SepMotors"]:contains(eng:name) 
+                {
+                    engList:add(eng).
+                }
+            }
+        }
+        return engList.
+    }
+
+
+    // GetNextEngines :: [<int>StageNumber] -> <Lexicon>EnginesObject 
+    // Given a stage number, checks from that stage forward for the next set of non-sepratron engines
+    // If no stage provided, defaults to current stage
+    global function GetNextEngines
+    {
+        parameter _stgNum is Stage:Number,
+                  _includeSepMotors is false.
+
+        local nextEngList to list().
+
+        for stgIdx in Range(_stgNum - 1, 0)
+        {
+            set nextEngList to GetEnginesForStage(stgIdx, _includeSepMotors).
+            if nextEngList:Length > 0 { break. }
+        }
+        return nextEngList.
+    }
+
+
+    // GetShipEnginesObject :: <none> -> <Lexicon>
+    // Returns a lexicon of engines on the vessel keyed by activation stage number
+    global function GetShipEnginesObject
+    {
+        local EngineObj to lexicon().
+        from { local i to stage:number.} until i < 0 step { set i to i - 1.} do 
+        {
+            set EngineObj[i] to lexicon("Engines", list(), "IsSepStage", True).
+            for eng in Ship:Engines
+            {
+                if eng:stage = i 
+                {
+                    if not g_PartInfo["Engines"]["SepMotors"]:contains(eng:name) 
+                    {
+                        set EngineObj[i]["IsSepStage"] to False.
+                    }
+                }
+            }
+        }
+        return EngineObj.
+    }
+
+    // SetGlobalShipEnginesObject :: <none> -> <none>
+    // Method that refreshes the value of g_ShipEngines via GetShipEnginesObject
+    global function SetGlobalShipEnginesObject
+    {
+        if not (defined g_ShipEngines) global g_ShipEngines to lexicon().
+        set g_ShipEngines to GetShipEnginesObject().
+    }
+
+
+    // #endregion
+
 
     // ArmAutoBoosterSeparation :: <Lexicon>BoosterObject -> (none)
     // Creates a trigger for the boosters to seperate based on resource consumption
@@ -282,7 +418,7 @@ InitActiveEngines().
 
         local _engRes_SummedPct to 0.
         local _resObj to lex("PctRemaining", 0, "Resources", lex()).
-
+        OutInfo("Engine: {0} ({1})":format(_engList[0]:name, _engList[0]:tag), 2).
         if _engList:length > 0
         {
             for _eng in _engList
@@ -290,12 +426,25 @@ InitActiveEngines().
                 from { local _idx to 0.} until _idx > _eng:consumedResources:values:length step { set _idx to _idx + 1.} do
                 {
                     local res to _eng:consumedResources:values[_idx].
-                    set _resObj["Resources"][res:name] to res.
-
-                    set _idx to _idx + 1.
-                    set _engRes_SummedPct to (_engRes_SummedPct + (max(0.001, res:amount) / res:capacity)) / _idx.
+                    if not g_ResIgnoreList:Contains(res:name)
+                    {
+                        OutInfo("Processing Resource: {0}":format(res:name), 3).
+                        set _resObj["Resources"][res:name] to res.
+                        set _idx to _idx + 1.
+                        set _engRes_SummedPct to (_engRes_SummedPct + (max(0.001, res:amount) / max(0.001, res:capacity))) / _idx.
+                        wait 0.25.
+                    }
+                    else
+                    {
+                        OutInfo("Ignoring resource: {0}":format(res:name), 3).
+                        wait 0.25.
+                    }
                 }
             }
+        }
+        else
+        {
+            OutInfo("No engines in _engList", 2).
         }
         set _resObj["PctRemaining"] to _engRes_SummedPct.
         return _resObj.
@@ -338,7 +487,7 @@ InitActiveEngines().
     global function ArmAutoStaging
     {
         // Auto-stage
-        when ship:availableThrust < 0.0005 then
+        when ship:availableThrust < 0.001 then
         {
             if stage:number >= g_stopStage
             {

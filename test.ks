@@ -7,6 +7,17 @@ runOncePath("0:/lib/globals").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 
+print "Testing TestBuildList".
+print TestBuildList().
+
+print " ".
+
+print "Testing TestShipList".
+print TestShipList().
+
+print " ".
+
+
 // local script to "". // Path to test script.
 // local scriptPrms to _prms. // parameters for script
 // if _prms:length > 0 
@@ -15,67 +26,67 @@ runOncePath("0:/lib/util").
 // }
 // runPath("").
 
-local eng to ship:partsNamed("ROE-Aerobee")[0].
-local l_line to 0.
-local l_col to 3.
-global g_frameCounterLine to 0.
-// The dictionary
+// local eng to ship:partsNamed("ROE-Aerobee")[0].
+// local l_line to 0.
+// local l_col to 3.
+// global g_frameCounterLine to 0.
+// // The dictionary
 
-if _prms:IsType("String")
-{
-    set _prms to _prms:split(";").
+// if _prms:IsType("String")
+// {
+//     set _prms to _prms:split(";").
 
-}
-else if _prms:IsType("List")
-{
-}
+// }
+// else if _prms:IsType("List")
+// {
+// }
 
-if _prms:length > 0 
-{
-    set eng to _prms[0].
-}
+// if _prms:length > 0 
+// {
+//     set eng to _prms[0].
+// }
 
-local doneFlag to false.
+// local doneFlag to false.
 
-DispTestHeader().
-InitDataObj(eng).
-local engData to lexicon().  // This will hold our data object from the engine in question
-local frameCount to 0.
+// DispTestHeader().
+// InitDataObj(eng).
+// local engData to lexicon().  // This will hold our data object from the engine in question
+// local frameCount to 0.
 
-// Main loop
-until doneFlag
-{
-    GetTermChar().
-    if g_TermChar <> ""
-    {
-        if g_TermChar = Terminal:Input:endCursor
-        {
-            set doneFlag to true.
-            break.
-        }
-        else if g_TermChar = Terminal:Input:deleteright
-        {
-            clearScreen.
-            DispTestHeader().
-            set frameCount to 0.
-        }
-    }
+// // Main loop
+// until doneFlag
+// {
+//     GetTermChar().
+//     if g_TermChar <> ""
+//     {
+//         if g_TermChar = Terminal:Input:endCursor
+//         {
+//             set doneFlag to true.
+//             break.
+//         }
+//         else if g_TermChar = Terminal:Input:deleteright
+//         {
+//             clearScreen.
+//             DispTestHeader().
+//             set frameCount to 0.
+//         }
+//     }
 
-    if frameCount > 60 
-    {
-        clearScreen.
-        DispTestHeader().
-        set frameCount to 0.
-    }
-    engData:clear().
-    set engData to RefreshData(eng).
-    DispLexiconData(engData, l_line).
-    set frameCount to frameCount + 1.
+//     if frameCount > 60 
+//     {
+//         clearScreen.
+//         DispTestHeader().
+//         set frameCount to 0.
+//     }
+//     engData:clear().
+//     set engData to RefreshData(eng).
+//     DispLexiconData(engData, l_line).
+//     set frameCount to frameCount + 1.
     
-    print "[{0}]":format(frameCount) at (15, g_frameCounterLine).
-    wait 0.01.
-}
-print "*** Script Complete! ***" at (5, Terminal:height - 2).
+//     print "[{0}]":format(frameCount) at (15, g_frameCounterLine).
+//     wait 0.01.
+// }
+// print "*** Script Complete! ***" at (5, Terminal:height - 2).
 
 
 
@@ -237,4 +248,26 @@ local function RefreshData
     ).
 
     return suffixLex.
+}
+
+local function TestBuildList
+{
+    local foo to "".
+
+    local TS to Time:Seconds.
+    set foo to BuildList("engines").
+    set TS to Time:Seconds - TS.
+    
+    return foo.
+}
+
+local function TestShipList
+{
+    local foo to "".
+
+    local TS to Time:Seconds.
+    set foo to Ship:Engines.
+    set TS to Time:Seconds - TS.
+    
+    return foo.
 }

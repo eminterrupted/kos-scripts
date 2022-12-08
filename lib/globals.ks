@@ -39,3 +39,12 @@ global g_PartInfo to    lex(
     "Decouplers",       lex(), 
     "Tanks",            lex()
 ).
+
+global g_ResIgnoreList to list(
+    "ElectricCharge"
+    ,"Oxygen"
+    ,"Atmosphere"
+    ,"WasteAtmosphere"
+    ,"Shielding"
+    ,"_AirPump"
+).

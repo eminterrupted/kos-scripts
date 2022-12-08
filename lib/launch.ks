@@ -59,7 +59,7 @@
         local engSpool           to CheckEngineSpool(stage:number - 1). 
         local hasSpool           to engSpool[0].
         local spoolTime          to engSpool[1].
-        set t_engStart           to t_launch - spoolTime.
+        set t_engStart           to t_launch - (spoolTime * 1.1).
         
         OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_launch, 2))).
 
@@ -109,7 +109,7 @@
                 if t_spoolTime > 0.1
                 {
                     set g_activeEngines to ActiveEngines().
-                    set thrustPerf to g_activeEngines["CURTHRUST"] / g_activeEngines["AVLTHRUST"].
+                    set thrustPerf to max(0.0001, g_activeEngines["CURTHRUST"]) / max(0.0001, g_activeEngines["AVLTHRUST"]).
 
                     if time:seconds > t_liftoff
                     {
@@ -173,7 +173,7 @@
     global function GetAscentAngle
     {
         parameter tgt_alt is body:atm:height * 0.86,
-                  f_shape is 1. // TODO: Implement this 'shape' factor to provide a way to control the steepness of the trajectory
+                  f_shape is 1.0125. // TODO: Implement this 'shape' factor to provide a way to control the steepness of the trajectory
 
         local tgt_effAng to 90.
         
@@ -186,7 +186,7 @@
             local tgt_effAlt to tgt_alt - g_la_turnAltStart.
             local cur_effAlt to 0.1 + ship:altitude - g_la_turnAltStart.
             local tgt_pitAng to max(-10, 90 * (1 - (cur_effAlt / tgt_effAlt))).
-            set   tgt_effAng to max(cur_pitAng - 3.5, min(cur_pitAng + 3.5, tgt_pitAng)) * f_shape.
+            set   tgt_effAng to min(90, max(cur_pitAng - 3.5, min(cur_pitAng + 3.5, tgt_pitAng)) * f_shape).
         }
         return tgt_effAng.
     }

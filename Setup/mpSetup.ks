@@ -3,7 +3,7 @@
 runOncePath("0:/lib/loadDep.ks").
 
 local setupPlan to Path("0:/_plan/{0}/setup.ks":format(g_tag["PCN"])).
-local missionPlanPath to path("0:/_missions/{0}/{1}.ks":format(g_tag["PCN"], ship:name:replace(" ","_"))).
+local missionPlanPath to path("0:/_mission/{0}/{1}.ks":format(g_tag["PCN"], ship:name:replace(" ","_"))).
 
 // print g_tag.
 // Breakpoint().

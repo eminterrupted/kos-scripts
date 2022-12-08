@@ -28,21 +28,7 @@ if params:length > 0
     if params:length > 3 set tgt_rll to params[3].
 }
 
-local f_spinStab to false.
-local f_hotStage to false.
-
 local doneFlag to false.
-
-// Script flags can be added to the global g_scriptFlags object
-local f_spinStabID to "f_spinStab".
-local f_spinStab   to false.
-set g_scriptFlagDelegates[f_spinStabID] to { parameter val. set f_spinStab to val.}.
-set g_scriptFlags[f_spinStabID] to f_spinStab.
-
-local f_hotStageID    to "f_hotStage".
-local f_hotStage        to false.
-set g_scriptFlagDelegates[f_hotStageID] to { parameter val. set f_hotStage to val.}.
-set g_scriptFlags[f_hotStageID] to f_hotStage.
 
 local tgtLex to lexicon(
     tgt_ap_key, tgt_ap,
@@ -81,21 +67,6 @@ if paramUpdatesMade
     set tgt_hdg to tgtLex[tgt_hdg_key].
     set tgt_pit to tgtLex[tgt_pit_key].
     set tgt_rll to tgtLex[tgt_rll_key].
-}
-
-// Check the vessel for decouplers that are tagged for spin stabilization or hot staging
-for dc in ship:decouplers
-{
-    if dc:Tag:matchesPattern(".*spinStab.*")
-    {
-        set f_spinStab to SetScriptFlag(f_spinStabID, true).
-        OutInfo("Spin Stabilized Stage").
-    }
-    if dc:Tag:matchesPattern(".*hotStage.*")
-    {
-        set f_hotStage to SetScriptFlag(f_hotStageID, true).
-        OutInfo("Hot Staging").
-    }
 }
 
 OutMsg("Press Enter to begin launch countdown").

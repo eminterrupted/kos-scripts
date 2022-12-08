@@ -11,12 +11,12 @@
 // #region
     // *- Local
     local os_ver            to "0.0.1a (ALPO)".
-    local  TermWidth      to 72.
+    local  TermWidth      to 70.
     local  TermHeight     to 60.
     
     // *- Global
     global g_col            to 0.
-    global g_line           to 8.
+    global g_line           to 10.
     
 // #endregion
 
@@ -117,11 +117,10 @@
         set g_line to 10.
         local label to "LAUNCH TELEMETRY".
 
-        if not exists(g_maxAlt) global g_maxAlt to 0.
-        set g_maxAlt to max(ship:altitude, g_maxAlt).
+        // if not exists(g_maxAlt) global g_maxAlt to 0.
+        // set g_maxAlt to max(ship:altitude, g_maxAlt).
 
-        print "{0,-25}":format(label) at (0, g_line).
-        cr().
+        print "{0,-25}":format(label) at (0, cr()).
         from { local i to 0.} until i = label:length step { set i to i + 1.} do
         {
             print "-" at (0 + i, g_line).
@@ -129,7 +128,7 @@
 
         print "ALTITUDE " at (1, cr()).
         print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (TGT)", round(_prmList[0]), "m") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (MAX)", round(g_maxAlt), "m") at (2, cr()).
+        // print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (MAX)", round(g_maxAlt), "m") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (CUR)", round(ship:altitude), "m") at (2, cr()).
         cr().
         print "VELOCITY " at (1, cr()).
@@ -140,8 +139,8 @@
         print "|- {0,-15}: {1}{2}   ":format("APOAPSIS", round(ship:apoapsis), "m") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("APOAPSIS ETA", round(ship:orbit:eta:apoapsis), "s") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
-        cr().
-        print "ENGINES " at (1, cr()).
+        // cr().
+        // print "ENGINES " at (1, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines["CURTHRUST"], 2), "kn") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines["AVLTHRUST"], 2), "kn") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("THRUST (% CUR)", round( (max(0.00001, g_activeEngines["CURTHRUST"]) / max(0.00001, g_activeEngines["AVLTHRUST"] ) * 100)), "%") at (2, cr()).

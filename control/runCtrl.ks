@@ -6,6 +6,7 @@ RunOncePath("0:/lib/loadDep").
 
 // Tag parsing
 set g_tag to ParseCoreTag().
+set g_stopStage to g_tag:ASL.
 
 // Detect if we are pre-launch, and if so, set up the mission plan. 
 if ship:status = "PRELAUNCH"

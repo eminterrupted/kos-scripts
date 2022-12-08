@@ -7,7 +7,7 @@ parameter inObj,
 runOncePath("0:/lib/disp.ks").
 runOncePath("0:/lib/util.ks").
 
-if inObj:TypeName = "List_value`1" or inObj:TypeName = "List"
+if inObj:TypeName = "List_value`1" or inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
 {
     if inObj[0]:typename = "string"
     {

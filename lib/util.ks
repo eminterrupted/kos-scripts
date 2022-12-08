@@ -103,7 +103,8 @@
                                                 // If we only get one part from this step, the tag is not formatted with a valid stage number defined for the 
                                                 // Auto-Staging Limiter. In this case, default to stage 0 (which is the last possible stage for any ship with at least one stage)
 
-        local _scriptFragments to _tagFragments[0]:Split(":").   // First-token string after the pipe split: "sounder:simple[325km,90]"
+        local _scriptFragments to list(_tagFragments[0]). // Disabling the ':' split here for backward compatibility purposes (used : in delimited params previously)
+        //local _scriptFragments to _tagFragments[0]:Split(":").   // First-token string after the pipe split: "sounder:simple[325km,90]"
                                                                     // Separate the container ("sounder") from the script details ("simple[325km,90]")
 
         if _scriptFragments:Length > 1                  // If we have more than one fragment, we know we have the PCN in the first token, and the script details in the second
@@ -139,7 +140,8 @@
         }
         else
         {
-            for val in _sidFrag:Split(",")
+            local _sidSplit to choose _sidFrag:Split(",") if _sidFrag:Split(","):Length > 1 else _sidFrag:Split(":").
+            for val in _sidSplit
             {
                 _prm:add(val).
             }
@@ -153,6 +155,7 @@
             set _asl to _tagFragments[1]:ToNumber(-1). // Attempts to convert the string to a scalar.
                                                     // If it fails because the string is not able to be cast, then defaults to -1
 
+            set _tagLex["ASL"] to _asl.
             // if _asl < 0 // Below 0 means -1, so something went wrong
             // {
             //     set _asl to _asl. // Making assumptions here that the reason we failed is because a string was using the old '[2:main]' format
@@ -185,6 +188,10 @@
         {
             // No need for additional checks now, but will in future if we add more amounts
             return _inString:Replace("Kg",""):ToNumber(-1) / 1000.
+        }
+        else if _inString:MatchesPattern("^\d*$")
+        {
+            return _inString:ToNumber().
         }
 
         return _inString. // If we didn't match anything, then return value as-is.
