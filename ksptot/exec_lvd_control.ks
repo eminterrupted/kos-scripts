@@ -32,8 +32,8 @@
 // =================================================
 clearscreen.
 
-run once lib_num_to_formatted_str.ks.
-run once  lib_navball.ks.
+runOncePath("0:/kslib/lib_num_to_formatted_str.ks").
+runOncePath("0:/kslib/lib_navball.ks").
 set Config:IPU to 2000.
 SET SAS TO FALSE.
 
