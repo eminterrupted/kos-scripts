@@ -11,7 +11,10 @@ global g_missionPlan to "".
 global g_ActiveEngines      to list().
 global g_ActiveEnginesLex   to lexicon().
 
+// LogFile Directory
+global g_LogPath to "0:\_mission\{0}\mission.log".
 
+// Tagging
 global g_StopStage to 99.
 global g_Tag to lexicon().
 

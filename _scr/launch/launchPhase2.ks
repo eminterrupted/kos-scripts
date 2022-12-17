@@ -28,9 +28,9 @@ if params:length > 0
     if params:length > 3 set tgt_rll to params[3].
 }
 
-local gravTurnAlt to body:atm:height * 0.765.
-
 local doneFlag to false.
+
+local gravTurnAlt to body:atm:height * 0.90.
 
 local tgtLex to lexicon(
     tgt_ap_key, tgt_ap,
@@ -53,10 +53,14 @@ from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do
             {
                 if tgtParamVal:ENDSWITH("km") 
                 {
-                    set tgtParamVal to tgtParamVal:REPLACE("km", "").
+                    set tgtParamVal to tgtParamVal:REPLACE("km", ""):TONUMBER() * 1000.
+                }
+                else
+                {
+                    set tgtParamVal to tgtParamVal:TONUMBER().
                 }
 
-                set tgtLex[tgtKeyList[i]] to tgtParamVal:TONUMBER().
+                set tgtLex[tgtKeyList[i]] to tgtParamVal.
                 set paramUpdatesMade to true.    
             }
         }
@@ -70,10 +74,16 @@ if paramUpdatesMade
     set tgt_pit to tgtLex[tgt_pit_key].
     set tgt_rll_key to tgtLex[tgt_rll_key].
 }
+if tgt_ap:isType("String") set tgt_ap to tgt_ap:ToNumber().
+if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
+if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
+if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
+
+local gravAltAvg  to ((gravTurnAlt * 2) + tgt_ap) / 3.
 
 OutMsg("Press Enter to begin launch countdown").
-OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg)).
-OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 1).
+OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg), 1).
+OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 2).
 until false
 {
     if Terminal:Input:hasChar
@@ -82,78 +92,54 @@ until false
     }
     if g_TermChar = Terminal:Input:enter break.
 }
-if tgt_ap:isType("String") set tgt_ap to tgt_ap:ToNumber().
-if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
-if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
-if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
 
+set s_val to Ship:Facing.
 lock throttle to t_val.
 lock steering to s_val.
 OutInfo().
 OutInfo("", 1).
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
-set t_val to 1.
+set t_Val to 1.
 OutMsg("Liftoff!").
 
 ArmAutoStaging().
 
 until ship:altitude > g_la_turnAltStart
 {
-    print "tgt_ap: {0} ({1})":format(tgt_ap, tgt_ap:typename) at (2, 45).
     DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("Stage: {0}":format(Stage:Number), 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
 }
 
 until stage:number = g_stopStage
 {
-    set tgt_pit to GetAscentAngle(gravTurnAlt).
+    set tgt_pit to GetAscentAngle(gravAltAvg).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("Stage: {0}":format(Stage:Number), 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
     wait 0.01.
 }
 
-set g_activeEnginesLex to ActiveEngines().
-until g_activeEnginesLex["CURTHRUST"] < 0.01 or ship:apoapsis >= tgt_ap
+until ship:availableThrust < 0.01 // or ship:apoapsis >= tgt_ap
 {
-    set tgt_pit to GetAscentAngle(gravTurnAlt).
+    set tgt_pit to GetAscentAngle(gravAltAvg).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    // if ship:altitude > lastAlt set maxAlt to ship:altitude.
     DispLaunchTelemetry(list(tgt_ap)).
-    // OutInfo("SECO BURN", 0).
-    // OutInfo("tgt_pit: {0}":format(round(tgt_pit, 2)), 1).
-    set g_activeEngines to ActiveEngines().
     wait 0.01.
 }
+set t_Val to 0.
 OutMsg("Engine Cutoff").
 // OutInfo().
 
-local ts to time:seconds + eta:apoapsis.
-until time:seconds >= ts
+local ts to Time:Seconds + eta:apoapsis.
+until Time:Seconds >= ts
 {
-    set ts to time:seconds + eta:apoapsis.
+    set ts to Time:Seconds + eta:apoapsis.
     set s_val to lookDirUp(ship:prograde:vector, -body:position).
     // if ship:altitude > lastAlt set maxAlt to ship:altitude.
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
 OutMsg("Apoapsis reached").
-unlock steering.
-
-until doneFlag
-{
-    if alt:radar < 2 
-    {
-        set doneFlag to true.
-    }
-    else
-    {
-        DispLaunchTelemetry(list(tgt_ap)).
-        wait 0.01.
-    }
-}
+unlock Steering.
+unlock Throttle.
 OutMsg("Script complete!").

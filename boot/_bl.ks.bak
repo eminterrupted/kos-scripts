@@ -8,12 +8,12 @@ if HomeConnection:IsConnected
 }
 else
 {
-    local ts to time:seconds + 5.
+    local ts to Time:Seconds + 5.
     Print "Waiting for connection to KSC...".
     until HomeConnection:IsConnected 
     {
         wait 0.01.
-        if time:seconds > ts break.
+        if Time:Seconds > ts break.
     }
 }
 

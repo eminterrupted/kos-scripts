@@ -10,9 +10,9 @@
 // *~ Variables ~* //
 // #region
     // *- Local
-    local os_ver            to "0.0.1a (ALPO)".
+    local  os_ver         to "0.0.1a (ALPO)".
     local  TermWidth      to 70.
-    local  TermHeight     to 60.
+    local  TermHeight     to 80.
     
     // *- Global
     global g_col            to 0.
@@ -40,8 +40,8 @@
     // Sets the terminal resolution and brings it up
     global function InitDisp
     {
-        set Terminal:width to TermWidth.
-        set Terminal:height to TermHeight.
+        set Terminal:Width to TermWidth.
+        set Terminal:Height to TermHeight.
         Core:doEvent("Open Terminal").
     }
 
@@ -49,18 +49,18 @@
     // Writes a string in a consistent manner (location, formatting)
     global function OutMsg
     {
-        parameter str.
+        parameter str is "".
 
-        local label to choose "[MSG]" if str:length > 0 else "".
-        if str:length > Terminal:width - 8
+        local label to choose "[MSG]" if str:Length > 0 else "".
+        if str:Length > Terminal:Width - 8
         {
-            set str to str:substring(0, Terminal:width - 8).
+            set str to str:Substring(0, Terminal:Width - 8).
         }
-        else if str:length < 1
+        else if str:Length < 1
         {
             set label to "".
         }
-        print "{0,-6} {1, -60}":format(label, str) at (0, 6).
+        print "{0,-6} {1, -60}":Format(label, str) at (0, 6).
     }
 
     // OutInfo :: <string>String, [<int>Position] -> <none>
@@ -120,7 +120,8 @@
         // if not exists(g_maxAlt) global g_maxAlt to 0.
         // set g_maxAlt to max(ship:altitude, g_maxAlt).
 
-        print "{0,-25}":format(label) at (0, cr()).
+        print "{0,-25}":format(label) at (0, g_line).
+        cr().
         from { local i to 0.} until i = label:length step { set i to i + 1.} do
         {
             print "-" at (0 + i, g_line).

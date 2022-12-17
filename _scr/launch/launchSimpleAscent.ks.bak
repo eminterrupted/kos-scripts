@@ -89,9 +89,9 @@ local function AerobeeSafeStage
         wait 0.05.  // Wait a bit to ensure we are getting data from the new engines
 
         set g_idx to 0.
-        set g_ts to time:seconds + 0.50.
-        local _ts_2 to time:seconds + 0.100.
-        local _ts_3 to time:seconds + 0.125.
+        set g_ts to Time:Seconds + 0.50.
+        local _ts_2 to Time:Seconds + 0.100.
+        local _ts_3 to Time:Seconds + 0.125.
 
         local _strArr to list(
             "     Ignition     ",
@@ -119,9 +119,9 @@ local function AerobeeSafeStage
 
         OutInfo(_strArr[g_idx]).
         local doneFlag to false.
-        set _ts_2 to time:seconds + 0.325.
+        set _ts_2 to Time:Seconds + 0.325.
         OutInfo("[AerobeeSafeStage] 2nd until loop", 1).
-        until doneFlag or time:seconds > g_ts 
+        until doneFlag or Time:Seconds > g_ts 
         {    
             OutInfo("[AerobeeSafeStage][120] Refreshing g_activeEngines()", 1).
             set g_activeEngines to ActiveEngines().
@@ -130,7 +130,7 @@ local function AerobeeSafeStage
                 OutInfo("SEP STAGE ACTIVE").
                 OutInfo("[AerobeeSafeStage][125] SEPSTG: Entering second staging loop", 1).
                 
-                if time:seconds < _ts_2
+                if Time:Seconds < _ts_2
                 {
                     set g_idx to mod(g_idx + 1, 21).
                     OutInfo(_strArr[g_idx]).
@@ -157,7 +157,7 @@ local function AerobeeSafeStage
                 }
                 else
                 {
-                    if time:seconds > _ts_2
+                    if Time:Seconds > _ts_2
                     {
                         set g_idx to mod(g_idx + 1, 21).
                         OutInfo(_strArr[g_idx]).

@@ -139,11 +139,11 @@ set g_activeEngines to ActiveEngines().
 
 if ship:status = "PRELAUNCH"
 {
-    local toEng to time:seconds + 7.
+    local toEng to Time:Seconds + 7.
     local launchCommit to false.
     local thrustPerf to GetEnginePerformance().
 
-    until time:seconds > toEng or launchCommit
+    until Time:Seconds > toEng or launchCommit
     {
         set g_activeEngines to ActiveEngines().
         DispSoundingTelemetry().
@@ -401,7 +401,7 @@ if ascentType = "gravityTurn"
     OutMsg("Coasting to AP").
     set doneFlag to false.
     local curAp to ship:altitude.
-    set ts to time:seconds + eta:apoapsis.
+    set ts to Time:Seconds + eta:apoapsis.
     until doneFlag
     {
         set s_val    to lookDirUp(ship:prograde:vector, -body:position).
@@ -415,7 +415,7 @@ if ascentType = "gravityTurn"
             set doneFlag to true.
         }
 
-        if time:seconds > ts 
+        if Time:Seconds > ts 
         {
             set doneFlag to true.
         }

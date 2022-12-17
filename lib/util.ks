@@ -10,7 +10,7 @@
 // *~--- Variables ---~* //
 // #region
     // *- Local
-
+    
     // *- Global
 // #endregion
 
@@ -35,6 +35,59 @@
         wait 0.01.
         wait until Terminal:Input:HasChar.
     }
+
+// #endregion
+
+// *- Logging
+// #region
+
+    // InitLog :: <none> -> <none>
+    // Sets the log file path and writes a header to it
+    global function InitLog
+    {
+        if g_LogPath:IsType("String")
+        {
+            set g_LogPath to g_LogPath:Format(g_Tag:PCN).
+        }
+        if exists(g_LogPath)
+        {
+            log " " to g_LogPath.
+            log "*** MISSION LOG REINITIALIZED ***" to g_LogPath.
+            log "DateTime: {0} (MET: {1})":Format(TimeSpan(Time:Seconds):Full, TimeSpan(MissionTime):Full) to g_LogPath.
+            log "*********************************" to g_LogPath.
+            log " " to g_LogPath.
+        }
+        else
+        {
+            log "*** MISSION LOG BEGIN ***" to g_LogPath.
+            log "Mission : {0}":Format(Ship:Name) to g_LogPath.
+            log "DateTime: {0}":Format(TimeSpan(Time:Seconds):Full) to g_LogPath.
+            log "*************************" to g_LogPath.
+            log " " to g_LogPath.
+        }
+    }
+
+    //LogStr :: <string>LogString -> <none>
+    // Logs a string to a log file for this mission
+    global function LogStr
+    {
+        parameter _str, 
+                  _errLvl is 0.
+
+        local label to "INFO".
+        if _errLvl > 1
+        {
+            set label to "*ERR".
+        }
+        else if _errLvl > 0
+        {
+            set label to "WARN".
+        }
+
+        local logLine to "[{0}][{1}]: {2}":Format(label, MissionTime, _str).
+
+    }
+
 
 // #endregion
 
@@ -134,7 +187,7 @@
             {
                 for val in _prmFrag[1]:Split(",")       // Parameters are comma-delimited within the square brackets
                 {
-                    _prm:add(val). // This list will be added to _tagLex in the next step
+                    _prm:Add(val). // This list will be added to _tagLex in the next step
                 }
             }
         }
@@ -143,7 +196,7 @@
             local _sidSplit to choose _sidFrag:Split(",") if _sidFrag:Split(","):Length > 1 else _sidFrag:Split(":").
             for val in _sidSplit
             {
-                _prm:add(val).
+                _prm:Add(val).
             }
         }
         set _tagLex["SID"] to _sid. // This can be an empty string, it will just default to "Setup.ks" under the path
@@ -152,15 +205,9 @@
         // Now set the ASL - AutoStaging Limiter
         if _tagFragments:Length > 1
         {
-            set _asl to _tagFragments[1]:ToNumber(-1). // Attempts to convert the string to a scalar.
-                                                    // If it fails because the string is not able to be cast, then defaults to -1
-
+            set _asl to _tagFragments[1]:Replace("[",""):Replace("]",""):ToNumber(). // Attempts to convert the string to a scalar, removing any brackets in the process
+                                                                                     // If it fails because the string is not able to be cast, then breaks because we shouldn't go without a stage limiter
             set _tagLex["ASL"] to _asl.
-            // if _asl < 0 // Below 0 means -1, so something went wrong
-            // {
-            //     set _asl to _asl. // Making assumptions here that the reason we failed is because a string was using the old '[2:main]' format
-            //                                                                                 // Note that if we still fail for whatever reason, we fallback to 0.
-            // }
         }
 
         return _tagLex.

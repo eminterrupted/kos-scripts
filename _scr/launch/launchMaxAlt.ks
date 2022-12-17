@@ -105,7 +105,7 @@ until stage:number = g_stopStage
 }
 
 OutMsg("P18: Final Burn").
-until ship:availablethrustAt(body:atm:altitudepressure(ship:altitude)) < 0.01
+until ship:availablethrust < 0.01
 {
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
@@ -117,7 +117,7 @@ OutMsg("P20: MECO").
 OutInfo("     AP ETA: {0}":format(round(eta:apoapsis))).
 until eta:apoapsis < 1
 {
-    set s_val to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
+    set s_val to heading(tgt_hdg, pitch_for(ship, ship:prograde), tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }

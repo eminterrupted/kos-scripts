@@ -54,18 +54,18 @@
         parameter t_engStart to -2.75.
 
         local arm_engStartFlag   to true.
-        local t_launch           to time:seconds + countdown.
+        local t_launch           to Time:Seconds + countdown.
         local launchCommit       to false.
         local engSpool           to CheckEngineSpool(stage:number - 1). 
         local hasSpool           to engSpool[0].
         local spoolTime          to engSpool[1].
         set t_engStart           to t_launch - (spoolTime * 1.1).
         
-        OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_launch, 2))).
+        OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_launch, 2))).
 
-        until time:seconds >= t_launch or launchCommit
+        until Time:Seconds >= t_launch or launchCommit
         {
-            if time:seconds >= t_engStart 
+            if Time:Seconds >= t_engStart 
             {
                 if arm_engStartFlag
                 {
@@ -75,21 +75,31 @@
                 }
                 else
                 {
-                    LaunchCommit_validation(t_launch, spoolTime).
-                    OutMsg("Liftoff!").
-                    OutInfo("",0).
-                    OutInfo("",1).
+                    if LaunchCommitValidation(t_launch, spoolTime)
+                    {
+                        stage.
+                        OutMsg("Liftoff!").
+                        OutInfo().
+                    }
+                    else
+                    {
+                        OutMsg("*** ENGINE UNDERPERF ABORT ***").
+                        OutInfo().
+                        Breakpoint().
+                        wait 10.
+                        print 0 / 1.
+                    }
                 }
                 wait 0.01.
             }
 
-            OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_launch, 2))).
+            OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_launch, 2))).
         }
     }
 
-    local function LaunchCommit_validation
+    local function LaunchCommitValidation
     {
-        parameter t_liftoff to time:seconds,
+        parameter t_liftoff to Time:Seconds,
                   t_spoolTime to 0.1,
                   launchThrustThreshold to 0.975.
 
@@ -104,14 +114,14 @@
 
         if ship:status = "PRELAUNCH" or ship:status = "LANDED"
         {
-            until time:seconds > t_engPerfAbort or launchCommit
+            until Time:Seconds > t_engPerfAbort or launchCommit
             {   
                 if t_spoolTime > 0.1
                 {
                     set g_activeEngines to ActiveEngines().
                     set thrustPerf to max(0.0001, g_activeEngines["CURTHRUST"]) / max(0.0001, g_activeEngines["AVLTHRUST"]).
 
-                    if time:seconds > t_liftoff
+                    if Time:Seconds > t_liftoff
                     {
                         if thrustPerf > launchThrustThreshold
                         {
@@ -123,32 +133,29 @@
                         }
                     }
                 }
-                else if time:seconds > t_liftoff
+                else if Time:Seconds > t_liftoff
                 {
                     set launchCommit to true.
                     wait 0.01.
                 }
-                OutMsg("LAUNCH: T{0}s":format(round(time:seconds - t_liftoff, 2))).
+                OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_liftoff, 2))).
             }
 
             // If we are good, send it! If not, kill throt and trigger a breakpoint
             if launchCommit 
             {
-                stage.
+                return true. 
             }
             else
             {
                 set t_val to 0.
-                OutMsg("*** ENGINE UNDERPERF ABORT ***").
-                OutInfo().
-                Breakpoint().
-                print 1 / 0.
+                return false. 
             }
-            DispClr().
         }
         else
         {
             OutMsg("ERROR: Tried to validate launch, but already airborne!").
+            return false.
         }
     }
 
@@ -173,7 +180,7 @@
     global function GetAscentAngle
     {
         parameter tgt_alt is body:atm:height * 0.86,
-                  f_shape is 1.0125. // TODO: Implement this 'shape' factor to provide a way to control the steepness of the trajectory
+                  f_shape is 1.00. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
 
         local tgt_effAng to 90.
         
@@ -185,8 +192,8 @@
             local cur_pitAng to pitch_for(ship).
             local tgt_effAlt to tgt_alt - g_la_turnAltStart.
             local cur_effAlt to 0.1 + ship:altitude - g_la_turnAltStart.
-            local tgt_pitAng to max(-10, 90 * (1 - (cur_effAlt / tgt_effAlt))).
-            set   tgt_effAng to min(90, max(cur_pitAng - 3.5, min(cur_pitAng + 3.5, tgt_pitAng)) * f_shape).
+            local tgt_pitAng to max(-3, 90 * (1 - (cur_effAlt / tgt_effAlt))).
+            set   tgt_effAng to min(90, max(cur_pitAng - 2.25, min(cur_pitAng + 2.25, tgt_pitAng)) * f_shape).
         }
         return tgt_effAng.
     }

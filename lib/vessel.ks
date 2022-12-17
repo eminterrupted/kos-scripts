@@ -287,6 +287,21 @@ InitActiveEngines().
         }
     }
 
+    // JettisonFairings :: <string>PartTag -> <none>
+    global function JettisonFairings
+    {
+        parameter _fairingTag is "fairingSep".
+
+        for m in ship:moduleNamed("ProceduralFairingSide")
+        {
+            if m:part:tag = _fairingTag
+            {
+                local fairingDecoupler to m:part:GetModule("ProceduralFairingDecoupler").
+                fairingDecoupler:doAction("decouple", true).
+            }
+        }
+    }
+
     // GetBoosters :: [<none>] -> <lexicon>Boosters
     // Returns any strap-on boosters on the vessel that are tagged with 'booster.<n>'
     global function GetBoosters
@@ -450,6 +465,7 @@ InitActiveEngines().
         return _resObj.
     }
 
+    
     // InitActiveEngines :: none -> none
     // Initializes the g_ActiveEnginesLex variable.
     global function InitActiveEngines
@@ -476,7 +492,7 @@ InitActiveEngines().
         if chuteList:length = 0 set chuteList to ship:modulesNamed("RealChuteModule").
         for m in chuteList
         {
-            m:doEvent("arm parachute").
+            m:doAction("arm parachute", true).
         }
     }
     // #endregion
@@ -506,19 +522,20 @@ InitActiveEngines().
                 }
 
                 OutInfo("Engine ignition sequence initiated...").
-                local ts_stg to time:seconds + 2.5.
-                wait until time:seconds >= ts_stg or g_ActiveEnginesLex["CURTHRUST"] > 0.01.
+                local ts_stg to Time:Seconds + 2.5.
+                wait until Time:Seconds >= ts_stg or g_ActiveEnginesLex["CURTHRUST"] > 0.01.
                 
                 OutMsg("Staging complete...").
                 wait 0.10.
 
                 if stage:number > g_stopStage
                 {
+                    OutInfo("STAGE PRESERVE: Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
                     preserve.
                 }
                 else
                 {
-                    OutMsg("StopStage reached").
+                    OutInfo("STAGE STOP: Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
                 }
             }
         }
@@ -543,18 +560,18 @@ InitActiveEngines().
         OutMsg("Hot Staging in progress...").
 
         set resStart to _resObj:Resources:values[0]:amount.
-        local ts to time:seconds + 1.
+        local ts to Time:Seconds + 1.
 
-        until time:seconds >= ts
+        until Time:Seconds >= ts
         {
             wait 0.01.
         }
         set resEnd to _resObj:Resources:values[0]:amount.
         local resRateSec to (resStart - resEnd) / 0.01.
         local timeRemaining to (_resObj:Resources:values[0]:amount - (_resObj:Resources:values[0]:amount * (_pctTrig * 2))) / resRateSec.
-        set ts to time:seconds + timeRemaining.
+        set ts to Time:Seconds + timeRemaining.
 
-        until pctRemain <= _pctTrig or time:seconds >= ts
+        until pctRemain <= _pctTrig or Time:Seconds >= ts
         {
             set pctRemain to _resObj:PctRemaining.
             set s_val to ship:prograde.
