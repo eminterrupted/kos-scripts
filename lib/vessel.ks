@@ -35,7 +35,7 @@ InitActiveEngines().
         local fuelFlowMax   to 0.
         local massFlow      to 0.
         local massFlowMax   to 0.
-        local engLex        to lex().
+        local engStatus     to "".
         local engList       to list().
         local sepflag       to true.
         local localGrav     to constant:g * (ves:body:radius / (ves:body:radius + ship:altitude))^2.
@@ -64,8 +64,13 @@ InitActiveEngines().
             if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name)
             {
                 set sepFlag to false.
-
                 engList:add(_eng). 
+                local m to _eng:GetModule("ModuleEnginesRF").
+                if m:GetField("Status") = "Failed" 
+                { 
+                    set engStatus to m:GetField("Status"). 
+                    set engFailReason to m:GetField("").
+                }
                 set actThr to actThr + _eng:thrust. 
                 set avlThr to avlThr + _eng:availableThrustAt(body:atm:altitudePressure(ship:altitude)).
                 set fuelFlow to fuelFlow + _eng:fuelFlow.
@@ -97,7 +102,7 @@ InitActiveEngines().
         set avlTWR to max(0.00001, avlThr) / (ves:mass * localGrav).
         set curTWR to max(0.00001, actThr) / (ves:mass * localGrav).
         
-        return lex("CURTHRUST", actThr, "AVLTHRUST", avlThr, "CURTWR", curTWR, "AVLTWR", avlTWR, "ENGLIST", engList, "SEPSTG", sepFlag).
+        return lex("CURTHRUST", actThr, "AVLTHRUST", avlThr, "CURTWR", curTWR, "AVLTWR", avlTWR, "ENGLIST", engList, "SEPSTG", sepFlag, "ENGSTATUS", engStatus).
     }
 
     // GetActiveEngines :: <none> -> <List>Engines

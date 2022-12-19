@@ -71,7 +71,7 @@
         parameter str is "",
                 pos is 0.
 
-        set pos to max(pos, 1).
+        set pos to max(pos, 2).
         local label to "[INFO]".
         if str:length > Terminal:width - 8
         {
@@ -214,9 +214,9 @@
     global function DispClr
     {
         parameter line_start to 10, 
-                  line_end   to Terminal:height.
+                  line_end   to Terminal:height - 1.
 
-        local clrLine to "{0," + Terminal:width + "}".
+        local clrLine to "{0," + (Terminal:width - 1) + "}".
         set clrLine to clrLine:format(" ").
         from { local i to line_start.} until i = line_end step { set i to i + 1.} do
         {

@@ -31,7 +31,8 @@ global g_PartInfo to    lex(
     "Engines", lex(
             "SepMotors",    list(
                 "sepMotorSmall",
-                "ROSmallSpinMotor"
+                "ROSmallSpinMotor",
+                "SnubOtron"
             ),
             "SolidFuels", list(
                 "NGNC",

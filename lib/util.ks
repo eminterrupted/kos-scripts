@@ -83,12 +83,8 @@
         {
             set label to "WARN".
         }
-
-        local logLine to "[{0}][{1}]: {2}":Format(label, MissionTime, _str).
-
+        log "[{0}][{1}]: {2}":Format(label, MissionTime, _str) to g_LogPath.
     }
-
-
 // #endregion
 
 // *- Terminal Input

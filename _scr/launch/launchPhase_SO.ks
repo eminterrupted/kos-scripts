@@ -79,11 +79,16 @@ if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
 if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
 if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
 
-local gravAltAvg  to ((gravTurnAlt * 2) + tgt_ap) / 3.
+local gravAltAvg  to ((gravTurnAlt * 3) + tgt_ap) / 4.
 
 OutMsg("Press Enter to begin launch countdown").
 OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg), 1).
 OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 2).
+Print "PARSED TAG DETAILS" at (0, 11).
+Print "PCN: " + g_Tag:PCN at (2, 12).
+Print "SID: " + g_Tag:SID at (2, 13).
+Print "PRM: " + g_Tag:PRM:Join(";") at (2, 14).
+Print "ASL: " + g_Tag:ASL at (2, 15).
 until false
 {
     if Terminal:Input:hasChar
@@ -92,12 +97,10 @@ until false
     }
     if g_TermChar = Terminal:Input:enter break.
 }
-
+DispClr(7).
 set s_val to Ship:Facing.
 lock throttle to t_val.
 lock steering to s_val.
-OutInfo().
-OutInfo("", 1).
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
 set t_Val to 1.
@@ -111,9 +114,9 @@ until ship:altitude > g_la_turnAltStart
     wait 0.01.
 }
 
-until stage:number = g_stopStage
+until stage:number <= g_stopStage
 {
-    set tgt_pit to GetAscentAngle(gravAltAvg).
+    set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
@@ -121,7 +124,7 @@ until stage:number = g_stopStage
 
 until ship:availableThrust < 0.01 // or ship:apoapsis >= tgt_ap
 {
-    set tgt_pit to GetAscentAngle(gravAltAvg).
+    set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.

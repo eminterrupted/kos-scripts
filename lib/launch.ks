@@ -9,7 +9,7 @@
 // *~ Variables ~* //
 // #region
     // *- Local
-    local countdown to 10.
+    local countdown to 5.
     
     // *- Global
     global g_la_turnAltStart to 500. // Altitude at which the vessel will begin a gravity turn
@@ -27,10 +27,10 @@
     // Given a stage number, it will determine if any engines in that stage have engine spool properties
     global function CheckEngineSpool
     {
-        parameter stgNum to stage:number - 1.
+        parameter stgNum.
 
         local hasSpoolTime to false.
-        local maxSpoolTime to 0.001.
+        local maxSpoolTime to 0.0001.
 
         for _e in ship:engines 
         {
@@ -39,8 +39,11 @@
                 local _m to _e:getModule("ModuleEnginesRF").
                 if _m:hasField("effective spool-up time") 
                 {
-                    set hasSpoolTime to true.
-                    set maxSpoolTime to max(maxSpoolTime, _m:getField("effective spool-up time")).
+                    set maxSpoolTime to max(_m:getField("effective spool-up time"), maxSpoolTime).
+                }
+                else
+                {
+                    set maxSpoolTime to maxSpoolTime.
                 }
             }
         }
@@ -83,7 +86,7 @@
                     }
                     else
                     {
-                        OutMsg("*** ENGINE UNDERPERF ABORT ***").
+                        OutMsg("*** ABORT ***").
                         OutInfo().
                         Breakpoint().
                         wait 10.
@@ -103,7 +106,8 @@
                   t_spoolTime to 0.1,
                   launchThrustThreshold to 0.975.
 
-        local launchCommit      to false.
+        // local abortFlag         to false.
+        // local launchCommit      to false.
         local t_engPerfAbort    to t_liftoff + 5.
         local thrustPerf to 0.
         set t_spoolTime to max(0.09, t_spoolTime).
@@ -114,18 +118,23 @@
 
         if ship:status = "PRELAUNCH" or ship:status = "LANDED"
         {
-            until Time:Seconds > t_engPerfAbort or launchCommit
-            {   
+            until Time:Seconds > t_engPerfAbort
+            {  
                 if t_spoolTime > 0.1
                 {
                     set g_activeEngines to ActiveEngines().
                     set thrustPerf to max(0.0001, g_activeEngines["CURTHRUST"]) / max(0.0001, g_activeEngines["AVLTHRUST"]).
-
+                    
                     if Time:Seconds > t_liftoff
                     {
-                        if thrustPerf > launchThrustThreshold
+                        if g_activeEngines["ENGSTATUS"] = "Failed"
                         {
-                            set launchCommit to true.
+                            set t_val to 0.
+                            return false.
+                        }
+                        else if thrustPerf > launchThrustThreshold
+                        {
+                            return true.
                         }
                         else
                         {
@@ -135,21 +144,10 @@
                 }
                 else if Time:Seconds > t_liftoff
                 {
-                    set launchCommit to true.
                     wait 0.01.
+                    return true.
                 }
                 OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_liftoff, 2))).
-            }
-
-            // If we are good, send it! If not, kill throt and trigger a breakpoint
-            if launchCommit 
-            {
-                return true. 
-            }
-            else
-            {
-                set t_val to 0.
-                return false. 
             }
         }
         else
@@ -157,6 +155,9 @@
             OutMsg("ERROR: Tried to validate launch, but already airborne!").
             return false.
         }
+        
+        // Performance not validated by abort time, so return false.
+        return false.
     }
 
 
@@ -180,22 +181,54 @@
     global function GetAscentAngle
     {
         parameter tgt_alt is body:atm:height * 0.86,
-                  f_shape is 1.00. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
+                  tgt_ap is body:atm:height * 0.86,
+                  f_shape is 1.025. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
 
         local tgt_effAng to 90.
-        
+        local tgt_effAP  to tgt_ap / 2.
         if ship:altitude < g_la_turnAltStart
         {
         }
         else
         {
-            local cur_pitAng to pitch_for(ship).
+            local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:altitude > 100000 else pitch_for(ship, ship:prograde).
             local tgt_effAlt to tgt_alt - g_la_turnAltStart.
             local cur_effAlt to 0.1 + ship:altitude - g_la_turnAltStart.
-            local tgt_pitAng to max(-3, 90 * (1 - (cur_effAlt / tgt_effAlt))).
-            set   tgt_effAng to min(90, max(cur_pitAng - 2.25, min(cur_pitAng + 2.25, tgt_pitAng)) * f_shape).
+            local cur_altErr to cur_effAlt / (tgt_effAlt / 2).
+            local tgt_pitAng to max(-2, 90 * (1 - cur_altErr)).// * abs(f_shape - 1).
+            local tgt_angErr to min(15, max(4, 15 * min(1, (Ship:Apoapsis / (tgt_ap / 2))))) * f_shape.
+            set   tgt_effAng to max(tgt_pitAng, cur_pitAng - tgt_angErr). // min(90, max(cur_pitAng - tgt_angErr, min(cur_pitAng + tgt_angErr, tgt_pitAng)) * f_shape).
+
+            local ascentStatObj to lexicon(
+                "cur_pitAng",  round(cur_pitAng, 5)
+                ,"tgt_alt",    round(tgt_alt)
+                ,"tgt_ap",     round(tgt_ap)
+                ,"tgt_effAlt", round(tgt_effAlt)
+                ,"cur_effAlt", round(cur_effAlt)
+                ,"cur_altErr", round(cur_altErr, 5)
+                ,"tgt_pitAng", round(tgt_pitAng, 5)
+                ,"tgt_angErr", round(tgt_angErr, 5)
+                ,"tgt_effAng", round(tgt_effAng, 5)
+            ).
+            DispAscentAngleStats(ascentStatObj).
+            //Breakpoint().
         }
         return tgt_effAng.
+    }
+
+    // Local helper function
+    local function DispAscentAngleStats
+    {
+        parameter _statLex,
+                  _line is 25.
+
+        set g_line to _line.
+        print "ASCENT STATS" at (0, g_line).
+        print "------------" at (0, cr()).
+        for key in _statLex:keys
+        {
+            print "{0,-10}: {1}":format(key, _statLex[key]) at (0, cr()).
+        }
     }
 // #endregion
 
