@@ -17,7 +17,7 @@ else
 
     local line is 5.
 
-    from { local n is 0.} until n = part:modules:length step { set n to n + 1.} do 
+    from { local n is 0.} until n = part:modules:Length step { set n to n + 1.} do 
     {
         local m is part:getModuleByIndex(n).
 
@@ -26,7 +26,7 @@ else
             set line to line + 1.
             print "MODULE(" + m:name + "):".
 
-            set line to line + 1 + m:allactions:length + m:allevents:length + m:allfields:length.
+            set line to line + 1 + m:Allactions:Length + m:Allevents:Length + m:Allfields:Length.
             print m.
 
             set line to line + 1.

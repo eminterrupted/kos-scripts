@@ -4,6 +4,8 @@
 // Load Dependencies
 RunOncePath("0:/lib/loadDep").
 
+InitDisp().
+
 // Tag parsing
 set g_tag to ParseCoreTag().
 set g_stopStage to g_tag:ASL.

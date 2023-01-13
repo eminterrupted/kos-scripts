@@ -1,3 +1,3 @@
 parameter _prms to list().
 
-RunPath("0:/_scr/launch/launch_SO.ks", _prms).
+RunPath("0:/_scr/launch/launchPhase_OBT.ks", _prms).

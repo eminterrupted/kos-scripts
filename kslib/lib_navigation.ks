@@ -13,7 +13,7 @@ function kslib_nav_obt_tangent {
 function kslib_nav_obt_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, kslib_nav_obt_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:Body:position):normalized, kslib_nav_obt_tangent(ves)):normalized.
 }
 
 // Perpendicular to both tangent and binormal
@@ -28,7 +28,7 @@ function kslib_nav_obt_normal {
 function kslib_nav_obt_lan {
     parameter ves is ship.
 
-    return angleAxis(ves:orbit:LAN, ves:body:angularVel:normalized) * solarPrimeVector.
+    return angleAxis(ves:orbit:LAN, ves:Body:AngularVel:normalized) * solarPrimeVector.
 }
 
 // Same as surface prograde vector for ves
@@ -43,7 +43,7 @@ function kslib_nav_srf_tangent {
 function kslib_nav_srf_binormal {
     parameter ves is ship.
 
-    return vcrs((ves:position - ves:body:position):normalized, kslib_nav_srf_tangent(ves)):normalized.
+    return vcrs((ves:position - ves:Body:position):normalized, kslib_nav_srf_tangent(ves)):normalized.
 }
 
 // Perpendicular to  both tangent and binormal
@@ -58,7 +58,7 @@ function kslib_nav_srf_normal {
 function kslib_nav_srf_lan {
     parameter ves is ship.
 
-    return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel:normalized) * solarPrimeVector.
+    return angleAxis(ves:orbit:LAN - 90, ves:Body:AngularVel:normalized) * solarPrimeVector.
 }
 
 // Vector directly away from the body at ves' position
@@ -73,7 +73,7 @@ function kslib_nav_ang_to_body_asc_node {
     parameter ves is ship.
 
     local joinVector is kslib_nav_obt_lan(ves).
-    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
+    local angle is vang((ves:position - ves:Body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
@@ -92,7 +92,7 @@ function kslib_nav_ang_to_body_desc_node {
     parameter ves is ship.
 
     local joinVector is -kslib_nav_obt_lan(ves).
-    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
+    local angle is vang((ves:position - ves:Body:position):normalized, joinVector).
     if ves:status = "LANDED" {
         set angle to angle - 90.
     }
@@ -154,13 +154,13 @@ function kslib_nav_phase_angle {
     local my_ancestors is list().
     local your_ancestors is list().
 
-    my_ancestors:add(ship:body).
-    until not(my_ancestors[my_ancestors:length-1]:hasBody) {
-        my_ancestors:add(my_ancestors[my_ancestors:length-1]:body).
+    my_ancestors:Add(ship:Body).
+    until not(my_ancestors[my_ancestors:Length-1]:hasBody) {
+        my_ancestors:Add(my_ancestors[my_ancestors:Length-1]:Body).
     }
-    your_ancestors:add(target:body).
-    until not(your_ancestors[your_ancestors:length-1]:hasBody) {
-        your_ancestors:add(your_ancestors[your_ancestors:length-1]:body).
+    your_ancestors:Add(target:Body).
+    until not(your_ancestors[your_ancestors:Length-1]:hasBody) {
+        your_ancestors:Add(your_ancestors[your_ancestors:Length-1]:Body).
     }
 
     for my_ancestor in my_ancestors {
@@ -181,7 +181,7 @@ function kslib_nav_phase_angle {
     local my_ancestor is my_ancestors[0].
     until my_ancestor = common_ancestor {
         set vel to vel + my_ancestor:velocity:orbit.
-        set my_ancestor to my_ancestor:body.
+        set my_ancestor to my_ancestor:Body.
     }
     local binormal is vcrs(-common_ancestor:position:normalized, vel:normalized):normalized.
 
@@ -209,12 +209,12 @@ function kslib_nav_avg_isp {
     local massBurnRate is 0.
     for eng in burnEngines {
         if eng:ignition {
-            set massBurnRate to massBurnRate + eng:availableThrust/(eng:ISP * constant:g0).
+            set massBurnRate to massBurnRate + eng:AvailableThrust/(eng:ISP * constant:g0).
         }
     }
     local isp is -1.
     if massBurnRate <> 0 {
-        set isp to ship:availablethrust / massBurnRate.
+        set isp to ship:Availablethrust / massBurnRate.
     }
     return isp.
 }
@@ -232,8 +232,8 @@ function kslib_nav_burn_time {
     }
     
     local burnTime is -1.
-    if ship:availablethrust <> 0 {
-        set burnTime to ship:mass * (1 - CONSTANT:E ^ (-deltaV / isp)) / (ship:availablethrust / isp).
+    if ship:Availablethrust <> 0 {
+        set burnTime to ship:mass * (1 - CONSTANT:E ^ (-deltaV / isp)) / (ship:Availablethrust / isp).
     }
     return burnTime.
 }

@@ -35,7 +35,7 @@
     
     if b = "List" { 
       set _r to list(). 
-      for i in a _r:add(i). 
+      for i in a _r:Add(i). 
 
       return _r.
     }
@@ -116,8 +116,8 @@
               c is to_l(l),
               i is 0.
     
-    until i > c:length - 1 {
-      o(cast(c:sublist(i, min(m, c:length-1)), l:typename)). 
+    until i > c:Length - 1 {
+      o(cast(c:sublist(i, min(m, c:Length-1)), l:typename)). 
       set i to i+m. 
     } 
   }.
@@ -165,7 +165,7 @@
       local u is t(i). 
       
       if _r:haskey(u) {
-        _r[u]:add(i). 
+        _r[u]:Add(i). 
       }
       
       else {
@@ -183,7 +183,7 @@
               _r is list(). 
     
     for i in to_l(l) {
-      _r:add(t(i)).
+      _r:Add(t(i)).
     }
 
     return cast(_r, l:typename).
@@ -196,8 +196,8 @@
               i is 0, 
               c is to_l(l).
 
-    until i=c:length { 
-      _r:add(t(c[i], i + 1)). 
+    until i=c:Length { 
+      _r:Add(t(c[i], i + 1)). 
       set i to i + 1. 
     }
 
@@ -208,7 +208,7 @@
     parameter l,
               c is to_l(l). 
     
-    if c:length = 0 return n.
+    if c:Length = 0 return n.
     
     local r0 is c[0]. 
     
@@ -223,7 +223,7 @@
     parameter l, 
               c is to_l(l). 
     
-    if c:length = 0 return n.
+    if c:Length = 0 return n.
 
     local r0 is c[0].
 
@@ -246,11 +246,11 @@
     for i in c { 
 
       if o(i) {
-        _r[0]:add(i). 
+        _r[0]:Add(i). 
       }
       
       else {
-        _r[1]:add(i). 
+        _r[1]:Add(i). 
       }
     }
 
@@ -280,7 +280,7 @@
     for i in to_l(l) {
 
       if not c(i) {
-        _r:add(i). 
+        _r:Add(i). 
       }
     }
     
@@ -303,7 +303,7 @@
 
     for i in to_l(l) {
       
-      if c(i) _r:add(i). 
+      if c(i) _r:Add(i). 
     }
     
     return cast(_r,l:typename).
@@ -355,7 +355,7 @@
       }
     }
     
-    qs(_r, 0, _r:length - 1).
+    qs(_r, 0, _r:Length - 1).
     
     return cast(_r, l:typename).
   }

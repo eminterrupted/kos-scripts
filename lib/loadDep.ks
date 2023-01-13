@@ -1,3 +1,6 @@
+// Config Values
+set Config:IPU to 525.
+
 // Global vars
 runOncePath("0:/lib/globals.ks").
 

@@ -12,6 +12,15 @@
     // *- Local
     
     // *- Global
+    global g_CompDel to lexicon(
+         "GE", { parameter _curVal, _tgtVal. return _curVal >= _tgtVal.}
+        ,"GT", { parameter _curVal, _tgtVal. return _curVal >  _tgtVal.}
+        ,"EQ", { parameter _curVal, _tgtVal. return _curVal =  _tgtVal.}
+        ,"LT", { parameter _curVal, _tgtVal. return _curVal <  _tgtVal.}
+        ,"LE", { parameter _curVal, _tgtVal. return _curVal <= _tgtVal.}
+    ).
+
+                
 // #endregion
 
 // *~--- Functions ---~* //
@@ -35,6 +44,41 @@
         wait 0.01.
         wait until Terminal:Input:HasChar.
     }
+
+    // Module manipulation
+    global function DoEvent
+    {
+        parameter _module, 
+                  _event.
+        
+        if _module:HasEvent(_event)
+        {
+            _module:DoEvent(_event).
+            return True.
+        }
+        else
+        {
+            return False.
+        }
+    }
+
+    global function DoAction
+    {
+        parameter _module, 
+                  _action,
+                  _flag.
+        
+        if _module:HasAction(_action)
+        {
+            _module:DoAction(_action, _flag).
+            return True.
+        }
+        else
+        {
+            return False.
+        }
+    }
+
 
 // #endregion
 
@@ -165,7 +209,7 @@
         {
             set _pcnFrag        to _scriptFragments[0]:Replace("]",""):Split("[").
             set _tagLex["PCN"]  to _pcnFrag[0].
-            set _sidFrag        to _pcnFrag[1].
+            set _sidFrag        to choose _pcnFrag[1] if _pcnFrag:length > 1 else "".
         }
         else
         {
@@ -189,10 +233,14 @@
         }
         else
         {
-            local _sidSplit to choose _sidFrag:Split(",") if _sidFrag:Split(","):Length > 1 else _sidFrag:Split(":").
-            for val in _sidSplit
+            if _sidFrag:Length > 0 
             {
-                _prm:Add(val).
+                local _sidSplit to choose _sidFrag:Split(",") if _sidFrag:Split(","):Length > 1 else _sidFrag:Split(":").
+            
+                for val in _sidSplit
+                {
+                    _prm:Add(val).
+                }
             }
         }
         set _tagLex["SID"] to _sid. // This can be an empty string, it will just default to "Setup.ks" under the path
@@ -240,3 +288,74 @@
         return _inString. // If we didn't match anything, then return value as-is.
     }
 // #endregion
+
+// TODO: Work In Progress 'Util' functions
+global function SortList
+{
+    parameter _unsortedList.
+
+    local _maxVal to 0.
+    local _minVal to 99.
+    local workingCopy to _unsortedList:Copy.
+    local resultList to list().
+
+    // This is the order in which list sorting is done. SortList will basically iterate through this list to find the right spot to insert in the result list. Not case sensitive because kOS itself isn't
+    local sortDict to list(
+        "_"
+        ,"0"
+        ,"1"
+        ,"2"
+        ,"3"
+        ,"4"
+        ,"5"
+        ,"6"
+        ,"7"
+        ,"8"
+        ,"9"
+        ,"a"
+        ,"b"
+        ,"c"
+        ,"d"
+        ,"e"
+        ,"f"
+        ,"g"
+        ,"h"
+        ,"i"
+        ,"j"
+        ,"k"
+        ,"l"
+        ,"m"
+        ,"n"
+        ,"o"
+        ,"p"
+        ,"q"
+        ,"r"
+        ,"s"
+        ,"t"
+        ,"u"
+        ,"v"
+        ,"w"
+        ,"x"
+        ,"y"
+        ,"z"
+    ).
+
+    for item in workingCopy
+    {
+        if item:IsType("String")
+        {   
+            // Sort based on the first character using the following format:
+            // 1) _
+            // 2) [0-9]
+            // 3) [a-zA-Z]
+            // 4) [Eveything else]
+
+            // if there already exists an item with the same first character, use the second character... and so on.
+            local sortInt to sortDict:Find(item[0]).
+            
+            
+            if      item[0]:MatchesPattern("^_")        { resultList:Add(item). }
+            else if item[0]:MatchesPattern("^[0-9]+")   { resultList:Add(item). }
+        }
+    }    
+}

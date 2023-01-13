@@ -1,6 +1,5 @@
 clearscreen.
-Set Terminal:Width to 70.
-Set Terminal:Height to 50.
+// Terminal size
 Core:DoEvent("Open Terminal").
 print "Booting".
 wait until ship:unpacked and kuniverse:timewarp:issettled.

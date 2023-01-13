@@ -10,7 +10,7 @@ DispMain(ScriptPath()).
 local tgt_alt to -1.
 local tgt_hdg to 90.
 
-local eng to choose ship:partsTagged("ullageTest")[0] if ship:partsTagged("ullageTest"):length > 0 else ship:engines[0].
+local eng to choose ship:partsTagged("ullageTest")[0] if ship:partsTagged("ullageTest"):Length > 0 else ship:engines[0].
 
 global g_EngDataObj to InitDataObj(eng).
 
@@ -30,7 +30,7 @@ set nextStg to stage:number - 1.
 until false
 {
     OutMsg("Launch Ascent  ").
-    if ship:availableThrust < 0.01
+    if ship:AvailableThrust < 0.01
     {
         OutInfo("We are entering AerobeeSafeStage()", 1).
         AerobeeSafeStage().
@@ -38,7 +38,7 @@ until false
     }
     else
     {
-        OutInfo("ALTITUDE (AP)       : {0}m ({1}m)    ":format(round(ship:altitude), round(ship:apoapsis)), 0).
+        OutInfo("ALTITUDE (AP)       : {0}m ({1}m)    ":format(round(ship:Altitude), round(ship:Apoapsis)), 0).
         OutInfo("VELOCITY (SRF (OBT)): {0}m/s ({1}m/s)   ":format(round(ship:velocity:surface:mag, 1), round(ship:velocity:orbit:mag, 1)), 1).
         set g_EngDataObj to GetEngineData(eng).
         //DispEngineData(g_EngDataObj).
@@ -56,7 +56,7 @@ local function GetActiveEngines2
 
     for _e in _ves:engines
     {
-        if _e:ignition and not _e:flameout _engList:add(_e).
+        if _e:ignition and not _e:flameout _engList:Add(_e).
     }
     
     return _engList.
@@ -199,7 +199,7 @@ local function DispEngineData
 
     set g_line to _startLine.
     
-    from { local i to 0.} until i = _objToDisplay:keys:length step { set i to i + 1.} do 
+    from { local i to 0.} until i = _objToDisplay:keys:Length step { set i to i + 1.} do 
     {
         local _key to _objToDisplay:keys[i].
         local _val to _objToDisplay[_key].
@@ -208,7 +208,7 @@ local function DispEngineData
         {
             print _key at (0, cr()).
             cr().
-            for idx in range(0, _key:length, 1)
+            for idx in range(0, _key:Length, 1)
             {
                 print _val at (idx,g_line).
             }

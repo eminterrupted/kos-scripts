@@ -3,12 +3,12 @@ clearScreen.
 
 parameter params to list().
 
-DispMain(ScriptPath()).
-
 runOncePath("0:/lib/loadDep").
 runOncePath("0:/lib/launch").
 
-local tgt_ap    to body:atm:height * 1.5.
+DispMain(ScriptPath()).
+
+local tgt_ap    to body:Atm:Height * 1.5.
 local tgt_ap_key to "tgt_ap".
 
 local tgt_hdg   to 90. // 90 degrees (due east) is most efficient trajectory
@@ -20,17 +20,15 @@ local tgt_pit_key to "tgt_pit".
 local tgt_rll   to 0.
 local tgt_rll_key to "tgt_rll".
 
-if params:length > 0
+if params:Length > 0
 {
     set tgt_ap to params[0].
-    if params:length > 1 set tgt_hdg to params[1].
-    if params:length > 2 set tgt_pit to params[2].
-    if params:length > 3 set tgt_rll to params[3].
+    if params:Length > 1 set tgt_hdg to params[1].
+    if params:Length > 2 set tgt_pit to params[2].
+    if params:Length > 3 set tgt_rll to params[3].
 }
 
-local doneFlag to false.
-
-local gravTurnAlt to body:atm:height * 0.90.
+local gravTurnAlt to body:Atm:Height * 0.90.
 
 local tgtLex to lexicon(
     tgt_ap_key, tgt_ap,
@@ -42,11 +40,11 @@ local tgtLex to lexicon(
 local tgtKeyList to list(tgt_ap_key, tgt_hdg_key, tgt_pit_key, tgt_rll_key).
 
 local paramUpdatesMade to false.
-from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do 
+from { local i to 0. } until i = tgtKeyList:Length step { set i to i + 1. } do 
 {
     if tgtLex:HASKEY(tgtKeyList[i])
     {
-        if tgtLex[tgtKeyList[i]]:isType("String")
+        if tgtLex[tgtKeyList[i]]:IsType("String")
         {
             local tgtParamVal to tgtLex[tgtKeyList[i]]:TOLOWER().
             if tgtParamVal:MATCHESPATTERN("^[0-9]+(?:km)*$")
@@ -74,16 +72,16 @@ if paramUpdatesMade
     set tgt_pit to tgtLex[tgt_pit_key].
     set tgt_rll_key to tgtLex[tgt_rll_key].
 }
-if tgt_ap:isType("String") set tgt_ap to tgt_ap:ToNumber().
-if tgt_hdg:isType("String") set tgt_hdg to tgt_hdg:ToNumber().
-if tgt_pit:isType("String") set tgt_pit to tgt_pit:ToNumber().
-if tgt_rll:isType("String") set tgt_rll to tgt_rll:ToNumber().
+if tgt_ap:IsType("String") set tgt_ap to tgt_ap:ToNumber().
+if tgt_hdg:IsType("String") set tgt_hdg to tgt_hdg:ToNumber().
+if tgt_pit:IsType("String") set tgt_pit to tgt_pit:ToNumber().
+if tgt_rll:IsType("String") set tgt_rll to tgt_rll:ToNumber().
 
 local gravAltAvg  to ((gravTurnAlt * 3) + tgt_ap) / 4.
 
 OutMsg("Press Enter to begin launch countdown").
-OutInfo("ALT: {0}  |  HDG: {1}":format(tgt_ap, tgt_hdg), 1).
-OutInfo("PIT: {0}  |  RLL: {1}":format(tgt_pit, tgt_rll), 2).
+OutInfo("ALT: {0}  |  HDG: {1}":Format(tgt_ap, tgt_hdg), 1).
+OutInfo("PIT: {0}  |  RLL: {1}":Format(tgt_pit, tgt_rll), 2).
 Print "PARSED TAG DETAILS" at (0, 11).
 Print "PCN: " + g_Tag:PCN at (2, 12).
 Print "SID: " + g_Tag:SID at (2, 13).
@@ -91,11 +89,11 @@ Print "PRM: " + g_Tag:PRM:Join(";") at (2, 14).
 Print "ASL: " + g_Tag:ASL at (2, 15).
 until false
 {
-    if Terminal:Input:hasChar
+    if Terminal:Input:HasChar
     {
-        set g_TermChar to Terminal:Input:getchar.
+        set g_TermChar to Terminal:Input:Getchar.
     }
-    if g_TermChar = Terminal:Input:enter break.
+    if g_TermChar = Terminal:Input:Enter break.
 }
 DispClr(7).
 set s_val to Ship:Facing.
@@ -104,26 +102,34 @@ lock steering to s_val.
 OutMsg("Commencing launch countdown").
 LaunchCountdown().
 set t_Val to 1.
+DispClr(7).
 OutMsg("Liftoff!").
 
+set g_boosterSepArmed to ArmAutoBoosterSeparation().
 ArmAutoStaging().
+ArmHotStaging().
 
-until ship:altitude > g_la_turnAltStart
+until ship:Altitude > g_la_turnAltStart
 {
+    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
+    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEnginesLex to ActiveEngines().
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
 
-until stage:number <= g_stopStage
+until stage:Number <= g_stopStage
 {
+    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
 }
 
-until ship:availableThrust < 0.01 // or ship:apoapsis >= tgt_ap
+until ship:AvailableThrust < 0.01 // or ship:Apoapsis >= tgt_ap
 {
+    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
@@ -131,15 +137,18 @@ until ship:availableThrust < 0.01 // or ship:apoapsis >= tgt_ap
 }
 set t_Val to 0.
 OutMsg("Engine Cutoff").
+wait 1.
 // OutInfo().
 
-local ts to Time:Seconds + eta:apoapsis.
+OutMsg("Waiting until apoapsis").
+local ts to Time:Seconds + eta:Apoapsis.
 until Time:Seconds >= ts
 {
-    set ts to Time:Seconds + eta:apoapsis.
-    set s_val to lookDirUp(ship:prograde:vector, -body:position).
-    // if ship:altitude > lastAlt set maxAlt to ship:altitude.
+    set ts to Time:Seconds + eta:Apoapsis.
+    set s_val to lookDirUp(ship:Prograde:Vector, -body:Position).
+    // if ship:Altitude > lastAlt set maxAlt to ship:Altitude.
     DispLaunchTelemetry(list(tgt_ap)).
+    OutInfo("Apoapsis in: {0}s":Format(Round(ts - Time:Seconds, 2))).
     wait 0.01.
 }
 OutMsg("Apoapsis reached").

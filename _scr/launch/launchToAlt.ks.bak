@@ -20,12 +20,12 @@ local tgt_pit_key to "tgt_pit".
 local tgt_rll   to 0.
 local tgt_rll_key to "tgt_rll".
 
-if params:length > 0
+if params:Length > 0
 {
     set tgt_ap to params[0].
-    if params:length > 1 set tgt_hdg to params[1].
-    if params:length > 2 set tgt_pit to params[2].
-    if params:length > 3 set tgt_rll to params[3].
+    if params:Length > 1 set tgt_hdg to params[1].
+    if params:Length > 2 set tgt_pit to params[2].
+    if params:Length > 3 set tgt_rll to params[3].
 }
 
 local gravTurnAlt to tgt_ap.
@@ -55,7 +55,7 @@ local tgtLex to lexicon(
 local tgtKeyList to list(tgt_ap_key, tgt_hdg_key, tgt_pit_key, tgt_rll_key).
 
 local paramUpdatesMade to false.
-from { local i to 0. } until i = tgtKeyList:length step { set i to i + 1. } do 
+from { local i to 0. } until i = tgtKeyList:Length step { set i to i + 1. } do 
 {
     if tgtLex:HASKEY(tgtKeyList[i])
     {
@@ -127,7 +127,7 @@ OutMsg("Liftoff!").
 
 ArmAutoStaging().
 
-until ship:altitude > g_la_turnAltStart
+until ship:Altitude > g_la_turnAltStart
 {
     DispLaunchTelemetry(list(tgt_ap)).
     wait 0.01.
@@ -144,7 +144,7 @@ until stage:number = g_stopStage
 
 OutMsg("P18: Final Burn").
 OutInfo("     tgt_ap: {0}":format(round(tgt_ap))).
-until ship:availablethrustAt(body:atm:altitudepressure(ship:altitude)) < 0.01 or ship:apoapsis >= tgt_ap * 1.025
+until ship:AvailablethrustAt(body:Atm:Altitudepressure(ship:Altitude)) < 0.01 or ship:Apoapsis >= tgt_ap * 1.025
 {
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).
@@ -157,8 +157,8 @@ for eng in g_activeEngines["ENGLIST"]
 OutInfo().
 OutMsg("P20: MECO").
 
-OutInfo("     AP ETA: {0}":format(round(eta:apoapsis))).
-until eta:apoapsis < 1
+OutInfo("     AP ETA: {0}":format(round(eta:Apoapsis))).
+until eta:Apoapsis < 1
 {
     set s_val to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
     DispLaunchTelemetry(list(tgt_ap)).

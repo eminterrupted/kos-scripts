@@ -42,13 +42,13 @@ local function DispList
     local colLim to colSize * (numCols - 1).
     local lineLim to Terminal:height - 5.
 
-    local titleDiv to { local div to "". from { local i to 0.} until i = _passedTip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.    
+    local titleDiv to { local div to "". from { local i to 0.} until i = _passedTip:Length step { set i to i + 1.} do { set div to div + "-". } return div.}.    
     set g_col to stCol.
     set g_line to stLine.
 
     if _passedObj:isType("List")
     {
-        from { local n is 0.} until n = _passedObj:length step { set n to n + 1.} do 
+        from { local n is 0.} until n = _passedObj:Length step { set n to n + 1.} do 
         {
             if g_line = stLine 
             {
@@ -99,7 +99,7 @@ global function DispLex
         if _passedObj:hasKey("<tip>") set _passedTip to _passedObj["<tip>"]:replace("<tip>","").
     }
 
-    local titleDiv to { local div to "". from { local i to 0.} until i = _passedTip:length step { set i to i + 1.} do { set div to div + "-". } return div.}.            
+    local titleDiv to { local div to "". from { local i to 0.} until i = _passedTip:Length step { set i to i + 1.} do { set div to div + "-". } return div.}.            
 
     set g_col to stCol.
     set g_line to stLine.
@@ -108,7 +108,7 @@ global function DispLex
     
     for key in _passedObj:keys 
     {
-        set maxKeyLen to max(maxKeyLen, key:tostring:length).
+        set maxKeyLen to max(maxKeyLen, key:tostring:Length).
         set maxValLen to max(maxValLen, colSize - maxKeyLen - 5).
     }
     

@@ -12,7 +12,7 @@
     // *- Local
     local  os_ver         to "0.0.1a (ALPO)".
     local  TermWidth      to 70.
-    local  TermHeight     to 80.
+    local  TermHeight     to 50.
     
     // *- Global
     global g_col            to 0.
@@ -40,9 +40,12 @@
     // Sets the terminal resolution and brings it up
     global function InitDisp
     {
-        set Terminal:Width to TermWidth.
-        set Terminal:Height to TermHeight.
-        Core:doEvent("Open Terminal").
+        parameter termW to TermWidth,
+                  termH to TermHeight.
+
+        set Terminal:Width to termW.
+        set Terminal:Height to termH.
+        if Core:HasEvent("Open Terminal") { Core:DoEvent("Open Terminal"). }
     }
 
     // OutMsg :: <string>String -> <none>
@@ -71,13 +74,13 @@
         parameter str is "",
                 pos is 0.
 
-        set pos to max(pos, 2).
+        set pos to min(pos, 2).
         local label to "[INFO]".
-        if str:length > Terminal:width - 8
+        if str:Length > Terminal:width - 8
         {
             set str to str:substring(0, Terminal:width - 8).
         }
-        else if str:length < 1
+        else if str:Length < 1
         {
             set label to "".
         }
@@ -98,7 +101,7 @@
         parameter _scrPath is "".
 
         print "KUSP Mission Assistant" at (0, 0).
-                print "v: " + os_ver at (TermWidth - (os_ver:length + 3), 0).
+                print "v: " + os_ver at (TermWidth - (os_ver:Length + 3), 0).
         from { local i to 0.} until i = TermWidth step { set i to i + 1.} do 
         {
             print "=" at (0 + i, 1).
@@ -112,17 +115,17 @@
 
     global function DispLaunchTelemetry
     {
-        parameter _prmList is list(body:atm:height).
+        parameter _prmList is list(body:Atm:height).
 
         set g_line to 10.
         local label to "LAUNCH TELEMETRY".
 
         // if not exists(g_maxAlt) global g_maxAlt to 0.
-        // set g_maxAlt to max(ship:altitude, g_maxAlt).
+        // set g_maxAlt to max(ship:Altitude, g_maxAlt).
 
         print "{0,-25}":format(label) at (0, g_line).
         cr().
-        from { local i to 0.} until i = label:length step { set i to i + 1.} do
+        from { local i to 0.} until i = label:Length step { set i to i + 1.} do
         {
             print "-" at (0 + i, g_line).
         }
@@ -130,15 +133,15 @@
         print "ALTITUDE " at (1, cr()).
         print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (TGT)", round(_prmList[0]), "m") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (MAX)", round(g_maxAlt), "m") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (CUR)", round(ship:altitude), "m") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (CUR)", round(ship:Altitude), "m") at (2, cr()).
         cr().
         print "VELOCITY " at (1, cr()).
         print "|- {0,-15}: {1}{2}   ":format("SRF VELO (CUR)", round(ship:velocity:surface:mag, 2), "m/s") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("VERT SPD (CUR)", round(ship:verticalspeed, 2), "m/s") at (2, cr()).
         cr().
         print "TRAJECTORY " at (1, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("APOAPSIS", round(ship:apoapsis), "m") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("APOAPSIS ETA", round(ship:orbit:eta:apoapsis), "s") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("APOAPSIS", round(ship:Apoapsis), "m") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("APOAPSIS ETA", round(ship:orbit:eta:Apoapsis), "s") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
         // cr().
         // print "ENGINES " at (1, cr()).
@@ -149,7 +152,7 @@
         // print "|- {0,-15}: {1}{2}   ":format("TWR    (AVL)", round( g_activeEngines["AvailTWR"], 2)) at (2, cr()).
 
         // cr().
-        // if _prmList:length > 0 
+        // if _prmList:Length > 0 
         // {
         //     print " MISC " at (0, cr()).
         //     print " |- {0, -15}: {1}{2}   ":format(_prmList[0], _prmList[1], _prmList[2]) at (0, cr()).
@@ -163,7 +166,7 @@
 
     global function DispEngineTelemetry
     {
-        parameter _engs is g_activeEngines.
+        parameter _engs is GetActiveEngines().
 
         set g_line to 10.
         
@@ -172,7 +175,7 @@
 
         print "{0, -25}":format(label) at (0, g_line).
         cr().
-        from { local i to 0.} until i = label:length step { set i to i + 1.} do
+        from { local i to 0.} until i = label:Length step { set i to i + 1.} do
         {
             print "-" at (0 + i, g_line).
         }
@@ -190,9 +193,9 @@
         local _ln to 30.
 
         print g_scriptFlags at (2, 40).
-        if g_scriptFlags:keys:length > 0
+        if g_scriptFlags:keys:Length > 0
         {
-            from { local idx to 0.} until idx = g_scriptFlags:keys:length step { set idx to idx + 1.} do
+            from { local idx to 0.} until idx = g_scriptFlags:keys:Length step { set idx to idx + 1.} do
             {
                 local flagID to g_scriptFlags:keys[idx].
                 if flagID = "Ref"
@@ -209,12 +212,61 @@
     }
 
 
+    // DispData :: [<lexicon>Object to print, <int>line]
+    global function DispTelemetry
+    {
+        parameter _dispData,
+                  _dispLine is 10.
+
+        if _dispData:IsType("Lexicon")
+        {
+            if _dispData:Keys:Length > 0
+            {
+                set g_line to _dispLine.
+
+                DispHeaderLine(_dispData:Keys[0], _dispData:Values[0]).
+
+                from { local iKey to 1.} until iKey = _dispData:Keys:Length step { set iKey to iKey + 1.} do
+                {
+                    if _dispData:Keys[iKey]:MatchesPattern("^CR_.*")
+                    {
+                        cr().
+                    }
+                    else
+                    {
+                        print "- {0, -15}: {1, -40}":Format(_dispData:Keys[iKey], _dispData:Values[iKey]) at (0, cr()).
+                    }
+                }
+                
+            }
+        }
+    }
+
+    // DispHeaderLine :: [<string>Header text, <int>Line, <string>Header character]
+    local function DispHeaderLine
+    {
+        parameter _hdrText,
+                  _hdrChar,
+                  _hdrLine is g_line,
+                  _hdrCol is 0.
+
+        set g_line to _hdrLine.
+
+        print _hdrText at (_hdrCol, g_line).
+        cr().
+        from { local i to 0.} until i = _hdrText:Length step { set i to i + 1.} do
+        {
+            print _hdrChar at (_hdrCol + i, g_line).
+        }
+        cr().
+    }
+
     // DispClr :: [<scalar>Line To start, <scalar>Line to stop]
     // Clears a display block
     global function DispClr
     {
         parameter line_start to 10, 
-                  line_end   to Terminal:height - 1.
+                  line_end   to Terminal:height - 2.
 
         local clrLine to "{0," + (Terminal:width - 1) + "}".
         set clrLine to clrLine:format(" ").

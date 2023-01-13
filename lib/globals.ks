@@ -10,15 +10,20 @@ global g_missionPlan to "".
 // List and Lex of active engines and active engines + data
 global g_ActiveEngines      to list().
 global g_ActiveEnginesLex   to lexicon().
+global g_ConsumedResources  to lexicon().
 
 // LogFile Directory
 global g_LogPath to "0:\_mission\{0}\mission.log".
 
-// Tagging
+// Staging
 global g_StopStage to 99.
+
+// Tagging
 global g_Tag to lexicon().
 
 // Random useful globals
+global g_ETA to -1.
+global g_ETA_TS to -1.
 global g_TermChar to "".
 global g_TS to 0.
 global g_Counter to 0.

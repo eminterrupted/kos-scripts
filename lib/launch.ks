@@ -13,7 +13,7 @@
     
     // *- Global
     global g_la_turnAltStart to 500. // Altitude at which the vessel will begin a gravity turn
-    global g_la_turnAltEnd   to body:atm:height * 0.90. // Altitude at which the vessel will begin a gravity turn
+    global g_la_turnAltEnd   to body:Atm:height * 0.90. // Altitude at which the vessel will begin a gravity turn
 
 // #endregion
 
@@ -23,32 +23,6 @@
 
 // *- Countdown
 // #region
-
-    // Given a stage number, it will determine if any engines in that stage have engine spool properties
-    global function CheckEngineSpool
-    {
-        parameter stgNum.
-
-        local hasSpoolTime to false.
-        local maxSpoolTime to 0.0001.
-
-        for _e in ship:engines 
-        {
-            if _e:stage = stgNum
-            {
-                local _m to _e:getModule("ModuleEnginesRF").
-                if _m:hasField("effective spool-up time") 
-                {
-                    set maxSpoolTime to max(_m:getField("effective spool-up time"), maxSpoolTime).
-                }
-                else
-                {
-                    set maxSpoolTime to maxSpoolTime.
-                }
-            }
-        }
-        return list(hasSpoolTime, maxSpoolTime).
-    }
 
     // Countdown :: [<scalar>IgnitionSequenceStartSec] -> none
     // Performs the countdown
@@ -138,7 +112,7 @@
                         }
                         else
                         {
-                            DispEngineTelemetry().
+                            DispEngineTelemetry(g_activeEngines:EngList).
                         }
                     }
                 }
@@ -180,23 +154,25 @@
     // guidance as the vessel ascends. 
     global function GetAscentAngle
     {
-        parameter tgt_alt is body:atm:height * 0.86,
-                  tgt_ap is body:atm:height * 0.86,
+        parameter tgt_alt is body:Atm:height * 0.86,
+                  tgt_ap is body:Atm:height * 0.86,
                   f_shape is 1.025. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
 
         local tgt_effAng to 90.
-        local tgt_effAP  to tgt_ap / 2.
-        if ship:altitude < g_la_turnAltStart
+        local tgt_effAP  to max(body:Atm:Height * 1.25, tgt_ap / 3).
+        if ship:Altitude < g_la_turnAltStart
         {
         }
         else
         {
-            local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:altitude > 100000 else pitch_for(ship, ship:prograde).
+            local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:Altitude < 100000 else 
+                choose ((pitch_for(ship, ship:SrfPrograde) + pitch_for(ship, ship:Prograde)) / 2) if ship:altitude < body:Atm:Height else 
+                pitch_for(ship, ship:Prograde).
             local tgt_effAlt to tgt_alt - g_la_turnAltStart.
-            local cur_effAlt to 0.1 + ship:altitude - g_la_turnAltStart.
+            local cur_effAlt to 0.1 + ship:Altitude - g_la_turnAltStart.
             local cur_altErr to cur_effAlt / (tgt_effAlt / 2).
             local tgt_pitAng to max(-2, 90 * (1 - cur_altErr)).// * abs(f_shape - 1).
-            local tgt_angErr to min(15, max(4, 15 * min(1, (Ship:Apoapsis / (tgt_ap / 2))))) * f_shape.
+            local tgt_angErr to min(10, max(4, 10 * min(1, (Ship:Apoapsis / (tgt_effAp / 2))))) * f_shape.
             set   tgt_effAng to max(tgt_pitAng, cur_pitAng - tgt_angErr). // min(90, max(cur_pitAng - tgt_angErr, min(cur_pitAng + tgt_angErr, tgt_pitAng)) * f_shape).
 
             local ascentStatObj to lexicon(

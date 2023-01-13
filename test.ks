@@ -20,7 +20,7 @@ print " ".
 
 // local script to "". // Path to test script.
 // local scriptPrms to _prms. // parameters for script
-// if _prms:length > 0 
+// if _prms:Length > 0 
 // {
 
 // }
@@ -41,7 +41,7 @@ print " ".
 // {
 // }
 
-// if _prms:length > 0 
+// if _prms:Length > 0 
 // {
 //     set eng to _prms[0].
 // }
@@ -114,7 +114,7 @@ local function DispLexiconData
 
     set g_line to _startLine.
     
-    from { local i to 0.} until i = _objToDisplay:keys:length step { set i to i + 1.} do 
+    from { local i to 0.} until i = _objToDisplay:keys:Length step { set i to i + 1.} do 
     {
         local _key to _objToDisplay:keys[i].
         local _val to _objToDisplay[_key].
@@ -123,7 +123,7 @@ local function DispLexiconData
         {
             print _key at (0, cr()).
             cr().
-            for idx in range(0, _key:length, 1)
+            for idx in range(0, _key:Length, 1)
             {
                 print _val at (idx,g_line).
             }

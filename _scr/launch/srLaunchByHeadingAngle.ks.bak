@@ -21,9 +21,9 @@ lock throttle to t_val.
 local altStartTurn          to 250.
 local parsedTag             to ParseCoreTag(Core:Tag).
 local resPctRemaining       to 0.
-local stageStop             to parsedTag[parsedTag:length - 1].
-local tgt_Hdg               to choose params[0] if params:length > 0 else 90.
-local tgt_vAng              to choose params[1] if params:length > 1 else 87.
+local stageStop             to parsedTag[parsedTag:Length - 1].
+local tgt_Hdg               to choose params[0] if params:Length > 0 else 90.
+local tgt_vAng              to choose params[1] if params:Length > 1 else 87.
 local resObj                to lex().
 
 local spinStaged to false.
@@ -71,7 +71,7 @@ for dc in ship:decouplers
         set f_spinStabilization to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_spinStabilization"], true).
         // set f_spinStabilization to true.
         // set g_scriptFlags[f_spinStabilizationID] to true.
-        // g_stageInfo["SpinStabilized"]:add(dc:decoupledIn).
+        // g_stageInfo["SpinStabilized"]:Add(dc:decoupledIn).
         // OutMsg("spinStabilized: True").
         // print "{0,10}: {1}":format("SPIN STAB", f_spinStabilization) at (40, 4).
     }
@@ -80,7 +80,7 @@ for dc in ship:decouplers
         set f_hotStage to ToggleScriptFlag(g_scriptFlags["REF"]["NAME"]["f_hotStage"], true).
         // set f_hotStage to true.
         // set g_scriptFlags[f_hotStageID] to true.
-        // g_stageInfo["HotStage"]:add(dc:decoupledIn).
+        // g_stageInfo["HotStage"]:Add(dc:decoupledIn).
         // OutMsg("HotStage: True").
         // print "{0,10}: {1}":format("HOT STAGE", f_hotStage) at (40, 4).
     }
@@ -183,11 +183,11 @@ until stage:number = stageStop
         //set doneFlag to true.
         set ship:control:roll to rollCtrlVal.
         g_stageInfo["SpinStabilized"]:remove(nextStage). 
-        if g_stageInfo["SpinStabilized"]:length = 0 set f_spinStabilization to false.
+        if g_stageInfo["SpinStabilized"]:Length = 0 set f_spinStabilization to false.
     }
 
     //if spinStaged unlock steering.
-    until doneFlag or ship:altitude > body:atm:height
+    until doneFlag or ship:Altitude > body:Atm:height
     {
         set tgt_vAng to max(0, round(get_vAng:call(88, 0.875), 3)).
         set s_val    to heading(90, tgt_vAng).
@@ -213,7 +213,7 @@ set rollCtrlVal to 0.
 set s_val to ship:facing.
 
 // set ship:control:pilotRollTrim to 0.
-when ship:altitude > body:atm:height then 
+when ship:Altitude > body:Atm:height then 
 {
     OutMsg("Reached space!").
     rcs on.
@@ -221,10 +221,10 @@ when ship:altitude > body:atm:height then
 
 // set doneFlag to false.
 // OutMsg("Continuing pitch program").
-// until (ship:apoapsis > tgt_AP and body:atm:altitudepressure(ship:altitude) <= 0.001) or ship:altitude > body:atm:height or doneFlag
+// until (ship:Apoapsis > tgt_AP and body:Atm:Altitudepressure(ship:Altitude) <= 0.001) or ship:Altitude > body:Atm:height or doneFlag
 // {
 //     set tgt_vAng to max(0, round(get_vAng:call(88), 3)).
-//     //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:apoapsis) / tgt_AP) * 1.50)))).
+//     //set tgt_vAng  to 90 * (1 - max(0, min(1, ((max(0.0001, ship:Apoapsis) / tgt_AP) * 1.50)))).
 //     //set s_val    to heading(compass_for(ship, ship:prograde), tgt_vAng, 0).
 //     DispSoundingTelemetry(list(tgt_vAng)).
 //     if alt:radar <= 25 set doneFlag to true.

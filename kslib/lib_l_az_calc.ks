@@ -53,12 +53,12 @@ global function l_az_calc_init {
     //Does all the one time calculations and stores them in a list to help reduce the overhead or continuously updating
     local equatorialVel is (2 * constant():pi * body:radius) / body:rotationperiod.
     local targetOrbVel is sqrt(body:mu/ (body:radius + desiredAlt)).
-    data:add(desiredInc).       //[0]
-    data:add(launchLatitude).   //[1]
-    data:add(equatorialVel).    //[2]
-    data:add(targetOrbVel).     //[3]
-    data:add(launchNode).       //[4]
-    data:add(autoNodeEpsilon).  //[5]
+    data:Add(desiredInc).       //[0]
+    data:Add(launchLatitude).   //[1]
+    data:Add(equatorialVel).    //[2]
+    data:Add(targetOrbVel).     //[3]
+    data:Add(launchNode).       //[4]
+    data:Add(autoNodeEpsilon).  //[5]
     return data.
 }.
 
