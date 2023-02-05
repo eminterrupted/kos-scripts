@@ -1,8 +1,12 @@
 @lazyGlobal off.
 // #include "0:/lib/globals.ks"
 // #include "0:/lib/loadDep.ks"
+// #include "0:/lib/engines.ks"
 
 // Variables *****
+local v_SpinReady to false.
+
+
 global g_ShipEngines to lexicon().
 
 global g_ArmAutoStage to false.
@@ -10,14 +14,6 @@ global g_ArmAutoStage to false.
 global g_boosterObj  to lexicon().
 global g_BoosterSepArmed to false.
 
-global g_stageInfo to lex(
-    "HotStage",         uniqueSet(),
-    "SpinStabilized",   uniqueSet(),
-    "Engines",          lex(), 
-    "Resources",        lex()
-).
-
-local v_SpoolTime to 0.
 local StageLogic to lexicon(
     "DEF", {}
     ,"AutoStgOFF", { set g_ArmAutoStage to False. set g_StageLogicDelegate to stageLogic["AutoStgON"]@.}
@@ -27,16 +23,59 @@ local StageLogic to lexicon(
 global g_StageLogicTrigger to -99.
 global g_StageLogicDelegate to stageLogic["DEF"]@.
 
+local _etaDel to { parameter _ETA, _Threshold is 0, _opType is "LE". return g_OP[_opType]:Call(_ETA, Abs(_Threshold)).}.
+local _tsDel  to { parameter _TS,  _Threshold is 0, _opType is "GE". return g_OP[_opType]:Call(Time:Seconds, _TS).    }.
+local _obtDel to { 
+    parameter _obtPrm, _tgtVal, _opType is "LE". 
+    
+    if _obtPrm = "AP"          { return g_OP[_opType]:Call(Ship:Apoapsis, _tgtVal). } 
+    else if _obtPrm = "PE"     { return g_OP[_opType]:Call(Ship:Periapsis, _tgtVal).} 
+    else if _obtPrm = "ALT"    { return g_OP[_opType]:Call(Ship:Altitude, _tgtVal). }
+    else if _obtPrm = "RDRALT" { return g_OP[_opType]:Call(ALT:Radar,     _tgtVal). }
+    return false.
+}.
+
 local StgConDel to lexicon(
-    "TS",      { parameter _tgtTS, _op.    return g_CompDel[_op]:Call(Time:Seconds, _tgtTS).  }
-    ,"ETA_TS",  { parameter _tgtETA, _op.   return g_CompDel[_op]:Call(g_TS, (g_TS + _tgtETA)).}
-    ,"ETA_AP",  { parameter _tgtETA, _op.   return g_CompDel[_op]:Call(ETA:Apoapsis,  _tgtETA).}
-    ,"ETA_PE",  { parameter _tgtETA, _op.   return g_CompDel[_op]:Call(ETA:Periapsis, _tgtETA).}
-    ,"AP",      { parameter _tgtAP, _op.    return g_CompDel[_op]:Call(Ship:Apoapsis, _tgtAP). }
-    ,"PE",      { parameter _tgtPE, _op.    return g_CompDel[_op]:Call(Ship:Periapsis,_tgtPE). }
-    ,"ALT",     { parameter _tgtAlt, _op.   return g_CompDel[_op]:Call(Ship:Altitude, _tgtAlt).}
-    ,"ALTRDR",  { parameter _tgtAlt, _op.   return g_CompDel[_op]:Call(Alt:Radar, _tgtAlt).    }
+    "ETA",      { parameter _ETA, _Threshold is 0, _opType is "LE". return g_OP[_opType]:Call(_ETA, Abs(_Threshold)).}
+    ,"TS",      _tsDel@
+    ,"ETA_TS",  _tsDel@
+    ,"ETA_AP",  _etaDel:Bind(ETA:Apoapsis)@
+    ,"ETA_PE",  _etaDel:Bind(ETA:Periapsis)@
+    ,"ETA_ECO", _etaDel:Bind(g_ETA_ECO)@
+    ,"AP",      _obtDel:Bind("AP")@
+    ,"PE",      _obtDel:Bind("PE")@
+    ,"ALT",     _obtDel:Bind("ALT")@
+    ,"ALTRDR",  _obtDel:BIND("RDRALT")@
 ).
+
+local FieldByName to lexicon(
+    "ETA", lexicon(
+        "AP", { return ETA:Apoapsis.}
+        ,"PE", { return ETA:Periapsis.}
+        ,"G_TS", { return g_TS - Time:Seconds.}
+        ,"NA", { return Time:Seconds * 999. }
+    ),
+    "ALT", lexicon(
+        "AP", { return Ship:Apoapsis. }
+        ,"PE", { return Ship:Periapsis.}
+    )
+).
+
+local StgConInit to lexicon(
+    "ETA", { parameter _BaseValStr, _LeadTime. set g_ETA_TS to Time:Seconds + FieldByName["ETA"][_BaseValStr]:Call() + _LeadTime. return g_ETA_TS.}
+    ,"ALT", { parameter _BaseValStr, _LeadAlt. }
+).
+
+local NewStageInfo to lexicon(
+    "HotStage",         lexicon()
+    ,"SpinStg",        lexicon()
+    ,"Engines",         lexicon()
+    ,"Resources",       lexicon()
+    ,"Stages",          lexicon()
+    ,"Conditions",      lexicon()
+).
+
+set g_StageInfo to NewStageInfo:Copy().
 
 // Functions *****
 InitActiveEngines().
@@ -54,6 +93,7 @@ InitActiveEngines().
         parameter ves is ship,
                   includeSepMotors to false.
 
+        local lastUpdate    to 0.
         local actThr        to 0.
         local avlThr        to 0.
         local avlTWR        to 0.
@@ -62,10 +102,15 @@ InitActiveEngines().
         local fuelFlowMax   to 0.
         local massFlow      to 0.
         local massFlowMax   to 0.
-        local engStatus     to "".
+        local maxSpoolTime  to 0.
         local engList       to list().
         local sepflag       to true.
-        local localGrav     to constant:g * (ves:Body:radius / (ves:Body:radius + ship:Altitude))^2.
+        local localGrav     to GetLocalGravity(ves:Body, ves:Altitude).
+
+        local causeStr      to "N/A".
+        local failStr       to "N/A".
+        local statusStr     to "NOMINAL".
+        local engStatusLex  to lexicon("Status", statusStr, "Cause", causeStr, "FailedEngs", lex()).
 
         local sumThr_Del_AllEng to { 
             parameter _eng. 
@@ -76,12 +121,27 @@ InitActiveEngines().
             }
 
             engList:Add(_eng). 
+            local _engMod to _eng:GetModule("ModuleEnginesRF").
+            if _engMod:GetField("Status"):MatchesPattern(".*(FAILED)+.*")
+            {
+                set failStr to choose _engMod:GetField("cause") if _engMod:HasField("cause") else "UNKNOWN".
+                set statusStr to "[{0}]:{1}":Format("FAILED", failStr).
+                set engStatusLex["FailedEngs"][_eng:CID] to "[{0}]:{1}":Format("FAILED", failStr).
+                set engStatusLex["Status"] to "FAILED".
+                set g_ErrLvl to 1.
+                // #TODO PartHighlighting
+                // if g_PartHighlighting_On 
+                // {
+
+                // }
+            }
             set actThr to actThr + _eng:thrust. 
             set avlThr to avlThr + _eng:AvailableThrustAt(body:Atm:AltitudePressure(ship:Altitude)).
             set fuelFlow to fuelFlow + _eng:fuelFlow.
             set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
             set massFlow to massFlow + _eng:massFlow.
             set massFlowMax to massFlowMax + _eng:maxMassFlow.
+            set maxSpoolTime to choose max(maxSpoolTime, _engMod:GetField("effective spool-up time")) if _engMod:HasField("effective spool-up time") else maxSpoolTime.
         }.
 
         local sumThr_Del_NoSep to
@@ -92,11 +152,19 @@ InitActiveEngines().
             {
                 set sepFlag to false.
                 engList:Add(_eng). 
-                local m to _eng:GetModule("ModuleEnginesRF").
-                if m:GetField("Status") = "Failed" 
-                { 
-                    set engStatus to m:GetField("Status"). 
-                    set engFailReason to m:GetField("").
+                local _engMod to _eng:GetModule("ModuleEnginesRF").
+                if _engMod:GetField("Status"):MatchesPattern(".*FAILED.*")
+                {
+                    set failStr to choose _engMod:GetField("cause") if _engMod:HasField("cause") else "UNKNOWN".
+                    set statusStr to "[{0}]:{1}":Format("FAILED", failStr).
+                    set engStatusLex["FailedEngs"][_eng:CID] to "[{0}]:{1}":Format("FAILED", failStr).
+                    set engStatusLex["Status"] to "FAILED".
+                    
+                    // #TODO PartHighlighting
+                    // if g_PartHighlighting_On 
+                    // {
+
+                    // }
                 }
                 set actThr to actThr + _eng:thrust. 
                 set avlThr to avlThr + _eng:AvailableThrustAt(body:Atm:AltitudePressure(ship:Altitude)).
@@ -104,6 +172,7 @@ InitActiveEngines().
                 set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
                 set massFlow to massFlow + _eng:massFlow.
                 set massFlowMax to massFlowMax + _eng:maxMassFlow.
+                set maxSpoolTime to choose max(maxSpoolTime, _engMod:GetField("effective spool-up time")) if _engMod:HasField("effective spool-up time") else maxSpoolTime.
             }
         }.
 
@@ -120,9 +189,13 @@ InitActiveEngines().
 
         for eng in ves:engines 
         { 
-            if eng:ignition and not eng:flameout
+            if eng:Stage >= Stage:Number and eng:ignition and not eng:flameout
             {
                 sumThr_Del:call(eng).
+            }
+            else if eng:ignition and eng:flameout
+            {
+                set engStatusLex[eng:CID] to "FLAMEOUT".
             }
         }
 
@@ -132,22 +205,28 @@ InitActiveEngines().
         return lex(
              "CURTHRUST", actThr
             ,"AVLTHRUST", avlThr
+            ,"PCTTHRUST", round(max(0.000000000000001, actThr) / max(0.00001, avlThr), 5)
             ,"CURTWR", curTWR
             ,"AVLTWR", avlTWR
+            ,"TWRSAFE", curTWR > 1.05
             ,"FUELFLOW", fuelFlow
             ,"FUELFLOWMAX", fuelFlowMax
+            ,"FLOWPCT", round(max(0.000000000000001, fuelFlow)/ max(0.00001, fuelFlowMax), 5)
             ,"MASSFLOW", massFlow
             ,"MASSFLOWMAX", massFlowMax
             ,"ENGLIST", engList
             ,"SEPSTG", sepFlag
-            ,"ENGSTATUS", engStatus
+            ,"MAXSPOOLTIME", maxSpoolTime
+            ,"ENGSTATUS", engStatusLex
+            ,"LASTUPDATE", Round(Time:Seconds, 5)
         ).
     }
 
     // Given a list of engines, return perf data
-    global function GetEnginePerfData
+    global function GetEngineData
     {
-        parameter engList is list().
+        parameter engList is list(),
+                  includeSpecs is true.
 
         local actThr        to 0.
         local avlThr        to 0.
@@ -157,26 +236,51 @@ InitActiveEngines().
         local fuelFlowMax   to 0.
         local massFlow      to 0.
         local massFlowMax   to 0.
-        local engStatus     to "".
+        local engStatus     to lexicon().
         local engFailReason to "".
         local localGrav     to constant:g * (Ship:Body:Radius / (Ship:Body:Radius + Ship:Altitude))^2.
 
-        for _eng in engList
+        local maxSpoolTime  to 0.
+        local maxEffSpool   to 0.
+        from { local i to 0.} until i = engList:Length step { set i to i + 1.} do
         {
-            if _eng:ignition and not _eng:flameout
-            {
-                    local m to _eng:GetModule("ModuleEnginesRF").
-                if m:GetField("Status") = "Failed" 
-                { 
-                    set engStatus to m:GetField("Status"). 
-                    //set engFailReason to m:GetField("").
+            local eng to engList[i].
+            local engMod to eng:GetModule("ModuleEnginesRF").
+
+            set avlThr to avlThr + eng:AvailableThrustAt(Body:Atm:AltitudePressure(Ship:Altitude)).
+            set fuelFlowMax to fuelFlowMax + eng:MaxFuelFlow.
+            set massFlowMax to massFlowMax + eng:MaxMassFlow.
+            set engStatus[eng:CID] to engMod:GetField("Status").
+            if includeSpecs 
+            { 
+                if engMod:HasField("effective spool-up time") 
+                {
+                    local thisSpool to engMod:GetField("effective spool-up time").
+                    local effSpool  to thisSpool.
+                    if eng:Tag:MatchesPattern("(HotStg|HotStage)\.\d*")
+                    {
+                        local engTags to eng:Tag:Split(".").
+                        set effSpool to thisSpool + (engTags[1]:ToNumber(0.0000001) / 1000).
+                    }
+                    
+                    set maxSpoolTime to Max(maxSpoolTime, thisSpool).
+                    set maxEffSpool to Max(maxEffSpool, effSpool).
                 }
-                set actThr to actThr + _eng:Thrust. 
-                set avlThr to avlThr + _eng:AvailableThrustAt(Body:Atm:AltitudePressure(Ship:Altitude)).
-                set fuelFlow to fuelFlow + _eng:FuelFlow.
-                set fuelFlowMax to fuelFlowMax + _eng:MaxFuelFlow.
-                set massFlow to massFlow + _eng:MassFlow.
-                set massFlowMax to massFlowMax + _eng:MaxMassFlow.
+            }
+            if eng:ignition and not eng:flameout
+            {
+                // if engMod:GetField("Status") = "Failed" 
+                // { 
+                    
+                //     //set engFailReason to m:GetField("").
+                // }
+                set actThr to actThr + eng:Thrust. 
+                set fuelFlow to fuelFlow + eng:FuelFlow.
+                set massFlow to massFlow + eng:MassFlow.
+            }
+            else if eng:ignition and eng:flameout
+            {
+                set engStatus[eng:CID] to "FLAMEOUT".
             }
         }.
 
@@ -186,10 +290,10 @@ InitActiveEngines().
         return lex(
              "CURTHRUST", actThr
             ,"AVLTHRUST", avlThr
-            ,"THRPCT", actThr / avlThr
+            ,"PCTTHRUST", round(max(0.000000000000001, actThr) / max(0.00001, avlThr), 5)
             ,"CURTWR", curTWR
             ,"AVLTWR", avlTWR
-            ,"TWRSAFE", curTWR > 1.0
+            ,"TWRSAFE", curTWR > 1.05
             ,"FUELFLOW", fuelFlow
             ,"FUELFLOWMAX", fuelFlowMax
             ,"MASSFLOW", massFlow
@@ -197,6 +301,9 @@ InitActiveEngines().
             ,"ENGLIST", engList
             ,"ENGSTATUS", engStatus
             ,"STATUSSTR", engFailReason
+            ,"MAXSPOOLTIME", maxSpoolTime
+            ,"MAXEFFSPOOL", maxEffSpool
+            ,"LASTUPDATE", Round(Time:Seconds, 5)
         ).
     }
 
@@ -208,12 +315,12 @@ InitActiveEngines().
 
         local engList to list().
 
-        for eng in ship:engines
+        for eng in Ship:Engines
         { 
-            if eng:ignition and not eng:flameout
+            if eng:Stage >= Stage:Number and eng:Ignition and not eng:Flameout
             {
                 if _includeSepMotors { engList:Add(eng). }
-                else if not g_partInfo["Engines"]["SepMotors"]:contains(eng:name) or eng:Tag:Replace("sep"):Length > 0 { engList:Add(eng). }
+                else if not g_partInfo["Engines"]["SepMotors"]:Contains(eng:Name) or eng:Tag:Replace("sep"):Length > 0 { engList:Add(eng). }
             }
         }
         return engList.
@@ -325,8 +432,8 @@ InitActiveEngines().
                     {
                         if eng:Tag:Contains("StgCon")
                         {
-                            local stgCondList to ParseStageConditionTag(eng:tag).
-                            set EngineObj[i]["StgCon"] to lexicon("ACTIVE", True, "COND", stgCondList[0], "OP", stgCondList[1], "TGTVAL", stgCondList[2], "CHKDEL", stgCondList[3]).
+                            local stgCondLex to ParseConditionTag(eng:tag, "StgCon").
+                            set EngineObj[i]["StgCon"] to lexicon("ACTIVE", True, "CND", stgCondLex["Condition"], "INPUT", stgCondLex["Input"], "THRESH", stgCondLex["Threshold"], "CHKDEL", stgCondLex["CheckDelegate"], "INITDEL", stgCondLex["InitDelegate"]).
                         }
                         else
                         {
@@ -346,6 +453,7 @@ InitActiveEngines().
     {
         if not (defined g_ShipEngines) global g_ShipEngines to lexicon().
         set g_ShipEngines to GetShipEnginesObject().
+        set g_ShipLex["Engines"] to g_ShipEngines. 
     }
 
 
@@ -358,10 +466,9 @@ InitActiveEngines().
     {
         set g_BoosterObj to GetBoosters(ship).
         set g_line to 40.
-        local disarmBoosterSep to { set g_BoosterSepArmed to false. }.
-        local del_disarmBoosterSep to disarmBoosterSep@.
         if g_BoosterObj:PRESENT
         {
+            OutDebug("Arming Booster Sets").
             for _setIdx in g_BoosterObj["BOOSTER_SETS"]:Keys
             {   
                 // print "g_BoosterObj['BOOSTER_SETS']: {0}":format(g_BoosterObj:hasKey("BOOSTER_SETS")) at (2, g_line).
@@ -409,24 +516,51 @@ InitActiveEngines().
                 //when (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["ENG"]["AVLTHRUST"] <= 5)) then
                 when (g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_setIdx]["ENG"]["PCT"] <= 0.10 )) then
                 {
-                    del_DisarmBoosterSep:call().
-                    OutInfo("Staging booster set " + _setIdx).
+                    OutDebug("Staging booster set " + _setIdx).
                     from { local i to 0.} until i = g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"]:Length step { set i to i + 1.} do 
                     {
                         local dc to g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"][i].
                         if dc:HasEvent("decouple") 
                         {
                             dc:DoEvent("decouple").
-                            OutInfo("Staging success").
+                            OutDebug("Staging success").
                         }
                         else
                         {
-                            OutInfo("Staging failure - Decouple event not found on part").
+                            OutDebug("Staging failure - Decouple event not found on part").
                         }
                     }
                     g_BoosterObj["BOOSTER_SETS"]:Remove(_setIdx).
+                    if g_BoosterObj["BOOSTER_SETS"]:Keys:Length = 0 
+                    {
+                        set g_BoosterSepArmed to false.
+                    }
                 }
+                set g_BoosterSepArmed to True.
+                OutDebug("Booster Set ({0}) Armed":Format(_setIdx)).
             }
+        }
+    }
+
+
+    global function ArmFairingJettison
+    {
+        parameter _tag.
+
+        local FairingJettisonDelegates to lexicon(
+            "launch",   { parameter _alt is 125000. when Ship:Altitude >= _alt then { JettisonFairings("fairing.(Ascent|ASC|Launch)").}}
+            ,"reentry", { parameter _alt is 7500.   when Ship:Altitude <= _alt then { JettisonFairings("fairing.(Reentry|RET|Descent|DESC)").}}
+        ).
+
+        local fairings to Ship:PartsTaggedPattern("fairing\.{0}":Format(_tag)).
+        
+        if fairings:Length > 0 
+        {
+            local fairingTags to fairings[0]:Tag:Split(".").
+            local jettisonAlt to fairingTags[fairingTags:Length - 1]:ToNumber(5000).
+            local triggerType to choose "Launch" if _tag:MatchesPattern("Ascent|ASC|Launch") else "Reentry".
+            local triggerDel  to FairingJettisonDelegates[_tag]@.
+            triggerDel:Call(jettisonAlt).
         }
     }
 
@@ -496,8 +630,8 @@ InitActiveEngines().
         for boosterID in idSet
         {
             set b_lex["PRESENT"]    to true.
-
-            set regex               to "booster.{0}":format(boosterID).
+            
+            set regex               to "booster\.{0}":format(boosterID).
             set stgBoosters         to ship:PartsTaggedPattern(regex).
 
             set stg_lex             to lex().
@@ -545,6 +679,7 @@ InitActiveEngines().
                 }
                 else
                 {
+                    set stg_lex to ProcessBoosterItem(_item:TypeName, _item, boosterID, stg_lex).
                     set stg_lex to ProcessBoosterItem(_item:TypeName, _item:Decoupler, boosterID, stg_lex).
                 }
             }
@@ -563,9 +698,9 @@ InitActiveEngines().
     }
 
     // TODO Write Engine Perf Module
-    // GetEnginePerfData :: List<Engines> -> Lexicon<engine perf data>
+    // GetEngineData :: List<Engines> -> Lexicon<engine perf data>
     // Returns a lexicon containing engine performance data
-    global function GetEnginePerfData_Old
+    global function GetEngineData_Old
     {
         parameter _engList to ActiveEngines().
 
@@ -596,9 +731,10 @@ InitActiveEngines().
             ,"MassFlow", _engRes_MassFlow
             ,"MaxMassFlow", _engRes_MaxMassFlow
             ,"Resources",   lex()
+            ,"TimeRemaining", 999999
         ).
 
-        OutInfo("Engine: {0} ({1})":format(_engList[0]:name, _engList[0]:tag), 2).
+        //OutInfo("Engine: {0} ({1})":format(_engList[0]:name, _engList[0]:tag), 1).
         if _engList:Length > 0
         {
             for _eng in _engList
@@ -608,24 +744,32 @@ InitActiveEngines().
                 set _engRes_MassFlow to _engRes_MassFlow + _eng:MassFlow.
                 set _engRes_MaxMassFlow to _engRes_MaxMassFlow + _eng:MaxMassFlow.
                 
-                from { local _idx to 0.} until _idx > _eng:consumedResources:values:Length step { set _idx to _idx + 1.} do
+                if _eng:ConsumedResources:Values:Length > 0
                 {
-                    local res to _eng:consumedResources:values[_idx].
-                    if not g_ResIgnoreList:Contains(res:name)
+                    from { local _idx to 0.} until _idx >= _eng:consumedResources:values:Length step { set _idx to _idx + 1.} do
                     {
-                        OutInfo("Processing Resource: {0}":format(res:name), 3).
-                        set _resObj["Resources"][res:name] to res.
-                        set _idx to _idx + 1.
-                        set _engRes_SummedAmt to _engRes_SummedAmt + res:amount.
-                        set _engRes_SummedCap to _engRes_SummedCap + res:capacity.
-                        set _engRes_SummedPct to (_engRes_SummedPct + (max(0.001, res:Amount) / max(0.001, res:capacity))) / _idx.
-                    }
-                    else
-                    {
-                        OutInfo("Ignoring resource: {0}":format(res:name), 3).
+                        local engResources to choose _eng:ConsumedResources if _eng:ConsumedResources:Values:Length > _idx else lexicon().
+                        
+                        // print "eng: {0}  |  resIDX: [{1}]  | resCount [{2}]":format(_eng:Name, _idx, engResources:Keys:Length) at (2, 25).
+                        // print "engResources::" at (2, 26).
+                        // print engResources at (2, 27).
+                        // breakPoint().
+                        local res to engResources:Values[_idx].
+                        if not g_ResIgnoreList:Contains(res:name)
+                        {
+                            //OutInfo("Processing Resource: {0}":format(res:name), 3).
+                            set _resObj["Resources"][res:name] to res.
+                            set _idx to _idx + 1.
+                            set _engRes_SummedAmt to _engRes_SummedAmt + res:amount.
+                            set _engRes_SummedCap to _engRes_SummedCap + res:capacity.
+                            set _engRes_SummedPct to (_engRes_SummedPct + (max(0.001, res:Amount) / max(0.001, res:capacity))) / (_idx).
+                        }
+                        else
+                        {
+                            //OutInfo("Ignoring resource: {0}":format(res:name), 3).
+                        }
                     }
                 }
-
                 set _engRes_ResidualUnits to _engRes_ResidualUnits + (_engRes_SummedCap * _eng:GetModule("ModuleEnginesRF"):GetField("Predicted Residuals")).
             }
 
@@ -636,13 +780,15 @@ InitActiveEngines().
             set _resObj["MassFlow"] to _engRes_MassFlow.
             set _resObj["MaxMassFlow"] to _engRes_MaxMassFlow.
             set _resObj["Residuals"] to _engRes_ResidualUnits.
-            set _resObj["TimeRemaining"] to 2 * ((_engRes_SummedAmt - _engRes_ResidualUnits) / _engRes_FuelFlow).
+            set _resObj["PctRemaining"] to 100 * Round((max(0.00000000001, _engRes_SummedAmt) - _engRes_ResidualUnits) / _engRes_SummedCap, 5).
+            set _resObj["TimeRemaining"] to 2 * min(99999999999999999, max(0.00000001, _engRes_SummedAmt - _engRes_ResidualUnits) / max(0.00000001, _engRes_FuelFlow)).
         }
         else
         {
-            OutInfo("No engines in _engList", 2).
+            OutInfo("No engines in _engList", 1).
         }
         set _resObj["PctRemaining"] to _engRes_SummedPct.
+        set _resObj["LastUpdate"] to Round(Time:Seconds, 5).
         return _resObj.
     }
 
@@ -695,7 +841,7 @@ InitActiveEngines().
                 SafeStage().
                 wait 0.10.
 
-                if g_ActiveEnginesLex:SepStg
+                if g_ActiveEnginesLex:SepStg and Stage:Number > g_StopStage
                 {
                     OutInfo("Sep motors activated, priming stage engines").
                     wait 0.50.
@@ -718,12 +864,14 @@ InitActiveEngines().
                 else if stage:number > g_stopStage
                 {
                     OutInfo("STAGE PRESERVE | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
+                    LoadNextStagingCondition().
                     set g_ArmAutoStage to True.
                     preserve.
                 }
                 else
                 {
                     OutInfo("STAGE STOP | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
+                    LoadNextStagingCondition().
                     set g_ArmAutoStage to False.
                 }
             }
@@ -731,19 +879,28 @@ InitActiveEngines().
     }
 
 
+    local function LoadNextStagingCondition
+    {
+        local stgConParts to Ship:PartsTaggedPattern(".*(StgCon\(.*\)).*").
+        if stgConParts:Length > 0
+        {
+
+        }
+    }
+
 
     
     // Given a stage number, it will determine if any engines in that stage have engine spool properties
     global function CheckEngineSpool
     {
-        parameter stgNum.
+        parameter engList is list().
 
-        local hasSpoolTime to false.
-        local maxSpoolTime to 0.0001.
-
-        for _e in ship:engines 
+        if engList:Length > 0
         {
-            if _e:stage = stgNum
+            local hasSpoolTime to false.
+            local maxSpoolTime to 0.0001.
+
+            for _e in ship:engines 
             {
                 local _m to _e:GetModule("ModuleEnginesRF").
                 if _m:HasField("effective spool-up time") 
@@ -756,56 +913,122 @@ InitActiveEngines().
                     set maxSpoolTime to maxSpoolTime.
                 }
             }
+            return list(hasSpoolTime, maxSpoolTime).
         }
-        return list(hasSpoolTime, maxSpoolTime).
+        else
+        {
+            return list(false, 0).
+        }
     }
 
 
 
-    global function ArmHotStaging
+    global function AbortSequenceStart
     {
-        local _engList to Ship:PartsTaggedPattern("(^HotStg$|^HotStage$)").
-        if _engList:Length > 0
+        parameter _abortStr to "GENERAL",
+                  _breakFlag to false.
+
+        OutTee("ABORT SEQUENCE INITIATED [{0}]":format(_abortStr), 2).
+        if _breakFlag
         {
-            set g_StageLogicTrigger to _engList[0]:Stage + 1.
-            set g_ActiveEngines to GetActiveEngines().
-            set g_ActiveEnginesLex to ActiveEngines().
-            set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
-            local engSpool to CheckEngineSpool(Stage:Number - 1).
-            if engSpool[0] 
-            {
-                set v_SpoolTime to engSpool[1] + 0.1.
-            }
-            OutInfo("HotStaging Armed").
+            Breakpoint().
+            print 1 / 0.
+        }
+    }
 
-            // HotStaging Trigger
-            when Stage:Number = g_StageLogicTrigger then
+
+    // ArmSpinStaging :: <none> -> <Bool>SpinStaging Enabled / Disabled
+    global function ArmSpinStaging_old
+    {
+        local spinParts to ship:PartsTaggedPattern("(SpinStab|SpinStg|SpinStage)").
+        if spinParts:Length > 0
+        {
+            local spinStgLex to lexicon().
+            local nextSpinStg to 99.
+            local spinStgKey to 99.
+
+            for p in spinParts
             {
-                when g_ConsumedResources["TimeRemaining"] <= v_SpoolTime then
+                set spinStgKey to p:DecoupledIn.
+                set nextSpinStg to min(nextSpinStg, spinStgKey).
+
+                if spinStgLex:HasKey(spinStgKey)
                 {
-                    OutInfo("HOT STAGING: IGNITION (0%)").
-                    for eng in _engList
-                    {
-                        eng:Activate.
-                    }
-                    set g_TS to Time:Seconds + v_SpoolTime.
-                    wait 0.01.
-                    local engPerf to GetEnginePerfData(_engList).
-                    until engPerf["THRPCT"] >= 0.75 or Time:Seconds >= g_TS
-                    {
-                        set engPerf to GetEnginePerfData(_engList).
-                        OutInfo("HOT STAGING: IGNITION ({0}%)":Format(Round(engPerf["THRPCT"] * 100, 2))).
-                        wait 0.01.
-                    }
-                    OutInfo("HOT STAGING: STAGING ({0}%)":Format(Round(engPerf["THRPCT"] * 100, 2))).
+                    spinStgLex[spinStgKey]["Parts"]:Add(p).
+                }
+                else
+                {
+                    set spinStgLex[p:DecoupledIn] to lexicon(
+                        "Condition",        ParseConditionTag(p:Tag, "SpinStg")
+                        ,"Parts",           list(p)
+                        ,"Decoupler",       list()
+                        ,"Engines",         list()
+                    ).
+                }
+                if p:TypeName = "Decoupler" 
+                {
+                    spinStgLex[spinStgKey]["Decoupler"]:Add(p).
+                }
+                else if p:TypeName = "Engine"
+                {
+                    spinStgLex[spinStgKey]["Engines"]:Add(p).
+                }
+            }
 
-                    until Stage:Number = g_StageLogicTrigger
+            when Stage:Number = nextSpinStg + 1 then
+            {
+                if spinStgLex:HasKey(nextSpinStg)
+                {
+                    local spinObj to spinStgLex[nextSpinStg].
+                    
+                    local baseVal to spinStgLex[nextSpinStg]["Condition"]["InitDelegate"]:Call().
+                    local triggerDel to spinStgLex[nextSpinStg]["Condition"]["CheckDelegate"]:Bind(baseVal)@.
+                    local useRCS to choose true if spinStgLex[nextSpinStg]["Engines"]:Length = 0 else false.
+                    when triggerDel:Call() then
                     {
-                        wait until Stage:Ready.
-                        Stage.
+                        OutMsg("Initiating Spin Stabilization Sequence").
+                        local spinStopTS to Time:Seconds + Min(15, g_ConsumedResources["TimeRemaining"]).
+                        if useRCS
+                        {
+                            RCS On.
+                            set ship:control:roll to 1.
+                            local _stg to Stage:Number.
+                            when Time:Seconds >= spinStopTS or Stage:Number < _stg then 
+                            { 
+                                set ship:control:roll to 0. 
+                            }
+                        }
+                        else
+                        {
+                            for _eng in spinObj["Engines"]
+                            {
+                                _eng:Activate.
+                            }
+                            wait 0.01.
+                            spinStgLex:Remove(nextSpinStg).
+                            if spinStgLex:Keys:Length > 0
+                            {
+                                local doneFlag to false.
+                                for i in Range(Stage:Number, 0, -1)
+                                {
+                                    if doneFlag
+                                    {
+                                    }
+                                    else
+                                    {
+                                        if spinStgLex:Keys:Contains(i) 
+                                        {
+                                            set nextSpinStg to i.
+                                            set doneFlag to true.
+                                            preserve.
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
-                set g_StageLogicTrigger to -99.
             }
             return true.
         }
@@ -818,64 +1041,416 @@ InitActiveEngines().
 
 
 
-    global function CheckHotStageCondition
+    global function ArmSpinStabilization
     {
-        
-        if hotStageActive
+        local _spinList to Ship:PartsTaggedPattern("(SpinStg|SpinStab|SpinStage)").
+
+        local nextSpinStage to -1.
+        local spinLeadTime to 15.
+        local spinDur to spinLeadTime.
+        local spinType to "CTRL".
+
+        local SpinCtrlFactor to 1.
+
+        local _SpinStageLex to lexicon(
+            "Active", false
+            ,"NextSpinStage", nextSpinStage
+            ,"Stages", lexicon()
+        ).
+
+        for p in _spinList
         {
-            rcs on.
-            set g_ActiveEnginesLex to ActiveEngines().
-            if Time:Seconds >= g_TS and (g_ActiveEnginesLex["CURTHRUST"] / g_ActiveEnginesLex["AVLTHRUST"]) > 0.925
+            local pDecoupler to choose p if (p:TypeName:MatchesPattern("(Decoupler|Separator)") and p:Decoupler = "None") else p:Decoupler.
+            OutInfo("p: {0} | pDecoupler: {1}":Format(p:Name, pDecoupler)).
+            // Breakpoint().
+            local spinStg to pDecoupler:Stage.
+            set nextSpinStage to max(nextSpinStage, spinStg).
+            if _SpinStageLex:HasKey(spinStg)
             {
-                OutInfo("HotStaging: Decoupling").
-                wait until Stage:Ready.
-                Stage.
-                set hotStageActive to false.
-                set hotStageFlag to false.
-                set g_TS to 0.
+                _SpinStageLex["Stages"][spinStg]["Parts"]:add(p).
             }
-        } 
-        else
-        {
-            set g_ConsumedResources to GetResourcesFromEngines(GetActiveEngines()).
-            OutInfo("T-Resource: {0} | T-HotStage: {1}":Format(Round(g_ConsumedResources["TimeRemaining"], 2), Round(g_ConsumedResources["TimeRemaining"] - _spoolTime, 2))).
-            if g_ConsumedResources["TimeRemaining"] <= _spoolTime
+            else
             {
-                OutInfo("HotStaging: Ignition").
-                wait until Stage:Ready.
-                Stage. // Hotstage!
-                set g_TS to Time:Seconds + _spoolTime.
-                set hotStageActive to true.
+                set _SpinStageLex["Stages"][spinStg] to lexicon(
+                    "Active",       false
+                    ,"StageNum",    spinStg
+                    ,"Parts",       list(p)
+                    ,"Engines",     list()
+                    ,"Decouplers",  list()
+                    ,"SpinType",    spinType
+                    ,"Condition",   list()
+                ).
+            }
+            if p:TypeName = "Engine"
+            {
+                set spinType to "ENGINE".
+                _SpinStageLex["Stages"][spinStg]["Engines"]:add(p).
+            }
+            else if p:TypeName = "Decoupler" and p:Decoupler = "None"
+            {
+                _SpinStageLex["Stages"][spinStg]["Decouplers"]:add(p).
+            }
+            
+            if ship:PartsTaggedPattern("SpinCtrl"):Length > 0
+            {
+                set spinType to "FLAPS".
+            }
+            // if p:Tag:MatchesPattern("(SpinStg|SpinStab|SpinStage)\.\d*")
+            // {
+            //     set spinLeadTime to max(spinLeadTime, 5).
+            // }
+            set _SpinStageLex["Stages"][spinStg]["SpinType"] to spinType.
+            set _SpinStageLex["Stages"][spinStg]["Logic"] to lexicon(
+                "CONDITION", "STG"
+                ,"INPUT", "TimeRemaining"
+                ,"OP", "LT"
+                ,"VALUE", spinLeadTime
+            ).
+        }
+        set _SpinStageLex["Next"] to _SpinStageLex["Stages"][nextSpinStage].
+
+        //
+        // Triggers start below
+        when g_StageLogicTrigger = (nextSpinStage + 1) then
+        {
+            // if Time:Seconds - g_ActiveEnginesLex:LastUpdate > 0.1
+            // {
+            //     set g_ActiveEngines to GetActiveEngines().
+            //     set g_ActiveEnginesLex to ActiveEngines().
+            //     set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+            // }
+            set _SpinStageLex["Next"]["Active"] to True.
+            local _NextStgLex to _SpinStageLex["Stages"][nextSpinStage].
+            local _NextStgLogic to _NextStgLex["Logic"].
+
+            OutInfo("SpinStaging armed for {0}":Format(nextSpinStage), 2).
+            
+            local spinDel to "".
+            if _NextStgLogic["INPUT"] = "TimeRemaining"
+            {
+                local getETADel to "".
+                if _NextStgLogic["CONDITION"] = "STG"
+                {
+                    set getETADel to { return g_ConsumedResources["TimeRemaining"].}.
+                }
+                else if _NextStgLogic["CONDITION"] = "AP"
+                {
+                    set getETADel to { Return ETA:Apoapsis.}.
+                }
+                
+                set spinDel to StgConDel["ETA"]@. //:Bind(getETADel:Call(), _NextStgLogic["VALUE"])@.
+                
+                when spinDel:call(getETADel:Call(), _NextStgLogic["VALUE"], _NextStgLogic["OP"]) then
+                {
+                    OutInfo("Initiating Spin Stabilization", 2).
+                    local spinTS to choose spinDur if spinDur > 0 else Time:Seconds + (_NextStgLogic["VALUE"] * 2).
+                    local rVal to Ship:Control:Roll.
+                    if _NextStgLex["SpinType"] = "RCS"
+                    {
+                        RCS On.
+                        set Ship:Control:Roll to SpinCtrlFactor.
+                        when Time:Seconds >= spinTS then
+                        {
+                            set Ship:Control:Roll to rVal.
+                            set v_SpinReady to true.
+                        }
+                    }
+                    else if _NextStgLex["SpinType"] = "CTRL"
+                    {
+                        set Ship:Control:Roll to SpinCtrlFactor.
+                        when Time:Seconds >= spinTS then
+                        {
+                            set Ship:Control:Roll to rVal.
+                            set v_SpinReady to true.
+                        }
+                    }
+                    else if _NextStgLex["SpinType"] = "ENGINE"
+                    {
+                        local engBurnTime to 1.
+                        for eng in _NextStgLex["Engines"]
+                        {
+                            if not eng:ignition eng:activate.
+                        }
+                        set spinTS to Time:Seconds + engBurnTime.
+                        when Time:Seconds >= spinTS then
+                        {
+                            set v_SpinReady to true.
+                        }
+                    }
+                    else if _NextStgLex["SpinType"] = "FLAPS"
+                    {
+                        local flapList to list().
+                        for p in ship:partsTaggedPattern("SpinCtrl")
+                        {
+                            if p:decoupledIn = nextSpinStage
+                            {
+                                flapList:Add(p:GetModule("FARControllableSurface")).
+                            }
+                        }
+
+                        wait 0.001.
+                        for m in flapList
+                        {
+                            until m:GetField("Flap Setting") > 1
+                            {
+                                if DoEvent(m, "Deflect More")
+                                {
+                                }
+                                else
+                                {
+                                    break.
+                                }
+                            }
+                        }
+                        when Time:Seconds >= spinTS then
+                        {
+                            for m in flapList
+                            {
+                                until m:GetField("Flap Setting") = 0
+                                {
+                                    if DoEvent(m, "Deflect Less")
+                                    {
+                                    }
+                                    else
+                                    {
+                                        break.
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    OutInfo("", 2).
+                    _SpinStageLex["Stages"]:Remove(nextSpinStage).
+                    if _SpinStageLex["Stages"]:Length > 0
+                    {
+                        // #TODO: FINISH THE SPINSTAGE STUFFS
+                    }
+                }
             }
         }
     }
 
 
-    local function ParseStageConditionTag
+
+    // ArmHotStaging :: <none> -> <Bool>HotStaging Enabled / Disabled
+    // Function that will create triggers for Hot Staging if engines with the 
+    // appropriate tags are found
+    global function ArmHotStaging
     {
-        parameter _partTag.
-
-        if _partTag:Contains("StgCon")
+        local _engList to Ship:PartsTaggedPattern("(^HotStg.*$|^HotStage.*$)").
+        local _HotStageLex to lexicon().
+        local _HotStageEngList to list().
+        local nextHotStage to 0.
+        
+        if _engList:Length > 0
         {
-            local scStartPos to _partTag:Find("StgCon").
-            local scStrLen   to choose _partTag:FindAt("|", scStartPos + 1) if _partTag:Contains("|") else _partTag:Length.
-            local stgCondStr to _partTag:SubString(scStartPos, scStrLen).
-            local stgCondList to stgCondStr:Split(".").
-
-            local _cond    to choose stgCondList[1] if stgCondList:Length > 1 else "ETA".
-            local _operand to choose stgCondList[2] if stgCondList:Length > 2 else "GE".
-            local _thresh  to choose stgCondList[3] if stgCondList:Lenght > 3 else 0.
-
-            if _cond = "ETA"
+            for eng in _engList
             {
-                if g_TS < 0 
+                if _HotStageLex:HasKey(eng:Stage) 
                 {
-                    set g_TS to Time:Seconds + _thresh.
+                    _HotStageLex[eng:Stage]:Add(eng).
                 }
+                else
+                {
+                    set _HotStageLex[eng:Stage] to list(eng).
+                }
+                set nextHotStage to Max(nextHotStage, eng:Stage).
             }
 
-            return list(_cond, _operand, _thresh, StgConDel[_cond]@).
+            local doneFlag to false.
+
+            set g_StageLogicTrigger to nextHotStage + 1.
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveEnginesLex to ActiveEngines().
+            set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+            OutInfo("HotStaging Enabled").
+
+            // HotStaging Trigger
+            when Stage:Number = g_StageLogicTrigger then
+            {
+                set g_ActiveEngines to GetActiveEngines().
+                set g_ActiveEnginesLex to ActiveEngines().
+                set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+                set _HotStageEngList to _HotStageLex[nextHotStage].
+                local g_NextEnginesLex to GetEngineData(_HotStageEngList, true).
+
+                local eff_SpoolTime to Abs(g_NextEnginesLex:MaxEffSpool).
+
+                OutHUD("[HS{0}]: HotStaging armed":Format(nextHotStage)).
+                set g_HotStageArmed to True.
+                
+                // Update the timestamp for hot staging once every second
+                when Time:Seconds - g_TS_LastUpdate > 1 then
+                {
+                    set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+                    set g_TS to Time:Seconds + (g_ConsumedResources:TimeRemaining - eff_SpoolTime).
+                    wait 0.01.
+                    GetTermChar().
+                    if g_TermChar = Terminal:Input:EndCursor
+                    {
+                    }
+                    else
+                    {
+                        set g_TS_LastUpdate to Time:Seconds.
+                        Preserve.
+                    }
+                }
+
+                when g_ConsumedResources["TimeRemaining"] <= eff_SpoolTime then
+                {
+                    OutInfo("HOT STAGING: IGNITION (0%)").
+                    for eng in _HotStageEngList
+                    {
+                        eng:Activate.
+                    }
+                    set doneFlag to False.
+                    set g_TS to 5 + Time:Seconds + eff_SpoolTime.
+                    wait 0.01.
+                    local engPerf to GetEngineData(_HotStageEngList).
+                    until doneFlag
+                    {
+                        set engPerf to GetEngineData(_HotStageEngList).
+                        set g_ActiveEngines to GetActiveEngines().
+                        set g_ActiveEnginesLex to ActiveEngines().
+
+                        if engPerf["PCTTHRUST"] >= 0.90 and g_ActiveEnginesLex["PCTTHRUST"] <= 0.01
+                        {
+                            set doneFlag to True.
+                            OutInfo("", 2).
+                        }
+                        else if Time:Seconds >= g_TS
+                        {
+                            AbortSequenceStart("IGNITION FAILURE").                            
+                        }
+                        else
+                        {
+                            OutInfo("HOT STAGING: IGNITION ({0}%) ":Format(Round(engPerf["PCTTHRUST"] * 100, 1))).
+                            OutInfo("ACTIVE THR (%): {0}kn/{1}kn ({2}%)  ":Format(Round(g_ActiveEnginesLex["CURTHRUST"], 2), Round(g_ActiveEnginesLex["AVLTHRUST"], 2), Round(g_ActiveEnginesLex["PCTTHRUST"] * 100, 2)), 2).
+                        }
+                        DispLaunchTelemetry().
+                    }
+                    OutInfo("HOT STAGING: STAGING ({0}%)":Format(Round(engPerf["PCTTHRUST"] * 100, 1))).
+
+                    until Stage:Number = nextHotStage
+                    {
+                        wait until Stage:Ready.
+                        Stage.
+                        wait 0.025.
+                    }
+
+                    _HotStageLex:Remove(nextHotStage).
+                    DispClr(10).
+                    set g_Line to 10.
+                }
+
+                if _HotStageLex:Keys:Length > 0
+                {
+                    set g_ActiveEngines to GetActiveEngines().
+                    set g_ActiveEnginesLex to ActiveEngines().
+                    local keyHit to false.
+                    from { local i to Stage:Number.} until keyHit or i < 0 step { set i to i - 1.} do 
+                    {
+                        if _HotStageLex:HasKey(i)
+                        {
+                            //set maxStage to i.
+                            set nextHotStage to i.
+                            set g_StageLogicTrigger to Min(Stage:Number, i + 1).
+                            set keyHit to true.
+                            //OutInfo("HotStaging Preserved", 1).
+                            //preserve.
+                        }
+                    }
+                }
+                else
+                {
+                    set g_StageLogicTrigger to -99.
+                    set g_HotStageArmed to false.
+                    OutInfo("HotStaging Disarmed", 1).
+                }
+            }
+            return true.
         }
+        else
+        {
+            return false.
+        }
+    }
+
+
+
+
+    // global function CheckHotStageCondition
+    // {
+        
+    //     if hotStageActive
+    //     {
+    //         rcs on.
+    //         set g_ActiveEnginesLex to ActiveEngines().
+    //         if Time:Seconds >= g_TS and (g_ActiveEnginesLex["CURTHRUST"] / g_ActiveEnginesLex["AVLTHRUST"]) > 0.925
+    //         {
+    //             OutInfo("HotStaging: Decoupling").
+    //             wait until Stage:Ready.
+    //             Stage.
+    //             set hotStageActive to false.
+    //             set hotStageFlag to false.
+    //             set g_TS to 0.
+    //         }
+    //     } 
+    //     else
+    //     {
+    //         set g_ConsumedResources to GetResourcesFromEngines(GetActiveEngines()).
+    //         OutInfo("T-Resource: {0} | T-HotStage: {1}":Format(Round(g_ConsumedResources["TimeRemaining"], 2), Round(g_ConsumedResources["TimeRemaining"] - _spoolTime, 2))).
+    //         if g_ConsumedResources["TimeRemaining"] <= _spoolTime
+    //         {
+    //             OutInfo("HotStaging: Ignition").
+    //             wait until Stage:Ready.
+    //             Stage. // Hotstage!
+    //             set g_TS to Time:Seconds + _spoolTime.
+    //             set hotStageActive to true.
+    //         }
+    //     }
+    // }
+
+
+    local function ParseConditionTag
+    {
+        parameter _partTag,
+                  _queryTag is "".
+                  
+
+        if _partTag:MatchesPattern(_queryTag + "\(")
+        {
+            local StgConStartIdx to _partTag:Find(_queryTag).
+            local StgConStrLen   to choose _partTag:FindAt("|", StgConStartIdx + 1) if _partTag:SubString(StgConStartIdx, _partTag:Length - StgConStartIdx):Contains("|") else _partTag:Length.
+            local StgCondStr to _partTag:SubString(StgConStartIdx, StgConStrLen).
+            local StgCondPrms to StgCondStr:Remove(StgCondStr:Length - 1, 1):Replace("{0}(":Format(_queryTag), "").
+            local StgCondList to StgCondPrms:Split(".").
+
+            local _cond       to choose StgCondList[0] if StgCondList:Length > 0 else "ETA".
+            local _baseValStr to choose StgCondList[1] if StgCondList:Length > 1 else "NA".
+            local _operandStr to choose StgCondList[2] if StgCondList:Length > 2 else "GT".
+            local _thresh     to choose StgCondList[3] if StgCondList:Length > 3 else 0.
+            
+            // if _cond = "ETA"
+            // {
+            //     if _input = "AP"      { set g_TS to { set g_TS to Time:Seconds + (ETA:Apoapsis - _thresh). } 
+            //     else if _input = "PE" { set g_TS to Time:Seconds + (ETA:Periapsis - _thresh).}
+            // }
+
+            return lexicon(
+                "Condition", _cond
+                ,"BaseValue", _baseValStr
+                ,"Input", _operandStr
+                ,"Threshold", _thresh
+                ,"CheckDelegate", StgConDel[_cond]@
+                ,"InitDelegate", StgConInit[_cond]@
+            ).
+        }
+        else if _partTag:MatchesPattern(_queryTag + "|.*\..*\..*\..*")
+        {
+
+        }    
     }
 
     // CheckStagingCondition :: <part> -> <int>([-1|0|1])
@@ -939,9 +1514,9 @@ InitActiveEngines().
         }
         stage.
 
-        if g_stageInfo["HotStage"]:contains(stage:number) 
+        if g_stageInfo["HotStage"]:Keys:Contains(Stage:Number) 
         {
-            g_stageInfo["HotStage"]:remove(stage:number). 
+            g_stageInfo["HotStage"]:Remove(Stage:Number). 
         }
         wait 0.25.
     }
@@ -1027,6 +1602,7 @@ local function ProcessBoosterItem
         global _stgSummedThr_Pct        to 0.
     }
 
+    local _setDecoupler to "".
     //local _stgBoosterThr_Avl to 0.
     // local _stgResMass        to 0.
     // local _stgResPct         to 0.
@@ -1059,8 +1635,20 @@ local function ProcessBoosterItem
                     ,"THRUST",   _stgSummedThr_Cur
                 ).
             }
+
+            set _setDecoupler to item:Decoupler.
         }
-        else if type = "DECOUPLER" or type = "SEPARATOR"
+        else if item:IsType("Decoupler") or item:IsType("Separator")
+        {
+            set _setDecoupler to item.
+        }
+        else
+        {
+            set _setDecoupler to item:Decoupler.
+        }
+
+        // Decoupler parsing
+        if _setDecoupler <> "None"
         {
             local modDecoupleFlag to false.
             local modAnchoredFlag to false.
@@ -1291,13 +1879,167 @@ local function ProcessBoosterItem
 //                 "MASS", item:Amount * item:density,
 //                 "PARTLIST", list(),
 //                 "PCT", item:Amount / item:capacity,
-//                 "TYPES", UniqueSet(item:name),
+//                 "TYPES", UniqueSet(item:name),STageInfo
 //                 "UNITS", item:Amount
 //             ).
 //         }
 //     }
 //     return obj.
 // }
+
+
+
+// Idk
+global function ManualSpinStabilizationCheck 
+{
+    if g_TermChar = "q"
+    {
+        set Ship:Control:Roll to Max(-1, Min(1, Ship:Control:Roll - 0.20)).
+        OutInfo("Ship:Control:Roll (-)[{0}]":Format(Round(Ship:Control:Roll, 3))).
+        return true.
+    }
+    else if g_TermChar = "e"
+    {
+        set Ship:Control:Roll to Max(-1, Min(1, Ship:Control:Roll + 0.20)).
+        OutInfo("Ship:Control:Roll (+)[{0}]":Format(Round(Ship:Control:Roll, 3))).
+        return true.
+    }
+    else if g_TermChar = "w"
+    {
+        set Ship:Control:Roll to 0.
+        OutInfo("Ship:Control:Roll (~)[{0}]":Format(Round(Ship:Control:Roll, 3))).
+        return false.
+    }
+}
+
+
+global function HydrateStageInfoObject
+{
+    local stgObj to NewStageInfo:Copy().
+    
+    for p in Ship:PartsTaggedPattern("(SpinStg|SpinStab|SpinStage|HotStg|HotStage|StgCon)")
+    {
+
+        if not stgObj["Stages"]:HasKey(p:Stage)
+        {
+            set stgObj["Stages"][p:Stage] to lexicon("Parts", list(p)).
+        }
+
+        if p:TypeName = "Engine"
+        {
+            if stgObj["Engines"]:HasKey(p:Stage) 
+            {
+                stgObj["Engines"][p:Stage]["Part"]:Add(p).
+                stgObj["Engines"][p:Stage]["ModuleEnginesRF"]:Add(p:GetModule("ModuleEnginesRF")).
+            }
+            else
+            {
+                set stgObj["Engines"][p:Stage] to lexicon(
+                    "Part", list(p)
+                    ,"ModuleEnginesRF", list(p:GetModule("ModuleEnginesRF"))
+                ).
+            }
+        }
+        else if p:TypeName = "Decoupler"
+        {
+            if stgObj["Decouplers"]:HasKey(p:Stage) 
+            {
+                stgObj["Decouplers"][p:Stage]["Part"]:Add(p).
+                
+                local dcMod to "".
+
+                if p:HasModule("ModuleDecouple")
+                {
+                    set dcMod to p:GetModule("ModuleDecouple").
+                }
+                else if p:HasModule("ModuleAnchoredDecoupler")
+                {
+                    set dcMod to p:GetModule("ModuleAnchoredDecoupler").
+                }
+
+                if dcMod:TypeName = "String"
+                {
+                }
+                else
+                {
+                    if stgObj["Decouplers"][p:Stage]:HasKey(dcMod:Name)
+                    {
+                        stgObj["Decouplers"][p:Stage][dcMod:Name]:Add(dcMod).
+                    }
+                    else
+                    {
+                        set stgObj["Decouplers"][p:Stage][dcMod:Name] to list(dcMod).
+                    }
+                }
+            }
+            else
+            {
+                set stgObj["Decouplers"][p:Stage] to lexicon(
+                    "Part", list(p)
+                    ,"ModuleDecouplersRF", list(p:GetModule("ModuleDecouplersRF"))
+                ).
+                if p:HasModule("ModuleAnchoredDecoupler")
+                {
+                    if stgObj["Decouplers"][p:Stage]:HasKey("ModuleAnchoredDecoupler")
+                    {
+                        stgObj["Decouplers"][p:Stage]["ModuleAnchoredDecoupler"]:Add(p:GetModule("ModuleAnchoredDecoupler")).
+                    }
+                    else
+                    {
+                        set stgObj["Decouplers"][p:Stage]["ModuleAnchoredDecoupler"] to list(p:GetModule("ModuleAnchoredDecoupler")).
+                    }
+                }
+            }
+        }
+
+        if p:Tag:MatchesPattern("(SpinStg|SpinStab|SpinStage)")
+        {
+            local spinCondition to choose ParseConditionTag(p:Tag, "SpinStg") if p:Tag:MatchesPattern("SpinStg") 
+                else choose ParseConditionTag(p:Tag, "SpinStab") if p:Tag:MatchesPattern("SpinStab") 
+                else choose ParseConditionTag(p:Tag, "SpinStage") if p:Tag:MatchesPattern("SpinStage")
+                else "".
+
+            if stgObj["SpinStg"]:HasKey(p:Stage)
+            {
+                stgObj["SpinStg"][p:Stage]["Parts"]:Add(p).
+            }
+            else
+            {
+                set stgObj["SpinStg"][p:Stage] to lexicon(
+                    "Parts",        list(p)
+                    ,"Engines",     list()
+                    ,"Decouplers",  list()
+                    ,"Condition",   spinCondition
+                ).
+            }
+
+            if p:TypeName = "Engine" 
+            {
+                stgObj["SpinStg"][p:Stage]["Engines"]:Add(p).
+            }
+            else if p:TypeName = "Decoupler"
+            {
+                stgObj["SpinStg"][p:Stage]["Decouplers"]:Add(p).
+            }
+
+            set stgObj["Conditions"][p:Stage] to spinCondition.
+        }
+        if p:Tag:MatchesPattern("StgCon")
+        {
+            set stgObj["Conditions"][p:Stage] to ParseConditionTag(p:Tag, "StgCon").
+        }
+
+    }
+    set g_StageInfo to stgObj.
+    // from { local iStg to g_StartStage. } until iStg < 0 step { set iStg to iStg - 1. }  do
+    // {
+        
+    // }
+}
+
+
+
+
 
 
 local function ProcessBoosterItemChildren

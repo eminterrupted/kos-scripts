@@ -10,15 +10,28 @@
 // *~--- Variables ---~* //
 // #region
     // *- Local
-    
+    global g_EventTriggerActions to lexicon(
+         "Decouple",    DoDecouple@
+        ,"DC",          DoDecouple@
+        ,"Ignite",      DoEngineIgnition@
+        ,"IGT",         DoEngineIgnition@
+        ,"Activate",    DoPartActivation@
+        ,"ACT",         DoPartActivation@
+        ,"Stage",       DoSingleStage@
+        ,"STG",         DoSingleStage@
+    ).
+
     // *- Global
-    global g_CompDel to lexicon(
+    global g_OP to lexicon(
          "GE", { parameter _curVal, _tgtVal. return _curVal >= _tgtVal.}
         ,"GT", { parameter _curVal, _tgtVal. return _curVal >  _tgtVal.}
         ,"EQ", { parameter _curVal, _tgtVal. return _curVal =  _tgtVal.}
         ,"LT", { parameter _curVal, _tgtVal. return _curVal <  _tgtVal.}
         ,"LE", { parameter _curVal, _tgtVal. return _curVal <= _tgtVal.}
     ).
+
+    global g_AbortArmed to false.
+    global g_AbortFlag to false.
 
                 
 // #endregion
@@ -44,8 +57,305 @@
         wait 0.01.
         wait until Terminal:Input:HasChar.
     }
+// #endregion
 
-    // Module manipulation
+
+// Event Triggers
+// #region
+
+    // DoDecoupleEvent :: <Part> -> <Bool>Success
+    // Given a part, performs any availble decouple action on it
+    local function DoDecouple
+    {
+        parameter p. 
+        
+        local m to "".
+        if p:HasModule("ModuleDecouple") 
+        {
+            set m to p:GetModule("ModuleDecouple").
+        } 
+        else if p:HasModule("ModuleAnchoredDecoupler")
+        {
+            set m to p:GetModule("ModuleAnchoredDecoupler").
+        } 
+        
+        if m:TypeName = "PartModule" 
+        {
+            if DoEvent(m, "Decouple") 
+            { 
+                return true.
+            } 
+            else if DoAction(m, "Decouple", true) 
+            { 
+                return true.
+            } 
+            else if DoEvent(m, "Decoupler Staging")
+            {
+                return true.
+            } 
+            else if DoAction(m, "Decoupler Staging", true)
+            {
+                return true.
+            } 
+            else
+            {
+                return false.
+            }
+        } 
+        else
+        {
+            return false.
+        }
+    }
+
+    // DoDecoupleEvent :: <Part> -> <Bool>Success
+    // Given a part, performs any availble decouple action on it
+    local function DoEngineIgnition
+    {
+        parameter p. 
+        
+        
+        if p:IsType("Engine")
+        {
+            if not p:Ignition and not p:FlameOut
+            {
+                local fuelStable to false.
+
+                if p:Ullage or p:PressureFed
+                {
+                    OutInfo("({0}) Engine ignition fuel stability: {1}":Format(p:Name, p:FuelStability), 1).
+                    if p:FuelStability 
+                    {
+                        set fuelStable to True.
+                    }
+                    else if p:GetModule("ModuleEnginesRF"):GetField("propellant"):MatchesPattern(".*100\.00 %.*")
+                    {
+                        set fuelStable to True.
+                    }
+                }
+                else set fuelStable to True.
+                
+                if fuelStable
+                {
+                    OutInfo("({0}) Engine ignition start":Format(p:Name), 1).
+                    p:Activate.
+                    return True.
+                }
+            }
+        }
+        return False.
+    }
+
+    global function DoPartActivation
+    {
+        parameter p.
+        
+        return true.
+    }
+
+
+    // GetETA :: <string>ETAType -> <Scalar>ETA
+    // Gets an ETA based on a provided string identifier
+    global function GetETA
+    {
+        parameter _etaType.
+
+        if _etaType = "AP"
+        {
+            return ETA:Apoapsis.
+        }
+        else if _etaType = "PE"
+        {
+            return ETA:Periapsis.
+        }
+        else if _etaType = "REI"
+        {
+            if Ship:VerticalSpeed < 0 and Ship:Altitude >= Body:Atm:Height
+            {
+                //return abs((Ship:Altitude - Body:Atm:Height) / Ship:VerticalSpeed).
+                return Sqrt((2 * (Ship:Altitude - Body:Atm:Height)) / GetLocalGravity(Body, Ship:Altitude)).
+            }
+            else 
+            {
+                return 999999.
+            }
+        }
+        else if _etaType = "ECO"
+        {
+            local retVal to choose g_ConsumedResources["TimeRemaining"] if g_ConsumedResources:HasKey("TimeRemaining") else 99999999.
+        }
+    }
+
+    global function DoSingleStage
+    {
+        parameter _deadParam to "".
+
+        wait until Stage:Ready.
+        Stage.
+    }
+
+    // OnEvent :: <Part> -> <Bool>Success?
+    // Checks the provided part for an OnEvent tag. If found, parses and initiates a trigger for it if applicable
+    global function InitOnEventTrigger
+    {
+        parameter _partList is ship:PartsTaggedPattern("OnEvent").
+
+        for _part in _partList
+        {
+            if _part:Tag:Contains("OnEvent")
+            {
+                local parsedTag to _part:Tag:Split("|").
+                if parsedTag:Length > 3
+                {
+                    if g_EventTriggerActions:HasKey(parsedTag[3])
+                    {
+                        local actionToPerform to g_EventTriggerActions[parsedTag[3]]:Bind(_part)@.
+
+                        local parsedCondition to parsedTag[2]:Split(".").
+                        local checkType to parsedCondition[0].
+                        local checkRef to parsedCondition[1].
+                        local checkOP to parsedCondition[2].
+                        local checkVal to parsedCondition[3]:ToNumber(0).
+                        local armStage to choose parsedCondition[4]:ToNumber() if parsedCondition:Length > 4 else _part:stage + 1.
+                        
+                        when stage:number = armStage then
+                        {
+                            if checkType = "ETA"
+                            {
+                                when g_OP[checkOP]:Call(GetETA(checkRef), Abs(checkVal)) then
+                                {
+                                    if actionToPerform:IsType("String")
+                                    {
+                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                    }
+                                    else
+                                    {
+                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        actionToPerform:Call().
+                                    }
+                                }
+                            }
+                            else if checkType = "TS"
+                            {
+                                local triggerTS to Time:Seconds + checkVal.
+                                when Time:Seconds >= triggerTS then
+                                {
+                                    if actionToPerform:IsType("String")
+                                    {
+                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                    }
+                                    else
+                                    {
+                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        actionToPerform:Call().
+                                    }
+                                }
+                            }
+                            else if checkType = "ET" // Elapsed time. Example: Decoupler that is staged 3 seconds after engine ignition
+                            {
+                                set g_ET_Mark to Time:Seconds.
+                                local triggerET to checkVal.
+                                when Time:Seconds - g_ET_Mark >= triggerET then
+                                {
+                                    if actionToPerform:IsType("String")
+                                    {
+                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                    }
+                                    else
+                                    {
+                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        actionToPerform:Call().
+                                    }
+                                }
+                            }
+                            else if checkType = "ALT"
+                            {
+                                when g_OP[checkOP]:Call(Ship:Altitude, checkVal) then
+                                {
+                                    if actionToPerform:IsType("String")
+                                    {
+                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                    }
+                                    else
+                                    {
+                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        actionToPerform:Call().
+                                    }
+                                }
+                            }
+                            else if checkRef = "RALT"
+                            {
+                                when g_OP[checkOP]:Call(Ship:Altitude - Ship:GeoPosition:TerrainHeight, checkVal) then
+                                { 
+                                    if Kuniverse:TimeWarp:IsSettled 
+                                    { 
+                                        wait 0.075.
+                                        if g_OP[checkOP]:Call(Ship:Altitude - Ship:GeoPosition:TerrainHeight, checkVal)
+                                        {
+                                            if actionToPerform:IsType("String")
+                                            {
+                                                OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                            }
+                                            else
+                                            {
+                                                OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                                actionToPerform:Call().
+                                            }
+                                        }
+                                        else
+                                        {
+                                            preserve.
+                                        }
+                                    } 
+                                    else 
+                                    { 
+                                        preserve.
+                                    } 
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        OutTee("OnEvent: [{0}] No trigger action defined for [{1}]":Format(_part:name, parsedTag[3]), 1).
+                    }
+                }
+            }
+        }
+    }
+// #endregion
+
+
+// *- String manipulation
+// #region
+
+    // StripColorTags :: <string> -> string>
+    // Removes <color> tags from strings, useful for part module fields
+    global function StripColorTags
+    {
+        parameter _str.
+
+        if _str:MatchesPattern("(\<color\=\w*\>).*(\<\/color\>)")
+        {
+            local oStr to _str.
+            local sIdx to _str:Find(">") + 1.
+            local eIdx to _str:FindAt("<", sIdx) - 1.
+            set oStr to _str:Substring(sIdx, eIdx).
+            return oStr.
+        }
+        else
+        {
+            return _str.
+        }
+    }
+
+// #endregion
+
+
+// *- Module manipulation
+// #region
+    
+    // Events
     global function DoEvent
     {
         parameter _module, 
@@ -79,7 +389,153 @@
         }
     }
 
+    global function GetField
+    {
+        parameter _module,
+                  _field,
+                  _type is "any". // #TODO - Need to implement type checking helpers
+        
+        if _module:HasField(_field)
+        {
+            local oField to _module:GetField(_field).
+            if oField:IsType("String")
+            {
+                set oField to StripColorTags(oField).
+            }
+            return oField.
+        }
+        else 
+        {
+            return False.
+        }
+    }
 
+    global function SetField
+    {
+        parameter _module,
+                  _field,
+                  _newValue.
+        
+        if _module:HasField(_field)
+        {
+            _module:SetField(_field, _newValue).
+            return true.
+        }
+        else 
+        {
+            return False.
+        }
+    }
+
+
+// #endregion
+
+// *- Gravity functions
+// #region
+
+    // GetLocalGravity :: [<Body>Body, <Scalar>Altitude] -> <Scalar>Local Gravity (m/s)
+    global function GetLocalGravity
+    {
+        parameter _body is Ship:Body,
+                  _alt  is Ship:Altitude.
+
+        return constant:g * (_body:radius / (_body:radius + _alt))^2.   
+    }
+
+// #endregion
+
+// *- Warp functions
+// #region
+
+    // CheckWarpKey :: <none> -> <bool>
+    // Checks if the designated warp key (Enter) is pressed.
+    global function CheckWarpKey
+    {
+        if Terminal:Input:HasChar 
+        {
+            until not Terminal:Input:HasChar
+            {
+                set g_termChar to Terminal:Input:GetChar.
+                if g_termChar = Terminal:Input:Enter
+                {
+                    return true.
+                }
+            }
+            return false.
+        }
+        return false.
+    }
+
+    // Creates a trigger to warp to a timestamp using AG10
+    global function InitWarp
+    {
+        parameter tStamp, 
+                str is "timestamp",
+                buffer is 15,
+                warpNow to false.
+
+        set tStamp to tStamp - buffer.
+        if Time:Seconds <= tStamp
+        {
+            if warpNow 
+            {
+                WarpTo(tStamp).
+                wait until KUniverse:Timewarp:IsSettled.
+            }
+            else
+            {
+                when g_TermChar = Terminal:Input:Enter then
+                {
+                    WarpTo(tStamp).
+                    wait until KUniverse:Timewarp:IsSettled.
+                }
+                OutHUD("Press Enter in terminal to warp to " + str).
+            }
+        }
+        else
+        {
+            OutHUD("Warp not available, too close to timestamp", 1).
+        }
+    }
+
+    // Smooths out a warp down by altitude
+    global function WarpToAlt
+    {
+        parameter tgtAlt.
+        
+        local warpFactor to 1.
+
+        if tgtAlt > 1000000 set warpFactor to 1.
+        else if tgtAlt > 500000 set warpFactor to 1.01.
+        else if tgtAlt > 100000 set warpFactor to 1.03.
+        else if tgtAlt > 10000 set warpFactor to 1.05.
+        else set warpFactor to 1.075.
+
+        if ship:altitude > tgtAlt
+        {
+            if ship:altitude <= tgtAlt * 1.00003125 * warpFactor set warp to 0.
+            else if ship:altitude <= tgtAlt * 1.00125 * warpFactor set warp to 1.
+            else if ship:altitude <= tgtAlt * 1.025 * warpFactor set warp to 2.
+            else if ship:altitude <= tgtAlt * 1.75 * warpFactor set warp to 3.
+            else if ship:altitude <= tgtAlt * 5 * warpFactor set warp to 4.
+            else if ship:altitude <= tgtAlt * 25 * warpFactor set warp to 5.
+            else if ship:altitude <= tgtAlt * 250 set warp to 6.
+            else set warp to 7.
+            //else set warp to 6.
+        }
+        else
+        {
+            if ship:altitude >= tgtAlt * 0.999996875 * warpFactor set warp to 0.
+            else if ship:altitude >= tgtAlt * 0.99875 * warpFactor set warp to 1.
+            else if ship:altitude >= tgtAlt * 0.75 * warpFactor set warp to 2.
+            else if ship:altitude >= tgtAlt * 0.625 * warpFactor set warp to 3.
+            else if ship:altitude >= tgtAlt * 0.500 * warpFactor set warp to 4.
+            else if ship:altitude >= tgtAlt * 0.250 * warpFactor set warp to 5.
+            else set warp to 6.
+            //else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
+            //else set warp to 7.
+        }
+    }
 // #endregion
 
 // *- Logging
@@ -196,20 +652,28 @@
                                                 // If we only get one part from this step, the tag is not formatted with a valid stage number defined for the 
                                                 // Auto-Staging Limiter. In this case, default to stage 0 (which is the last possible stage for any ship with at least one stage)
 
-        local _scriptFragments to list(_tagFragments[0]). // Disabling the ':' split here for backward compatibility purposes (used : in delimited params previously)
-        //local _scriptFragments to _tagFragments[0]:Split(":").   // First-token string after the pipe split: "sounder:simple[325km,90]"
-                                                                    // Separate the container ("sounder") from the script details ("simple[325km,90]")
+        // local _scriptFragments to _tagFragments[0]. // Disabling the ':' split here for backward compatibility purposes (used : in delimited params previously)
+        // //local _scriptFragments to _tagFragments[0]:Split(":").   // First-token string after the pipe split: "sounder:simple[325km,90]"
+        //                                                             // Separate the container ("sounder") from the script details ("simple[325km,90]")
 
-        if _scriptFragments:Length > 1                  // If we have more than one fragment, we know we have the PCN in the first token, and the script details in the second
+        if _tagFragments[0]:Contains(":") // If we have more than one fragment, we know we have the PCN in the first token, and the script details in the second
         {
-            set _tagLex["PCN"]  to _scriptFragments[0].  // Should be "sounder"
-            set _sidFrag        to _scriptFragments[1].        // Should now be "simple[325km,90]"
+            set _pcnFrag        to _tagFragments[0]:Split(":")[0].  // Should be "sounder"
+            set _sidFrag        to _tagFragments[0]:Split(":")[1].  // Should now be "simple[325km,90]"
         }
-        else if _scriptFragments:Length > 0
+        else if _tagFragments[0]:MatchesPattern(".*\[.*\].*")
         {
-            set _pcnFrag        to _scriptFragments[0]:Replace("]",""):Split("[").
-            set _tagLex["PCN"]  to _pcnFrag[0].
-            set _sidFrag        to choose _pcnFrag[1] if _pcnFrag:length > 1 else "".
+            // OutInfo("TagFragMatch: {0}":Format(_tagFragments[0])).
+            // breakpoint().
+            local tempTagFrag to _tagFragments[0]:Replace("]",""):Split("[").
+            set _pcnFrag  to tempTagFrag[0].
+            set _sidFrag  to tempTagFrag[1].
+            // OutInfo("_pcnFrag: [{0}] | _sidFrag: [{1}]":Format(tempTagFrag[0], tempTagFrag[1])).
+            // Breakpoint().
+        }
+        else if _tagFragments[0]:Length > 0
+        {
+            set _pcnFrag to _tagFragments[0].
         }
         else
         {
@@ -220,9 +684,11 @@
         // Parse if we have something, else default to the hardcoded 'setup.ks' script under the PCN
         if _sidFrag:MatchesPattern("[\[\]]")
         {
+            // OutInfo("_sidFrag pattern matched").
+            // Breakpoint().
             local _prmFrag to _sidFrag:Replace("]",""):Split("["). // Cleans up the extraneous delimiter in the string prior to splitting at the point the SID ends and the params begin
             set _sid to _prmFrag[0].                     // Value here should be "simple"
-
+            
             if _prmFrag:Length > 1        // More than one fragment means we have parameters to get
             {
                 for val in _prmFrag[1]:Split(",")       // Parameters are comma-delimited within the square brackets
@@ -233,16 +699,23 @@
         }
         else
         {
+            // OutInfo("_sidFrag pattern not matched").
+            // Breakpoint().
             if _sidFrag:Length > 0 
             {
+                // OutInfo("_sidFrag length > 0").
+                // Breakpoint().
                 local _sidSplit to choose _sidFrag:Split(",") if _sidFrag:Split(","):Length > 1 else _sidFrag:Split(":").
             
                 for val in _sidSplit
                 {
+                    // OutInfo("_prm: Adding {0}":Format(val)).
                     _prm:Add(val).
+                    // Breakpoint().
                 }
             }
         }
+        set _tagLex["PCN"] to _pcnFrag.
         set _tagLex["SID"] to _sid. // This can be an empty string, it will just default to "Setup.ks" under the path
         set _tagLex["PRM"] to _prm.     // Add the parameters - either an empty list, or ones found above
 

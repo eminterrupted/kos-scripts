@@ -33,10 +33,10 @@
         local arm_engStartFlag   to true.
         local t_launch           to Time:Seconds + countdown.
         local launchCommit       to false.
-        local engSpool           to CheckEngineSpool(stage:number - 1). 
+        local engSpool           to CheckEngineSpool(GetEnginesForStage(stage:number - 1)). 
         local hasSpool           to engSpool[0].
         local spoolTime          to engSpool[1].
-        set t_engStart           to t_launch - (spoolTime * 1.1).
+        set t_engStart           to t_launch - (spoolTime * 1.075).
         
         OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_launch, 2))).
 
@@ -94,6 +94,7 @@
         {
             until Time:Seconds > t_engPerfAbort
             {  
+                wait 0.01.
                 if t_spoolTime > 0.1
                 {
                     set g_activeEngines to ActiveEngines().
@@ -101,7 +102,9 @@
                     
                     if Time:Seconds > t_liftoff
                     {
-                        if g_activeEngines["ENGSTATUS"] = "Failed"
+                        //OutInfo("EngStatus: {0}":Format(_engMod:GetField("Status")), 1).
+                        OutInfo("[Ignition Status]: {0}":Format(g_ActiveEngines["ENGSTATUS"]["Status"]), 2).
+                        if g_activeEngines["ENGSTATUS"]["Status"] = "Failed"
                         {
                             set t_val to 0.
                             return false.
@@ -118,7 +121,6 @@
                 }
                 else if Time:Seconds > t_liftoff
                 {
-                    wait 0.01.
                     return true.
                 }
                 OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_liftoff, 2))).
@@ -127,10 +129,12 @@
         else
         {
             OutMsg("ERROR: Tried to validate launch, but already airborne!").
+            OutInfo("Line 131", 2).
             return false.
         }
         
         // Performance not validated by abort time, so return false.
+        OutInfo("Line 136", 2).
         return false.
     }
 
@@ -156,38 +160,45 @@
     {
         parameter tgt_alt is body:Atm:height * 0.86,
                   tgt_ap is body:Atm:height * 0.86,
-                  f_shape is 1.025. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
+                  f_shape is 1.000. // 'shape' factor to provide a way to control the steepness of the trajectory. Values > 1 = steeper, < 1 = flatter
 
         local tgt_effAng to 90.
         local tgt_effAP  to max(body:Atm:Height * 1.25, tgt_ap / 3).
         if ship:Altitude < g_la_turnAltStart
         {
         }
-        else
+        else if g_ConsumedResources:HasKey("TimeRemaining")
         {
-            local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:Altitude < 100000 else 
-                choose ((pitch_for(ship, ship:SrfPrograde) + pitch_for(ship, ship:Prograde)) / 2) if ship:altitude < body:Atm:Height else 
-                pitch_for(ship, ship:Prograde).
-            local tgt_effAlt to tgt_alt - g_la_turnAltStart.
-            local cur_effAlt to 0.1 + ship:Altitude - g_la_turnAltStart.
-            local cur_altErr to cur_effAlt / (tgt_effAlt / 2).
-            local tgt_pitAng to max(-2, 90 * (1 - cur_altErr)).// * abs(f_shape - 1).
-            local tgt_angErr to min(10, max(4, 10 * min(1, (Ship:Apoapsis / (tgt_effAp / 2))))) * f_shape.
-            set   tgt_effAng to max(tgt_pitAng, cur_pitAng - tgt_angErr). // min(90, max(cur_pitAng - tgt_angErr, min(cur_pitAng + tgt_angErr, tgt_pitAng)) * f_shape).
-
-            local ascentStatObj to lexicon(
-                "cur_pitAng",  round(cur_pitAng, 5)
-                ,"tgt_alt",    round(tgt_alt)
-                ,"tgt_ap",     round(tgt_ap)
-                ,"tgt_effAlt", round(tgt_effAlt)
-                ,"cur_effAlt", round(cur_effAlt)
-                ,"cur_altErr", round(cur_altErr, 5)
-                ,"tgt_pitAng", round(tgt_pitAng, 5)
-                ,"tgt_angErr", round(tgt_angErr, 5)
-                ,"tgt_effAng", round(tgt_effAng, 5)
-            ).
-            DispAscentAngleStats(ascentStatObj).
-            //Breakpoint().
+            if g_ConsumedResources["TimeRemaining"] < 5
+            {
+                set tgt_EffAng to pitch_for(ship, ship:srfPrograde).
+            }
+            else
+            {
+                local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:Altitude < 100000 else 
+                    choose ((pitch_for(ship, ship:SrfPrograde) + pitch_for(ship, ship:Prograde)) / 2) if ship:altitude < body:Atm:Height else 
+                    pitch_for(ship, ship:Prograde).
+                local tgt_effAlt to tgt_alt - g_la_turnAltStart.
+                local cur_effAlt to 0.1 + ship:Altitude - g_la_turnAltStart.
+                local cur_altErr to cur_effAlt / (tgt_effAlt / 2).
+                local tgt_pitAng to max(-2, 90 * (1 - cur_altErr)).// * abs(f_shape - 1).
+                local tgt_angErr to min(10, max(4, 10 * min(1, (Ship:Apoapsis / (tgt_effAp / 2))))) * f_shape.
+                set   tgt_effAng to max(tgt_pitAng, cur_pitAng - tgt_angErr). // min(90, max(cur_pitAng - tgt_angErr, min(cur_pitAng + tgt_angErr, tgt_pitAng)) * f_shape).
+            
+                // local ascentStatObj to lexicon(
+                //     "cur_pitAng",  round(cur_pitAng, 5)
+                //     ,"tgt_alt",    round(tgt_alt)
+                //     ,"tgt_ap",     round(tgt_ap)
+                //     ,"tgt_effAlt", round(tgt_effAlt)
+                //     ,"cur_effAlt", round(cur_effAlt)
+                //     ,"cur_altErr", round(cur_altErr, 5)
+                //     ,"tgt_pitAng", round(tgt_pitAng, 5)
+                //     ,"tgt_angErr", round(tgt_angErr, 5)
+                //     ,"tgt_effAng", round(tgt_effAng, 5)
+                // ).
+                //DispAscentAngleStats(ascentStatObj).
+                //Breakpoint().
+            }
         }
         return tgt_effAng.
     }

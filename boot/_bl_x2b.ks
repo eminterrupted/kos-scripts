@@ -29,7 +29,7 @@ if TDEngs.Length > 0
         set ShipResources to GetResourcesFromEngines(TDEngs).
         set TLimit to TLimits[0] + (FuelRemaining * TLimitRange).
         //TDMod:SetField("Thrust Limiter", TLimit).
-        OutInfo("{0, -15}:   {1, 5}   ":format("FuelRemaining", Round(FuelRemaining, 3))).
+        OutInfo("{0, -15}:   {1, 5}   ":format("FuelRemaining", Round(FuelRemaining, 2))).
         OutInfo("{0, -15}: {1, 5}%  ":format("ThrustLimiter", Round(TLimit)), 1).
         wait 0.01.
     }

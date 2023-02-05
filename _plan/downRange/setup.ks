@@ -1,3 +1,7 @@
 parameter _prms to list().
 
-RunPath("0:/_scr/launch/launchPhase_SO.ks", _prms).
+RunOncePath("0:/lib/globals.ks").
+
+set g_MP_List to list(
+    "launch/launchPhase_SO", g_tag:PRM
+).

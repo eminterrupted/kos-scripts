@@ -1,4 +1,7 @@
 parameter _prms to list().
 
-runOncePath("0:/lib/loadDep").
-runPath("0:/_scr/launch/launchSimpleAscent.ks", _prms).
+RunOncePath("0:/lib/globals.ks").
+
+set g_MP_List to list(
+     "launch/launchMaxAlt", _prms
+).

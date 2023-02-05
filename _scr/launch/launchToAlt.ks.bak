@@ -129,7 +129,7 @@ ArmAutoStaging().
 
 until ship:Altitude > g_la_turnAltStart
 {
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 
@@ -138,7 +138,7 @@ set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
 
 until stage:number = g_stopStage
 {
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 
@@ -147,7 +147,7 @@ OutInfo("     tgt_ap: {0}":format(round(tgt_ap))).
 until ship:AvailablethrustAt(body:Atm:Altitudepressure(ship:Altitude)) < 0.01 or ship:Apoapsis >= tgt_ap * 1.025
 {
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 for eng in g_activeEngines["ENGLIST"]
@@ -161,7 +161,7 @@ OutInfo("     AP ETA: {0}":format(round(eta:Apoapsis))).
 until eta:Apoapsis < 1
 {
     set s_val to heading(tgt_hdg, pitch_for(ship:prograde), tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 
@@ -169,7 +169,7 @@ OutMsg("P21: DESCENT").
 until doneFlag
 {
     set s_val to lookDirUp(ship:retrograde:vector, heading(tgt_hdg, 0):vector).
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
     if alt:radar <= 1 set doneFlag to true.
 }

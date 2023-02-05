@@ -53,7 +53,7 @@
     global function OutMsg
     {
         parameter str is "".
-
+                  
         local label to choose "[MSG]" if str:Length > 0 else "".
         if str:Length > Terminal:Width - 8
         {
@@ -87,6 +87,80 @@
 
         print "{0,-6} {1, -60}":format(label, str) at (0, 7 + pos).
     }
+
+    // OutInfo :: <string>String, [<int>Position] -> <none>
+    // Like OutMsg, prints a string, but with added flexibility of the pos parameter
+    // pos is a positive offset from the default line it would be printed on if no value was passed
+    global function OutDebug
+    {
+        parameter str is "",
+                  pos is 0.
+
+        local stLine to Terminal:Height - 15.
+        set pos to min(pos, 2).
+        local label to "[DEBUG]".
+        if str:Length > Terminal:width - 8
+        {
+            set str to str:substring(0, Terminal:width - 8).
+        }
+        else if str:Length < 1
+        {
+            set label to "".
+        }
+
+        print "{0,-7} {1, -60}":format(label, str) at (0, stLine + pos).
+    }
+
+    global function OutTee
+    {
+        parameter str is "",
+                  errLvl is 0.
+                  
+        local hudLabel to "[INFO]".
+        local hudColor to Green.
+        local hudTime to 3.
+        if errLvl > 0
+        {
+            if errLvl > 1 
+            {
+                set hudLabel to "[***ERROR***]".
+                set hudColor to Red.
+                set hudTime to 10.
+            }
+            else 
+            {
+                set hudLabel to "[*WARN*]".
+                set hudColor to Yellow.
+                set hudTime to 5.
+            }
+        }
+        local termLabel to choose "[MSG]" if str:Length > 0 else "".
+        if str:Length > Terminal:Width - 8
+        {
+            set str to str:Substring(0, Terminal:Width - 8).
+        }
+        else if str:Length < 1
+        {
+            set termLabel to "".
+        }
+        print "{0,-6} {1, -60}":Format(termLabel, str) at (0, 6).
+        hudtext("{0}: {1}":Format(hudLabel, str), hudTime, 2, 20, hudColor, false).
+    }
+
+    // OutHUD :: 
+    global function OutHUD 
+    {
+        parameter str,
+                  errLvl is 0,
+                  hudPos is 2,
+                  screenTime is 10.
+
+        local color to green.
+        if errLvl = 1 set color to yellow.
+        if errLvl = 2 set color to red.
+
+        hudtext(str, screenTime, hudPos, 20, color, false).          
+    }
     // #endregion
 
 
@@ -115,7 +189,7 @@
 
     global function DispLaunchTelemetry
     {
-        parameter _prmList is list(body:Atm:height).
+        parameter _tgtAlt is -1.
 
         set g_line to 10.
         local label to "LAUNCH TELEMETRY".
@@ -131,7 +205,7 @@
         }
 
         print "ALTITUDE " at (1, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (TGT)", round(_prmList[0]), "m") at (2, cr()).
+        if _tgtAlt > 0 print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (TGT)", round(_tgtAlt), "m") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (MAX)", round(g_maxAlt), "m") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("ALTITUDE (CUR)", round(ship:Altitude), "m") at (2, cr()).
         cr().
@@ -143,7 +217,16 @@
         print "|- {0,-15}: {1}{2}   ":format("APOAPSIS", round(ship:Apoapsis), "m") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("APOAPSIS ETA", round(ship:orbit:eta:Apoapsis), "s") at (2, cr()).
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
-        // cr().
+        cr().
+        print  "RESOURCES" at (1, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("RESOURCE REMAINING", round(100 * g_ConsumedResources["PctRemaining"], 2), "%") at (2, cr()).
+        print "|- {0,-15}: {1}{2}   ":format("TIME TO DEPLETION", round(g_ConsumedResources["TimeRemaining"], 2), "s") at (2, cr()).
+        if g_HotStageArmed
+        {
+            cr().
+            print "HOT STAGING" at (1, cr()).
+            print "|- {0, -15}: {1}{2}   ":format("TIME TO STAGING", round(g_TS - Time:Seconds, 2), "s") at (2, cr()).
+        }
         // print "ENGINES " at (1, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("THRUST (CUR)", round(g_activeEngines["CURTHRUST"], 2), "kn") at (2, cr()).
         // print "|- {0,-15}: {1}{2}   ":format("THRUST (AVL)", round(g_activeEngines["AVLTHRUST"], 2), "kn") at (2, cr()).
@@ -171,7 +254,7 @@
         set g_line to 10.
         
         local label to "ENGINE PERFORMANCE".
-        local engPerfData to GetEnginePerfData(_engs).
+        local engPerfData to GetEngineData(_engs).
 
         print "{0, -25}":format(label) at (0, g_line).
         cr().

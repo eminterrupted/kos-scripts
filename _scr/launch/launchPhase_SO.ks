@@ -78,6 +78,7 @@ if tgt_pit:IsType("String") set tgt_pit to tgt_pit:ToNumber().
 if tgt_rll:IsType("String") set tgt_rll to tgt_rll:ToNumber().
 
 local gravAltAvg  to ((gravTurnAlt * 3) + tgt_ap) / 4.
+local f_SpinManualEngaged to false.
 
 OutMsg("Press Enter to begin launch countdown").
 OutInfo("ALT: {0}  |  HDG: {1}":Format(tgt_ap, tgt_hdg), 1).
@@ -105,34 +106,70 @@ set t_Val to 1.
 DispClr(7).
 OutMsg("Liftoff!").
 
-set g_boosterSepArmed to ArmAutoBoosterSeparation().
 ArmAutoStaging().
-ArmHotStaging().
+if Ship:PartsTaggedPattern("booster"):Length > 0                        { set g_boosterSepArmed to ArmAutoBoosterSeparation().}
+if Ship:PartsTaggedPattern("fairing\.(Ascent|ASC|Launch)"):Length > 0   { ArmFairingJettison("launch").}
+if Ship:PartsTaggedPattern("(HotStg|HotStage)"):Length > 0              { ArmHotStaging(). }
+if Ship:PartsTaggedPattern("Spin(Stage|Stg|Stab|Stabilize)"):Length > 0 { ArmSpinStabilization(). }
+if Ship:PartsTaggedPattern("OnEvent\|(Ascent|ASC|Launch)"):Length > 0   { InitOnEventTrigger(Ship:PartsTaggedPattern("OnEvent|(Ascent|ASC|Launch)")). }
 
 until ship:Altitude > g_la_turnAltStart
 {
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEnginesLex to ActiveEngines().
-    DispLaunchTelemetry(list(tgt_ap)).
+    set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
+
+    GetTermChar().
+    set f_SpinManualEngaged to ManualSpinStabilizationCheck().
+    set s_Val to choose Heading(tgt_hdg, tgt_pit):Vector if f_SpinManualEngaged else Heading(tgt_hdg, tgt_pit, tgt_rll).
 }
 
 until stage:Number <= g_stopStage
 {
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
-    set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
-    set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEnginesLex to ActiveEngines().
+    set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+
+    GetTermChar().
+    set f_SpinManualEngaged to ManualSpinStabilizationCheck().
+    if f_SpinManualEngaged
+    {
+        set tgt_pit to pitch_for(Ship).
+        set s_Val to Heading(tgt_hdg, tgt_pit):Vector.
+    }
+    else
+    {
+         set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
+         set s_Val to Heading(tgt_hdg, tgt_pit, tgt_rll).
+    }
+    
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 
 until ship:AvailableThrust < 0.01 // or ship:Apoapsis >= tgt_ap
 {
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
-    set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
-    set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    // set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
+    // //set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
+    // set s_Val to choose Heading(tgt_hdg, tgt_pit):Vector if f_SpinManualEngaged else Heading(tgt_hdg, tgt_pit, tgt_rll).
+    GetTermChar().
+    set f_SpinManualEngaged to ManualSpinStabilizationCheck().
+    if f_SpinManualEngaged
+    {
+        set tgt_pit to pitch_for(Ship).
+        set s_Val to Heading(tgt_hdg, tgt_pit):Vector.
+    }
+    else
+    {
+         set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
+         set s_Val to Heading(tgt_hdg, tgt_pit, tgt_rll).
+    }
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 set t_Val to 0.
@@ -142,12 +179,32 @@ wait 1.
 
 OutMsg("Waiting until apoapsis").
 local ts to Time:Seconds + eta:Apoapsis.
-until Time:Seconds >= ts
+local doneFlag to false.
+until Time:Seconds >= ts or doneFlag
 {
+    GetTermChar().
+    set f_SpinManualEngaged to ManualSpinStabilizationCheck().
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        unlock steering.
+        OutInfo("** Steering Unlocked **", 2).
+    }
+    else if g_TermChar = Terminal:Input:DownCursorOne
+    {
+        set Ship:Control:Neutralize to True.
+    }
+    else if g_TermChar = Terminal:Input:EndCursor
+    {
+        lock steering to s_Val.
+    }
+    else if g_TermChar = Terminal:Input:Enter
+    {
+        set doneFlag to true.
+    }
     set ts to Time:Seconds + eta:Apoapsis.
     set s_val to lookDirUp(ship:Prograde:Vector, -body:Position).
     // if ship:Altitude > lastAlt set maxAlt to ship:Altitude.
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     OutInfo("Apoapsis in: {0}s":Format(Round(ts - Time:Seconds, 2))).
     wait 0.01.
 }

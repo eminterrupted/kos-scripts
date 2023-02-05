@@ -7,15 +7,68 @@ runOncePath("0:/lib/globals").
 runOncePath("0:/lib/disp").
 runOncePath("0:/lib/util").
 
-print "Testing TestBuildList".
-print TestBuildList().
+OutMsg("Press 'q' to roll left.").
+local doneFlag to false.
+until doneFlag
+{
+    GetTermChar().
+    OutInfo("g_TermChar [{0}]":Format(g_TermChar)).
+    if g_TermChar = "q" 
+    { 
+        OutInfo("g_termChar = 'q'", 1).
+        set doneFlag to true. 
+    }
+    else if g_TermChar = char(113)
+    {
+        OutInfo("g_termChar = char(113)", 1).
+        set doneFlag to true.
+    }
+    else if g_TermChar = unchar("q")
+    {
+        OutInfo("g_termChar = unchar('q')", 1).
+        set doneFlag to true.
+    }
+}
+wait 1.
+set doneFlag to false.
+OutMsg("Press 'e' to roll right.").
+OutInfo().
+OutInfo("", 1).
+until doneFlag
+{
+    GetTermChar().
+    OutInfo("g_TermChar [{0}]":Format(g_TermChar)).
+    if g_TermChar = "e" 
+    { 
+        OutInfo("g_termChar = 'e'", 1).
+        set doneFlag to true. 
+    }
+    else if g_TermChar = char(101)
+    {
+        OutInfo("g_termChar = char(101)", 1).
+        set doneFlag to true.
+    }
+    else if g_TermChar = unchar("e")
+    {
+        OutInfo("g_termChar = unchar('e')", 1).
+        set doneFlag to true.
+    }
+}
+wait 1.
+OutMsg("Done").
+wait 1.
+OutMsg().
+OutInfo().
+OutInfo("", 1).
+// print "Testing TestBuildList".
+// print TestBuildList().
 
-print " ".
+// print " ".
 
-print "Testing TestShipList".
-print TestShipList().
+// print "Testing TestShipList".
+// print TestShipList().
 
-print " ".
+// print " ".
 
 
 // local script to "". // Path to test script.

@@ -220,7 +220,7 @@ if ascentType = "gravityTurn"
                 if resPctRemaining < 0.025
                 {
                     HotStage(0.00125).
-                    if g_stageInfo["HotStage"]:contains(stage:number - 1)
+                    if g_stageInfo["HotStage"]:Keys:Contains(stage:number - 1)
                     {
                     }
                     else
@@ -251,7 +251,7 @@ if ascentType = "gravityTurn"
                 {
                     unlock steering.
                     set ship:control:roll to rollCtrlVal.
-                    g_stageInfo["SpinStabilized"]:remove(nextStage). 
+                    g_stageInfo["SpinStabilized"]:Remove(nextStage). 
                     if g_stageInfo["SpinStabilized"]:Length = 0 
                     {
                         set f_spinStabilization to false.

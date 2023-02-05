@@ -1,3 +1,8 @@
 parameter _prms to list().
 
-RunPath("0:/_scr/launch/launchPhase_OBT.ks", _prms).
+RunOncePath("0:/lib/globals.ks").
+
+set g_MP_List to list(
+    "launch/launchPhase_OBT", _prms
+    ,"mission/simpleOrbit", list()
+).

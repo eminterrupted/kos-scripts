@@ -1,4 +1,8 @@
 parameter _prms to list().
 
-RunPath("0:/_scr/launch/launchPhase_SO.ks", _prms).
-RunPath("0:/_scr/reentry/reentry.ks", list(25000, True, 10000)).
+RunOncePath("0:/lib/globals.ks").
+
+set g_MP_List to list(
+     "launch/launchPhase_SO", _prms
+    ,"reentry/reentry", list(25000, True)
+).

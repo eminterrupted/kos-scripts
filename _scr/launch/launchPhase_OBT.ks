@@ -120,7 +120,7 @@ ArmAutoStaging().
 
 until ship:Altitude > g_la_turnAltStart
 {
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     wait 0.01.
 }
@@ -130,7 +130,7 @@ until stage:Number <= g_stopStage
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 
@@ -139,7 +139,7 @@ until ship:Periapsis > tgt_pe or ship:AvailableThrust < 0.01 // or ship:Apoapsis
     if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 set t_Val to 0.
@@ -152,7 +152,7 @@ until Time:Seconds >= ts
     set ts to Time:Seconds + eta:Apoapsis.
     set s_val to lookDirUp(ship:Prograde:Vector, -body:Position).
     // if ship:Altitude > lastAlt set maxAlt to ship:Altitude.
-    DispLaunchTelemetry(list(tgt_ap)).
+    DispLaunchTelemetry(tgt_ap).
     wait 0.01.
 }
 OutMsg("Apoapsis reached").
