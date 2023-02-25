@@ -115,16 +115,18 @@ InitActiveEngines().
         local sumThr_Del_AllEng to { 
             parameter _eng. 
 
-            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or (_eng:Tag:Length > 0 and _eng:Tag:Replace("sep",""):Length = _eng:Tag:Length)
+            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or _eng:Tag:Length > 0
             {
                 set sepFlag to false.
             }
 
             engList:Add(_eng). 
-            local _engMod to _eng:GetModule("ModuleEnginesRF").
-            if _engMod:GetField("Status"):MatchesPattern(".*(FAILED)+.*")
+            local engMod    to _eng:GetModule("ModuleEnginesRF").
+            local engStatus to GetEngineStatus(engMod).
+
+            if engStatus:STATUS = "Failed"
             {
-                set failStr to choose _engMod:GetField("cause") if _engMod:HasField("cause") else "UNKNOWN".
+                set failStr to engStatus:CAUSE.
                 set statusStr to "[{0}]:{1}":Format("FAILED", failStr).
                 set engStatusLex["FailedEngs"][_eng:CID] to "[{0}]:{1}":Format("FAILED", failStr).
                 set engStatusLex["Status"] to "FAILED".
@@ -141,38 +143,56 @@ InitActiveEngines().
             set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
             set massFlow to massFlow + _eng:massFlow.
             set massFlowMax to massFlowMax + _eng:maxMassFlow.
-            set maxSpoolTime to choose max(maxSpoolTime, _engMod:GetField("effective spool-up time")) if _engMod:HasField("effective spool-up time") else maxSpoolTime.
+            set maxSpoolTime to choose max(maxSpoolTime, engMod:GetField("effective spool-up time")) if engMod:HasField("effective spool-up time") else maxSpoolTime.
         }.
 
         local sumThr_Del_NoSep to
         {
             parameter _eng.
 
-            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or (_eng:Tag:Length > 0 and _eng:Tag:Replace("sep",""):Length = _eng:Tag:Length)
+            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or _eng:Tag:Length > 0
             {
                 set sepFlag to false.
                 engList:Add(_eng). 
-                local _engMod to _eng:GetModule("ModuleEnginesRF").
-                if _engMod:GetField("Status"):MatchesPattern(".*FAILED.*")
+
+                local engMod    to _eng:GetModule("ModuleEnginesRF").
+                local engStatus to GetEngineStatus(engMod).
+
+                if engStatus:STATUS = "Failed"
                 {
-                    set failStr to choose _engMod:GetField("cause") if _engMod:HasField("cause") else "UNKNOWN".
+                    set failStr to engStatus:CAUSE.
                     set statusStr to "[{0}]:{1}":Format("FAILED", failStr).
                     set engStatusLex["FailedEngs"][_eng:CID] to "[{0}]:{1}":Format("FAILED", failStr).
                     set engStatusLex["Status"] to "FAILED".
-                    
+                    set g_ErrLvl to 1.
                     // #TODO PartHighlighting
                     // if g_PartHighlighting_On 
                     // {
 
                     // }
                 }
+
+                // local engMod to _eng:GetModule("ModuleEnginesRF").
+                // if engMod:GetField("Status"):MatchesPattern(".*FAILED.*")
+                // {
+                //     set failStr to choose engMod:GetField("cause") if engMod:HasField("cause") else "UNKNOWN".
+                //     set statusStr to "[{0}]:{1}":Format("FAILED", failStr).
+                //     set engStatusLex["FailedEngs"][_eng:CID] to "[{0}]:{1}":Format("FAILED", failStr).
+                //     set engStatusLex["Status"] to "FAILED".
+                    
+                //     // #TODO PartHighlighting
+                //     // if g_PartHighlighting_On 
+                //     // {
+
+                //     // }
+                // }
                 set actThr to actThr + _eng:thrust. 
                 set avlThr to avlThr + _eng:AvailableThrustAt(body:Atm:AltitudePressure(ship:Altitude)).
                 set fuelFlow to fuelFlow + _eng:fuelFlow.
                 set fuelFlowMax to fuelFlowMax + _eng:maxFuelFlow.
                 set massFlow to massFlow + _eng:massFlow.
                 set massFlowMax to massFlowMax + _eng:maxMassFlow.
-                set maxSpoolTime to choose max(maxSpoolTime, _engMod:GetField("effective spool-up time")) if _engMod:HasField("effective spool-up time") else maxSpoolTime.
+                set maxSpoolTime to choose max(maxSpoolTime, engMod:GetField("effective spool-up time")) if engMod:HasField("effective spool-up time") else maxSpoolTime.
             }
         }.
 
@@ -320,7 +340,7 @@ InitActiveEngines().
             if eng:Stage >= Stage:Number and eng:Ignition and not eng:Flameout
             {
                 if _includeSepMotors { engList:Add(eng). }
-                else if not g_partInfo["Engines"]["SepMotors"]:Contains(eng:Name) or eng:Tag:Replace("sep"):Length > 0 { engList:Add(eng). }
+                else if not g_partInfo["Engines"]["SepMotors"]:Contains(eng:Name) or eng:Tag:Length > 0 { engList:Add(eng). }
             }
         }
         return engList.
@@ -423,7 +443,7 @@ InitActiveEngines().
             {
                 if eng:stage = i
                 {
-                    if not g_PartInfo["Engines"]["SepMotors"]:contains(eng:name) or eng:Tag:Replace("sep",""):Length > 0
+                    if not g_PartInfo["Engines"]["SepMotors"]:contains(eng:name) or eng:Tag:Length > 0 // eng:Tag:Replace("sep",""):Length > 0
                     {
                         set EngineObj[i]["IsSepStage"] to False.
                     }
@@ -514,20 +534,19 @@ InitActiveEngines().
                 // }
 
                 //when (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["ENG"]["AVLTHRUST"] <= 5)) then
-                when (g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_setIdx]["ENG"]["PCT"] <= 0.10 )) then
+                when (g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0075) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_setIdx]["ENG"]["PCT"] <= 0.05 )) then
                 {
                     OutDebug("Staging booster set " + _setIdx).
                     from { local i to 0.} until i = g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"]:Length step { set i to i + 1.} do 
                     {
                         local dc to g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"][i].
-                        if dc:HasEvent("decouple") 
+                        if DoEvent(dc, "Decouple")
                         {
-                            dc:DoEvent("decouple").
                             OutDebug("Staging success").
                         }
                         else
                         {
-                            OutDebug("Staging failure - Decouple event not found on part").
+                            OutDebug("Staging failure - Decouple failed, or event not found on part").
                         }
                     }
                     g_BoosterObj["BOOSTER_SETS"]:Remove(_setIdx).
@@ -535,10 +554,23 @@ InitActiveEngines().
                     {
                         set g_BoosterSepArmed to false.
                     }
+                    else 
+                    {
+                        local doneFlag to false.
+                        // from { local i to 1.} until doneFlag step { set i to i + 1.} do
+                        // {
+                        //     if g_BoosterObj["BOOSTER_SETS"]:Keys:Contains(_setIdx - i)
+                        //     {
+                        //         set _setIdx to _setIdx - i.
+                        //         set doneFlag to true.
+                        //     }
+                        // }
+                    }
                 }
                 set g_BoosterSepArmed to True.
                 OutDebug("Booster Set ({0}) Armed":Format(_setIdx)).
             }
+            return g_BoosterSepArmed.
         }
     }
 
@@ -547,38 +579,62 @@ InitActiveEngines().
     {
         parameter _tag.
 
-        local FairingJettisonDelegates to lexicon(
-            "launch",   { parameter _alt is 125000. when Ship:Altitude >= _alt then { JettisonFairings("fairing.(Ascent|ASC|Launch)").}}
-            ,"reentry", { parameter _alt is 7500.   when Ship:Altitude <= _alt then { JettisonFairings("fairing.(Reentry|RET|Descent|DESC)").}}
+        local fairingRefLex to lexicon(
+            "TagRef", lexicon(
+                 "Ascent",  "((ascent)|(asc)|(launch))+"
+                ,"ASC",     "((ascent)|(asc)|(launch))+"
+                ,"Launch",  "((ascent)|(asc)|(launch))+"
+                ,"DESC",    "((Reentry)|(RET)|(Descent)|(DESC))+"
+                ,"Descent", "((Reentry)|(RET)|(Descent)|(DESC))+"
+                ,"Reentry", "((Reentry)|(RET)|(Descent)|(DESC))+"
+                ,"Return",  "((Reentry)|(RET)|(Descent)|(DESC))+"
+                ,"RET",     "((Reentry)|(RET)|(Descent)|(DESC))+"
+            )
         ).
 
-        local fairings to Ship:PartsTaggedPattern("fairing\.{0}":Format(_tag)).
+        local fairingTag to "fairing\.{0}":Format(fairingRefLex["TagRef"][_tag]).
+        set fairingRefLex["Delegates"] to lexicon(
+            "Ascent",   { parameter _alt is 100000. when Ship:Altitude >= _alt then { OutInfo("Ascent Fairing Jettison (Reached _alt: {0}m ":Format(_alt), 1). JettisonFairings(fairingTag).}.  OutInfo("Launch fairings armed"). }
+            ,"Reentry", { parameter _alt is 7500.   when Ship:Altitude <= _alt then { OutInfo("Reentry Fairing Jettison (Reached _alt: {0}m ":Format(_alt), 1). JettisonFairings(fairingTag).}. OutInfo("Descent fairings armed").}
+        ).
+
+        // local FairingJettisonDelegates to lexicon(
+        //     "launch",   { parameter _alt is 125000. when Ship:Altitude >= _alt then { JettisonFairings("fairing.(Ascent|ASC|Launch)").}. OutInfo("Launch fairings armed"). }
+        //     ,"reentry", { parameter _alt is 7500.   when Ship:Altitude <= _alt then { JettisonFairings("fairing.(Reentry|RET|Descent|DESC)").}. OutInfo("Descent fairings armed").}
+        // ).
+
+        local fairings to Ship:PartsTaggedPattern(fairingTag).
         
         if fairings:Length > 0 
         {
             local fairingTags to fairings[0]:Tag:Split(".").
-            local jettisonAlt to fairingTags[fairingTags:Length - 1]:ToNumber(5000).
-            local triggerType to choose "Launch" if _tag:MatchesPattern("Ascent|ASC|Launch") else "Reentry".
-            local triggerDel  to FairingJettisonDelegates[_tag]@.
-            triggerDel:Call(jettisonAlt).
+            local jettisonAlt to ExpandToNumber(fairingTags[fairingTags:Length - 1]).
+            local triggerType to choose "Ascent" if _tag:MatchesPattern(fairingRefLex["TagRef"]:Ascent) else "Reentry".
+            OutDebug("Fairings:", 5).
+            print " - _tag Input : [{0}]":Format(_tag) at (0, Terminal:Height - 8).
+            print " - TagRef     : [{0}]":Format(fairingRefLex["TagRef"][_tag]) at (0, Terminal:Height - 7).
+            print " - fairingTags: [{0}]":Format(fairingTags:Join(";")) at (0, Terminal:Height - 6).
+            print " - jettisonAlt: [{0}]":Format(jettisonAlt) at (0, Terminal:Height - 5).
+            print " - triggerType: [{0}]":Format(triggerType) at (0, Terminal:Height - 4).
+            fairingRefLex["Delegates"][triggerType]:Call(jettisonAlt).
         }
     }
 
     // JettisonFairings :: <string>PartTag -> <none>
     global function JettisonFairings
     {
-        parameter _fairingTag is "fairingSep".
+        parameter _fairingTag is "fairing\.*".
 
         for m in Ship:ModulesNamed("ProceduralFairingSide")
         {
             if m:Part:Tag:MatchesPattern(_fairingTag)
             {
                 local fairingDecoupler to m:Part:GetModule("ProceduralFairingDecoupler").
-                if DoEvent(fairingDecoupler, "decouple")
+                if DoEvent(fairingDecoupler, "jettison fairing")
                 {
                     OutInfo("Fairing jettison").
                 }
-                else if DoEvent(fairingDecoupler, "jettison fairing")
+                else if DoEvent(fairingDecoupler, "decouple")
                 {
                     OutInfo("Fairing jettison").
                 }
@@ -831,17 +887,19 @@ InitActiveEngines().
     // Initiates a staging trigger that will continue being preserved until the desired stage number is reached
     global function ArmAutoStaging
     {
+        parameter _stopStgOverride is g_StopStage.
+
         // Auto-stage
         set g_ArmAutoStage to True.
         when (ship:AvailableThrust < 0.001 and g_ArmAutoStage) then
         {
-            if stage:number > g_stopStage
+            if stage:number > _stopStgOverride
             {
                 OutMsg("Staging...").
                 SafeStage().
                 wait 0.10.
 
-                if g_ActiveEnginesLex:SepStg and Stage:Number > g_StopStage
+                if g_ActiveEnginesLex:SepStg and Stage:Number > _stopStgOverride
                 {
                     OutInfo("Sep motors activated, priming stage engines").
                     wait 0.50.
@@ -859,18 +917,18 @@ InitActiveEngines().
                 if stage:number = g_StageLogicTrigger
                 {
                     g_StageLogicDelegate:Call().
-                    OutInfo("STAGE LOGIC TRIGGER | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
+                    OutInfo("STAGE LOGIC TRIGGER | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, _stopStgOverride), 1).
                 }
-                else if stage:number > g_stopStage
+                else if stage:number > _stopStgOverride
                 {
-                    OutInfo("STAGE PRESERVE | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
+                    OutInfo("STAGE PRESERVE | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, _stopStgOverride), 1).
                     LoadNextStagingCondition().
                     set g_ArmAutoStage to True.
                     preserve.
                 }
                 else
                 {
-                    OutInfo("STAGE STOP | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, g_stopStage), 1).
+                    OutInfo("STAGE STOP | Current Stage [{0}] | g_stopStage [{1}]":format(stage:number, _stopStgOverride), 1).
                     LoadNextStagingCondition().
                     set g_ArmAutoStage to False.
                 }
@@ -897,7 +955,6 @@ InitActiveEngines().
 
         if engList:Length > 0
         {
-            local hasSpoolTime to false.
             local maxSpoolTime to 0.0001.
 
             for _e in ship:engines 
@@ -905,7 +962,6 @@ InitActiveEngines().
                 local _m to _e:GetModule("ModuleEnginesRF").
                 if _m:HasField("effective spool-up time") 
                 {
-                    set hasSpoolTime to true.
                     set maxSpoolTime to Max(_m:GetField("effective spool-up time"), maxSpoolTime).
                 }
                 else
@@ -913,11 +969,11 @@ InitActiveEngines().
                     set maxSpoolTime to maxSpoolTime.
                 }
             }
-            return list(hasSpoolTime, maxSpoolTime).
+            return maxSpoolTime.
         }
         else
         {
-            return list(false, 0).
+            return 0.
         }
     }
 
@@ -1050,7 +1106,7 @@ InitActiveEngines().
         local spinDur to spinLeadTime.
         local spinType to "CTRL".
 
-        local SpinCtrlFactor to 1.
+        local SpinCtrlFactor to 0.5.
 
         local _SpinStageLex to lexicon(
             "Active", false
@@ -1095,10 +1151,6 @@ InitActiveEngines().
             {
                 set spinType to "FLAPS".
             }
-            // if p:Tag:MatchesPattern("(SpinStg|SpinStab|SpinStage)\.\d*")
-            // {
-            //     set spinLeadTime to max(spinLeadTime, 5).
-            // }
             set _SpinStageLex["Stages"][spinStg]["SpinType"] to spinType.
             set _SpinStageLex["Stages"][spinStg]["Logic"] to lexicon(
                 "CONDITION", "STG"
@@ -1238,22 +1290,22 @@ InitActiveEngines().
     // appropriate tags are found
     global function ArmHotStaging
     {
-        local _engList to Ship:PartsTaggedPattern("(^HotStg.*$|^HotStage.*$)").
-        local _HotStageLex to lexicon().
-        local _HotStageEngList to list().
-        local nextHotStage to 0.
+        global g_HotStageTrigger to false.
+        local engList to Ship:PartsTaggedPattern("(^HotStg.*$|^HotStage.*$)").
+        local HotStageLex to lexicon().
+        local nextHotStage to -1.
         
-        if _engList:Length > 0
+        if engList:Length > 0
         {
-            for eng in _engList
+            for eng in engList
             {
-                if _HotStageLex:HasKey(eng:Stage) 
+                if HotStageLex:HasKey(eng:Stage) 
                 {
-                    _HotStageLex[eng:Stage]:Add(eng).
+                    HotStageLex[eng:Stage]:Add(eng).
                 }
                 else
                 {
-                    set _HotStageLex[eng:Stage] to list(eng).
+                    set HotStageLex[eng:Stage] to list(eng).
                 }
                 set nextHotStage to Max(nextHotStage, eng:Stage).
             }
@@ -1265,109 +1317,11 @@ InitActiveEngines().
             set g_ActiveEnginesLex to ActiveEngines().
             set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
             OutInfo("HotStaging Enabled").
-
             // HotStaging Trigger
             when Stage:Number = g_StageLogicTrigger then
             {
-                set g_ActiveEngines to GetActiveEngines().
-                set g_ActiveEnginesLex to ActiveEngines().
-                set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
-                set _HotStageEngList to _HotStageLex[nextHotStage].
-                local g_NextEnginesLex to GetEngineData(_HotStageEngList, true).
-
-                local eff_SpoolTime to Abs(g_NextEnginesLex:MaxEffSpool).
-
-                OutHUD("[HS{0}]: HotStaging armed":Format(nextHotStage)).
-                set g_HotStageArmed to True.
-                
-                // Update the timestamp for hot staging once every second
-                when Time:Seconds - g_TS_LastUpdate > 1 then
-                {
-                    set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
-                    set g_TS to Time:Seconds + (g_ConsumedResources:TimeRemaining - eff_SpoolTime).
-                    wait 0.01.
-                    GetTermChar().
-                    if g_TermChar = Terminal:Input:EndCursor
-                    {
-                    }
-                    else
-                    {
-                        set g_TS_LastUpdate to Time:Seconds.
-                        Preserve.
-                    }
-                }
-
-                when g_ConsumedResources["TimeRemaining"] <= eff_SpoolTime then
-                {
-                    OutInfo("HOT STAGING: IGNITION (0%)").
-                    for eng in _HotStageEngList
-                    {
-                        eng:Activate.
-                    }
-                    set doneFlag to False.
-                    set g_TS to 5 + Time:Seconds + eff_SpoolTime.
-                    wait 0.01.
-                    local engPerf to GetEngineData(_HotStageEngList).
-                    until doneFlag
-                    {
-                        set engPerf to GetEngineData(_HotStageEngList).
-                        set g_ActiveEngines to GetActiveEngines().
-                        set g_ActiveEnginesLex to ActiveEngines().
-
-                        if engPerf["PCTTHRUST"] >= 0.90 and g_ActiveEnginesLex["PCTTHRUST"] <= 0.01
-                        {
-                            set doneFlag to True.
-                            OutInfo("", 2).
-                        }
-                        else if Time:Seconds >= g_TS
-                        {
-                            AbortSequenceStart("IGNITION FAILURE").                            
-                        }
-                        else
-                        {
-                            OutInfo("HOT STAGING: IGNITION ({0}%) ":Format(Round(engPerf["PCTTHRUST"] * 100, 1))).
-                            OutInfo("ACTIVE THR (%): {0}kn/{1}kn ({2}%)  ":Format(Round(g_ActiveEnginesLex["CURTHRUST"], 2), Round(g_ActiveEnginesLex["AVLTHRUST"], 2), Round(g_ActiveEnginesLex["PCTTHRUST"] * 100, 2)), 2).
-                        }
-                        DispLaunchTelemetry().
-                    }
-                    OutInfo("HOT STAGING: STAGING ({0}%)":Format(Round(engPerf["PCTTHRUST"] * 100, 1))).
-
-                    until Stage:Number = nextHotStage
-                    {
-                        wait until Stage:Ready.
-                        Stage.
-                        wait 0.025.
-                    }
-
-                    _HotStageLex:Remove(nextHotStage).
-                    DispClr(10).
-                    set g_Line to 10.
-                }
-
-                if _HotStageLex:Keys:Length > 0
-                {
-                    set g_ActiveEngines to GetActiveEngines().
-                    set g_ActiveEnginesLex to ActiveEngines().
-                    local keyHit to false.
-                    from { local i to Stage:Number.} until keyHit or i < 0 step { set i to i - 1.} do 
-                    {
-                        if _HotStageLex:HasKey(i)
-                        {
-                            //set maxStage to i.
-                            set nextHotStage to i.
-                            set g_StageLogicTrigger to Min(Stage:Number, i + 1).
-                            set keyHit to true.
-                            //OutInfo("HotStaging Preserved", 1).
-                            //preserve.
-                        }
-                    }
-                }
-                else
-                {
-                    set g_StageLogicTrigger to -99.
-                    set g_HotStageArmed to false.
-                    OutInfo("HotStaging Disarmed", 1).
-                }
+                set g_HotStageTrigger to true.
+                SetupHotStagingTrigger(HotStageLex, nextHotStage).
             }
             return true.
         }
@@ -1377,6 +1331,151 @@ InitActiveEngines().
         }
     }
 
+    global function SetupHotStagingTrigger
+    {
+        parameter _HotStageLex is lex(),
+                  _nextHotStage to 0.
+
+        set g_ActiveEngines to GetActiveEngines().
+        set g_ActiveEnginesLex to ActiveEngines().
+        set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+        local g_NextEnginesLex to GetEngineData(_HotStageLex[_nextHotStage], true).
+
+        local eff_SpoolTime to Abs(g_NextEnginesLex:MaxEffSpool).
+
+        OutHUD("[HS{0}]: HotStaging armed":Format(_nextHotStage)).
+        set g_HotStageArmed to True.
+        
+        // Update the timestamp for hot staging once every second
+        when Time:Seconds - g_TS_LastUpdate > 1 then
+        {
+            set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+            set g_TS to Time:Seconds + (g_ConsumedResources:TimeRemaining - eff_SpoolTime).
+            wait 0.01.
+            GetTermChar().
+            if g_TermChar = Terminal:Input:EndCursor
+            {
+            }
+            else
+            {
+                set g_TS_LastUpdate to Time:Seconds.
+                preserve.
+            }
+        }
+
+        when g_ConsumedResources["TimeRemaining"] <= eff_SpoolTime then
+        {
+            DoHotStaging(_HotStageLex, _nextHotStage).
+        }
+        wait 0.01.
+
+        if _HotStageLex:Keys:Length > 0
+        {
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveEnginesLex to ActiveEngines().
+            local keyHit to false.
+            from { local i to Stage:Number.} until keyHit or i < 0 step { set i to i - 1.} do 
+            {
+                if _HotStageLex:HasKey(i)
+                {
+                    //set maxStage to i.
+                    set _nextHotStage to i.
+                    set g_StageLogicTrigger to Min(Stage:Number, i + 1).
+                    set keyHit to true.
+                    //OutInfo("HotStaging Preserved", 1).
+                }
+                else
+                {
+                    OutInfo("HotStaging Miss: [{0}]":Format(i), 1).
+                }
+            }
+            if not keyHit 
+            {
+                set g_StageLogicTrigger to -99.
+                set g_HotStageArmed to false.
+                OutInfo("HotStaging Disarmed", 1).
+            }
+        }
+        else
+        {
+            set g_StageLogicTrigger to -99.
+            set g_HotStageArmed to false.
+            OutInfo("HotStaging Disarmed", 1).
+        }
+    }
+
+
+    global function DoHotStaging
+    {
+        parameter _HotStageLex,
+                  _nextHotStage.
+
+        OutInfo("HOT STAGING: IGNITION (0%)").
+        local curStageEngines to GetActiveEngines().
+        set g_HotStageActive to true.
+        local hotStageEngines to _HotStageLex[_nextHotStage].
+        for eng in hotStageEngines
+        {
+            eng:Activate.
+        }
+
+        wait 0.01.
+        set g_ActiveEngines to GetActiveEngines().
+        set g_ActiveEnginesLex to ActiveEngines().
+        local curStgEngPerf to GetEngineData(curStageEngines).
+        local spoolTime to Abs(g_ActiveEnginesLex:MAXSPOOLTIME).
+        set g_TS to 1 + Time:Seconds + (spoolTime * 8).
+        local hotStgEngPerf to GetEngineData(hotStageEngines).
+        local doneFlag to false.
+        until doneFlag
+        {
+            set hotStgEngPerf to GetEngineData(hotStageEngines).
+            set curStgEngPerf to GetEngineData(curStageEngines).
+            if hotStgEngPerf["PCTTHRUST"] >= 0.995 // and g_ActiveEnginesLex["PCTTHRUST"] <= 0.01
+            {
+                set doneFlag to True.
+                set g_HotStageActive to false.
+                OutInfo("Engines greater than 99.5% Thrust", 2).
+            }
+            else if hotStgEngPerf["CURTHRUST"] > curStgEngPerf["CURTHRUST"]
+            {
+                set doneFlag to True.
+                set g_HotStageActive to false.
+                OutInfo("Thrust greater than last stage", 2).
+            }
+            else if Time:Seconds >= g_TS
+            {
+                AbortSequenceStart("IGNITION FAILURE").                            
+                set g_HotStageActive to false.
+            }
+            else
+            {
+                OutInfo("HOT STAGING: IGNITION ({0}%) ":Format(Round(hotStgEngPerf["PCTTHRUST"] * 100, 1))).
+                OutInfo("ACTIVE THR (%): {0}kn/{1}kn ({2}%)  ":Format(Round(g_ActiveEnginesLex["CURTHRUST"], 2), Round(g_ActiveEnginesLex["AVLTHRUST"], 2), Round(g_ActiveEnginesLex["PCTTHRUST"] * 100, 2)), 2).
+            }
+            DispLaunchTelemetry().
+        }
+        OutInfo("HOT STAGING: STAGING ({0}%)":Format(Round(hotStgEngPerf["PCTTHRUST"] * 100, 1))).
+        until Stage:Number <= _nextHotStage
+        {
+            OutDebug("HOT STAGING: STAGING {0} ({1})":Format(Stage:Number, _nextHotStage)).
+            wait until Stage:Ready.
+            Stage.
+            wait 0.025.
+        }
+
+        _HotStageLex:Remove(_nextHotStage).
+        if _HotStageLex:HasKey(_nextHotStage)
+        {
+            OutInfo("HOT STAGING: ERROR, KEY [{0}] NOT REMOVED":Format(_nextHotStage), 1).
+        }
+        else
+        {
+            OutInfo("HOT STAGING: KEY [{0}] REMOVED":Format(_nextHotStage), 1).
+        }
+        DispClr(10).
+        set g_Line to 10.
+    }
 
 
 
@@ -1481,35 +1580,48 @@ InitActiveEngines().
     //  reaches the threshold
     global function HotStage
     {
-        parameter _stgPctTrigger to 0.0025.
+        parameter _stgPctTrigger to 0.00325.
         
         //set g_ActiveEnginesLex   to ActiveEngines(ship).
         
         local _pctTrig  to _stgPctTrigger * 2.
         local _resObj   to GetResourcesFromEngines(g_ActiveEnginesLex:engines).
-        local pctRemain to 0.
-        local resStart  to 0.
-        local resEnd    to 0.
+        local pctRemain to _resObj:PctRemaining.
+        // local resStart  to 0.
+        // local resEnd    to 0.
 
         OutMsg("Hot Staging in progress...").
 
-        set resStart to _resObj:Resources:values[0]:Amount.
-        local ts to Time:Seconds + 1.
+        // set resStart to _resObj:Resources:values[0]:Amount.
+        // local ts to Time:Seconds + 1.
 
-        until Time:Seconds >= ts
-        {
-            wait 0.01.
-        }
-        set resEnd to _resObj:Resources:values[0]:Amount.
-        local resRateSec to (resStart - resEnd) / 0.01.
-        local timeRemaining to (_resObj:Resources:values[0]:Amount - (_resObj:Resources:values[0]:Amount * (_pctTrig * 2))) / resRateSec.
-        set ts to Time:Seconds + timeRemaining.
+        // OutInfo("Measuring Resources", 1).
+        // until Time:Seconds >= ts
+        // {
+        //     wait 0.01.
+        // }
+        
+        // set resEnd to _resObj:Resources:values[0]:Amount.
+        //local resRateSec to (resStart - resEnd).// / 0.01.
+        //local timeRemaining to (_resObj:Resources:values[0]:Amount - (_resObj:Resources:values[0]:Amount * (_pctTrig * 2))) / resRateSec.
+        local ts to Time:Seconds + _resObj:TimeRemaining.
+        set pctRemain to _resObj:PctRemaining.
 
         until pctRemain <= _pctTrig or Time:Seconds >= ts
         {
+            set _resObj   to GetResourcesFromEngines(g_ActiveEnginesLex:engines).
             set pctRemain to _resObj:PctRemaining.
-            set s_val to ship:prograde.
+            set ts        to Time:Seconds + _resObj:TimeRemaining.
+
+            local curPrograde to compass_and_pitch_for(Ship, Ship:SrfPrograde).
+            local curFacing to compass_and_pitch_for(Ship, Ship:Facing).
+            local effPitch to curFacing[1] + ((curFacing[1] - curPrograde[1]) * Body:Atm:AltitudePressure(Ship:Altitude)).
+            //set s_val to Heading(compass_for(Ship, Ship:Facing), ((pitch_for(ship, Ship:Facing) + pitch_for(ship, Ship:SrfPrograde)) / 2, 0).
+            set s_Val to Heading(curFacing[0], effPitch, curFacing[2]).
+
             DispLaunchTelemetry().
+            OutInfo("pctRemain / pctTrig: {0} / {1}":Format(Round(pctRemain, 4), Round(_pctTrig, 4)), 1).
+            OutInfo("MET / TS: {0} / {1}":Format(Round(Time:Seconds, 2), Round(ts, 2)), 2).
             wait 0.01.
         }
         stage.
@@ -1519,6 +1631,7 @@ InitActiveEngines().
             g_stageInfo["HotStage"]:Remove(Stage:Number). 
         }
         wait 0.25.
+        Print "[{0}]: HotStaging Complete":Format(Round(MissionTime, 5)) at (2, 25).
     }
 
     // SafeStage :: none -> none
@@ -1529,9 +1642,9 @@ InitActiveEngines().
         OutInfo("Waiting for stage ready...").
         wait until stage:ready.
         OutInfo("Stage ready!").
-        wait 0.25.
+        wait 0.125.
         stage.
-        wait 0.25.
+        wait 0.125.
         if stage:number < curStage OutInfo("Stage successful!").
         set g_ActiveEnginesLex to ActiveEngines(ship, false).
         wait 0.05.
@@ -1912,6 +2025,21 @@ global function ManualSpinStabilizationCheck
     }
 }
 
+global function ManualHoldFacingCheck
+{
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        return true.
+    }
+}
+
+global function ManualHoldProgradeCheck 
+{
+    if g_TermChar = Terminal:Input:EndCursor
+    {
+        return true.
+    }
+}
 
 global function HydrateStageInfoObject
 {
@@ -2070,4 +2198,17 @@ local function GetEnginesInTree
         _engDel:call(_p1).
     }
     return _engList.
+}
+
+
+
+
+
+global function GetAoA
+{
+    parameter ves is Ship,
+              checkDir is Ship:Facing.
+
+    local pitAoA to (pitch_for(Ship, Ship:SrfPrograde) - pitch_for(Ship, Ship:Facing)).
+    return list(pitAoA).
 }

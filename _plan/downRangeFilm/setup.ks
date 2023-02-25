@@ -10,5 +10,5 @@ if _prms:Length = 0
 set g_MP_List to list(
      "launch/launchPhase_Main", _prms
     ,"sci/collectSamples", list("planetary photography")
-    ,"reentry/reentry", list(40000, True)
+    ,"reentry/reentry", list(50000, True)
 ).

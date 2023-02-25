@@ -30,7 +30,7 @@
 
         if _p:HasModule("HardDrive")
         {
-            _p:GetModule("HardDrive"):DoEvent("transfer data here").
+            DoEvent(_p:GetModule("HardDrive"), "transfer data here").
         }
     }
 

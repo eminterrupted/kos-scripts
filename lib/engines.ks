@@ -23,24 +23,29 @@
 
     // *- Engine Module Helpers
     // #region
-    // GetEngineStatus :: (Engine)<Engine> -> (Engine Status)<Lexicon>
+    // GetEngineStatus :: (Engine)<Engine|PartModule> -> (Engine Status)<Lexicon>
     // Returns the status of a provided engine with ModuleEnginesRF
     global function GetEngineStatus
     {
-        parameter _eng.
+        parameter _eng. // Can be either a part or module
 
-        local EngStatus    to "".
-        local FailCause     to "".
+        local EngStatus to "".
+        local FailCause to "".
+        local engMod    to "".
 
-        if _eng:HasModule("ModuleEnginesRF")
+        if _eng:IsType("PartModule")
         {
-            local m to _eng:GetModule("ModuleEnginesRF").
-            
-            set EngStatus to GetField(m, "Status").
-            if EngStatus = "Failed"
-            {
-                set FailCause to GetField(m, "Cause").
-            }
+            set engMod to _eng.
+            set EngStatus to GetField(engMod, "Status").
+        } 
+        else if _eng:HasModule("ModuleEnginesRF")
+        {
+            set engMod to _eng:GetModule("ModuleEnginesRF").
+        }
+
+        if EngStatus:MatchesPattern("Fail") 
+        {
+            set FailCause to GetField(engMod, "Cause").
         }
 
         return lexicon(

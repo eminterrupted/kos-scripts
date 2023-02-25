@@ -219,8 +219,10 @@
         print "|- {0,-15}: {1}{2}   ":format("INCLINATION", round(ship:orbit:inclination, 3), char(176)) at (2, cr()).
         cr().
         print  "RESOURCES" at (1, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("RESOURCE REMAINING", round(100 * g_ConsumedResources["PctRemaining"], 2), "%") at (2, cr()).
-        print "|- {0,-15}: {1}{2}   ":format("TIME TO DEPLETION", round(g_ConsumedResources["TimeRemaining"], 2), "s") at (2, cr()).
+        local l_ConsumedResources to choose Round(100 * g_ConsumedResources["PctRemaining"]) if g_ConsumedResources:HasKey("PctRemaining") else "NA".
+        print "|- {0,-15}: {1}{2}   ":format("RESOURCE REMAINING", l_ConsumedResources, "%") at (2, cr()).
+        local l_TimeToResDepletion to choose Round(g_ConsumedResources["TimeRemaining"], 2) if g_ConsumedResources:HasKey("TimeRemaining") else "NA".
+        print "|- {0,-15}: {1}{2}   ":format("TIME TO DEPLETION", l_TimeToResDepletion, "s") at (2, cr()).
         if g_HotStageArmed
         {
             cr().

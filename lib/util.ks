@@ -14,11 +14,15 @@
          "Decouple",    DoDecouple@
         ,"DC",          DoDecouple@
         ,"Ignite",      DoEngineIgnition@
+        ,"Ignition",    DoEngineIgnition@
         ,"IGT",         DoEngineIgnition@
         ,"Activate",    DoPartActivation@
         ,"ACT",         DoPartActivation@
         ,"Stage",       DoSingleStage@
         ,"STG",         DoSingleStage@
+        ,"AutoStage",   ArmAutoStageOnEvent@
+        ,"AS",          ArmAutoStageOnEvent@
+        ,"THR",         DoThrottle@
     ).
 
     // *- Global
@@ -154,6 +158,32 @@
     }
 
 
+    global function DoThrottle
+    {
+        parameter _p.
+
+        if _p:Tag:Contains("|")
+        {
+            local tagSplit to _p:Tag:Split("|").
+            local stageTag to tagSplit[tagSplit:Length - 1].
+            if stageTag:Contains(":") 
+            {
+                local t_ValTag to stageTag:Split(":")[1]:ToNumber(-999).
+                if t_ValTag = -999 // If the value wasn't able to be converted, the number will remain this.
+                {
+                    unlock throttle.
+                }
+                else if t_ValTag:IsType("Scalar")
+                {
+                    lock throttle to t_ValTag / 100. // This is defined in whole units, so divide for the actual val.
+                }
+            }
+            OutInfo("Arming AutoStaging in 1s...").
+            ArmAutoStaging().
+        }
+    }
+
+
     // GetETA :: <string>ETAType -> <Scalar>ETA
     // Gets an ETA based on a provided string identifier
     global function GetETA
@@ -194,6 +224,23 @@
         Stage.
     }
 
+    global function ArmAutoStageOnEvent
+    {
+        parameter _part.
+
+        if _part:Tag:Contains("|")
+        {
+            local tagSplit to _part:Tag:Split("|").
+            local stageTag to tagSplit[tagSplit:Length - 1].
+            if stageTag:Contains(":") 
+            {
+                set g_StopStage to stageTag:Split(":")[1]:ToNumber(0).
+            }
+            OutInfo("Arming AutoStaging in 1s...").
+            ArmAutoStaging().
+        }
+    }
+
     // OnEvent :: <Part> -> <Bool>Success?
     // Checks the provided part for an OnEvent tag. If found, parses and initiates a trigger for it if applicable
     global function InitOnEventTrigger
@@ -207,9 +254,10 @@
                 local parsedTag to _part:Tag:Split("|").
                 if parsedTag:Length > 3
                 {
-                    if g_EventTriggerActions:HasKey(parsedTag[3])
+                    local parsedAction to parsedTag[3]:Split(":")[0]. // Splitting by ':' here to cut off the parameter for the action, if present
+                    if g_EventTriggerActions:HasKey(parsedAction)
                     {
-                        local actionToPerform to g_EventTriggerActions[parsedTag[3]]:Bind(_part)@.
+                        local actionToPerform to g_EventTriggerActions[parsedAction]:Bind(_part)@.
 
                         local parsedCondition to parsedTag[2]:Split(".").
                         local checkType to parsedCondition[0].
@@ -317,7 +365,7 @@
                     }
                     else
                     {
-                        OutTee("OnEvent: [{0}] No trigger action defined for [{1}]":Format(_part:name, parsedTag[3]), 1).
+                        OutTee("OnEvent: [{0}] No trigger action defined for [{1}]":Format(_part:name, parsedAction), 1).
                     }
                 }
             }
@@ -337,11 +385,12 @@
 
         if _str:MatchesPattern("(\<color\=\w*\>).*(\<\/color\>)")
         {
-            local oStr to _str.
-            local sIdx to _str:Find(">") + 1.
-            local eIdx to _str:FindAt("<", sIdx) - 1.
-            set oStr to _str:Substring(sIdx, eIdx).
-            return oStr.
+            return _str:Split(">")[1]:Split("<")[0].
+            // local oStr to _str.
+            // local sIdx to min(_str:FindAt(">", 0), _str:Length - 1).
+            // local eIdx to Min(_str:Length - 1, (_str:FindAt("<", sIdx))).
+            // set oStr to _str:Substring(sIdx, eIdx).
+            // return oStr.
         }
         else
         {

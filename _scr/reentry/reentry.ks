@@ -14,7 +14,7 @@ local fairingList to Ship:PartsTaggedPattern("fairing.reentry").
 local hasReentryFairings to fairingList:Length > 0.
 local fairingJettisonAlt to 10000.
 local stageOnFairings to true.
-local stageToID to 0.
+local stageToID to 1.
 
 if params:Length > 0
 {
@@ -106,8 +106,8 @@ OutInfo().
 
 RCS On.
 OutMsg("Maneuvering for staging").
-local stg_TS to Time:Seconds + 2.5.
-set s_Val to ship:SrfRetrograde + r(15, 15, 0).
+local stg_TS to Time:Seconds + 10.
+set s_Val to ship:SrfRetrograde.
 until Time:Seconds > stg_TS
 {
     OutMsg("Manuevering for staging: {0}s":Format(Round(stg_TS - Time:Seconds, 2))).
@@ -150,7 +150,7 @@ until ship:Altitude < body:Atm:height
 }
 
 OutMsg("Reentry interface").
-until ship:Altitude < fairingJettisonAlt
+until Ship:Altitude - Ship:GeoPosition:TerrainHeight < fairingJettisonAlt
 {
     set s_Val to ship:srfretrograde.
     local etaImpact to ((Ship:Altitude - Ship:GeoPosition:TerrainHeight) / (Abs(Ship:VerticalSpeed) + GetLocalGravity(Body, Ship:Altitude))).

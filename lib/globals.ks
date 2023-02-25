@@ -21,11 +21,17 @@ global g_LogPath to "0:\_mission\{0}\mission.log".
 
 // Staging
 global g_StopStage to 99.
+global g_HotStageActive to false.
 global g_HotStageArmed to false.
 global g_SpinStageArmed to false.
 
 // Tagging
-global g_Tag to lexicon().
+global g_Tag to lexicon(
+     "PCN", ""
+    ,"SID", ""
+    ,"PRM", list()
+    ,"ASL", 0
+).
 
 // Random useful globals
 global g_TermChar to "".
@@ -44,6 +50,22 @@ global g_Idx to 0.
 
 // global objects
 global g_Cache to lex().
+
+
+
+// This is the loop delegate lexicon. 
+// It will hold delegates that should be iterated through at specific points in the gxLaunch loop, 
+// with the keys mapping to the before, during, and after loop calls the loop will make to execute these
+//
+// - 0 (BEFORE) : Runs before anything else in the loop runs, even before the program block lookup
+// - 1 (PROCESS): Runs this after program block has been located but before anything else in the program. Not quite during, but after all delegates in BEFORE have run at least
+// - 2 (END)    : Runs after the program block has been executed, so at the end of the loop
+global g_RegisteredLoopDelegates to lex(
+    "BEGIN",   lex()
+    ,"PROCESS", lex()
+    ,"END",     lex()
+).
+
 
 global g_PartInfo to    lex(
     "Engines", lex(

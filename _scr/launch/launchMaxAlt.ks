@@ -8,9 +8,6 @@ runOncePath("0:/lib/launch").
 
 DispMain(scriptPath()).
 
-local tgt_ap    to Body:Soiradius.
-local tgt_ap_key to "tgt_ap".
-
 local tgt_hdg   to 90. // 90 degrees (due east) is most efficient trajectory
 local tgt_hdg_key to "tgt_hdg".
 
@@ -30,13 +27,12 @@ if params:Length > 0
 local doneFlag to false.
 
 local tgtLex to lexicon(
-    tgt_ap_key, tgt_ap,
     tgt_hdg_key, tgt_hdg,
     tgt_pit_key, tgt_pit,
     tgt_rll_key, tgt_rll
 ).
 
-local tgtKeyList to list(tgt_ap_key, tgt_hdg_key, tgt_pit_key, tgt_rll_key).
+local tgtKeyList to list(tgt_hdg_key, tgt_pit_key, tgt_rll_key).
 
 local paramUpdatesMade to false.
 from { local i to 0. } until i = tgtKeyList:Length step { set i to i + 1. } do 
@@ -46,27 +42,34 @@ from { local i to 0. } until i = tgtKeyList:Length step { set i to i + 1. } do
         if tgtLex[tgtKeyList[i]]:IsType("String")
         {
             local tgtParamVal to tgtLex[tgtKeyList[i]]:TOLOWER().
-            if tgtParamVal:MATCHESPATTERN("^[0-9\.]+(?:Km)*$")
+            if tgtParamVal:ENDSWITH("km") or tgtParamVal:ENDSWITH("k") 
             {
-                if tgtParamVal:ENDSWITH("km") 
-                {
-                    set tgtParamVal to tgtParamVal:REPLACE("km", "").
-                }
-
-                set tgtLex[tgtKeyList[i]] to tgtParamVal:TONUMBER(0).
-                set paramUpdatesMade to true.    
+                set tgtParamVal to (tgtParamVal:REPLACE("km", ""):REPLACE("k",""):TONUMBER()) * 1000.
             }
+            else if tgtParamVal:ENDSWITH("mm") 
+            {
+                set tgtParamVal to tgtParamVal:TONUMBER() * 1000000.
+            }
+            else 
+            {
+                set tgtParamVal to tgtParamVal:TONUMBER().
+            }
+
+            set tgtLex[tgtKeyList[i]] to tgtParamVal.
+            set paramUpdatesMade to true.    
         }
     }
 }
 
 if paramUpdatesMade 
 {
-    set tgt_ap to choose tgtLex[tgt_ap_key] if tgtLex[tgt_ap_key] > 0 else body:Soiradius.
     set tgt_hdg to tgtLex[tgt_hdg_key].
     set tgt_pit to tgtLex[tgt_pit_key].
-    set tgt_rll to tgtLex[tgt_rll_key].
+    set tgt_rll_key to tgtLex[tgt_rll_key].
 }
+if tgt_hdg:IsType("String") set tgt_hdg to tgt_hdg:ToNumber().
+if tgt_pit:IsType("String") set tgt_pit to tgt_pit:ToNumber().
+if tgt_rll:IsType("String") set tgt_rll to tgt_rll:ToNumber().
 
 local f_SpinManualEngaged to false.
 
@@ -103,7 +106,7 @@ until ship:Altitude > g_la_turnAltStart
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEnginesLex to ActiveEngines().
     set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
-    DispLaunchTelemetry(tgt_ap).
+    DispLaunchTelemetry().
     wait 0.01.
 
     GetTermChar().
@@ -123,7 +126,7 @@ until stage:Number = g_stopStage
     set f_SpinManualEngaged to ManualSpinStabilizationCheck().
     set s_val to choose heading(tgt_hdg, tgt_pit):Vector if f_SpinManualEngaged else heading(tgt_hdg, tgt_pit, tgt_rll).
 
-    DispLaunchTelemetry(tgt_ap).
+    DispLaunchTelemetry().
     wait 0.01.
 }
 
@@ -139,7 +142,7 @@ until ship:Availablethrust < 0.01
     set f_SpinManualEngaged to ManualSpinStabilizationCheck().
     set s_val to choose heading(tgt_hdg, tgt_pit):Vector if f_SpinManualEngaged else heading(tgt_hdg, tgt_pit, tgt_rll).
 
-    DispLaunchTelemetry(tgt_ap).
+    DispLaunchTelemetry().
     wait 0.01.
 }
 
@@ -172,7 +175,7 @@ until Time:Seconds >= ts or doneFlag
     set ts to Time:Seconds + eta:Apoapsis.
     set s_val to lookDirUp(ship:Prograde:Vector, -body:Position).
     // if ship:Altitude > lastAlt set maxAlt to ship:Altitude.
-    DispLaunchTelemetry(tgt_ap).
+    DispLaunchTelemetry().
     OutInfo("Apoapsis in: {0}s":Format(Round(ts - Time:Seconds, 2))).
     wait 0.01.
 }

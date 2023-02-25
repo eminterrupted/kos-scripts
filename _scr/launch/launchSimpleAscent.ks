@@ -4,11 +4,20 @@ ClearScreen.
 parameter params to list().
 
 runOncePath("0:/lib/loadDep").
+runOncePath("0:/lib/launch").
 
 DispMain(ScriptPath()).
 
-local tgt_alt to -1.
 local tgt_hdg to 90.
+local tgt_pit to 88.
+local spinStab to false.
+
+if params:length > 0 
+{
+    set tgt_hdg to params[0]:ToNumber(tgt_hdg).
+    if params:length > 1 set tgt_pit to params[1]:ToNumber(tgt_pit).
+    if params:length > 2 set spinStab to params[2].
+}
 
 local eng to choose ship:partsTagged("ullageTest")[0] if ship:partsTagged("ullageTest"):Length > 0 else ship:engines[0].
 
@@ -16,33 +25,83 @@ global g_EngDataObj to InitDataObj(eng).
 
 local nextStg to stage:number - 1.
 
-OutMsg("Press SPACE to go to SPACE!").
-until stage:number = nextStg
-{
-    wait 0.01.
-}
-OutMsg("Launch Commit!").
-OutInfo("Yay, you did it").
-OutInfo("", 1).
-wait 0.01.
-set nextStg to stage:number - 1.
-
+OutMsg("Press Enter to begin launch countdown").
+OutInfo("HDG: {0} | PIT: {1} | SPNSTB: {2}":Format(tgt_pit, tgt_hdg, spinStab), 1).
+// Print "PARSED TAG DETAILS" at (0, 11).
+// Print "PCN: " + g_Tag:PCN at (2, 12).
+// Print "SID: " + g_Tag:SID at (2, 13).
+// Print "PRM: " + g_Tag:PRM:Join(";") at (2, 14).
+// Print "ASL: " + g_Tag:ASL at (2, 15).
 until false
 {
-    OutMsg("Launch Ascent  ").
-    if ship:AvailableThrust < 0.01
+    if Terminal:Input:HasChar
     {
-        OutInfo("We are entering AerobeeSafeStage()", 1).
-        AerobeeSafeStage().
-        OutInfo("We are exiting AerobeeSafeStage()", 1).
+        set g_TermChar to Terminal:Input:Getchar.
+    }
+    if g_TermChar = Terminal:Input:Enter break.
+}
+DispClr(7).
+set s_val to Ship:Facing.
+lock throttle to t_val.
+lock steering to s_val.
+
+if Ship:PartsTaggedPattern("(HotStg|HotStage)"):Length > 0              { ArmHotStaging(). }
+if Ship:PartsTaggedPattern("Spin(Stage|Stg|Stab|Stabilize)"):Length > 0 { ArmSpinStabilization(). }
+if Ship:PartsTaggedPattern("fairing\.(Ascent|ASC|Launch)"):Length > 0   { ArmFairingJettison("launch").}
+if Ship:PartsTaggedPattern("OnEvent\|(Ascent|ASC|Launch)"):Length > 0   { InitOnEventTrigger(Ship:PartsTaggedPattern("OnEvent|(Ascent|ASC|Launch)")). }
+
+OutMsg("Commencing launch countdown").
+LaunchCountdown().
+set t_Val to 1.
+DispClr(7).
+OutMsg("Liftoff!").
+
+ArmAutoStaging().
+if Ship:PartsTaggedPattern("booster"):Length > 0                        { set g_boosterSepArmed to ArmAutoBoosterSeparation().}
+
+OutMsg("Launch Ascent").
+local f_SpinManualEngaged to false.
+local f_SpinInit to true.
+local f_ts to Time:Seconds + 5.
+local rcsToggleFlag to false.
+until false
+{
+    GetTermChar().
+    set f_SpinManualEngaged to ManualSpinStabilizationCheck().
+    if f_SpinManualEngaged
+    {
+        set s_Val to Ship:SrfPrograde:Vector.
+        if f_SpinInit
+        {
+            set f_ts to Time:Seconds + 5.
+            set f_SpinInit to true.
+        }
+        else if Time:Seconds > f_ts 
+        {
+            break.
+        }
+        else
+        {
+            set s_Val to Ship:SrfPrograde:Vector.
+        }
     }
     else
     {
-        OutInfo("ALTITUDE (AP)       : {0}m ({1}m)    ":format(round(ship:Altitude), round(ship:Apoapsis)), 0).
-        OutInfo("VELOCITY (SRF (OBT)): {0}m/s ({1}m/s)   ":format(round(ship:velocity:surface:mag, 1), round(ship:velocity:orbit:mag, 1)), 1).
-        set g_EngDataObj to GetEngineData(eng).
-        //DispEngineData(g_EngDataObj).
+        set s_Val to Heading(tgt_hdg, tgt_pit, 0).
     }
+
+    if not rcsToggleFlag
+    {
+        if Ship:Altitude > 30000
+        {
+            RCS on.
+            set rcsToggleFlag to true.
+        }
+    }
+    DispLaunchTelemetry().
+    wait 0.01.
+    // OutInfo("ALTITUDE (AP)       : {0}m ({1}m)    ":format(round(ship:Altitude), round(ship:Apoapsis)), 0).
+    // OutInfo("VELOCITY (SRF (OBT)): {0}m/s ({1}m/s)   ":format(round(ship:velocity:surface:mag, 1), round(ship:velocity:orbit:mag, 1)), 1).
     wait 0.01.
 }
 
@@ -76,7 +135,7 @@ local function AerobeeSafeStage
         OutInfo("[AerobeeSafeStage] Waiting until stage ready...").
         until stage:ready
         {
-            set g_EngDataObj to GetEngineData(eng).
+            set g_EngDataObj to LocalEngineData(eng).
             //DispEngineData(g_EngDataObj). 
         }
         OutInfo("[AerobeeSafeStage] Wait over, staging").
@@ -242,14 +301,14 @@ local function InitDataObj
     parameter _eng, _dataObj to lexicon().
 
     if defined g_EngData unset g_EngData. 
-    global g_EngData to GetEngineData(_eng).
+    global g_EngData to LocalEngineData(_eng).
     return g_EngData.
 }
 
 
 
 // Refreshes the provided data object with the provided engine data
-local function GetEngineData
+local function LocalEngineData
 {
     parameter _eng.
 
