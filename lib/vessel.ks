@@ -53,6 +53,8 @@
                 ,"Exec", SafeStage@
             ).
 
+            if g_LoopDelegates:HasKey("AutoStageCheck") set resultCode to 1.
+
             return resultCode.
         }
         // #endregion
