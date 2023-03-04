@@ -104,7 +104,7 @@ InitActiveEngines().
         local massFlowMax   to 0.
         local maxSpoolTime  to 0.
         local engList       to list().
-        local sepflag       to true.
+        local sepflag       to false.
         local localGrav     to GetLocalGravity(ves:Body, ves:Altitude).
 
         local causeStr      to "N/A".
@@ -115,11 +115,11 @@ InitActiveEngines().
         local sumThr_Del_AllEng to { 
             parameter _eng. 
 
-            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or _eng:Tag:Length > 0
+            if (g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) and _eng:Tag:Length = 0)
             {
-                set sepFlag to false.
+                set sepFlag to true.
             }
-
+            
             engList:Add(_eng). 
             local engMod    to _eng:GetModule("ModuleEnginesRF").
             local engStatus to GetEngineStatus(engMod).
@@ -150,11 +150,30 @@ InitActiveEngines().
         {
             parameter _eng.
 
-            if not g_partInfo["Engines"]["SepMotors"]:contains(_eng:name) or _eng:Tag:Length > 0
-            {
-                set sepFlag to false.
-                engList:Add(_eng). 
+            set sepFlag to false.
+            local processFlag to false.
 
+            // The below gets sep motors that are used as actual engines
+            if g_partInfo["Engines"]["SepMotors"]:contains(_eng:name)
+            {
+                if _eng:Tag:Length = 0
+                {
+                    set sepFlag to True.
+                }
+                else 
+                {
+                    engList:Add(_eng).
+                    set processFlag to True.
+                }
+            }
+            else
+            {
+                engList:Add(_eng).
+                set processFlag to True.
+            }
+
+            if processFlag
+            {
                 local engMod    to _eng:GetModule("ModuleEnginesRF").
                 local engStatus to GetEngineStatus(engMod).
 
@@ -533,20 +552,24 @@ InitActiveEngines().
                 //     }
                 // }
 
-                //when (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_stgIdx]["ENG"]["AVLTHRUST"] <= 5)) then
-                when (g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0075) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_setIdx]["ENG"]["PCT"] <= 0.05 )) then
+                // when g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0125 then
+                when (g_BoosterObj["BOOSTER_SETS"][_setIdx]["RES"]["PCT"] <= 0.0125) or (Ship:Status <> "PRELAUNCH" and (g_BoosterObj["BOOSTER_SETS"][_setIdx]["ENG"]["AVLTHRUST"] <= 5)) then
                 {
-                    OutDebug("Staging booster set " + _setIdx).
+                    OutDebug("Staging booster set " + _setIdx, 1).
+                    from { local i to 0.} until i = g_BoosterObj["BOOSTER_SETS"][_setIdx]["SEP"]:Length step { set i to i + 1.} do 
+                    {
+                        g_BoosterObj["BOOSTER_SETS"][_setIdx]["SEP"][i]:Activate.
+                    }
                     from { local i to 0.} until i = g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"]:Length step { set i to i + 1.} do 
                     {
                         local dc to g_BoosterObj["BOOSTER_SETS"][_setIdx]["DC"]["MODULES"][i].
                         if DoEvent(dc, "Decouple")
                         {
-                            OutDebug("Staging success").
+                            OutDebug("Staging success (_setIdx[{0}])":Format(_setIdx), 2).
                         }
                         else
                         {
-                            OutDebug("Staging failure - Decouple failed, or event not found on part").
+                            OutDebug("Staging failure (_setIdx[{0}]) - Decouple failed, or event not found on part":Format(_setIdx), 2).
                         }
                     }
                     g_BoosterObj["BOOSTER_SETS"]:Remove(_setIdx).
@@ -610,12 +633,12 @@ InitActiveEngines().
             local fairingTags to fairings[0]:Tag:Split(".").
             local jettisonAlt to ExpandToNumber(fairingTags[fairingTags:Length - 1]).
             local triggerType to choose "Ascent" if _tag:MatchesPattern(fairingRefLex["TagRef"]:Ascent) else "Reentry".
-            OutDebug("Fairings:", 5).
-            print " - _tag Input : [{0}]":Format(_tag) at (0, Terminal:Height - 8).
-            print " - TagRef     : [{0}]":Format(fairingRefLex["TagRef"][_tag]) at (0, Terminal:Height - 7).
-            print " - fairingTags: [{0}]":Format(fairingTags:Join(";")) at (0, Terminal:Height - 6).
-            print " - jettisonAlt: [{0}]":Format(jettisonAlt) at (0, Terminal:Height - 5).
-            print " - triggerType: [{0}]":Format(triggerType) at (0, Terminal:Height - 4).
+            // OutDebug("Fairings:", 5).
+            // print " - _tag Input : [{0}]":Format(_tag) at (0, Terminal:Height - 8).
+            // print " - TagRef     : [{0}]":Format(fairingRefLex["TagRef"][_tag]) at (0, Terminal:Height - 7).
+            // print " - fairingTags: [{0}]":Format(fairingTags:Join(";")) at (0, Terminal:Height - 6).
+            // print " - jettisonAlt: [{0}]":Format(jettisonAlt) at (0, Terminal:Height - 5).
+            // print " - triggerType: [{0}]":Format(triggerType) at (0, Terminal:Height - 4).
             fairingRefLex["Delegates"][triggerType]:Call(jettisonAlt).
         }
     }
@@ -625,6 +648,12 @@ InitActiveEngines().
     {
         parameter _fairingTag is "fairing\.*".
 
+        if Warp > 0
+        {
+            set Warp to 0.
+            wait until Kuniverse:Timewarp:IsSettled.
+        }
+        
         for m in Ship:ModulesNamed("ProceduralFairingSide")
         {
             if m:Part:Tag:MatchesPattern(_fairingTag)
@@ -723,7 +752,8 @@ InitActiveEngines().
                         ,"TYPES",    Lexicon()
                         ,"UNITS",    0
                         ,"PARTLIST", list()
-                    )
+                    ),
+                    "SEP", list()
                 ).
             }
 
@@ -1431,13 +1461,14 @@ InitActiveEngines().
         {
             set hotStgEngPerf to GetEngineData(hotStageEngines).
             set curStgEngPerf to GetEngineData(curStageEngines).
-            if hotStgEngPerf["PCTTHRUST"] >= 0.995 // and g_ActiveEnginesLex["PCTTHRUST"] <= 0.01
-            {
-                set doneFlag to True.
-                set g_HotStageActive to false.
-                OutInfo("Engines greater than 99.5% Thrust", 2).
-            }
-            else if hotStgEngPerf["CURTHRUST"] > curStgEngPerf["CURTHRUST"]
+            // if hotStgEngPerf["PCTTHRUST"] >= 0.995 and g_ActiveEnginesLex["PCTTHRUST"] <= 0.10
+            // {
+            //     set doneFlag to True.
+            //     set g_HotStageActive to false.
+            //     OutInfo("Engines greater than 99.5% Thrust", 2).
+            // }
+            // else 
+            if hotStgEngPerf["CURTHRUST"] > curStgEngPerf["CURTHRUST"]
             {
                 set doneFlag to True.
                 set g_HotStageActive to false.
@@ -1725,28 +1756,42 @@ local function ProcessBoosterItem
     {
         if item:IsType("ENGINE")
         {
-            local _stgBoosterThr_Avl to item:AVAILABLETHRUSTAT(Body:Atm:AltitudePressure(Ship:Altitude)).
-            
-            set _stgSummedThr_Avl to _stgSummedThr_Avl + _stgBoosterThr_Avl.
-            set _stgSummedThr_Cur to _stgSummedThr_Cur + item:Thrust.
-            set _stgSummedEngs_Count to _stgSummedEngs_Count + 1.
-            set _stgSummedThr_Pct to (max(0.00001, _stgSummedThr_Cur) / max(0.00001, _stgSummedThr_Avl)).// / _stgSummedEngs_Count.
-            
-            if obj:HasKey("ENG")
+            if g_PartInfo["Engines"]:SepMotors:Contains(item:Name)
             {
-                if obj["ENG"]:hasKey("AVLTHRUST") { set obj["ENG"]["AVLTHRUST"] to _stgSummedThr_Avl. }
-                if obj["ENG"]:HasKey("PARTLIST")  { obj["ENG"]["PARTLIST"]:Add(item). }
-                if obj["ENG"]:hasKey("PCT")       { set obj["ENG"]["PCT"] to _stgSummedThr_Pct. }
-                if obj["ENG"]:hasKey("THRUST")    { set obj["ENG"]["THRUST"] to _stgSummedThr_Cur.}
+                if obj:HasKey("SEP")
+                {
+                    obj["SEP"]:add(item).
+                }
+                else
+                {
+                    set obj["SEP"] to list(item).
+                }
             }
             else
             {
-                set obj["ENG"] to lexicon(
-                    "AVLTHRUST", _stgSummedThr_Avl
-                    ,"PARTLIST", list(item)
-                    ,"PCT",      _stgSummedThr_Pct
-                    ,"THRUST",   _stgSummedThr_Cur
-                ).
+                local _stgBoosterThr_Avl to item:AVAILABLETHRUSTAT(Body:Atm:AltitudePressure(Ship:Altitude)).
+                
+                set _stgSummedThr_Avl to _stgSummedThr_Avl + _stgBoosterThr_Avl.
+                set _stgSummedThr_Cur to _stgSummedThr_Cur + item:Thrust.
+                set _stgSummedEngs_Count to _stgSummedEngs_Count + 1.
+                set _stgSummedThr_Pct to (max(0.00001, _stgSummedThr_Cur) / max(0.00001, _stgSummedThr_Avl)).// / _stgSummedEngs_Count.
+                
+                if obj:HasKey("ENG")
+                {
+                    if obj["ENG"]:hasKey("AVLTHRUST") { set obj["ENG"]["AVLTHRUST"] to _stgSummedThr_Avl. }
+                    if obj["ENG"]:HasKey("PARTLIST")  { obj["ENG"]["PARTLIST"]:Add(item). }
+                    if obj["ENG"]:hasKey("PCT")       { set obj["ENG"]["PCT"] to _stgSummedThr_Pct. }
+                    if obj["ENG"]:hasKey("THRUST")    { set obj["ENG"]["THRUST"] to _stgSummedThr_Cur.}
+                }
+                else
+                {
+                    set obj["ENG"] to lexicon(
+                        "AVLTHRUST", _stgSummedThr_Avl
+                        ,"PARTLIST", list(item)
+                        ,"PCT",      _stgSummedThr_Pct
+                        ,"THRUST",   _stgSummedThr_Cur
+                    ).
+                }
             }
 
             set _setDecoupler to item:Decoupler.

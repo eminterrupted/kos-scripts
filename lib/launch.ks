@@ -9,13 +9,17 @@
 // *~ Variables ~* //
 // #region
     // *- Local
-    local countdown to 5.
-    local lc_MinAoA to -45.
-    local lc_MaxAoA to 45.
+    local countdown                 to 5.
+    local lc_MinAoA                 to -45.
+    local lc_MaxAoA                 to 45.
+    local proSrfObtBlendStartAlt    to 100000.
+    local atmBlendDiv               to Body:ATM:Height - proSrfObtBlendStartAlt.
 
     // *- Global
-    global g_la_turnAltStart to 200. // Altitude at which the vessel will begin a gravity turn
-    global g_la_turnAltEnd   to body:Atm:height * 0.925. // Altitude at which the vessel will begin a gravity turn
+    global g_la_turnAltStart        to Ship:Altitude + (Ship:Bounds:Size:Z * 2).    // Altitude at which the vessel will begin a gravity turn
+                                                                                    // taken from the bounding box of the ship on the launch pad
+                                                                                    // and is 2x the height of the vessel/launch pad tower
+    global g_la_turnAltEnd          to body:Atm:height * 0.925. // Altitude at which the vessel will end a gravity turn
     
 
 // #endregion
@@ -35,11 +39,11 @@
     {
         parameter tgt_alt is body:Atm:height * 0.86,
                   tgt_ap is body:Atm:height * 0.86,
-                  f_shape is 0.86. // 'shape' factor to provide a way to control the steepness of the trajectory. Values < 1 = steeper, > 1 = flatter
+                  _fShape is 1.125. // 'shape' factor to provide a way to control the steepness of the trajectory. Values < 1 = steeper, > 1 = flatter
 
         local tgt_effAng to 90.
-        local tgt_effAP  to tgt_ap. // max(body:Atm:Height, tgt_ap / 2).
-        if ship:Altitude < g_la_turnAltStart
+        // local tgt_effAP  to tgt_ap. // max(body:Atm:Height, tgt_ap / 2).
+        if Ship:Altitude < g_la_turnAltStart
         {
         }
         else if g_ConsumedResources:HasKey("TimeRemaining")
@@ -52,9 +56,15 @@
             }
             else
             {
-                local cur_pitAng to choose pitch_for(ship, ship:srfprograde) if ship:Altitude < 75000 else 
-                    choose ((pitch_for(ship, ship:SrfPrograde) + pitch_for(ship, ship:Prograde)) / 2) if ship:altitude < body:Atm:Height else 
-                    pitch_for(ship, ship:Prograde).
+                local srfProPit to pitch_for(Ship, Ship:SrfPrograde).
+                local obtProPit to pitch_for(Ship, Ship:Prograde).
+                // local pitDiff   to VAng(Ship:SrfPrograde:Vector, Ship:Prograde:Vector).
+                local nrmlzdAlt to Ship:Altitude - proSrfObtBlendStartAlt.
+                // local cur_pitAng to choose srfProPit if ship:Altitude < 100000 else 
+                //     choose ((srfProPit + obtProPit) / 2) if ship:altitude < body:Atm:Height else 
+                //     obtProPit.
+                local cur_pitAng to choose srfProPit if Ship:Altitude <= proSrfObtBlendStartAlt else
+                    (srfProPit * (1 - (nrmlzdAlt / atmBlendDiv))) + (obtProPit * (nrmlzdAlt / atmBlendDiv)).
                 local tgt_effAlt to tgt_alt - g_la_turnAltStart.
                 local cur_effAlt to 0.1 + ship:Altitude - g_la_turnAltStart.
                 local cur_altErr to cur_effAlt / (tgt_effAlt / 2).
@@ -62,12 +72,22 @@
                 // local cur_pitRatio to Round(Ship:Altitude / (Body:Atm:Height + 25000), 4).
                 // local tgt_pitRatio to Round(Ship:Apoapsis / tgt_effAP, 4).
                 //local eff_pitRatio to choose cur_pitRatio if Ship:Altitude < Body:Atm:Height * 0.625 else tgt_pitRatio.
-                local eff_pitRatio to (1 - Body:Atm:AltitudePressure(Ship:Altitude)) * f_shape.
+                local eff_pitRatio to (1 - Body:Atm:AltitudePressure(Ship:Altitude)) * _fShape.
                 //local tgt_angErr to min(10, max(lc_MaxAoA * eff_pitRatio, 10 * min(1, eff_pitRatio * lc_MinAoA))) * f_shape.
-                local tgt_angErr to min((30 * eff_pitRatio) , max(-30, (90 * eff_pitRatio))).
+                // local tgt_angErr to min((30 * eff_pitRatio) , max(-30, (90 * eff_pitRatio))).
+                local tgt_angErr to min(15, max(-15, 90 * eff_pitRatio)).
+                // if Ship:Altitude > Body:Atm:Height 
+                // {
+                //     set tgt_angErr to tgt_angErr / (1 + g_ActiveEnginesLex:CURTWR).
+                // }
                 set   tgt_effAng to max(tgt_pitAng, cur_pitAng - tgt_angErr). // min(90, max(cur_pitAng - tgt_angErr, min(cur_pitAng + tgt_angErr, tgt_pitAng)) * f_shape).
+                if tgt_effAng < 0 
+                {
+                    set tgt_effAng to tgt_effAng / -2.
+                }
             }
         }
+        OutInfo("Current Pitch Angle: {0}":Format(Round(tgt_effAng, 2)), 1).
         return tgt_effAng.
     }
 
@@ -150,7 +170,7 @@
             set maxSpoolTime to max(engSpoolLex[i], maxSpoolTime).
             set totalSpoolTime to totalSpoolTime + engSpoolLex[i].
         }
-        set countdown            to maxSpoolTime + 5.
+        set countdown            to maxSpoolTime + 3.
         local t_launch           to Time:Seconds + countdown.
         local launchCommit       to false.
         //local hasSpool           to engSpoolLex[Stage:Number - 1][0].

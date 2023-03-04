@@ -96,19 +96,22 @@
         parameter str is "",
                   pos is 0.
 
-        local stLine to Terminal:Height - 15.
-        set pos to min(pos, 2).
-        local label to "[DEBUG]".
-        if str:Length > Terminal:width - 8
+        if g_DebugOut
         {
-            set str to str:substring(0, Terminal:width - 8).
-        }
-        else if str:Length < 1
-        {
-            set label to "".
-        }
+            local stLine to Terminal:Height - 15.
+            set pos to min(pos, 2).
+            local label to "[DEBUG]".
+            if str:Length > Terminal:width - 8
+            {
+                set str to str:substring(0, Terminal:width - 8).
+            }
+            else if str:Length < 1
+            {
+                set label to "".
+            }
 
-        print "{0,-7} {1, -60}":format(label, str) at (0, stLine + pos).
+            print "{0,-7} {1, -60}":format(label, str) at (0, stLine + pos).
+        }
     }
 
     global function OutTee

@@ -274,11 +274,11 @@
                                 {
                                     if actionToPerform:IsType("String")
                                     {
-                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                     }
                                     else
                                     {
-                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                         actionToPerform:Call().
                                     }
                                 }
@@ -290,11 +290,11 @@
                                 {
                                     if actionToPerform:IsType("String")
                                     {
-                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        //OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                     }
                                     else
                                     {
-                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        //OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                         actionToPerform:Call().
                                     }
                                 }
@@ -307,11 +307,11 @@
                                 {
                                     if actionToPerform:IsType("String")
                                     {
-                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                     }
                                     else
                                     {
-                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                         actionToPerform:Call().
                                     }
                                 }
@@ -322,11 +322,11 @@
                                 {
                                     if actionToPerform:IsType("String")
                                     {
-                                        OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                     }
                                     else
                                     {
-                                        OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                        // OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                         actionToPerform:Call().
                                     }
                                 }
@@ -342,11 +342,11 @@
                                         {
                                             if actionToPerform:IsType("String")
                                             {
-                                                OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                                // OutInfo("No action for eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                             }
                                             else
                                             {
-                                                OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
+                                                // OutInfo("Performing eventTrigger [{0}|{1}({2})]":Format(_part:name, _part:UID, _part:Tag), 1).
                                                 actionToPerform:Call().
                                             }
                                         }
@@ -365,7 +365,7 @@
                     }
                     else
                     {
-                        OutTee("OnEvent: [{0}] No trigger action defined for [{1}]":Format(_part:name, parsedAction), 1).
+                        // OutTee("OnEvent: [{0}] No trigger action defined for [{1}]":Format(_part:name, parsedAction), 1).
                     }
                 }
             }
@@ -594,25 +594,42 @@
     // Sets the log file path and writes a header to it
     global function InitLog
     {
-        if g_LogPath:IsType("String")
+        parameter _logPath is g_LogPath, 
+                  _initStr to "{0} MISSION":Format(Ship:Name).
+        
+        if _logPath:IsType("String")
         {
-            set g_LogPath to g_LogPath:Format(g_Tag:PCN).
+            set _logPath to _logPath:Format(g_Tag:PCN).
         }
-        if exists(g_LogPath)
+        
+        if _initStr > 0
         {
-            log " " to g_LogPath.
-            log "*** MISSION LOG REINITIALIZED ***" to g_LogPath.
-            log "DateTime: {0} (MET: {1})":Format(TimeSpan(Time:Seconds):Full, TimeSpan(MissionTime):Full) to g_LogPath.
-            log "*********************************" to g_LogPath.
-            log " " to g_LogPath.
+            local initHeader to "".
+            if exists(_logPath)
+            {
+                log " " to _logPath.
+                set initHeader to "*** {0} LOG REINITIALIZED ***":Format(initStr:ToUpper).
+            }
+            else
+            {
+                set initHeader to "*** {0} LOG ININITALIZED ***":Format(initStr:ToUpper).
+            }
+
+            log "*********************************" to _logPath.
+            log initHeader to _logPath.
+            log "DateTime   : {0}":Format(TimeSpan(Time:Seconds):Full) to _logPath.
+            log "MissionTime: {0}":Format(TimeSpan(MissionTime):Full) to _logPath.
+            log "*********************************" to _logPath.
+            log " " to _logPath.
+        }
+
+        if exists(_logPath)
+        {
+            return _logPath.
         }
         else
         {
-            log "*** MISSION LOG BEGIN ***" to g_LogPath.
-            log "Mission : {0}":Format(Ship:Name) to g_LogPath.
-            log "DateTime: {0}":Format(TimeSpan(Time:Seconds):Full) to g_LogPath.
-            log "*************************" to g_LogPath.
-            log " " to g_LogPath.
+            return "ERR".
         }
     }
 
@@ -621,18 +638,41 @@
     global function LogStr
     {
         parameter _str, 
-                  _errLvl is 0.
+                  _logPath is g_LogPath,
+                  _format is 0,
+                  _errLvl is -1,
+                  _includeTimeStamp is True.
 
-        local label to "INFO".
-        if _errLvl > 1
+        local strContext to "".
+        local typeLabel  to "".
+
+        if _errLvl > -1
         {
-            set label to "*ERR".
+            set typelabel to "INFO".
+            if _errLvl > 1
+            {
+                set typeLabel to "*ERR".
+            }
+            else if _errLvl > 0
+            {
+                set typeLabel to "WARN".
+            }
         }
-        else if _errLvl > 0
+
+        if _format = 0 // 0 is Default, i.e. standard logging that is more human readable
         {
-            set label to "WARN".
+            if typeLabel <> ""       set strContext to "[{0}]".
+            if _includeTimeStamp     set strContext to "{0}[{1}]":Format(strContext, Round(MissionTime, 3):ToString).
+            if strContext:Length > 0 set strContext to strContext + ": ".
         }
-        log "[{0}][{1}]: {2}":Format(label, MissionTime, _str) to g_LogPath.
+        else if _format = 1 // 1 is CSV formatted.
+        {
+            if typeLabel <> ""       set strContext to "{0},".
+            if _includeTimeStamp     set strContext to "{0}{1},":Format(strContext, Round(MissionTime, 3):ToString).
+            if strContext:Length > 0 set strContext to strContext + ",".
+        }
+        // Finally, we log the string
+        log "{0}{1}":Format(strContext, _str) to _logPath.
     }
 // #endregion
 
@@ -645,7 +685,8 @@
     {
         if Terminal:Input:hasChar
         {
-            set g_TermChar to Terminal:Input:getChar.
+            set g_TermChar            to Terminal:Input:getChar.
+            set g_TermChar_LastUpdate to Time:Seconds.
         }
         else
         {
@@ -661,6 +702,26 @@
         return GetTermChar().
     }
 
+
+    // Checks if the terminal character matches the param
+    global function CheckTermChar
+    {
+        parameter _inputCheck to Terminal:Input:Enter.
+
+        if g_TermChar_LastUpdate < Time:Seconds
+        {
+            GetTermChar().
+        }
+
+        if g_TermChar = _inputCheck
+        {
+            return True.
+        }
+        else
+        {
+            return False.
+        }
+    }
 // #endregion
 
 // *- Tag parsing

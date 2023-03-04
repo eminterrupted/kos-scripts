@@ -86,9 +86,11 @@ if tgt_rll:IsType("String") set tgt_rll to tgt_rll:ToNumber().
 local gravTurnAlt to body:Atm:Height * 0.875.
 local gravAltAvg            to ((gravTurnAlt * 3) + tgt_ap) / 4.
 
+local effHdg                to 0.
 local f_SpinManualEngaged   to false.
 local f_HoldFacing          to false.
 local f_HoldPro             to false.
+local launchHeading         to 0.
 local rcsToggleFlag         to false.
 
 
@@ -127,14 +129,25 @@ if Ship:PartsTaggedPattern("(HotStg|HotStage)"):Length > 0              { ArmHot
 if Ship:PartsTaggedPattern("Spin(Stage|Stg|Stab|Stabilize)"):Length > 0 { ArmSpinStabilization(). }
 if Ship:PartsTaggedPattern("OnEvent\|(Ascent|ASC|Launch)"):Length > 0   { InitOnEventTrigger(Ship:PartsTaggedPattern("OnEvent|(Ascent|ASC|Launch)")). }
 
+local shipBounds to Ship:Bounds.
+
 until ship:Altitude > g_la_turnAltStart
 {
-    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEnginesLex to ActiveEngines().
     set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
-    DispLaunchTelemetry(tgt_ap).
-    wait 0.01.
+    if g_BoosterSepArmed 
+    { 
+        set g_BoosterObj to GetBoosters().
+        if g_BoosterObj:HasKey("Present")
+        {
+            if not g_BoosterObj:Present 
+            {
+                set g_BoosterSepArmed to false.
+            }
+        }
+    }
+
 
     GetTermChar().
     if g_TermChar = Terminal:Input:Backspace
@@ -174,17 +187,30 @@ until ship:Altitude > g_la_turnAltStart
         else 
         {
             OutDebug("MODE[A]: Normal / Guided", 1).
-            set s_Val to Heading(tgt_hdg, tgt_pit, tgt_rll).
+            set s_Val to choose Heading(tgt_hdg, 90, 0) if shipBounds:BottomAltRadar > 250 else Ship:Facing.
         }
     }
+
+    DispLaunchTelemetry(tgt_ap).
+    wait 0.01.
 }
 
 until stage:Number <= g_stopStage
 {
-    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEnginesLex to ActiveEngines().
     set g_ConsumedResources to GetResourcesFromEngines(g_ActiveEngines).
+    if g_BoosterSepArmed 
+    { 
+        set g_BoosterObj to GetBoosters().
+        if g_BoosterObj:HasKey("Present")
+        {
+            if not g_BoosterObj:Present 
+            {
+                set g_BoosterSepArmed to false.
+            }
+        }
+    }
     
     GetTermChar().
     if g_TermChar = Terminal:Input:Backspace
@@ -262,10 +288,22 @@ until stage:Number <= g_stopStage
 
 until ship:AvailableThrust < 0.01 // or ship:Apoapsis >= tgt_ap
 {
-    if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
+    //if g_BoosterSepArmed { set g_BoosterObj to GetBoosters(). }
     // set tgt_pit to GetAscentAngle(gravAltAvg, tgt_ap).
     // //set s_val to heading(tgt_hdg, tgt_pit, tgt_rll).
     // set s_Val to choose Heading(tgt_hdg, tgt_pit):Vector if f_SpinManualEngaged else Heading(tgt_hdg, tgt_pit, tgt_rll).
+
+    if g_BoosterSepArmed 
+    { 
+        set g_BoosterObj to GetBoosters().
+        if g_BoosterObj:HasKey("Present")
+        {
+            if not g_BoosterObj:Present 
+            {
+                set g_BoosterSepArmed to false.
+            }
+        }
+    }
 
     GetTermChar().
     if g_TermChar = Terminal:Input:Backspace
@@ -380,8 +418,9 @@ ClearScreen.
 DispMain(ScriptPath()).
 OutMsg("{0} complete!":Format(ScriptPath())).
 OutInfo("Press 'End' to exit now").
+OutInfo("Press 'Up' arrow to add 15 more seconds", 1).
 local exitTS to Time:Seconds + 14.
-until Time:Seconds >= exitTS 
+until Time:Seconds >= exitTS
 {
     GetTermChar().
     if g_TermChar = Terminal:Input:EndCursor
@@ -389,8 +428,14 @@ until Time:Seconds >= exitTS
         OutInfo("",1).
         Break.
     }
+    else if g_TermChar = Terminal:Input:UpCursorOne
+    {
+        set exitTS to exitTS + 5.
+    }
     OutInfo("Exiting script in {0,5}s":Format(Round(exitTS - Time:Seconds, 2)), 1).
     wait 0.01.
 }
 OutInfo("Exiting script now!").
+unlock throttle.
+unlock steering.
 wait 1.

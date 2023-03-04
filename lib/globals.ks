@@ -5,6 +5,7 @@ global s_Val             to ship:facing.
 global t_Val             to 0.
 
 global g_ErrLvl to 0.
+global g_DebugOut to true.
 
 // Mission Plan Variables
 global g_MP_Json to "".
@@ -33,8 +34,9 @@ global g_Tag to lexicon(
     ,"ASL", 0
 ).
 
-// Random useful globals
-global g_TermChar to "".
+// Terminal Input Globals
+global g_TermChar            to "".
+global g_TermChar_LastUpdate to 0.
 
 // Time globals
 global g_ET_Mark to Time:Seconds. // Starting point for evaluating elapsed time

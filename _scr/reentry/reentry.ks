@@ -105,6 +105,10 @@ set warpFlag to false.
 OutInfo().
 
 RCS On.
+
+OutMsg("Collecting any remaining science").
+DoEvent(core:part:GetModule("HardDrive"), "transfer data here").
+
 OutMsg("Maneuvering for staging").
 local stg_TS to Time:Seconds + 10.
 set s_Val to ship:SrfRetrograde.
@@ -165,6 +169,7 @@ until Ship:Altitude - Ship:GeoPosition:TerrainHeight < fairingJettisonAlt
 
 if hasReentryFairings
 {
+    Lights Off.
     Lights On.
     OutMsg("Fairings jettison").
     OutInfo().
@@ -180,6 +185,7 @@ if hasReentryFairings
             Stage.
         }
     }
+    lights on.
 }
 wait 2.
 
