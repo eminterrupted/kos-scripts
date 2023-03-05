@@ -4,8 +4,7 @@ clearScreen.
 parameter inObj,
           tip is "".
 
-runOncePath("0:/lib/disp.ks").
-runOncePath("0:/lib/util.ks").
+runOncePath("0:/lib/depLoader").
 
 if inObj:TypeName = "List_value`1" or inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
 {
