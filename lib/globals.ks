@@ -11,8 +11,14 @@
 
 // *~ Simple Variables ~* //
 // #region
+    // Program flow control
+    global g_ResultCode to 0.
+
     // Staging
     global g_StageLimit to 1.
+
+    // Tags
+    global g_MissionTag to lexicon().
 
     // Terminal Metadata
     global g_Line   to 0.

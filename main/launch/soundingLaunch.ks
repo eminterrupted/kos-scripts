@@ -3,9 +3,11 @@ ClearScreen.
 
 RunOncePath("0:/lib/depLoader.ks").
 
+set g_MissionTag to ParseCoreTag(core:Part:Tag).
+
 local clampStage to Ship:ModulesNamed("LaunchClamp")[0]:Part:Stage.
 
-local boostersActive to false.
+local boostersActive to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
 local boosterIdx     to 0.
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
@@ -48,7 +50,7 @@ until Stage:Number = g_StageLimit
                 //     cbCousins:Add(cd:SymmetryPartner(i)).
                 // }
 
-                if cb:Thrust <= 0.001
+                if cb:Thrust <= 0.0001
                 {
                     for i in Range (0, cb:SymmetryCount - 1, 1)
                     {
@@ -76,12 +78,29 @@ until Stage:Number = g_StageLimit
         if Stage:Ready
         {
             Stage.
-            wait 0.05.
+            wait 0.5.
         }
     }
 
     OutInfo("Altitude: {0}m ":Format(Round(Ship:Altitude))).
     wait 0.01.
+}
+
+wait until Ship:AvailableThrust >= 1.
+
+until Ship:AvailableThrust <= 0.01
+{
+    OutInfo("Altitude: {0}m ":Format(Round(Ship:Altitude))).
+    wait 0.01.
+}
+
+OutMsg("Launch script complete, performing exit actions").
+
+// Arm any parachutes before we exit
+for m in Ship:ModulesNamed("RealChuteModule")
+{
+    OutInfo("Arming Parachute [{0}({1})]":Format(m:part:name, m:part:uid)).
+    DoEvent(m, "arm parachute").
 }
 
 // until Ship:AvailableThrust <= 0.1

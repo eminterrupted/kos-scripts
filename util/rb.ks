@@ -1,5 +1,7 @@
 parameter _bf is "dboot.ks".
 
-copyPath("0:/boot/" + _bf, "/boot/" + _bf).
-set Core:BootFileName to "/boot/" + _bf.
+set arcBF to "0:/boot/" + _bf.
+set locBF to "/boot/" + _bf.
+copyPath(arcBF, locBF).
+set Core:BootFileName to choose locBF if exists(Path(locBF)) else arcBF.
 reboot.

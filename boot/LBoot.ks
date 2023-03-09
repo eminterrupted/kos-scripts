@@ -1,0 +1,1 @@
+RunPath("0:/main/exec/missionExec.ks").

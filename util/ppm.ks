@@ -1,30 +1,31 @@
 @lazyGlobal off.
 
-parameter part is "".
+parameter _part is "".
 
 clearScreen. 
 
-if part = ""
+if _part = ""
 {
     print "ERROR: No valid part provided!".
     print "Must provide param value with typename: 'Part'".
 }
 else
 {
-    print "MODULES FOR PART: " + part:name.
+    print "MODULES FOR PART: " + _part:name.
+    print "COUNT           : {0}":Format(_part:modules:length).
     print "----------------------------------------------------".
     print " ".
 
     local line is 5.
 
-    from { local n is 0.} until n = part:modules:Length step { set n to n + 1.} do 
+    from { local n is 0.} until n = _part:modules:Length step { set n to n + 1.} do 
     {
-        local m is part:getModuleByIndex(n).
+        local m is _part:getModuleByIndex(n).
 
         if line < terminal:height - 35 
         {
             set line to line + 1.
-            print "MODULE(" + m:name + "):".
+            print "[{0}] MODULE({1})":Format(n, m:name).
 
             set line to line + 1 + m:Allactions:Length + m:Allevents:Length + m:Allfields:Length.
             print m.

@@ -88,5 +88,35 @@
         }
     }
 
+    // *~ Display Components
+
+    // DispMain :: (_scriptPath)<Path> -> (nextLine)<scalar>
+    // Prints the main terminal header, and returns the next available line for printing
+    global function DispMain
+    {
+        parameter _scriptPath is ScriptPath().
+
+        set g_Line to 0.
+        local progName      to "KASA MISSION CONTROL".
+        local progVer       to "v0.01 ALPO".
+        local safeWidth     to Terminal:Width - 2 - progName:Length.
+        local str to "{0,20}{1," + -(safeWidth) + "}".
+        set str to str:Format(progName, progVer).
+        
+        print str at (0, g_Line).
+        set str to "".
+        for i in Range(0, Terminal:Width - 2, 1)
+        {
+            set str to str + "=".
+        }
+        print str at (0, g_Line).
+        print "MISSION: {1}":Format(Ship:Name)                  at (0, cr()).
+        print "STATUS : {1}":Format(Ship:Status)                at (0, cr()).
+        print "MET    : {1}":Format(TimeSpan(MissionTime):Full) at (0, cr()).
+        print "PROGRAM: {1}":Format(_scriptPath)                at (0, cr()).
+        cr().
+        return g_Line.
+    }
+
     // #endregion
 // #endregion
