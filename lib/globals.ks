@@ -1,7 +1,7 @@
 // lib/globals - contains all global variables and delegates in one place
 @lazyGlobal off.
 
-// #include "0:/dep/depLoader.ks"
+// #include "0:/lib/libLoader.ks"
 
 // *~ Dependencies ~* //
 // #region

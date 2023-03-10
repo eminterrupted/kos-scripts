@@ -1,7 +1,7 @@
 @LazyGlobal off.
 ClearScreen.
 
-RunOncePath("0:/dep/depLoader.ks").
+RunOncePath("0:/lib/libLoader.ks").
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 
