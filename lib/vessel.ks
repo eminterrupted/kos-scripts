@@ -17,13 +17,7 @@
     // #region
     
     // New entries in global objects
-    // This adds engines to the part info global
-    set g_PartInfo["Engines"] to lexicon( 
-        "SEPREF", list(
-            "ROSmallSpinMotor" // Spin Sepratron
-        )
-    ).
-
+    
     // #endregion
 // #endregion
 

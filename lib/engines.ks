@@ -15,6 +15,26 @@
     // *- Global
     // #region
     // #endregion
+
+    // *- Object entry registrations
+    // This adds engines to the part info global
+    set g_PartInfo["Engines"] to lexicon( 
+        "SEPREF", list(
+            "ROSmallSpinMotor"      // Spin Motor (Small)
+            ,"CREI_RO_IntSep_33"    // Internal sep motor (33% scale)
+            ,"CREI_RO_IntSep_100"   // Internal sep motor (normal scale)
+            ,"CREI_RO_IntSep_166"   // Internal sep motor (166% scale)
+            ,"ROE-1204sepMotor"     // UA1204 Nosecone & Separation Motor
+            ,"ROE-1205sepMotor"     // UA1205 Nosecone & Separation Motor
+            ,"ROE-1206sepMotor"     // UA1206 Nosecone & Separation Motor
+            ,"ROE-1207sepMotor"     // UA1207 Nosecone & Separation Motor
+            ,"ROE-1208sepMotor"     // UA1208 Nosecone & Separation Motor
+            ,"sepMotorSmall"        // Radial Separation Motor (Small)
+            ,"sepMotor1"            // Radial Separation Motor (Medium)
+            ,"sepMotorLarge"        // Radial Separation Motor (Large)
+            ,"SnubOtron"            // Separation Motor (Small)
+        )
+    ).
 // #endregion
 
 
@@ -130,8 +150,10 @@
     }
 
     // GetShipEnginesSpecs :: (_ves)(vessel) -> (engStgObj)(Engines Specs By Stage)
-    // Returns engine specifications in a lexicon keyed by stage activation number. 
-    global function GetShipEngineSpecs
+    // Returns engine specifications in a lexicon keyed by stage activation number.
+    // Also denotes if a stage contains sep motors without tags (meaning they are 
+    // true sepratrons; tagged motors perform non-seperation actions such as spin motors)
+    global function GetShipEnginesSpecs
     {
         parameter _ves is Ship.
 
@@ -139,19 +161,22 @@
         local engList   to _ves:Engines.
         from { local i to 0.} until i = engList:Length step { set i to i + 1.} do
         {
-            local eng to engList[i].
+            local eng           to engList[i].
+            local engSpecs      to GetEngineSpecs(eng).
+            local isSepStage    to choose true if isSepStage or engSpecs:IsSepMotor else false.
             if engStgObj:HasKey(eng:Stage)
             {
-                set engStgObj[eng:Stage][Engines][eng:CID] to GetEngineSpecs(eng).
+                set engStgObj[eng:Stage][Engines][eng:CID] to engSpecs.
             }
             else
             {
                 set engStgObj[eng:Stage] to lexicon(
                     "Engines", lexicon(
-                        eng:CID, GetEngineSpecs(eng)
+                        eng:CID, engSpecs
                     )
                 ).
             }
+            set engStgObj[eng:Stage]["IsSepStage"] to isSepStage.
         }
 
         return engStgObj.
