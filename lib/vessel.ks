@@ -42,18 +42,25 @@
         // Arms automatic staging based on current thrust levels. If they fall below 0.1, we stage
         global function ArmAutoStaging
         {
-            parameter _stgLimit to 0,
+            parameter _stgLimit to g_StageLimit,
                       _stgCondition is 0. // 0: ThrustValue < 0.01
 
             local resultCode to 0.
-            local selectedCondition to GetStageConditionDelegate(_stgCondition). 
+            if Stage:Number <= _stgLimit 
+            {
+                set resultCode to 2.
+            }
+            else
+            {
+                local selectedCondition to GetStageConditionDelegate(0). 
 
-            set g_LoopDelegates["AutoStageCheck"] to lexicon(
-                "Check", selectedCondition
-                ,"Exec", SafeStage@
-            ).
+                set g_LoopDelegates["AutoStage"] to lexicon(
+                    "Check", selectedCondition
+                    ,"Action", SafeStage@
+                ).
 
-            if g_LoopDelegates:HasKey("AutoStageCheck") set resultCode to 1.
+                if g_LoopDelegates:HasKey("AutoStage") set resultCode to 1.
+            }
 
             return resultCode.
         }
@@ -65,11 +72,13 @@
         // Given a staging check type string, performs that condition check and returns the result
         local function GetStageConditionDelegate
         {
-            parameter _checkType.
+            parameter _checkType is 0.
 
             if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
             {
-                return CheckShipThrustCondition:Bind(Ship, 0.01)@.
+                local condition to CheckShipThrustCondition@.
+                local boundCondition to condition:Bind(Ship, 0.01).
+                return boundCondition.
             }
             // else if _checkType = 1
             // {
@@ -81,7 +90,7 @@
         // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> <ResultCode>(Scalar)
         local function CheckShipThrustCondition
         {
-            parameter _ves, 
+            parameter _ves,
                       _checkVal.
 
             local resultCode to 0.
@@ -99,8 +108,8 @@
         local function SafeStage
         {
             wait until Stage:Ready.
-            Stage.
-            Wait 0.01.
+            stage.
+            wait 0.1.
         }
         // #endregion
     // #endregion

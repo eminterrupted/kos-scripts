@@ -1,7 +1,7 @@
 @LazyGlobal off.
 ClearScreen.
 
-RunOncePath("0:/lib/depLoader.ks").
+RunOncePath("0:/dep/depLoader.ks").
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 
@@ -11,6 +11,10 @@ local boostersActive to choose true if Ship:PartsTaggedPattern("booster\.\d*"):L
 local boosterIdx     to 0.
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
+local stagingCheckResult to 0.
+local stagingDelegate to lexicon().
+local stagingDelegateCheck  to { return 0.}.
+local stagingDelegateAction to { return 0.}.
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
@@ -32,55 +36,71 @@ until Stage:Number <= clampStage
 set g_StageEngines_Current to GetEnginesForStage(Stage:Number).
 set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
 
+local AutoStageResult to ArmAutoStaging().
+if AutoStageResult = 1
+{
+    Print "AutoStaging Armed with ResultCode: {0}":Format(AutoStageResult) at (2, 19).
+    set stagingDelegateCheck  to g_LoopDelegates:AutoStage["Check"].
+    set stagingDelegateAction to g_LoopDelegates:AutoStage["Action"].
+}
+
 until Stage:Number = g_StageLimit
 {
     // local cbCousins      to list().
     set g_StageEngines_Active to GetActiveEngines().
-    for p in g_StageEngines_Active
+    // for p in g_StageEngines_Active
+    // {
+    //     if p:Tag:MatchesPattern("Booster.\d*")
+    //     {
+    if boostersActive
     {
-        if p:Tag:MatchesPattern("Booster.\d*")
+        set curBoosterTag   to "booster.{0}":Format(boosterIdx).
+        local boosterParts  to Ship:PartsTagged(curBoosterTag).
+        if boosterParts:Length > 0
         {
-            set curBoosterTag   to "booster.{0}":Format(boosterIdx).
-            local boosterParts  to Ship:PartsTagged(curBoosterTag).
-            if boosterParts:Length > 0
-            {
-                set cb to boosterParts[0]. // cb = CheckBooster
-                // from { local i to 0.} until i = cb:SymmetryCount step { set i to i + 1. } do
-                // {
-                //     cbCousins:Add(cd:SymmetryPartner(i)).
-                // }
+            set cb to boosterParts[0]. // cb = CheckBooster
+            // from { local i to 0.} until i = cb:SymmetryCount step { set i to i + 1. } do
+            // {
+            //     cbCousins:Add(cd:SymmetryPartner(i)).
+            // }
 
-                if cb:Thrust <= 0.0001
+            if cb:Thrust <= 0.0001
+            {
+                for i in Range (0, cb:SymmetryCount - 1, 1)
                 {
-                    for i in Range (0, cb:SymmetryCount - 1, 1)
-                    {
-                        cb:SymmetryPartner(i):Shutdown.
-                    }
-                    wait until Stage:Ready.
-                    stage.
-                    wait 0.01.
-                
-                    if Ship:PartsTaggedPattern("booster.\d*"):Length = 0
-                    {
-                        set boostersActive to false.
-                    }
-                    else
-                    {
-                        set boosterIdx to boosterIdx + 1.
-                    }
+                    cb:SymmetryPartner(i):Shutdown.
+                }
+                wait until Stage:Ready.
+                stage.
+                wait 0.01.
+            
+                if Ship:PartsTaggedPattern("booster.\d*"):Length < 1
+                {
+                    set boostersActive to false.
+                }
+                else
+                {
+                    set boosterIdx to boosterIdx + 1.
                 }
             }
         }
     }
 
-    if Ship:AvailableThrust <= 0.01
+    // print stagingDelegateCheck at (2, 25).
+    set stagingCheckResult to g_LoopDelegates:AutoStage:Check:Call().
+    if stagingCheckResult = 1
     {
-        if Stage:Ready
-        {
-            Stage.
-            wait 0.5.
-        }
+        stagingDelegateAction:Call().
     }
+
+    // if Ship:AvailableThrust <= 0.01
+    // {
+    //     if Stage:Ready
+    //     {
+    //         Stage.
+    //         wait 0.5.
+    //     }
+    // }
 
     OutInfo("Altitude: {0}m ":Format(Round(Ship:Altitude))).
     wait 0.01.
@@ -88,6 +108,7 @@ until Stage:Number = g_StageLimit
 
 wait until Ship:AvailableThrust >= 1.
 
+OutMsg("Final Burn").
 until Ship:AvailableThrust <= 0.01
 {
     OutInfo("Altitude: {0}m ":Format(Round(Ship:Altitude))).
@@ -133,69 +154,12 @@ for m in Ship:ModulesNamed("RealChuteModule")
 
 
 
-// GetActiveEngines :: [(_ves)<Ship>] -> (ActiveEngines)<List)
-// Returns a list of engines current firing and with a stage number great than the current one
-global function GetActiveEngines
-{
-    parameter _ves is Ship.
-
-    local engList to list().
-    for eng in _ves:Engines
-    {
-        if eng:ignition
-        {
-            if not eng:flameout
-            {
-                if eng:stage >= Stage:Number
-                {
-                    engList:Add(eng).
-                }
-            }
-        }
-    }
-
-    return engList.
-}
 
 
-// GetEnginesForStage :: (Stage Number)<scalar> -> (Engines activated by that stage)<List>
-// Returns engines for a given stage number
-global function GetEnginesForStage
-{
-    parameter _stg.
 
-    local engList to list().
 
-    for eng in ship:engines
-    {
-        if eng:Stage = _stg 
-        { 
-            engList:Add(eng). 
-        }
-    }
-    return engList.
-}
 
-// GetEngineDetails :: (Engine)<Engine> -> (Details Object)<Lexicon>
-// Returns a set of useful details about this engine such as spool time, ullage requirement, and max mass and fuel flows
-global function GetEngineDetails
-{
-    parameter _eng.
 
-    local m to _eng:GetModule("ModuleEnginesRF").
-    local engLex to lexicon(
-        "ENGTITLE",        _eng:Title
-        ,"ENGNAME",         _eng:Name
-        ,"IGNITIONS",       GetField(m, "ignitions remaining", 0)
-        ,"MIXRATIO",        GetField(m, "mixture ratio", 0)
-        ,"FUELSTABILITY",   GetField(m, "propellant", "")
-        ,"RESIDUALS",       GetField(m, "predicted residuals", 0)
-        ,"SPOOLTIME",       GetField(m, "effective spool-up time", 0)
-        ,"STATUS",          GetField(m, "status", "")
-        ,"ULLAGE",          _eng:Ullage
-    ).
-    return engLex.
-}
 
 
 // GetField :: (Module)<Module>, (Field Name)<String>, (Default If Not Present)<any> -> (Field value or default)<any>

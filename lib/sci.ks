@@ -1,4 +1,4 @@
-// #include "0:/lib/depLoader.ks"
+// #include "0:/dep/depLoader.ks"
 @lazyGlobal off.
 
 // *~ Dependencies ~* //
