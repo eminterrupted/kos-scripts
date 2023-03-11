@@ -5,14 +5,18 @@ parameter _prms to list().
 
 runOncePath("0:/lib/libLoader").
 
-if _prms = list() 
-{
-    until false DispLexiconData(GetShipEnginesSpecs()).
-}
-else 
-{
-    until false DispLexiconData(GetEnginePerformanceData(_prms)).
-}
+DispTermGrid(10, 70, 4, 1).
+DispTermGrid(g_Line, 34, 16).
+
+
+// if _prms = list() 
+// {
+//     until false DispLexiconData(GetShipEnginesSpecs()).
+// }
+// else 
+// {
+//     until false DispLexiconData(GetEnginePerformanceData(_prms)).
+// }
 
 
 // Functions

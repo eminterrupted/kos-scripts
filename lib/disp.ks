@@ -18,23 +18,32 @@
 
     // *- Local Anonymous Delegates
     local l_GridRowLine to { 
-        parameter _width is Terminal:Width, _char is "_".  
+        parameter _width , _char.  
+
         local str is "". 
-        for i in Range(1, _width, 1) set str to str + "_". 
+        from { local i to 0.} until i = _width or i = Terminal:Width step { set i to i + 1.} do
+        {
+            set str to str + _char.
+        }
         return str. 
     }.
 
     local l_GridColLine to {
-        until colIdx = Floor(Terminal:Width / (_colWidth + 2)) // Adding 2 to colWidth to account for grid lines
+        parameter _colWidth is 16, _char is "|".
+
+        local colIdx to 0.
+        local colCount to Floor(Terminal:Width / (_colWidth + 2)).  // Adding 2 to colWidth to account for grid lines
+        local str to "|".
+        until colIdx = colCount
         {
-            set colStr to colStr + "|".
             from { local i to 1.} until i = _colWidth step { set i to i + 1.} do
             {
-                set colStr to colStr + " ".
+                set str to str + " ".
             }
-            set colStr to colStr + "|".
             set colIdx to colIdx + 1.
+            set str to str + _char.
         }
+        return str.
     }.
     // #endregion
 // #endregion
@@ -144,30 +153,48 @@
     // *- Full Display
     // #region
 
-    // DispDrawGrid :: <scalar>_columnWidth, <scalar>_rowHeight -> <none>
+    // DispTermGrid :: <scalar>_columnWidth, <scalar>_rowHeight -> <none>
     // Draws a grid on the terminal screen. Takes width of columns and height of rows as parameters.
     // Note: the function reserves one px on each side of the column for the grid lines
     // Example: On a 72col screen, a _columnWidth of 16 will result in 4 columns, with grid lines in between
-    global function DispDrawGrid
+    global function DispTermGrid
     {
-        parameter _colWidth is 16,
-                  _rowHeight is 10.
+        parameter _startAt      is 10,
+                  _colWidth     is 34, 
+                  _rowHeight    is 20,
+                  _rowCount     is -1.
 
-        local colIdx to 0.
-        local colStr to "".
-        local rowIdx to 0.
-        local rowStr to "".
-        
-        set g_Line to 10.
+        set g_Line to _startAt.
 
+        local colWidthFloor to Floor(_colWidth).
+        local colCount      to Floor((Terminal:Width) / (colWidthFloor + 2)).
+        local colStr        to l_GridColLine:Call(_colWidth, "|").
+
+        local rowLineWidth  to (_colWidth) * colCount.
+        local headerStr     to l_GridRowLine:Call(rowLineWidth, "=").
+        local rowStr        to l_GridRowLine:Call(rowLineWidth, "_").
+
+        local rowCount      to choose _rowCount if _rowCount > 0 else Floor((Terminal:Height - g_Line - 5) / _rowHeight).
+        local rowInnerIdx   to 0.
+        local rowTotalIdx   to 0.
+
+        // print the header line
+        print headerStr at (0, g_Line).
         
-        
-        print rowStr at (0, g_Line).
-        cr().
-        for cnt in Range(g_Line, Terminal:Height - g_Line - 1, 1)
+        // Print the grid for this row
+        until rowTotalIdx = rowCount
         {
-
+            set rowInnerIdx to 0.
+            until rowInnerIdx >= _rowHeight - 1 or g_Line >= Terminal:Height - 6
+            {
+                print colStr at (0, cr()).
+                set rowInnerIdx to rowInnerIdx + 1.
+            }
+            set rowTotalIdx to rowTotalIdx + 1.
+            if rowTotalIdx < rowCount print rowStr at (0, cr()).
         }
+        print headerStr at (0, cr()).
+        // Neat
     }
     // #endregion
 // #endregion
