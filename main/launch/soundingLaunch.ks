@@ -2,6 +2,7 @@
 ClearScreen.
 
 RunOncePath("0:/lib/libLoader.ks").
+RunOncePath("0:/lib/launch.ks").
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 
@@ -21,17 +22,18 @@ ClearScreen.
 OutMsg("Launch initiated!").
 lock Throttle to 1.
 wait 0.25.
-set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
-wait 0.01.
-stage.
-wait GetField(g_StageEngines_Next[0]:GetModule("ModuleEnginesRF"), "effective spool-up time", 0).
+LaunchCountdown().
+// set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
+// wait 0.01.
+// stage.
+// wait GetField(g_StageEngines_Next[0]:GetModule("ModuleEnginesRF"), "effective spool-up time", 0).
 
-until Stage:Number <= clampStage
-{
-    wait until Stage:Ready.
-    stage.
-    wait 1.
-}
+// until Stage:Number <= clampStage
+// {
+//     wait until Stage:Ready.
+//     stage.
+//     wait 1.
+// }
 
 set g_StageEngines_Current to GetEnginesForStage(Stage:Number).
 set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
@@ -40,6 +42,7 @@ local AutoStageResult to ArmAutoStaging().
 if AutoStageResult = 1
 {
     Print "AutoStaging Armed with ResultCode: {0}":Format(AutoStageResult) at (2, 19).
+    Print "g_StageLimit: [{0}]":Format(g_StageLimit) at (2, 20).
     set stagingDelegateCheck  to g_LoopDelegates:AutoStage["Check"].
     set stagingDelegateAction to g_LoopDelegates:AutoStage["Action"].
 }

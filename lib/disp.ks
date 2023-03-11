@@ -8,12 +8,34 @@
 
 // *~ Variables ~* //
 // #region
+    // *- Global
+    // #region
+    // #endregion
+
     // *- Local
     // #region
     // #endregion
 
-    // *- Global
-    // #region
+    // *- Local Anonymous Delegates
+    local l_GridRowLine to { 
+        parameter _width is Terminal:Width, _char is "_".  
+        local str is "". 
+        for i in Range(1, _width, 1) set str to str + "_". 
+        return str. 
+    }.
+
+    local l_GridColLine to {
+        until colIdx = Floor(Terminal:Width / (_colWidth + 2)) // Adding 2 to colWidth to account for grid lines
+        {
+            set colStr to colStr + "|".
+            from { local i to 1.} until i = _colWidth step { set i to i + 1.} do
+            {
+                set colStr to colStr + " ".
+            }
+            set colStr to colStr + "|".
+            set colIdx to colIdx + 1.
+        }
+    }.
     // #endregion
 // #endregion
 
@@ -117,6 +139,35 @@
         cr().
         return g_Line.
     }
+    // #endregion
 
+    // *- Full Display
+    // #region
+
+    // DispDrawGrid :: <scalar>_columnWidth, <scalar>_rowHeight -> <none>
+    // Draws a grid on the terminal screen. Takes width of columns and height of rows as parameters.
+    // Note: the function reserves one px on each side of the column for the grid lines
+    // Example: On a 72col screen, a _columnWidth of 16 will result in 4 columns, with grid lines in between
+    global function DispDrawGrid
+    {
+        parameter _colWidth is 16,
+                  _rowHeight is 10.
+
+        local colIdx to 0.
+        local colStr to "".
+        local rowIdx to 0.
+        local rowStr to "".
+        
+        set g_Line to 10.
+
+        
+        
+        print rowStr at (0, g_Line).
+        cr().
+        for cnt in Range(g_Line, Terminal:Height - g_Line - 1, 1)
+        {
+
+        }
+    }
     // #endregion
 // #endregion

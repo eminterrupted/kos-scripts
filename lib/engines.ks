@@ -113,10 +113,8 @@
             ,"ISP",             _eng:ISP
             ,"ISPSeaLevel",     _eng:SeaLevelISP
             ,"ISPVacumm",       _eng:VacuumISP
-            ,"MassFlowMax",     _eng:MassFlowMax
+            ,"MassFlowMax",     _eng:MaxMassFlow
             ,"MixRatio",        GetField(m, "mixture ratio")
-            ,"ModeAutoSwitch",  _eng:AutoSwitch
-            ,"ModePrimary",     _eng:PrimaryMode
             ,"Modes",           _eng:Modes
             ,"MultiMode",       _eng:MultiMode
             ,"PressureFed",     _eng:PressureFed
@@ -157,16 +155,17 @@
     {
         parameter _ves is Ship.
 
-        local engStgObj to lexicon().
-        local engList   to _ves:Engines.
+        local engStgObj  to lexicon().
+        local engList    to _ves:Engines.
+        local isSepStage to false.
         from { local i to 0.} until i = engList:Length step { set i to i + 1.} do
         {
             local eng           to engList[i].
             local engSpecs      to GetEngineSpecs(eng).
-            local isSepStage    to choose true if isSepStage or engSpecs:IsSepMotor else false.
+            set isSepStage      to choose true if isSepStage or engSpecs:IsSepMotor else false.
             if engStgObj:HasKey(eng:Stage)
             {
-                set engStgObj[eng:Stage][Engines][eng:CID] to engSpecs.
+                set engStgObj[eng:Stage]["Engines"][eng:CID] to engSpecs.
             }
             else
             {
@@ -192,24 +191,29 @@
     {
         parameter _eng.
 
-        local m to _eng:GetModule("ModuleEnginesRF").
-        local altPres to Body:ATM:AltitudePressure(Ship:Altitude).
-        local availThrustPres to _eng:AvailableThrustAt(altPres).
-        local sepMotorCheck to (g_PartInfo:Engines:SepRef:Contains(_eng:Name) and _eng:Tag:Length = 0).
+        local m                     to _eng:GetModule("ModuleEnginesRF").
+        local altPres               to Body:ATM:AltitudePressure(Ship:Altitude).
+        local availThrustPres       to _eng:AvailableThrustAt(altPres).
+        local sepMotorCheck         to (g_PartInfo:Engines:SepRef:Contains(_eng:Name) and _eng:Tag:Length = 0).
+        local thrustPct             to max(_eng:MaxThrust, .00001) / max(availThrustPres, 0.1).
+        local fuelStability         to GetField(m, "propellant"). // GetField(m, "propellant").
+        local stabilityStrIdx       to fuelStability:Find("(").
+        local fuelStabilityScalar   to fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100.
+        //:ToNumber(1) / 100.
         local engPerfObj to lexicon(
             "CID",              _eng:CID
             ,"EngName",         _eng:Name
             ,"EngTitle",        _eng:Title
             ,"Flameout",        _eng:Flameout
             ,"FuelFlow",        _eng:FuelFlow
-            ,"FuelStability",   GetField(m, "propellant")
+            ,"FuelStability",   fuelStabilityScalar
             ,"Ignition",        _eng:Ignition
             ,"ISPAt",           _eng:ISPAt(altPres)
             ,"IsSepMotor",      sepMotorCheck
-            ,"MassFlow",        _eng:MassFlow
+            ,"MassFlow",        GetField(m, "Mass Flow")
             ,"Thrust",          _eng:MaxThrust
             ,"ThrustAvailPres", availThrustPres
-            ,"ThrustPct",       _eng:MaxThrust / availThrustPres
+            ,"ThrustPct",       thrustPct
         ).
 
         return engPerfObj.
@@ -243,18 +247,18 @@
             set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
             set aggMassFlow         to aggMassFlow + eng:MassFlow.
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
-
-            set aggEngPerfObj:Engines[eng:CID] to engLex.
+            if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
+            set aggEngPerfObj["Engines"][eng:CID] to engLex.
         }
 
         set aggISPAt to aggThrustAvailPres / aggMassFlowMax.
-        set aggISP   to aggThrust / aggMassFlow.
+        set aggISP   to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.00001).
 
-        set aggEngPerfObj["ISP"]                to aggThrust / aggMassFlow.
-        set aggEngPerfObj["ISPAt"]              to aggThrustAvailPres / aggMassFlowMax.
-        set aggEngPerfObj["Thrust"]             to aggEngThrust.
+        set aggEngPerfObj["ISP"]                to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.0001).
+        set aggEngPerfObj["ISPAt"]              to max(aggThrustAvailPres, 0.000000001) / max(aggMassFlowMax * 1000000, 0.00001).
+        set aggEngPerfObj["Thrust"]             to aggThrust.
         set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
-        set aggEngPerfObj["ThrustPct"]          to aggEngThrust / aggThrustAvailPres.
+        set aggEngPerfObj["ThrustPct"]          to max(aggThrust, 0.000000001) / max(aggThrustAvailPres, 0.00001).
 
         return aggEngPerfObj.
     }

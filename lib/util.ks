@@ -190,15 +190,14 @@
 
             if _m:HasField(_field)
             {
-                _m:GetField(_field).
                 set g_ResultCode to 1.
+                return _m:GetField(_field).
             }
             else
             {
                 set g_ResultCode to 2.
+                return "NUL".
             }
-
-            return _field.
         }
 
         // SetField :: (_m)<Module>, (_field)<string>, (_value)<any> -> (ResultCode)<scalar>

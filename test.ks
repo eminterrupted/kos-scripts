@@ -3,145 +3,16 @@ clearScreen.
 
 parameter _prms to list().
 
-runOncePath("0:/lib/globals").
-runOncePath("0:/lib/disp").
-runOncePath("0:/lib/util").
+runOncePath("0:/lib/libLoader").
 
-OutMsg("Press 'q' to roll left.").
-local doneFlag to false.
-until doneFlag
+if _prms = list() 
 {
-    GetTermChar().
-    OutInfo("g_TermChar [{0}]":Format(g_TermChar)).
-    if g_TermChar = "q" 
-    { 
-        OutInfo("g_termChar = 'q'", 1).
-        set doneFlag to true. 
-    }
-    else if g_TermChar = char(113)
-    {
-        OutInfo("g_termChar = char(113)", 1).
-        set doneFlag to true.
-    }
-    else if g_TermChar = unchar("q")
-    {
-        OutInfo("g_termChar = unchar('q')", 1).
-        set doneFlag to true.
-    }
+    until false DispLexiconData(GetShipEnginesSpecs()).
 }
-wait 1.
-set doneFlag to false.
-OutMsg("Press 'e' to roll right.").
-OutInfo().
-OutInfo("", 1).
-until doneFlag
+else 
 {
-    GetTermChar().
-    OutInfo("g_TermChar [{0}]":Format(g_TermChar)).
-    if g_TermChar = "e" 
-    { 
-        OutInfo("g_termChar = 'e'", 1).
-        set doneFlag to true. 
-    }
-    else if g_TermChar = char(101)
-    {
-        OutInfo("g_termChar = char(101)", 1).
-        set doneFlag to true.
-    }
-    else if g_TermChar = unchar("e")
-    {
-        OutInfo("g_termChar = unchar('e')", 1).
-        set doneFlag to true.
-    }
+    until false DispLexiconData(GetEnginePerformanceData(_prms)).
 }
-wait 1.
-OutMsg("Done").
-wait 1.
-OutMsg().
-OutInfo().
-OutInfo("", 1).
-// print "Testing TestBuildList".
-// print TestBuildList().
-
-// print " ".
-
-// print "Testing TestShipList".
-// print TestShipList().
-
-// print " ".
-
-
-// local script to "". // Path to test script.
-// local scriptPrms to _prms. // parameters for script
-// if _prms:Length > 0 
-// {
-
-// }
-// runPath("").
-
-// local eng to ship:partsNamed("ROE-Aerobee")[0].
-// local l_line to 0.
-// local l_col to 3.
-// global g_frameCounterLine to 0.
-// // The dictionary
-
-// if _prms:IsType("String")
-// {
-//     set _prms to _prms:split(";").
-
-// }
-// else if _prms:IsType("List")
-// {
-// }
-
-// if _prms:Length > 0 
-// {
-//     set eng to _prms[0].
-// }
-
-// local doneFlag to false.
-
-// DispTestHeader().
-// InitDataObj(eng).
-// local engData to lexicon().  // This will hold our data object from the engine in question
-// local frameCount to 0.
-
-// // Main loop
-// until doneFlag
-// {
-//     GetTermChar().
-//     if g_TermChar <> ""
-//     {
-//         if g_TermChar = Terminal:Input:endCursor
-//         {
-//             set doneFlag to true.
-//             break.
-//         }
-//         else if g_TermChar = Terminal:Input:deleteright
-//         {
-//             clearScreen.
-//             DispTestHeader().
-//             set frameCount to 0.
-//         }
-//     }
-
-//     if frameCount > 60 
-//     {
-//         clearScreen.
-//         DispTestHeader().
-//         set frameCount to 0.
-//     }
-//     engData:clear().
-//     set engData to RefreshData(eng).
-//     DispLexiconData(engData, l_line).
-//     set frameCount to frameCount + 1.
-    
-//     print "[{0}]":format(frameCount) at (15, g_frameCounterLine).
-//     wait 0.01.
-// }
-// print "*** Script Complete! ***" at (5, Terminal:height - 2).
-
-
 
 
 // Functions
@@ -163,10 +34,11 @@ local function DispTestHeader
 local function DispLexiconData
 {
     parameter _objToDisplay, 
-              _startLine is g_line.
+              _startLine is 10.
 
     set g_line to _startLine.
-    
+    local l_col to 0.
+
     from { local i to 0.} until i = _objToDisplay:keys:Length step { set i to i + 1.} do 
     {
         local _key to _objToDisplay:keys[i].
