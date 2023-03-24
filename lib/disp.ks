@@ -14,6 +14,9 @@
 
     // *- Local
     // #region
+    global g_GridAssignments to lexicon().
+    local  GridSpaceIdx to 0.
+    local  GridSpaceLex to lexicon().
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -79,20 +82,21 @@
                   _errLvl is 0.
                   //_teeHUD is false. TODO: implement TeeHud function
 
+        local msg_line to 8.
         if _str:length > 0
         {
             local errLabel to choose "MSG" if _errLvl < 1
                          else choose "WRN" if _errLvl < 2
                          else        "ERR".
-            print "[{0}] {1} ":Format(errLabel, _str) at (2, 5).
+            print "[{0}] {1} ":Format(errLabel, _str) at (2, msg_line).
         }
         else
         {
-            for i in Range(0, Terminal:Width - 1, 1) //
+            for i in Range(1, Terminal:Width - 2, 1) //
             {
                 set _str to _str + " ".
             }
-            print _str at (0, 5).
+            print _str at (1, msg_line).
         }
     }
 
@@ -104,32 +108,72 @@
                   _lineIdx is 0.
                   //_teeHUD is false. TODO: implement TeeHud function
 
-        local line to 6.
+        local line to 11.
         if _str:length > 0
         {
             print "[{0}] {1} ":Format("INFO", _str) at (2, line + _lineIdx).
         }
         else
         {
-            for i in Range(0, Terminal:Width - 1, 1) //
+            for i in Range(1, Terminal:Width - 2, 1) //
             {
                 set _str to _str + " ".
             }
-            print _str at (0, line + _lineIdx).
+            print _str at (1, line + _lineIdx).
         }
     }
 
     // *~ Display Components
 
+    // DispAscentAngleStats :: (_statLex)<lexicon>, [(_line)<scalar>]
+    // Does what it says. Since most of the vars in the ascentangle function are local,
+    // it requires passing them all in via a telemetry-formatted lex
+    global function DispAscentAngleStats
+    {
+        parameter _statLex.
+
+        local titleStr to "ASCENT ANGLE".
+        
+        local boxIdx to 1.
+        if g_GridAssignments:Values:Contains(titleStr)
+        {
+            set boxIdx to g_GridAssignments:Values:Find(titleStr).
+        }
+        else
+        {
+            for box in g_GridAssignments:Keys
+            {
+                if not g_GridAssignments[Box] = ""
+                {
+                    set boxIdx to box.
+                    set g_GridAssignments[Box] to titleStr.
+                }
+            }
+        }
+        local col to GridSpaceLex[boxIdx][0].
+        set g_Line to GridSpaceLex[boxIdx][1].
+        print titleStr at (col, g_line).
+        for key in _statLex:keys
+        {
+            print "|- {0,-16}: {1} ":format(key, _statLex[key]) at (col, cr()).
+        }
+    }
+
     // DispMain :: (_scriptPath)<Path> -> (nextLine)<scalar>
     // Prints the main terminal header, and returns the next available line for printing
     global function DispMain
     {
-        parameter _scriptPath is ScriptPath().
+        parameter _scriptPath is ScriptPath(),
+                  _termWidth is 72,
+                  _termHeight is 0.
+
+        set Terminal:Width to _termWidth.
+        set Terminal:Height to choose _termHeight if _termHeight > 0 else 64.
+        DoEvent(Core, "Open Terminal").
 
         set g_Line to 0.
         local progName      to "KASA MISSION CONTROL".
-        local progVer       to "v0.01 ALPO".
+        local progVer       to "v0.01 {0} ({1})":Format(Char(5679), "Omega").
         local safeWidth     to Terminal:Width - 2 - progName:Length.
         local str to "{0,20}{1," + -(safeWidth) + "}".
         set str to str:Format(progName, progVer).
@@ -140,12 +184,17 @@
         {
             set str to str + "=".
         }
-        print str at (0, g_Line).
-        print "MISSION: {1}":Format(Ship:Name)                  at (0, cr()).
-        print "STATUS : {1}":Format(Ship:Status)                at (0, cr()).
-        print "MET    : {1}":Format(TimeSpan(MissionTime):Full) at (0, cr()).
-        print "PROGRAM: {1}":Format(_scriptPath)                at (0, cr()).
+        print str at (0, cr()).
+        print "MISSION: {0}":Format(Ship:Name)                  at (0, cr()).
+        print "STATUS : {0}":Format(Ship:Status)                at (0, cr()).
+        print "MET    : {0}":Format(TimeSpan(MissionTime):Full) at (0, cr()).
+        print "PROGRAM: {0}":Format(_scriptPath)                at (0, cr()).
         cr().
+        
+        DispTermGrid(10, 68, 4, 1, true).
+        set g_GridAssignments[0] to "MAIN".
+        DispTermGrid(g_Line, 34, 16, 2).
+
         return g_Line.
     }
     // #endregion
@@ -162,14 +211,16 @@
         parameter _startAt      is 10,
                   _colWidth     is 34, 
                   _rowHeight    is 20,
-                  _rowCount     is -1.
+                  _rowCount     is -1,
+                  _refreshRef   is false.
 
         set g_Line to _startAt.
 
         local colWidthFloor to Floor(_colWidth).
         local colCount      to Floor((Terminal:Width) / (colWidthFloor + 2)).
         local colStr        to l_GridColLine:Call(_colWidth, "|").
-
+        local colIdxList    to list(2).
+        
         local rowLineWidth  to (_colWidth) * colCount.
         local headerStr     to l_GridRowLine:Call(rowLineWidth, "=").
         local rowStr        to l_GridRowLine:Call(rowLineWidth, "_").
@@ -178,6 +229,38 @@
         local rowInnerIdx   to 0.
         local rowTotalIdx   to 0.
 
+        if _refreshRef
+        {
+            set GridSpaceIdx    to 0.
+            set GridSpaceLex    to lexicon().
+            set g_GridAssignments to lexicon().
+        }
+
+        from { local i to 0.} until i = colCount step { set i to i + 1.} do
+        {
+            colIdxList:Add(2 + Mod(i * _colWidth, _colWidth)).
+        }
+        from { local iRow to 0.} until iRow = _rowCount step { set iRow to iRow + 1.} do
+        {
+            local rowLine to _startAt + 2 + Mod(iRow * _rowHeight, _rowHeight).
+            from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
+            {
+                if g_GridAssignments:HasKey(GridSpaceIdx)
+                {
+                    if g_GridAssignments[GridSpaceIdx] = ""
+                    {
+                        set GridSpaceLex[GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                    }
+                }
+                else
+                {
+                    set GridSpaceLex[GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                    set g_GridAssignments[GridSpaceIdx] to "".
+                }
+                set GridSpaceIdx to GridSpaceIdx + 1.
+            }
+        }
+    
         // print the header line
         print headerStr at (0, g_Line).
         

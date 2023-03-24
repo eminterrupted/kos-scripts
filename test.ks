@@ -4,9 +4,35 @@ clearScreen.
 parameter _prms to list().
 
 runOncePath("0:/lib/libLoader").
+runOncePath("0:/lib/launch").
 
-DispTermGrid(10, 70, 4, 1).
-DispTermGrid(g_Line, 34, 16).
+ArmAutoStaging(0).
+local stagingCheckResult to lexicon().
+local stagingDelegateAction to g_LoopDelegates:AutoStage:Action.
+
+local steeringAction to { return LookDirUp(Ship:Prograde:Vector, -Body:Position) - R(0, 3, 0). }.
+local steeringDel to steeringAction@.
+
+lock steering to s_Val.
+
+until ETA:Apoapsis <= 90
+{
+    set s_Val to steeringDel:Call().
+    OutMsg("Time to AP: {0}":Format(Round(ETA:apoapsis, 2))).
+    wait 0.01.
+}
+lock throttle to 1.
+
+until Stage:Number = 0
+{
+    set s_Val to steeringDel:Call().
+    set stagingCheckResult to g_LoopDelegates:AutoStage:Check:Call().
+    if stagingCheckResult = 1
+    {
+        stagingDelegateAction:Call().
+    }
+}
+lock throttle to 0.
 
 
 // if _prms = list() 

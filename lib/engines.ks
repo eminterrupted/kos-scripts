@@ -77,7 +77,7 @@
 
         for eng in ship:engines
         {
-            if eng:Stage = _stg 
+            if eng:Stage = _stg
             { 
                 engList:Add(eng). 
             }
@@ -97,6 +97,12 @@
 
         local m to _eng:GetModule("ModuleEnginesRF").
         local sepMotorCheck to (g_PartInfo:Engines:SepRef:Contains(_eng:Name) and _eng:Tag:Length = 0).
+        
+        local mixRatio to GetField(m, "mixture ratio").
+        if g_resultCode = 2 { set mixRatio to 1. }
+
+        local spoolTime to GetField(m, "effective spool-up time").
+        if g_ResultCode = 2 { set spoolTime to 0.01. }
 
         local engSpecObj to lexicon(
             "ActiveStage",      _eng:Stage
@@ -114,13 +120,13 @@
             ,"ISPSeaLevel",     _eng:SeaLevelISP
             ,"ISPVacumm",       _eng:VacuumISP
             ,"MassFlowMax",     _eng:MaxMassFlow
-            ,"MixRatio",        GetField(m, "mixture ratio")
+            ,"MixRatio",        mixRatio
             ,"Modes",           _eng:Modes
             ,"MultiMode",       _eng:MultiMode
             ,"PressureFed",     _eng:PressureFed
             ,"Residuals",       GetField(m, "predicted residuals")
             ,"Resources",       _eng:ConsumedResources
-            ,"SpoolTime",       GetField(m, "effective spool-up time")
+            ,"SpoolTime",       spoolTime
             ,"ThrottleMin",     _eng:MinThrottle
             ,"ThrottleLock",    _eng:ThrottleLock
             ,"ThrustPoss",      _eng:PossibleThrust
@@ -198,7 +204,7 @@
         local thrustPct             to max(_eng:MaxThrust, .00001) / max(availThrustPres, 0.1).
         local fuelStability         to GetField(m, "propellant"). // GetField(m, "propellant").
         local stabilityStrIdx       to fuelStability:Find("(").
-        local fuelStabilityScalar   to fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100.
+        local fuelStabilityScalar   to choose fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100 if fuelStability:Contains("%") else 0.01.
         //:ToNumber(1) / 100.
         local engPerfObj to lexicon(
             "CID",              _eng:CID
@@ -226,7 +232,8 @@
         parameter _engList.
 
         local aggEngPerfObj to lexicon(
-            "Engines",         lexicon()
+            "Engines", lexicon()
+            ,"SepStg", true
         ).
 
         local aggISP                to 0.
@@ -249,9 +256,14 @@
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
             if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
             set aggEngPerfObj["Engines"][eng:CID] to engLex.
+            if aggEngPerfObj["SepStg"] 
+            {
+                if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name) set aggEngPerfObj["SepStg"] to true.
+                else set aggEngPerfObj["SepStg"] to false.
+            }
         }
 
-        set aggISPAt to aggThrustAvailPres / aggMassFlowMax.
+        set aggISPAt to max(aggThrustAvailPres, 0.000000001) / max(aggMassFlowMax * 1000000, 0.00001).
         set aggISP   to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.00001).
 
         set aggEngPerfObj["ISP"]                to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.0001).

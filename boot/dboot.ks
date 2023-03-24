@@ -1,8 +1,7 @@
 ClearScreen.
 wait until Ship:Unpacked.
 print "Ship unpacked".
-local scr to "0:/main/launch/soundingLaunch.ks".
-print "Executing path: {0}":Format(scr).
-runPath(scr).
+print "Executing missionExec".
+runPath("0:/main/exec/missionExec.ks").
 ClearScreen.
-print "terminating dboot, have a nice day".
+print "Terminating dboot, have a nice day! ".

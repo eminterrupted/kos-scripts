@@ -29,7 +29,7 @@
         // By default, timeout is 0 which is indefinite
         global function Breakpoint
         {
-            parameter _timeout is 30,
+            parameter _timeout is -1,
                     _waitMsg is "BREAKPOINT".
 
             local doneFlag      to false.
@@ -74,7 +74,7 @@
                     }
                 }
                 
-                print infoStr at (infoLine, infoCol).
+                print infoStr at (infoCol, infoLine).
                 wait 0.1.
             }
 
@@ -246,44 +246,165 @@
     {
         parameter _tag is core:tag.
 
+        local newStopStage         to 0.
         local parsedMission     to "".
         local parsedParams      to list().
         local parsedStageStop   to 0.
         local parsedTag         to list(_tag).
+        local prmResult         to "".
         local prmSplit          to list().
+        local prmSet            to list("0", "0").
+        local stageExitGate     to "".
+        local tempStageStop     to "".
+        local tempStopSplit     to list().
 
         local parsedTagObject   to lexicon(
-            "MISSION", _tag
+            "MISSION", _tag:Split("|")[0]
             ,"PARAMS", list()
-            ,"STGSTOP", 0            
+            ,"STGSTOP", 0
+            ,"STGSTOPSET", lexicon()
         ).
 
         if _tag:Contains("|")
         {
             set parsedTag       to _tag:Split("|").
-            set parsedStageStop to parsedTag[parsedTag:Length - 1]:ToNumber(-2).
+            set tempStageStop to parsedTag[parsedTag:Length - 1].
+            if tempStageStop:Contains(";")
+            {
+                local stopIdx to 0.
+                set tempStopSplit to tempStageStop:Split(";").
+                from { local i to 0.} until i = tempStopSplit:Length step { set i to i + 1.} do
+                {
+                    local s to tempStopSplit[i].
+                    if s:Contains(":")
+                    {
+                        local splitStopPair to s:Split(":").
+                        set newStopStage     to splitStopPair[0]:ToNumber(-2).
+                        set stageExitGate to splitStopPair[1].
+                    }
+                    else
+                    {
+                        set newStopStage to s:ToNumber(-2).
+                        set stageExitGate    to "NE".
+                    }
+
+                    local gateDelegate to GetTimestampDelegate(stageExitGate).
+                    
+                    if i = 0 set parsedStageStop to newStopStage.
+                    set parsedTagObject["STGSTOPSET"][stopIdx] to lexicon(
+                        "C",  gateDelegate
+                        ,"S", newStopStage
+                    ).
+                    set stopIdx to stopIdx + 1.
+                }
+            }
+            else
+            {
+                set parsedStageStop to tempStageStop:ToNumber(-2).
+            }
+
             set parsedTagObject["MISSION"]  to parsedTag[0].
 
             if parsedStageStop <> -2
             {
                 set parsedTagObject["STGSTOP"] to parsedStageStop.
                 set g_StageLimit to parsedStageStop.
+                set g_StageLimitSet to parsedTagObject:STGSTOPSET.
             }
 
             if parsedTag:Length > 2
             {
                 set prmSplit to parsedTag[1]:Split(";"). // Params
+                
+                if prmSplit:Length = 0
+                {
+                }
+                else
+                {
+                    set prmSet to list().
+
+                    if prmSplit:Length = 1 
+                    { 
+                        set prmSplit to parsedTag[1]:Split(","). 
+                    }
+                
+                    for prm in prmSplit
+                    {
+                        set prmResult to "".
+                        if prm:MatchesPattern("\d*(m$|k$|km$|mm$)")
+                        {
+                            if prm:MatchesPattern("(^\d*(k$|km$))")
+                            {
+                                set prmResult to prm:Replace("k", ""):Replace("m", ""):ToNumber() * 1000.
+                            }
+                            else if prm:MatchesPattern("(^\d*(mm$))")
+                            {
+                                set prmResult to prm:Replace("mm", ""):ToNumber() * 1000000.
+                            }
+                            else if prm:MatchesPattern("(^\d*(m$))")
+                            {
+                                set prmResult to prm:Replace("m", ""):ToNumber().
+                            }
+                        }
+                        else if prm:MatchesPattern("^\d*$")
+                        {
+                            set prmResult to prm:ToNumber().
+                        }
+                        else
+                        {
+                            set prmResult to prm.
+                        }
+                        prmSet:Add(prmResult).
+                    }
+                }
             }
             else
             {
-                set prmSplit to parsedTag[0]:Replace(parsedTagObject:MISSION, ""):Split(";").
             }
 
-            set parsedTagObject["PARAMS"]   to prmSplit.
+            set parsedTagObject["PARAMS"]   to prmSet.
 
         }
-        
         return parsedTagObject.
+    }
+
+
+
+    global function GetTimestampDelegate
+    {
+        parameter _eventStr.
+
+        local resultDel to { return true.}.
+
+        if _eventStr = "NE"
+        {
+            return resultDel@.
+        }
+        else if _eventStr:Contains(":")
+        {
+            local eventSplit to _eventStr:Split(":").
+            local eventTimeStamp to GetEventTimeStamp(eventSplit[0]).
+            local scalarEventTrig to eventSplit[1]:ToNumber(0).
+            local resultTS to eventTimeStamp + scalarEventTrig.
+            set g_TS to resultTS.
+            set resultDel to { return Time:Seconds >= resultTS. }.
+        }
+
+        return resultDel@.
+    }
+
+    local function GetEventTimeStamp
+    {
+        parameter _eventStr.
+
+        if _eventStr:MatchesPattern("(AP)+(O)?")
+        {
+            return Time:Seconds + ETA:Apoapsis.
+        }
+        else if _eventStr:MatchesPattern("(PE)+(R)?")
+        {
+            return Time:Seconds + ETA:Periapsis.
+        }
     }
     // #endregion
 
