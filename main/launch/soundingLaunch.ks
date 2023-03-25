@@ -11,18 +11,19 @@ set g_MissionTag to ParseCoreTag(core:Part:Tag).
 local clampStage to Ship:ModulesNamed("LaunchClamp")[0]:Part:Stage.
 
 local altTurn to 3500.
-local boostersActive to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
+local boostersArmed  to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
 local boosterIdx     to 0.
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
 local RCSAlt         to 50000.
-local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0 and not RCS.
+local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
 local stagingDelegate to lexicon().
 local stagingDelegateCheck  to { return 0.}.
 local stagingDelegateAction to { return 0.}.
 local steeringDelegate      to { return 0.}.
 local tgtAlt         to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 500000.
+local ThrustThresh   to 0.
 
 local sounderStartTurn to 250.
 
@@ -62,6 +63,8 @@ if AutoStageResult = 1
     set stagingDelegateAction to g_LoopDelegates:AutoStage["Action"].
 }
 
+ArmBoosterStaging().
+
 set s_Val to Ship:Facing.
 lock steering to s_Val.
 
@@ -69,10 +72,11 @@ OutMsg().
 OutInfo().
 OutInfo("", 1).
 
+OutMsg("Liftoff! ").
 until Alt:Radar >= towerHeight
 {
-    OutMsg("Liftoff! ").
-    OutInfo("Altitude (Radar): {0} ({1}) ":Format(Round(Ship:Altitude), Round(Alt:Radar))).
+    if g_BoostersArmed { CheckBoosterStageCondition().}
+    DispLaunchTelemetry().
 }
 
 set steeringDelegate to GetSteeringDelegate().
@@ -80,19 +84,8 @@ set steeringDelegate to GetSteeringDelegate().
 OutMsg("Vertical Ascent").
 until Stage:Number <= g_StageLimit
 {
-    // local cbCousins      to list().
     set g_StageEngines_Active to GetActiveEngines().
-    
-    // for p in g_StageEngines_Active
-    // {
-    //     if p:Tag:MatchesPattern("Booster.\d*")
-    //     {
-    if boostersActive
-    {
-        set boosterIdx to CheckBoosterStaging().
-    }
-
-    // print stagingDelegateCheck at (2, 25).
+    if g_BoostersArmed { CheckBoosterStageCondition().}
     set stagingCheckResult to g_LoopDelegates:AutoStage:Check:Call().
     if stagingCheckResult = 1
     {
@@ -103,17 +96,9 @@ until Stage:Number <= g_StageLimit
         if Ship:Altitude > RCSAlt { RCS on. }
         set RCSArmed to False.
     }
-
-    // if Ship:AvailableThrust <= 0.01
-    // {
-    //     if Stage:Ready
-    //     {
-    //         Stage.
-    //         wait 0.5.
-    //     }
     
     steeringDelegate:Call().
-    OutInfo("Altitude (Radar): {0} ({1}) ":Format(Round(Ship:Altitude), Round(Ship:Altitude - Ship:GeoPosition:TerrainHeight))).
+    DispLaunchTelemetry().
     wait 0.01.
 }
 
@@ -121,6 +106,7 @@ local perfObj to GetEnginesPerformanceData(GetActiveEngines()).
 until perfObj:Thrust >= 0.2
 {
     set perfObj to GetEnginesPerformanceData(GetActiveEngines()).
+    DispLaunchTelemetry().
     wait 0.01.
 }
 
@@ -129,15 +115,15 @@ until perfObj:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
 {
     steeringDelegate:Call().
     set perfObj to GetEnginesPerformanceData(GetActiveEngines()).
-    OutInfo("Altitude (Radar): {0} ({1}) ":Format(Round(Ship:Altitude), Round(Ship:Altitude - Ship:GeoPosition:TerrainHeight))).
+    DispLaunchTelemetry().
     wait 0.01.
 }
 
+OutMsg("Coasting out of atmosphere").
 Until Ship:Altitude >= Body:ATM:Height
 {
-    OutMsg("Coasting out of atmosphere").
     set s_Val to Ship:Prograde.
-    OutInfo("Altitude (AP ETA): {0} ({1}) ":Format(Round(Ship:Altitude), Round(ETA:apoapsis, 2))).
+    DispLaunchTelemetry().
 }
 
 if g_StageLimitSet:Keys:Length > 0
@@ -151,6 +137,7 @@ if g_StageLimitSet:Keys:Length > 0
             {
                 OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
                 set s_Val to Ship:Prograde.
+                DispLaunchTelemetry().
                 wait 0.01.
             }
             set g_StageLimit to g_StageLimitSet[i]:S.
@@ -240,7 +227,378 @@ local function SetSteering
     }
 }
 
-local function CheckBoosterStaging
+
+
+
+local function ArmBoosterStaging
+{
+    parameter _boosterTag is "booster".
+
+    set g_BoosterObj to lexicon().
+
+    local BoosterParts to Ship:PartsTaggedPattern("(^booster(\.|\|))+\d*$").
+
+    local idx to 0.
+    if BoosterParts:Length > 0
+    {
+        for p in BoosterParts
+        {
+            local setIdx to p:Tag:Replace("booster",""):Replace(".",""):Replace("|",""):ToNumber(0).
+            set g_BoosterObj[setIdx] to ProcessBoosterTree(p, g_BoosterObj).
+            if idx > 0
+            {
+            }
+            else 
+            {
+                if p:IsType("Decoupler")
+                {
+                    set g_BoosterObj["UPDATE"] to { 
+                        for bp in Ship:PartsTaggedPattern("(^booster(\.|\|))+\d*$")
+                        {
+                            local _setIdx to bp:Tag:Replace("booster",""):Replace(".",""):Replace("|",""):ToNumber(0).
+                            if g_BoosterObj:HasKey(_setIdx) 
+                            { 
+                                if g_BoosterObj[_setIdx]:HasKey("ENG") 
+                                {
+                                    set g_BoosterObj[_setIdx]["ENG"]:ALLTHRUST to 0.
+                                    set g_BoosterObj[_setIdx]["ENG"]:AVLTHRUST to 0.
+                                }
+                            }
+                            set g_BoosterObj[_setIdx] to ProcessBoosterTree(bp, g_BoosterObj).
+                        }
+                        return g_BoosterObj.
+                    }.
+                }
+                set idx to idx + 1.
+            }
+        }
+        set g_BoostersArmed to true.
+        return g_BoostersArmed.
+    }
+    else 
+    {
+        set g_BoostersArmed to false.
+        return g_BoostersArmed.
+    }
+}
+
+
+
+
+local function ProcessBoosterTree
+{
+    parameter _p,
+              _boosterObj.
+
+    local dc to _p.
+    if not _p:IsType("Decoupler")
+    {
+        set dc to _p:Decoupler.
+    }
+    local setIdx to dc:Tag:Replace("booster", ""):Replace(".",""):Replace("|",""):ToNumber(0).
+
+    local m to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
+    local event to "".
+    for _e in m:AllEvents
+    {
+        if _e:MatchesPattern("\(callable\).*decouple.*is KSPEvent")
+        {
+            set event to _e:Replace("(callable) ",""):Replace(", is KSPEvent","").
+        }
+    }
+    
+    // This resets the lex for each loop
+    if not _boosterObj:HasKey(setIdx)
+    {
+        set _boosterObj[setIdx] to lexicon(
+            "DC", lex(
+                dc:UID, lex(
+                    "P", dc
+                    ,"M", m
+                    ,"E", event
+                    ,"S", dc:Stage
+                )
+            )
+        ).
+    }
+    else
+    {
+        if not _boosterObj[setIdx]:HasKey("DC")
+        {
+            set _boosterObj[setIdx]["DC"] to lexicon().
+        }
+        
+        set _boosterObj[setIdx]["DC"][dc:UID] to lexicon(
+            "P", dc
+            ,"M", m
+            ,"E", event
+            ,"S", dc:Stage
+        ).
+    }
+
+    for child in dc:Children
+    {
+        set _boosterObj to ProcessBoosterChildren(child, setIdx, _boosterObj).
+    }
+    // if _boosterObj[setIdx]["RES"]:HasSuffix("AMOUNT")
+    // {
+    //     set _boosterObj[setIdx]["RES"]["PCTLEFT"] to Round(_boosterObj[setIdx]["RES"]:AMOUNT / _boosterObj[setIdx]["RES"]:CAPACITY, 5).
+    // }
+    // else
+    // {
+    //     set _boosterObj[setIdx]["RES"]["PCTLEFT"] to 1.
+    // }
+
+    return _boosterObj.
+}
+
+
+
+
+
+local function ProcessBoosterChildren
+{
+    parameter _p,
+              _setIdx,
+              _boosterObj.
+
+    // OutInfo("Processing Child for (Set): [{0}] ({1})":Format(_p:Name, _setIdx), 1).
+
+    local _bcObj to _boosterObj.
+    if not _p:HasModule("ProceduralFairingDecoupler")
+    {
+        if _p:IsType("Engine")
+        {
+            set _bcObj to ProcessBoosterEngine(_p, _setIdx, _bcObj).
+        }
+        else if _p:HasModule("ModuleFuelTank")
+        {
+            set _bcObj to ProcessBoosterTank(_p, _setIdx, _bcObj).
+        }
+        
+        if _p:Children:Length > 0
+        {
+            for _child in _p:Children
+            {
+                set _bcObj to ProcessBoosterChildren(_child, _setIdx, _bcObj).
+            }
+        }
+    }
+    
+    return _bcObj.
+}
+
+
+
+
+
+local function ProcessBoosterEngine
+{
+    parameter _p,
+              _setIdx,
+              _boosterObj.
+
+    // OutInfo("Processing Engine: [{0}]":Format(_p:Name), 1).
+
+    local _beObj to _boosterObj.
+    
+    if not _beObj[_setIdx]:HasKey("ENG")
+    {
+        set _beObj[_setIdx]["ENG"] to lexicon(
+            "ALLTHRUST", 0
+            ,"AVLTHRUST", 0
+            ,"PCTTHRUST", 0
+            ,"PARTS", lex()
+        ).
+    }
+    if not _beObj[_setIdx]:HasKey("SEP")
+    {
+        set _beObj[_setIdx]["SEP"] to lexicon().
+    }
+
+    if g_PartInfo:Engines:SEPREF:Contains(_p:Name) and _p:Tag:Length = 0
+    {
+        set _beObj[_setIdx]["SEP"][_p:UID] to _p.
+    }
+    else
+    {
+        local curThr  to _p:Thrust.
+        local avlThr  to _p:AvailableThrustAt(Body:Atm:AltitudePressure(Ship:Altitude)).
+
+        set _beObj[_setIdx]["ENG"]["PARTS"][_p:UID] to lexicon(
+            "P", _p
+            ,"M", _p:GetModule("ModuleEnginesRF")
+            ,"S", _p:Stage
+            ,"T", _p:Config
+        ).
+        set _beObj[_setIdx]["ENG"]:ALLTHRUST to _beObj[_setIdx]["ENG"]:ALLTHRUST + curThr.
+        set _beObj[_setIdx]["ENG"]:AVLTHRUST to _beObj[_setIdx]["ENG"]:AVLTHRUST + avlThr.
+        // set _beObj[_setIdx]["ENG"]:PCTTHRUST to Round(max(_beObj[_setIdx]["ENG"]:ALLTHRUST, 0.00000001) / max(_beObj[_setIdx]["ENG"]:AVLTHRUST, 0.0001), 4).
+    }
+
+    return _beObj.
+}
+
+
+
+
+
+local function ProcessBoosterTank
+{
+    parameter _p,
+              _setIdx,
+              _boosterObj.
+
+    // OutInfo("Processing Tank: [{0}]":Format(_p:Name), 1).
+
+    local _btObj to _boosterObj.
+    if not _btObj[_setIdx]:HasKey("TANK")
+    {
+        set _btObj[_setIdx]["TANK"] to lexicon().
+    }
+
+    set _btObj[_setIdx]["TANK"][_p:UID] to lexicon(
+        "P", _p
+        ,"M", _p:GetModule("ModuleFuelTank")
+    ).
+    set _btObj to ProcessBoosterTankResources(_p, _btObj).
+
+    return _btObj.
+}
+
+
+
+
+local function ProcessBoosterTankResources
+{
+    parameter _p,
+              _setIdx,
+              _boosterObj.
+
+    local _brObj to _boosterObj.
+
+    if not _brObj[_setIdx]:HasKey("RES")
+    {
+        set _brObj[_setIdx]["RES"] to lexicon(
+            "AMOUNT", 0
+            ,"CAPACITY", 0
+            ,"RESLIST", list()
+        ).
+    }
+
+    for _res in _p:Resources
+    {
+        _brObj[_setIdx]["RES"][_res:Name]:RESLIST:Add(_res).
+        set _brObj[_setIdx]["RES"][_res:Name]:AMOUNT to Round(_brObj[_setIdx]["RES"][_res:Name]:AMOUNT + _res:Amount, 5).
+        set _brObj[_setIdx]["RES"][_res:Name]:CAPACITY to Round(_brObj[_setIdx]["RES"][_res:Name]:CAPACITY + _res:Capacity, 5).
+    }
+    return _brObj.
+}
+
+
+
+
+local function CheckBoosterStageCondition
+{
+    parameter _pctThresh to 0.025.
+
+    if g_BoostersArmed 
+    {
+        if g_BoosterObj:HasKey("UPDATE") 
+        {
+            set g_BoosterObj to g_BoosterObj:UPDATE:Call().
+            wait 0.01.
+            // writeJson(g_BoosterObj, Path("0:/data/g_BoosterObj.json")).
+            if g_BoosterObj:Keys:Length > 1
+            {
+                local doneFlag to false.
+                from { local i to 0.} until i = 10 or doneFlag step { set i to i + 1.} do
+                {
+                    if g_BoosterObj:HasKey(i)
+                    {
+                        OutInfo("Booster set [{0}] found in g_BoosterObj":Format(i)).
+                        // local check to g_BoosterObj[i]["RES"]["PCTLEFT"] <= _pctThresh.
+                        // OutInfo("BoosterStageCondition: {0} ({1})":Format(check, g_BoosterObj[i]["RES"]["PCTLEFT"]), 2).
+                        // if g_BoosterObj[i]["RES"]["PCTLEFT"] <= _pctThresh
+                        // if g_BoosterObj[i]["ENG"]:Values[0]:P:Thrust < 0.1
+                        set ThrustThresh to Max(ThrustThresh, g_BoosterObj[i]["ENG"]:AVLTHRUST * _pctThresh).
+                        // set ThrustThresh to 0.5.
+                        OutInfo("THRUST: {0} ({1})":Format(Round(g_BoosterObj[i]["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2)), 1).
+                        if g_BoosterObj[i]["ENG"]:ALLTHRUST < ThrustThresh
+                        {
+                            StageBoosterSet(i).
+                            // set g_BoosterObj[i] to "".
+                            wait 0.025.
+                            g_BoosterObj:Remove(i).
+                            wait 0.01.
+
+                            if g_BoosterObj:Keys:Length < 2
+                            {
+                                set g_BoostersArmed to false.
+                            }
+                            set doneFlag to true.
+                            OutInfo("",1).
+                        }
+
+                    }
+                }
+            }
+            else
+            {
+                set g_BoostersArmed to false.
+            }
+        }
+        else
+        {
+            set g_BoostersArmed to false.
+        }
+    }
+}
+
+
+
+
+
+local function StageBoosterSet
+{
+    parameter _setIdx.
+
+    if g_BoosterObj:HasKey(_setIdx)
+    {
+        // local stgSet to g_BoosterObj[_setIdx].
+        OutInfo("Booster Staging (Set: {0})":Format(_setIdx)).
+        for eng in g_BoosterObj[_setIdx]["ENG"]:Parts:Values
+        {
+            if eng:P:Ignition and not eng:P:Flameout
+            {
+                eng:P:Shutdown.
+            }
+        }
+        wait 0.01.
+        for sep in g_BoosterObj[_setIdx]["SEP"]:Values
+        {
+            DoEvent(sep:GetModule("ModuleEnginesRF"), "activate engine").
+            wait 0.01.
+        }
+        wait 0.01.
+        for dc in g_BoosterObj[_setIdx]["DC"]:Keys
+        {
+            DoEvent(g_BoosterObj[_setIdx]["DC"][dc]:M, g_BoosterObj[_setIdx]["DC"][dc]:E).
+        }
+        wait 0.01.
+        // wait until Stage:Ready.
+        // Stage.
+        return true.
+    }
+    else
+    {
+        return false.
+    }
+    
+}
+
+
+local function CheckBoosterStaging_Old
 {
     parameter _boosterIdx is 0.
               
@@ -250,28 +608,30 @@ local function CheckBoosterStaging
     if boosterParts:Length > 0
     {
         set cb to boosterParts[0]. // cb = CheckBooster
-        // from { local i to 0.} until i = cb:SymmetryCount step { set i to i + 1. } do
-        // {
-        //     cbCousins:Add(cd:SymmetryPartner(i)).
-        // }
-
-        if cb:Thrust <= 0.0001
+        if cb:IsType("Decoupler")
         {
-            for i in Range (0, cb:SymmetryCount - 1, 1)
+
+        }
+        else if cb:IsType("Engine")
+        {
+            if cb:Thrust <= 0.0001
             {
-                cb:SymmetryPartner(i):Shutdown.
-            }
-            wait until Stage:Ready.
-            stage.
-            wait 0.01.
-        
-            if Ship:PartsTaggedPattern("booster.\d*"):Length < 1
-            {
-                set boostersActive to false.
-            }
-            else
-            {
-                set booster_index to booster_index + 1.
+                for i in Range (0, cb:SymmetryCount - 1, 1)
+                {
+                    cb:SymmetryPartner(i):Shutdown.
+                }
+                wait until Stage:Ready.
+                stage.
+                wait 0.01.
+            
+                if Ship:PartsTaggedPattern("booster.\d*"):Length < 1
+                {
+                    set boostersArmed to false.
+                }
+                else
+                {
+                    set booster_index to booster_index + 1.
+                }
             }
         }
     }

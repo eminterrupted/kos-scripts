@@ -65,6 +65,7 @@
 
     // Terminal Input
     global g_TermChar to "".
+    global g_TermGrid to lexicon().
 
     // Engines
     global g_ActiveEngines          to list().
@@ -72,6 +73,8 @@
     global g_StageEngines_Current   to list().
     global g_StageEngines_Next      to list().
     global g_ActiveEngines_Data     to lexicon().
+    global g_BoostersArmed          to false.
+    global g_BoosterObj             to lexicon().
 
     // Ship control
     global t_Val to 0.

@@ -14,9 +14,9 @@
 
     // *- Local
     // #region
-    global g_GridAssignments to lexicon().
-    local  GridSpaceIdx to 0.
-    local  GridSpaceLex to lexicon().
+    global l_GridAssignments to lexicon().
+    local  l_GridSpaceIdx to 0.
+    local  l_GridSpaceLex to lexicon().
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -135,29 +135,55 @@
         local titleStr to "ASCENT ANGLE".
         
         local boxIdx to 1.
-        if g_GridAssignments:Values:Contains(titleStr)
+        if l_GridAssignments:Values:Contains(titleStr)
         {
-            set boxIdx to g_GridAssignments:Values:Find(titleStr).
+            set boxIdx to l_GridAssignments:Values:Find(titleStr).
         }
         else
         {
-            for box in g_GridAssignments:Keys
+            for box in l_GridAssignments:Keys
             {
-                if not g_GridAssignments[Box] = ""
+                if not l_GridAssignments[Box] = ""
                 {
                     set boxIdx to box.
-                    set g_GridAssignments[Box] to titleStr.
+                    set l_GridAssignments[Box] to titleStr.
                 }
             }
         }
-        local col to GridSpaceLex[boxIdx][0].
-        set g_Line to GridSpaceLex[boxIdx][1].
+        local col to l_GridSpaceLex[boxIdx][0].
+        set g_Line to l_GridSpaceLex[boxIdx][1].
         print titleStr at (col, g_line).
         for key in _statLex:keys
         {
             print "|- {0,-16}: {1} ":format(key, _statLex[key]) at (col, cr()).
         }
     }
+
+    // DispLaunchTelemetry :: [(_dispBlockIdx)<none>] -> <none>
+    // Displays launch telemetry in the terminal grid. 
+    // Defaults to next available grid space, can be pointed to a specific one
+    global function DispLaunchTelemetry
+    {
+        parameter _dispBlockIdx is -1.
+
+        if _dispBlockIdx < 0
+        {
+            set _dispBlockIdx to NextOrAssignedTermBlock().
+        }
+        
+        local dispList to list(
+            "TELEMETRY"
+            ,"ALTITUDE : {0} ":Format(Round(Ship:Altitude))
+            ,"APOAPSIS : {0} ":Format(Round(Ship:Apoapsis))
+            ,"PERIAPSIS: {0} ":Format(Round(Ship:Periapsis))
+            ,"VELOCITY"
+            ,"  SURFACE : {0} ":Format(Round(Ship:Velocity:Surface:Mag, 1))
+            ,"  ORBIT   : {0} ":Format(Round(Ship:Velocity:Orbit:Mag, 1))
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
 
     // DispMain :: (_scriptPath)<Path> -> (nextLine)<scalar>
     // Prints the main terminal header, and returns the next available line for printing
@@ -192,7 +218,7 @@
         cr().
         
         DispTermGrid(10, 68, 4, 1, true).
-        set g_GridAssignments[0] to "MAIN".
+        set l_GridAssignments[0] to "MAIN".
         DispTermGrid(g_Line, 34, 16, 2).
 
         return g_Line.
@@ -231,9 +257,9 @@
 
         if _refreshRef
         {
-            set GridSpaceIdx    to 0.
-            set GridSpaceLex    to lexicon().
-            set g_GridAssignments to lexicon().
+            set l_GridSpaceIdx    to 0.
+            set l_GridSpaceLex    to lexicon().
+            set l_GridAssignments to lexicon().
         }
 
         from { local i to 0.} until i = colCount step { set i to i + 1.} do
@@ -245,19 +271,19 @@
             local rowLine to _startAt + 2 + Mod(iRow * _rowHeight, _rowHeight).
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
-                if g_GridAssignments:HasKey(GridSpaceIdx)
+                if l_GridAssignments:HasKey(l_GridSpaceIdx)
                 {
-                    if g_GridAssignments[GridSpaceIdx] = ""
+                    if l_GridAssignments[l_GridSpaceIdx] = ""
                     {
-                        set GridSpaceLex[GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                        set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], rowLine).
                     }
                 }
                 else
                 {
-                    set GridSpaceLex[GridSpaceIdx] to list(colIdxList[iCol], rowLine).
-                    set g_GridAssignments[GridSpaceIdx] to "".
+                    set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                    set l_GridAssignments[l_GridSpaceIdx] to "".
                 }
-                set GridSpaceIdx to GridSpaceIdx + 1.
+                set l_GridSpaceIdx to l_GridSpaceIdx + 1.
             }
         }
     
@@ -278,6 +304,79 @@
         }
         print headerStr at (0, cr()).
         // Neat
+    }
+
+    // NextOrAssignedTermBlock :: [_dispId<string>] -> (_outIdx)<scalar>
+    // Returns the index of the next available block for display readouts
+    // when using the grid system, or the idx of the assignment if the provided
+    // disp component name is already assigned
+    global function NextOrAssignedTermBlock
+    {
+        parameter _dispId is "".
+
+        local assigned_block to 99.
+
+        from { local i to 1.} until i = l_GridAssignments:Keys:Length step { set i to i + 1.} do
+        {
+            local assignedId to l_GridAssignments[i].
+            if assignedId = _dispId
+            {
+                set assigned_block to i.
+                break.
+            }
+            else if assignedId:Length = 0
+            {
+                set assigned_block to min(assigned_block, i).
+            }
+        }
+        return assigned_block.
+    }
+
+    // DispPrintBlock :: (_blockIdx)<scalar>, (_dispData)[String<list>] -> <none>
+    // Does what's on the tin
+    local function DispPrintBlock
+    {
+        parameter _blockIdx,
+                  _dispData.
+
+        local blockAnchor to list().
+        if _blockIdx:IsType("Scalar")
+        {
+            set blockAnchor to l_GridSpaceLex[_blockIdx].
+        }
+        else if _blockIdx:IsType("String")
+        {
+            if l_GridAssignments:Values:Contains(_blockIdx)
+            {
+                set blockAnchor to l_GridSpaceLex[l_GridAssignments:Values:Find(_blockIdx)].
+            }
+            else
+            {
+                set blockAnchor to l_GridSpaceLex[NextOrAssignedTermBlock(_blockIdx)].
+            }
+        }
+
+        set g_col to blockAnchor[0] + 1.
+        set g_line to blockAnchor[1] + 4.
+
+        local hIdx to 0.
+        for line in _dispData
+        {
+            if hIdx > 0
+            {
+                print "{0} {1}":Format(Char(9500),line) at (g_col, cr()).
+            }
+            else 
+            {
+                print line:ToUpper at (g_col, g_line).
+                cr().
+                for colFoo in Range(0, line:Length - 1, 1)
+                {
+                    print "-" at (g_col + colFoo, g_line).
+                }
+                set hIdx to hIdx + 1.
+            }
+        }
     }
     // #endregion
 // #endregion

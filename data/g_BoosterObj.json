@@ -1,0 +1,204 @@
+{
+    "entries": [
+        {
+            "value": 0,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "entries": [
+                {
+                    "value": "ENG",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                },
+                {
+                    "entries": [
+                        {
+                            "value": "3882144621",
+                            "$type": "kOS.Safe.Encapsulation.StringValue"
+                        },
+                        {
+                            "entries": [
+                                {
+                                    "value": "P",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "PART(ROE-LR89,uid=3801186304)",
+                                {
+                                    "value": "M",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "ModuleEnginesRF, containing:\r\nLIST of 18 items:\r\n[0] = \r\n  [\"value\"] = \"(settable) propellant, is String\"\r\n[1] = \r\n  [\"value\"] = \"(settable) predicted residuals, is Double\"\r\n[2] = \r\n  [\"value\"] = \"(settable) mixture ratio, is Double\"\r\n[3] = \r\n  [\"value\"] = \"(settable) ignitions remaining, is Int32\"\r\n[4] = \r\n  [\"value\"] = \"(settable) effective spool-up time, is Single\"\r\n[5] = \r\n  [\"value\"] = \"(settable) current throttle, is Single\"\r\n[6] = \r\n  [\"value\"] = \"(settable) mass flow, is Single\"\r\n[7] = \r\n  [\"value\"] = \"(settable) eng. internal temp, is Double\"\r\n[8] = \r\n  [\"value\"] = \"(settable) prop. requirement met, is Single\"\r\n[9] = \r\n  [\"value\"] = \"(settable) thrust, is Single\"\r\n[10] = \r\n  [\"value\"] = \"(settable) specific impulse, is Single\"\r\n[11] = \r\n  [\"value\"] = \"(settable) status, is String\"\r\n[12] = \r\n  [\"value\"] = \"(settable) throttle, is Boolean\"\r\n[13] = \r\n  [\"value\"] = \"(callable) shutdown engine, is KSPEvent\"\r\n[14] = \r\n  [\"value\"] = \"(callable) toggle engine, is KSPAction\"\r\n[15] = \r\n  [\"value\"] = \"(callable) shutdown engine, is KSPAction\"\r\n[16] = \r\n  [\"value\"] = \"(callable) activate engine, is KSPAction\"\r\n[17] = \r\n  [\"value\"] = \"(callable) toggle independent throttle, is KSPAction\"\r\n",
+                                {
+                                    "value": "S",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": 11,
+                                    "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                                },
+                                {
+                                    "value": "T",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "LR89-NA-3",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                }
+                            ],
+                            "$type": "kOS.Safe.Encapsulation.Lexicon"
+                        },
+                        {
+                            "value": "1034903817",
+                            "$type": "kOS.Safe.Encapsulation.StringValue"
+                        },
+                        {
+                            "entries": [
+                                {
+                                    "value": "P",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "PART(ROE-LR89,uid=2335211520)",
+                                {
+                                    "value": "M",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "ModuleEnginesRF, containing:\r\nLIST of 18 items:\r\n[0] = \r\n  [\"value\"] = \"(settable) propellant, is String\"\r\n[1] = \r\n  [\"value\"] = \"(settable) predicted residuals, is Double\"\r\n[2] = \r\n  [\"value\"] = \"(settable) mixture ratio, is Double\"\r\n[3] = \r\n  [\"value\"] = \"(settable) ignitions remaining, is Int32\"\r\n[4] = \r\n  [\"value\"] = \"(settable) effective spool-up time, is Single\"\r\n[5] = \r\n  [\"value\"] = \"(settable) current throttle, is Single\"\r\n[6] = \r\n  [\"value\"] = \"(settable) mass flow, is Single\"\r\n[7] = \r\n  [\"value\"] = \"(settable) eng. internal temp, is Double\"\r\n[8] = \r\n  [\"value\"] = \"(settable) prop. requirement met, is Single\"\r\n[9] = \r\n  [\"value\"] = \"(settable) thrust, is Single\"\r\n[10] = \r\n  [\"value\"] = \"(settable) specific impulse, is Single\"\r\n[11] = \r\n  [\"value\"] = \"(settable) status, is String\"\r\n[12] = \r\n  [\"value\"] = \"(settable) throttle, is Boolean\"\r\n[13] = \r\n  [\"value\"] = \"(callable) shutdown engine, is KSPEvent\"\r\n[14] = \r\n  [\"value\"] = \"(callable) toggle engine, is KSPAction\"\r\n[15] = \r\n  [\"value\"] = \"(callable) shutdown engine, is KSPAction\"\r\n[16] = \r\n  [\"value\"] = \"(callable) activate engine, is KSPAction\"\r\n[17] = \r\n  [\"value\"] = \"(callable) toggle independent throttle, is KSPAction\"\r\n",
+                                {
+                                    "value": "S",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": 12,
+                                    "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                                },
+                                {
+                                    "value": "T",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "LR89-NA-3",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                }
+                            ],
+                            "$type": "kOS.Safe.Encapsulation.Lexicon"
+                        }
+                    ],
+                    "$type": "kOS.Safe.Encapsulation.Lexicon"
+                },
+                {
+                    "value": "RES",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                },
+                {
+                    "entries": [
+                        {
+                            "value": "PCTLEFT",
+                            "$type": "kOS.Safe.Encapsulation.StringValue"
+                        },
+                        {
+                            "value": 1,
+                            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                        }
+                    ],
+                    "$type": "kOS.Safe.Encapsulation.Lexicon"
+                },
+                {
+                    "value": "TANK",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                },
+                {
+                    "entries": [
+                        
+                    ],
+                    "$type": "kOS.Safe.Encapsulation.Lexicon"
+                },
+                {
+                    "value": "DC",
+                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                },
+                {
+                    "entries": [
+                        {
+                            "value": "463183144",
+                            "$type": "kOS.Safe.Encapsulation.StringValue"
+                        },
+                        {
+                            "entries": [
+                                {
+                                    "value": "P",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "PART(radialDecoupler1-2,tag=booster.0)",
+                                {
+                                    "value": "M",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "ModuleAnchoredDecoupler, containing:\r\nLIST of 2 items:\r\n[0] = \r\n  [\"value\"] = \"(callable) decouple, is KSPEvent\"\r\n[1] = \r\n  [\"value\"] = \"(callable) decouple, is KSPAction\"\r\n",
+                                {
+                                    "value": "E",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "decouple",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "S",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": 10,
+                                    "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                                }
+                            ],
+                            "$type": "kOS.Safe.Encapsulation.Lexicon"
+                        },
+                        {
+                            "value": "2223080974",
+                            "$type": "kOS.Safe.Encapsulation.StringValue"
+                        },
+                        {
+                            "entries": [
+                                {
+                                    "value": "P",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "PART(radialDecoupler1-2,tag=booster.0)",
+                                {
+                                    "value": "M",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                "ModuleAnchoredDecoupler, containing:\r\nLIST of 2 items:\r\n[0] = \r\n  [\"value\"] = \"(callable) decouple, is KSPEvent\"\r\n[1] = \r\n  [\"value\"] = \"(callable) decouple, is KSPAction\"\r\n",
+                                {
+                                    "value": "E",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "decouple",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": "S",
+                                    "$type": "kOS.Safe.Encapsulation.StringValue"
+                                },
+                                {
+                                    "value": 10,
+                                    "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+                                }
+                            ],
+                            "$type": "kOS.Safe.Encapsulation.Lexicon"
+                        }
+                    ],
+                    "$type": "kOS.Safe.Encapsulation.Lexicon"
+                }
+            ],
+            "$type": "kOS.Safe.Encapsulation.Lexicon"
+        },
+        {
+            "value": "UPDATE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        "UserDelegate(cpu=kOS.Safe.Execution.CPU, entryPoint=5159, Closure=System.Collections.Generic.List`1[kOS.Safe.Execution.VariableScope],\n   KOSDelegate())"
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

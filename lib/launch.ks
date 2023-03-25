@@ -234,7 +234,7 @@
         set g_apo_PID:Setpoint  to _tgtAlt.
 
         local trn_alt_start      to g_la_turnAltStart.
-        local trn_alt_end        to 62500.// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
+        local trn_alt_end        to 75000.// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
         local trn_alt_blend      to 10000.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
         
         set g_turn_PID           to PidLoop(1.0, 0.05, 0.001, -1, 1).
@@ -245,7 +245,7 @@
             "APO_PID", g_apo_PID
             ,"APO_SETPOINT", _tgtAlt
             ,"APO_TGT", _tgtAlt
-            ,"PIT_LIM", 20
+            ,"PIT_LIM", 25
             ,"TRN_PID", g_turn_PID
             ,"TRN_SETPOINT", trn_alt_end
             ,"TRN_ALT_START", trn_alt_start
@@ -369,16 +369,16 @@
                 set ascent_mode to 3.
                 set apo_error           to current_apo / target_apo.
                 set error_pitch         to 90 * (1 - apo_error).
-                set effective_limit     to max(pitch_limit_low, pitch_limit / min(1, apo_error)).
+                set effective_limit     to max(pitch_limit_low, pitch_limit_low + (pitch_limit / min(1, apo_error))).
                 // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
                 // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
-                set output_pitch        to max(-10, min(effective_pitch * _fShape, 90)).
+                set output_pitch        to max(-5, min(effective_pitch * _fShape, 90)).
             }
         }
         if output_pitch < 0 set output_pitch to output_pitch * 1.5.
-        OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
-        OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
+        // OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
+        // OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
         return output_pitch.
     }
 
