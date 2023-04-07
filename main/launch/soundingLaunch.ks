@@ -12,10 +12,12 @@ local clampStage to Ship:ModulesNamed("LaunchClamp")[0]:Part:Stage.
 
 local altTurn to 3500.
 local boostersArmed  to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
+local boostersArmed  to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
 local boosterIdx     to 0.
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
 local RCSAlt         to 50000.
+local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
 local stagingDelegate to lexicon().
@@ -23,6 +25,7 @@ local stagingDelegateCheck  to { return 0.}.
 local stagingDelegateAction to { return 0.}.
 local steeringDelegate      to { return 0.}.
 local tgtAlt         to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 500000.
+local ThrustThresh   to 0.
 local ThrustThresh   to 0.
 
 local sounderStartTurn to 250.
@@ -73,6 +76,7 @@ OutMsg().
 OutInfo().
 OutInfo("", 1).
 
+OutMsg("Liftoff! ").
 OutMsg("Liftoff! ").
 until Alt:Radar >= towerHeight
 {
@@ -134,9 +138,11 @@ until g_ActiveEngines_Data:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
 ClearDispBlock("ENGINE_TELEMETRY").
 
 OutMsg("Coasting out of atmosphere").
+OutMsg("Coasting out of atmosphere").
 Until Ship:Altitude >= Body:ATM:Height
 {
     set s_Val to Ship:Prograde.
+    DispLaunchTelemetry().
     DispLaunchTelemetry().
 }
 
@@ -151,6 +157,7 @@ if g_StageLimitSet:Keys:Length > 0
             {
                 OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
                 set s_Val to Ship:Prograde.
+                DispLaunchTelemetry().
                 DispLaunchTelemetry().
                 wait 0.01.
             }
