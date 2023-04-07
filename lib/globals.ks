@@ -18,6 +18,7 @@
     // Program flow control
     global g_ResultCode to 0.
     global g_TS to 0.
+    global g_LastUpdate to 0.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(
@@ -65,6 +66,7 @@
 
     // Terminal Input
     global g_TermChar to "".
+    global g_TermGrid to lexicon().
 
     // Engines
     global g_ActiveEngines          to list().
@@ -72,6 +74,9 @@
     global g_StageEngines_Current   to list().
     global g_StageEngines_Next      to list().
     global g_ActiveEngines_Data     to lexicon().
+    global g_BoostersArmed          to false.
+    global g_HotStageArmed          to false.
+    global g_BoosterObj             to lexicon().
 
     // Ship control
     global t_Val to 0.
@@ -87,6 +92,7 @@
 global g_LoopDelegates  to lexicon(
     "Program", lexicon()
     ,"Staging", lexicon()
+    ,"Events", lexicon()
 ).
 global g_PartInfo       to lexicon().
 // #endregion

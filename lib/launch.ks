@@ -46,7 +46,7 @@
     {
         parameter _tgtAp is Body:ATM:Height,
                   _tgtAlt is Body:ATM:Height * 0.86,
-                  _fShape is 0.725. // 'shape' factor to provide a way to control the steepness of the trajectory. Values < 1 = steeper, > 1 = flatter
+                  _fShape is 0.750. // 'shape' factor to provide a way to control the steepness of the trajectory. Values < 1 = flatter, > 1 = steeper
 
         local eff_PitAng to 45.
         // local tgt_effAP  to tgt_ap. // max(body:Atm:Height, tgt_ap / 2).
@@ -116,7 +116,8 @@
             }
             // }
             DispAscentAngleStats(lexicon(
-                "srfProPit", Round(srfProPit, 3)
+                "ASCENT ANGLE"
+                ,"srfProPit", Round(srfProPit, 3)
                 ,"obtProPit", Round(obtProPit, 3)
                 ,"cur_Alt", Round(cur_Alt)
                 ,"proSrfObtBlendStartAlt", proSrfObtBlendStartAlt
@@ -234,7 +235,7 @@
         set g_apo_PID:Setpoint  to _tgtAlt.
 
         local trn_alt_start      to g_la_turnAltStart.
-        local trn_alt_end        to 62500.// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
+        local trn_alt_end        to 75000.// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
         local trn_alt_blend      to 10000.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
         
         set g_turn_PID           to PidLoop(1.0, 0.05, 0.001, -1, 1).
@@ -245,7 +246,7 @@
             "APO_PID", g_apo_PID
             ,"APO_SETPOINT", _tgtAlt
             ,"APO_TGT", _tgtAlt
-            ,"PIT_LIM", 20
+            ,"PIT_LIM", 25
             ,"TRN_PID", g_turn_PID
             ,"TRN_SETPOINT", trn_alt_end
             ,"TRN_ALT_START", trn_alt_start
@@ -322,9 +323,9 @@
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).
                 local apo_error_blended to apo_error * blend_alt_error.
                 local comb_err          to alt_error_blended + apo_error_blended.
-                print "alt_error_blended: {0} ":Format(round(alt_error_blended, 3)) at (2, 25).
-                print "apo_error_blended: {0} ":Format(round(apo_error_blended, 3)) at (2, 26).
-                print "comb_error: {0} ":Format(round(comb_err, 3)) at (2, 27).
+                // print "alt_error_blended: {0} ":Format(round(alt_error_blended, 3)) at (2, 25).
+                // print "apo_error_blended: {0} ":Format(round(apo_error_blended, 3)) at (2, 26).
+                // print "comb_error: {0} ":Format(round(comb_err, 3)) at (2, 27).
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
@@ -369,16 +370,16 @@
                 set ascent_mode to 3.
                 set apo_error           to current_apo / target_apo.
                 set error_pitch         to 90 * (1 - apo_error).
-                set effective_limit     to max(pitch_limit_low, pitch_limit / min(1, apo_error)).
+                set effective_limit     to max(pitch_limit_low, pitch_limit_low + (pitch_limit / min(1, apo_error))).
                 // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
                 // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
-                set output_pitch        to max(-10, min(effective_pitch * _fShape, 90)).
+                set output_pitch        to max(-5, min(effective_pitch * _fShape, 90)).
             }
         }
         if output_pitch < 0 set output_pitch to output_pitch * 1.5.
-        OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
-        OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
+        // OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
+        // OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
         return output_pitch.
     }
 
@@ -387,7 +388,8 @@
         parameter turnAlt,
                   startAlt is g_la_turnAltStart,
                   endPitch is -15,
-                  pitchLim is 5.
+                  pitchLim is 5,
+                  _fShape is 1.
         
         // Calculates needed pitch angle to track towards desired pitch at the desired turn altitude
         local pitch     to max(endPitch, 90 * (1 - ((ship:altitude - startAlt) / (turnAlt - startAlt)))). 
@@ -397,7 +399,7 @@
         local pgPitch   to 90 - vang(ship:up:vector, pg).
         //set pitchLim    to choose pitchLim if ship:body:atm:altitudePressure(ship:altitude) * constant:atmtokpa > 0.0040 else pitchLim * 5.
         // Calculate the effective pitch with a 5 degree limiter
-        local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)).
+        local effPitch  to max(pgPitch - pitchLim, min(pitch, pgPitch + pitchLim)) * _fShape.
         return effPitch.
     }.
 
@@ -468,8 +470,11 @@
             local stgEngSpecs to GetEnginesSpecs(GetEnginesForStage(i)).
             for eng in stgEngSpecs:Values
             {
-                set stgMaxSpool  to max(stgMaxSpool, eng:SpoolTime).
-                set maxSpoolTime to max(eng:SpoolTime, maxSpoolTime).
+                if eng:IsType("Lexicon")
+                {
+                    set stgMaxSpool  to max(stgMaxSpool, eng:SpoolTime).
+                    set maxSpoolTime to max(eng:SpoolTime, maxSpoolTime).
+                }
             }
             set totalSpoolTime to totalSpoolTime + stgMaxSpool.
             set engSpoolLex[i] to stgMaxSpool.
@@ -547,14 +552,15 @@
 
         // local abortFlag         to false.
         // local launchCommit      to false.
-        local engPerfObj        to lexicon().
         local engPerfAbort    to t_liftoff + 5.
         local thrustPerf        to 0.
         set t_spoolTime         to max(0.09, t_spoolTime).
 
         OutInfo("Validating engine performance...").
+        wait 0.01.
         set g_activeEngines to GetActiveEngines().
         set t_val to 1.
+        wait 0.01.
 
         if ship:status = "PRELAUNCH" or ship:status = "LANDED"
         {
@@ -564,13 +570,13 @@
                 if t_spoolTime > 0.1
                 {
                     set g_ActiveEngines to GetActiveEngines().
-                    set engPerfObj to GetEnginesPerformanceData(g_ActiveEngines).
-                    set thrustPerf to max(0.0001, engPerfObj["ThrustPct"]).
-                    
+                    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                    set thrustPerf to max(0.0001, g_ActiveEngines_Data["ThrustPct"]).
+
                     if Time:Seconds > t_liftoff
                     {
                         //OutInfo("EngStatus: {0}":Format(_engMod:GetField("Status")), 1).
-                        OutInfo("[Ignition Status]: {0}":Format(engPerfObj["Ignition"]), 1).
+                        OutInfo("[Ignition Status]: {0}":Format(g_ActiveEngines_Data["Ignition"]), 1).
                         // if g_ActiveEngines["ENGSTATUS"]["Status"] = "Failed"
                         // {
                         //     set t_val to 0.
@@ -580,11 +586,8 @@
                         {
                             return true.
                         }
-                        else
-                        {
-                            OutInfo("Engine Thrust (Pct): {0} ({1}%)":Format(engPerfObj["Thrust"], engPerfObj["ThrustPct"]), 1).
-                        }
                     }
+                    DispEngineTelemetry().
                 }
                 else if Time:Seconds > t_liftoff
                 {

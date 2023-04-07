@@ -295,10 +295,22 @@ Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from a
 // if warp > 0 set warp to 0.
 // wait until kuniverse:timewarp:issettled.
 
+OutInfo("Press Home to take control, End to relinquish").
 until ship:altitude <= startAlt
 {
-    set sVal to ship:facing.
-    // DispTelemetry().
+    GetTermChar().
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        unlock steering.
+    }
+    else if g_TermChar = Terminal:Input:EndCursor
+    {
+        lock steering to sVal.
+    }
+    else 
+    {
+        set sVal to LookDirUp(Ship:Retrograde:Vector, -Body:Position).
+    }
 }
 
 if warp > 0 set warp to 0.

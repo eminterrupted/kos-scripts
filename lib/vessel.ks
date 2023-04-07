@@ -93,6 +93,114 @@
 
             return resultCode.
         }
+
+        // ArmFairingJettison :: (fairingTag) -> <none>
+        global function ArmFairingJettison
+        {
+            parameter _fairingTag is "ascent".
+
+            local jettison_alt to 100000.
+            local fairing_tag_extended to "fairing|{0}":Format(_fairingTag).
+            local fairing_tag_ext_regex to "fairing\|{0}":Format(_fairingTag).
+
+            local op to choose "gt" if _fairingTag:MatchesPattern("(ascent|asc|launch)") else "lt".
+
+            for p in ship:PartsTaggedPattern(fairing_tag_ext_regex)
+            {
+                if p:tag:MatchesPattern("{0}\|\d*":format(fairing_tag_ext_regex))
+                {
+                    set jettison_alt to ParseStringScalar(p:tag:replace("{0}|":format(fairing_tag_extended),"")).
+                }
+                if p:HasModule("ProceduralFairingDecoupler")
+                {
+                    if not g_LoopDelegates["Events"]:HasKey(fairing_tag_extended)
+                    {
+                        set g_LoopDelegates["Events"][fairing_tag_extended] to lexicon(
+                            "Tag", _fairingTag
+                            ,"Alt", jettison_alt
+                            ,"Op", op
+                            ,"Modules", list(p:GetModule("ProceduralFairingDecoupler"))
+                        ).
+                    }
+                    else
+                    {
+                        g_LoopDelegates["Events"][fairing_tag_extended]["Modules"]:add(p:GetModule("ProceduralFairingDecoupler")).
+                    }
+                    if not g_LoopDelegates["Events"][fairing_tag_extended]:HasKey("Delegate")
+                    {
+                        set g_LoopDelegates["Events"][fairing_tag_extended]["Delegate"] to choose
+                        { if ship:altitude > jettison_alt { for m in g_LoopDelegates["Events"][fairing_tag_extended]["Modules"] { DoEvent(m, "jettison fairing").}} g_LoopDelegates["Events"]:Remove(fairing_tag_extended).} if op = "gt" else
+                        { if ship:altitude < jettison_alt { for m in g_LoopDelegates["Events"][fairing_tag_extended]["Modules"] { DoEvent(m, "jettison fairing").}} g_LoopDelegates["Events"]:Remove(fairing_tag_extended).}.
+                    }
+                }
+            }
+            return g_LoopDelegates["Events"]:HasKey(fairing_tag_extended).
+        }
+
+        // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
+        // Writes events to g_LoopDelegates to fire hot staging if applicable for a given stage (next by default)
+        global function ArmHotStaging
+        {
+            parameter _stage is Stage:Number - 1.
+
+            local actionDel to {}.
+            local checkDel to {}.
+            local delKey to "HotStg_{0}":Format(_stage).
+            local engine_list to list().
+
+            if ship:status <> "PRELAUNCH"
+            {
+                for eng in ship:engines
+                {
+                    if eng:stage = _stage
+                    {
+                        if eng:tag:MatchesPattern("(HotStg|HotStage|HotStaging|HS)") 
+                        {
+                            engine_list:add(eng).   
+                        }
+                    }
+                }
+                if engine_list:Length > 0
+                {
+                    set g_LoopDelegates:Events[delKey]["Engines"] to engine_list.
+                    set g_LoopDelegates:Events[delKey]["EngSpecs"] to GetEnginesSpecs(engine_list).
+                    set checkDel to { return g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Events[delKey]:EngSpecs:SpoolTime + 0.1.}.
+                    set actionDel to 
+                    { 
+                        OutInfo("Hot Staging...").
+                        for eng in g_LoopDelegates:Events[delKey]["Engines"] 
+                        { 
+                            if not eng:ignition eng:activate.
+                        }
+
+                        OutInfo("Building thrust in stage").
+                        local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Events[delKey]:Engines).
+                        until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
+                        { 
+                            set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                            set NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Events[delKey]:Engines).
+                        } 
+                        OutInfo("Staging...").
+                        stage.
+                        wait 1. 
+                        OutInfo().
+                        g_LoopDelegates:Events:Remove(delKey).
+                    }.
+                    set g_LoopDelegates:Events[delKey]["CheckDel"] to checkDel@.
+                    set g_LoopDelegates:Events[delKey]["ActionDel"] to actionDel@.
+
+                    return true.
+                }
+                else
+                {
+                    return false.
+                }
+            }
+            else
+            {
+                return false.
+            }
+        }
         // #endregion
 
         // -- Local
@@ -149,6 +257,10 @@
             wait until Stage:Ready.
             stage.
             wait 0.01.
+            if g_HotStageArmed
+            {
+                set g_HotStageArmed to ArmHotStaging().
+            }
         }
 
 

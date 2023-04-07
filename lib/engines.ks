@@ -19,7 +19,7 @@
     // *- Object entry registrations
     // This adds engines to the part info global
     set g_PartInfo["Engines"] to lexicon( 
-        "SEPREF", list(
+        "SepRef", list(
             "ROSmallSpinMotor"      // Spin Motor (Small)
             ,"CREI_RO_IntSep_33"    // Internal sep motor (33% scale)
             ,"CREI_RO_IntSep_100"   // Internal sep motor (normal scale)
@@ -141,12 +141,13 @@
     {
         parameter _engList.
 
-        local engsSpecs to lexicon().
+        local engsSpecs to lexicon("SpoolTime", 0).
 
         from { local i to 0.} until i = _engList:Length step { local i to i + 1.} do
         {
             local eng to _engList[i].
             local engSpecs to GetEngineSpecs(eng).
+            set engsSpecs["SpoolTime"] to max(engsSpecs:SpoolTime, engSpecs:SpoolTime).
             set engsSpecs[eng:CID] to engSpecs.
         }
 
@@ -240,15 +241,20 @@
         local aggISPAt              to 0.
         local aggMassFlow           to 0.
         local aggMassFlowMax        to 0.
+        local aggMassRemaining      to 0.
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
         local aggTWR                to 0.
         local thrustPct             to 0.
 
+        local burnTimeRemaining     to 999999999.
+        local maxSpoolTime          to 0.
+
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
         {
             local eng       to _engList[i].
             local engLex    to GetEnginePerformanceData(eng).
+            
 
             set aggThrust           to aggThrust + eng:Thrust.
             set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
@@ -261,6 +267,12 @@
                 if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name) set aggEngPerfObj["SepStg"] to true.
                 else set aggEngPerfObj["SepStg"] to false.
             }
+            local _am to 0.
+            for res in eng:ConsumedResources:Values
+            {
+                set _am to _am + (res:amount * res:density).
+                set burnTimeRemaining to min(burnTimeRemaining, (res:amount * res:density) / max(res:massFlow, 0.00000000001)).
+            }
         }
 
         set aggISPAt to max(aggThrustAvailPres, 0.000000001) / max(aggMassFlowMax * 1000000, 0.00001).
@@ -271,9 +283,11 @@
         set aggEngPerfObj["Thrust"]             to aggThrust.
         set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
         set aggEngPerfObj["ThrustPct"]          to max(aggThrust, 0.000000001) / max(aggThrustAvailPres, 0.00001).
+        set aggEngPerfObj["BurnTimeRemaining"]  to round(burnTimeRemaining, 3).
+
+        // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
 
         return aggEngPerfObj.
     }
-
     // #endregion
 // #endregion

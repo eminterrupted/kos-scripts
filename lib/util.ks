@@ -330,31 +330,7 @@
                 
                     for prm in prmSplit
                     {
-                        set prmResult to "".
-                        if prm:MatchesPattern("\d*(m$|k$|km$|mm$)")
-                        {
-                            if prm:MatchesPattern("(^\d*(k$|km$))")
-                            {
-                                set prmResult to prm:Replace("k", ""):Replace("m", ""):ToNumber() * 1000.
-                            }
-                            else if prm:MatchesPattern("(^\d*(mm$))")
-                            {
-                                set prmResult to prm:Replace("mm", ""):ToNumber() * 1000000.
-                            }
-                            else if prm:MatchesPattern("(^\d*(m$))")
-                            {
-                                set prmResult to prm:Replace("m", ""):ToNumber().
-                            }
-                        }
-                        else if prm:MatchesPattern("^\d*$")
-                        {
-                            set prmResult to prm:ToNumber().
-                        }
-                        else
-                        {
-                            set prmResult to prm.
-                        }
-                        prmSet:Add(prmResult).
+                        prmSet:Add(ParseStringScalar(prm)).
                     }
                 }
             }
@@ -368,6 +344,37 @@
         return parsedTagObject.
     }
 
+
+    global function ParseStringScalar
+    {
+        parameter _inputString.
+
+        local scalar_result to -1.
+        if _inputString:MatchesPattern("\d*(m$|k$|km$|mm$)")
+        {
+            if _inputString:MatchesPattern("(^\d*(k$|km$))")
+            {
+                set scalar_result to _inputString:Replace("k", ""):Replace("m", ""):ToNumber() * 1000.
+            }
+            else if _inputString:MatchesPattern("(^\d*(mm$))")
+            {
+                set scalar_result to _inputString:Replace("mm", ""):ToNumber() * 1000000.
+            }
+            else if _inputString:MatchesPattern("(^\d*(m$))")
+            {
+                set scalar_result to _inputString:Replace("m", ""):ToNumber().
+            }
+        }
+        else if _inputString:MatchesPattern("^\d*$")
+        {
+            set scalar_result to _inputString:ToNumber().
+        }
+        else
+        {
+            set scalar_result to _inputString:ToNumber(-1).
+        }
+        return scalar_result.
+    }
 
 
     global function GetTimestampDelegate
