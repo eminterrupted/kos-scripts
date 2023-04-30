@@ -4,7 +4,7 @@ ClearScreen.
 parameter params is list().
 
 // Dependencies
-RunOncePath("0:/lib/loadDep").
+RunOncePath("0:/lib/libLoader").
 
 DispMain(ScriptPath():name).
 

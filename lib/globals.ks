@@ -69,11 +69,6 @@
     global g_TermGrid to lexicon().
 
     // Engines
-    global g_ActiveEngines          to list().
-    global g_StageEngines_Active    to list().
-    global g_StageEngines_Current   to list().
-    global g_StageEngines_Next      to list().
-    global g_ActiveEngines_Data     to lexicon().
     global g_BoostersArmed          to false.
     global g_HotStageArmed          to false.
     global g_BoosterObj             to lexicon().
@@ -91,7 +86,7 @@
 // #region
 global g_LoopDelegates  to lexicon(
     "Program", lexicon()
-    ,"Staging", lexicon()
+    // ,"Staging", lexicon()
     ,"Events", lexicon()
 ).
 global g_PartInfo       to lexicon().

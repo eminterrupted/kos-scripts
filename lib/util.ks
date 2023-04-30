@@ -415,4 +415,31 @@
     }
     // #endregion
 
+    // *- Event Loop Execution and Parsing
+    // #region
+    
+    // ExecLoopEventDelegates :: <none> -> <none>
+    // If there are events registered in g_LoopDelegates, this executes them
+    global function ExecLoopEventDelegates
+    {
+        local EventSet to g_LoopDelegates["Events"].
+        if EventSet:Keys:Length > 0
+        {
+            for ev in EventSet:Keys
+            {
+                if EventSet[ev]:HasKey("Delegate")
+                {
+                    EventSet[ev]:Delegate:Call().
+                }
+                else if EventSet[ev]:HasKey("CheckDel")
+                {
+                    if EventSet[ev]:CheckDel:Call() 
+                    {
+                        EventSet[ev]:ActionDel:Call().
+                    }
+                }
+            }
+        }
+    }
+    // #endregion
 // #endregion

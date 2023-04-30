@@ -2,7 +2,7 @@
 ClearScreen.
 
 parameter logVals to false.
-runOncePath("0:/lib/loadDep").
+runOncePath("0:/lib/libLoader").
 RunOncePath("0:/lib/vessel").
 
 local logPath to Path("0:/data/test/PressureLogs/Pres_{0}.csv":Format(Ship:Name:Replace(" ","_"))).
@@ -29,7 +29,7 @@ until Ship:Altitude >= Body:Atm:Height
     PresDisp().
 }
 
-DispClr(3,15).
+// DispClr(3,15).
 OutMsg("Reached space!").
 wait 1.
 
@@ -49,4 +49,10 @@ local function PresDisp
         
     }
     wait 0.01.
+}
+
+
+local function GetAoA
+{
+    return pitch_for(Ship, Ship:Facing) - pitch_for(Ship, Ship:Velocity:Surface:Mag).
 }

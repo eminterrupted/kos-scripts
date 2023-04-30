@@ -7,6 +7,9 @@ runOncePath("0:/lib/libLoader").
 
 DispMain(scriptPath()).
 
+local fairings to ship:PartsTaggedPattern("fairing\|reentry").
+local jettAlt to 5000.
+
 local parachutes to ship:modulesnamed("RealChuteModule").
 local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[2]:tonumber.
 local reentryTgt to (ship:body:atm:height * 0.425).
@@ -22,7 +25,6 @@ lock steering to sVal.
 local tVal to 0.
 lock throttle to tVal.
 
-
 ///Params
 //retroFire: bool, fire rockets to deorbit
 //spinStab: bool, stages to fire spin stablization motors
@@ -36,6 +38,16 @@ if params:length > 0
     if params:length > 3 set spinStab to params[3].
 }
 local startAlt to stagingAlt + 10000.
+
+if fairings:length > 0
+{
+    if fairings[0]:Tag:Split("|"):Length > 2 
+    {
+        set jettAlt to fairings[0]:Tag:Split("|")[2]:ToNumber(5000).
+    }
+}
+OutMsg("Fairings present: {0} ({1})":Format(fairings:Length, jettAlt)).
+wait 3.
 
 OutMsg("Arming Parachute(s)").
 if parachutes:length > 0 
@@ -58,7 +70,7 @@ if parachutes:length > 0
         }
     }
 }
-wait 1.
+wait 3.
 
 OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
 OutInfo("Down: Wait until descent | Up: Wait until ascent").
@@ -307,10 +319,13 @@ until ship:altitude <= startAlt
     {
         lock steering to sVal.
     }
-    else 
+    else
     {
-        set sVal to LookDirUp(Ship:Retrograde:Vector, -Body:Position).
+        Terminal:Input:Clear().
+        set sVal to Ship:Retrograde. 
+        set g_TermChar to "".
     }
+    DispReentryTelemetry().
 }
 
 if warp > 0 set warp to 0.
@@ -338,6 +353,44 @@ if parachutes:length > 0
     }
 }
 
+// Science data collection
+OutMsg("Checking Science Data").
+local sciDrive to "".
+
+if ship:partsNamed("RP0-SampleReturnCapsule"):Length > 0  // If we have a proper sample return capsule, use it
+{
+    set sciDrive to ship:PartsNamed("RP0-SampleReturnCapsule")[0]:GetModule("HardDrive").
+    DoEvent(sciDrive:Part:GetModule("ModuleAnimateGeneric"), "Close").
+}
+else if core:Part:HasModule("HardDrive")  // Otherwise, use the core's hard drive if present
+{
+    if core:Part:GetModule("HardDrive"):HasEvent("Transfer Data Here")
+    {
+        set sciDrive to core:Part:GetModule("HardDrive").
+    }
+}
+
+if not sciDrive:IsType("String")
+{
+    OutMsg("Collecting Data").
+    DoEvent(sciDrive, "transfer data here").
+}
+else
+{
+    OutMsg("No HDD for data collection").
+}
+wait 1.
+
+for m in ship:ModulesNamed("ModuleRCSFX")
+{
+    if not m:getField("RCS")
+    {
+        m:SetField("RCS", true).
+    }
+}
+RCS on.
+
+// Staging
 if stage:number > 1
 {
     // set sVal to body:position.
@@ -357,16 +410,16 @@ if stage:number > 1
     until stage:number <= 1 
     {
         stage.
-        wait 2.
+        wait 2.5.
     }
 }
 
+// set ts to time:seconds + 5.
 OutMsg("Waiting for reentry interface").
-set ts to time:seconds + 5.
 until ship:altitude <= body:atm:height + 1000
 {
-    set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
-    // DispTelemetry().
+    set sVal to ship:retrograde.
+    DispReentryTelemetry().
     
     // DispGeneric().
     // if CheckWarpKey()
@@ -380,58 +433,40 @@ OutInfo().
 
 until ship:altitude <= body:atm:height
 {
-    set sVal to ship:retrograde.
-    // DispTelemetry().
+    set sVal to ship:SrfRetrograde.
+    DispReentryTelemetry().
 }
 OutMsg("Reentry Interface").
-// OutMsg("Reentry interface, signal lost").
-// // clrDisp().
-
-// for m in ship:modulesNamed("ModuleRTAntenna")
-// {
-//     DoEvent(m, "Deactivate").
-// }
 
 until ship:groundspeed <= 1350 and ship:altitude <= 10000
 {
-    set sVal to ship:srfRetrograde.
-    // DispTelemetry(false). // False: simulate telemetry blackout
+    set sVal to ship:SrfRetrograde.
 }
 
-// for m in ship:modulesNamed("ModuleRTAntenna")
-// {
-    // DoEvent(m, "Activate").
-// }
-// OutMsg("Signal reacquired").
-// clrDisp().
 wait 1.
 
 unlock steering.
 OutMsg("Control released").
 
-local fairings to ship:PartsTaggedPattern("Fairing\|(Reentry|Descent)").
-local jettAlt to 2500.
-
-if fairings:Length > 0 
-{
-    if fairings[0]:Tag:Split("|"):Length > 2
-    {
-        set jettAlt to fairings[0]:Tag:Split("|")[2]:ToNumber(2500).
-    }
-}
-
 until (Ship:Altitude - Ship:GeoPosition:TerrainHeight) <= jettAlt
 {
-    for f in fairings
-    {
-        local m to f:GetModule("ProceduralFairingDecoupler").
-        DoEvent(m, "jettison fairing").
-    }
-    // DispTelemetry().
+    DispReentryTelemetry().
 }
+
+for f in fairings
+{
+    local m to f:GetModule("ProceduralFairingDecoupler").
+    DoEvent(m, "jettison fairing").
+}
+
+until alt:radar <= 1250
+{
+    DispReentryTelemetry().
+}
+
 OutMsg("Chute deploy").
 
 until alt:radar <= 5
 {
-    // DispTelemetry().
+    DispReentryTelemetry().
 }

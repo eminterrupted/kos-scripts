@@ -19,7 +19,7 @@ local program to 0. // Used to control flow within a loop
 // Load the loopDelegates
 
 // Auto-Staging delegate
-set g_LoopDelegates["Staging"] to InitStagingDelegate@.
+InitStagingDelegate@.
 
 // Abort Delegate. This triggers if the runmode is ever negative, 
 // and takes the program index as the parameter to determine which abort mode
@@ -64,9 +64,12 @@ until program = -1
         set program to program + g_ErrorLevel.
     }
 
-    if g_LoopDelegates["Staging"]:Check
+    if g_LoopDelegates:HasKey("Staging")
     {
-        g_LoopDelegates["Staging"]:Action:Call().
+        if g_LoopDelegates["Staging"]:Check
+        {
+            g_LoopDelegates["Staging"]:Action:Call().
+        }
     }
 
     from { local i to 0.} until i = g_LoopDelegates["Display"]:Keys:Length step { set i to i + 1.} do
@@ -84,5 +87,9 @@ local function LaunchAbort
 
 local function LaunchPreChecks
 {
+    local returnCode to 0.
 
+    
+
+    return returnCode.
 }

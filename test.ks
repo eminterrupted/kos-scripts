@@ -8,7 +8,7 @@ runOncePath("0:/lib/launch").
 
 ArmAutoStaging(0).
 local stagingCheckResult to lexicon().
-local stagingDelegateAction to g_LoopDelegates:AutoStage:Action.
+local stagingDelegateAction to g_LoopDelegates:Staging:Action.
 
 local steeringAction to { return LookDirUp(Ship:Prograde:Vector, -Body:Position) - R(0, 3, 0). }.
 local steeringDel to steeringAction@.
@@ -26,7 +26,7 @@ lock throttle to 1.
 until Stage:Number = 0
 {
     set s_Val to steeringDel:Call().
-    set stagingCheckResult to g_LoopDelegates:AutoStage:Check:Call().
+    set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
     if stagingCheckResult = 1
     {
         stagingDelegateAction:Call().

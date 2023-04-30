@@ -92,7 +92,7 @@
         }
         else
         {
-            for i in Range(1, Terminal:Width - 2, 1) //
+            for i in Range(2, Terminal:Width - 3, 1) //
             {
                 set _str to _str + " ".
             }
@@ -115,7 +115,7 @@
         }
         else
         {
-            for i in Range(1, Terminal:Width - 2, 1) //
+            for i in Range(2, Terminal:Width - 3, 1) //
             {
                 set _str to _str + " ".
             }
@@ -236,6 +236,32 @@
 
         return g_Line.
     }
+
+    // DispReetryTelemetry :: [(_dispBlockIdx)<none>] -> <none>
+    // Displays reentry telemetry in the terminal grid. 
+    // Defaults to next available grid space, can be pointed to a specific one
+    global function DispReentryTelemetry
+    {
+        parameter _dispBlockIdx is -1.
+
+        if _dispBlockIdx < 0
+        {
+            set _dispBlockIdx to NextOrAssignedTermBlock("REENTRY_TELEMETRY").
+        }
+
+        local dispList to list(
+            "TELEMETRY"
+            ,"ALTITUDE : {0} ":Format(Round(Ship:Altitude))
+            ,"APOAPSIS : {0} ":Format(Round(Ship:Apoapsis))
+            ,"PERIAPSIS: {0} ":Format(Round(Ship:Periapsis))
+            ,"VELOCITY"
+            ,"  SURFACE : {0} ":Format(Round(Ship:Velocity:Surface:Mag, 1))
+            ,"  ORBIT   : {0} ":Format(Round(Ship:Velocity:Orbit:Mag, 1))
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
     // #endregion
 
     // *- Full Display
@@ -258,7 +284,7 @@
         local colWidthFloor to Floor(_colWidth).
         local colCount      to Floor((Terminal:Width) / (colWidthFloor + 2)).
         local colStr        to l_GridColLine:Call(_colWidth, "|").
-        local colIdxList    to list(2).
+        local colIdxList    to list(2). // Prepopulated with 2 because that's where the safe column space always starts
         
         local rowLineWidth  to (_colWidth) * colCount.
         local headerStr     to l_GridRowLine:Call(rowLineWidth, "=").
@@ -275,9 +301,10 @@
             set l_GridAssignments to lexicon().
         }
 
-        from { local i to 0.} until i = colCount step { set i to i + 1.} do
+        // This bit adds the column position for each possible column beyond the start.
+        from { local i to 1.} until i = colCount step { set i to i + 1.} do
         {
-            colIdxList:Add(2 + Mod(i * _colWidth, _colWidth)).
+            colIdxList:Add(2 + Mod(i * _colWidth, _colWidth)). 
         }
         from { local iRow to 0.} until iRow = _rowCount step { set iRow to iRow + 1.} do
         {

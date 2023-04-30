@@ -3,6 +3,7 @@
 
 // *~ Dependencies ~* //
 // #region
+    RunOncePath("0:/kslib/lib_l_az_calc.ks").
 // #endregion
 
 
@@ -24,7 +25,8 @@
                                                                              // taken from the bounding box of the ship on the launch pad
                                                                              // and is 2x the height of the vessel/launch pad tower
     global g_la_turnAltEnd   to body:Atm:height * 0.925. // Altitude at which the vessel will end a gravity turn
-    
+    global g_sounderStartTurn to 125.
+
     global g_turn_pid to PidLoop(1.0, 0.05, 0.001, -1, 1).
     global g_apo_pid  to PidLoop(1.0, 0.05, 0.001, -1, 1).
     global g_ascentProfile to lexicon().
@@ -37,6 +39,51 @@
 
 // *- Guidance
 // #region
+
+    // GetAscentSteeringDelegate :: 
+    // Returns the steering delegate appropriate for the mission
+    global function GetAscentSteeringDelegate
+    {
+        // parameter _delDependency is lexicon().
+        parameter tgtAlt is 0.
+
+        if tgtAlt < 1 
+        {
+            set tgtAlt to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 325000.
+        }
+        local del to "".
+
+        if g_MissionTag:Mission = "MaxAlt"
+        {
+            set del to { set s_Val to Heading(g_MissionTag:Params[0], g_MissionTag:Params[1], 0).}.
+        }
+        else if g_MissionTag:Mission = "DownRange"
+        {
+            // set del to { if Ship:Altitude >= sounderStartTurn { local apo_err to Ship:Apoapsis / tgtAlt. set s_Val to Heading(g_MissionTag:Params[0], LaunchAngForAlt(tgtAlt, sounderStartTurn, 0, 5 + (10 * apo_err)), 0.925). } else { set s_Val to Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
+            local _delDependency to InitAscentAng_Next(tgtAlt).
+            set _delDependency["l_az_calc"] to l_az_calc_init(tgtAlt, g_missionTag:Params[0]).
+            set del to { if Ship:Altitude >= g_sounderStartTurn { set s_Val to Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0.925). } else { set s_Val to Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
+        }
+        else if g_MissionTag:Mission = "SubOrbital"
+        {
+            local _delDependency to InitAscentAng_Next(tgtAlt).
+            set _delDependency["l_az_calc"] to l_az_calc_init(tgtAlt, g_missionTag:Params[0]).
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { set s_Val to Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+        }
+        else if g_MissionTag:Mission = "Orbit"
+        {
+            //local _delDependency to InitAscentAng_Next(tgtAlt).
+            //set del to { if Ship:Altitude >= g_la_turnAltStart { set s_Val to Heading(g_MissionTag:Params[0], GetAscentAngle(g_MissionTag:Params[1]), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0). }}.
+            local _delDependency to InitAscentAng_Next(tgtAlt).
+            set _delDependency["l_az_calc"] to l_az_calc_init(tgtAlt, g_missionTag:Params[0]).
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { set s_Val to Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+        }
+        else 
+        { 
+            set del to {  }.
+        }
+        return del@.
+    }
 
     // GetAscentAngle :: <scalar>tAlt (Target Altitude), [<scalar>shapeFactor] -> <scalar>AscentAngle (-10.0 - 90.0)
     // Returns a valid launch angle for the current vessel during an ascent 
@@ -246,7 +293,7 @@
             "APO_PID", g_apo_PID
             ,"APO_SETPOINT", _tgtAlt
             ,"APO_TGT", _tgtAlt
-            ,"PIT_LIM", 25
+            ,"PIT_LIM", 15
             ,"TRN_PID", g_turn_PID
             ,"TRN_SETPOINT", trn_alt_end
             ,"TRN_ALT_START", trn_alt_start
@@ -260,10 +307,10 @@
     global function GetAscentAng_Next
     {
         parameter _ascAngObj,
-                  _fShape is 0.99825. // Veeeerrrrry sensitive
+                  _fShape is 1. // 0.99825. // Veeeerrrrry sensitive
 
 
-        local pitch_limit_low   to 5.
+        local pitch_limit_low   to 2.5.
         local altitude_error    to 0.
         local apo_error         to 0.
         local ascent_mode       to 0.
@@ -296,6 +343,8 @@
         
         if current_alt > turn_alt_start
         {
+            set altitude_error      to current_alt / turn_alt_end.
+            set apo_error           to current_apo / target_apo.
             // if current_alt < turn_alt_start
             // {
             //     set altitude_error      to current_alt / turn_alt_end.
@@ -307,7 +356,7 @@
             // }
             if current_alt < turn_alt_blend
             {
-                set altitude_error      to current_alt / turn_alt_end.
+                // set altitude_error      to current_alt / turn_alt_end.
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
                 set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)).
@@ -317,8 +366,8 @@
             else if current_alt < turn_alt_end
             {
                 set ascent_mode to 1.
-                set altitude_error      to current_alt / turn_alt_end.
-                set apo_error           to current_apo / target_apo.     
+                // set altitude_error      to current_alt / turn_alt_end.
+                // set apo_error           to current_apo / target_apo.
                 local blend_alt_error   to (current_alt - turn_alt_blend) / (turn_alt_end - turn_alt_blend).
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).
                 local apo_error_blended to apo_error * blend_alt_error.
@@ -329,11 +378,11 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
-                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit * 1.5)).
+                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit * 2.5)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 //set prograde_pitch      to prograde_surface_pitch.
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-10, min(effective_pitch * _fShape, 90)).
+                set output_pitch        to max(-45, min(effective_pitch * _fShape, 90)).
             }
             // else if current_apo < target_apo_turn
             // {
@@ -368,16 +417,16 @@
             else
             {
                 set ascent_mode to 3.
-                set apo_error           to current_apo / target_apo.
+                // set apo_error           to current_apo / target_apo.
                 set error_pitch         to 90 * (1 - apo_error).
-                set effective_limit     to max(pitch_limit_low, pitch_limit_low + (pitch_limit / min(1, apo_error))).
+                set effective_limit     to max(pitch_limit_low, pitch_limit_low + ((pitch_limit * 2.5) / min(1, apo_error))).
                 // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
                 // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
-                set output_pitch        to max(-5, min(effective_pitch * _fShape, 90)).
+                set output_pitch        to max(-45, min(effective_pitch * _fShape, 90)).
             }
         }
-        if output_pitch < 0 set output_pitch to output_pitch * 1.5.
+        if output_pitch < 0 set output_pitch to output_pitch * 2.5.
         // OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
         // OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
         return output_pitch.

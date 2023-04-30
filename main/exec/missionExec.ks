@@ -8,4 +8,5 @@ if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("R
 {
     runPath("0:/main/return/reentry").
 }
+set core:bootfilename to "".
 print "terminating missionExec, have a nice day".

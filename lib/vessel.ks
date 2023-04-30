@@ -3,6 +3,10 @@
 // *~ Dependencies ~* //
 // #region
 // #include "0:/lib/globals.ks"
+// #include "0:/lib/util.ks"
+// #include "0:/lib/disp.ks"
+// #include "0:/lib/engines.ks"
+    
 // #endregion
 
 
@@ -64,7 +68,24 @@
             ).
         }
 
+        global function ArmAutoStagingNext
+        {
+            parameter _stgLimit to g_StageLimit,
+                      _stgCondition is 0, // 0: ThrustValue < 0.01
+                      _stgAction is 0. // 1 is experimental ullage check, 0 is regular safestage.
 
+            local resultCode to 0.
+            set g_StageLimit to _stgLimit.
+            if Stage:Number <= g_StageLimit 
+            {
+                set resultCode to 2.
+            }
+            else
+            {
+                InitStagingDelegate(_stgAction, _stgCondition).
+            }
+            return resultCode.
+        }
 
         // ArmAutoStaging :: (_stgLimit)<type> -> (ResultCode)<scalar>
         // Arms automatic staging based on current thrust levels. If they fall below 0.1, we stage
@@ -83,12 +104,12 @@
             {
                 local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
 
-                set g_LoopDelegates["AutoStage"] to lexicon(
+                set g_LoopDelegates["Staging"] to lexicon(
                     "Check", selectedCondition
                     ,"Action", SafeStage@
                 ).
 
-                if g_LoopDelegates:HasKey("AutoStage") set resultCode to 1.
+                if g_LoopDelegates:HasKey("Staging") set resultCode to 1.
             }
 
             return resultCode.
@@ -216,6 +237,25 @@
             {
                 return SafeStage@.
             }
+            else if _actionType = 1
+            {
+                local stageAction to {
+                    if g_NextEngines_Spec:Keys:Length = 0
+                    {
+                        set g_NextEngines to GetNextEngines().
+                        if g_NextEngines:Length > 0
+                        {
+                            set g_NextEngines_Spec to GetEngineSpecs(g_NextEngines).
+                        }
+                    }
+                    SafeStageWithUllage().
+                    // set g_ActiveEngines to GetActiveEngines(). 
+                    set g_NextEngines to GetNextEngines().
+                    set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+                }.
+
+                return stageAction@.
+            }
         }
         
         
@@ -225,12 +265,12 @@
         {
             parameter _checkType is 0.
 
-            if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
-            {
+            // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
+            // {
                 local condition to CheckShipThrustCondition@.
                 local boundCondition to condition:Bind(Ship, 0.01).
                 return boundCondition.
-            }
+            // }
             // else if _checkType = 1
             // {
 
@@ -257,6 +297,43 @@
             wait until Stage:Ready.
             stage.
             wait 0.01.
+            if g_HotStageArmed
+            {
+                set g_HotStageArmed to ArmHotStaging().
+            }
+        }
+
+
+        // Checks for ullage before  staging
+        local function SafeStageWithUllage
+        {
+            wait until Stage:Ready.
+            // Ullage check. Skips if engine set doesn't require it.
+            if g_NextEngines_Spec:Ullage
+            {
+                set g_TS to Time:Seconds + 3.
+                local doneFlag to false.
+                until doneFlag or Time:Seconds > g_TS
+                {
+                    set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+                    if g_NextEngines_Spec:FuelStabilityMin > 0.75 
+                    {
+                        set doneFlag to true.
+                    }
+                    else
+                    {
+                        OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(g_NextEngines_Spec:FuelStabilityMin, 5))).
+                    }
+                }
+                if not doneFlag 
+                {
+                    OutInfo("Ullage check timeout").
+                }
+            }
+
+            stage.
+            wait 0.01.
+
             if g_HotStageArmed
             {
                 set g_HotStageArmed to ArmHotStaging().
@@ -306,5 +383,38 @@
             }
         }
         // #endregion
+    // #endregion
+
+    // ** Steering
+    // #region
+
+    global function GetOrbitalSteeringDelegate
+    {
+        // parameter _delDependency is lexicon().
+        parameter _steerPair is "flat:sun".
+
+        local del to {}.
+
+        if _steerPair = "flat:sun"
+        {
+            set del to { set s_Val to Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+        }
+        
+        return del@.
+    }
+
+    global function SetSteering
+    {
+        parameter _altTurn.
+
+        if Ship:Altitude >= _altTurn
+        {
+            set s_Val to Ship:SrfPrograde - r(0, 4, 0).
+        } 
+        else
+        {
+            set s_Val to Heading(90, 88, 0).
+        }
+    }
     // #endregion
 // #endregion

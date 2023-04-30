@@ -8,30 +8,19 @@ DispMain().
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 
-local clampStage to Ship:ModulesNamed("LaunchClamp")[0]:Part:Stage.
-
-local altTurn to 3500.
-local boostersArmed  to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
-local boostersArmed  to choose true if Ship:PartsTaggedPattern("booster\.\d*"):Length > 0 else false.
-local boosterIdx     to 0.
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
-local RCSAlt         to 50000.
-local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
+local RCSAlt         to 32500.
 local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
-local stagingDelegate to lexicon().
-local stagingDelegateCheck  to { return 0.}.
-local stagingDelegateAction to { return 0.}.
 local steeringDelegate      to { return 0.}.
 local tgtAlt         to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 500000.
 local ThrustThresh   to 0.
-local ThrustThresh   to 0.
-
-local sounderStartTurn to 250.
 
 wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + 100).
+
+set steeringDelegate to GetAscentSteeringDelegate().
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
@@ -43,31 +32,21 @@ wait 0.25.
 LaunchCountdown().
 OutInfo().
 OutInfo("",1).
-// set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
-// wait 0.01.
-// stage.
-// wait GetField(g_StageEngines_Next[0]:GetModule("ModuleEnginesRF"), "effective spool-up time", 0).
 
-// until Stage:Number <= clampStage
+set g_ActiveEngines to GetEnginesForStage(Stage:Number).
+set g_NextEngines   to GetNextEngines().
+
+
+// local AutoStageResult to ArmAutoStaging().
+ArmAutoStaging().
+
+// if AutoStageResult = 1
 // {
-//     wait until Stage:Ready.
-//     stage.
-//     wait 1.
+//     set stagingDelegateCheck  to g_LoopDelegates:Staging["Check"].
+//     set stagingDelegateAction to g_LoopDelegates:Staging["Action"].
 // }
 
-set g_StageEngines_Current to GetEnginesForStage(Stage:Number).
-set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
-
-
-local AutoStageResult to ArmAutoStaging().
-
-if AutoStageResult = 1
-{
-    set stagingDelegateCheck  to g_LoopDelegates:AutoStage["Check"].
-    set stagingDelegateAction to g_LoopDelegates:AutoStage["Action"].
-}
-
-ArmBoosterStaging().
+set g_BoostersArmed to ArmBoosterStaging().
 
 set s_Val to Ship:Facing.
 lock steering to s_Val.
@@ -77,27 +56,40 @@ OutInfo().
 OutInfo("", 1).
 
 OutMsg("Liftoff! ").
-OutMsg("Liftoff! ").
 until Alt:Radar >= towerHeight
 {
+    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_BoostersArmed { CheckBoosterStageCondition().}
+    if g_LoopDelegates:HasKey("Staging")
+    {
+        set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+        if stagingCheckResult = 1
+        {
+            g_LoopDelegates:Staging["Action"]:Call().
+        }
+    }
+
     DispLaunchTelemetry().
     // DispEngineTelemetry().
 }
 
 OutInfo("ArmFairingJettison() result: {0}":Format(ArmFairingJettison())).
-set steeringDelegate to GetSteeringDelegate().
+
 
 OutMsg("Vertical Ascent").
 until Stage:Number <= g_StageLimit
 {
-    set g_StageEngines_Active to GetActiveEngines().
+    set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_BoostersArmed { CheckBoosterStageCondition().}
-    set stagingCheckResult to g_LoopDelegates:AutoStage:Check:Call().
-    if stagingCheckResult = 1
+    if g_LoopDelegates:HasKey("Staging")
     {
-        stagingDelegateAction:Call().
+        set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+        if stagingCheckResult = 1
+        {
+            g_LoopDelegates:Staging["Action"]:Call().
+        }
     }
     if RCSArmed
     {
@@ -138,11 +130,9 @@ until g_ActiveEngines_Data:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
 ClearDispBlock("ENGINE_TELEMETRY").
 
 OutMsg("Coasting out of atmosphere").
-OutMsg("Coasting out of atmosphere").
 Until Ship:Altitude >= Body:ATM:Height
 {
     set s_Val to Ship:Prograde.
-    DispLaunchTelemetry().
     DispLaunchTelemetry().
 }
 
@@ -158,7 +148,6 @@ if g_StageLimitSet:Keys:Length > 0
                 OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
                 set s_Val to Ship:Prograde.
                 DispLaunchTelemetry().
-                DispLaunchTelemetry().
                 wait 0.01.
             }
             set g_StageLimit to g_StageLimitSet[i]:S.
@@ -168,111 +157,18 @@ if g_StageLimitSet:Keys:Length > 0
 }
 
 // Arm any parachutes before we exit
+OutMsg("Arming Parachutes").
 for m in Ship:ModulesNamed("RealChuteModule")
 {
     OutInfo("Arming Parachute [{0}({1})] ":Format(m:part:name, m:part:uid)).
     DoEvent(m, "arm parachute").
 }
+wait 1.
 
 OutMsg("Launch script complete, performing exit actions").
 OutInfo().
 OutInfo("",1).
 wait 1.
-// until Ship:AvailableThrust <= 0.1
-// {
-//     wait 0.01.
-// }
-// stage.
-// wait 0.01.
-
-// set g_StageEngines_Current to GetEnginesForStage(Stage:Number).
-// set g_StageEngines_Next to GetEnginesForStage(Stage:Number - 1).
-// local ullageEng to g_StageEngines_Next[0].
-// local fuelStab to ullageEng:FuelStability.
-// OutInfo("Fuel Stability: {0} ":Format(Round(fuelStab, 5)), 1).
-// until ullageEng:Thrust > (ullageEng:AvailableThrust * 0.8) or fuelStab >= 0.90
-// { 
-//     set fuelStab to ullageEng:FuelStability.
-//     OutInfo("Fuel Stability: {0} ":Format(Round(fuelStab, 5)), 1).
-//     wait 0.01.
-// }
-// OutInfo("Ignition sequence started at FuelStability: {0}":Format(Round(fuelStab, 5))).
-// wait until Stage:Ready.
-// stage.
-// print "~*~ (●'◡'●)  ~*~" at (2, 24).
-// wait 10.
-
-local function ExecLoopEventDelegates
-{
-    local EventSet to g_LoopDelegates["Events"].
-    if EventSet:Keys:Length > 0
-    {
-        for ev in EventSet:Keys
-        {
-            if EventSet[ev]:HasKey("Delegate")
-            {
-                EventSet[ev]:Delegate:Call().
-            }
-            else if EventSet[ev]:HasKey("CheckDel")
-            {
-                if EventSet[ev]:CheckDel:Call() 
-                {
-                    EventSet[ev]:ActionDel:Call().
-                }
-            }
-        }
-    }
-}
-
-local function GetSteeringDelegate
-{
-    // parameter _delDependency is lexicon().
-    
-    local del to "".
-    if g_MissionTag:Mission = "MaxAlt"
-    {
-        set del to { set s_Val to Heading(g_MissionTag:Params[0], g_MissionTag:Params[1], 0).}.
-    }
-    else if g_MissionTag:Mission = "DownRange"
-    {
-        // set del to { if Ship:Altitude >= sounderStartTurn { local apo_err to Ship:Apoapsis / tgtAlt. set s_Val to Heading(g_MissionTag:Params[0], LaunchAngForAlt(tgtAlt, sounderStartTurn, 0, 5 + (10 * apo_err)), 0.925). } else { set s_Val to Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
-        local _delDependency to InitAscentAng_Next(tgtAlt).
-        set del to { if Ship:Altitude >= sounderStartTurn { local apo_err to Ship:Apoapsis / tgtAlt. set s_Val to Heading(g_MissionTag:Params[0], GetAscentAng_Next(_delDependency), 0.925). } else { set s_Val to Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
-    }
-    else if g_MissionTag:Mission = "SubOrbital"
-    {
-        local _delDependency to InitAscentAng_Next(tgtAlt).
-        set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { set s_Val to Heading(g_MissionTag:Params[0], GetAscentAng_Next(_delDependency), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0 ). }}.
-    }
-    else if g_MissionTag:Mission = "Orbit"
-    {
-        //local _delDependency to InitAscentAng_Next(tgtAlt).
-        //set del to { if Ship:Altitude >= g_la_turnAltStart { set s_Val to Heading(g_MissionTag:Params[0], GetAscentAngle(g_MissionTag:Params[1]), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0). }}.
-        local _delDependency to InitAscentAng_Next(tgtAlt).
-        set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { set s_Val to Heading(g_MissionTag:Params[0], GetAscentAng_Next(_delDependency), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0 ). }}.
-    }
-    else 
-    { 
-        set del to {  }.
-    }
-    return del@.
-}
-
-local function SetSteering
-{
-    parameter _altTurn.
-
-    if Ship:Altitude >= _altTurn
-    {
-        set s_Val to Ship:SrfPrograde - r(0, 4, 0).
-    } 
-    else
-    {
-        set s_Val to Heading(90, 88, 0).
-    }
-}
-
-
 
 
 local function ArmBoosterStaging
@@ -313,13 +209,12 @@ local function GetBoosterUpdateDel
     { 
         for bp in Ship:PartsTaggedPattern("(^booster(\.|\|))+(as(\.|\|))?\d*$")
         {
-            local setIdx to bp:Tag:Replace("booster",""):Replace("as",""):Replace(".",""):Replace("|",""):ToNumber(0).
-            if g_BoosterObj:HasKey(setIdx) 
+            local setIdx to bp:Tag:Replace("booster",""):Replace("as",""):Replace(".",""):Replace("|",""):ToNumber().
+            if g_BoosterObj:HasKey(setIdx)
             { 
                 if g_BoosterObj[setIdx]:HasKey("ENG") 
                 {
                     set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to 0.
-                    set g_BoosterObj[setIdx]["ENG"]:AVLTHRUST to 0.
                 }
             }
             set g_BoosterObj to ProcessBoosterTree(bp, setIdx, g_BoosterObj).
@@ -335,14 +230,10 @@ local function ProcessBoosterTree
               _setIdx,
               _boosterObj.
 
-    local dc to _p.
-    if not _p:IsType("Decoupler")
-    {
-        set dc to _p:Decoupler.
-    }
-
+    local dc to choose _p if _p:IsType("Decoupler") else _p:Decoupler.
     local m to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
     local event to "".
+
     for _e in m:AllEvents
     {
         if _e:MatchesPattern("\(callable\).*decouple.*is KSPEvent")
@@ -573,9 +464,7 @@ local function CheckBoosterStageCondition
 
     if g_BoostersArmed 
     {
-
         // writeJson(g_BoosterObj, "0:/data/g_boosterobj.json").
-
         OutInfo("Boosters: [Armed(X)] [Set( )] [Cond( )]").
         if g_BoosterObj:Keys:Length > 0
         {
@@ -628,6 +517,7 @@ local function CheckBoosterStageCondition
         }
         else
         {
+            OutInfo("Boosters disarmed").
             set g_BoostersArmed to false.
         }
     }
