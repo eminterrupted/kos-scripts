@@ -1,26 +1,44 @@
 @LazyGlobal off.
 ClearScreen.
 
+parameter params to list().
+
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 
 DispMain().
 
-set g_MissionTag to ParseCoreTag(core:Part:Tag).
-
 local cb             to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag  to "".
+local fairingJetAlt  to 100000.
 local RCSAlt         to 32500.
 local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
 local steeringDelegate      to { return 0.}.
-local tgtAlt         to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 500000.
 local ThrustThresh   to 0.
+
+// Parameter default values.
+local _tgtAlt        to 500000.
+local _tgtInc        to 0.
+local _azObj         to list().
+
+if params:length > 0
+{
+    set _tgtAlt to params[0].
+    if params:length > 1 set _tgtInc to params[1].
+    if params:length > 2 set _azObj to params[2].
+}
+
+if _azObj:Length = 0
+{
+    set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
+}
+set g_azData to _azObj.
 
 wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + 100).
 
-set steeringDelegate to GetAscentSteeringDelegate().
+set steeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
@@ -56,6 +74,8 @@ OutInfo().
 OutInfo("", 1).
 
 OutMsg("Liftoff! ").
+wait 1.
+OutMsg("Vertical Ascent").
 until Alt:Radar >= towerHeight
 {
     set g_ActiveEngines to GetActiveEngines().
@@ -74,10 +94,15 @@ until Alt:Radar >= towerHeight
     // DispEngineTelemetry().
 }
 
-OutInfo("ArmFairingJettison() result: {0}":Format(ArmFairingJettison())).
+local fairingsArmed to ArmFairingJettison("ascent").
+OutInfo("ArmFairingJettison() result: {0}":Format(fairingsArmed)).
+if fairingsArmed
+{
+    set fairingJetAlt to g_LoopDelegates["Events"]["fairing"]:Alt.
+}
 
 
-OutMsg("Vertical Ascent").
+OutMsg("Gravity Turn").
 until Stage:Number <= g_StageLimit
 {
     set g_ActiveEngines to GetActiveEngines().
@@ -91,6 +116,24 @@ until Stage:Number <= g_StageLimit
             g_LoopDelegates:Staging["Action"]:Call().
         }
     }
+    if fairingsArmed
+    {
+        if Ship:Altitude >= fairingJetAlt
+        {
+            if g_LoopDelegates:Events:HasKey("Fairing")
+            {
+                if g_LoopDelegates:Events:Fairings:HasKey("Delegate")
+                {
+                    g_LoopDelegates:Events:Fairings:Delegate:Call().
+                }
+                else
+                {
+                    JettisonFairings(Ship:PartsTaggedPattern("fairing|ascent")).
+                }
+            }
+            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+        }
+    }
     if RCSArmed
     {
         if Ship:Altitude > RCSAlt { RCS on. }
@@ -102,7 +145,7 @@ until Stage:Number <= g_StageLimit
         ExecLoopEventDelegates().
     }
 
-    steeringDelegate:Call().
+    set s_Val to steeringDelegate:Call().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
@@ -113,6 +156,16 @@ until g_ActiveEngines_Data:Thrust >= 0.2
 {
     if g_BoostersArmed { CheckBoosterStageCondition().}
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+
+    if fairingsArmed
+    {
+        if Ship:Altitude >= fairingJetAlt
+        {
+            g_LoopDelegates:Events["fairing"]:Delegate:Call().
+            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+        }
+    }
+
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
@@ -121,8 +174,18 @@ until g_ActiveEngines_Data:Thrust >= 0.2
 OutMsg("Final Burn").
 until g_ActiveEngines_Data:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
 {
-    steeringDelegate:Call().
+    set s_Val to steeringDelegate:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+
+    if fairingsArmed
+    {
+        if Ship:Altitude >= fairingJetAlt
+        {
+            g_LoopDelegates:Events["fairing"]:Delegate:Call().
+            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+        }
+    }
+
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
@@ -175,14 +238,14 @@ local function ArmBoosterStaging
 {
     set g_BoosterObj to lexicon().
 
-    local BoosterParts to Ship:PartsTaggedPattern("(^booster(\.|\|))+(as(\.|\|))?\d*$").
+    local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\|\d*)+(\|as)?$").
 
     local setIdxList to UniqueSet().
     if BoosterParts:Length > 0
     {
         for p in BoosterParts
         {
-            local setIdx to p:Tag:Replace("booster",""):Replace("as",""):Replace(".",""):Replace("|",""):ToNumber(0).
+            local setIdx to p:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
             set g_BoosterObj[setIdx] to ProcessBoosterTree(p, setIdx, g_BoosterObj).
             if setIdxList:Contains(setIdx)
             {
@@ -205,11 +268,15 @@ local function ArmBoosterStaging
 
 local function GetBoosterUpdateDel
 {
-    local updateDel to 
-    { 
-        for bp in Ship:PartsTaggedPattern("(^booster(\.|\|))+(as(\.|\|))?\d*$")
-        {
-            local setIdx to bp:Tag:Replace("booster",""):Replace("as",""):Replace(".",""):Replace("|",""):ToNumber().
+    parameter _dc is Core:Part.
+
+    local updateDel to { return g_BoosterObj.}.
+    if not (_dc = Core:Part)
+    {
+        OutInfo("_dc: {0}":Format(_dc:name)).
+        set updateDel to
+        { 
+            local setIdx to _dc:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
             if g_BoosterObj:HasKey(setIdx)
             { 
                 if g_BoosterObj[setIdx]:HasKey("ENG") 
@@ -217,10 +284,14 @@ local function GetBoosterUpdateDel
                     set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to 0.
                 }
             }
-            set g_BoosterObj to ProcessBoosterTree(bp, setIdx, g_BoosterObj).
-        }
-        return g_BoosterObj.
-    }.
+            set g_BoosterObj to ProcessBoosterTree(_dc, setIdx, g_BoosterObj).
+            return g_BoosterObj.
+        }.
+    }
+    else
+    {
+        OutInfo("_dc in GetBoosterUpdateDel is core:part!").
+    }
     return updateDel@.
 }
 
@@ -254,7 +325,7 @@ local function ProcessBoosterTree
                     ,"S", dc:Stage
                 )
             )
-            ,"UPDATE", GetBoosterUpdateDel()
+            ,"UPDATE", GetBoosterUpdateDel(dc)
         ).
     }
     else
@@ -273,7 +344,7 @@ local function ProcessBoosterTree
 
         if not _boosterObj[_setIdx]:HasKey("UPDATE")
         {
-            set _boosterObj[_setIdx]["UPDATE"] to GetBoosterUpdateDel().
+            set _boosterObj[_setIdx]["UPDATE"] to GetBoosterUpdateDel(dc).
         }
     }
     
@@ -460,15 +531,17 @@ local function ProcessBoosterTankResources
 
 local function CheckBoosterStageCondition
 {
-    parameter _pctThresh to 0.025.
+    parameter _pctThresh to 0.0625.
 
     if g_BoostersArmed 
     {
         // writeJson(g_BoosterObj, "0:/data/g_boosterobj.json").
-        OutInfo("Boosters: [Armed(X)] [Set( )] [Cond( )]").
+        OutInfo("Boosters: [Armed(X)] [Set( )] [Update( )] [Cond( )]").
         if g_BoosterObj:Keys:Length > 0
         {
+            OutInfo("Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]").
             local doneFlag to false.
+
             from { local i to 0.} until i = g_BoosterObj:Keys:Length or doneFlag step { set i to i + 1.} do
             {
                 if not g_BoosterObj:Keys[i] = "UPDATE"
@@ -476,10 +549,10 @@ local function CheckBoosterStageCondition
                     local bSet to g_BoosterObj[g_BoosterObj:Keys[i]].
                     if bSet:HasKey("UPDATE") 
                     {
+                        OutInfo("Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond( )]").
                         set g_BoosterObj to bSet:UPDATE:Call().
                         wait 0.01.
                         // writeJson(g_BoosterObj, Path("0:/data/g_BoosterObj.json")).
-                        OutInfo("Boosters: [Armed(X)] [Set(X)] [Cond( )]").
                         // local check to bSet["RES"]["PCTLEFT"] <= _pctThresh.
                         // OutInfo("BoosterStageCondition: {0} ({1})":Format(check, bSet["RES"]["PCTLEFT"]), 2).
                         // if bSet["RES"]["PCTLEFT"] <= _pctThresh
@@ -494,7 +567,7 @@ local function CheckBoosterStageCondition
                         OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2)), 1).
                         if bSet["ENG"]:ALLTHRUST < ThrustThresh
                         {
-                            OutInfo("Boosters: [Armed(X)] [Set(X)] [Cond(X)]").
+                            OutInfo("Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]").
                             StageBoosterSet(i).
                             // set bSet to "".
                             wait 0.025.

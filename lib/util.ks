@@ -339,8 +339,9 @@
             }
 
             set parsedTagObject["PARAMS"]   to prmSet.
-
+            set g_MissionParams to prmSet.
         }
+
         return parsedTagObject.
     }
 

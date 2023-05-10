@@ -6,6 +6,7 @@
 // #include "0:/lib/util.ks"
 // #include "0:/lib/disp.ks"
 // #include "0:/lib/engines.ks"
+// #include "0:/kslib/lib_l_az_calc.ks"
     
 // #endregion
 
@@ -134,9 +135,9 @@
                 }
                 if p:HasModule("ProceduralFairingDecoupler")
                 {
-                    if not g_LoopDelegates["Events"]:HasKey(fairing_tag_extended)
+                    if not g_LoopDelegates["Events"]:HasKey("Fairing")
                     {
-                        set g_LoopDelegates["Events"][fairing_tag_extended] to lexicon(
+                        set g_LoopDelegates["Events"]["Fairing"] to lexicon(
                             "Tag", _fairingTag
                             ,"Alt", jettison_alt
                             ,"Op", op
@@ -145,17 +146,34 @@
                     }
                     else
                     {
-                        g_LoopDelegates["Events"][fairing_tag_extended]["Modules"]:add(p:GetModule("ProceduralFairingDecoupler")).
+                        g_LoopDelegates:Events:Fairing:Modules:add(p:GetModule("ProceduralFairingDecoupler")).
                     }
-                    if not g_LoopDelegates["Events"][fairing_tag_extended]:HasKey("Delegate")
+
+                    if not g_LoopDelegates["Events"]["Fairing"]:HasKey("Delegate")
                     {
-                        set g_LoopDelegates["Events"][fairing_tag_extended]["Delegate"] to choose
-                        { if ship:altitude > jettison_alt { for m in g_LoopDelegates["Events"][fairing_tag_extended]["Modules"] { DoEvent(m, "jettison fairing").}} g_LoopDelegates["Events"]:Remove(fairing_tag_extended).} if op = "gt" else
-                        { if ship:altitude < jettison_alt { for m in g_LoopDelegates["Events"][fairing_tag_extended]["Modules"] { DoEvent(m, "jettison fairing").}} g_LoopDelegates["Events"]:Remove(fairing_tag_extended).}.
+                        set g_LoopDelegates["Events"]["Fairing"]["Delegate"] to choose
+                            { if ship:altitude > jettison_alt { JettisonFairings(g_LoopDelegates["Events"]["Fairing"]["Modules"]).} g_LoopDelegates["Events"]:Remove("Fairing").} if op = "gt" else
+                            { if ship:altitude < jettison_alt { JettisonFairings(g_LoopDelegates["Events"]["Fairing"]["Modules"]).} g_LoopDelegates["Events"]:Remove("Fairing").}.
                     }
                 }
             }
-            return g_LoopDelegates["Events"]:HasKey(fairing_tag_extended).
+            return g_LoopDelegates["Events"]:HasKey("Fairing").
+        }
+
+        // JettisonFairings :: _fairings<list> -> <none>
+        // Will jettison fairings provided
+        global function JettisonFairings
+        {
+            parameter _fairings is list().
+
+            if _fairings:length > 0
+            {
+                for f in _fairings
+                {
+                    if f:IsType("Part") { set f to f:GetModule("ProceduralFairingDeoupler"). }
+                    DoEvent(f, "jettison fairing").
+                }
+            }
         }
 
         // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
@@ -307,11 +325,13 @@
         // Checks for ullage before  staging
         local function SafeStageWithUllage
         {
+            set g_NextEngines to GetEnginesForStage(Stage:Number - 1).
             wait until Stage:Ready.
+            
             // Ullage check. Skips if engine set doesn't require it.
             if g_NextEngines_Spec:Ullage
             {
-                set g_TS to Time:Seconds + 3.
+                set g_TS to Time:Seconds + 5.
                 local doneFlag to false.
                 until doneFlag or Time:Seconds > g_TS
                 {
@@ -391,13 +411,31 @@
     global function GetOrbitalSteeringDelegate
     {
         // parameter _delDependency is lexicon().
-        parameter _steerPair is "flat:sun".
+        parameter _steerPair is "Flat:Sun".
 
         local del to {}.
-
-        if _steerPair = "flat:sun"
+        if g_azData:Length = 0
         {
-            set del to { set s_Val to Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+            set g_AzData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
+        }
+
+        if g_AngDependency:Keys:Length = 0
+        {
+            set g_AngDependency to InitAscentAng_Next(g_MissionParams[1], 1, 22.5).
+        }
+
+        if _steerPair = "Flat:Sun"
+        {
+            set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+        }
+        else if _steerPair = "AngErr:Sun"
+        {
+            RunOncePath("0:/lib/launch.ks").
+            set del to { return Heading(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
+        }
+        else if _steerPair = "lazCalc:Sun"
+        {
+            set del to { return Ship:Facing.}   .
         }
         
         return del@.

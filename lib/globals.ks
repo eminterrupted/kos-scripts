@@ -77,6 +77,7 @@
     global t_Val to 0.
     global s_Val to Ship:Facing.
 
+    global g_AngDependency to lexicon().
     global g_StartTurn to 3750.
 // #endregion
 

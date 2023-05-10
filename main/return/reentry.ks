@@ -19,11 +19,11 @@ local spinStab to false.
 local stagingAlt to ship:body:atm:height + 25000.
 local ts to time:seconds.
 
-local sVal to ship:facing.
-lock steering to sVal.
+set s_Val to ship:facing.
+lock steering to s_Val.
 
-local tVal to 0.
-lock throttle to tVal.
+set t_Val to 0.
+lock throttle to t_Val.
 
 ///Params
 //retroFire: bool, fire rockets to deorbit
@@ -149,7 +149,7 @@ wait 1.
 if retroFire and ship:periapsis > reentryTgt
 {
     OutInfo("Target reentry alt: " + round(reentryTgt) + " (" + round(ship:periapsis) + ")", 1).
-    set sVal to ship:retrograde.
+    set s_Val to ship:retrograde.
     local settleTime to 5.
     local progCounter to 0.
     local progTimer to time:seconds + 2.5.
@@ -211,7 +211,7 @@ if retroFire and ship:periapsis > reentryTgt
     }
 
     OutMsg("Firing retro rockets to stage " + retroStage).
-    set tVal to 1.
+    set t_Val to 1.
     until stage:number <= retroStage
     {
         stage.
@@ -221,14 +221,14 @@ if retroFire and ship:periapsis > reentryTgt
     local perfObj to GetEnginePerformanceData(GetActiveEngines()).
     until perfObj:ThrustAvailPres <= 0.1 or ship:periapsis <= reentryTgt
     {
-        if stage = 1 set tVal to 0.
+        if stage = 1 set t_Val to 0.
         else if ship:periapsis <= reentryTgt + 10000
         {
-            set tVal to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
+            set t_Val to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
         }
         // DispTelemetry().
     }
-    set tVal to 0.
+    set t_Val to 0.
     OutMsg("Retro fire complete").
     wait 1.
     if spinStab
@@ -246,8 +246,8 @@ if retroFire and ship:periapsis > reentryTgt
     OutInfo("", 1).
 }
 
-set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
-lock steering to sVal.
+set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
+lock steering to s_Val.
 
 OutMsg("Waiting until altitude <= " + startAlt).
 // local dir to choose "down" if startAlt <= ship:altitude else "up".
@@ -296,7 +296,7 @@ Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from a
 //     //         //         set warpFlag to false.
 //     //         //     }
 //     //         // }
-//     //         set sVal to lookDirUp(ship:retrograde:vector, Sun:Position).
+//     //         set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
 //     //         DispTelemetry().
 //     //         wait 0.01. 
 //     //     }
@@ -317,12 +317,12 @@ until ship:altitude <= startAlt
     }
     else if g_TermChar = Terminal:Input:EndCursor
     {
-        lock steering to sVal.
+        lock steering to s_Val.
     }
     else
     {
         Terminal:Input:Clear().
-        set sVal to Ship:Retrograde. 
+        set s_Val to Ship:Retrograde. 
         set g_TermChar to "".
     }
     DispReentryTelemetry().
@@ -393,17 +393,17 @@ RCS on.
 // Staging
 if stage:number > 1
 {
-    // set sVal to body:position.
+    // set s_Val to body:position.
     // OutMsg("Waiting until staging altitude: " + stagingAlt).
     // until ship:altitude <= stagingAlt
     // {
-    //     set sVal to GetSteeringDir("body-sun").
+    //     set s_Val to GetSteeringDir("body-sun").
     //     DispTelemetry().
     // }
 
     // if warp > 0 set warp to 0.
     // wait until kuniverse:timewarp:issettled.
-    // set sVal to GetSteeringDir("body-sun").
+    // set s_Val to GetSteeringDir("body-sun").
     // wait 5.
 
     OutMsg("Staging").
@@ -418,7 +418,7 @@ if stage:number > 1
 OutMsg("Waiting for reentry interface").
 until ship:altitude <= body:atm:height + 1000
 {
-    set sVal to ship:retrograde.
+    set s_Val to ship:retrograde.
     DispReentryTelemetry().
     
     // DispGeneric().
@@ -433,14 +433,15 @@ OutInfo().
 
 until ship:altitude <= body:atm:height
 {
-    set sVal to ship:SrfRetrograde.
+    set s_Val to ship:SrfRetrograde.
     DispReentryTelemetry().
 }
 OutMsg("Reentry Interface").
 
 until ship:groundspeed <= 1350 and ship:altitude <= 10000
 {
-    set sVal to ship:SrfRetrograde.
+    set s_Val to ship:SrfRetrograde.
+    DispReentryTelemetry().
 }
 
 wait 1.
@@ -448,7 +449,7 @@ wait 1.
 unlock steering.
 OutMsg("Control released").
 
-until (Ship:Altitude - Ship:GeoPosition:TerrainHeight) <= jettAlt
+until ALT:RADAR <= jettAlt
 {
     DispReentryTelemetry().
 }
@@ -456,12 +457,24 @@ until (Ship:Altitude - Ship:GeoPosition:TerrainHeight) <= jettAlt
 for f in fairings
 {
     local m to f:GetModule("ProceduralFairingDecoupler").
-    DoEvent(m, "jettison fairing").
+    if not DoEvent(m, "jettison fairing")
+    {
+        DoAction(m, "jettison fairing", true).
+    }
 }
 
-until alt:radar <= 1250
+until alt:radar <= 2500
 {
     DispReentryTelemetry().
+}
+
+if ship:ModulesNamed("ProceduralFairingDecoupler"):Length > 0
+{
+    until ship:ModulesNamed("ProceduralFairingDecoupler"):Length = 0
+    {
+        stage.
+        wait 1.
+    }
 }
 
 OutMsg("Chute deploy").

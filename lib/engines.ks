@@ -43,6 +43,10 @@
             ,"sepMotor1"            // Radial Separation Motor (Medium)
             ,"sepMotorLarge"        // Radial Separation Motor (Large)
             ,"SnubOtron"            // Separation Motor (Small)
+            ,"CREI_RO_IntSep_50"    // CREI Internal SRB 50% Resize
+            ,"CREI_RO_IntSep_100"   // CREI Internal SRB 100% Resize
+            ,"CREI_RO_IntSep_166"   // CREI Internal SRB 166% Resize
+            ,"CREI_RO_IntSep_200"   // CREI Internal SRB 200% Resize
         )
     ).
 // #endregion
@@ -81,7 +85,8 @@
     // Returns engines for a given stage number
     global function GetEnginesForStage
     {
-        parameter _stg.
+        parameter _stg, 
+                  _type is "All".
 
         local engList to list().
 
@@ -89,7 +94,24 @@
         {
             if eng:Stage = _stg
             { 
-                engList:Add(eng). 
+                if _type = "All" 
+                {
+                    engList:Add(eng). 
+                }
+                else if _type = "Main"
+                {
+                    if not g_PartInfo:Engines:SepRef:Contains(eng:Name) and eng:Tag:Length = 0
+                    {
+                        engList:Add(eng).
+                    }
+                }
+                else if _type = "Sep"
+                {
+                    if g_PartInfo:Engines:SepRef:Contains(eng:Name)
+                    {
+                        engList:Add(eng).
+                    }
+                }
             }
         }
         return engList.

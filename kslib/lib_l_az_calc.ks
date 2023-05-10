@@ -13,6 +13,7 @@
 global function l_az_calc_init {
     parameter   desiredAlt,             //Altitude of desired target orbit (in *meters*)
                 desiredInc,             //Inclination of desired target orbit
+                launchLat is -90,
                 autoNodeEpsilon is 10.  // How many m/s north or south
                                         // will be needed to cause a north/south switch. Pass zero to disable
                                         // the feature.
@@ -20,7 +21,7 @@ global function l_az_calc_init {
     set autoNodeEpsilon to abs(autoNodeEpsilon).
     
     //We'll pull the latitude now so we aren't sampling it multiple times
-    local launchLatitude is ship:latitude.
+    local launchLatitude to choose ship:latitude if launchLat = -90 else launchLat.
     
     local data is list().               // A list is used to store information used by LAZcalc
     
