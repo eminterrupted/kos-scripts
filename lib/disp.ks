@@ -83,20 +83,31 @@
                   //_teeHUD is false. TODO: implement TeeHud function
 
         local msg_line to 8.
+        local msg_str to "".
         if _str:length > 0
         {
-            local errLabel to choose "MSG" if _errLvl < 1
-                         else choose "WRN" if _errLvl < 2
-                         else        "ERR".
-            print "[{0}] {1} ":Format(errLabel, _str) at (2, msg_line).
+            if _errLvl < 1
+            {
+                // set msgColot 
+                set msg_str to "[MSG] {0}":Format(_str).
+            }
+            else if _errLvl > 1
+            {
+                set msg_str to "<color=red>[ERR] {0}</color>":Format(_str).
+            }
+            else
+            {
+                set msg_str to "<color=yellow>[WRN] {0}</color>":Format(_str).
+            }
+            // local errLabel to choose "MSG" if _errLvl < 1
+            //              else choose "<yellow>WRN" if _errLvl < 2
+            //              else        "<red>ERR".
+
+            print msg_str:PadRight(Terminal:Width - 1) at (2, msg_line).
         }
         else
         {
-            for i in Range(2, Terminal:Width - 3, 1) //
-            {
-                set _str to _str + " ".
-            }
-            print _str at (1, msg_line).
+            print _str:PadRight(Terminal:Width - 1) at (1, msg_line).
         }
     }
 
@@ -111,15 +122,11 @@
         local line to 11.
         if _str:length > 0
         {
-            print "[{0}] {1} ":Format("INFO", _str) at (2, line + _lineIdx).
+            print "[{0}] {1} ":Format("INFO", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
         }
         else
         {
-            for i in Range(2, Terminal:Width - 3, 1) //
-            {
-                set _str to _str + " ".
-            }
-            print _str at (1, line + _lineIdx).
+            print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
         }
     }
 
@@ -214,7 +221,7 @@
         local progName      to "KASA MISSION CONTROL".
         local progVer       to "v0.01 {0} ({1})":Format(Char(5679), "Omega").
         local safeWidth     to Terminal:Width - 2 - progName:Length.
-        local str to "{0,20}{1," + -(safeWidth) + "}".
+        local str to "{0,20}{1," + safeWidth + "}".
         set str to str:Format(progName, progVer).
         
         print str at (0, g_Line).

@@ -28,12 +28,23 @@
 
     // Staging
     global g_StageLimit to 3.
-    global g_StageLimitSet to lexicon().
+    global g_StageLimitSet to list().
 
     // Tags
     global g_MissionTag to lexicon().
     global g_MissionParams to list().
-    global g_ReturnMissionList to list("MaxAlt", "DownRange", "SubOrbital").
+    global g_ReturnMissionList to list(
+        "DownRange"     // Guided downrange suborbital, no reentry guidance
+        ,"MaxAlt"       // Guided or unguided max altitude
+        ,"SSO"          // Unguided launch, guided reentry
+        ,"SubOrbital"   // Fully guided launch and reentry
+    ).
+
+    global g_GuidedAscentMissions to list(
+        "DownRange"
+        ,"Orbit"
+        ,"SubOrbital"
+    ).
 
     // Terminal Metadata
     global g_Line   to 0.
@@ -69,9 +80,9 @@
     global g_TermGrid to lexicon().
 
     // Engines
-    global g_BoostersArmed          to false.
-    global g_HotStageArmed          to false.
-    global g_BoosterObj             to lexicon().
+    global g_BoostersArmed   to false.
+    global g_HotStagingArmed to false.
+    global g_BoosterObj      to lexicon().
 
     // Ship control
     global t_Val to 0.

@@ -262,7 +262,7 @@
             "MISSION", _tag:Split("|")[0]
             ,"PARAMS", list()
             ,"STGSTOP", 0
-            ,"STGSTOPSET", lexicon()
+            ,"STGSTOPSET", list()
         ).
 
         if _tag:Contains("|")
@@ -271,45 +271,57 @@
             set tempStageStop to parsedTag[parsedTag:Length - 1].
             if tempStageStop:Contains(";")
             {
-                local stopIdx to 0.
+                // local stopIdx to 0.
                 set tempStopSplit to tempStageStop:Split(";").
-                from { local i to 0.} until i = tempStopSplit:Length step { set i to i + 1.} do
-                {
-                    local s to tempStopSplit[i].
-                    if s:Contains(":")
-                    {
-                        local splitStopPair to s:Split(":").
-                        set newStopStage     to splitStopPair[0]:ToNumber(-2).
-                        set stageExitGate to splitStopPair[1].
-                    }
-                    else
-                    {
-                        set newStopStage to s:ToNumber(-2).
-                        set stageExitGate    to "NE".
-                    }
 
-                    local gateDelegate to GetTimestampDelegate(stageExitGate).
-                    
-                    if i = 0 set parsedStageStop to newStopStage.
-                    set parsedTagObject["STGSTOPSET"][stopIdx] to lexicon(
-                        "C",  gateDelegate
-                        ,"S", newStopStage
-                    ).
-                    set stopIdx to stopIdx + 1.
+                for stageID in tempStopSplit
+                {
+                    parsedTagObject:StgStopSet:Add(stageID).
                 }
+                set parsedStageStop to parsedTagObject:StgStopSet[0]:ToNumber(-1).
+                // from { local i to 0.} until i = tempStopSplit:Length step { set i to i + 1.} do
+                // {
+                //     local s to tempStopSplit[i].
+                //     if s:Contains(":")
+                //     {
+                //         local splitStopPair to s:Split(":").
+                //         set newStopStage     to splitStopPair[0]:ToNumber(-1).
+                //         set stageExitGate to splitStopPair[1].
+                //     }
+                //     else
+                //     {
+                //         set newStopStage to s:ToNumber(-1).
+                //         set stageExitGate    to "NE".
+                //     }
+
+                //     local gateDelegate to GetTimestampDelegate(stageExitGate).
+                    
+                //     if i = 0 set parsedStageStop to newStopStage.
+                //     set parsedTagObject["STGSTOPSET"][stopIdx] to lexicon(
+                //         "C",  gateDelegate
+                //         ,"S", newStopStage
+                //     ).
+                //     set stopIdx to stopIdx + 1.
+                // }
             }
             else
             {
-                set parsedStageStop to tempStageStop:ToNumber(-2).
+                set parsedStageStop to tempStageStop:ToNumber(-1).
             }
 
             set parsedTagObject["MISSION"]  to parsedTag[0].
 
-            if parsedStageStop <> -2
+            if parsedStageStop <> -1
             {
                 set parsedTagObject["STGSTOP"] to parsedStageStop.
                 set g_StageLimit to parsedStageStop.
-                set g_StageLimitSet to parsedTagObject:STGSTOPSET.
+                set g_StageLimitSet to parsedTagObject:StgStopSet.
+            }
+            else
+            {
+                set parsedTagObject["STGSTOP"] to 0.
+                set g_StageLimit to parsedStageStop.
+                set g_StageLimitSet to list(g_StageLimit).
             }
 
             if parsedTag:Length > 2

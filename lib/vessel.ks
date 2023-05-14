@@ -1,4 +1,4 @@
-@lazyGlobal off.
+@LAZYGLOBAL off.
 
 // *~ Dependencies ~* //
 // #region
@@ -16,14 +16,14 @@
 // #region
     // *- Local
     // #region
-    local stagingState to 0.
-    local localTS to 0.
+    LOCAL stagingState TO 0.
+    LOCAL localTS TO 0.
     // #endregion
 
-    // *- Global (Adds new globals specific to this library, and updates existing globals)
+    // *- Global (Adds new globals specific TO this library, and updates existing globals)
     // #region
     
-    // New entries in global objects
+    // New entries IN global objects
     
     // #endregion
 // #endregion
@@ -40,204 +40,257 @@
         // #region
 
         // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
-        global function StagingCheck
+        GLOBAL FUNCTION StagingCheck
         {
-            parameter _program,
+            PARAMETER _program,
                       _runmode,
-                      _checkType is 0.
+                      _checkType IS 0.
 
-            if Stage:Number <= g_StageLimit
+            IF STAGE:NUMBER <= g_StageLimit
             {
-                return false.
+                RETURN false.
             }
-            else
+            ELSE
             {
-                
+                RETURN TRUE.
             }
         }
 
         // InitStagingDelegate :: 
-        // Adds the proper staging check and action delegates to the g_LoopDelegates object
-        global function InitStagingDelegate
+        // Adds the proper staging check and action delegates TO the g_LoopDelegates object
+        GLOBAL FUNCTION InitStagingDelegate
         {
-            parameter _actionType,
+            PARAMETER _actionType,
                       _conditionType.
 
-            set g_LoopDelegates["Staging"] to lexicon(
+            SET g_LoopDelegates["Staging"] TO LEX(
                 "Action", GetStagingActionDelegate(_actionType)  // #TODO: Write GetStagingActionDelegate
                 ,"Check", GetStagingConditionDelegate(_conditionType)
             ).
         }
 
-        global function ArmAutoStagingNext
+        GLOBAL FUNCTION ArmAutoStagingNext
         {
-            parameter _stgLimit to g_StageLimit,
-                      _stgCondition is 0, // 0: ThrustValue < 0.01
-                      _stgAction is 0. // 1 is experimental ullage check, 0 is regular safestage.
+            PARAMETER _stgLimit TO g_StageLimit,
+                      _stgCondition IS 0, // 0: ThrustValue < 0.01
+                      _stgAction IS 0. // 1 IS experimental ullage check, 0 IS regular safestage.
 
-            local resultCode to 0.
-            set g_StageLimit to _stgLimit.
-            if Stage:Number <= g_StageLimit 
+            LOCAL resultCode TO 0.
+            SET g_StageLimit TO _stgLimit.
+            IF STAGE:NUMBER <= g_StageLimit 
             {
-                set resultCode to 2.
+                SET resultCode TO 2.
             }
-            else
+            ELSE
             {
                 InitStagingDelegate(_stgAction, _stgCondition).
             }
-            return resultCode.
+            RETURN resultCode.
         }
 
         // ArmAutoStaging :: (_stgLimit)<type> -> (ResultCode)<scalar>
-        // Arms automatic staging based on current thrust levels. If they fall below 0.1, we stage
-        global function ArmAutoStaging
+        // Arms automatic staging based on current thrust levels. IF they fall below 0.1, we stage
+        GLOBAL FUNCTION ArmAutoStaging
         {
-            parameter _stgLimit to g_StageLimit,
-                      _stgCondition is 0. // 0: ThrustValue < 0.01
+            PARAMETER _stgLimit TO g_StageLimit,
+                      _stgCondition IS 0. // 0: ThrustValue < 0.01
 
-            local resultCode to 0.
-            set g_StageLimit to _stgLimit.
-            if Stage:Number <= g_StageLimit 
+            LOCAL resultCode TO 0.
+            SET g_StageLimit TO _stgLimit.
+            IF STAGE:NUMBER <= g_StageLimit 
             {
-                set resultCode to 2.
+                SET resultCode TO 2.
             }
-            else
+            ELSE
             {
-                local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
+                LOCAL selectedCondition TO GetStagingConditionDelegate(_stgCondition). 
 
-                set g_LoopDelegates["Staging"] to lexicon(
+                SET g_LoopDelegates["Staging"] TO LEX(
                     "Check", selectedCondition
                     ,"Action", SafeStage@
                 ).
 
-                if g_LoopDelegates:HasKey("Staging") set resultCode to 1.
+                IF g_LoopDelegates:HASKEY("Staging") SET resultCode TO 1.
             }
 
-            return resultCode.
+            RETURN resultCode.
+        }
+
+        GLOBAL FUNCTION DisableAutoStaging
+        {
+            g_LoopDelegates:Remove("Staging").
         }
 
         // ArmFairingJettison :: (fairingTag) -> <none>
-        global function ArmFairingJettison
+        GLOBAL FUNCTION ArmFairingJettison
         {
-            parameter _fairingTag is "ascent".
+            PARAMETER _fairingTag IS "ascent".
 
-            local jettison_alt to 100000.
-            local fairing_tag_extended to "fairing|{0}":Format(_fairingTag).
-            local fairing_tag_ext_regex to "fairing\|{0}":Format(_fairingTag).
+            LOCAL jettison_alt TO 100000.
+            LOCAL fairing_tag_extended TO "fairing|{0}":FORMAT(_fairingTag).
+            LOCAL fairing_tag_ext_regex TO "fairing\|{0}":FORMAT(_fairingTag).
 
-            local op to choose "gt" if _fairingTag:MatchesPattern("(ascent|asc|launch)") else "lt".
+            LOCAL op TO choose "gt" IF _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") ELSE "lt".
 
-            for p in ship:PartsTaggedPattern(fairing_tag_ext_regex)
+            FOR p IN SHIP:PARTSTAGGEDPATTERN(fairing_tag_ext_regex)
             {
-                if p:tag:MatchesPattern("{0}\|\d*":format(fairing_tag_ext_regex))
+                IF p:TAG:MATCHESPATTERN("{0}\|\d*":FORMAT(fairing_tag_ext_regex))
                 {
-                    set jettison_alt to ParseStringScalar(p:tag:replace("{0}|":format(fairing_tag_extended),"")).
+                    SET jettison_alt TO ParseStringScalar(p:TAG:REPLACE("{0}|":FORMAT(fairing_tag_extended),"")).
                 }
-                if p:HasModule("ProceduralFairingDecoupler")
+                IF p:HASMODULE("ProceduralFairingDecoupler")
                 {
-                    if not g_LoopDelegates["Events"]:HasKey("Fairing")
+                    IF not g_LoopDelegates["Events"]:HASKEY("Fairings")
                     {
-                        set g_LoopDelegates["Events"]["Fairing"] to lexicon(
+                        SET g_LoopDelegates["Events"]["Fairings"] TO LEX(
                             "Tag", _fairingTag
                             ,"Alt", jettison_alt
                             ,"Op", op
-                            ,"Modules", list(p:GetModule("ProceduralFairingDecoupler"))
+                            ,"Modules", LIST(p:GETMODULE("ProceduralFairingDecoupler"))
                         ).
                     }
-                    else
+                    ELSE
                     {
-                        g_LoopDelegates:Events:Fairing:Modules:add(p:GetModule("ProceduralFairingDecoupler")).
+                        g_LoopDelegates:Events:Fairings:Modules:ADD(p:GETMODULE("ProceduralFairingDecoupler")).
                     }
 
-                    if not g_LoopDelegates["Events"]["Fairing"]:HasKey("Delegate")
+                    IF not g_LoopDelegates["Events"]["Fairings"]:HASKEY("Check")
                     {
-                        set g_LoopDelegates["Events"]["Fairing"]["Delegate"] to choose
-                            { if ship:altitude > jettison_alt { JettisonFairings(g_LoopDelegates["Events"]["Fairing"]["Modules"]).} g_LoopDelegates["Events"]:Remove("Fairing").} if op = "gt" else
-                            { if ship:altitude < jettison_alt { JettisonFairings(g_LoopDelegates["Events"]["Fairing"]["Modules"]).} g_LoopDelegates["Events"]:Remove("Fairing").}.
+                        SET g_LoopDelegates["Events"]["Fairings"]["Check"] TO choose
+                        { 
+                            IF SHIP:ALTITUDE > jettison_alt 
+                            { 
+                                JettisonFairings(g_LoopDelegates["Events"]["Fairings"]["Modules"]).
+                                g_LoopDelegates["Events"]:Remove("Fairings").
+                            } 
+                        } 
+                        IF op = "gt" ELSE
+                        { 
+                            IF SHIP:altitude < jettison_alt 
+                            { 
+                                JettisonFairings(g_LoopDelegates["Events"]["Fairings"]["Modules"]).
+                                g_LoopDelegates["Events"]:Remove("Fairings").
+                            } 
+                        }.
                     }
                 }
             }
-            return g_LoopDelegates["Events"]:HasKey("Fairing").
+            RETURN g_LoopDelegates["Events"]:HASKEY("Fairings").
         }
 
         // JettisonFairings :: _fairings<list> -> <none>
         // Will jettison fairings provided
-        global function JettisonFairings
+        GLOBAL FUNCTION JettisonFairings
         {
-            parameter _fairings is list().
+            PARAMETER _fairings IS LIST().
 
-            if _fairings:length > 0
+            IF _fairings:LENGTH > 0
             {
-                for f in _fairings
+                FOR f IN _fairings
                 {
-                    if f:IsType("Part") { set f to f:GetModule("ProceduralFairingDeoupler"). }
+                    IF f:ISTYPE("Part") { SET f TO f:GETMODULE("ProceduralFairingDeoupler"). }
                     DoEvent(f, "jettison fairing").
                 }
             }
         }
 
         // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
-        // Writes events to g_LoopDelegates to fire hot staging if applicable for a given stage (next by default)
-        global function ArmHotStaging
+        // Writes events TO g_LoopDelegates TO fire hot staging IF applicable FOR a given stage (next by default)
+        GLOBAL FUNCTION ArmHotStaging
         {
-            parameter _stage is Stage:Number - 1.
+            LOCAL ActionDel TO {}.
+            LOCAL CheckDel TO {}.
+            LOCAL Engine_Obj TO LEX().
+            LOCAL HotStage_List TO SHIP:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
 
-            local actionDel to {}.
-            local checkDel to {}.
-            local delKey to "HotStg_{0}":Format(_stage).
-            local engine_list to list().
-
-            if ship:status <> "PRELAUNCH"
+            IF HotStage_List:LENGTH > 0
             {
-                for eng in ship:engines
+                if not g_LoopDelegates:HASKEY("Staging")
                 {
-                    if eng:stage = _stage
+                    set g_LoopDelegates["Staging"] to LEX().
+                }
+
+                g_LoopDelegates:Staging:Add("HotStaging", LEX()).
+
+                FOR p IN HotStage_List
+                {
+                    IF p:ISTYPE("Engine")
                     {
-                        if eng:tag:MatchesPattern("(HotStg|HotStage|HotStaging|HS)") 
+                        IF Engine_Obj:HASKEY(p:STAGE)
                         {
-                            engine_list:add(eng).   
+                            Engine_Obj[p:STAGE]:ADD(p).
+                        }
+                        ELSE
+                        {
+                            SET Engine_Obj[p:STAGE] TO LIST(p).
                         }
                     }
                 }
-                if engine_list:Length > 0
+                
+                FOR EngListID IN Engine_Obj:KEYS
                 {
-                    set g_LoopDelegates:Events[delKey]["Engines"] to engine_list.
-                    set g_LoopDelegates:Events[delKey]["EngSpecs"] to GetEnginesSpecs(engine_list).
-                    set checkDel to { return g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Events[delKey]:EngSpecs:SpoolTime + 0.1.}.
-                    set actionDel to 
-                    { 
-                        OutInfo("Hot Staging...").
-                        for eng in g_LoopDelegates:Events[delKey]["Engines"] 
-                        { 
-                            if not eng:ignition eng:activate.
+                    OutInfo("Arming Hot Staging for Engine(s): {0}":Format(EngListID)).
+                    
+                    // Set up the g_LoopDelegates object
+                    g_LoopDelegates:Staging:HotStaging:ADD(EngListID, LEX(
+                        "Engines", Engine_Obj[EngListID]
+                        ,"EngSpecs", GetEnginesSpecs(Engine_Obj[EngListID])
+                        )
+                    ).
+
+                    SET checkDel  TO { 
+                        IF STAGE:NUMBER - 1 = EngListID { 
+                            OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
+                            RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                        }
+                    }.
+
+                    SET actionDel TO { 
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(EngListID, "Ignition")).
+                        FOR eng IN g_LoopDelegates:Staging:HotStaging[EngListID]:Engines
+                        {
+                            IF not eng:IGNITION { eng:ACTIVATE.}
                         }
 
-                        OutInfo("Building thrust in stage").
-                        local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Events[delKey]:Engines).
-                        until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
-                        { 
-                            set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-                            set NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Events[delKey]:Engines).
-                        } 
-                        OutInfo("Staging...").
-                        stage.
-                        wait 1. 
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(EngListID, "SpoolUp")).
+                        SET g_ActiveEngines_Data TO GetEnginesPerformanceData(g_ActiveEngines).
+                        LOCAL NextEngines_Data TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[EngListID]:Engines).
+                        UNTIL NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
+                        {
+                            SET s_Val                TO g_LoopDelegates:Steering:CALL().
+                            SET g_ActiveEngines_Data TO GetEnginesPerformanceData(g_ActiveEngines).
+                            SET NextEngines_Data     TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[EngListID]:Engines).
+                            OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":FORMAT(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
+                            WAIT 0.01.
+                        }
                         OutInfo().
-                        g_LoopDelegates:Events:Remove(delKey).
+                        OutInfo("Staging").
+                        WAIT UNTIL STAGE:READY.
+                        STAGE.
+                        WAIT 0.5.
+                        OutInfo().
+                        g_LoopDelegates:Staging:HotStaging:REMOVE(EngListID).
+                        if g_LoopDelegates:Staging:HotStaging:KEYS:LENGTH = 0
+                        {
+                            g_LoopDelegates:Staging:Remove("HotStaging").
+                            set g_HotStagingArmed to  false.
+                        }
+                        else
+                        {
+                            ArmHotStaging().
+                        }
                     }.
-                    set g_LoopDelegates:Events[delKey]["CheckDel"] to checkDel@.
-                    set g_LoopDelegates:Events[delKey]["ActionDel"] to actionDel@.
 
-                    return true.
+                    // Add the delegates TO the previously set up object
+                    g_LoopDelegates:Staging:HotStaging[EngListID]:ADD("Check", checkDel@).
+                    g_LoopDelegates:Staging:HotStaging[EngListID]:ADD("Action", actionDel@).
                 }
-                else
-                {
-                    return false.
-                }
+
+                RETURN TRUE.
             }
-            else
+            ELSE
             {
-                return false.
+                RETURN FALSE.
             }
         }
         // #endregion
@@ -247,49 +300,49 @@
 
         // GetStagingActionDelegate :: (_actionType)<Scalar> -> (actionDel)<kOSDelegate>
         // Returns a delegate of the staging function that should be used (via Stage, or directly via a part's ModuleDecoupler action).
-        local function GetStagingActionDelegate
+        LOCAL function GetStagingActionDelegate
         {
-            parameter _actionType is 0.
+            PARAMETER _actionType IS 0.
 
-            if _actionType = 0
+            IF _actionType = 0
             {
-                return SafeStage@.
+                RETURN SafeStage@.
             }
-            else if _actionType = 1
+            ELSE IF _actionType = 1
             {
-                local stageAction to {
-                    if g_NextEngines_Spec:Keys:Length = 0
+                LOCAL stageAction TO {
+                    IF g_NextEngines_Spec:Keys:LENGTH = 0
                     {
-                        set g_NextEngines to GetNextEngines().
-                        if g_NextEngines:Length > 0
+                        SET g_NextEngines TO GetNextEngines().
+                        IF g_NextEngines:LENGTH > 0
                         {
-                            set g_NextEngines_Spec to GetEngineSpecs(g_NextEngines).
+                            SET g_NextEngines_Spec TO GetEngineSpecs(g_NextEngines).
                         }
                     }
                     SafeStageWithUllage().
-                    // set g_ActiveEngines to GetActiveEngines(). 
-                    set g_NextEngines to GetNextEngines().
-                    set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+                    // SET g_ActiveEngines TO GetActiveEngines(). 
+                    SET g_NextEngines TO GetNextEngines().
+                    SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
                 }.
 
-                return stageAction@.
+                RETURN stageAction@.
             }
         }
         
         
-        // GetStagingConditionDelegate :: (_checkType)<string> -> (Result)<kOSDelegate>   // TODO: Implement other check types here (only thrust value for now)
+        // GetStagingConditionDelegate :: (_checkType)<string> -> (Result)<kOSDelegate>   // TODO: Implement other check types here (only thrust value FOR now)
         // Given a staging check type string, performs that condition check and returns the result
-        local function GetStagingConditionDelegate
+        LOCAL function GetStagingConditionDelegate
         {
-            parameter _checkType is 0.
+            PARAMETER _checkType IS 0.
 
-            // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
+            // IF _checkType = 0 // Thrust Value: SHIP:AvailableThrust < 0.01
             // {
-                local condition to CheckShipThrustCondition@.
-                local boundCondition to condition:Bind(Ship, 0.01).
-                return boundCondition.
+                LOCAL condition TO CheckShipThrustCondition@.
+                LOCAL boundCondition TO condition:BIND(Ship, 0.01).
+                RETURN boundCondition.
             // }
-            // else if _checkType = 1
+            // ELSE IF _checkType = 1
             // {
 
             // }
@@ -297,109 +350,109 @@
 
 
         // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> <ResultCode>(Scalar)
-        local function CheckShipThrustCondition
+        LOCAL function CheckShipThrustCondition
         {
-            parameter _ves,
+            PARAMETER _ves,
                       _checkVal.
 
-            local resultCode to 0.
-            if _ves:AvailableThrust < _checkVal
+            LOCAL resultCode TO 0.
+            IF _ves:AvailableThrust < _checkVal and SHIP:STATUS <> "PRELAUNCH"
             {
-                set resultCode to 1.
+                SET resultCode TO 1.
             }
-            return resultCode.
+            RETURN resultCode.
         }
 
-        local function SafeStage
+        LOCAL function SafeStage
         {
-            wait until Stage:Ready.
+            WAIT UNTIL STAGE:READY.
             stage.
-            wait 0.01.
-            if g_HotStageArmed
-            {
-                set g_HotStageArmed to ArmHotStaging().
-            }
+            WAIT 0.01.
+            // IF g_HotStageArmed
+            // {
+            //     SET g_HotStageArmed TO ArmHotStaging().
+            // }
         }
 
 
-        // Checks for ullage before  staging
-        local function SafeStageWithUllage
+        // Checks FOR ullage before  staging
+        LOCAL function SafeStageWithUllage
         {
-            set g_NextEngines to GetEnginesForStage(Stage:Number - 1).
-            wait until Stage:Ready.
+            SET g_NextEngines TO GetEnginesForStage(STAGE:NUMBER - 1).
+            WAIT UNTIL STAGE:READY.
             
-            // Ullage check. Skips if engine set doesn't require it.
-            if g_NextEngines_Spec:Ullage
+            // Ullage check. Skips IF engine SET doesn't require it.
+            IF g_NextEngines_Spec:Ullage
             {
-                set g_TS to Time:Seconds + 5.
-                local doneFlag to false.
-                until doneFlag or Time:Seconds > g_TS
+                SET g_TS TO Time:Seconds + 5.
+                LOCAL doneFlag TO false.
+                UNTIL doneFlag or Time:Seconds > g_TS
                 {
-                    set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
-                    if g_NextEngines_Spec:FuelStabilityMin > 0.75 
+                    SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
+                    IF g_NextEngines_Spec:FuelStabilityMin > 0.75 
                     {
-                        set doneFlag to true.
+                        SET doneFlag TO true.
                     }
-                    else
+                    ELSE
                     {
-                        OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(g_NextEngines_Spec:FuelStabilityMin, 5))).
+                        OutInfo("Ullage Check (Fuel Stability Rating: {0})":FORMAT(round(g_NextEngines_Spec:FuelStabilityMin, 5))).
                     }
                 }
-                if not doneFlag 
+                IF not doneFlag 
                 {
                     OutInfo("Ullage check timeout").
                 }
             }
 
-            stage.
-            wait 0.01.
+            STAGE.
+            WAIT 0.01.
 
-            if g_HotStageArmed
-            {
-                set g_HotStageArmed to ArmHotStaging().
-            }
+            // IF g_HotStageArmed
+            // {
+            //     SET g_HotStageArmed TO ArmHotStaging().
+            // }
         }
 
 
         // SafeStage :: <none> -> <none>
-        // Performs a staging function after waiting for the stage to report it is ready first
-        local function SafeStageState
+        // Performs a staging function after waiting FOR the stage TO report it IS ready first
+        LOCAL function SafeStageState
         {
-            local ullageDelegate to { return true. }.
+            LOCAL ullageDelegate TO { RETURN true. }.
 
-            if stagingState = 0
+            IF stagingState = 0
             {
-                wait until Stage:Ready.
-                stage.
-                set stagingState to 1.
+                WAIT UNTIL STAGE:READY.
+                STAGE.
+                SET stagingState TO 1.
             }
-            else if stagingState = 1
+            ELSE IF stagingState = 1
             {
-                if g_ActiveEngines_Data["Spec"]["IsSepMotor"]
+                IF g_ActiveEngines_Data["Spec"]["IsSepMotor"]
                 { 
-                    if g_ActiveEngines_Data["Spec"]["Ullage"]
+                    IF g_ActiveEngines_Data["Spec"]["Ullage"]
                     {
-                        set ullageDelegate to { return CheckUllage(). }.  // #TODO: Write CheckUllage()
+                        SET ullageDelegate TO { RETURN CheckUllage(). }.  // #TODO: Write CheckUllage()
                     }
-                    set stagingState to 2.
+                    SET stagingState TO 2.
                 }
-                else
+                ELSE
                 {
-                    set stagingState to 4.
+                    SET stagingState TO 4.
                 }
             }
-            else if stagingState = 2
+            ELSE IF stagingState = 2
             {
-                if ullageDelegate:Call()
+                IF ullageDelegate:Call()
                 {
-                    set stagingState to 1.
+                    SET stagingState TO 1.
                 }
             }
-            else if stagingState = 4
+            ELSE IF stagingState = 4
             {
-                set stagingState to 0.
-                unset ullageDelegate.
-                return true.
+                SET stagingState TO 0.
+                UNSET ullageDelegate.
+                RETURN true.
             }
         }
         // #endregion
@@ -408,50 +461,51 @@
     // ** Steering
     // #region
 
-    global function GetOrbitalSteeringDelegate
+    GLOBAL FUNCTION GetOrbitalSteeringDelegate
     {
-        // parameter _delDependency is lexicon().
-        parameter _steerPair is "Flat:Sun".
+        // PARAMETER _delDependency IS LEX().
+        PARAMETER _steerPair IS "Flat:Sun",
+                  _fShape    IS 0.9875.
 
-        local del to {}.
-        if g_azData:Length = 0
+        LOCAL del TO {}.
+        IF g_azData:LENGTH = 0
         {
-            set g_AzData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
+            SET g_AzData TO l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
         }
 
-        if g_AngDependency:Keys:Length = 0
+        IF g_AngDependency:Keys:LENGTH = 0
         {
-            set g_AngDependency to InitAscentAng_Next(g_MissionParams[1], 1, 22.5).
+            SET g_AngDependency TO InitAscentAng_Next(g_MissionParams[1], _fShape, 22.5).
         }
 
-        if _steerPair = "Flat:Sun"
+        IF _steerPair = "Flat:Sun"
         {
-            set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+            SET del TO { RETURN HEADING(compass_for(SHIP, SHIP:Prograde), 0, 0).}.
         }
-        else if _steerPair = "AngErr:Sun"
+        ELSE IF _steerPair = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            set del to { return Heading(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
+            SET del TO { RETURN HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
-        else if _steerPair = "lazCalc:Sun"
+        ELSE IF _steerPair = "lazCalc:Sun"
         {
-            set del to { return Ship:Facing.}   .
+            SET del TO { RETURN SHIP:FACING.}.
         }
         
-        return del@.
+        RETURN del@.
     }
 
-    global function SetSteering
+    GLOBAL FUNCTION SetSteering
     {
-        parameter _altTurn.
+        PARAMETER _altTurn.
 
-        if Ship:Altitude >= _altTurn
+        IF SHIP:ALTITUDE >= _altTurn
         {
-            set s_Val to Ship:SrfPrograde - r(0, 4, 0).
+            SET s_Val TO SHIP:SRFPROGRADE - r(0, 4, 0).
         } 
-        else
+        ELSE
         {
-            set s_Val to Heading(90, 88, 0).
+            SET s_Val TO HEADING(90, 88, 0).
         }
     }
     // #endregion

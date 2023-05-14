@@ -6,20 +6,23 @@ RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
 DispMain(ScriptPath()).
 
-local g_MissionTag to ParseCoreTag(core:Part:Tag).
+set g_MissionTag to ParseCoreTag(core:Part:Tag).
 local tgtInc       to choose g_MissionTag:Params[0] if g_MissionTag:Params:Length > 0 else 0.
-local tgtAlt       to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 500000.
-local azObj        to l_az_calc_init(tgtAlt, tgtInc).
+local tgtAlt       to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 100.
+local azObj        to choose l_az_calc_init(tgtAlt, tgtInc) if g_GuidedAscentMissions:Contains(g_MissionTag:Mission) else list().
 
 local scr to "0:/main/launch/soundingLaunch.ks".
 print "Executing path: {0}":Format(scr).
 runPath(scr, list(tgtAlt, tgtInc, azObj)).
 
+// Circularize if necessary
 if Stage:Number > 0 and Ship:Periapsis < Body:Atm:Height and g_MissionTag:Mission = "Orbit"
 {
+    local burnTime to 90. // GetEnginesSpecs(GetNextEngines()):ESTBURNTIME.
+
     OutMsg("Executing circAtApo").
     wait 1.
-    runPath("0:/main/launch/circAtApo", list(0, 60, azObj)).
+    runPath("0:/main/launch/circAtApo", list(g_MissionTag:StgStop, burnTime, azObj)).
 }
 
 wait until ETA:Apoapsis < 15 or Ship:VerticalSpeed <= 0.

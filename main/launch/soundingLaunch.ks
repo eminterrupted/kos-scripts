@@ -18,7 +18,7 @@ local steeringDelegate      to { return 0.}.
 local ThrustThresh   to 0.
 
 // Parameter default values.
-local _tgtAlt        to 500000.
+local _tgtAlt        to 100.
 local _tgtInc        to 0.
 local _azObj         to list().
 
@@ -29,16 +29,19 @@ if params:length > 0
     if params:length > 2 set _azObj to params[2].
 }
 
-if _azObj:Length = 0
-{
-    set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
-}
-set g_azData to _azObj.
 
 wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + 100).
 
-set steeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
+// Set the steering delegate
+if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
+{
+    set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
+}
+
+set g_azData to _azObj.
+set g_LoopDelegates["Steering"] to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
+
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
@@ -57,6 +60,9 @@ set g_NextEngines   to GetNextEngines().
 
 // local AutoStageResult to ArmAutoStaging().
 ArmAutoStaging().
+
+// Arm hot staging if present
+set g_HotStagingArmed to ArmHotStaging().
 
 // if AutoStageResult = 1
 // {
@@ -80,13 +86,23 @@ until Alt:Radar >= towerHeight
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-    if g_BoostersArmed { CheckBoosterStageCondition().}
+    if g_BoostersArmed   { CheckBoosterStageCondition().}
     if g_LoopDelegates:HasKey("Staging")
     {
-        set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-        if stagingCheckResult = 1
+        if g_HotStagingArmed 
+        { 
+            if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+            {
+                g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+            }
+        }
+        else
         {
-            g_LoopDelegates:Staging["Action"]:Call().
+            set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+            if stagingCheckResult = 1
+            {
+                g_LoopDelegates:Staging["Action"]:Call().
+            }
         }
     }
 
@@ -98,7 +114,7 @@ local fairingsArmed to ArmFairingJettison("ascent").
 OutInfo("ArmFairingJettison() result: {0}":Format(fairingsArmed)).
 if fairingsArmed
 {
-    set fairingJetAlt to g_LoopDelegates["Events"]["fairing"]:Alt.
+    set fairingJetAlt to g_LoopDelegates["Events"]["Fairings"]:Alt.
 }
 
 
@@ -110,21 +126,31 @@ until Stage:Number <= g_StageLimit
     if g_BoostersArmed { CheckBoosterStageCondition().}
     if g_LoopDelegates:HasKey("Staging")
     {
-        set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-        if stagingCheckResult = 1
+        if g_HotStagingArmed 
+        { 
+            if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+            {
+                g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+            }
+        }
+        else
         {
-            g_LoopDelegates:Staging["Action"]:Call().
+            set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+            if stagingCheckResult = 1
+            {
+                g_LoopDelegates:Staging["Action"]:Call().
+            }
         }
     }
     if fairingsArmed
     {
         if Ship:Altitude >= fairingJetAlt
         {
-            if g_LoopDelegates:Events:HasKey("Fairing")
+            if g_LoopDelegates:Events:HasKey("Fairings")
             {
-                if g_LoopDelegates:Events:Fairings:HasKey("Delegate")
+                if g_LoopDelegates:Events:Fairings:HasKey("Check")
                 {
-                    g_LoopDelegates:Events:Fairings:Delegate:Call().
+                    g_LoopDelegates:Events:Fairings:Check:Call().
                 }
                 else
                 {
@@ -136,8 +162,11 @@ until Stage:Number <= g_StageLimit
     }
     if RCSArmed
     {
-        if Ship:Altitude > RCSAlt { RCS on. }
-        set RCSArmed to False.
+        if Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= 0.001
+        {
+            RCS on.
+            set RCSArmed to False.
+        }
     }
     
     if g_LoopDelegates["Events"]:Keys:Length > 0 
@@ -145,45 +174,54 @@ until Stage:Number <= g_StageLimit
         ExecLoopEventDelegates().
     }
 
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_LoopDelegates:Steering:Call().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
 }
 
+// set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+// until g_ActiveEngines_Data:Thrust >= 0.2
+// {
+//     if g_BoostersArmed { CheckBoosterStageCondition().}
+//     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+
+//     if fairingsArmed
+//     {
+//         if Ship:Altitude >= fairingJetAlt
+//         {
+//             g_LoopDelegates:Events["fairing"]:Delegate:Call().
+//             set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+//         }
+//     }
+
+//     DispLaunchTelemetry().
+//     // DispEngineTelemetry().
+//     wait 0.01.
+// }
+
+DisableAutoStaging().
+
+OutMsg("Final Burn").
 set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-until g_ActiveEngines_Data:Thrust >= 0.2
+wait 0.25.
+until g_ActiveEngines_Data:Thrust <= 0.25 // until Ship:AvailableThrust <= 0.01
 {
-    if g_BoostersArmed { CheckBoosterStageCondition().}
+    set s_Val to g_LoopDelegates:Steering:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
 
     if fairingsArmed
     {
         if Ship:Altitude >= fairingJetAlt
         {
-            g_LoopDelegates:Events["fairing"]:Delegate:Call().
+            g_LoopDelegates:Events["Fairings"]:Check:Call().
             set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
         }
     }
 
-    DispLaunchTelemetry().
-    // DispEngineTelemetry().
-    wait 0.01.
-}
-
-OutMsg("Final Burn").
-until g_ActiveEngines_Data:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
-{
-    set s_Val to steeringDelegate:Call().
-    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-
-    if fairingsArmed
+    if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        if Ship:Altitude >= fairingJetAlt
-        {
-            g_LoopDelegates:Events["fairing"]:Delegate:Call().
-            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-        }
+        ExecLoopEventDelegates().
     }
 
     DispLaunchTelemetry().
@@ -192,6 +230,7 @@ until g_ActiveEngines_Data:Thrust <= 0.1 // until Ship:AvailableThrust <= 0.01
 }
 ClearDispBlock("ENGINE_TELEMETRY").
 
+
 OutMsg("Coasting out of atmosphere").
 Until Ship:Altitude >= Body:ATM:Height
 {
@@ -199,46 +238,63 @@ Until Ship:Altitude >= Body:ATM:Height
     DispLaunchTelemetry().
 }
 
-if g_StageLimitSet:Keys:Length > 0
-{
-    from { local i to 0.} until i = g_StageLimitSet:Keys:Length step { set i to i + 1.} do
-    {
-        if g_StageLimitSet[i]:s < g_StageLimit
-        {
-            OutMsg("Executing Event-Based Auto-Staging").
-            until g_StageLimitSet[i]:C:Call()
-            {
-                OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
-                set s_Val to Ship:Prograde.
-                DispLaunchTelemetry().
-                wait 0.01.
-            }
-            set g_StageLimit to g_StageLimitSet[i]:S.
-            ArmAutoStaging().
-        }
-    }
-}
+// if g_StageLimitSet:Keys:Length > 0
+// {
+//     from { local i to 0.} until i = g_StageLimitSet:Keys:Length step { set i to i + 1.} do
+//     {
+//         if g_StageLimitSet[i]:s < g_StageLimit
+//         {
+//             OutMsg("Executing Event-Based Auto-Staging").
+//             until g_StageLimitSet[i]:C:Call()
+//             {
+//                 OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
+//                 set s_Val to Ship:Prograde.
+//                 DispLaunchTelemetry().
+//                 wait 0.01.
+//             }
+//             set g_StageLimit to g_StageLimitSet[i]:S.
+//             ArmAutoStaging().
+//         }
+//     }
+// }
 
 // Arm any parachutes before we exit
-OutMsg("Arming Parachutes").
-for m in Ship:ModulesNamed("RealChuteModule")
+// OutMsg("Arming Parachutes").
+// for m in Ship:ModulesNamed("RealChuteModule")
+// {
+//     OutInfo("Arming Parachute [{0}({1})] ":Format(m:part:name, m:part:uid)).
+//     DoEvent(m, "arm parachute").
+// }
+// wait 1.
+
+if g_StageLimitSet:Length > 0
 {
-    OutInfo("Arming Parachute [{0}({1})] ":Format(m:part:name, m:part:uid)).
-    DoEvent(m, "arm parachute").
+    set core:tag to SetNextStageLimit(core:tag).
 }
-wait 1.
 
 OutMsg("Launch script complete, performing exit actions").
 OutInfo().
 OutInfo("",1).
 wait 1.
 
+global function SetNextStageLimit
+{
+    parameter _tag is core:tag.
+
+    if g_StageLimitSet:Length > 1
+    {
+        set _tag to _tag:replace("|{0};":Format(g_StageLimit:ToString), "|").
+        g_StageLimitSet:Remove(0).
+    }
+    return _tag.
+}
+
 
 local function ArmBoosterStaging
 {
     set g_BoosterObj to lexicon().
 
-    local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\|\d*)+(\|as)?$").
+    local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\|\.)+(\d*)+").
 
     local setIdxList to UniqueSet().
     if BoosterParts:Length > 0
@@ -256,13 +312,12 @@ local function ArmBoosterStaging
             }
         }
         set g_BoostersArmed to true.
-        return g_BoostersArmed.
     }
     else 
     {
         set g_BoostersArmed to false.
-        return g_BoostersArmed.
     }
+    return g_BoostersArmed.
 }
 
 
