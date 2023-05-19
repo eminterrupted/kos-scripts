@@ -560,7 +560,7 @@
     {
         parameter _eventID.
 
-        OutInfo("UnregisterLoopEvent: Removing event ({0})":Format(localID)).
+        OutInfo("UnregisterLoopEvent: Removing event ({0})":Format(_eventID)).
 
         if g_LoopDelegates:Events:Keys:Contains(_eventID)
         {

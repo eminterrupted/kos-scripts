@@ -58,26 +58,26 @@
     // #region
     
     // GetActiveEngines :: [(_ves)<Ship>] -> (ActiveEngines)<List)
-    // Returns a list of engines current firing and with a stage number great than the current one
+    // Gets all engines that are active right now, no matter what stage they were
+    // activated in. 
+    // Valid _engType values are "All" and "NoSep" (excludes sep motors) 
     global function GetActiveEngines
     {
-        parameter _ves is Ship.
+        parameter _ves is ship,
+                  _engType is "all".
 
         local engList to list().
-        for eng in _ves:Engines
+
+        for eng in _ves:engines
         {
-            if eng:ignition
+            if _engType = "all" or eng:tag:length > 0
             {
-                if not eng:flameout
+                if eng:ignition and not eng:flameout
                 {
-                    if eng:stage >= Stage:Number
-                    {
-                        engList:Add(eng).
-                    }
+                    engList:add(eng).
                 }
             }
         }
-
         return engList.
     }
 
@@ -116,6 +116,7 @@
         }
         return engList.
     }
+
 
     // GetNextEngines :: -> (engList)<List>
     // Returns the next set of engines, starting with current stage - 1, and iterating towards 0 until it finds them (or doesn't)
@@ -402,9 +403,9 @@
                     if res:MassFlow > 0 
                     {
                         set burnTimeRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
-                        if g_ActiveEngines:Length > 0 
+                        if g_ActiveEngines:Length > 0
                         {
-                            set burnTimeRemaining to max(burnTimeRemaining, 0.0000001) / max(0.01, g_ActiveEngines:Length).
+                            set burnTimeRemaining to max(burnTimeRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
                         }
                     }
                     else 

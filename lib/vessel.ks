@@ -128,7 +128,6 @@
             PARAMETER _fairingTag IS "ascent".
 
             LOCAL jettison_alt TO 100000.
-            LOCAL fairing_tag_extended TO "fairing|{0}":FORMAT(_fairingTag).
             LOCAL fairing_tag_ext_regex TO "fairing\|{0}":FORMAT(_fairingTag).
 
             LOCAL op TO choose "gt" IF _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") ELSE "lt".
@@ -163,7 +162,8 @@
             return result.
         }
 
-            
+        // LOOK AT ALL THIS DEAD CODE. =D 
+
         //     FOR p IN SHIP:PARTSTAGGEDPATTERN(fairing_tag_ext_regex)
         //     {
         //         OutDebug("AFJ: Line 139").
@@ -253,10 +253,7 @@
             LOCAL CheckDel TO {}.
             LOCAL Engine_Obj TO LEX().
             LOCAL HotStage_List TO SHIP:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
-
-            local StageActiveEngines to list().
-
-
+            
             IF HotStage_List:LENGTH > 0
             {
                 if not g_LoopDelegates:HASKEY("Staging")
@@ -281,39 +278,43 @@
                     }
                 }
                 
-                FOR EngListID IN Engine_Obj:KEYS
+                FOR HotStageID IN Engine_Obj:KEYS
                 {
-                    OutInfo("Arming Hot Staging for Engine(s): {0}":Format(EngListID)).
+                    OutInfo("Arming Hot Staging for Engine(s): {0}":Format(HotStageID)).
                     
                     // Set up the g_LoopDelegates object
-                    g_LoopDelegates:Staging:HotStaging:ADD(EngListID, LEX(
-                        "Engines", Engine_Obj[EngListID]
-                        ,"EngSpecs", GetEnginesSpecs(Engine_Obj[EngListID])
+                    g_LoopDelegates:Staging:HotStaging:ADD(HotStageID, LEX(
+                        "Engines", Engine_Obj[HotStageID]
+                        ,"EngSpecs", GetEnginesSpecs(Engine_Obj[HotStageID])
                         )
                     ).
 
                     SET checkDel  TO { 
-                        IF STAGE:NUMBER - 1 = EngListID {
-                            OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
-                            RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                        IF STAGE:NUMBER - 1 = HotStageID {
+                            OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
+                            RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                        }
+                        else
+                        {
+                            return false.
                         }
                     }.
 
                     SET actionDel TO { 
-                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(EngListID, "Ignition")).
-                        FOR eng IN g_LoopDelegates:Staging:HotStaging[EngListID]:Engines
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(HotStageID, "Ignition")).
+                        FOR eng IN g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines
                         {
                             IF not eng:IGNITION { eng:ACTIVATE.}
                         }
 
-                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(EngListID, "SpoolUp")).
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(HotStageID, "SpoolUp")).
                         SET g_ActiveEngines_Data TO GetEnginesPerformanceData(g_ActiveEngines).
-                        LOCAL NextEngines_Data TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[EngListID]:Engines).
+                        LOCAL NextEngines_Data TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                         UNTIL NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
                         {
                             SET s_Val                TO g_LoopDelegates:Steering:CALL().
                             SET g_ActiveEngines_Data TO GetEnginesPerformanceData(g_ActiveEngines).
-                            SET NextEngines_Data     TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[EngListID]:Engines).
+                            SET NextEngines_Data     TO GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                             OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":FORMAT(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
                             WAIT 0.01.
                         }
@@ -323,7 +324,7 @@
                         STAGE.
                         WAIT 0.5.
                         OutInfo().
-                        g_LoopDelegates:Staging:HotStaging:REMOVE(EngListID).
+                        g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
                         if g_LoopDelegates:Staging:HotStaging:KEYS:LENGTH = 0
                         {
                             g_LoopDelegates:Staging:Remove("HotStaging").
@@ -336,8 +337,8 @@
                     }.
 
                     // Add the delegates TO the previously set up object
-                    g_LoopDelegates:Staging:HotStaging[EngListID]:ADD("Check", checkDel@).
-                    g_LoopDelegates:Staging:HotStaging[EngListID]:ADD("Action", actionDel@).
+                    g_LoopDelegates:Staging:HotStaging[HotStageID]:ADD("Check", checkDel@).
+                    g_LoopDelegates:Staging:HotStaging[HotStageID]:ADD("Action", actionDel@).
                 }
 
                 RETURN TRUE.
