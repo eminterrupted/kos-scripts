@@ -17,6 +17,8 @@
 // #region
     // Program flow control
     global g_ResultCode to 0.
+    global g_RunMode to 0.
+    global g_Program to 0.
     global g_TS to 0.
     global g_LastUpdate to 0.
 

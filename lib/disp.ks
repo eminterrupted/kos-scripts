@@ -130,6 +130,25 @@
         }
     }
 
+    // OutInfo :: (Message)<string>, (LineIndex)<scalar> -> (none)
+    // Writes a non-critical message at lines 6-8 depending on the line provided. 
+    global function OutDebug
+    {
+        parameter _str is "",
+                  _lineIdx is 0.
+                  //_teeHUD is false. TODO: implement TeeHud function
+
+        local line to 50.
+        if _str:length > 0
+        {
+            print "[{0}] {1} ":Format("*DBG", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+        }
+        else
+        {
+            print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+        }
+    }
+
     // *~ Display Components
 
     // DispAscentAngleStats :: (_statLex)<lexicon>, [(_line)<scalar>]

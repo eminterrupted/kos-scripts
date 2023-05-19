@@ -65,3 +65,10 @@ global function GetKSPActionFromExperiment
     }
     return list(expName, expAction).
 }
+
+global function StoreSciResults
+{
+    parameter _destPart is core:part.
+
+    if g_ActiveEngines:length > 0 {}
+}

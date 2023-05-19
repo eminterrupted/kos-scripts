@@ -22,7 +22,7 @@
 
     // *- Global (Adds new globals specific TO this library, and updates existing globals)
     // #region
-    
+    global g_UllageTS to -1.
     // New entries IN global objects
     
     // #endregion
@@ -121,6 +121,7 @@
             g_LoopDelegates:Remove("Staging").
         }
 
+
         // ArmFairingJettison :: (fairingTag) -> <none>
         GLOBAL FUNCTION ArmFairingJettison
         {
@@ -131,52 +132,102 @@
             LOCAL fairing_tag_ext_regex TO "fairing\|{0}":FORMAT(_fairingTag).
 
             LOCAL op TO choose "gt" IF _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") ELSE "lt".
+            local result to false.
 
-            FOR p IN SHIP:PARTSTAGGEDPATTERN(fairing_tag_ext_regex)
+            OutDebug("AFJ: Line 136").
+
+            local fairingSet to Ship:PartsTaggedPattern(fairing_tag_ext_regex).
+            if fairingSet:Length > 0
             {
-                IF p:TAG:MATCHESPATTERN("{0}\|\d*":FORMAT(fairing_tag_ext_regex))
-                {
-                    SET jettison_alt TO ParseStringScalar(p:TAG:REPLACE("{0}|":FORMAT(fairing_tag_extended),"")).
-                }
-                IF p:HASMODULE("ProceduralFairingDecoupler")
-                {
-                    IF not g_LoopDelegates["Events"]:HASKEY("Fairings")
-                    {
-                        SET g_LoopDelegates["Events"]["Fairings"] TO LEX(
-                            "Tag", _fairingTag
-                            ,"Alt", jettison_alt
-                            ,"Op", op
-                            ,"Modules", LIST(p:GETMODULE("ProceduralFairingDecoupler"))
-                        ).
-                    }
-                    ELSE
-                    {
-                        g_LoopDelegates:Events:Fairings:Modules:ADD(p:GETMODULE("ProceduralFairingDecoupler")).
-                    }
+                set jettison_alt to choose jettison_alt if fairingSet[0]:Tag:Split("|"):Length < 3 else ParseStringScalar(fairingSet[0]:Tag:Split("|")[2]).
 
-                    IF not g_LoopDelegates["Events"]["Fairings"]:HASKEY("Check")
-                    {
-                        SET g_LoopDelegates["Events"]["Fairings"]["Check"] TO choose
-                        { 
-                            IF SHIP:ALTITUDE > jettison_alt 
-                            { 
-                                JettisonFairings(g_LoopDelegates["Events"]["Fairings"]["Modules"]).
-                                g_LoopDelegates["Events"]:Remove("Fairings").
-                            } 
-                        } 
-                        IF op = "gt" ELSE
-                        { 
-                            IF SHIP:altitude < jettison_alt 
-                            { 
-                                JettisonFairings(g_LoopDelegates["Events"]["Fairings"]["Modules"]).
-                                g_LoopDelegates["Events"]:Remove("Fairings").
-                            } 
-                        }.
-                    }
-                }
+                local checkDel to choose { 
+                    parameter _params to list(). return Ship:Altitude > _params[0].
+                } 
+                if op = "gt" ELSE
+                { 
+                    parameter _params to list(). return Ship:Altitude < _params[0].
+                }.
+
+                local actionDel to {
+                    parameter _params is list().
+                    
+                    JettisonFairings(_params[1]).
+                    OutDebug("Fairing action performed").
+                    return false.
+                }.
+
+                local fairingEvent to CreateLoopEvent("Fairings", "CheckAction", list(jettison_alt, fairingSet), checkDel@, actionDel@). 
+                set result to RegisterLoopEvent(fairingEvent).
             }
-            RETURN g_LoopDelegates["Events"]:HASKEY("Fairings").
+            return result.
         }
+
+            
+        //     FOR p IN SHIP:PARTSTAGGEDPATTERN(fairing_tag_ext_regex)
+        //     {
+        //         OutDebug("AFJ: Line 139").
+        //         IF p:TAG:MATCHESPATTERN("{0}\|\d*":FORMAT(fairing_tag_ext_regex))
+        //         {
+        //             OutDebug("AFJ: Line 142").
+        //             SET jettison_alt TO ParseStringScalar(p:TAG:REPLACE("{0}|":FORMAT(fairing_tag_extended),"")).
+        //         }
+        //         IF p:HASMODULE("ProceduralFairingDecoupler")
+        //         {
+        //             OutDebug("AFJ: Line 147").
+        //             IF not g_LoopDelegates["Events"]:HASKEY("Fairings")
+        //             {
+        //                 OutDebug("AFJ: Line 150").
+        //                 SET g_LoopDelegates["Events"]["Fairings"] TO LEX(
+        //                     "Tag", _fairingTag
+        //                     ,"Alt", jettison_alt
+        //                     ,"Op", op
+        //                     ,"Modules", LIST(p:GETMODULE("ProceduralFairingDecoupler"))
+        //                     ,"Delegates", LEX(
+        //                         "Check", {},
+        //                         "Action", {}
+        //                     )
+        //                 ).
+        //             }
+        //             ELSE
+        //             {
+        //                 OutDebug("AFJ: Line 160").
+        //                 g_LoopDelegates:Events:Fairings:Modules:ADD(p:GETMODULE("ProceduralFairingDecoupler")).
+        //             }
+
+        //             OutDebug("AFJ: Line 166").
+        //             SET g_LoopDelegates:Events:Fairings:Delegates:Check TO choose
+        //             { 
+        //                 parameter _params to list(). return SHIP:ALTITUDE > jettison_alt.
+        //             } 
+        //             IF op = "gt" ELSE
+        //             { 
+        //                 parameter _params to list(). return SHIP:altitude < jettison_alt.
+        //             }.
+                    
+        //             // if not g_LoopDelegates:Events:Fairings:Delegates:HasKey("Action")
+        //             // {
+        //             OutDebug("AFJ: Line 178").
+        //             //g_LoopDelegates:Events:Fairings:Delegates:Add(
+        //             set g_LoopDelegates:Events:Fairings:Delegates:Action to {
+        //                 parameter _modules is g_LoopDelegates:Events:Fairings:Modules.
+
+        //                 JettisonFairings(_modules).
+        //                 OutDebug("Fairing action performed").
+        //                 return false.
+        //             }.
+        //             // }
+        //             // else
+        //             // {
+        //             //     OutDebug("AFJ: Line 187").
+        //             // }
+
+        //             OutDebug("AFJ: Line 189").
+        //         }
+        //     }
+        //     wait 3.
+        //     RETURN g_LoopDelegates["Events"]:HASKEY("Fairings").
+        // }
 
         // JettisonFairings :: _fairings<list> -> <none>
         // Will jettison fairings provided
@@ -188,7 +239,7 @@
             {
                 FOR f IN _fairings
                 {
-                    IF f:ISTYPE("Part") { SET f TO f:GETMODULE("ProceduralFairingDeoupler"). }
+                    IF f:ISTYPE("Part") { SET f TO f:GETMODULE("ProceduralFairingDecoupler"). }
                     DoEvent(f, "jettison fairing").
                 }
             }
@@ -202,6 +253,9 @@
             LOCAL CheckDel TO {}.
             LOCAL Engine_Obj TO LEX().
             LOCAL HotStage_List TO SHIP:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
+
+            local StageActiveEngines to list().
+
 
             IF HotStage_List:LENGTH > 0
             {
@@ -239,7 +293,7 @@
                     ).
 
                     SET checkDel  TO { 
-                        IF STAGE:NUMBER - 1 = EngListID { 
+                        IF STAGE:NUMBER - 1 = EngListID {
                             OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
                             RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[EngListID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
                         }
@@ -316,13 +370,18 @@
                         SET g_NextEngines TO GetNextEngines().
                         IF g_NextEngines:LENGTH > 0
                         {
-                            SET g_NextEngines_Spec TO GetEngineSpecs(g_NextEngines).
+                            SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
                         }
                     }
-                    SafeStageWithUllage().
+
+                    until SafeStageWithUllage(g_NextEngines, g_NextEngines_Spec)
+                    {
+                        DispLaunchTelemetry().
+                        wait 0.01.
+                    }
                     // SET g_ActiveEngines TO GetActiveEngines(). 
-                    SET g_NextEngines TO GetNextEngines().
-                    SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
+                    // SET g_NextEngines TO GetNextEngines().
+                    // SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
                 }.
 
                 RETURN stageAction@.
@@ -375,42 +434,47 @@
         }
 
 
-        // Checks FOR ullage before  staging
-        LOCAL function SafeStageWithUllage
+        // Checks FOR ullage before staging
+        local function SafeStageWithUllage
         {
-            SET g_NextEngines TO GetEnginesForStage(STAGE:NUMBER - 1).
-            WAIT UNTIL STAGE:READY.
+            parameter _engList,
+                      _engList_Spec is lexicon().
+
+            // set g_NextEngines     to GetNextEngines().
+            // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+
+            local stageResult to false.
             
-            // Ullage check. Skips IF engine SET doesn't require it.
-            IF g_NextEngines_Spec:Ullage
+            if _engList_Spec:Keys:Length = 0
             {
-                SET g_TS TO Time:Seconds + 5.
-                LOCAL doneFlag TO false.
-                UNTIL doneFlag or Time:Seconds > g_TS
+                set _engList_Spec to GetEnginesSpecs(_engList).
+            }
+                        
+            if _engList_Spec:HasKey("FuelStabilityMin")
+            {
+                if _engList_Spec:FuelStabilityMin > 0.925
                 {
-                    SET g_NextEngines_Spec TO GetEnginesSpecs(g_NextEngines).
-                    IF g_NextEngines_Spec:FuelStabilityMin > 0.75 
-                    {
-                        SET doneFlag TO true.
-                    }
-                    ELSE
-                    {
-                        OutInfo("Ullage Check (Fuel Stability Rating: {0})":FORMAT(round(g_NextEngines_Spec:FuelStabilityMin, 5))).
-                    }
+                    OutInfo("Ullage Check Passed!").
+                    set stageResult to true.
                 }
-                IF not doneFlag 
+                else
                 {
-                    OutInfo("Ullage check timeout").
+                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":FORMAT(round(_engList_Spec:FuelStabilityMin * 100, 2))).
                 }
             }
+            else 
+            {
+                set stageResult to true.
+            }
 
-            STAGE.
-            WAIT 0.01.
-
-            // IF g_HotStageArmed
-            // {
-            //     SET g_HotStageArmed TO ArmHotStaging().
-            // }
+            if stageResult
+            {
+                wait until Stage:Ready.
+                Stage.
+                wait 0.01.
+            }
+            
+            return stageResult.
         }
 
 
@@ -461,6 +525,16 @@
     // ** Steering
     // #region
 
+    global function GetSteeringError
+    {
+        parameter _type is "ang".
+
+             if _type:MatchesPattern("ang")  return SteeringManager:AngleError.
+        else if _type:matchesPattern("pit")  return SteeringManager:PitchError.
+        else if _type:MatchesPattern("yaw")  return SteeringManager:YawError.
+        else if _type:MatchesPattern("roll") return SteeringManager:RollError.
+    }
+
     GLOBAL FUNCTION GetOrbitalSteeringDelegate
     {
         // PARAMETER _delDependency IS LEX().
@@ -475,7 +549,7 @@
 
         IF g_AngDependency:Keys:LENGTH = 0
         {
-            SET g_AngDependency TO InitAscentAng_Next(g_MissionParams[1], _fShape, 22.5).
+            SET g_AngDependency TO InitAscentAng_Next(g_MissionParams[1], _fShape, 10).
         }
 
         IF _steerPair = "Flat:Sun"
@@ -486,6 +560,11 @@
         {
             RunOncePath("0:/lib/launch.ks").
             SET del TO { RETURN HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
+        }
+        ELSE IF _steerPair = "ApoErr:Sun"
+        {
+            RunOncePath("0:/lib/launch.ks").
+            set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
         ELSE IF _steerPair = "lazCalc:Sun"
         {

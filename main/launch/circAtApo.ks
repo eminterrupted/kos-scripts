@@ -14,7 +14,7 @@ set g_MissionParams to g_MissionTag:PARAMS.
 
 local _azData   to g_azData.
 local _stgAtETA to ETA:Apoapsis - 60.
-local _stpStg   to 0.
+local _stpStg   to g_StageLimit.
 
 if params:length > 0
 {
@@ -59,7 +59,6 @@ until ETA:Apoapsis <= _stgAtETA + 5
         set warp to 1.
         wait until KUniverse:TimeWarp:IsSettled.
         WarpTo(_stgAtETA - 30).
-        set g_TermChar to "".
     }
     else if g_TermChar = Terminal:Input:EndCursor
     {
@@ -67,6 +66,24 @@ until ETA:Apoapsis <= _stgAtETA + 5
         OutMsg("Warp Cancelled").
         wait until KUniverse:TimeWarp:IsSettled.
     }
+    else if g_TermChar = Terminal:Input:RightCursorOne
+    {
+        set _setAtETA to _stgAtETA + 5.
+    }
+    else if g_TermChar = Terminal:Input:UpCursorOne
+    {
+        set _stgAtETA to _stgAtETA + 1.
+    }
+    else if g_TermChar = Terminal:Input:LeftCursorOne
+    {
+        set _stgAtETA to _stgAtETA - 5.
+    }
+    else if g_TermChar = Terminal:Input:DownCursorOne
+    {
+        set _stgAtETA to _stgAtETA - 1.
+    }
+    set g_TermChar to "".
+
     OutInfo("Time Remaining: {0}s  ":Format(round(ETA:Apoapsis - _stgAtETA, 2))).
     DispLaunchTelemetry().
 }
@@ -107,7 +124,7 @@ OutMsg("Arming AutoStaging to {0}":Format(_stpStg)).
 OutInfo().
 
 set t_Val to 1.
-ArmAutoStagingNext(_stpStg, 1, 0).
+ArmAutoStagingNext(_stpStg, 1, 1).
 
 until Stage:Number = g_StageLimit
 {
@@ -123,7 +140,7 @@ until Stage:Number = g_StageLimit
     
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        ExecLoopEventDelegates().
+        ExecGLoopEvents().
     }
 
     set s_Val to steeringDelegate:Call().

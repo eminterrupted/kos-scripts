@@ -11,7 +11,7 @@ local fairings to ship:PartsTaggedPattern("fairing\|reentry").
 local jettAlt to 5000.
 
 local parachutes to ship:modulesnamed("RealChuteModule").
-local payloadStage to choose 0 if core:tag:split("|"):length < 2 else core:tag:split("|")[2]:tonumber.
+local payloadStage to g_StageLimit.
 local reentryTgt to (ship:body:atm:height * 0.425).
 local retroFire to false.
 local retroStage to payloadStage.
@@ -157,7 +157,7 @@ if retroFire and ship:periapsis > reentryTgt
     set ts to time:seconds + settleTime.
     until time:seconds >= ts
     {
-        if not CheckSteering(0.050) 
+        if not GetSteeringError(0.050)
         {
             set ts to time:seconds + settleTime.
             set progCounter to progTimer - time:seconds.
@@ -462,20 +462,21 @@ for f in fairings
         DoAction(m, "jettison fairing", true).
     }
 }
+LIGHTS on.
 
 until alt:radar <= 2500
 {
     DispReentryTelemetry().
 }
 
-if ship:ModulesNamed("ProceduralFairingDecoupler"):Length > 0
-{
-    until ship:ModulesNamed("ProceduralFairingDecoupler"):Length = 0
-    {
-        stage.
-        wait 1.
-    }
-}
+// if ship:ModulesNamed("ProceduralFairingDecoupler"):Length > 0
+// {
+//     until ship:ModulesNamed("ProceduralFairingDecoupler"):Length = 0
+//     {
+//         stage.
+//         wait 1.
+//     }
+// }
 
 OutMsg("Chute deploy").
 

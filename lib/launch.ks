@@ -325,8 +325,8 @@
         set g_apo_PID:Setpoint  to _tgtAlt.
 
         local trn_alt_start      to g_la_turnAltStart.
-        local trn_alt_end        to choose 62500 if _tgtAlt <= 250000 else min(75000, max(100000, _tgtAlt / 4)).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
-        local trn_alt_blend      to 750.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
+        local trn_alt_end        to choose 50000 if _tgtAlt <= 175000 else min(325000, max(62500, _tgtAlt / 2)).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
+        local trn_alt_blend      to 500.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
         
         set g_turn_PID           to PidLoop(1.0, 0.05, 0.001, -1, 1).
         set g_turn_PID:Setpoint  to trn_alt_end.
@@ -343,7 +343,7 @@
             ,"TRN_ALT_START", trn_alt_start
             ,"TRN_ALT_END", trn_alt_end
             ,"TRN_ALT_BLEND", trn_alt_blend
-            ,"TRN_APO_TGT", Round(_tgtAlt * 0.875)
+            ,"TRN_APO_TGT", Round(_tgtAlt * 0.925)
         ).
     }
 
@@ -368,6 +368,8 @@
         local output_pitch      to 90.
         local pid_pitch         to 0.
         local pid_value         to 1.
+
+        local current_ap_alt    to (Ship:Altitude + (1 * (Ship:Apoapsis))) / 2.
         
         local facing_pitch              to 90 - VAng(Ship:Up:Vector, Ship:Facing:Vector).
         local prograde_pitch            to 90.
@@ -407,26 +409,27 @@
                 set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
                 set output_pitch        to min(90, effective_pitch * fShape).
             }
-            else if current_alt < turn_alt_end
+            else if current_ap_alt < turn_alt_end
             {
                 set ascent_mode to 1.
                 // set altitude_error      to current_alt / turn_alt_end.
                 // set apo_error           to current_apo / target_apo.
                 local blend_alt_error   to (current_alt - turn_alt_blend) / (turn_alt_end - turn_alt_blend).
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).
-                local apo_error_blended to apo_error * blend_alt_error.
+                local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
+                local apo_error_blended to apo_error * (1 - blend_apo_error).
                 local comb_err          to alt_error_blended + apo_error_blended.
                 // print "alt_error_blended: {0} ":Format(round(alt_error_blended, 3)) at (2, 25).
                 // print "apo_error_blended: {0} ":Format(round(apo_error_blended, 3)) at (2, 26).
                 // print "comb_error: {0} ":Format(round(comb_err, 3)) at (2, 27).
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
-                set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
-                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)). // * 1.125)).
+                set error_limit         to pitch_limit_low + (pitch_limit * comb_err).
+                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)).// * 1.125)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 //set prograde_pitch      to prograde_surface_pitch.
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-10, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
             }
             // else if current_apo < target_apo_turn
             // {
@@ -449,6 +452,19 @@
             //     set output_pitch        to max(-15, min(effective_pitch * _fShape, 90)).
 
             // }
+            else
+            {
+                set ascent_mode to 3.
+                // set apo_error           to current_apo / target_apo.
+                // set error_pitch         to 90 * (1 - apo_error).
+                set error_pitch         to 90 * (1 - apo_error).
+                set error_limit         to pitch_limit_low + (pitch_limit * apo_error).
+                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit_low + (pitch_limit / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
+                set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
+                // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
+                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
+            }
             // else if current_apo < target_apo * 0.825
             // {
             //     set ascent_mode to 3.
@@ -458,17 +474,6 @@
             //     set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
             //     set output_pitch        to max(-10, min(effective_pitch * _fShape, 90)).
             // }
-            else
-            {
-                set ascent_mode to 3.
-                // set apo_error           to current_apo / target_apo.
-                set error_pitch         to 90 * (1 - apo_error).
-                set effective_limit     to max(pitch_limit_low, pitch_limit_low + (pitch_limit / min(1.00000001, apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
-                // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
-                set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
-                set output_pitch        to max(-10, min(effective_pitch * fShape, 90)).
-            }
         }
         if output_pitch < 0 set output_pitch to output_pitch * 0.750.
         // OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).

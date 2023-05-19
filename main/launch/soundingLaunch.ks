@@ -8,14 +8,18 @@ RunOncePath("0:/lib/launch.ks").
 
 DispMain().
 
-local cb             to Ship:Engines[0]. // Initialized to any old engine for now
-local curBoosterTag  to "".
-local fairingJetAlt  to 100000.
-local RCSAlt         to 32500.
-local RCSArmed       to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
+local cb                 to Ship:Engines[0]. // Initialized to any old engine for now
+local curBoosterTag      to "".
+local fairingJetAlt      to 100000.
+local RCSAlt             to 32500.
+
+local FairingsArmed      to false.
+local RCSArmed           to false.
+local RCSPresent         to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
+local HotStagePresent    to Ship:PartsTaggedPattern("(HotStage|HotStg|HS)"):Length > 0.
 local stagingCheckResult to 0.
-local steeringDelegate      to { return 0.}.
-local ThrustThresh   to 0.
+local steeringDelegate   to { return ship:facing.}.
+local ThrustThresh       to 0.
 
 // Parameter default values.
 local _tgtAlt        to 100.
@@ -42,12 +46,41 @@ if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 set g_azData to _azObj.
 set g_LoopDelegates["Steering"] to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
 
+local timeStampSpan to TimeSpan(TIME:SECONDS).
+if timeStampSpan:HOUR > 12 and timeStampSpan:HOUR <= 23
+{
+    LIGHTS off.
+    wait 0.25.
+    LIGHTS off.
+}
+else
+{
+    LIGHTS on.
+}
+
+if RCSPresent
+{
+    local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
+    local rcsActionDel to { parameter _params is list(). RCS on. return false.}.
+    local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
+    set RCSArmed to RegisterLoopEvent(rcsEventData).
+    OutInfo("Exiting RCSPresent block with result: {0}":Format(RCSArmed)).
+}
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
 // DispTermGrid().
 DispMain(ScriptPath()).
 OutMsg("Launch initiated!").
+
+set FairingsArmed to ArmFairingJettison("ascent").
+OutInfo("ArmFairingJettison() result: {0}":Format(FairingsArmed)).
+// if fairingsArmed
+// {
+//     set fairingJetAlt to g_LoopDelegates:Events:Fairings:Params[1].
+// }
+
+
 lock Throttle to 1.
 wait 0.25.
 LaunchCountdown().
@@ -57,7 +90,59 @@ OutInfo("",1).
 set g_ActiveEngines to GetEnginesForStage(Stage:Number).
 set g_NextEngines   to GetNextEngines().
 
+// Check if we have any special MECO engines to handle
+local MECO_Engines to Ship:PartsTaggedPattern("MECO\|ascent").
+if MECO_Engines:Length > 0
+{
+    // SetupMECOEvent(Ship:PartsTaggedPattern("MECO\|ascent")).
+    local MECO_EngineID_List to list().
+    for p in MECO_Engines 
+    { 
+        MECO_EngineID_List:Add(p:CID).
+    }
 
+    local MECO_Time to MECO_Engines[0]:Tag:Replace("MECO|ascent|",""):ToNumber(-1).
+    global MECO_Action_Counter to 0.
+    if MECO_Time >= 0 
+    {
+        local checkDel to { parameter _params is list(). OutDebug("MECO Check"). return MissionTime >= _params[1].}.
+        local actionDel to 
+        { 
+            parameter _params is list(). 
+            
+            set MECO_Action_Counter to MECO_Action_Counter + 1. 
+            OutDebug("MECO Action ({0}) ":Format(MECO_Action_Counter)). 
+            
+            local engIDList to _params[0].
+
+            from { local i to 0.} until i = g_ActiveEngines:Length or engIDList:Length = 0 step { set i to i + 1.} do
+            {
+                local eng to g_ActiveEngines[i].
+                
+                if engIDList:Contains(eng:CID)
+                {
+                    if eng:ignition and not eng:flameout
+                    {
+                        eng:shutdown.
+                        if eng:HasGimbal 
+                        {
+                            DoAction(eng:Gimbal, "Lock Gimbal", true).
+                        }
+                        engIDList:Remove(engIDList:Find(eng:CID)).
+                    }
+                }
+            }
+            wait 0.01. 
+            return false.
+        }.
+            
+        local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, MECO_Time), checkDel@, actionDel@).
+        if RegisterLoopEvent(MECO_Event)
+        {
+            OutDebug("MECO Handler Created").
+        }
+    }
+}
 // local AutoStageResult to ArmAutoStaging().
 ArmAutoStaging().
 
@@ -91,9 +176,15 @@ until Alt:Radar >= towerHeight
     {
         if g_HotStagingArmed 
         { 
-            if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+            if g_LoopDelegates:Staging:HotStaging:HasKey(STAGE:NUMBER - 1)
             {
-                g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+                if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:HasKey("Check")
+                {
+                    if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+                    {
+                        g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+                    }
+                }
             }
         }
         else
@@ -110,14 +201,6 @@ until Alt:Radar >= towerHeight
     // DispEngineTelemetry().
 }
 
-local fairingsArmed to ArmFairingJettison("ascent").
-OutInfo("ArmFairingJettison() result: {0}":Format(fairingsArmed)).
-if fairingsArmed
-{
-    set fairingJetAlt to g_LoopDelegates["Events"]["Fairings"]:Alt.
-}
-
-
 OutMsg("Gravity Turn").
 until Stage:Number <= g_StageLimit
 {
@@ -128,9 +211,17 @@ until Stage:Number <= g_StageLimit
     {
         if g_HotStagingArmed 
         { 
-            if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+            local doneFlag to false.
+            from { local i to Stage:Number - 1.} until i = 0 or doneFlag step { set i to i - 1.} do
             {
-                g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+                if g_LoopDelegates:Staging:HotStaging:HasKey(i)
+                {
+                    if g_LoopDelegates:Staging:HotStaging[i]:Check:CALL()
+                    {
+                        g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
+                    }
+                    set doneFlag to true.
+                }
             }
         }
         else
@@ -142,36 +233,37 @@ until Stage:Number <= g_StageLimit
             }
         }
     }
-    if fairingsArmed
+    
+    // if fairingsArmed
+    // {
+    //     if Ship:Altitude >= fairingJetAlt
+    //     {
+    //         if g_LoopDelegates:Events:HasKey("Fairings")
+    //         {
+    //             if g_LoopDelegates:Events:Fairings:HasKey("Check")
+    //             {
+    //                 g_LoopDelegates:Events:Fairings:Check:Call().
+    //             }
+    //             else
+    //             {
+    //                 JettisonFairings(Ship:PartsTaggedPattern("fairing|ascent")).
+    //             }
+    //         }
+    //         set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+    //     }
+    // }
+    if RCSPresent
     {
-        if Ship:Altitude >= fairingJetAlt
-        {
-            if g_LoopDelegates:Events:HasKey("Fairings")
-            {
-                if g_LoopDelegates:Events:Fairings:HasKey("Check")
-                {
-                    g_LoopDelegates:Events:Fairings:Check:Call().
-                }
-                else
-                {
-                    JettisonFairings(Ship:PartsTaggedPattern("fairing|ascent")).
-                }
-            }
-            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-        }
-    }
-    if RCSArmed
-    {
-        if Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= 0.001
+        if Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= 0.001 or g_ActiveEngines_Data:BurnTimeRemaining <= 5
         {
             RCS on.
-            set RCSArmed to False.
+            set RCSPresent to False.
         }
     }
     
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        ExecLoopEventDelegates().
+        ExecGLoopEvents().
     }
 
     set s_Val to g_LoopDelegates:Steering:Call().
@@ -210,18 +302,15 @@ until g_ActiveEngines_Data:Thrust <= 0.25 // until Ship:AvailableThrust <= 0.01
     set s_Val to g_LoopDelegates:Steering:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
 
-    if fairingsArmed
-    {
-        if Ship:Altitude >= fairingJetAlt
-        {
-            g_LoopDelegates:Events["Fairings"]:Check:Call().
-            set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-        }
-    }
+    // if fairingsArmed
+    // {
+    //     g_LoopDelegates:Events["Fairings"]:Check:Call().
+    //     set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
+    // }
 
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        ExecLoopEventDelegates().
+        ExecGLoopEvents().
     }
 
     DispLaunchTelemetry().
@@ -236,36 +325,8 @@ Until Ship:Altitude >= Body:ATM:Height
 {
     set s_Val to Ship:Prograde.
     DispLaunchTelemetry().
+    wait 0.01.
 }
-
-// if g_StageLimitSet:Keys:Length > 0
-// {
-//     from { local i to 0.} until i = g_StageLimitSet:Keys:Length step { set i to i + 1.} do
-//     {
-//         if g_StageLimitSet[i]:s < g_StageLimit
-//         {
-//             OutMsg("Executing Event-Based Auto-Staging").
-//             until g_StageLimitSet[i]:C:Call()
-//             {
-//                 OutInfo("AUTOSTAGE ETA: {0}  ":Format(TimeSpan(g_TS - Time:Seconds):Full)).
-//                 set s_Val to Ship:Prograde.
-//                 DispLaunchTelemetry().
-//                 wait 0.01.
-//             }
-//             set g_StageLimit to g_StageLimitSet[i]:S.
-//             ArmAutoStaging().
-//         }
-//     }
-// }
-
-// Arm any parachutes before we exit
-// OutMsg("Arming Parachutes").
-// for m in Ship:ModulesNamed("RealChuteModule")
-// {
-//     OutInfo("Arming Parachute [{0}({1})] ":Format(m:part:name, m:part:uid)).
-//     DoEvent(m, "arm parachute").
-// }
-// wait 1.
 
 if g_StageLimitSet:Length > 0
 {
@@ -273,23 +334,12 @@ if g_StageLimitSet:Length > 0
 }
 
 OutMsg("Launch script complete, performing exit actions").
-OutInfo().
-OutInfo("",1).
 wait 1.
-
-global function SetNextStageLimit
-{
-    parameter _tag is core:tag.
-
-    if g_StageLimitSet:Length > 1
-    {
-        set _tag to _tag:replace("|{0};":Format(g_StageLimit:ToString), "|").
-        g_StageLimitSet:Remove(0).
-    }
-    return _tag.
-}
+ClearScreen.
 
 
+
+// Test Functions
 local function ArmBoosterStaging
 {
     set g_BoosterObj to lexicon().
@@ -438,10 +488,6 @@ local function ProcessBoosterTree
     return _boosterObj.
 }
 
-
-
-
-
 local function ProcessBoosterChildren
 {
     parameter _p,
@@ -473,10 +519,6 @@ local function ProcessBoosterChildren
     
     return _bcObj.
 }
-
-
-
-
 
 local function ProcessBoosterEngine
 {
@@ -525,10 +567,6 @@ local function ProcessBoosterEngine
     return _beObj.
 }
 
-
-
-
-
 local function ProcessBoosterTank
 {
     parameter _p,
@@ -551,9 +589,6 @@ local function ProcessBoosterTank
 
     return _btObj.
 }
-
-
-
 
 local function ProcessBoosterTankResources
 {
@@ -580,9 +615,6 @@ local function ProcessBoosterTankResources
     }
     return _brObj.
 }
-
-
-
 
 local function CheckBoosterStageCondition
 {
@@ -651,10 +683,6 @@ local function CheckBoosterStageCondition
     }
 }
 
-
-
-
-
 local function StageBoosterSet
 {
     parameter _setIdx.
@@ -709,7 +737,6 @@ local function StageBoosterSet
     
 }
 
-
 local function CheckBoosterStaging_Old
 {
     parameter _boosterIdx is 0.
@@ -749,35 +776,3 @@ local function CheckBoosterStaging_Old
     }
     return booster_index.
 }
-
-
-
-
-
-
-
-
-
-
-
-// GetField :: (Module)<Module>, (Field Name)<String>, (Default If Not Present)<any> -> (Field value or default)<any>
-// Returns the value of a field on a module, provided the module has that field. 
-// If the field is not present, a caller can provide a default return value in whatever type needed
-// global function GetField
-// {
-//     parameter _mod,
-//               _field,
-//               _def is -1.
-
-//     if _mod:HasField(_field)
-//     {
-//         return _mod:GetField(_field).
-//     }
-//     else
-//     {
-//         return _def.
-//     }
-// }
-
-
-// WaitOnTermInput :: [(ContinueInput)<TerminalInput>], [(Message)<string>] -> (Continue)<bool>

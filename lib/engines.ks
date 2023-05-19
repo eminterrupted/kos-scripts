@@ -195,10 +195,10 @@
     {
         parameter _engList.
 
-        local fuelStabilityAvg to 0.
-        local fuelStabilityMin to 1.
-        local TotalResMass is 0.
-
+        local fuelStabilityAvg  to 0.
+        local fuelStabilityMin  to 1.
+        local TotalResMass      to 0.
+        local RequiresUllage    to false.
         local AggregateMassLex to lexicon(
             "MAXMASSFLOW", 0
             ,"RESOURCES", lexicon()
@@ -209,6 +209,7 @@
             ,"FuelStabilityAvg", 0
             , "FuelStabilityMin", 0
             ,"EstBurnTime", 0
+            ,"Ullage", false
         ).
 
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
@@ -228,6 +229,10 @@
             set AggregateMassLex["Engines"] to lexicon(
                 eng:Name, lexicon()
             ).
+            if eng:Ullage
+            {
+                set engsSpecs:Ullage to true.
+            }
 
             for resName in eng:ConsumedResources:Keys
             {

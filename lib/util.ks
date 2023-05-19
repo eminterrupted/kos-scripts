@@ -262,6 +262,7 @@
             "MISSION", _tag:Split("|")[0]
             ,"PARAMS", list()
             ,"STGSTOP", 0
+            ,"STAGESTOP", 0
             ,"STGSTOPSET", list()
         ).
 
@@ -358,6 +359,21 @@
     }
 
 
+    global function SetNextStageLimit
+    {
+        parameter _tag is core:tag.
+
+        if g_StageLimitSet:Length > 1
+        {
+            set _tag to _tag:replace("|{0};":Format(g_StageLimit:ToString), "|").
+            set g_StageLimit to _tag:Split(";")[0].
+            g_StageLimitSet:Remove(0).
+        }
+        set core:tag to _tag.
+        return _tag.
+    }
+
+
     global function ParseStringScalar
     {
         parameter _inputString.
@@ -433,26 +449,123 @@
     
     // ExecLoopEventDelegates :: <none> -> <none>
     // If there are events registered in g_LoopDelegates, this executes them
-    global function ExecLoopEventDelegates
+    global function ExecGLoopEvents
     {
         local EventSet to g_LoopDelegates["Events"].
-        if EventSet:Keys:Length > 0
+        local repeatEvent to false.
+        
+        for ev in EventSet:Keys
         {
-            for ev in EventSet:Keys
+            if GetLoopEventResult(EventSet[ev])
             {
-                if EventSet[ev]:HasKey("Delegate")
+                // result indicates whether to preserve
+                set repeatEvent to DoLoopEventAction(EventSet[ev]).
+                if not repeatEvent 
                 {
-                    EventSet[ev]:Delegate:Call().
-                }
-                else if EventSet[ev]:HasKey("CheckDel")
-                {
-                    if EventSet[ev]:CheckDel:Call() 
-                    {
-                        EventSet[ev]:ActionDel:Call().
-                    }
+                    UnregisterLoopEvent(EventSet[ev]:ID).
                 }
             }
         }
     }
     // #endregion
+
+    // *- Event registration and creation
+    global function CreateLoopEvent
+    {
+        parameter _id,
+                  _type,
+                  _params is list(),
+                  _check is { return true.},
+                  _action is { return false.}.
+
+
+        OutInfo("CreateLoopEvent: Creating new event ({0})":Format(_id)).
+
+        local newEvent to lexicon(
+            "id",           _id
+            ,"type",        _type
+            ,"delegates",   lexicon(
+                "check",    _check@
+                ,"action",  _action@
+            )
+            ,"params",      _params
+            ,"repeat",      false
+        ).
+
+        return newEvent.
+    }
+
+    global function DoLoopEventAction
+    {
+        parameter _eventData.
+
+        local repeatFlag to true.
+
+        if _eventData:HasKey("Delegates")                  
+        {
+            if _eventData:Delegates:HasKey("Action")
+            {
+                return _eventData:Delegates:Action:Call(_eventData:Params).
+            }
+        }
+        return repeatFlag.
+    }
+
+    global function GetLoopEventResult
+    {
+        parameter _eventData.
+
+        local loopResult to false.
+
+        if _eventData:HasKey("Delegates")                  
+        {
+            if _eventData:Delegates:HasKey("Check")
+            {
+                return _eventData:Delegates:Check:Call(_eventData:Params).
+            }
+        }
+        return loopResult.
+    }
+
+    // Register an event created in CreateEvent
+    global function RegisterLoopEvent
+    {
+        parameter _eventData,
+                  _idOverride is "*NA*".
+
+        local localID to choose _eventData:id if _idOverride = "*NA*" else _idOverride.
+
+        OutInfo("RegisterLoopEvent: Adding event ({0})":Format(localID)).
+
+        if not g_LoopDelegates:HasKey("Events")
+        {
+            set g_LoopDelegates["Events"] to lexicon().
+        }
+
+        local doneFlag to false.
+        from { local i to 0.} until doneFlag = true or i > g_LoopDelegates:Events:Keys:Length step { set i to i + 1.} do
+        {
+            // local namePair to "{0}_{1}":Format(localID, i:ToString()).
+            if not g_LoopDelegates:Events:HasKey(localID)
+            {
+                g_LoopDelegates:Events:Add(localID, _eventData).
+                set doneFlag to true.
+            }
+        }
+        return doneFlag.
+    }
+
+
+    global function UnregisterLoopEvent
+    {
+        parameter _eventID.
+
+        OutInfo("UnregisterLoopEvent: Removing event ({0})":Format(localID)).
+
+        if g_LoopDelegates:Events:Keys:Contains(_eventID)
+        {
+            g_LoopDelegates:Events:Remove(_eventID).
+        }
+        return g_LoopDelegates:Events:Keys:Contains(_eventID).
+    }
 // #endregion
