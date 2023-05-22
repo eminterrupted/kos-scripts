@@ -18,7 +18,9 @@
     local ascent_Blend_Start        to proSrfObtBlendStartAlt.
     local ascent_Blend_End          to Body:Atm:Height.
     local ascent_Blend_Window       to ascent_Blend_End - ascent_Blend_Start.
-    local ascent_MaxAoA             to 7.5.
+
+    local Ascent_AoA_Max            to 22.5.
+    local Ascent_AoA_Min          to 7.5.
 
     // *- Global
     global g_la_turnAltStart to Ship:Altitude + (Ship:Bounds:Size:Z * 2).    // Altitude at which the vessel will begin a gravity turn
@@ -27,10 +29,14 @@
     global g_la_turnAltEnd   to body:Atm:height * 0.925. // Altitude at which the vessel will end a gravity turn
     global g_sounderStartTurn to 125.
 
-    global g_turn_pid to PidLoop(1.0, 0.05, 0.001, -1, 1).
+    global g_alt_PID to PidLoop(1.0, 0.05, 0.001, -1, 1).
     global g_apo_pid  to PidLoop(1.0, 0.05, 0.001, -1, 1).
     global g_ascentProfile to lexicon().
     global g_azData to list().
+
+    global g_PID_Flag       to false.
+    global g_PID_Alt_Flag   to false.
+    global g_PID_Apo_Flag   to false.
 
 // #endregion
 
@@ -83,7 +89,8 @@
 
         if g_AngDependency:Keys:Length = 0 and g_azData:Length > 0
         {
-            set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 12.5).
+            // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
+            set _delDependency to InitAscentAng_Next(_tgtAlt, 1, 7.5, 37).
         }
         set g_AngDependency to _delDependency.
 
@@ -116,6 +123,11 @@
             // set _delDependency to InitAscentAng_Next(_tgtAlt, _delDependency:FSHAPE ).
             set _delDependency["l_az_calc"] to _azData.
             set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+        }
+        else if g_MissionTag:Mission = "PIDOrbit"
+        {
+            set _delDependency["l_az_calc"] to _azData.
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetPIDAscentAngle(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission = "Circularize"
         {
@@ -295,7 +307,7 @@
                 set eff_H_Err   to cur_Apo_Err.
                 set cur_Pit     to 90 * (((cur_Pit_Err + eff_H_Err) / 2) * _fShape).
             }
-            set eff_Pit  to cur_Pit - (ascent_MaxAoA * eff_H_Err).
+            set eff_Pit  to cur_Pit - (Ascent_AoA_Max * eff_H_Err).
             set out_Pit  to min(90, max(-15, eff_Pit * _fShape)).
         }
 
@@ -319,31 +331,44 @@
     {
         parameter _tgtAlt,
                   _fShape is 1,
-                  _pitLimClamp to ascent_MaxAoA.
+                  _pitLimMin to Ascent_AoA_Min,
+                  _pitLimMax to Ascent_AoA_Max.
 
-        set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -1, 1).
-        set g_apo_PID:Setpoint  to _tgtAlt.
+        // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
+        // set g_apo_PID:Setpoint  to _tgtAlt.
 
-        local trn_alt_start      to g_la_turnAltStart.
-        local trn_alt_end        to choose 50000 if _tgtAlt <= 175000 else min(325000, max(62500, _tgtAlt / 2)).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
-        local trn_alt_blend      to 500.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
+        local min_pitch to 5.
+
+        local turn_alt_start      to g_la_turnAltStart.
+        local turn_alt_end        to choose 62500 if _tgtAlt <= 200000 else min(250000, max(75000, _tgtAlt / 3)).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
+        local turn_alt_blend      to 500.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
+
+        local pid_Apo_ID to "TurnApo".
+        set g_PIDS[pid_Apo_ID]       to PIDLoop(1.0, 0.05, 0.001, -90, 90).
+        set g_PIDS[pid_Apo_ID]:Setpoint to _tgtAlt.
         
-        set g_turn_PID           to PidLoop(1.0, 0.05, 0.001, -1, 1).
-        set g_turn_PID:Setpoint  to trn_alt_end.
+        local pid_Alt_ID to "TurnAlt".
+        set g_PIDS[pid_Alt_ID]   to PIDLoop(1.0, 0.05, 0.001, -90, 90).
+        set g_PIDS[pid_Alt_ID]:Setpoint to turn_alt_end.
+        // set g_alt_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
+        // set g_alt_PID:Setpoint  to trn_alt_end.
         
         return lexicon
         (
-            "APO_PID", g_apo_PID
+            "ALT_PID", pid_Alt_ID
+            ,"ALT_SETPOINT", turn_alt_end
+            ,"APO_PID", pid_Apo_ID
             ,"APO_SETPOINT", _tgtAlt
             ,"APO_TGT", _tgtAlt
             ,"FSHAPE", _fShape
-            ,"PIT_LIM", _pitLimClamp
-            ,"TRN_PID", g_turn_PID
-            ,"TRN_SETPOINT", trn_alt_end
-            ,"TRN_ALT_START", trn_alt_start
-            ,"TRN_ALT_END", trn_alt_end
-            ,"TRN_ALT_BLEND", trn_alt_blend
-            ,"TRN_APO_TGT", Round(_tgtAlt * 0.925)
+            ,"PIT_LIM_MAX", _pitLimMax
+            ,"PIT_LIM_MIN", _pitLimMin
+            ,"RESET_PIDS", true
+            ,"TRN_ALT_START", turn_alt_start
+            ,"TRN_ALT_END", turn_alt_end
+            ,"TRN_ALT_BLEND", turn_alt_blend
+            ,"TRN_APO_TGT", Round(_tgtAlt * 0.875)
+            ,"UPDATE_SETPOINT", true
         ).
     }
 
@@ -352,12 +377,9 @@
     {
         parameter _ascAngObj.
 
-
         local fShape            to _ascAngObj:FSHAPE.
-        local pitch_limit_low   to _ascAngObj:PIT_LIM.
         local altitude_error    to 0.
         local apo_error         to 0.
-        local ascent_mode       to 0.
         local current_alt       to Ship:Altitude.
         local current_apo       to Ship:Apoapsis.
         local effective_error   to 0.
@@ -366,120 +388,162 @@
         local error_limit       to 0.
         local error_pitch       to 0.
         local output_pitch      to 90.
-        local pid_pitch         to 0.
-        local pid_value         to 1.
 
         local current_ap_alt    to (Ship:Altitude + (1 * (Ship:Apoapsis))) / 2.
         
-        local facing_pitch              to 90 - VAng(Ship:Up:Vector, Ship:Facing:Vector).
         local prograde_pitch            to 90.
         local prograde_surface          to Ship:SrfPrograde:Vector. // Ship:Velocity:Surface.
         local prograde_surface_pitch    to 90 - VAng(Ship:Up:Vector, prograde_surface).
         local prograge_orbit            to Ship:Prograde:Vector. // Ship:Velocity:Orbit.
         local prograde_orbit_pitch      to 90 - VAng(Ship:Up:Vector, prograge_orbit).
-        local angle_of_attack_pitch     to facing_pitch - prograde_surface_pitch.
         
-        local pitch_limit   to _ascAngObj:PIT_LIM.
-        local target_apo    to _ascAngObj:APO_TGT.
-        local target_apo_turn to _ascAngObj:TRN_APO_TGT.
-        local turn_alt_blend to _ascAngObj:TRN_ALT_BLEND.
-        local turn_alt_end  to _ascAngObj:TRN_ALT_END.
-        local turn_alt_start to _ascAngObj:TRN_ALT_START.
+        local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
+        local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
+        local target_apo        to _ascAngObj:APO_TGT.
+        local turn_alt_blend    to _ascAngObj:TRN_ALT_BLEND.
+        local turn_alt_end      to _ascAngObj:TRN_ALT_END.
+        local turn_alt_start    to _ascAngObj:TRN_ALT_START.
         
         
         if current_alt > turn_alt_start
         {
             set altitude_error      to current_alt / turn_alt_end.
             set apo_error           to current_apo / target_apo.
-            // if current_alt < turn_alt_start
-            // {
-            //     set altitude_error      to current_alt / turn_alt_end.
-            //     set error_pitch         to 90 * (1 - altitude_error).
-            //     set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
-            //     set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)).
-            //     set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
-            //     set output_pitch        to max(-5, min(effective_pitch * _fShape, 90)).
-            // }
+
             if current_alt < turn_alt_blend
             {
-                // set altitude_error      to current_alt / turn_alt_end.
                 set error_pitch         to 90 * (1 - altitude_error).
-                set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
-                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)).// * 1.025)).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.025)).
                 set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
                 set output_pitch        to min(90, effective_pitch * fShape).
             }
             else if current_ap_alt < turn_alt_end
             {
-                set ascent_mode to 1.
-                // set altitude_error      to current_alt / turn_alt_end.
-                // set apo_error           to current_apo / target_apo.
                 local blend_alt_error   to (current_alt - turn_alt_blend) / (turn_alt_end - turn_alt_blend).
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).
                 local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
-                local apo_error_blended to apo_error * (1 - blend_apo_error).
+                local apo_error_blended to apo_error * blend_apo_error.
                 local comb_err          to alt_error_blended + apo_error_blended.
-                // print "alt_error_blended: {0} ":Format(round(alt_error_blended, 3)) at (2, 25).
-                // print "apo_error_blended: {0} ":Format(round(apo_error_blended, 3)) at (2, 26).
-                // print "comb_error: {0} ":Format(round(comb_err, 3)) at (2, 27).
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
-                set error_limit         to pitch_limit_low + (pitch_limit * comb_err).
-                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit)).// * 1.125)).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.125)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
-                //set prograde_pitch      to prograde_surface_pitch.
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-22.5, min(effective_pitch * fShape, 90)).
             }
-            // else if current_apo < target_apo_turn
-            // {
-            //     set ascent_mode         to 2.
-            //     set altitude_error      to current_alt / target_apo_turn.
-            //     set apo_error           to current_apo / target_apo.     
-            //     local blend_alt_error   to target_apo_turn - turn_alt_end.
-            //     local apo_error_blended to apo_error * blend_alt_error.
-            //     local comb_err          to alt_error_blended + apo_error_blended.
-            //     print "alt_error_blended: {0} ":Format(round(alt_error_blended, 3)) at (2, 25).
-            //     print "apo_error_blended: {0} ":Format(round(apo_error_blended, 3)) at (2, 26).
-            //     print "comb_error: {0} ":Format(round(comb_err, 3)) at (2, 27).
-            //     set effective_error     to comb_err.
-            //     set error_pitch         to 90 * (1 - comb_err).
-            //     set error_limit         to pitch_limit_low + (pitch_limit * altitude_error).
-            //     set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit * 1.5)).
-            //     set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
-            //     //set prograde_pitch      to prograde_surface_pitch.
-            //     set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-            //     set output_pitch        to max(-15, min(effective_pitch * _fShape, 90)).
-
-            // }
             else
             {
-                set ascent_mode to 3.
-                // set apo_error           to current_apo / target_apo.
-                // set error_pitch         to 90 * (1 - apo_error).
                 set error_pitch         to 90 * (1 - apo_error).
-                set error_limit         to pitch_limit_low + (pitch_limit * apo_error).
-                set effective_limit     to max(pitch_limit_low, min(error_limit, pitch_limit_low + (pitch_limit / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
-                // set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 3)).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.25) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                // set effective_pitch     to max(0 - effective_limit, min(error_pitch, 0 + effective_limit)).
-                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-30, min(effective_pitch * fShape, 90)).
             }
-            // else if current_apo < target_apo * 0.825
-            // {
-            //     set ascent_mode to 3.
-            //     set apo_error           to current_apo / target_apo.
-            //     set error_pitch         to 90 * (1 - apo_error).
-            //     set effective_limit     to max(pitch_limit_low, min(pitch_limit_low + (pitch_limit * apo_error), pitch_limit * 1.5)).
-            //     set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-            //     set output_pitch        to max(-10, min(effective_pitch * _fShape, 90)).
-            // }
         }
-        if output_pitch < 0 set output_pitch to output_pitch * 0.750.
-        // OutInfo("out_pit (Mode): {0} ({1}) ":Format(round(output_pitch, 3), ascent_mode), 1).
-        // OutInfo("aoa_pit (DLim): {0} ({1}) ":Format(round(angle_of_attack_pitch, 3), round(effective_limit, 3)), 2).
+
         return output_pitch.
     }
+
+    // WIP AGAIN CAUSE WHY NOT YOU IDIOT
+    global function GetPIDAscentAngle
+    {
+        parameter _ascAngObj.
+
+        local current_alt       to Ship:Altitude.
+        local current_apo       to Ship:Apoapsis.
+
+        local effective_pitch   to 90.
+        local error_limit       to 0.
+        local error_pitch       to 0.
+        local output_pitch      to 90.       
+
+        local PID_Alt           to g_PIDS[_ascAngObj:ALT_PID].
+        local PID_Alt_Output    to 0.
+        local PID_Apo           to g_PIDS[_ascAngObj:APO_PID].
+        local PID_Apo_Output    to 0.
+        local PID_Avg_Error     to 0.
+        local PID_Avg_Output    to 0.
+        local PID_Inv_Error     to 0.
+        local PID_Inv_Output    to 0.
+        
+        local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
+        local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
+        local target_apo        to _ascAngObj:APO_TGT.
+        local turn_blend_alt    to _ascAngObj:TRN_ALT_BLEND.
+        local turn_end_alt      to _ascAngObj:TRN_ALT_END.
+        local turn_alt_start    to _ascAngObj:TRN_ALT_START.
+
+        // Vector to pitch degree conversions
+        local prograde_surface          to Ship:SrfPrograde:Vector.
+        local prograde_surface_pitch    to 90 - VAng(Ship:Up:Vector, prograde_surface).
+        local prograde_orbit            to Ship:Prograde:Vector.
+        local prograde_orbit_pitch      to 90 - VAng(Ship:Up:Vector, prograde_orbit).
+        local prograde_effective_pitch   to prograde_orbit_pitch.
+
+        // Check our flags for any pre-update actions
+        if _ascAngObj:HasKey("RESET_PIDS")
+        {
+            if _ascAngObj:RESET_PIDS
+            {
+                PID_Alt:Reset().
+                PID_Apo:Reset().
+                OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
+            }
+            set _ascAngObj:RESET_PIDS to false.
+        }
+        if _ascAngObj:HasKey("UPDATE_SETPOINT")
+        {
+            if _ascAngObj:UPDATE_SETPOINT
+            {
+                set PID_Alt:Setpoint to _ascAngObj:ALT_SETPOINT.
+                set PID_Apo:Setpoint to _ascAngObj:APO_SETPOINT.
+                OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
+            }
+            set _ascAngObj:UPDATE_SETPOINT to false.
+        }
+    
+        // Update the PID loops
+        set PID_Alt_Output to PID_Alt:Update(Time:Seconds, current_alt).
+        set PID_Apo_Output to PID_Apo:Update(Time:Seconds, current_apo).
+        set PID_Avg_Output to (PID_Alt_Output + PID_Apo_Output) / 2.
+
+        // Create an average value from both pid error rates
+        set PID_Avg_Error  to (PID_Alt:Error + PID_Apo:Error) / 2.
+        set PID_Inv_Error  to 1 - PID_Avg_Error.
+
+
+        // Now do... something I guess
+        if current_alt < turn_alt_start
+        {
+            set prograde_effective_pitch to prograde_surface_pitch.
+            set error_limit    to Min(pitch_limit_max, Max(pitch_limit_min, pitch_limit_max * PID_Avg_Output)).
+            set error_pitch to PID_Alt_Output.
+        }
+        else if current_alt < turn_end_alt and current_apo <= target_apo
+        {
+            local blend_window to turn_end_alt - turn_alt_start.
+            local blend_error to (Ship:Altitude - turn_alt_start) / blend_window.
+            set prograde_effective_pitch to (prograde_surface_pitch * (1 - blend_error)) + (prograde_orbit_pitch * blend_error).
+            // set error_limit    to Min(pitch_limit_max, Max(pitch_limit_min, (pitch_limit_min * (1 - blend_error)) + (pitch_limit_max * blend_error))).
+            set error_limit    to Min(pitch_limit_max, Max(pitch_limit_min, pitch_limit_max * PID_Avg_Output)).
+            set error_pitch to (PID_Alt_Output * (1 - blend_error)) + (PID_Apo_Output * blend_error).
+        }
+        else 
+        {
+            set prograde_effective_pitch to prograde_orbit_pitch.
+            set error_limit    to Min(pitch_limit_max, Max(pitch_limit_min, pitch_limit_max * PID_Avg_Output)).
+            set error_pitch to PID_Apo_Output.
+        }
+
+        set effective_pitch     to max(prograde_effective_pitch - error_limit, min(error_pitch, prograde_effective_pitch + error_limit)).
+        set output_pitch        to max(-45, min(90, effective_pitch)).
+
+        return output_pitch.
+    }
+
+
 
     global function LaunchAngForAlt
     {

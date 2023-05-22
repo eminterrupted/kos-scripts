@@ -133,8 +133,6 @@
             LOCAL op TO choose "gt" IF _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") ELSE "lt".
             local result to false.
 
-            OutDebug("AFJ: Line 136").
-
             local fairingSet to Ship:PartsTaggedPattern(fairing_tag_ext_regex).
             if fairingSet:Length > 0
             {
@@ -152,7 +150,7 @@
                     parameter _params is list().
                     
                     JettisonFairings(_params[1]).
-                    OutDebug("Fairing action performed").
+                    OutInfo("Fairing jettison").
                     return false.
                 }.
 
@@ -288,11 +286,25 @@
                         ,"EngSpecs", GetEnginesSpecs(Engine_Obj[HotStageID])
                         )
                     ).
+                    local stageEngines to list().
+                    local stageEngines_BT to 999999.
 
-                    SET checkDel  TO { 
+                    for eng in g_ActiveEngines
+                    {
+                        if eng:DecoupledIn = HotStageID 
+                        {
+                            stageEngines:Add(eng).
+                        }
+                    }
+
+                    SET checkDel  TO {
+                        set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
                         IF STAGE:NUMBER - 1 = HotStageID {
-                            OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
-                            RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                            local stageEngines_BT_Padded to round(stageEngines_BT - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime - 0.25, 3).
+                            OutInfo("HotStaging Armed: (ET: T-{0,7}s) ":FORMAT(stageEngines_BT_Padded, 1)).
+                            RETURN (stageEngines_BT <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                            // OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
+                            // RETURN (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
                         }
                         else
                         {
@@ -324,6 +336,7 @@
                         STAGE.
                         WAIT 0.5.
                         OutInfo().
+                        OutInfo("", 1).
                         g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
                         if g_LoopDelegates:Staging:HotStaging:KEYS:LENGTH = 0
                         {
@@ -416,7 +429,7 @@
                       _checkVal.
 
             LOCAL resultCode TO 0.
-            IF _ves:AvailableThrust < _checkVal and SHIP:STATUS <> "PRELAUNCH"
+            IF _ves:AvailableThrust < _checkVal and SHIP:STATUS <> "PRELAUNCH" and throttle > 0
             {
                 SET resultCode TO 1.
             }
@@ -550,7 +563,7 @@
 
         IF g_AngDependency:Keys:LENGTH = 0
         {
-            SET g_AngDependency TO InitAscentAng_Next(g_MissionParams[1], _fShape, 10).
+            SET g_AngDependency TO InitAscentAng_Next(g_MissionParams[1], _fShape, 5, 30).
         }
 
         IF _steerPair = "Flat:Sun"

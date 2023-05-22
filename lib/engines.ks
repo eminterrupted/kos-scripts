@@ -325,11 +325,28 @@
         local fuelStability         to GetField(m, "propellant"). // GetField(m, "propellant").
         local stabilityStrIdx       to fuelStability:Find("(").
         local fuelStabilityScalar   to choose fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100 if fuelStability:Contains("%") else 0.01.
+
+        local statusString          to TrimHTML(m:GetField("Status")).
+        local failureCause          to choose "" if statusString = "Nominal" else m:GetField("Cause").
+        
+        global function TrimHTML
+        {
+            parameter _str.
+
+            local _spl to _str:Split(">").
+            if _spl:Length > 1
+            {
+                set _str to _spl[1]:split("<")[0].
+            }
+            return _str.
+        }
+
         //:ToNumber(1) / 100.
         local engPerfObj to lexicon(
             "CID",              _eng:CID
             ,"EngName",         _eng:Name
             ,"EngTitle",        _eng:Title
+            ,"FailureCause",    failureCause
             ,"Flameout",        _eng:Flameout
             ,"FuelFlow",        _eng:FuelFlow
             ,"FuelStability",   fuelStabilityScalar
@@ -337,6 +354,7 @@
             ,"ISPAt",           _eng:ISPAt(altPres)
             ,"IsSepMotor",      sepMotorCheck
             ,"MassFlow",        GetField(m, "Mass Flow")
+            ,"Status",          statusString
             ,"Thrust",          _eng:MaxThrust
             ,"ThrustAvailPres", availThrustPres
             ,"ThrustPct",       thrustPct
@@ -356,6 +374,7 @@
             ,"SepStg", true
         ).
 
+        local aggFailureCount       to 0.
         local aggFuelStability      to 0.
         local aggISP                to 0.
         local aggISPAt              to 0.
@@ -367,6 +386,7 @@
         // local aggTWR                to 0.
         local thrustPct             to 0.
         local totalMassFlow         to 0.
+        local aggFailureObj         to lexicon().
 
         local burnTimeRemaining     to 999999999.
 
@@ -382,6 +402,26 @@
                 set aggMassFlow         to aggMassFlow + eng:MassFlow.
                 set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
                 if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
+                if engLex:FailureCause:Length > 0
+                {   
+                    set aggFailureCount to aggFailureCount + 1.
+                    if not aggFailureObj:HasKey(engLex:Status)
+                    {
+                        set aggFailureObj[engLex:Status] to 
+                        (
+                            lexicon(
+                                eng:CID, list(
+                                    eng:Name,
+                                    engLex:FailureCause
+                                )
+                            )
+                        ).
+                    }
+                    else
+                    {
+                        aggFailureObj[engLex:Status]:Add(eng:CID, lex("Name", eng:name, "Cause", engLex:FailureCause)).
+                    }
+                }
                 
                 set aggEngPerfObj["Engines"][eng:CID] to engLex.
                 if aggEngPerfObj["SepStg"] 
@@ -429,10 +469,96 @@
         set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
         set aggEngPerfObj["ThrustPct"]          to thrustPct.
         set aggEngPerfObj["BurnTimeRemaining"]  to round(burnTimeRemaining, 3).
+        set aggEngPerfObj["Failures"]           to aggFailureCount.
+        set aggEngPerfObj["FailureSet"]         to aggFailureObj.
 
         // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
 
         return aggEngPerfObj.
+    }
+
+    global function GetEnginesBurnTimeRemaining
+    {
+        parameter _engList.
+
+        local fuelWeight to 0.
+        local btRemaining to 999999999.
+
+        for eng in _engList
+        {
+            for res in eng:ConsumedResources:Values
+            {
+                set fuelWeight to fuelWeight + (res:amount * res:density).
+                if res:MassFlow > 0 
+                {
+                    set btRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
+                    if g_ActiveEngines:Length > 0
+                    {
+                        set btRemaining to max(btRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
+                    }
+                }
+            }
+        }
+        return btRemaining.
+    }
+
+    // #endregion
+
+    // *- Event Handlers
+    // #region
+
+    global function SetupMECOEventHandler
+    {
+        parameter _engList.
+
+        // SetupMECOEvent(Ship:PartsTaggedPattern("MECO\|ascent")).
+        local MECO_EngineID_List to list().
+        for p in _engList 
+        { 
+            MECO_EngineID_List:Add(p:CID).
+        }
+
+        local MECO_Time to _engList[0]:Tag:Replace("MECO|ascent|",""):ToNumber(-1).
+        global MECO_Action_Counter to 0.
+        if MECO_Time >= 0 
+        {
+            local checkDel to { parameter _params is list(). OutDebug("MECO Check"). return MissionTime >= _params[1].}.
+            local actionDel to 
+            { 
+                parameter _params is list(). 
+                
+                set MECO_Action_Counter to MECO_Action_Counter + 1. 
+                OutDebug("MECO Action ({0}) ":Format(MECO_Action_Counter)). 
+                
+                local engIDList to _params[0].
+
+                from { local i to 0.} until i = g_ActiveEngines:Length or engIDList:Length = 0 step { set i to i + 1.} do
+                {
+                    local eng to g_ActiveEngines[i].
+                    
+                    if engIDList:Contains(eng:CID)
+                    {
+                        if eng:ignition and not eng:flameout
+                        {
+                            eng:shutdown.
+                            if eng:HasGimbal 
+                            {
+                                DoAction(eng:Gimbal, "Lock Gimbal", true).
+                            }
+                            engIDList:Remove(engIDList:Find(eng:CID)).
+                        }
+                    }
+                }
+                wait 0.01. 
+                return false.
+            }.
+                
+            local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, MECO_Time), checkDel@, actionDel@).
+            if RegisterLoopEvent(MECO_Event)
+            {
+                OutDebug("MECO Handler Created").
+            }
+        }
     }
     // #endregion
 // #endregion

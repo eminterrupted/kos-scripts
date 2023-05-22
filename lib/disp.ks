@@ -141,7 +141,7 @@
         local line to 50.
         if _str:length > 0
         {
-            print "[{0}] {1} ":Format("*DBG", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            print "<color=White>[{0}]</color> {1} ":Format("*DBG", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
         }
         else
         {

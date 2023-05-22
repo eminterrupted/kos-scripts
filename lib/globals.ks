@@ -45,6 +45,7 @@
     global g_GuidedAscentMissions to list(
         "DownRange"
         ,"Orbit"
+        ,"PIDOrbit"
         ,"SubOrbital"
     ).
 
@@ -92,6 +93,8 @@
 
     global g_AngDependency to lexicon().
     global g_StartTurn to 3750.
+
+    global g_PIDS to lexicon(). // This will hold all PID loops we use across multiple scripts
 // #endregion
 
 

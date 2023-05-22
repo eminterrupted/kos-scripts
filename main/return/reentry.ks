@@ -6,6 +6,7 @@ parameter params is list().
 runOncePath("0:/lib/libLoader").
 
 DispMain(scriptPath()).
+SAS off.
 
 local fairings to ship:PartsTaggedPattern("fairing\|reentry").
 local jettAlt to 5000.
@@ -16,7 +17,7 @@ local reentryTgt to (ship:body:atm:height * 0.425).
 local retroFire to false.
 local retroStage to payloadStage.
 local spinStab to false.
-local stagingAlt to ship:body:atm:height + 25000.
+local stagingAlt to ship:body:atm:height.
 local ts to time:seconds.
 
 set s_Val to ship:facing.
@@ -70,12 +71,13 @@ if parachutes:length > 0
         }
     }
 }
-wait 3.
+wait 1.
 
 OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
 OutInfo("Down: Wait until descent | Up: Wait until ascent").
 OutInfo("End: Begin reentry procedures now | PageDown: Skip reentry burn", 1).
-local mode to "".
+
+local mode to "descent".
 local doneFlag to false.
 
 
@@ -115,7 +117,9 @@ until doneFlag
             set retroFire to false.
             OutInfo("retroFire: " + retroFire, 1).
         }
+        set g_TermChar to "".
     }
+
     if mode = "descent" 
     {
         if ship:VerticalSpeed <= 0 set doneFlag to true.
@@ -313,18 +317,20 @@ until ship:altitude <= startAlt
     GetTermChar().
     if g_TermChar = Terminal:Input:HomeCursor
     {
+        OutMsg("Control released").
         unlock steering.
     }
     else if g_TermChar = Terminal:Input:EndCursor
     {
+        OutMsg("Control locked").
         lock steering to s_Val.
     }
     else
     {
         Terminal:Input:Clear().
         set s_Val to Ship:Retrograde. 
-        set g_TermChar to "".
     }
+    set g_TermChar to "".
     DispReentryTelemetry().
 }
 
@@ -410,7 +416,7 @@ if stage:number > 1
     until stage:number <= 1 
     {
         stage.
-        wait 2.5.
+        wait 3.25.
     }
 }
 
@@ -418,7 +424,7 @@ if stage:number > 1
 OutMsg("Waiting for reentry interface").
 until ship:altitude <= body:atm:height + 1000
 {
-    set s_Val to ship:retrograde.
+    set s_Val to ship:SrfRetrograde.
     DispReentryTelemetry().
     
     // DispGeneric().

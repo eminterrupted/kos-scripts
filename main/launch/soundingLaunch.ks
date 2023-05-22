@@ -10,6 +10,7 @@ DispMain().
 
 local cb                 to Ship:Engines[0]. // Initialized to any old engine for now
 local curBoosterTag      to "".
+local engineCounter      to 0.
 local fairingJetAlt      to 100000.
 local RCSAlt             to 32500.
 
@@ -87,61 +88,14 @@ LaunchCountdown().
 OutInfo().
 OutInfo("",1).
 
-set g_ActiveEngines to GetEnginesForStage(Stage:Number).
+set g_ActiveEngines to GetActiveEngines().
 set g_NextEngines   to GetNextEngines().
 
 // Check if we have any special MECO engines to handle
 local MECO_Engines to Ship:PartsTaggedPattern("MECO\|ascent").
 if MECO_Engines:Length > 0
 {
-    // SetupMECOEvent(Ship:PartsTaggedPattern("MECO\|ascent")).
-    local MECO_EngineID_List to list().
-    for p in MECO_Engines 
-    { 
-        MECO_EngineID_List:Add(p:CID).
-    }
-
-    local MECO_Time to MECO_Engines[0]:Tag:Replace("MECO|ascent|",""):ToNumber(-1).
-    global MECO_Action_Counter to 0.
-    if MECO_Time >= 0 
-    {
-        local checkDel to { parameter _params is list(). OutDebug("MECO Check"). return MissionTime >= _params[1].}.
-        local actionDel to 
-        { 
-            parameter _params is list(). 
-            
-            set MECO_Action_Counter to MECO_Action_Counter + 1. 
-            OutDebug("MECO Action ({0}) ":Format(MECO_Action_Counter)). 
-            
-            local engIDList to _params[0].
-
-            from { local i to 0.} until i = g_ActiveEngines:Length or engIDList:Length = 0 step { set i to i + 1.} do
-            {
-                local eng to g_ActiveEngines[i].
-                
-                if engIDList:Contains(eng:CID)
-                {
-                    if eng:ignition and not eng:flameout
-                    {
-                        eng:shutdown.
-                        if eng:HasGimbal 
-                        {
-                            DoAction(eng:Gimbal, "Lock Gimbal", true).
-                        }
-                        engIDList:Remove(engIDList:Find(eng:CID)).
-                    }
-                }
-            }
-            wait 0.01. 
-            return false.
-        }.
-            
-        local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, MECO_Time), checkDel@, actionDel@).
-        if RegisterLoopEvent(MECO_Event)
-        {
-            OutDebug("MECO Handler Created").
-        }
-    }
+    SetupMECOEventHandler(MECO_Engines).
 }
 // local AutoStageResult to ArmAutoStaging().
 ArmAutoStaging().
@@ -167,22 +121,32 @@ OutInfo("", 1).
 OutMsg("Liftoff! ").
 wait 1.
 OutMsg("Vertical Ascent").
+set g_ActiveEngines to GetActiveEngines().
+
 until Alt:Radar >= towerHeight
 {
-    set g_ActiveEngines to GetActiveEngines().
-    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-    if g_BoostersArmed   { CheckBoosterStageCondition().}
+    if engineCounter <> g_ActiveEngines:Length
+    {
+        set g_ActiveEngines to GetActiveEngines().
+    } 
+    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+    if g_BoostersArmed { CheckBoosterStageCondition().}
     if g_LoopDelegates:HasKey("Staging")
     {
         if g_HotStagingArmed 
         { 
-            if g_LoopDelegates:Staging:HotStaging:HasKey(STAGE:NUMBER - 1)
+            local doneFlag to false.
+            from { local i to Stage:Number.} until i < 0 or doneFlag step { set i to i - 1.} do
             {
-                if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:HasKey("Check")
+                if g_LoopDelegates:Staging:HotStaging:HasKey(i)
                 {
-                    if g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Check:CALL()
+                    if g_LoopDelegates:Staging:HotStaging[i]:HasKey("Check")
                     {
-                        g_LoopDelegates:Staging:HotStaging[STAGE:NUMBER - 1]:Action:CALL().
+                        if g_LoopDelegates:Staging:HotStaging[i]:Check:CALL()
+                        {
+                            g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
+                            set doneFlag to true.
+                        }
                     }
                 }
             }
@@ -205,7 +169,7 @@ OutMsg("Gravity Turn").
 until Stage:Number <= g_StageLimit
 {
     set g_ActiveEngines to GetActiveEngines().
-    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
     if g_BoostersArmed { CheckBoosterStageCondition().}
     if g_LoopDelegates:HasKey("Staging")
     {
@@ -295,12 +259,15 @@ until Stage:Number <= g_StageLimit
 DisableAutoStaging().
 
 OutMsg("Final Burn").
-set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
 wait 0.25.
-until g_ActiveEngines_Data:Thrust <= 0.25 // until Ship:AvailableThrust <= 0.01
+set g_ActiveEngines to GetActiveEngines().
+set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+wait 0.25.
+local doneFlag to false.
+until doneFlag or Ship:AvailableThrust <= 0.01
 {
     set s_Val to g_LoopDelegates:Steering:Call().
-    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
     // if fairingsArmed
     // {
@@ -316,6 +283,11 @@ until g_ActiveEngines_Data:Thrust <= 0.25 // until Ship:AvailableThrust <= 0.01
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
+    if g_ActiveEngines_Data:Thrust <= 0.1
+    {
+        set doneFlag to true.
+        OutDebug("[289]: DoneFlag triggered").
+    }
 }
 ClearDispBlock("ENGINE_TELEMETRY").
 
