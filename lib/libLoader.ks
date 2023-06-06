@@ -7,3 +7,4 @@ RunOncePath("0:/kslib/lib_navigation.ks").
 RunOncePath("0:/lib/engines.ks").
 RunOncePath("0:/lib/vessel.ks").
 RunOncePath("0:/lib/disp.ks").
+RunOncePath("0:/lib/nav.ks").

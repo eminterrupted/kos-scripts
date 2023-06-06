@@ -34,6 +34,74 @@ else if _azData:Length = 0
 {
     set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0], Ship:Latitude).
 }
+
+local eccCheckAtAp to True.
+if _tgtEcc:IsType("String")
+{
+    if _tgtEcc:MatchesPattern("^(\+)")
+    {
+        set eccCheckAtAp to False.
+        set _tgtEcc to _tgtEcc:SubString(1,_tgtEcc:Length).
+    }
+    else
+    {
+        set _tgtEcc to _tgtEcc:SubString(1,_tgtEcc:Length).
+    }
+    
+    set _tgtEcc to _tgtEcc:ToNumber(0.0075).
+}
+else
+{
+    set _tgtEcc to 0.0075.
+}
+local tgtAp to choose g_MissionParams[1] if eccCheckAtAp else GetApFromPeEcc(g_MissionParams[1], _tgtEcc).
+local tgtPe to choose GetPeFromApEcc(g_MissionParams[1], _tgtEcc) if eccCheckAtAp else g_MissionParams[1].
+
+// GetApFromPeEcc :: _pe<Scalar>, _ecc<Scalar> -> apResult<Scalar>
+// Returns an apoapsis for a given peripasis and eccentricity.
+global function GetApFromPeEcc
+{
+    parameter _pe,
+              _ecc.
+
+    local apResult to 0.
+    return apResult.
+}
+
+// GetPeFromApEcc :: _ap<Scalar>, _ecc<Scalar> -> peResult<Scalar>
+// Returns an apoapsis for a given peripasis and eccentricity.
+global function GetApFromPeEcc
+{
+    parameter _pe,
+              _ecc.
+
+    local peResult to 0.
+    return peResult.
+}
+
+
+local eccApCheckDelegate to { 
+    local result to False. 
+    if Ship:Orbit:Eccentricity <= _tgtEcc
+    {
+        if Ship:Periapsis > Body:ATM:Height 
+        {
+            set result to True.
+        }
+    }
+    else
+    {
+        if Ship:Periapsis >= tgtPe
+        {
+            set result to True.
+        }
+    }
+    return result.
+}.
+local eccPeCheckDelegate to { 
+    return Ship:Orbit:Eccentricity >= _tgtEcc and Ship:Periapsis >= tgtPe.
+}.
+
 // else
 // {
 //     set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
@@ -161,7 +229,7 @@ wait 0.01.
 set Ship:Control:Fore to 0.
 
 local rollFlag to false.
-until Stage:Number = _stpStg or Ship:Orbit:Eccentricity <= _tgtEcc
+until Stage:Number = _stpStg or (Ship:Orbit:Eccentricity <= _tgtEcc and Ship:Periapsis >= Body:ATM:Height)
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
@@ -219,7 +287,7 @@ until g_ActiveEngines_Data:Thrust > 0.1 or Time:Seconds >= g_TS
 }
 
 OutMsg("Final Stage").
-until g_ActiveEngines_Data:Thrust <= 0.01 or Ship:Orbit:Eccentricity <= _tgtEcc //or Ship:Orbit:Eccentricity <= 0.005
+until g_ActiveEngines_Data:Thrust <= 0.01 or (Ship:Orbit:Eccentricity <= _tgtEcc and Ship:Periapsis >= Body:ATM:Height)
 {
     GetTermChar().
     if g_TermChar = "e"

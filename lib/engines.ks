@@ -573,12 +573,12 @@
                 {
                     if engBurnTimeLex:Resources:Keys:Contains(res:Name)
                     {
-                        OutDebug("Resource Cached: {0}":Format(res:Name)).
+                        // OutDebug("Resource Cached: {0}":Format(res:Name)).
                     }
                     else
                     {
                         engBurnTimeLex:Resources:Add(res:Name, res).
-                        OutDebug("Processing Resource: {0}":Format(res:Name)).
+                        // OutDebug("Processing Resource: {0}":Format(res:Name)).
                         set resMass to (res:amount * res:density) * (1 - engineResiduals).
                         set engFuelMass to engFuelMass + resMass.
                         set fuelMass to fuelMass + engFuelMass.
@@ -598,7 +598,7 @@
         }
 
         local burnTimeRemaining to choose burnTimeTotal / _engList:Length if _engList:Length > 0 else 0.
-        OutDebug("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeRemaining, 2))).
+        // OutDebug("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeRemaining, 2))).
         return burnTimeRemaining.
     }
 
@@ -622,13 +622,12 @@
         global MECO_Action_Counter to 0.
         if MECO_Time >= 0 
         {
-            local checkDel to { parameter _params is list(). OutDebug("MECO Check"). return MissionTime >= _params[1].}.
+            local checkDel to { parameter _params is list(). return MissionTime >= _params[1].}.
             local actionDel to 
             { 
                 parameter _params is list(). 
                 
                 set MECO_Action_Counter to MECO_Action_Counter + 1. 
-                OutDebug("MECO Action ({0}) ":Format(MECO_Action_Counter)). 
                 
                 local engIDList to _params[0].
 
@@ -656,7 +655,7 @@
             local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, MECO_Time), checkDel@, actionDel@).
             if RegisterLoopEvent(MECO_Event)
             {
-                OutDebug("MECO Handler Created").
+                // OutDebug("MECO Handler Created").
             }
         }
     }
