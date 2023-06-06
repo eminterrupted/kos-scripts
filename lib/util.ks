@@ -366,7 +366,9 @@
         if g_StageLimitSet:Length > 1
         {
             set _tag to _tag:replace("|{0};":Format(g_StageLimit:ToString), "|").
-            set g_StageLimit to _tag:Split(";")[0].
+            local tagSplit to _tag:Split("|").
+            set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
+            set g_MissionTag:STGSTP to g_StageLimit.
             g_StageLimitSet:Remove(0).
         }
         set core:tag to _tag.

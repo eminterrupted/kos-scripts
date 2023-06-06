@@ -73,13 +73,12 @@ if parachutes:length > 0
 }
 wait 1.
 
+local mode to "descent".
+local doneFlag to choose false if Ship:VerticalSpeed > 0 else true.
+
 OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
 OutInfo("Down: Wait until descent | Up: Wait until ascent").
 OutInfo("End: Begin reentry procedures now | PageDown: Skip reentry burn", 1).
-
-local mode to "descent".
-local doneFlag to false.
-
 
 until doneFlag
 {
@@ -251,7 +250,7 @@ if retroFire and ship:periapsis > reentryTgt
 }
 
 set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
-lock steering to s_Val.
+// lock steering to s_Val.
 
 OutMsg("Waiting until altitude <= " + startAlt).
 // local dir to choose "down" if startAlt <= ship:altitude else "up".
@@ -424,7 +423,7 @@ if stage:number > 1
 OutMsg("Waiting for reentry interface").
 until ship:altitude <= body:atm:height + 1000
 {
-    set s_Val to ship:SrfRetrograde.
+    set s_Val to Ship:SrfRetrograde.
     DispReentryTelemetry().
     
     // DispGeneric().

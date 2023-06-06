@@ -13,14 +13,17 @@ set g_MissionTag to ParseCoreTag(core:Part:Tag).
 set g_MissionParams to g_MissionTag:PARAMS.
 
 local _azData   to g_azData.
-local _stgAtETA to ETA:Apoapsis - 60.
+local _tgtEcc   to -1.
+local _stgAtETA to -1.
 local _stpStg   to g_StageLimit.
+
 
 if params:length > 0
 {
     set _stpStg to params[0].
     if params:length > 1 set _stgAtETA to params[1].
-    if params:length > 2 set _azData to params[2].
+    if params:length > 2 set _tgtEcc to params[2].
+    if params:length > 3 set _azData to params[3].
 }
 
 if _azData:Length = 1
@@ -39,6 +42,35 @@ else if _azData:Length = 0
 set g_StageLimit to _stpStg.
 
 local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun").
+
+// TODO: getting burntime from the burn time remaining of the engines to be burned
+if _stgAtETA < 0 
+{
+    set _stgAtETA to 165.
+}
+// {
+//     OutMsg("Calculating Burn Time").
+//     local availableEngines_BT to 0.
+//     local stageEngs           to list().
+//     local stageEngs_BT        to 0.
+
+//     from { local i to Stage:Number.} until i < g_StageLimit step { set i to i - 1.} do
+//     {
+//         set stageEngs to GetEnginesForStage(i).
+//         local infoStr to "N/A".
+//         if stageEngs:Length > 0
+//         {
+//             set stageEngs_BT to GetEnginesBurnTimeRemaining(stageEngs).
+//             set availableEngines_BT to availableEngines_BT + stageEngs_BT.
+//             set infoStr to Round(stageEngs_BT, 2) + "s".
+//         }
+//         OutInfo("Total    : {0}s ":Format(availableEngines_BT)).
+//         OutInfo("Stage [{0}]: {1}  ":Format(i, infoStr), 1).
+//     }
+//     set _stgAtETA to max(12, max(0.001, availableEngines_BT) / 1.5).
+// }
+OutMsg("_stgAtETA: {0}":Format(Round(_stgAtETA, 2))).
+wait 2.
 
 OutMsg("Waiting until timestamp").
 set s_Val to steeringDelegate:Call().
@@ -103,9 +135,9 @@ if nextEngs:Length > 0
 
 if not nextStageIsSep
 {
-    rcs on.
+    RCS on.
     OutMsg("Performing ullage manuever").
-    set t_Val to 1.
+    set Ship:Control:Fore to 1.
 }
 else
 {
@@ -124,9 +156,12 @@ OutMsg("Arming AutoStaging to {0}":Format(_stpStg)).
 OutInfo().
 
 set t_Val to 1.
-ArmAutoStagingNext(_stpStg, 1, 1).
+ArmAutoStagingNext(_stpStg, 1, 2).
+wait 0.01.
+set Ship:Control:Fore to 0.
 
-until Stage:Number = g_StageLimit
+local rollFlag to false.
+until Stage:Number = _stpStg or Ship:Orbit:Eccentricity <= _tgtEcc
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
@@ -143,20 +178,96 @@ until Stage:Number = g_StageLimit
         ExecGLoopEvents().
     }
 
-    set s_Val to steeringDelegate:Call().
+    GetTermChar().
+    if g_TermChar = "e"
+    {
+        if Ship:Control:Roll < 0 
+        {
+            set Ship:Control:Roll to 0.
+            set rollFlag to false.
+        }
+        else
+        {
+            set Ship:Control:Roll to 1.
+            set rollFlag to true.
+        }
+    }
+    else if g_TermChar = "q"
+    {
+        if Ship:Control:Roll > 0 
+        {
+            set Ship:Control:Roll to 0.
+            set rollFlag to false.
+        }
+        else
+        {
+            set Ship:Control:Roll to -1.
+            set rollFlag to true.
+        }
+    }
+    set g_TermChar to "".
+
+    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else steeringDelegate:Call().
     DispLaunchTelemetry().
     wait 0.01.
 }
-wait 1.
-set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-until g_ActiveEngines_Data:Thrust <= 0.01 or Ship:Orbit:Eccentricity <= 0.005
+set g_TS to Time:Seconds + 5.
+until g_ActiveEngines_Data:Thrust > 0.1 or Time:Seconds >= g_TS
 {
-    set s_Val to steeringDelegate:Call().
+    set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    wait 0.01.
+}
+
+OutMsg("Final Stage").
+until g_ActiveEngines_Data:Thrust <= 0.01 or Ship:Orbit:Eccentricity <= _tgtEcc //or Ship:Orbit:Eccentricity <= 0.005
+{
+    GetTermChar().
+    if g_TermChar = "e"
+    {
+        if Ship:Control:Roll < 0 
+        {
+            set Ship:Control:Roll to 0.
+            set rollFlag to false.
+        }
+        else
+        {
+            set Ship:Control:Roll to 1.
+            set rollFlag to true.
+        }
+    }
+    else if g_TermChar = "q"
+    {
+        if Ship:Control:Roll > 0 
+        {
+            set Ship:Control:Roll to 0.
+            set rollFlag to false.
+        }
+        else
+        {
+            set Ship:Control:Roll to -1.
+            set rollFlag to true.
+        }
+    }
+    set g_TermChar to "".
+
+    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else steeringDelegate:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     DispLaunchTelemetry().
     wait 0.01.
 }
 set t_Val to 0.
+wait 0.25.
+if Ship:AvailableThrust > 0.01
+{
+    OutMsg("Waiting for engine burnout").
+    until g_ActiveEngines_Data:Thrust <= 0.01
+    {
+        set s_Val to steeringDelegate:Call().
+        set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+        DispLaunchTelemetry().
+        wait 0.01.
+    }
+}
 unlock Throttle.
 unlock Steering.
 

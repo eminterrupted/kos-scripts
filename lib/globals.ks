@@ -10,6 +10,8 @@
 // *~ Config Settings ~* //
 // #region
     set Config:IPU to 1000.
+
+    global g_DualCore to ship:partsTagged("Core2"):Length > 0.
 // #endregion
 
 

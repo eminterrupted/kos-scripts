@@ -262,7 +262,7 @@
 
         if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
         {
-            set engSpecs:EstBurnTime to (Round(TotalResMass / AggregateMassLex:MaxMassFlow, 2)).
+            set engsSpecs:EstBurnTime to (Round(TotalResMass / AggregateMassLex:MaxMassFlow, 2)).
         }
         // set engSpecs["ESTBURNTIME"] to choose (Round(TotalResMass / AggregateMassLex:MaxMassFlow, 2) if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0) else 0, 2).
 
@@ -304,6 +304,42 @@
         }
 
         return engStgObj.
+    }
+    // #endregion
+
+    // *- Engine State
+    // #region
+
+    // GetEngineFuelStability :: [(_engList)<List[Engine]>] | [(_engList)<Engine>] -> ([FuelStabilityMin, FuelStabilityAvg])<List[Scalar]>
+    // Returns the fuel stability of a given set of engines in a list format containing
+    //  - [0] the minimum fuel stability value found amongst all engines
+    //  - [1] the average value amongst all engines
+    // Acceptable inputs are a list of engines, or a single engine object.
+    global function GetEngineFuelStability
+    {
+        parameter _engList is g_NextEngines.
+
+        local FuelStabilityAvg  to 0.
+        local FuelStabilityMin  to 1.
+        
+        if _engList:IsType("Engine")
+        {
+            set _engList to list(_engList).
+        }
+
+        from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
+        {
+            local eng to _engList[i].
+            local m to eng:GetModule("ModuleEnginesRF").
+
+            local EngFuelStability      to GetField(m, "propellant").
+            local StabilityStrIdx       to EngFuelStability:Find("(").
+            local FuelStabilityScalar   to choose EngFuelStability:SubString(StabilityStrIdx + 1, EngFuelStability:Find("%") - StabilityStrIdx - 2):ToNumber(0.01) / 100 if EngFuelStability:Contains("%") else 0.01.
+
+            set FuelStabilityAvg to ((FuelStabilityAvg * i) + FuelStabilityScalar) / (i + 1).
+            set FuelStabilityMin to min(FuelStabilityScalar, FuelStabilityMin).
+        }
+        return List(FuelStabilityMin, FuelStabilityAvg).
     }
     // #endregion
 
@@ -481,25 +517,89 @@
     {
         parameter _engList.
 
-        local fuelWeight to 0.
-        local btRemaining to 999999999.
+        local flowMass      to 0.
+        local fuelMass          to 0.
+        // local burnTimeRemaining to 0.
+        local burnTimeTotal to 0.
+        // local engineBurnTime    to 0.
+        // local residualsAverage  to 0.
+        local engineResiduals   to 0.
+
+        // from { local i to 0.} until i = _engList:Length step { set i to i + 0.} do
+        // {
+        //     set engineBurnTime to 0.
+        //     local eng to _engList[i].
+        //     // local engCount to i + 1.
+
+        //     local m to eng:GetModule("ModuleEnginesRF").
+        //     set engineResiduals to m:GetField("Predicted Residuals").
+
+        //     local doneFlag to false.
+        //     from { local i to 0.} until i = eng:ConsumedResources:Values:Length or doneFlag step { set i to i + 1.} do
+        //     {
+        //         local engResource to eng:ConsumedResources:Values[i].
+        //         OutInfo("Processing Resource: {0}":Format(engResource:Name)).
+        //         if engResource:MassFlow > 0 
+        //         {
+        //             set fuelMass to fuelMass + (engResource:amount * engResource:density).
+        //             set fuelMass to fuelMass - (FuelMass * engineResiduals).
+        //             set engineBurnTime   to (fuelMass - (fuelMass * engineResiduals)) / engResource:MaxMassFlow.
+        //             set burnTimeRemaining  to burnTimeRemaining + engineBurnTime.
+        //             set doneFlag to true.
+        //         }
+        //     }
+        //     // set residualsAverage to (residualsAverage + engineResiduals) / _engList:Length.
+        // }
+        // set burnTimeRemaining to burnTimeRemaining / _engList:Length.
+        // OutInfo("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeRemaining, 2))).
+        // return burnTimeRemaining.
+
+        local engBurnTimeLex to lexicon(
+            "Resources", lex()
+        ).
 
         for eng in _engList
         {
+            local m to eng:GetModule("ModuleEnginesRF").
+            set engineResiduals to choose m:GetField("Predicted Residuals") if m:HasField("Predicted Residuals") else 0.
+
+            local engFuelMass to 0.
+
             for res in eng:ConsumedResources:Values
             {
-                set fuelWeight to fuelWeight + (res:amount * res:density).
-                if res:MassFlow > 0 
+                local resMass to 0.
+
+                if res:MassFlow > 0
                 {
-                    set btRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
-                    if g_ActiveEngines:Length > 0
+                    if engBurnTimeLex:Resources:Keys:Contains(res:Name)
                     {
-                        set btRemaining to max(btRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
+                        OutDebug("Resource Cached: {0}":Format(res:Name)).
                     }
+                    else
+                    {
+                        engBurnTimeLex:Resources:Add(res:Name, res).
+                        OutDebug("Processing Resource: {0}":Format(res:Name)).
+                        set resMass to (res:amount * res:density) * (1 - engineResiduals).
+                        set engFuelMass to engFuelMass + resMass.
+                        set fuelMass to fuelMass + engFuelMass.
+                    }
+                    // set fuelMass to fuelMass - (fuelMass * engineResiduals).
                 }
             }
+
+            local engBurnTime to choose engFuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.
+            set burnTimeTotal to burnTimeTotal + engBurnTime.
+            set engBurnTimeLex[eng:UID] to lexicon(
+                "FuelMass",  engFuelMass
+                ,"FlowMass", eng:MassFlow
+                ,"BurnTimeEstimate", engBurnTime
+                ,"Residuals", round(engineResiduals, 5)
+            ).
         }
-        return btRemaining.
+
+        local burnTimeRemaining to choose burnTimeTotal / _engList:Length if _engList:Length > 0 else 0.
+        OutDebug("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeRemaining, 2))).
+        return burnTimeRemaining.
     }
 
     // #endregion

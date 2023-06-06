@@ -414,7 +414,7 @@
             {
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.025)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.03125)).
                 set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
                 set output_pitch        to min(90, effective_pitch * fShape).
             }
@@ -428,19 +428,23 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.125)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.0625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-22.5, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-30, min(effective_pitch * fShape, 90)).
             }
             else
             {
                 set error_pitch         to 90 * (1 - apo_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.25) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                set output_pitch        to max(-30, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-22.5, min(effective_pitch * fShape, 90)).
             }
+        }
+        if ETA:Apoapsis > ETA:Periapsis
+        {
+            set output_pitch to -output_pitch.
         }
 
         return output_pitch.
@@ -607,10 +611,63 @@
     
 // #endregion
 
-// *- Countdown
+// *- Pre-Launch Configuration
 // #region
 
-    // Countdown :: [<scalar>IgnitionSequenceStartSec] -> none
+    // ConfigureLaunchPad
+    //
+    global function ConfigureLaunchPad
+    {
+        local CurrentTimeSpan to TimeSpan(TIME:SECONDS).
+        local lpClamps to Ship:ModulesNamed("LaunchClamp").
+        local lpLights to choose lpClamps[0]:Part:PartsDubbedPattern("Light") if lpClamps:Length > 0 else list().
+
+        if lpLights:Length > 0
+        {
+            local lpLightModules to list().
+            for p in lpLights { lpLightModules:Add(p:GetModule("ModuleLight")). }
+
+            if CurrentTimeSpan:HOUR > 11 and CurrentTimeSpan:HOUR <= 23
+            {
+                for m in lpLightModules { DoAction(m, "Turn Light Off", true).}
+            }
+            else
+            {
+                for m in lpLightModules { DoAction(m, "Turn Light On", true).}
+            }
+        }
+
+        local lpEventList to list(
+            "Raise Walkway"
+            ,"Lower Safety Gate"
+            ,"Open Upper Clamp"
+            ,"Partial Retract Tower Step 1"
+        ).
+        for m in Ship:ModulesNamed("ModuleAnimateGenericExtra")
+        {
+            if m:Part:Name:MatchesPattern("^AM.MLP.*")
+            {
+                for lpEvent in lpEventList
+                {
+                    if DoEvent(m, lpEvent) = 1
+                    {
+                        wait 1.
+                    }
+                }
+                if m:HasField("Car Height Adjust")
+                {
+                    m:SetField("Car Height Adjust", 0).
+                }
+            }
+        }
+    }
+
+// #endregion
+
+// *- Launch Countdown
+// #region
+
+    // LaunchCountdown :: [<scalar>IgnitionSequenceStartSec] -> none
     // Performs the countdown
     global function LaunchCountdown
     {
@@ -710,7 +767,7 @@
     {
         parameter t_liftoff to Time:Seconds,
                   t_spoolTime to 0.1,
-                  launchThrustThreshold to 0.975.
+                  launchThrustThreshold to 0.985.
 
         // local abortFlag         to false.
         // local launchCommit      to false.
@@ -782,6 +839,10 @@
 // #endregion
 
 
+// *- Part Module Manipulation
+// #region
+
+    // Retract Swing Arms
     global function RetractSwingArms
     {
         parameter _part.
@@ -817,5 +878,6 @@
             }
         }
     }
+// #endregion
 
 // #endregion
