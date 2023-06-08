@@ -58,6 +58,11 @@ else
 ClearScreen.
 DispMain(ScriptPath()).
 
+// TODO: Extend Antenna Function
+
+// Extend any solar panels
+ExtendSolarPanels().
+
 if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("RealChuteModule"):Length > 0
 {
     OutMsg("Executing reentry").

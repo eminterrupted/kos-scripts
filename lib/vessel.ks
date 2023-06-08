@@ -1158,4 +1158,19 @@
             }
         }
     // #endregion
+
+    // ** Solar Panels
+
+    // ExtendSolarPanels :: _panelList<Module> -> <none>
+    // Given a list of ModuleROSolar items, extends any panels that have the event available
+    global function ExtendSolarPanels
+    {
+        parameter _panelList is Ship:ModulesNamed("ModuleROSolar").
+
+        for m in _panelList
+        {
+            DoEvent(m, "extend solar panel").
+        }
+    }
+
 // #endregion

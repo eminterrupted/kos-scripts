@@ -90,7 +90,7 @@
         if g_AngDependency:Keys:Length = 0 and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            set _delDependency to InitAscentAng_Next(_tgtAlt, 1.0875, 7.5, 37).
+            set _delDependency to InitAscentAng_Next(_tgtAlt, 1.0075, 7.5, 37).
         }
         set g_AngDependency to _delDependency.
 

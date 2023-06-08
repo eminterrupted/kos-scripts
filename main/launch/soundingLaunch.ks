@@ -220,7 +220,7 @@ until Stage:Number <= g_StageLimit
     
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
+        // OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
         ExecGLoopEvents().
     }
 
@@ -269,7 +269,7 @@ until doneFlag or Ship:AvailableThrust <= 0.1
 
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
+        // OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
         ExecGLoopEvents().
     }
 
