@@ -136,6 +136,7 @@ SAS Off.
 set s_Val to steeringDelegate:Call().
 lock steering to s_Val.
 set t_Val to 0.
+wait 0.1.
 lock throttle to t_Val.
 
 until ETA:Apoapsis <= _stgAtETA + 5

@@ -1169,7 +1169,7 @@
 
         for m in _panelList
         {
-            DoEvent(m, "extend solar panel").
+            DoAction(m, "extend solar panel", true).
         }
     }
 

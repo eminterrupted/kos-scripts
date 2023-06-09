@@ -625,15 +625,21 @@
         if lpLights:Length > 0
         {
             local lpLightModules to list().
-            for p in lpLights { lpLightModules:Add(p:GetModule("ModuleLight")). }
+            for p in lpLights 
+            { 
+                if p:HasModule("ModuleLight") 
+                {
+                    local m to p:GetModule("ModuleLight"). 
 
-            if CurrentTimeSpan:HOUR > 11 and CurrentTimeSpan:HOUR <= 23
-            {
-                for m in lpLightModules { DoAction(m, "Turn Light Off", true).}
-            }
-            else
-            {
-                for m in lpLightModules { DoAction(m, "Turn Light On", true).}
+                    if CurrentTimeSpan:HOUR > 11 and CurrentTimeSpan:HOUR <= 23
+                    {
+                        DoAction(m, "Turn Light Off", true).
+                    }
+                    else
+                    {
+                        DoAction(m, "Turn Light On", true).
+                    }
+                }
             }
         }
 
