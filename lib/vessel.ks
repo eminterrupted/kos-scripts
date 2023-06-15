@@ -479,7 +479,7 @@
     {
         // parameter _delDependency IS LEX().
         parameter _steerPair IS "Flat:Sun",
-                  _fShape    IS 0.9875.
+                  _fShape    IS 0.975.
 
         local del to {}.
         if g_azData:LENGTH = 0

@@ -316,12 +316,12 @@ until ship:altitude <= startAlt
     GetTermChar().
     if g_TermChar = Terminal:Input:HomeCursor
     {
-        OutMsg("Control released").
+        OutInfo("Control released").
         unlock steering.
     }
     else if g_TermChar = Terminal:Input:EndCursor
     {
-        OutMsg("Control locked").
+        OutInfo("Control locked").
         lock steering to s_Val.
     }
     else
@@ -423,6 +423,24 @@ if stage:number > 1
 OutMsg("Waiting for reentry interface").
 until ship:altitude <= body:atm:height + 1000
 {
+    GetTermChar().
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        OutInfo("Control released").
+        unlock steering.
+    }
+    else if g_TermChar = Terminal:Input:EndCursor
+    {
+        OutInfo("Control locked").
+        lock steering to s_Val.
+    }
+    else
+    {
+        Terminal:Input:Clear().
+        set s_Val to Ship:SrfRetrograde. 
+    }
+    set g_TermChar to "".
+    
     set s_Val to Ship:SrfRetrograde.
     DispReentryTelemetry().
     
@@ -438,14 +456,49 @@ OutInfo().
 
 until ship:altitude <= body:atm:height
 {
-    set s_Val to ship:SrfRetrograde.
+    GetTermChar().
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        OutInfo("Control released").
+        unlock steering.
+    }
+    else if g_TermChar = Terminal:Input:EndCursor
+    {
+        OutInfo("Control locked").
+        lock steering to s_Val.
+    }
+    else
+    {
+        Terminal:Input:Clear().
+        set s_Val to Ship:SrfRetrograde. 
+    }
+    set g_TermChar to "".
+    
     DispReentryTelemetry().
 }
 OutMsg("Reentry Interface").
 
 until ship:groundspeed <= 1350 and ship:altitude <= 10000
 {
-    set s_Val to ship:SrfRetrograde.
+    GetTermChar().
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        OutInfo("Control released").
+        unlock steering.
+    }
+    else if g_TermChar = Terminal:Input:EndCursor
+    {
+        OutInfo("Control locked").
+        lock steering to s_Val.
+    }
+    else
+    {
+        Terminal:Input:Clear().
+        set s_Val to Ship:SrfRetrograde. 
+    }
+    set g_TermChar to "".
+    
+    // set s_Val to ship:SrfRetrograde.
     DispReentryTelemetry().
 }
 

@@ -15,8 +15,8 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
-	"Library Template": {
-		"prefix": "newlib",
+	"NewLibrary": {
+		"prefix": "NewLib",
 		"body": [
 		  "// #include \"0:/lib/libLoader.ks\"",
 		  "@lazyGlobal off.",
@@ -43,15 +43,37 @@
 		  "// *~ Functions ~* //",
 		  "// #region",
 		  "  ",
-		  "  // *- Function Block",
-		  "  // #region",
+		  "    // *- Function Block",
+		  "    // #region",
 		  "",
-		  "  // FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
-		  "  // Function Description",
+		  "    // FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
+		  "    // Function Description",
 		  "",
-		  "  // #endregion",
+		  "    // #endregion",
 		  "// #endregion"
 		],
-		"description": "Library Template"
+		"description": "NewLibrary"
+	  },
+	  "NewGlobalFunction": {
+		"prefix": "gblfunc",
+		"body": [
+		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
+		  "// Function Description",
+		  "global function FunctionName",
+		  "{",
+		  "}"
+		],
+		"description": "NewGlobalFunction"
+	  },
+	  "NewLocalFunction": {
+		"prefix": "locfunc",
+		"body": [
+		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
+		  "// Function Description",
+		  "local function FunctionName",
+		  "{",
+		  "}"
+		],
+		"description": "NewLocalFunction"
 	  }
 }

@@ -307,6 +307,65 @@
     }
     // #endregion
 
+    // *- Engine Specification Helpers
+    // #region
+    // GetTotalISP :: (<list>Engines) -> <scalar>
+    // Returns averaged ISP for a list of engines
+    global function GetTotalIsp
+    {
+        parameter _engList, 
+                  _mode is "vac".
+
+        local relThr to 0.
+        local totThr to 0.
+
+        local engIsp to { 
+            parameter eng. 
+            if _mode = "vac" return eng:VISP.
+            if _mode = "sl" return eng:SLISP.
+            if _mode = "cur" return eng:ispAt(body:ATM:AltitudePressure(Ship:Altitude)).
+        }.
+
+        if _engList:Length > 0 
+        {
+            for eng in _engList
+            {
+                set totThr to totThr + eng:PossibleThrust.
+                set relThr to relThr + (eng:PossibleThrust / engIsp(eng)).
+            }
+
+            // clrDisp(30).
+            // print "GetTotalIsp                    " at (2, 30).
+            // print "stg: " + stg.
+            // print "totThr: " + totThr at (2, 31).
+            // print "relThr: " + relThr at (2, 32).
+            //Breakpoint().
+            if totThr = 0
+            {
+                return 0.00001.
+            }
+            else
+            {
+                return totThr / relThr.
+            }
+        }
+        else
+        {
+            return 0.00001.
+        }
+    }
+
+    // GetExhVel :: (<list>Engines) -> <scalar>
+    // Returns the averaged exhaust velocity for a list of engines
+    global function GetExhVel
+    {
+        parameter _engList, 
+                  _mode is "vac".
+
+        return Constant:g0 * GetTotalIsp(_engList, _mode).
+    }
+    // #endregion
+
     // *- Engine State
     // #region
 

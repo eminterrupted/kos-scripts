@@ -90,7 +90,7 @@
         if g_AngDependency:Keys:Length = 0 and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            set _delDependency to InitAscentAng_Next(_tgtAlt, 1.0075, 7.5, 37).
+            set _delDependency to InitAscentAng_Next(_tgtAlt, 0.975, 7.5, 37).
         }
         set g_AngDependency to _delDependency.
 
@@ -410,7 +410,7 @@
             set altitude_error      to current_alt / turn_alt_end.
             set apo_error           to current_apo / target_apo.
 
-            if current_alt < turn_alt_blend
+            if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
             {
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
@@ -418,7 +418,7 @@
                 set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
                 set output_pitch        to min(90, effective_pitch * fShape).
             }
-            else if current_ap_alt < turn_alt_end
+            else if current_ap_alt < turn_alt_end and Ship:VerticalSpeed > 0
             {
                 local blend_alt_error   to (current_alt - turn_alt_blend) / (turn_alt_end - turn_alt_blend).
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).

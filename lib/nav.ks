@@ -31,21 +31,21 @@
 
     global function GetApFromPeEcc
     {
-        parameter pe,
-                  ecc,
-                  tgtBody is ship:body.
+        parameter _pe,
+                  _ecc,
+                  _tgtBody is ship:body.
 
-        return (((pe + tgtBody:radius) / (1 - ecc)) * (1 + ecc)) - tgtBody:radius.
+        return (((_pe + _tgtBody:radius) / (1 - _ecc)) * (1 + _ecc)) - _tgtBody:radius.
     }
 
     // Apoapsis and Periapsis from sma and ecc
     global function GetApPeFromSMAEcc
     {
-        parameter sma,
-                  ecc.
+        parameter _sma,
+                  _ecc.
 
-        local pe to sma * (1 - ecc).
-        local ap to sma * (1 + ecc).
+        local pe to _sma * (1 - _ecc).
+        local ap to _sma * (1 + _ecc).
 
         return list (pe, ap).
     }
@@ -53,67 +53,67 @@
     // Eccentricity from apoapsis and periapsis
     global function GetEccFromApPe
     {
-        parameter ap,
-                  pe,
-                  tgtBody is ship:body.
+        parameter _ap,
+                  _pe,
+                  _tgtBody is ship:body.
 
-        return ((ap + tgtBody:radius) - (pe + tgtBody:radius)) / (ap + pe + (tgtBody:radius * 2)).
+        return ((_ap + _tgtBody:radius) - (_pe + _tgtBody:radius)) / (_ap + _pe + (_tgtBody:radius * 2)).
     }
 
     // Periapsis from apoapsis and eccentricity
     global function GetPeFromApEcc
     {
-        parameter ap,
-                  ecc,
-                  tgtBody is ship:body.
+        parameter _ap,
+                  _ecc,
+                  _tgtBody is ship:body.
 
-        return (((ap + tgtBody:radius) / (1 + ecc)) * (1 - ecc)) - tgtBody:radius.
+        return (((_ap + _tgtBody:radius) / (1 + _ecc)) * (1 - _ecc)) - _tgtBody:radius.
     }
 
     // Period of hohmann transfer
     global function GetPeriodFromSMA
     {
-        parameter tgtSMA, 
-                  tgtBody is ship:body.
+        parameter _tgtSMA, 
+                  _tgtBody is ship:body.
 
-        return 0.5 * sqrt((4 * constant:pi^2 * tgtSMA^3) / tgtBody:mu).
+        return 0.5 * sqrt((4 * constant:pi^2 * _tgtSMA^3) / _tgtBody:mu).
     }
 
     // Semimajoraxis from orbital period
     global function GetSMAFromPeriod
     {
-        parameter period, 
-                  tgtBody is ship:body.
+        parameter _period, 
+                  _tgtBody is ship:body.
 
-        return ((tgtBody:mu * period^2) / (4 * constant:pi^2))^(1/3).
+        return ((_tgtBody:mu * _period^2) / (4 * constant:pi^2))^(1/3).
     }
 
     // Semimajoraxis from apoapsis, periapsis, and body
     global function GetSMAFromApPe
     {
-        parameter ap,
-                  pe,
-                  smaBody is ship:body.
+        parameter _ap,
+                  _pe,
+                  _smaBody is ship:body.
 
-        return (pe + ap + (smaBody:radius * 2)) / 2.
+        return (_pe + _ap + (_smaBody:radius * 2)) / 2.
     }
 
     // 
     global function GetTransferSma
     {
-        parameter arrivalRadius,
-                  parkingOrbit.
+        parameter _arrivalRadius,
+                  _parkingOrbit.
 
-        return (arrivalRadius + parkingOrbit) / 2.
+        return (_arrivalRadius + _parkingOrbit) / 2.
     }
 
     global function GetTransferPeriod
     {
-        parameter xfrSMA,
-                  tgtBody is ship:body.
+        parameter _xfrSMA,
+                  _tgtBody is ship:body.
 
         //return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
-        return 2 * constant:pi * sqrt(xfrSMA^3 / tgtBody:mu).
+        return 2 * constant:pi * sqrt(_xfrSMA^3 / _tgtBody:mu).
     }
     //#endregion
   // #endregion

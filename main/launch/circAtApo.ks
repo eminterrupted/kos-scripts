@@ -105,7 +105,7 @@ local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun").
 // TODO: getting burntime from the burn time remaining of the engines to be burned
 if _stgAtETA < 0 
 {
-    set _stgAtETA to 165.
+    set _stgAtETA to 120.
 }
 // {
 //     OutMsg("Calculating Burn Time").
@@ -135,9 +135,6 @@ OutMsg("Waiting until timestamp").
 SAS Off.
 set s_Val to steeringDelegate:Call().
 lock steering to s_Val.
-set t_Val to 0.
-wait 0.1.
-lock throttle to t_Val.
 
 until ETA:Apoapsis <= _stgAtETA + 5
 {
@@ -181,30 +178,30 @@ until ETA:Apoapsis <= _stgAtETA + 5
     DispLaunchTelemetry().
 }
 
-local nextEngs to GetNextEngines().
-local nextStageIsSep to false.
-if nextEngs:Length > 0
-{
-    for eng in nextEngs
-    {
-        if eng:tag = "" and g_PartInfo:Engines:SepRef:Contains(eng:name)
-        {
-            set nextStageIsSep to true.
-        }
-    }
-}
+// local nextEngs to GetNextEngines().
+// local nextStageIsSep to false.
+// if nextEngs:Length > 0
+// {
+//     for eng in nextEngs
+//     {
+//         if eng:tag = "" and g_PartInfo:Engines:SepRef:Contains(eng:name)
+//         {
+//             set nextStageIsSep to true.
+//         }
+//     }
+// }
 
-if not nextStageIsSep
-{
+// if not nextStageIsSep
+// {
     RCS on.
     OutMsg("Performing ullage manuever").
     set Ship:Control:Fore to 1.
-}
-else
-{
-    OutMsg("Sep motors detected, awaiting ignition").
-    wait 1.
-}
+// }
+// else
+// {
+//     OutMsg("Sep motors detected, awaiting ignition").
+//     wait 1.
+// }
 
 until ETA:Apoapsis <= _stgAtETA
 {
@@ -217,6 +214,7 @@ OutMsg("Arming AutoStaging to {0}":Format(_stpStg)).
 OutInfo().
 
 set t_Val to 1.
+lock throttle to t_Val.
 ArmAutoStagingNext(_stpStg, 1, 2).
 wait 0.01.
 set Ship:Control:Fore to 0.
@@ -272,15 +270,26 @@ until Stage:Number = _stpStg
     DispLaunchTelemetry().
     wait 0.01.
 }
-set g_TS to Time:Seconds + 5.
-until g_ActiveEngines_Data:Thrust > 0.1 or Time:Seconds >= g_TS
+set g_TS to Time:Seconds + 10.
+
+local thrustFlag to false.
+until thrustFlag or Time:Seconds >= g_TS
 {
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    if g_ActiveEngines_Data:HasKey("Thrust") 
+    {
+        if g_ActiveEngines_Data:Thrust <= 0.01
+        {
+            set thrustFlag to true.
+        }
+    }
     wait 0.01.
 }
 
+wait 0.25.
+local MECOFlag to false.
 OutMsg("Final Stage").
-until g_ActiveEngines_Data:Thrust <= 0.01 or eccCheckDelegate:Call()
+until eccCheckDelegate:Call() or MECOFlag
 {
     GetTermChar().
     if g_TermChar = "e"
@@ -313,11 +322,19 @@ until g_ActiveEngines_Data:Thrust <= 0.01 or eccCheckDelegate:Call()
 
     set s_Val to choose steeringDelegate:Call():Vector if rollFlag else steeringDelegate:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    if g_ActiveEngines_Data:HasKey("Thrust") 
+    {
+        if g_ActiveEngines_Data:Thrust <= 0.01
+        {
+            set MECOFlag to true.
+        }
+    }
+
     DispLaunchTelemetry().
     wait 0.01.
 }
 set t_Val to 0.
-wait 0.25.
+wait 0.01.
 if Ship:AvailableThrust > 0.01
 {
     OutMsg("Waiting for engine burnout").
