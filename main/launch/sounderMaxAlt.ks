@@ -55,5 +55,5 @@ until false
         }
     }
     DispLaunchTelemetry().
-    DispEngineTelemetry().
+    DispEngineTelemetry(g_ActiveEngines_Data).
 }
