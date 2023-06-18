@@ -6,6 +6,8 @@
 // #region
     // #include "0:/lib/globals"
     // #include "0:/lib/util"
+    // #include "0:/lib/engines"
+    // #include "0:/lib/launch"
 // #endregion
 
 
@@ -141,6 +143,27 @@
         return g_Line.
     }
 
+    // DispEngineTelemetry
+    // Displays Engine Telemetry, woo
+    global function DispEngineTelemetry
+    {
+        set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines). 
+        
+        local timeRemaining to choose TimeSpan(g_ActiveEngines_Data:BurnTimeRemaining) if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") else TimeSpan(0).
+        local trStr to "{0}m {1}s  ":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 3)).
+        local dispBlock to list(
+            "ENGINE TELEMETRY"
+            ,"---------------"
+            ,"THRUST    : {0}   ":Format(Round(g_ActiveEngines_Data:Thrust, 2))
+            ,"AVL THRUST: {0}   ":Format(Round(g_ActiveEngines_Data:ThrustAvailPres, 2))
+            ,"THRUST PCT: {0}%  ":Format(Round(g_ActiveEngines_Data:ThrustPct * 100, 2))
+            ,"ISP       : {0}s  ":Format(Round(g_ActiveEngines_Data:ISPAt, 2))
+            ,"BURN TIME : {0}s  ":Format(trStr)
+        ).
+
+        PrintDisp(dispBlock).
+    }
+
     // DispLaunchTelemetry :: <none> -> <none>
     // Displays launch telemetry in terminal 
     global function DispLaunchTelemetry
@@ -166,11 +189,14 @@
         parameter _dispBlock,
                   _line to g_Line.
 
+        set g_Line to _line.
+
         for str in _dispBlock
         {
             print str at (2, g_Line).
             cr().
         }
+        cr().
     }
 
     // #endregion
