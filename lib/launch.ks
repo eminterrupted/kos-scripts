@@ -420,7 +420,7 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.015625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.125)).// 1.015625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
                 set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
@@ -430,7 +430,7 @@
             {
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.03125)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.25)). // 1.03125)).
                 set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
                 set output_pitch        to min(90, effective_pitch * fShape).
             }
@@ -444,18 +444,18 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.0625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.375)).// 1.0625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-30, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
             }
             else
             {
                 set error_pitch         to 90 * (1 - apo_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.425) / apo_error))). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                set output_pitch        to max(-22.5, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
             }
         }
         if ETA:Apoapsis > ETA:Periapsis
@@ -720,7 +720,7 @@
             set totalSpoolTime to totalSpoolTime + stgMaxSpool.
             set engSpoolLex[i] to stgMaxSpool.
         }
-        set countdown            to maxSpoolTime + 3.
+        set countdown            to maxSpoolTime + 5.
         local t_launch           to Time:Seconds + countdown.
         local launchCommit       to false.
         //local hasSpool           to engSpoolLex[Stage:Number - 1][0].
