@@ -55,7 +55,7 @@
 		"description": "NewLibrary"
 	  },
 	  "NewGlobalFunction": {
-		"prefix": "gblfunc",
+		"prefix": "NGF",
 		"body": [
 		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
 		  "// Function Description",
@@ -66,7 +66,7 @@
 		"description": "NewGlobalFunction"
 	  },
 	  "NewLocalFunction": {
-		"prefix": "locfunc",
+		"prefix": "NLF",
 		"body": [
 		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
 		  "// Function Description",
@@ -75,5 +75,30 @@
 		  "}"
 		],
 		"description": "NewLocalFunction"
+	  }
+	  ,
+	  "New Script": {
+		"prefix": "NewScript",
+		"body": [
+		  "@LazyGlobal off.",
+		  "ClearScreen.",
+		  "",
+		  "parameter _params is list().",
+		  "",
+		  "// Dependencies",
+		  "RunOncePath(\"0:/lib/libLoader.ks\").",
+		  "",
+		  "// Variables",
+		  "local foo is 0.",
+		  "",
+		  "// Parameter validation",
+		  "if _params:length > 0 ",
+		  "{",
+		  "    set foo to _params[0].",
+		  "}",
+		  "",
+		  "// Begin"
+		],
+		"description": "New Script"
 	  }
 }
