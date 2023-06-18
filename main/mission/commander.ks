@@ -21,7 +21,7 @@ else
 
 until g_PlanLex:Keys:Length = 0
 {
-    RunPath(g_PlanLex:Keys[0], g_PlanLex:Values[0]).
+    RunPath("0:/main/{0}":Format(g_PlanLex:Keys[0]), g_PlanLex:Values[0]).
     g_PlanLex:Remove(g_PlanLex:Keys[0]).
 }
 

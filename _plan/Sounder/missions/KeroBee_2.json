@@ -1,0 +1,15 @@
+{
+    "entries": [
+        {
+            "value": "Launch/sounderMaxAlt.ks",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "items": [
+                
+            ],
+            "$type": "kOS.Safe.Encapsulation.ListValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.Lexicon"
+}

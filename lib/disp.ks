@@ -18,12 +18,13 @@
     // #region
     local dispTermWidth to 72.
     local dispTermHeight to 50.
+    local defLine to 10.
     // #endregion
 
     // *- Global
     // #region
-    local  d_Line to 10.
-    global g_Line to 0.
+    global g_DispBuffer to list().
+    global g_Line to defLine.
     // #endregion
 // #endregion
 
@@ -102,6 +103,14 @@
         }
     }
 
+
+    // VBlank :: <none> -> <none>
+    // Resets g_Line to default
+    global function VBlank
+    {
+        set g_Line to defLine.
+        wait 0.01.
+    }
     // #endregion
 
     // *- Displays
@@ -161,7 +170,7 @@
             ,"BURN TIME : {0}s  ":Format(trStr)
         ).
 
-        PrintDisp(dispBlock).
+        g_DispBuffer:Add(dispBlock).
     }
 
     // DispLaunchTelemetry :: <none> -> <none>
@@ -179,24 +188,28 @@
             ,"{0, 10}: {1}  ":Format("ORBIT", Round(Ship:Velocity:Orbit:Mag, 1))
         ).
 
-        PrintDisp(dispBlock).
+        g_DispBuffer:Add(dispBlock).
     }
 
     // PrintDisp: (_dispBlock)<List> -> <none>
     // Given a list of things to print, prints them
     global function PrintDisp
     {
-        parameter _dispBlock,
+        parameter _bufferData is g_DispBuffer,
                   _line to g_Line.
 
         set g_Line to _line.
 
-        for str in _dispBlock
+        for dispBlock in _bufferData
         {
-            print str at (2, g_Line).
+            for str in dispBlock
+            {
+                print str at (2, g_Line).
+                cr().
+            }
             cr().
         }
-        cr().
+        VBlank().
     }
 
     // #endregion

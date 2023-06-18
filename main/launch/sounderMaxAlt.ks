@@ -5,6 +5,7 @@ parameter _params is list().
 
 // Load dependencies
 RunOncePath("0:/lib/libLoader.ks").
+RunOncePath("0:/lib/launch.ks").
 
 // Define high-level variables
 local tgtHeading to 90.
@@ -48,12 +49,12 @@ until false
     
     if g_LoopDelegates:HasKey("Staging")
     {
-        set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-        if stagingCheckResult = 1
+        if g_LoopDelegates:Staging:Check:Call() = 1
         {
             g_LoopDelegates:Staging["Action"]:Call().
         }
     }
     DispLaunchTelemetry().
     DispEngineTelemetry(g_ActiveEngines_Data).
+    PrintDisp().
 }

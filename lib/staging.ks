@@ -43,7 +43,7 @@
         else
         {
             set g_LoopDelegates["Staging"] to LEX(
-                "Check", GetStagingConditionDelegate(_stgCondition)
+                "Check", GetStagingConditionDelegate()
                 ,"Action", GetStagingActionDelegate(_stgAction)
             ).
 

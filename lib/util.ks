@@ -38,14 +38,12 @@ SetKOSConfig().
         parameter _ipu is 500
                  ,_ucp is False
                  ,_stat is False
-                 ,_clobber is False
                  ,_verbose is True
                  ,_safeMode is True.
 
         set Config:IPU      to _ipu.
         set Config:UCP      to _ucp.
         set Config:Stat     to _stat.
-        set Config:Clobber  to _clobber.
         set Config:Verbose  to _verbose.
         set Config:Safe     to _safeMode.
     }
