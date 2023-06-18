@@ -223,13 +223,14 @@
                             return true.
                         }
                     }
-                    DispEngineTelemetry().
+                    DispEngineTelemetry(g_ActiveEngines_Data).
                 }
                 else if Time:Seconds > t_liftoff
                 {
                     return true.
                 }
                 OutMsg("LAUNCH: T{0}s":format(round(Time:Seconds - t_liftoff, 1))).
+                PrintDisp().
             }
         }
         else

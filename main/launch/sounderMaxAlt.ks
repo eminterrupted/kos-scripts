@@ -19,10 +19,10 @@ if _params:length > 0
     if _params:length > 1 set tgtAngle to _params[1].
 }
 
-DispMain(ScriptPath()).
+set g_Context to ScriptPath().
+DispMain().
 Breakpoint(Terminal:Input:Enter, "*** Press Enter to Launch ***").
-ClearScreen.
-DispMain(ScriptPath()).
+ResetDisp().
 
 // Begin
 lock steering to s_Val.
@@ -36,10 +36,12 @@ set g_ActiveEngines to GetActiveEngines().
 set g_NextEngines   to GetNextEngines().
 ArmAutoStaging().
 wait 0.01.
+ResetDisp().
 
 local engineCounter to g_ActiveEngines:Length.
 
-until false
+OutMsg("Ascent").
+until Stage:Number <= g_StageLimit
 {
     if engineCounter <> g_ActiveEngines:Length
     {
@@ -57,4 +59,13 @@ until false
     DispLaunchTelemetry().
     DispEngineTelemetry(g_ActiveEngines_Data).
     PrintDisp().
+}
+ResetDisp().
+
+OutMsg("MECO").
+until false
+{
+    DispLaunchTelemetry().
+    PrintDisp().
+    wait 0.01.
 }

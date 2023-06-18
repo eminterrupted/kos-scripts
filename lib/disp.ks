@@ -95,11 +95,11 @@
         local line to 8.
         if _str:length > 0
         {
-            print "[{0}] {1} ":Format("INFO", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            print "[{0}] {1} ":Format("INFO", _str):PadRight(Terminal:Width - 2) at (2, line).
         }
         else
         {
-            print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            print _str:PadRight(Terminal:Width - 2) at (2, line).
         }
     }
 
@@ -109,6 +109,7 @@
     global function VBlank
     {
         set g_Line to defLine.
+        g_DispBuffer:Clear().
         wait 0.01.
     }
     // #endregion
@@ -120,7 +121,7 @@
     // Prints the main terminal header, and returns the next available line for printing
     global function DispMain
     {
-        parameter _scriptPath is ScriptPath(),
+        parameter _scriptPath is g_Context,
                   _termWidth is dispTermWidth,
                   _termHeight is dispTermHeight.
 
@@ -178,14 +179,14 @@
     global function DispLaunchTelemetry
     {
         local dispBlock to list(
-            "TELEMETRY"
-            ,"---------"
+            "LAUNCH TELEMETRY"
+            ,"----------------"
             ,"{0,-10}: {1}  ":Format("ALTITUDE", Round(Ship:Altitude))
             ,"{0,-10}: {1}  ":Format("APOAPSIS", Round(Ship:Apoapsis))
             ,"{0,-10}: {1}  ":Format("PERIAPSIS", Round(Ship:Periapsis))
             ,"{0,-10}":Format("VELOCITY")
-            ,"{0, 10}: {1}  ":Format("SURFACE", Round(Ship:Velocity:Surface:Mag, 1))
-            ,"{0, 10}: {1}  ":Format("ORBIT", Round(Ship:Velocity:Orbit:Mag, 1))
+            ,"{0,-8}: {1}  ":Format("SURFACE", Round(Ship:Velocity:Surface:Mag, 1)):PadLeft(2)
+            ,"{0,-8}: {1}  ":Format("ORBIT", Round(Ship:Velocity:Orbit:Mag, 1)):PadLeft(2)
         ).
 
         g_DispBuffer:Add(dispBlock).
@@ -196,7 +197,7 @@
     global function PrintDisp
     {
         parameter _bufferData is g_DispBuffer,
-                  _line to g_Line.
+                  _line to defLine.
 
         set g_Line to _line.
 
@@ -204,12 +205,22 @@
         {
             for str in dispBlock
             {
-                print str at (2, g_Line).
-                cr().
+                print str at (2, cr()).
             }
             cr().
+            cr().
         }
-        VBlank().
+        g_DispBuffer:Clear.
+        set g_Line to defLine.
+    }
+
+    // ResetDisp
+    // FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>
+    // Function Description
+    global function ResetDisp
+    {
+        ClearScreen.
+        DispMain().
     }
 
     // #endregion

@@ -1,6 +1,11 @@
 // *~ Global Variables ~* //
 // #region
     
+    // *- Basics
+    // #region
+    global g_Context to "".
+    // #endregion
+
     // *- Vessel Control
     // #region
     global s_Val to Ship:Facing.
