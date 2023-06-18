@@ -102,13 +102,13 @@ set g_HotStagingArmed to ArmHotStaging().
 //     set stagingDelegateAction to g_LoopDelegates:Staging["Action"].
 // }
 
-set g_BoostersArmed to ArmBoosterStaging().
-
+// set g_BoostersArmed to ArmBoosterStaging().
+OutInfo("g_BoostersArmed: {0}":Format(g_BoostersArmed)).
 set s_Val to Ship:Facing.
 lock steering to s_Val.
 
 OutMsg().
-OutInfo().
+// OutInfo().
 OutInfo("", 1).
 
 OutMsg("Liftoff! ").

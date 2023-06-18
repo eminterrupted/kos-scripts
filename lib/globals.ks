@@ -23,6 +23,7 @@
     global g_Program to 0.
     global g_TS to 0.
     global g_LastUpdate to 0.
+    global g_Counter to 0.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(

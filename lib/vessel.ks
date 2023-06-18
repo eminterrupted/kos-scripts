@@ -535,11 +535,12 @@
     {
         set g_BoosterObj to lexicon().
 
-        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\|\.)+(\d*)+").
+        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\||\.)+(\d*)+").
 
         local setIdxList to UniqueSet().
         if BoosterParts:Length > 0
         {
+            OutInfo("BoosterParts:Length > 0"). wait 1.
             for p in BoosterParts
             {
                 local setIdx to p:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
@@ -556,6 +557,7 @@
         }
         else 
         {
+            OutInfo("BoosterParts:Length = 0"). wait 1.
             set g_BoostersArmed to false.
         }
         return g_BoostersArmed.
@@ -599,10 +601,10 @@
         local updateDel to { return g_BoosterObj.}.
         if not (_dc = Core:Part)
         {
+            local setIdx to _dc:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
             OutInfo("_dc: {0}":Format(_dc:name)).
             set updateDel to
             { 
-                local setIdx to _dc:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
                 if g_BoosterObj:HasKey(setIdx)
                 { 
                     if g_BoosterObj[setIdx]:HasKey("ENG") 
@@ -610,7 +612,13 @@
                         set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to 0.
                     }
                 }
-                set g_BoosterObj to ProcessBoosterTree(_dc, setIdx, g_BoosterObj).
+                //set g_BoosterObj to ProcessBoosterTree(_dc, setIdx, g_BoosterObj).
+                local boosterEngs to list().
+                for engObj in g_BoosterObj[setIdx]["ENG"]:Parts:Values
+                {
+                    boosterEngs:Add(engObj:P).
+                }
+                set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to GetThrustForEngines(boosterEngs).
                 return g_BoosterObj.
             }.
         }
@@ -621,11 +629,26 @@
         return updateDel@.
     }
 
+    global function GetThrustForEngines
+    {
+        parameter _engList.
+
+        local allThrust to 0.
+
+        for eng in _engList
+        {
+            set allThrust to allThrust + eng:Thrust.
+        }
+        return allThrust.
+    }
+
     local function ProcessBoosterTree
     {
         parameter _p,
                 _setIdx,
                 _boosterObj.
+
+        OutInfo("Processing booster tree for part: {0} ({1})":Format(_p:name, _p:UID), 1).
 
         local dc to choose _p if _p:IsType("Decoupler") else _p:Decoupler.
         local m to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
@@ -724,7 +747,8 @@
             {
                 set _bcObj to ProcessBoosterEngine(_p, _setIdx, _bcObj).
             }
-            else if _p:HasModule("ModuleFuelTank")
+            
+            if _p:HasModule("ModuleFuelTank")
             {
                 set _bcObj to ProcessBoosterTank(_p, _setIdx, _bcObj).
             }
@@ -844,21 +868,23 @@
         if g_BoostersArmed 
         {
             // writeJson(g_BoosterObj, "0:/data/g_boosterobj.json").
-            OutInfo("Boosters: [Armed(X)] [Set( )] [Update( )] [Cond( )]").
+            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set( )] [Update( )] [Cond( )]":Format(g_Counter)).
             if g_BoosterObj:Keys:Length > 0
             {
-                OutInfo("Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]").
+                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]":Format(g_Counter)).
                 local doneFlag to false.
                 local ThrustThresh to 0.
-
+                print g_BoosterObj:Keys at (2, 48).
+                print g_BoosterObj[0] at (2, 50).
                 from { local i to 0.} until i = g_BoosterObj:Keys:Length or doneFlag step { set i to i + 1.} do
                 {
+                    local bSet to g_BoosterObj:Values[i].
                     if not g_BoosterObj:Keys[i] = "UPDATE"
                     {
-                        local bSet to g_BoosterObj[g_BoosterObj:Keys[i]].
+                        // local bSet to g_BoosterObj[g_BoosterObj:Keys[i]].
                         if bSet:HasKey("UPDATE") 
                         {
-                            OutInfo("Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond( )]").
+                            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond( )]":Format(g_Counter)).
                             set g_BoosterObj to bSet:UPDATE:Call().
                             wait 0.01.
                             // writeJson(g_BoosterObj, Path("0:/data/g_BoosterObj.json")).
@@ -876,7 +902,7 @@
                             OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2)), 1).
                             if bSet["ENG"]:ALLTHRUST < ThrustThresh
                             {
-                                OutInfo("Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]").
+                                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]":Format(g_Counter)).
                                 StageBoosterSet(i).
                                 // set bSet to "".
                                 wait 0.025.
@@ -893,6 +919,14 @@
                                 }
                                 set doneFlag to true.
                             }
+                            else
+                            {
+                                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(-)]":Format(g_Counter)).
+                            }
+                        }
+                        else
+                        {
+                            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(-)] [Cond( )]":Format(g_Counter)).
                         }
                     }
                 }

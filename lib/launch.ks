@@ -410,6 +410,22 @@
             set altitude_error      to current_alt / turn_alt_end.
             set apo_error           to current_apo / target_apo.
 
+            if current_alt < 2500 and Ship:VerticalSpeed > 0
+            {
+                local blend_alt_error   to (current_alt - turn_alt_start) / (2500 - turn_alt_start).
+                local alt_error_blended to altitude_error * (1 - blend_alt_error).
+                local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
+                local apo_error_blended to apo_error * blend_apo_error.
+                local comb_err          to alt_error_blended + apo_error_blended.
+                set effective_error     to comb_err.
+                set error_pitch         to 90 * (1 - comb_err).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.015625)).
+                set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
+                set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
+                set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
+            }
+
             if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
             {
                 set error_pitch         to 90 * (1 - altitude_error).
