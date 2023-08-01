@@ -18,6 +18,27 @@
     // #region
     local stagingState to 0.
     local localTS to 0.
+
+    // Making copies of this object instead of specifying multiple times in code
+    local boosterSetTemplate to lexicon(
+        "DEC", lexicon(
+            "PRT",  list()
+            ,"MOD",  list()
+        )
+        ,"ENG", lexicon(
+            "PRT", list()
+            ,"THR", 0.0
+            ,"TRP", 0.0
+        )
+        ,"CSR", lexicon(
+            "RES", lexicon()
+            ,"PCT", 0.0
+            ,"MAS", 0.0
+            ,"FLW", 0.0
+            ,"FLX", 0.0
+        )
+        ,"BTR", 999999
+    ).
     // #endregion
 
     // *- Global (Adds new globals specific to this library, and updates existing globals)
@@ -27,8 +48,6 @@
     set g_PartInfo["LES"] to list(
         "ROC-MercuryLESBDB"
     ).
-
-
     // #endregion
 // #endregion
 
@@ -44,17 +63,17 @@
         // #region
 
         // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
-        GLOBAL FUNCTION StagingCheck
+        global function StagingCheck
         {
             parameter _program,
                       _runmode,
-                      _checkType IS 0.
+                      _checkType is 0.
 
-            if STAGE:NUMBER <= g_StageLimit
+            if Stage:Number <= g_StageLimit
             {
                 return false.
             }
-            ELSE
+            else
             {
                 return TRUE.
             }
@@ -62,55 +81,56 @@
 
         // InitStagingDelegate :: 
         // Adds the proper staging check and action delegates to the g_LoopDelegates object
-        GLOBAL FUNCTION InitStagingDelegate
+        global function InitStagingDelegate
         {
             parameter _conditionType,
                       _actionType.
 
             set g_LoopDelegates["Staging"] to LEX(
                 "Check", GetStagingConditionDelegate(_conditionType)
-                ,"Action", GetStagingActionDelegate(_actionType)  // #TODO: Write GetStagingActionDelegate
+                ,"Action", GetStagingActionDelegate(_actionType)
             ).
         }
 
-        GLOBAL FUNCTION ArmAutoStagingNext
+        global function ArmAutoStagingNext
         {
             parameter _stgLimit to g_StageLimit,
-                      _stgCondition IS 0, // 0: ThrustValue < 0.01
-                      _stgAction IS 0. // 1 IS experimental ullage check, 0 IS regular safestage.
+                      _stgCondition is 0, // 0: ThrustValue < 0.01
+                      _stgAction is 0. // 1 is experimental ullage check, 0 is regular safestage.
 
             local resultCode to 0.
             set g_StageLimit to _stgLimit.
-            if STAGE:NUMBER <= g_StageLimit 
+            if Stage:Number <= _stgLimit
             {
                 set resultCode to 2.
             }
-            ELSE
+            else
             {
                 InitStagingDelegate(_stgCondition, _stgAction).
+                set resultCode to 1.
             }
             return resultCode.
         }
 
         // ArmAutoStaging :: (_stgLimit)<type> -> (ResultCode)<scalar>
         // Arms automatic staging based on current thrust levels. if they fall below 0.1, we stage
-        GLOBAL FUNCTION ArmAutoStaging
+        global function ArmAutoStaging
         {
-            parameter _stgLimit to g_StageLimit,
-                      _stgCondition IS 0. // 0: ThrustValue < 0.01
+            parameter _stgLimit is g_StageLimit,
+                      _stgCondition is 0. // 0: ThrustValue < 0.01
 
             local resultCode to 0.
             set g_StageLimit to _stgLimit.
-            if STAGE:NUMBER <= g_StageLimit 
+            if Stage:Number <= g_StageLimit 
             {
                 set resultCode to 2.
             }
-            ELSE
+            else
             {
                 local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
 
                 set g_LoopDelegates["Staging"] to LEX(
-                    "Check", selectedCondition
+                    "Check", selectedCondition@
                     ,"Action", SafeStage@
                 ).
 
@@ -120,21 +140,21 @@
             return resultCode.
         }
 
-        GLOBAL FUNCTION DisableAutoStaging
+        global function DisableAutoStaging
         {
             g_LoopDelegates:Remove("Staging").
         }
 
         // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
         // Writes events to g_LoopDelegates to fire hot staging if applicable FOR a given stage (next by default)
-        GLOBAL FUNCTION ArmHotStaging
+        global function ArmHotStaging
         {
             local ActionDel to {}.
             local CheckDel to {}.
             local Engine_Obj to LEX().
-            local HotStage_List to SHIP:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
+            local HotStage_List to Ship:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
             
-            if HotStage_List:LENGTH > 0
+            if HotStage_List:Length > 0
             {
                 if not g_LoopDelegates:HASKEY("Staging")
                 {
@@ -145,15 +165,15 @@
 
                 FOR p IN HotStage_List
                 {
-                    if p:ISTYPE("Engine")
+                    if p:isTYPE("Engine")
                     {
-                        if Engine_Obj:HASKEY(p:STAGE)
+                        if Engine_Obj:HASKEY(p:Stage)
                         {
-                            Engine_Obj[p:STAGE]:ADD(p).
+                            Engine_Obj[p:Stage]:ADD(p).
                         }
-                        ELSE
+                        else
                         {
-                            set Engine_Obj[p:STAGE] to LIST(p).
+                            set Engine_Obj[p:Stage] to LisT(p).
                         }
                     }
                 }
@@ -173,7 +193,7 @@
 
                     for eng in g_ActiveEngines
                     {
-                        if eng:DecoupledIn = HotStageID 
+                        if eng:DecoupledIn >= HotStageID
                         {
                             stageEngines:Add(eng).
                         }
@@ -181,11 +201,11 @@
 
                     set checkDel  to {
                         set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
-                        if STAGE:NUMBER - 1 = HotStageID {
+                        if Stage:Number - 1 = HotStageID {
                             local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
-                            OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":FORMAT(round(stageEngines_BT - SpoolTime, 2), 1)).
+                            OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
                             return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
-                            // OutInfo("HotStaging Armed: (ETS: {0}s) ":FORMAT(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
+                            // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
                             // return (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
                         }
                         else
@@ -195,13 +215,13 @@
                     }.
 
                     set actionDel to { 
-                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(HotStageID, "Ignition")).
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(HotStageID, "Ignition")).
                         FOR eng IN g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines
                         {
-                            if not eng:IGNITION { eng:ACTIVATE.}
+                            if not eng:Ignition { eng:Activate.}
                         }
 
-                        OutInfo("[{0}] Hot Staging Engines ({1})   ":FORMAT(HotStageID, "SpoolUp")).
+                        OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(HotStageID, "SpoolUp")).
                         set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                         local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                         until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
@@ -209,18 +229,18 @@
                             set s_Val                to g_LoopDelegates:Steering:CALL().
                             set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                             set NextEngines_Data     to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
-                            OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":FORMAT(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
+                            OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
                             wait 0.01.
                         }
                         OutInfo().
                         OutInfo("Staging").
-                        wait until STAGE:READY.
-                        STAGE.
+                        wait until Stage:Ready.
+                        Stage.
                         wait 0.5.
                         OutInfo().
                         OutInfo("", 1).
                         g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
-                        if g_LoopDelegates:Staging:HotStaging:KEYS:LENGTH = 0
+                        if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
                         {
                             g_LoopDelegates:Staging:Remove("HotStaging").
                             set g_HotStagingArmed to  false.
@@ -236,11 +256,11 @@
                     g_LoopDelegates:Staging:HotStaging[HotStageID]:ADD("Action", actionDel@).
                 }
 
-                return TRUE.
+                return True.
             }
-            ELSE
+            else
             {
-                return FALSE.
+                return False.
             }
         }
         // #endregion
@@ -261,10 +281,10 @@
             else if _actionType = 1
             {
                 local stageAction to {
-                    if g_NextEngines_Spec:Keys:LENGTH = 0
+                    if g_NextEngines_Spec:Keys:Length = 0
                     {
                         set g_NextEngines to GetNextEngines().
-                        if g_NextEngines:LENGTH > 0
+                        if g_NextEngines:Length > 0
                         {
                             set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
                         }
@@ -293,40 +313,51 @@
         // Given a staging check type string, performs that condition check and returns the result
         local function GetStagingConditionDelegate
         {
-            parameter _checkType IS 0.
+            parameter _checkType is 0,
+                      _checkVal is 0.01.
 
-            // if _checkType = 0 // Thrust Value: SHIP:AvailableThrust < 0.01
+            // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
             // {
-                local condition to CheckShipThrustCondition@.
-                local boundCondition to condition:BIND(Ship, 0.01).
-                return boundCondition.
+                local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
+                // local boundCondition to condition:BIND(Ship, 0.1).
+                // return boundCondition.
+                return condition.
             // }
             // else if _checkType = 1
             // {
-
             // }
         }
 
 
-        // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> <ResultCode>(Scalar)
-        local function CheckShipThrustCondition
+        // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> thrustDelegate (Delegate)
+        local function GetShipThrustConditionDelegate
         {
             parameter _ves,
-                      _checkVal.
+                      _checkVal is 0.01.
 
-            local resultCode to 0.
-            if _ves:AvailableThrust < _checkVal and SHIP:STATUS <> "PRELAUNCH" and throttle > 0
-            {
-                set resultCode to 1.
-            }
-            return resultCode.
+            local conditionDelegate to { parameter __ves is _ves, checkVal is _checkVal. if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 { return 1.} else {return 0.}}.
+            return conditionDelegate@.
         }
 
         local function SafeStage
         {
-            wait until STAGE:READY.
+            // Check if current stage has RCS that should be disabled before staging.
+
+            for m in Ship:ModulesNamed("ModuleRCSFX")
+            {
+                if m:Part:DecoupledIn >= Stage:Number - 1
+                {
+                    m:SetField("RCS", False).
+                }
+            }
+            wait until Stage:Ready.
             stage.
             wait 0.01.
+
+            // if Ship:PartsTaggedPattern("Spin\|"):Length > 0
+            // {
+            //     ArmSpinStabilization().
+            // }
             // if g_HotStageArmed
             // {
             //     set g_HotStageArmed to ArmHotStaging().
@@ -338,7 +369,7 @@
         local function SafeStageWithUllage2
         {
             local StageResult to false.
-            local FuelStabilityMin to 0.975.
+            local FuelStabilityMin to 0.98.
 
             set g_NextEngines to GetNextEngines().
             
@@ -368,6 +399,7 @@
                 // lock throttle to t_Val.
                 set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
             }
+            OutInfo().
             return StageResult.
         }
 
@@ -396,7 +428,7 @@
                 }
                 else
                 {
-                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":FORMAT(round(_engList_Spec:FuelStabilityMin * 100, 2))).
+                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(_engList_Spec:FuelStabilityMin * 100, 2))).
                 }
             }
             else 
@@ -413,21 +445,22 @@
                 wait 0.01.
                 set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
             }
-            
+            OutInfo().
+
             return stageResult.
         }
 
 
         // SafeStage :: <none> -> <none>
-        // Performs a staging function after waiting FOR the stage to report it IS ready first
+        // Performs a staging function after waiting FOR the stage to report it is ready first
         local function SafeStageState
         {
             local ullageDelegate to { return true. }.
 
             if stagingState = 0
             {
-                wait until STAGE:READY.
-                STAGE.
+                wait until Stage:Ready.
+                Stage.
                 set stagingState to 1.
             }
             else if stagingState = 1
@@ -440,7 +473,7 @@
                     }
                     set stagingState to 2.
                 }
-                ELSE
+                else
                 {
                     set stagingState to 4.
                 }
@@ -462,6 +495,31 @@
         // #endregion
     // #endregion
 
+    // Spin-stabilization
+    // #region
+    
+    global function ArmSpinStabilization
+    {
+        local spinArmed to false.
+        if g_ActiveEngines:Length > 0
+        {
+            local dc to g_ActiveEngines[0]:Decoupler.
+            if dc:Tag:MatchesPattern("Spin\|")
+            {
+                local spinTime to dc:Tag:Replace("Spin|"):ToNumber(15).
+
+                local checkDel to { parameter _params is list(). if params:length  = 0 { set _params to list(spinTime).} if g_ActiveEngines_Data:BurnTimeRemaining <= _params[0] { return 1.} else { return 0.}}.
+                local actionDel to { if g_ActiveEngines_Data:BurnTimeRemaining > 0.25 { if Ship:Control:Roll = 0 { set Ship:Control:Roll to 1.} return true.} else { set Ship:Control:Roll to 0. return false.}}.
+
+                local spinEventData to CreateLoopEvent("SpinStabilization", "Spin", list(15), checkDel@, actionDel@).
+                set spinArmed to RegisterLoopEvent(spinEventData).
+            }
+        }
+
+        return spinArmed.
+    }
+    // #endregion
+
     // ** Steering
     // #region
 
@@ -475,54 +533,56 @@
         else if _type:MatchesPattern("roll") return SteeringManager:RollError.
     }
 
-    GLOBAL FUNCTION GetOrbitalSteeringDelegate
+    global function GetOrbitalSteeringDelegate
     {
-        // parameter _delDependency IS LEX().
-        parameter _steerPair IS "Flat:Sun",
-                  _fShape    IS 0.975.
+        // parameter _delDependency is LEX().
+        parameter _steerPair is "Flat:Sun",
+                  _fShape    is 0.975.
 
         local del to {}.
-        if g_azData:LENGTH = 0
-        {
-            set g_AzData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
-        }
 
-        if g_AngDependency:Keys:LENGTH = 0
+        if g_AzData:Length = 0
         {
-            set g_AngDependency to InitAscentAng_Next(g_MissionParams[1], _fShape, 5, 30).
+            set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
+        }
+        if g_AngDependency:Keys:Length = 0
+        {
+            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 22.5).
         }
 
         if _steerPair = "Flat:Sun"
         {
-            set del to { return HEADING(compass_for(SHIP, SHIP:Prograde), 0, 0).}.
+            set del to { return HEADING(compass_for(Ship, Ship:Prograde), 0, 0).}.
         }
         else if _steerPair = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
+            if g_Debug OutDebug("g_MissionTag:Params: {0}":Format(g_MissionTag:Params:Join(";"))).
+            set del to GetAscentSteeringDelegate(g_MissionTag:Params[1], g_MissionTag:Params[0], g_AzData).
+            // set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
         else if _steerPair = "ApoErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
+            set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
         }
         else if _steerPair = "lazCalc:Sun"
         {
-            set del to { return SHIP:FACING.}.
+            set del to { return Ship:Facing.}.
         }
         
         return del@.
     }
 
-    GLOBAL FUNCTION SetSteering
+    global function SetSteering
     {
         parameter _altTurn.
 
-        if SHIP:ALTITUDE >= _altTurn
+        if Ship:ALTITUDE >= _altTurn
         {
-            set s_Val to SHIP:SRFPROGRADE - r(0, 4, 0).
+            set s_Val to Ship:SRFPROGRADE - r(0, 4, 0).
         } 
-        ELSE
+        else
         {
             set s_Val to HEADING(90, 88, 0).
         }
@@ -535,7 +595,7 @@
     {
         set g_BoosterObj to lexicon().
 
-        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+(\||\.)+(\d*)+").
+        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+((\||\.)\d*)+").
 
         local setIdxList to UniqueSet().
         if BoosterParts:Length > 0
@@ -543,15 +603,9 @@
             OutInfo("BoosterParts:Length > 0"). wait 1.
             for p in BoosterParts
             {
-                local setIdx to p:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
+                local setIdx to p:Tag:Replace("booster",""):Replace("|",""):Replace(".",""):Replace("as",""):ToNumber(0).
                 set g_BoosterObj[setIdx] to ProcessBoosterTree(p, setIdx, g_BoosterObj).
-                if setIdxList:Contains(setIdx)
-                {
-                }
-                else 
-                {
-                    setIdxList:Add(setIdx).
-                }
+                setIdxList:Add(setIdx).
             }
             set g_BoostersArmed to true.
         }
@@ -598,28 +652,31 @@
     {
         parameter _dc is Core:Part.
 
-        local updateDel to { return g_BoosterObj.}.
+        local updateDel to { parameter _boosterObj is g_BoosterObj. return _boosterObj.}.
+
         if not (_dc = Core:Part)
         {
             local setIdx to _dc:Tag:Replace("booster",""):Replace("|",""):Replace("as",""):ToNumber(0).
             OutInfo("_dc: {0}":Format(_dc:name)).
             set updateDel to
             { 
-                if g_BoosterObj:HasKey(setIdx)
+                parameter _boosterObj is g_BoosterObj.
+
+                if _boosterObj:HasKey(setIdx)
                 { 
-                    if g_BoosterObj[setIdx]:HasKey("ENG") 
+                    if _boosterObj[setIdx]:HasKey("ENG")
                     {
-                        set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to 0.
+                        set _boosterObj[setIdx]["ENG"]:ALLTHRUST to 0.
                     }
                 }
-                //set g_BoosterObj to ProcessBoosterTree(_dc, setIdx, g_BoosterObj).
+                //set _boosterObj to ProcessBoosterTree(_dc, setIdx, _boosterObj).
                 local boosterEngs to list().
-                for engObj in g_BoosterObj[setIdx]["ENG"]:Parts:Values
+                for engObj in _boosterObj[setIdx]["ENG"]:Parts:Values
                 {
                     boosterEngs:Add(engObj:P).
                 }
-                set g_BoosterObj[setIdx]["ENG"]:ALLTHRUST to GetThrustForEngines(boosterEngs).
-                return g_BoosterObj.
+                set _boosterObj[setIdx]["ENG"]:ALLTHRUST to GetThrustForEngines(boosterEngs).
+                return _boosterObj.
             }.
         }
         else
@@ -642,6 +699,294 @@
         return allThrust.
     }
 
+
+
+    // ArmBoosterStaging_Next :: <none> -> _resultFlag<bool>
+    // Will attempt to arm auto-staging for boosters using like the 13th attempt at this. Apparently I suck at this.
+    global function ArmBoosterStaging_Next
+    {
+        local primedBoosters    to Ship:PartsTaggedPattern("(^booster)(\||\.)\d+").
+        local boosterIdxSet     to UniqueSet(). 
+        if primedBoosters:Length > 0
+        {
+            for pb in primedBoosters
+            {
+                local pbSetIdx  to pb:Tag:Replace("booster",""):Replace("AS",""):Replace("|",""):Replace(".","").
+                set   pbSetIdx  to pbSetIdx:ToNumber(0).
+                boosterIdxSet:Add(pbSetIdx).
+
+                set g_BoosterObj to InitBoosterSet(pbSetIdx, g_BoosterObj).
+                set g_BoosterObj to HydrateBoosterSet(pbSetIdx, g_BoosterObj).
+                
+
+            }
+        }
+
+        
+    }
+
+    // InitBoosterSet :: (_setIdx<Scalar>), [_boosterObj<Lexicon>] -> _boosterObj<Lexicon>
+    // Initiates a new object for a given set Scalar Idx, provided a set doesn't already exist with that Idx
+    local function InitBoosterSet
+    {
+        parameter _setIdx,
+                  _boosterObj is g_BoosterObj,
+                  _force is False.
+
+        if not _boosterObj:HasKey(_setIdx) or _force
+        {
+            set _boosterObj[_setIdx] to boosterSetTemplate:Copy.
+        }
+
+        return _boosterObj.
+    }
+
+
+    // HydrateBoosterSet :: (_setIdx<Scalar>), [_boosterObj<Lexicon>] -> _boosterObj<Lexicon>
+    // Given a setIdx and boosterObj (usually g_BoosterObj), will hydrate the set
+    local function HydrateBoosterSet
+    {
+        parameter _setIdx,
+                  _boosterObj is g_BoosterObj.
+
+        local setParts to Ship:PartsTaggedPattern("(^booster)((\||\.){0})":Format(_setIdx)).
+        local setObj to lexicon().
+
+        if _boosterObj:HasKey(_setIdx)
+        {
+            set setObj to _boosterObj[_setIdx].
+        }
+        else
+        {
+            set setObj to boosterSetTemplate:Copy.
+        }
+        
+        for p in setParts
+        {
+            if p:IsType("Decoupler") 
+            {
+                set g_BoosterObj to ProcessBoosterSetDecoupler(p, _setIdx, g_BoosterObj).
+            }
+            else if p:IsType("Engine")
+            {
+                set g_BoosterObj to ProcessBoosterSetEngine(p, _setIdx, g_BoosterObj).
+            }
+        }
+        set _boosterObj[_setIdx] to setObj.
+
+        
+
+        return _boosterObj.
+    }
+
+
+    local function ProcessBoosterSetDecoupler
+    {
+
+    }
+
+    local function ProcessBoosterSetEngine
+    {
+
+    }
+
+
+    // ProcessBoosterSetItem :: (_p<Part>), (_setIdx<Scalar>), [_boosterObj<Lexicon>] -> _boosterObj<Lexicon>
+    // Given a part, attempts to set it as either a decoupler and then process that decoupler's engine(s), or as an engine and then processes the decoupler.
+    local function ProcessBoosterSetItem
+    {
+        parameter _p,
+                  _setIdx,
+                  _boosterObj is g_BoosterObj.
+
+        OutInfo("Processing Booster Item [{0}][{1}]":Format(_setIdx, _p:name)).
+        
+        local setObj to _boosterObj[_setIdx].
+        
+        //local dc to choose _p if _p:IsType("Decoupler") else _p:Decoupler.
+        local dc  to _p:Decoupler.
+        local eng to _p.
+        local mdc to "".
+        if _p:IsType("Decoupler")
+        {
+            set dc to _p.
+            from { local i to 0.} until i = dc:Children:Length step { set i to i + 1.} do
+            {
+                if dc:Children[i]:IsType("Engine")
+                {
+
+                }
+            }
+        }
+        
+
+        set mdc to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
+
+        if _boosterObj:HasKey(_setIdx)
+        {
+            set setObj to _boosterObj[_setIdx].
+            if setObj:HasKey("DC")
+            {
+                if setObj:DC:HasKey("PRT")
+                {
+                    if setObj:DC:Parts:Contains(dc)
+                    {
+                    }
+                    else
+                    {
+                        setObj:DC:Parts:Add(dc).
+                        if setObj:DC:HasKey("MOD")
+                        {
+                            setObj:DC:Modules:Add(mdc).
+                        }
+                    }
+                }
+                else
+                {
+                    set setObj:DC["PRT"]   to list(dc).
+                    set setObj:DC["MOD"] to list(mdc).
+                }
+            }
+            else
+            {
+                set setObj["DC"] to lexicon(
+                    "PRT",    list(dc)
+                    ,"MOD", list(mdc)
+                ).
+            }
+
+            set _boosterObj[_setIdx] to setObj.
+        }
+
+        return _boosterObj.
+    }
+
+
+    // GetBoosterResources :: (_item<part>), (_setObj<lexicon>) -> (_setObj<lexicon>)
+    // Populates a lexicon with pointers to booster resources
+    local function GetBoosterConsumedResources
+    {
+        parameter _eng,
+                  _setIdx,
+                  _boosterObj is g_BoosterObj.
+
+        local _setObj to lexicon().
+
+        if _boosterObj:HasKey(_setIdx) and _eng:IsType("Engine")
+        {
+            if _setObj:ENG:PRT:Contains(_eng)
+            {
+            }
+            else
+            {
+                _setObj:ENG:PRT:Add(_eng).
+                for res in _eng:ConsumedResources
+                {
+                    local processAmountsFlag to False.
+
+                    if _setObj:CSR:Res:HasKey(res:Name)
+                    {
+                        if g_PropInfo:Solids:Contains(res:Name)
+                        {
+                            set processAmountsFlag to True.
+                        }
+                        else
+                        {
+                            set processAmountsFlag to False. 
+                        }
+                    }
+                    else
+                    {
+                        set processAmountsFlag to True.
+                    }
+
+                    if processAmountsFlag
+                    {
+                        local resAmt  to res:Amount.
+                        local resCap  to res:Capacity.
+                        local resMass to resAmt * res:Density.
+                        local resPct  to Round(resAmt / resCap, 4).
+
+                        set _setObj:CSR:MAS to setResMass. 
+                        set _setObj:CSR:FLW to setMassFlow.
+                        set _setObj:CSR:FLX to setMaxMassFlow.
+                        set _setObj:CSR:PCT to resPct.
+                        
+                        local engRemainingBurn to choose 0 if setResMass <= 0 or setMassFlow <= 0 else Round(setResMass / setMassFlow, 2).
+                        set _setObj:BTR to Round((_setObj:BTR + engRemainingBurn) / _setObj:ENG:PRT:Length, 2).
+                    }
+                }
+            }
+        }
+
+        return _setObj.
+    }
+
+    local function UpdateBoosterResources
+    {
+        parameter _item,
+                  _setObj.
+
+        local setResMass     to choose _setObj:CSR:MAS if _setObj:CSR:HasKey("MAS") else 0.
+        local setMassFlow    to choose _setObj:CSR:FLW if _setObj:CSR:HasKey("FLW") else 0.
+        local setMaxMassFlow to choose _setObj:CSR:FLX if _setObj:CSR:HasKey("FLX") else 0.
+
+        if _item:IsType("Engine")
+        {
+            if _setObj:ENG:PRT:Contains(_item)
+            {
+            }
+            else
+            {
+                _setObj:ENG:PRT:Add(_item).
+                for res in _item:ConsumedResources
+                {
+                    local processFlag to False.
+
+                    if _setObj:CSR:Res:HasKey(res:Name)
+                    {
+                        if g_PropInfo:Solids:Contains(res:Name)
+                        {
+                            set processFlag to True.
+                        }
+                        else
+                        {
+                            set processFlag to False. 
+                        }
+                    }
+                    else
+                    {
+                        set processFlag to True.
+                    }
+
+                    if processFlag
+                    {
+                        local resAmt  to res:Amount.
+                        local resCap  to res:Capacity.
+                        local resMass to resAmt * res:Density.
+                        local resPct  to Round(resAmt / resCap, 4).
+
+                        set   setResMass     to setResMass       + resMass.
+                        set   setMassFlow    to setMassFlow      + res:MassFlow.
+                        set   setMaxMassFlow to setMaxMassFlow   + res:MaxMassFlow.
+                        
+                        set _setObj:CSR:MAS to setResMass. 
+                        set _setObj:CSR:FLW to setMassFlow.
+                        set _setObj:CSR:FLX to setMaxMassFlow.
+                        set _setObj:CSR:PCT to resPct.
+                        
+                        local engRemainingBurn to choose 0 if setResMass <= 0 or setMassFlow <= 0 else Round(setResMass / setMassFlow, 2).
+                        set _setObj:BTR to Round((_setObj:BTR + engRemainingBurn) / _setObj:ENG:PRT:Length, 2).
+                    }
+                }
+            }
+        }
+
+        return _setObj.
+    }
+
+
+
     local function ProcessBoosterTree
     {
         parameter _p,
@@ -652,15 +997,15 @@
 
         local dc to choose _p if _p:IsType("Decoupler") else _p:Decoupler.
         local m to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
-        local event to "".
+        local event to "decouple".
 
-        for _e in m:AllEvents
-        {
-            if _e:MatchesPattern("\(callable\).*decouple.*is KSPEvent")
-            {
-                set event to _e:Replace("(callable) ",""):Replace(", is KSPEvent","").
-            }
-        }
+        // for _e in m:AllEvents
+        // {
+        //     if _e:MatchesPattern("\(callable\).*decouple.*is KSPEvent")
+        //     {
+        //         set event to _e:Replace("(callable) ",""):Replace(", is KSPEvent","").
+        //     }
+        // }
         
         // This resets the lex for each loop
         if not _boosterObj:HasKey(_setIdx)
@@ -848,13 +1193,13 @@
             set _brObj[_setIdx]["RES"] to lexicon(
                 "AMOUNT", 0
                 ,"CAPACITY", 0
-                ,"RESLIST", list()
+                ,"RESLisT", list()
             ).
         }
 
         for _res in _p:Resources
         {
-            _brObj[_setIdx]["RES"][_res:Name]:RESLIST:Add(_res).
+            _brObj[_setIdx]["RES"][_res:Name]:RESLisT:Add(_res).
             set _brObj[_setIdx]["RES"][_res:Name]:AMOUNT to Round(_brObj[_setIdx]["RES"][_res:Name]:AMOUNT + _res:Amount, 5).
             set _brObj[_setIdx]["RES"][_res:Name]:CAPACITY to Round(_brObj[_setIdx]["RES"][_res:Name]:CAPACITY + _res:Capacity, 5).
         }
@@ -1038,12 +1383,12 @@
     // ** Fairings
     // #region
     // ArmFairingJettison :: (fairingTag) -> <none>
-        GLOBAL FUNCTION ArmFairingJettison
+        global function ArmFairingJettison
         {
-            parameter _fairingTag IS "ascent".
+            parameter _fairingTag is "ascent".
 
             local jettison_alt to 100000.
-            local fairing_tag_ext_regex to "fairing\|{0}":FORMAT(_fairingTag).
+            local fairing_tag_ext_regex to "fairing\|{0}":Format(_fairingTag).
 
             local op to choose "gt" if _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") else "lt".
             local result to false.
@@ -1056,7 +1401,7 @@
                 local checkDel to choose { 
                     parameter _params to list(). return Ship:Altitude > _params[0].
                 } 
-                if op = "gt" ELSE
+                if op = "gt" else
                 { 
                     parameter _params to list(). return Ship:Altitude < _params[0].
                 }.
@@ -1077,15 +1422,15 @@
 
         // JettisonFairings :: _fairings<list> -> <none>
         // Will jettison fairings provided
-        GLOBAL FUNCTION JettisonFairings
+        global function JettisonFairings
         {
-            parameter _fairings IS LIST().
+            parameter _fairings is LisT().
 
-            if _fairings:LENGTH > 0
+            if _fairings:Length > 0
             {
                 FOR f IN _fairings
                 {
-                    if f:ISTYPE("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
+                    if f:isTYPE("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
                     DoEvent(f, "jettison fairing").
                 }
             }

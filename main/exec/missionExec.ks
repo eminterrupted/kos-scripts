@@ -8,7 +8,7 @@ DispMain(ScriptPath()).
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 local tgtInc       to choose g_MissionTag:Params[0] if g_MissionTag:Params:Length > 0 else 0.
-local tgtAlt       to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 100.
+local tgtAlt       to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 175000.
 local tgtEcc       to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 else -1. 
 local azObj        to choose l_az_calc_init(tgtAlt, tgtInc) if g_GuidedAscentMissions:Contains(g_MissionTag:Mission) else list().
 
@@ -18,7 +18,7 @@ if Ship:Status = "PRELAUNCH"
 {
     OutMsg("Executing path: {0}":Format(scr)).
     wait 1.
-    runPath(scr, list(tgtAlt, tgtInc, azObj)).
+    runPath(scr, list(tgtInc, tgtAlt, azObj)).
 
     if g_StageLimitSet:Length > 1
     {
@@ -33,12 +33,31 @@ ClearScreen.
 DispMain(ScriptPath()).
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("(Orbit|Circularize)")
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(SubOrbital|Orbit|Circularize)")
 {
     local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
 
     OutMsg("Executing circAtApo").
-    wait 1.
+    wait 0.25.
+    // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|", "Circularize|").
+    // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|{0}":Format(), "Circularize|{0}":Format(Round(Ship:Apoapsis)):Replace("km", "")).
+    
+    local tagSplit to Core:Part:Tag:Split("|").
+    if tagSplit:Length > 2
+    {
+        local tagParam to tagSplit[1]:Split(";").
+        if tagParam:Length > 1 
+        {
+            if tagParam[1]:Contains("km")
+            {
+                set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
+            }
+            else
+            {
+                set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tgtAlt), "{0}":Format(Round(Ship:Apoapsis))).
+            }
+        }
+    }
     runPath("0:/main/launch/circAtApo", list(g_StageLimit, burnTime, tgtEcc, azObj)).
 
     if g_StageLimitSet:Length > 1
@@ -70,4 +89,6 @@ if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("R
 }
 
 set core:bootfilename to "".
-print "terminating missionExec, have a nice day".
+
+OutInfo().
+OutMsg("Exiting missionExec").

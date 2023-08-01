@@ -8,31 +8,31 @@ RunOncePath("0:/lib/launch.ks").
 
 DispMain().
 
-local cb                 to Ship:Engines[0]. // Initialized to any old engine for now
-local curBoosterTag      to "".
 local engineCounter      to 0.
-local fairingJetAlt      to 100000.
-local RCSAlt             to 32500.
-
-local FairingsArmed      to false.
-local LESArmed           to false.
-local RCSArmed           to false.
-local RCSPresent         to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
-local HotStagePresent    to Ship:PartsTaggedPattern("(HotStage|HotStg|HS)"):Length > 0.
+local rcsPresent         to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
-local steeringDelegate   to { return ship:facing.}.
-local ThrustThresh       to 0.
 
 // Parameter default values.
-local _tgtAlt        to 100.
+local _tgtAlt        to -1.
 local _tgtInc        to 0.
 local _azObj         to list().
 
+if g_MissionTag:Params:Length > 0
+{
+    set _tgtInc to g_MissionTag:Params[0].
+    if g_MissionTag:Params:Length > 1 set _tgtAlt to g_MissionTag:Params[1].
+}
+
 if params:length > 0
 {
-    set _tgtAlt to params[0].
-    if params:length > 1 set _tgtInc to params[1].
+    set _tgtInc to params[0].
+    if params:length > 1 set _tgtAlt to params[1].
     if params:length > 2 set _azObj to params[2].
+}
+
+if _tgtAlt < 0
+{
+    set _tgtAlt to 250000.
 }
 
 wait until Ship:Unpacked.
@@ -49,30 +49,66 @@ set g_LoopDelegates["Steering"] to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _
 
 ConfigureLaunchPad().
 
-Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
-ClearScreen.
-// DispTermGrid().
-DispMain(ScriptPath()).
-
-if RCSPresent
+if rcsPresent
 {
     local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
     local rcsActionDel to { parameter _params is list(). RCS on. return false.}.
     local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
-    set RCSArmed to RegisterLoopEvent(rcsEventData).
+    set g_RCSArmed to RegisterLoopEvent(rcsEventData).
 }
 
-set FairingsArmed to ArmFairingJettison("ascent").
-set LESArmed      to ArmLESTower().
+set g_FairingsArmed to ArmFairingJettison("ascent").
+set g_LESArmed      to ArmLESTower().
 
-if FairingsArmed 
+if g_FairingsArmed 
 {
-    OutInfo("ArmFairingJettison() result: {0}":Format(FairingsArmed)).
+    OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
 }
-else if LESArmed
+else if g_LESArmed
 {
-    OutInfo("ArmLESTower() result: {0}":Format(LESArmed)).
+    OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
 }
+
+// Check if we have any special MECO engines to handle
+local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
+if ascentEventParts:Length > 0
+{
+    for eventPart in ascentEventParts
+    {
+        local epTag to eventPart:Tag:Replace("Ascent|","").
+
+        if epTag:MatchesPattern("MECO\|\d*")
+        {
+            if not g_LoopDelegates:Events:HasKey("MECO")
+            {
+                set g_MECOArmed to SetupMECOEventHandler("Ascent").
+            }
+        }
+
+        if epTag:MatchesPattern("^Decouple\|\d*$")
+        {   
+            local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
+            if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
+            wait 1.
+            local dcEventId to "DC_{0}":Format(dcMET).
+            if not g_LoopDelegates:Events:HasKey(dcEventId)
+            {
+                local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|{0}":Format(dcMET:ToString:Replace(".","\."))).
+                OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
+                local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
+                OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format(dcEventID, g_DecouplerEventArmed),1).
+                set g_DecouplerEventArmed to choose True if g_DecouplerEventArmed else dcEventRegistrationResult.
+            }
+        }
+    }
+}
+
+DispStateFlags().
+
+Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
+ClearScreen.
+// DispTermGrid().
+DispMain(ScriptPath()).
 
 lock Throttle to 1.
 OutMsg("Launch initiated!").
@@ -84,14 +120,17 @@ OutInfo("",1).
 set g_ActiveEngines to GetActiveEngines().
 set g_NextEngines   to GetNextEngines().
 
-// Check if we have any special MECO engines to handle
-local MECO_Engines to Ship:PartsTaggedPattern("MECO\|ascent").
-if MECO_Engines:Length > 0
-{
-    SetupMECOEventHandler(MECO_Engines).
-}
+// local MECO_Engines to Ship:PartsTaggedPattern("Ascent\|MECO\|\d*").
+// if MECO_Engines:Length > 0
+// {
+//     SetupMECOEventHandler(MECO_Engines, "Ascent").
+// }
 // local AutoStageResult to ArmAutoStaging().
-ArmAutoStaging().
+// ArmAutoStagingNext(g_StageLimit, 0, 1).
+OutInfo("g_StageLimit = {0}":Format(g_StageLimit), 1).
+
+local autoStageResult to ArmAutoStaging().
+set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 
 // Arm hot staging if present
 set g_HotStagingArmed to ArmHotStaging().
@@ -103,18 +142,21 @@ set g_HotStagingArmed to ArmHotStaging().
 // }
 
 // set g_BoostersArmed to ArmBoosterStaging().
+set g_BoostersArmed to False.
 OutInfo("g_BoostersArmed: {0}":Format(g_BoostersArmed)).
 set s_Val to Ship:Facing.
 lock steering to s_Val.
 
 OutMsg().
 // OutInfo().
-OutInfo("", 1).
+OutInfo("g_DecouplerEventArmed: {0}":Format(g_DecouplerEventArmed),1).
 
 OutMsg("Liftoff! ").
 wait 1.
 OutMsg("Vertical Ascent").
 set g_ActiveEngines to GetActiveEngines().
+
+ClearDispBlock().
 
 until Alt:Radar >= towerHeight
 {
@@ -146,14 +188,17 @@ until Alt:Radar >= towerHeight
         }
         else
         {
+            OutInfo("Checking staging delegate", 2).
             set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
             if stagingCheckResult = 1
             {
+                OutInfo("Staging", 2).
                 g_LoopDelegates:Staging["Action"]:Call().
             }
         }
     }
-
+    
+    DispStateFlags().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
 }
@@ -183,7 +228,7 @@ until Stage:Number <= g_StageLimit
         }
         else
         {
-            set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+            set stagingCheckResult to g_LoopDelegates:Staging["Check"]:Call().
             if stagingCheckResult = 1
             {
                 g_LoopDelegates:Staging["Action"]:Call().
@@ -209,12 +254,12 @@ until Stage:Number <= g_StageLimit
     //         set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
     //     }
     // }
-    if RCSPresent
+    if rcsPresent
     {
         if Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= 0.001 or g_ActiveEngines_Data:BurnTimeRemaining <= 5
         {
             RCS on.
-            set RCSPresent to False.
+            set rcsPresent to False.
         }
     }
     
@@ -225,6 +270,7 @@ until Stage:Number <= g_StageLimit
     }
 
     set s_Val to g_LoopDelegates:Steering:Call().
+    DispStateFlags().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
@@ -250,12 +296,12 @@ until Stage:Number <= g_StageLimit
 //     wait 0.01.
 // }
 
+OutInfo("Disabling Autostaging").
 DisableAutoStaging().
 
 OutMsg("Final Burn").
 wait 0.25.
-local doneFlag to false.
-until doneFlag or Ship:AvailableThrust <= 0.1
+until Ship:AvailableThrust <= 0.1
 {
     set s_Val to g_LoopDelegates:Steering:Call().
     set g_ActiveEngines to GetActiveEngines().
@@ -273,6 +319,7 @@ until doneFlag or Ship:AvailableThrust <= 0.1
         ExecGLoopEvents().
     }
 
+    DispStateFlags().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
     wait 0.01.
@@ -283,9 +330,11 @@ until doneFlag or Ship:AvailableThrust <= 0.1
     // }
 }
 ClearDispBlock("ENGINE_TELEMETRY").
+ClearDispBlock("SYSTEMS ARMED STATUS").
 
 set t_Val to 0.
 OutMsg("Coasting out of atmosphere").
+unlock throttle.
 Until Ship:Altitude >= Body:ATM:Height
 {
     set s_Val to Ship:Prograde.

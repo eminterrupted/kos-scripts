@@ -8,3 +8,6 @@ RunOncePath("0:/lib/engines.ks").
 RunOncePath("0:/lib/vessel.ks").
 RunOncePath("0:/lib/disp.ks").
 RunOncePath("0:/lib/nav.ks").
+
+// Initiate any global objects here
+set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).

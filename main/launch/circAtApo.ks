@@ -8,9 +8,8 @@ RunOncePath("0:/lib/launch.ks").
 
 DispMain().
 
-set Core:Part:Tag to Core:Part:Tag:Replace("Orbit", "Circularize").
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
-set g_MissionParams to g_MissionTag:PARAMS.
+set g_MissionTag:Params to g_MissionTag:PARAMS.
 
 local _azData   to g_azData.
 local _tgtEcc   to -1.
@@ -27,11 +26,11 @@ if params:length > 0
 
 if _azData:Length = 1
 {
-    set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0], _azData[0]).
+    set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], _azData[0]).
 }
 else if _azData:Length = 0
 {
-    set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0], Ship:Latitude).
+    set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], Ship:Latitude).
 }
 
 local eccCheckAtAp to True.
@@ -53,8 +52,8 @@ else
 {
     set _tgtEcc to 0.0075.
 }
-local tgtAp to choose g_MissionParams[1] if eccCheckAtAp else GetApFromPeEcc(g_MissionParams[1], _tgtEcc).
-local tgtPe to choose GetPeFromApEcc(g_MissionParams[1], _tgtEcc) if eccCheckAtAp else g_MissionParams[1].
+local tgtAp to choose g_MissionTag:Params[1] if eccCheckAtAp else GetApFromPeEcc(g_MissionTag:Params[1], _tgtEcc).
+local tgtPe to choose GetPeFromApEcc(g_MissionTag:Params[1], _tgtEcc) if eccCheckAtAp else g_MissionTag:Params[1].
 
 local eccApCheckDelegate to { 
     local result to False. 
@@ -95,17 +94,138 @@ local eccCheckDelegate to choose eccApCheckDelegate@ if eccCheckAtAp else eccPeC
 
 // else
 // {
-//     set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
+//     set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
 // }
 
 set g_StageLimit to _stpStg.
 
-local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun").
+local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun", 0.9925).
 
 // TODO: getting burntime from the burn time remaining of the engines to be burned
 if _stgAtETA < 0 
 {
-    set _stgAtETA to 120.
+    local stgWaitVal to 30. 
+    OutMsg("Setting _stgAtETA").
+    wait 0.25.
+    // set _stgAtETA to 90.
+    set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+    if g_ShipEngines_Spec:HasKey("TotalBurnTimeEnabled")
+    {
+        set _stgAtETA to g_ShipEngines_Spec:TotalBurnTime / 2.
+        OutMsg("Estimating burn time [{0}s]":Format(Round(_stgAtETA, 2))).
+        wait 1.
+    }
+    else
+    {
+        // set stgWaitVal to 30.
+        local doneFlag to False.
+
+        OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format("30","15","5","1")).
+        OutInfo(" {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ":Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+
+        set g_TermChar to "".
+        Terminal:Input:Clear.
+
+        local maxETAFlag to False.
+        local maxETAIndicator to "".
+        set g_TS to Time:Seconds + 10.
+
+        until Time:Seconds >= g_TS or doneFlag
+        {
+            set g_TermChar to "".
+            local charReady to GetTermChar().
+            local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+
+
+            if g_TermChar = Terminal:Input:DownCursorOne
+            {
+                set stgWaitVal to stgWaitVal - 1.
+                set keyMapActiveStr to " {0} | {1} | {2} |[{3}]| {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:UpCursorOne
+            {
+                set stgWaitVal to stgWaitVal + 1.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} |[{5}]| {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:LeftCursorOne
+            {
+                set stgWaitVal to stgWaitVal - 5.
+                set keyMapActiveStr to " {0} | {1} |[{2}]| {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:RightCursorOne
+            {
+                set stgWaitVal to stgWaitVal + 5.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:DeleteRight
+            {
+                set stgWaitVal to stgWaitVal - 15.
+                set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = "\"
+            {
+                set stgWaitVal to stgWaitVal + 15.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
+            }
+            else if g_TermChar = Terminal:Input:EndCursor
+            {
+                set stgWaitVal to stgWaitVal - 30.
+                set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:HomeCursor
+            {
+                set stgWaitVal to stgWaitVal + 30.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".
+            }
+            else if g_TermChar = "0"
+            {
+                set stgWaitVal to 0.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} |[{4}]| {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:Enter
+            {
+                set doneFlag to True.
+            }
+
+            if charReady
+            {
+                set g_TS to Min(Time:Seconds + ((g_TS - Time:Seconds) + 3), Time:Seconds + 5). 
+                set g_TermChar to "".
+            }
+            
+            set stgWaitVal to Max(0, Min(ETA:Apoapsis, stgWaitVal)).
+
+            if doneFlag
+            {
+                OutMsg("stgWaitValue Set Value: {1}{0,-5}s":Format(Round(stgWaitVal, 2), maxETAIndicator)).
+                OutInfo("*** User Bypassed ***").
+                OutInfo("", 1).
+                OutInfo("", 2).
+            }
+            else
+            {
+                if stgWaitVal >= ETA:Apoapsis * 0.99975
+                {
+                    set maxETAFlag to True.
+                }
+                else
+                {
+                    set maxETAFlag to False.
+                }
+                set maxETAIndicator to choose "*" if maxETAFlag else "".
+
+                OutMsg("Current stgWaitValue Value: {1}{0}s":Format(stgWaitVal, maxETAIndicator)).
+                OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+                OutInfo("Continuing in {0,-5}s":Format(Round(g_TS - Time:Seconds, 2)), 2).
+            }
+        }
+        set _stgAtETA to stgWaitVal.
+        OutInfo().
+        OutInfo("",1).
+        OutInfo("",2).
+        OutMsg("Finalized _stgAtETA Set Value: {1}{0,-5}s":Format(Round(_stgAtETA, 2), maxETAIndicator)).
+        wait 1.
+    }
 }
 // {
 //     OutMsg("Calculating Burn Time").
@@ -158,7 +278,7 @@ until ETA:Apoapsis <= _stgAtETA + 5
     }
     else if g_TermChar = Terminal:Input:RightCursorOne
     {
-        set _setAtETA to _stgAtETA + 5.
+        set _stgAtETA to _stgAtETA + 5.
     }
     else if g_TermChar = Terminal:Input:UpCursorOne
     {
@@ -208,6 +328,7 @@ until ETA:Apoapsis <= _stgAtETA
     set s_Val to steeringDelegate:Call().
     OutInfo("Time Remaining: {0}s  ":Format(round(ETA:Apoapsis - _stgAtETA, 2))).
     DispLaunchTelemetry().
+    wait 0.01.
 }
 
 OutMsg("Arming AutoStaging to {0}":Format(_stpStg)).
@@ -220,6 +341,8 @@ wait 0.01.
 set Ship:Control:Fore to 0.
 
 local rollFlag to false.
+local apoFlag to false.
+
 until Stage:Number = _stpStg 
 {
     set g_ActiveEngines to GetActiveEngines().
@@ -266,7 +389,14 @@ until Stage:Number = _stpStg
     }
     set g_TermChar to "".
 
-    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else steeringDelegate:Call().
+    if Ship:Apoapsis >= tgtAp - 10000 and Ship:Apoapsis <= tgtAp + 10000 
+    {
+        set apoFlag to true.
+    }
+
+
+    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if apoFlag else steeringDelegate:Call().
+    
     DispLaunchTelemetry().
     wait 0.01.
 }

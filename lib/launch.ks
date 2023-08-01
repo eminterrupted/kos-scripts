@@ -19,7 +19,7 @@
     local ascent_Blend_End          to Body:Atm:Height.
     local ascent_Blend_Window       to ascent_Blend_End - ascent_Blend_Start.
 
-    local Ascent_AoA_Max            to 22.5.
+    local Ascent_AoA_Max            to 45.
     local Ascent_AoA_Min          to 7.5.
 
     // *- Global
@@ -61,8 +61,21 @@
             set g_MissionTag to ParseCoreTag(Core:Tag).
         }
 
-        local del to { return "". }.
-        local _delDependency to lexicon().
+        local del to { return Ship:Facing. }.
+        local _delDependency to g_AngDependency.
+        
+        if _tgtAlt < 0
+        {
+            if g_MissionTag:Params:Length > 0
+            {
+                set _tgtAlt to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 250000.
+            }
+            else
+            {
+                set _tgtInc to 0.
+                set _tgtAlt to 250000.
+            }
+        }
 
         if _azData:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
         {
@@ -74,23 +87,21 @@
             set g_azData to _azData. 
         }
 
-        if _tgtAlt < 100
-        {
-            if g_MissionTag:Params:Length > 0
-            {
-                set _tgtAlt to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 250000.
-            }
-            else
-            {
-                set _tgtInc to 90.
-                set _tgtAlt to 999999999.
-            }
-        }
 
-        if g_AngDependency:Keys:Length = 0 and g_azData:Length > 0
+        if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            set _delDependency to InitAscentAng_Next(_tgtAlt, 0.975, 7.5, 37).
+            local fShape to 0.9875.
+            local minPit to 5.
+            local pitLim to 45.
+            if g_MissionTag:Mission = "DownRange"
+            {
+                set fShape to 1.
+                set minPit to 3.
+                set pitLim to 22.5.
+            }
+            OutMsg("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt))).
+            set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim).
         }
         set g_AngDependency to _delDependency.
 
@@ -108,7 +119,7 @@
             // set del to { if Ship:Altitude >= sounderStartTurn { local apo_err to Ship:Apoapsis / tgtAlt. set s_Val to Heading(g_MissionTag:Params[0], LaunchAngForAlt(tgtAlt, sounderStartTurn, 0, 5 + (10 * apo_err)), 0.925). } else { set s_Val to Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
             // set _delDependency to InitAscentAng_Next(_tgtAlt, _delDependency:FSHAPE).
             set _delDependency["l_az_calc"] to _azData.
-            set del to { if Ship:Altitude >= g_sounderStartTurn { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency)). } else { return Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
+            set del to { if Ship:Altitude >= g_sounderStartTurn { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
         }
         else if g_MissionTag:Mission = "SubOrbital" // Suborbital hop :: [0] Inclination and [1]Target Alt
         {
@@ -122,11 +133,19 @@
             //set del to { if Ship:Altitude >= g_la_turnAltStart { set s_Val to Heading(g_MissionTag:Params[0], GetAscentAngle(g_MissionTag:Params[1]), 0). } else { set s_Val to Heading(g_MissionTag:Params[0], 90, 0). }}.
             // set _delDependency to InitAscentAng_Next(_tgtAlt, _delDependency:FSHAPE ).
             set _delDependency["l_az_calc"] to _azData.
+            if not _delDependency:HasKey("TRN_ALT_START")
+            {
+                set _delDependency["TRN_ALT_START"] to 375.
+            }
             set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission = "PIDOrbit"
         {
             set _delDependency["l_az_calc"] to _azData.
+            if not _delDependency:HasKey("TRN_ALT_START")
+            {
+                set _delDependency["TRN_ALT_START"] to 375.
+            }
             set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetPIDAscentAngle(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission = "Circularize"
@@ -329,30 +348,37 @@
 
     global function InitAscentAng_Next
     {
-        parameter _tgtAlt,
+        parameter _tgtInc,
+                  _tgtAlt,
                   _fShape is 1,
-                  _pitLimMin to Ascent_AoA_Min,
-                  _pitLimMax to Ascent_AoA_Max.
+                  _pitLimMin is Ascent_AoA_Min,
+                  _pitLimMax is Ascent_AoA_Max,
+                  _fStop is 90.
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
 
-        local min_pitch to 5.
+        if abs(_tgtInc) + 5 > _fStop
+        {
+            set _fStop to choose _tgtInc + 5 if _tgtInc > 0 else abs(_tgtInc - 5).
+        }
 
         local turn_alt_start      to g_la_turnAltStart.
-        local turn_alt_end        to choose 62500 if _tgtAlt <= 200000 else min(250000, max(75000, _tgtAlt / 3)).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
+        local turn_alt_end        to choose 72500 if _tgtAlt <= 200000 else min(1000000, max(100000, Round(_tgtAlt / 2.75))).// max(Body:ATM:Height + 10000, min(Body:ATM:Height + 110000, (Body:ATM:Height + _tgtAlt) / 2)).
         local turn_alt_blend      to 500.// max(Body:Atm:Height - 50000, min(Body:ATM:Height + 50000, trn_alt_end - 100000)).
 
         local pid_Apo_ID to "TurnApo".
-        set g_PIDS[pid_Apo_ID]       to PIDLoop(1.0, 0.05, 0.001, -90, 90).
+        set g_PIDS[pid_Apo_ID]       to PIDLoop(1.0, 0.05, 0.001, -_fStop, _fStop).
         set g_PIDS[pid_Apo_ID]:Setpoint to _tgtAlt.
         
         local pid_Alt_ID to "TurnAlt".
-        set g_PIDS[pid_Alt_ID]   to PIDLoop(1.0, 0.05, 0.001, -90, 90).
+        set g_PIDS[pid_Alt_ID]   to PIDLoop(1.0, 0.05, 0.001, -_fStop, _fStop).
         set g_PIDS[pid_Alt_ID]:Setpoint to turn_alt_end.
         // set g_alt_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_alt_PID:Setpoint  to trn_alt_end.
         
+        OutInfo("TurnAlt: {0}":Format(turn_alt_end)).
+
         return lexicon
         (
             "ALT_PID", pid_Alt_ID
@@ -367,7 +393,7 @@
             ,"TRN_ALT_START", turn_alt_start
             ,"TRN_ALT_END", turn_alt_end
             ,"TRN_ALT_BLEND", turn_alt_blend
-            ,"TRN_APO_TGT", Round(_tgtAlt * 0.875)
+            ,"TRN_APO_TGT", Round(_tgtAlt * 0.825)
             ,"UPDATE_SETPOINT", true
         ).
     }
@@ -394,8 +420,8 @@
         local prograde_pitch            to 90.
         local prograde_surface          to Ship:SrfPrograde:Vector. // Ship:Velocity:Surface.
         local prograde_surface_pitch    to 90 - VAng(Ship:Up:Vector, prograde_surface).
-        local prograge_orbit            to Ship:Prograde:Vector. // Ship:Velocity:Orbit.
-        local prograde_orbit_pitch      to 90 - VAng(Ship:Up:Vector, prograge_orbit).
+        local prograde_orbit            to Ship:Prograde:Vector. // Ship:Velocity:Orbit.
+        local prograde_orbit_pitch      to 90 - VAng(Ship:Up:Vector, prograde_orbit).
         
         local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
         local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
@@ -420,7 +446,7 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.125)).// 1.015625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max)). // * 1.125)).// 1.015625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
                 set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
@@ -444,23 +470,23 @@
                 set effective_error     to comb_err.
                 set error_pitch         to 90 * (1 - comb_err).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.375)).// 1.0625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.275)).// 1.0625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(pitch_limit_min, min(effective_pitch * fShape, 90)).
             }
             else
             {
                 set error_pitch         to 90 * (1 - apo_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + ((pitch_limit_max * 1.425) / apo_error))). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                set output_pitch        to max(-45, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(pitch_limit_min, min(effective_pitch * fShape, 90)).
             }
         }
         if ETA:Apoapsis > ETA:Periapsis
         {
-            set output_pitch to -output_pitch.
+            set output_pitch to max(5, min(-5, -output_pitch)).
         }
 
         return output_pitch.
@@ -509,7 +535,7 @@
             {
                 PID_Alt:Reset().
                 PID_Apo:Reset().
-                OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
+                if g_Debug OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:RESET_PIDS to false.
         }
@@ -519,7 +545,7 @@
             {
                 set PID_Alt:Setpoint to _ascAngObj:ALT_SETPOINT.
                 set PID_Apo:Setpoint to _ascAngObj:APO_SETPOINT.
-                OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
+                if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:UPDATE_SETPOINT to false.
         }
@@ -673,12 +699,31 @@
                 {
                     if DoEvent(m, lpEvent) = 1
                     {
-                        wait 1.
+                        wait 0.01.
+                        if m:HasField("Status")
+                        {
+                            wait until m:GetField("Status") = "Locked".
+                        }
+                        else 
+                        {
+                            wait 1.
+                        }
                     }
                 }
                 if m:HasField("Car Height Adjust")
                 {
                     m:SetField("Car Height Adjust", 0).
+                }
+                if m:Part:Name:MatchesPattern("^AM.MLP.*SwingArm.*") and m:Part:Tag:MatchesPattern("Retract\|(Left|Right)\|OnLoad") <> 0
+                {
+                    local tagSplit to m:Part:Tag:Split("|").
+                    if m:HasEvent("{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
+                    {
+                        if DoEvent(m, "{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
+                        {
+                            wait until m:GetField("Status") = "Locked".
+                        }
+                    }
                 }
             }
         }
@@ -696,9 +741,13 @@
         parameter t_engStart to -2.75.
 
         local launchStage to 99.
-        for p in Ship:PartsDubbedPattern("Clamp|AM\.MLP")
+        // for p in Ship:PartsDubbedPattern("Clamp|AM\.MLP")
+        // {
+        //     set launchStage to min(launchStage, p:stage).
+        // }
+        for m in ship:ModulesNamed("LaunchClamp")
         {
-            set launchStage to min(launchStage, p:stage).
+            set launchStage to min(launchStage, m:part:stage).
         }
 
         local arm_engStartFlag   to true.
@@ -720,7 +769,7 @@
             set totalSpoolTime to totalSpoolTime + stgMaxSpool.
             set engSpoolLex[i] to stgMaxSpool.
         }
-        set countdown            to maxSpoolTime + 5.
+        set countdown            to maxSpoolTime + 3.
         local t_launch           to Time:Seconds + countdown.
         local launchCommit       to false.
         //local hasSpool           to engSpoolLex[Stage:Number - 1][0].
@@ -769,6 +818,7 @@
                     else
                     {
                         OutMsg("*** ABORT ***").
+                        set t_Val to 0.
                         OutInfo().
                         Breakpoint().
                         wait 10.

@@ -10,7 +10,7 @@ DispMain().
 
 set Core:Part:Tag to Core:Part:Tag:Replace("Orbit", "Circularize").
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
-set g_MissionParams to g_MissionTag:PARAMS.
+set g_MissionTag:Params to g_MissionTag:PARAMS.
 
 local _azData   to g_azData.
 local _stgAtETA to ETA:Apoapsis - 60.
@@ -25,15 +25,15 @@ if params:length > 0
 
 if _azData:Length = 1
 {
-    set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0], _azData[0]).
+    set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], _azData[0]).
 }
 else if _azData:Length = 0
 {
-    set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0], Ship:Latitude).
+    set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], Ship:Latitude).
 }
 // else
 // {
-//     set _azData to l_az_calc_init(g_MissionParams[1], g_MissionParams[0]).
+//     set _azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
 // }
 
 set g_StageLimit to _stpStg.

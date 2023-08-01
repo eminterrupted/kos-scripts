@@ -310,7 +310,7 @@
                 set parsedStageStop to tempStageStop:ToNumber(-1).
             }
 
-            set parsedTagObject["MISSION"]  to parsedTag[0].
+            set parsedTagObject["MISSION"] to parsedTag[0].
 
             if parsedStageStop <> -1
             {
@@ -325,24 +325,20 @@
                 set g_StageLimitSet to list(g_StageLimit).
             }
 
-            if parsedTag:Length > 2
+            if parsedTag:Length > 2 // Params
             {
-                set prmSplit to parsedTag[1]:Split(";"). // Params
+                set prmSplit to parsedTag[1]:Split(";"). 
+                if prmSplit:Length > 0
+                {
+                    // if prmSplit:Length = 1 
+                    // { 
+                    //     set prmSplit to parsedTag[1]:Split(","). 
+                    // }
                 
-                if prmSplit:Length = 0
-                {
-                }
-                else
-                {
                     set prmSet to list().
-
-                    if prmSplit:Length = 1 
-                    { 
-                        set prmSplit to parsedTag[1]:Split(","). 
-                    }
-                
-                    for prm in prmSplit
+                    from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
                     {
+                        local prm to prmSplit[i].
                         prmSet:Add(ParseStringScalar(prm)).
                     }
                 }
@@ -351,8 +347,8 @@
             {
             }
 
-            set parsedTagObject["PARAMS"]   to prmSet.
-            set g_MissionParams to prmSet.
+            set parsedTagObject["PARAMS"] to prmSet.
+            set g_MissionTag:Params to prmSet.
         }
 
         return parsedTagObject.
@@ -381,28 +377,33 @@
         parameter _inputString.
 
         local scalar_result to -1.
-        if _inputString:MatchesPattern("\d*(m$|k$|km$|mm$)")
+        if _inputString:IsType("Scalar") // if it's already a scalar, well...
         {
-            if _inputString:MatchesPattern("(^\d*(k$|km$))")
-            {
-                set scalar_result to _inputString:Replace("k", ""):Replace("m", ""):ToNumber() * 1000.
-            }
-            else if _inputString:MatchesPattern("(^\d*(mm$))")
-            {
-                set scalar_result to _inputString:Replace("mm", ""):ToNumber() * 1000000.
-            }
-            else if _inputString:MatchesPattern("(^\d*(m$))")
-            {
-                set scalar_result to _inputString:Replace("m", ""):ToNumber().
-            }
-        }
-        else if _inputString:MatchesPattern("^\d*$")
-        {
-            set scalar_result to _inputString:ToNumber().
+            set scalar_result to _inputString.
         }
         else
         {
-            set scalar_result to _inputString:ToNumber(-1).
+            if _inputString:MatchesPattern("\d*(km$|mm$)")
+            {
+                if _inputString:MatchesPattern("(^\d*(km$))")
+                {
+                    set scalar_result to _inputString:Replace("km", ""):ToNumber() * 1000.
+                }
+                else if _inputString:MatchesPattern("(^\d*(mm$))")
+                {
+                    set scalar_result to _inputString:Replace("mm", ""):ToNumber() * 1000000.
+                }
+            }
+            else if _inputString:MatchesPattern("(^\d*$)")
+            {
+                OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
+                set scalar_result to _inputString:ToNumber().
+                wait 0.1.
+            }
+            else
+            {
+                set scalar_result to _inputString:ToNumber(-1).
+            }
         }
         return scalar_result.
     }
@@ -472,6 +473,7 @@
     // #endregion
 
     // *- Event registration and creation
+    // #region
     global function CreateLoopEvent
     {
         parameter _id,
@@ -570,4 +572,175 @@
         }
         return g_LoopDelegates:Events:Keys:Contains(_eventID).
     }
+    // #endregion
+
+    // Loop Event Handlers
+    // #region
+    global function SetupDecoupleEventHandler
+    {
+        parameter _dcList.
+
+        local anchoredDCMod to "ModuleAnchoredDecoupler".
+        local dcIDList      to list().
+        local decoupleMod   to "ModuleDecouple".
+        local fairingDCMod  to "ProceduralFairingDecoupler".
+        local resultFlag    to False.
+
+        local dcTag to _dcList[0]:Tag.
+        local _partTagSplit to dcTag:Split("|").
+        if g_Debug OutDebug("[SetupDecoupleEventHandler] dcTag: [{0}]":Format(dcTag)).
+        local decoupleMET to _partTagSplit[_partTagSplit:Length - 1]:ToNumber(0).
+        
+        if g_Debug OutDebug("[SetupDecoupleEventHandler] checking requirements").
+        if decoupleMET > 0
+        {
+            local dcEventID to "DC_{0}":Format(decoupleMET).
+            if g_LoopDelegates:Events:HasKey(dcEventID)
+            {
+                if g_Debug OutDebug("[SetupDecoupleEventHandler] Event {0} already exists, skipping":Format(dcEventID)).
+            }
+            else
+            {
+                if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
+                local checkDel to { 
+                    parameter _params is list(). 
+                    OutInfo("Checking DecoupleDelegate [ETA:{0}]":Format(Round(_params[1] - MissionTime, 2)), 2).
+                    return MissionTime >= _params[1].
+                }.
+                local actionDel to 
+                { 
+                    parameter _params is list(). 
+
+                    OutInfo("Decouple Action Delegate [DC#:{0}]":Format(_dcList:Length), 2).
+                    set dcIDList to _params[0].
+                    from { local i to 0.} until i = _dcList:Length or _dcList:Length = 0 step { set i to i + 1.} do
+                    {
+                        local dc to _dcList[i].
+                        
+                        if dcIDList:Contains(dc:CID)
+                        {
+                            local dcModule to choose decoupleMod if dc:HasModule(decoupleMod) else choose anchoredDCMod if dc:HasModule(anchoredDCMod) else choose fairingDCMod if dc:HasModule(fairingDCMod) else core.
+                            if dcModule:Name <> "kOSProcessor"
+                            {
+                                local event to choose "jettison fairing" if dcModule:Name = fairingDCMod else "decouple".
+                                DoEvent(dcModule, event).
+                                dcIDList:Remove(dcIDList:Find(dc:CID)).
+                            }
+                        }
+                    }
+                    wait 0.01. 
+                    return false.
+                }.
+                
+                if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
+                local dcEvent to CreateLoopEvent(dcEventID, "DecoupleEvent", list(dcIDList, decoupleMET), checkDel@, actionDel@).
+                if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
+                if RegisterLoopEvent(dcEvent)
+                {
+                    set resultFlag to True.// OutDebug("MECO Handler Created").
+                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
+                }
+                else
+                {
+                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration failed").
+                }
+            }
+        }
+        else
+        {
+            if g_Debug OutDebug("[SetupDecoupleEventHandler] EventRegistration Failed (decoupleMET [{0}] <= 0)":Format(decoupleMET)).
+        }
+        return resultFlag.
+    }
+    // #endregion
+
+    // Addon Wrappers
+    // #region
+
+    // Career
+    // #region
+    // TryRecoverVessel :: [_ves<Ship>], [_recoveryWindow<Scalar>] -> <None>
+    global function TryRecoverVessel
+    {
+        parameter _ves is Ship,
+                  _recoveryWindow is 30.
+
+        if Addons:Available("Career")
+        {
+            local waitTimer to 15.
+            set g_TS to Time:Seconds + waitTimer.
+            local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
+            set g_TermChar to "".
+            OutInfo("Press any key to abort").
+            local abortFlag to false.
+            until Time:Seconds > g_TS or abortFlag
+            {
+                OutMsg(waitStr:Format(Round(g_TS - Time:Seconds, 2))).
+                GetTermChar().
+                if g_TermChar <> ""
+                {
+                    set abortFlag to true.
+                    OutInfo().
+                }
+                wait 0.01.
+            }
+
+            if abortFlag 
+            {
+                OutMsg("Aborting recovery attempts!").
+                wait 0.25.
+            }
+            else
+            {
+                local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
+                local recoveryStr to "Attempting recovery (Status: {0})".
+                set g_TS to Time:Seconds + _recoveryWindow.
+                local abortStr to "Press any key to abort ({0,-5}s)".
+                until Time:Seconds >= g_TS or abortFlag
+                {
+                    local recoveryState to getRecoveryState:Call(_ves).
+                    if recoveryState[0]
+                    {
+                        Addons:Career:RecoverVessel(_ves).
+                        OutMsg("Recovery in progress (Status: {0})":Format(recoveryState[1])).
+                        OutInfo().
+                        wait 0.01.
+                        break.
+                    }
+                    else
+                    {
+                        OutMsg(recoveryStr:Format(recoveryState[1])).
+                        OutInfo(abortStr:Format(g_TS - Time:Seconds, 2)).
+
+                        GetTermChar().
+                        if g_TermChar <> ""
+                        {
+                            set abortFlag to true.
+                        }
+                        wait 0.01.
+                    }
+                }
+                
+                if abortFlag
+                {
+                    OutMsg("Recovery aborted!").
+                    OutInfo().
+                }
+                else
+                {
+                    OutMsg("Recovery failed. :(").
+                }
+                OutInfo().
+            }
+        }
+        else
+        {
+            OutMsg("No recovery firmware found!").
+            OutInfo().
+            wait 0.25.
+        }
+    }
+
+    // #endregion
+    // #endregion
 // #endregion

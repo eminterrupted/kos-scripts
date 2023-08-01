@@ -18,12 +18,15 @@
 // *~ Simple Variables ~* //
 // #region
     // Program flow control
+
+    global g_Counter to 0.
+    global g_Debug to True.
+    global g_Slowbug to False.
+    global g_LastUpdate to 0.
+    global g_Program to 0.
     global g_ResultCode to 0.
     global g_RunMode to 0.
-    global g_Program to 0.
     global g_TS to 0.
-    global g_LastUpdate to 0.
-    global g_Counter to 0.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(
@@ -37,7 +40,7 @@
 
     // Tags
     global g_MissionTag to lexicon().
-    global g_MissionParams to list().
+    
     global g_ReturnMissionList to list(
         "DownRange"     // Guided downrange suborbital, no reentry guidance
         ,"MaxAlt"       // Guided or unguided max altitude
@@ -86,9 +89,17 @@
     global g_TermGrid to lexicon().
 
     // Engines
-    global g_BoostersArmed   to false.
-    global g_HotStagingArmed to false.
     global g_BoosterObj      to lexicon().
+
+    // State Flags
+    global g_AutoStageArmed         to False.
+    global g_BoostersArmed          to False.
+    global g_DecouplerEventArmed    to False.
+    global g_HotStagingArmed        to False.
+    global g_FairingsArmed          to false.
+    global g_MECOArmed              to False.
+    global g_LESArmed               to false.
+    global g_RCSArmed               to false.
 
     // Ship control
     global t_Val to 0.
@@ -110,6 +121,7 @@ global g_LoopDelegates  to lexicon(
     ,"Events", lexicon()
 ).
 global g_PartInfo       to lexicon().
+global g_PropInfo       to lexicon().
 // #endregion
 
 

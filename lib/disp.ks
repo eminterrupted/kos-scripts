@@ -17,6 +17,7 @@
     global l_GridAssignments to lexicon().
     local  l_GridSpaceIdx to 0.
     local  l_GridSpaceLex to lexicon().
+    local  l_LastAssignedBlock to 0.
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -80,7 +81,7 @@
     {
         parameter _str is "",
                   _errLvl is 0.
-                  //_teeHUD is false. TODO: implement TeeHud function
+                  //_teeHUD is False. TODO: implement TeeHud function
 
         local msg_line to 8.
         local msg_str to "".
@@ -117,7 +118,7 @@
     {
         parameter _str is "",
                   _lineIdx is 0.
-                  //_teeHUD is false. TODO: implement TeeHud function
+                  //_teeHUD is False. TODO: implement TeeHud function
 
         local line to 11.
         if _str:length > 0
@@ -136,7 +137,7 @@
     {
         parameter _str is "",
                   _lineIdx is 0.
-                  //_teeHUD is false. TODO: implement TeeHud function
+                  //_teeHUD is False. TODO: implement TeeHud function
 
         local line to 50.
         if _str:length > 0
@@ -147,6 +148,7 @@
         {
             print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
         }
+        if g_Slowbug wait 0.325. // Debug induces a small wait to ensure messages can be seen
     }
 
     // *~ Display Components
@@ -256,14 +258,14 @@
         print "PROGRAM: {0}":Format(_scriptPath)                at (0, cr()).
         cr().
         
-        DispTermGrid(10, 68, 4, 1, true).
+        DispTermGrid(10, 68, 4, 1, True).
         set l_GridAssignments[0] to "MAIN".
-        DispTermGrid(g_Line, 34, 16, 2).
+        DispTermGrid(g_Line, 34, 16, 2, False).
 
         return g_Line.
     }
 
-    // DispReetryTelemetry :: [(_dispBlockIdx)<none>] -> <none>
+    // DispReetryTelemetry :: [(_dispBlockIdx)<scalar>] -> <none>
     // Displays reentry telemetry in the terminal grid. 
     // Defaults to next available grid space, can be pointed to a specific one
     global function DispReentryTelemetry
@@ -288,6 +290,32 @@
         DispPrintBlock(_dispBlockIdx, dispList).
     }
 
+    // DispStateFlags :: [(dispBlockIdx)<scalar>}] -> <none>
+    // Displays the current value of all state flags currently active
+    global function DispStateFlags
+    {
+        parameter _dispBlockIdx is -1.
+
+        if _dispBlockIdx < 0
+        {
+            set _dispBlockIdx to NextOrAssignedTermBlock("ARMED_SYS_STATE").
+        }
+
+        local dispList to list(
+            "ARMED SYSTEMS"
+            ,"AutoStage : {0,-5}":Format(g_AutoStageArmed)
+            ,"Boosters  : {0,-5}":Format(g_BoostersArmed)
+            ,"Decouplers: {0,-5}":Format(g_DecouplerEventArmed)
+            ,"Fairings  : {0,-5}":Format(g_FairingsArmed)
+            ,"HotStage  : {0,-5}":Format(g_HotStagingArmed)
+            ,"AutoMECO  : {0,-5}":Format(g_MECOArmed)
+            ,"LES       : {0,-5}":Format(g_LESArmed)
+            ,"RCS       : {0,-5}":Format(g_RCSArmed)
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
     // #endregion
 
     // *- Full Display
@@ -302,8 +330,8 @@
         parameter _startAt      is 10,
                   _colWidth     is 34, 
                   _rowHeight    is 20,
-                  _rowCount     is -1,
-                  _refreshRef   is false.
+                  _rowCount     is 0, //-1,
+                  _refreshRef   is False.
 
         set g_Line to _startAt.
 
@@ -322,19 +350,21 @@
 
         if _refreshRef
         {
-            set l_GridSpaceIdx    to 0.
-            set l_GridSpaceLex    to lexicon().
-            set l_GridAssignments to lexicon().
+            set l_GridSpaceIdx to 0.
+            l_GridSpaceLex:Clear().
+            l_GridAssignments:Clear().
+            ClearDispBlock().
         }
 
         // This bit adds the column position for each possible column beyond the start.
         from { local i to 1.} until i = colCount step { set i to i + 1.} do
         {
-            colIdxList:Add(2 + Mod(i * _colWidth, _colWidth)). 
+            colIdxList:Add(2 + (i * _colWidth)). 
         }
+
         from { local iRow to 0.} until iRow = _rowCount step { set iRow to iRow + 1.} do
         {
-            local rowLine to _startAt + 2 + Mod(iRow * _rowHeight, _rowHeight).
+            local rowLine to _startAt + 1 + Mod(iRow * _rowHeight, _rowHeight).
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
                 set l_GridSpaceIdx to iCol + iRow.
@@ -342,12 +372,12 @@
                 {
                     if l_GridAssignments[l_GridSpaceIdx] = ""
                     {
-                        set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                        set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
                     }
                 }
                 else
                 {
-                    set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], rowLine).
+                    set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
                     set l_GridAssignments[l_GridSpaceIdx] to "".
                 }
                 set l_GridSpaceIdx to l_GridSpaceIdx + 1.
@@ -381,53 +411,133 @@
     {
         parameter _dispId.
 
-        local assigned_block to 1.
+        local blockIdx to 1.
 
-        from { local i to 1.} until i = l_GridAssignments:Values:Length step { set i to i + 1.} do
+        if l_GridAssignments:Values:Length = 0
         {
-            local assignedId to l_GridAssignments[i].
-            if assignedId = _dispId
+            // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments error [Length: {0}]":Format(l_GridAssignments:Values:Length)).
+            set l_LastAssignedBlock to blockIdx.
+            return l_LastAssignedBlock.
+        }
+        else if l_GridAssignments:Values:Contains(_dispId)
+        {
+            set blockIdx to l_GridAssignments:Keys[l_GridAssignments:Values:find(_dispId)].
+            // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments _dispId cache hit [{0}]":Format(blockIdx)).
+            return blockIdx.
+        }
+        else
+        {
+            // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments _dispId cache miss [{0}]":Format(blockIdx)).
+            
+            local doneFlag to False.
+            from { local i to 0.} until doneFlag step { set i to i + 1.} do
             {
-                set assigned_block to i.
-                break.
-            }
-            else if assignedId:Length = 0
-            {
-                set assigned_block to max(assigned_block, i).
-                set l_GridAssignments[i] to _dispId.
-                break.
+                local processFlag   to False.
+                set blockIdx to blockIdx + i.
+                if l_GridAssignments:HasKey(blockIdx)
+                {
+                    if l_GridAssignments[blockIdx]:Length = 0
+                    {
+                        set processFlag to True.
+                    }
+                }
+                else
+                {
+                    set processFlag to True.
+                }
+
+                if processFlag 
+                {
+                    // set assignedBlock to i.// max(l_LastAssignedBlock, i).
+                    set l_LastAssignedBlock to max(l_LastAssignedBlock, blockIdx).
+                    set l_GridAssignments[blockIdx] to _dispId.
+                    set doneFlag to True.
+                }
             }
         }
-        return assigned_block.
+        
+        return blockIdx.
     }
 
     global function ClearDispBlock
     {
         parameter _dispId is "ALL".
 
+        local blockAnchor    to list().
         local blockClearList to list().
+        local doneFlag       to False.
 
         if _dispId = "ALL"
         {
             set blockClearList to l_GridAssignments:Values.
         }
         else
+        {   
+            local blockIdx to 0.
+            for blockID in l_GridAssignments:Values
+            {
+                if blockID = _dispId
+                {
+                    blockClearList:Add(blockIdx).
+                    set doneFlag to True.
+                }
+                
+                if doneFlag
+                {
+                    break.
+                }
+                else
+                {
+                    set blockIdx to blockIdx + 1.
+                }
+            }
+        }
+        
+        for blockID in blockClearList
         {
+            if l_GridSpaceLex:HasKey(blockID)
+            {
+                set blockAnchor to l_GridSpaceLex[blockID].
 
+                local colStop to blockAnchor[0] + blockAnchor[1].
+                local rowStop to blockAnchor[2] + blockAnchor[3].
+
+                local col to blockAnchor[0].
+                set g_Line to blockAnchor[2].
+                until g_line > rowStop 
+                {
+                    print " ":PadRight(colStop) at (col, cr()).
+                }
+                if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
+                set l_GridAssignments[blockID] to "".
+            }
+            else
+            {
+                if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
+            }
         }
     }
 
-    // DispPrintBlock :: (_blockIdx)<scalar>, (_dispData)[String<list>] -> <none>
+    // DispPrintBlock :: (_blockIdx)<scalar>, (_dispData)[String<list>], [_numColumns<Scalar>] -> <none>
     // Does what's on the tin
     local function DispPrintBlock
     {
         parameter _blockIdx,
-                  _dispData.
+                  _dispData,
+                  _numColumns is 1.
 
         local blockAnchor to list().
         if _blockIdx:IsType("Scalar")
         {
-            set blockAnchor to l_GridSpaceLex[_blockIdx].
+            if l_GridSpaceLex:HasKey(_blockIdx)
+            {
+                set blockAnchor to l_GridSpaceLex[_blockIdx].
+            }
+            else
+            {
+                if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).
+                // set blockAnchor to l_GridSpaceLex[1].
+            }
         }
         else if _blockIdx:IsType("String")
         {
@@ -441,27 +551,56 @@
             }
         }
 
-        set g_col to blockAnchor[0] + 1.
-        set g_line to blockAnchor[1].
-
-        local hIdx to 0.
-        for line in _dispData
+        set g_Col to blockAnchor[0] + 1.
+        set g_line to blockAnchor[2].
+       
+        from { local i to 0.} until i = _dispData:Length step { set i to i + _numColumns.} do
         {
-            if hIdx > 0
+            local bulletStr to choose "{0} ":Format(Char(9500)) if i > 0 else "".
+            local str to _dispData[i].
+
+            
+            if i > 0
             {
-                print "{0} {1}":Format(Char(9500),line) at (g_col, cr()).
-            }
-            else 
-            {
-                print line:ToUpper at (g_col, g_line).
-                cr().
-                for colFoo in Range(0, line:Length - 1, 1)
+                print "{0}{1,-16}":Format(bulletStr, _dispData[i]) at (g_Col, cr()).
+                set g_Col to g_Col + 18.
+                from { local _i to i + 1.} until _i >= i + _numColumns step { set _i to _i + 1.} do
                 {
-                    print "-" at (g_col + colFoo, g_line).
+                    local _str to choose ": {0}" if _i = i + 1 else " | {0}".
+                    set _str to _str:Format(_dispData[_i]).
+                    print _str at (g_Col, g_Line).
+                    set g_Col to min(Terminal:Width - 8, g_Col + _str:Length + 2).
                 }
-                set hIdx to hIdx + 1.
             }
+            else
+            {
+                print "{0}{1,-16}":Format(bulletStr, _dispData[i]) at (g_Col, cr()).
+                print str:ToUpper at (g_Col, cr()).
+                for colFoo in Range(0, str:Length, 1)
+                {
+                    print "-" at (g_Col + colFoo, g_Line).
+                }
+            }
+        
+            set g_Col to blockAnchor[0] + 1.
         }
+        // for line in _dispData
+        // {
+        //     if lineIdx > 0
+        //     {
+        //         print "{0} {1}":Format(Char(9500),line) at (g_Col, cr()).
+        //     }
+        //     else 
+        //     {
+        //         print line:ToUpper at (g_Col, g_line).
+        //         cr().
+        //         for colFoo in Range(0, line:Length - 1, 1)
+        //         {
+        //             print "-" at (g_Col + colFoo, g_line).
+        //         }
+        //         set lineIdx to lineIdx + 1.
+        //     }
+        // }
     }
     // #endregion
 // #endregion

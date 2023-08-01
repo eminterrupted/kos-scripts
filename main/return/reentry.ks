@@ -537,8 +537,18 @@ until alt:radar <= 2500
 // }
 
 OutMsg("Chute deploy").
+// until stage:number <= 0
+// {
+//     stage.
+//     wait 0.25.
+// }
 
 until alt:radar <= 5
 {
     DispReentryTelemetry().
 }
+
+OutMsg("Preparing for recovery").
+wait 1.
+
+TryRecoverVessel(Ship, 30).
