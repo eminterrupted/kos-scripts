@@ -10,11 +10,14 @@
 // #region
     // *- Global
     // #region
+    global g_GridAssignments to lexicon().
+    global g_TermHeight to 64.
+    global g_TermWidth  to 72.
+
     // #endregion
 
     // *- Local
     // #region
-    global l_GridAssignments to lexicon().
     local  l_GridSpaceIdx to 0.
     local  l_GridSpaceLex to lexicon().
     local  l_LastAssignedBlock to 0.
@@ -136,17 +139,33 @@
     global function OutDebug
     {
         parameter _str is "",
-                  _lineIdx is 0.
+                  _lineIdx is 0,
+                  _color is "White".
                   //_teeHUD is False. TODO: implement TeeHud function
+        
+        local anchor to g_TermHeight - 7.
+        local line to anchor.
 
-        local line to 50.
+        if _lineIdx < 0 
+        {
+            set line to anchor - Max(-5, _lineIdx).
+        }
+        else if _lineIdx > 0
+        {
+            set line to anchor + Min(5, _lineIdx).
+        }
+
         if _str:length > 0
         {
-            print "<color=White>[{0}]</color> {1} ":Format("*DBG", _str):PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            // local newStr to "<color={0}>[`0~]</color> `1~ ":Format(_color).
+            // set newStr to newStr:Replace("`","{"):Replace("~","}").
+            // set newStr to newStr:Format("*DBG", _str).
+            // print newStr:PadRight(Terminal:Width - 2) at (1, line).
+            print "<color={2}>[{0}]</color> {1} ":Format("*DBG", _str, _color):PadRight(Terminal:Width - 2) at (1, line).
         }
         else
         {
-            print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            print _str:PadRight(Terminal:Width - 2) at (1, line).
         }
         if g_Slowbug wait 0.325. // Debug induces a small wait to ensure messages can be seen
     }
@@ -231,11 +250,11 @@
     global function DispMain
     {
         parameter _scriptPath is ScriptPath(),
-                  _termWidth is 72,
-                  _termHeight is 0.
+                  _termWidth is g_TermWidth,
+                  _termHeight is g_TermHeight.
 
-        set Terminal:Width to _termWidth.
-        set Terminal:Height to choose _termHeight if _termHeight > 0 else 64.
+        set Terminal:Width to Max(16, _termWidth).
+        set Terminal:Height to Max(24, _termHeight).
         DoEvent(Core, "Open Terminal").
 
         set g_Line to 0.
@@ -259,7 +278,7 @@
         cr().
         
         DispTermGrid(10, 68, 4, 1, True).
-        set l_GridAssignments[0] to "MAIN".
+        set g_GridAssignments[0] to "MAIN".
         DispTermGrid(g_Line, 34, 16, 2, False).
 
         return g_Line.
@@ -352,7 +371,7 @@
         {
             set l_GridSpaceIdx to 0.
             l_GridSpaceLex:Clear().
-            l_GridAssignments:Clear().
+            g_GridAssignments:Clear().
             ClearDispBlock().
         }
 
@@ -368,9 +387,9 @@
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
                 set l_GridSpaceIdx to iCol + iRow.
-                if l_GridAssignments:HasKey(l_GridSpaceIdx)
+                if g_GridAssignments:HasKey(l_GridSpaceIdx)
                 {
-                    if l_GridAssignments[l_GridSpaceIdx] = ""
+                    if g_GridAssignments[l_GridSpaceIdx] = ""
                     {
                         set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
                     }
@@ -378,7 +397,7 @@
                 else
                 {
                     set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
-                    set l_GridAssignments[l_GridSpaceIdx] to "".
+                    set g_GridAssignments[l_GridSpaceIdx] to "".
                 }
                 set l_GridSpaceIdx to l_GridSpaceIdx + 1.
             }
@@ -413,15 +432,15 @@
 
         local blockIdx to 1.
 
-        if l_GridAssignments:Values:Length = 0
+        if g_GridAssignments:Values:Length = 0
         {
             // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments error [Length: {0}]":Format(l_GridAssignments:Values:Length)).
             set l_LastAssignedBlock to blockIdx.
             return l_LastAssignedBlock.
         }
-        else if l_GridAssignments:Values:Contains(_dispId)
+        else if g_GridAssignments:Values:Contains(_dispId)
         {
-            set blockIdx to l_GridAssignments:Keys[l_GridAssignments:Values:find(_dispId)].
+            set blockIdx to g_GridAssignments:Keys[g_GridAssignments:Values:find(_dispId)].
             // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments _dispId cache hit [{0}]":Format(blockIdx)).
             return blockIdx.
         }
@@ -434,9 +453,9 @@
             {
                 local processFlag   to False.
                 set blockIdx to blockIdx + i.
-                if l_GridAssignments:HasKey(blockIdx)
+                if g_GridAssignments:HasKey(blockIdx)
                 {
-                    if l_GridAssignments[blockIdx]:Length = 0
+                    if g_GridAssignments[blockIdx]:Length = 0
                     {
                         set processFlag to True.
                     }
@@ -450,7 +469,7 @@
                 {
                     // set assignedBlock to i.// max(l_LastAssignedBlock, i).
                     set l_LastAssignedBlock to max(l_LastAssignedBlock, blockIdx).
-                    set l_GridAssignments[blockIdx] to _dispId.
+                    set g_GridAssignments[blockIdx] to _dispId.
                     set doneFlag to True.
                 }
             }
@@ -469,12 +488,12 @@
 
         if _dispId = "ALL"
         {
-            set blockClearList to l_GridAssignments:Values.
+            set blockClearList to g_GridAssignments:Values.
         }
         else
         {   
             local blockIdx to 0.
-            for blockID in l_GridAssignments:Values
+            for blockID in g_GridAssignments:Values
             {
                 if blockID = _dispId
                 {
@@ -509,7 +528,7 @@
                     print " ":PadRight(colStop) at (col, cr()).
                 }
                 if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
-                set l_GridAssignments[blockID] to "".
+                set g_GridAssignments[blockID] to "".
             }
             else
             {
@@ -541,9 +560,9 @@
         }
         else if _blockIdx:IsType("String")
         {
-            if l_GridAssignments:Values:Contains(_blockIdx)
+            if g_GridAssignments:Values:Contains(_blockIdx)
             {
-                set blockAnchor to l_GridSpaceLex[l_GridAssignments:Values:Find(_blockIdx)].
+                set blockAnchor to l_GridSpaceLex[g_GridAssignments:Values:Find(_blockIdx)].
             }
             else
             {

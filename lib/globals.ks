@@ -21,12 +21,20 @@
 
     global g_Counter to 0.
     global g_Debug to True.
+    global g_Debug_Max to True.
     global g_Slowbug to False.
     global g_LastUpdate to 0.
     global g_Program to 0.
     global g_ResultCode to 0.
     global g_RunMode to 0.
+
+    // Global timestamp / timer placeholders
     global g_TS to 0.
+    global g_TS0 to 0.
+    global g_TS1 to 0.
+    global g_TS2 to 0.
+    global g_TS3 to 0.
+    global g_TSi to 0.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(

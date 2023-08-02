@@ -1539,6 +1539,7 @@
     // #endregion
 
     // ** Solar Panels
+    // #region
 
     // ExtendSolarPanels :: _panelList<Module> -> <none>
     // Given a list of ModuleROSolar items, extends any panels that have the event available
@@ -1551,5 +1552,6 @@
             DoAction(m, "extend solar panel", true).
         }
     }
+    // #endregion
 
 // #endregion

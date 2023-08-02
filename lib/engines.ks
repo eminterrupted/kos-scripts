@@ -32,23 +32,37 @@
     // This adds engines to the part info global
     set g_PartInfo["Engines"] to lexicon( 
         "SepRef", list(
-            "ROSmallSpinMotor"      // Spin Motor (Small)
-            ,"CREI_RO_IntSep_33"    // Internal sep motor (33% scale)
-            ,"CREI_RO_IntSep_100"   // Internal sep motor (normal scale)
-            ,"CREI_RO_IntSep_166"   // Internal sep motor (166% scale)
-            ,"ROE-1204sepMotor"     // UA1204 Nosecone & Separation Motor
-            ,"ROE-1205sepMotor"     // UA1205 Nosecone & Separation Motor
-            ,"ROE-1206sepMotor"     // UA1206 Nosecone & Separation Motor
-            ,"ROE-1207sepMotor"     // UA1207 Nosecone & Separation Motor
-            ,"ROE-1208sepMotor"     // UA1208 Nosecone & Separation Motor
-            ,"sepMotorSmall"        // Radial Separation Motor (Small)
-            ,"sepMotor1"            // Radial Separation Motor (Medium)
-            ,"sepMotorLarge"        // Radial Separation Motor (Large)
-            ,"SnubOtron"            // Separation Motor (Small)
-            ,"CREI_RO_IntSep_50"    // CREI Internal SRB 50% Resize
-            ,"CREI_RO_IntSep_100"   // CREI Internal SRB 100% Resize
-            ,"CREI_RO_IntSep_166"   // CREI Internal SRB 166% Resize
-            ,"CREI_RO_IntSep_200"   // CREI Internal SRB 200% Resize
+            "ROSmallSpinMotor"              // Spin Motor (Small)
+            ,"CREI_RO_IntSep_33"            // Internal sep motor (33% scale)
+            ,"CREI_RO_IntSep_100"           // Internal sep motor (normal scale)
+            ,"CREI_RO_IntSep_166"           // Internal sep motor (166% scale)
+            ,"ROE-1204sepMotor"             // UA1204 Nosecone & Separation Motor
+            ,"ROE-1205sepMotor"             // UA1205 Nosecone & Separation Motor
+            ,"ROE-1206sepMotor"             // UA1206 Nosecone & Separation Motor
+            ,"ROE-1207sepMotor"             // UA1207 Nosecone & Separation Motor
+            ,"ROE-1208sepMotor"             // UA1208 Nosecone & Separation Motor
+            ,"sepMotorSmall"                // Radial Separation Motor (Small)
+            ,"sepMotor1"                    // Radial Separation Motor (Medium)
+            ,"sepMotorLarge"                // Radial Separation Motor (Large)
+            ,"SnubOtron"                    // Separation Motor (Small)
+            ,"CREI_RO_IntSep_50"            // InternalRCS SRB (CREI 50% Resize)
+            ,"CREI_RO_IntSep_100"           // InternalRCS SRB (CREI 100% Resize)
+            ,"CREI_RO_IntSep_166"           // InternalRCS SRB (CREI 166% Resize)
+            ,"CREI_RO_IntSep_200"           // InternalRCS SRB (CREI 200% Resize)
+            ,"B9_Engine_T2_SRBS"            // B9 Radial Sep Motor
+            ,"B9_Engine_T2_SRBS_CREI_25"    // B9 Radial Sep Motor (CREI 25% Resize)
+            ,"B9_Engine_T2_SRBS_CREI_50"    // B9 Radial Sep Motor (CREI 50% Resize)
+            ,"B9_Engine_T2_SRBS_CREI_150"   // B9 Radial Sep Motor (CREI 150% Resize)
+            // ,"B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
+            // ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
+            // ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
+            // ,"B9_Engine_T2A_SRBS_CREI_150"  // B9 Radial Retro Motor (CREI 150% Resize)
+        )
+        ,"RetroRef", list(
+            "B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
+            ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
+            ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
+            ,"B9_Engine_T2A_SRBS_CREI_150"  // B9 Radial Retro Motor (CREI 150% Resize)
         )
     ).
 

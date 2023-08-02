@@ -578,35 +578,83 @@
     // #region
     global function SetupDecoupleEventHandler
     {
-        parameter _dcList.
+        parameter _dcList is list().
 
-        local anchoredDCMod to "ModuleAnchoredDecoupler".
         local dcIDList      to list().
-        local decoupleMod   to "ModuleDecouple".
-        local fairingDCMod  to "ProceduralFairingDecoupler".
+        local registerFlag  to False.
+        local resultCode    to 0.
         local resultFlag    to False.
+        local codeLex       to lexicon(
+            "SUCCESS",  list(11, 21)
+            ,"ERROR",   list()
+            ,"NOOP",    list(0)
+        ).
+
+        local modEvents     to lexicon(
+            "ModuleAnchoredDecoupler",      "decouple"
+            ,"ModuleDecouple",              "decouple"
+            ,"ProceduralFairingDecoupler",  "jettison fairing"
+        ).
 
         local dcTag to _dcList[0]:Tag.
         local _partTagSplit to dcTag:Split("|").
         if g_Debug OutDebug("[SetupDecoupleEventHandler] dcTag: [{0}]":Format(dcTag)).
-        local decoupleMET to _partTagSplit[_partTagSplit:Length - 1]:ToNumber(0).
         
-        if g_Debug OutDebug("[SetupDecoupleEventHandler] checking requirements").
-        if decoupleMET > 0
+        local eventCheckVal to _partTagSplit[_partTagSplit:Length - 1].
+        local eventCheckScalar to eventCheckVal:ToNumber(-1).
+
+
+        local dcEventID to "DC_{0}":Format(eventCheckVal).
+        if g_LoopDelegates:Events:HasKey(dcEventID)
         {
-            local dcEventID to "DC_{0}":Format(decoupleMET).
-            if g_LoopDelegates:Events:HasKey(dcEventID)
+            set resultCode to 9.
+        }
+        else
+        {
+            set resultCode to 1.
+
+            if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
+
+            for p in _dcList
             {
-                if g_Debug OutDebug("[SetupDecoupleEventHandler] Event {0} already exists, skipping":Format(dcEventID)).
+                for m in modEvents:Keys
+                {
+                    if p:Modules:Contains(m) dcIDList:Add(p:UID).
+                }
             }
-            else
+            
+            local checkDel      to { return False.}.
+            if eventCheckScalar > -1
             {
-                if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
-                local checkDel to { 
+                set resultCode to 10.
+
+                set checkDel to { 
                     parameter _params is list(). 
                     OutInfo("Checking DecoupleDelegate [ETA:{0}]":Format(Round(_params[1] - MissionTime, 2)), 2).
                     return MissionTime >= _params[1].
                 }.
+                set registerFlag to True.
+            }
+            else if eventCheckVal = "MECO"
+            {
+                set resultCode to 20.
+                set checkDel to { 
+                    parameter _params is list(). 
+                    local MECOResult to not g_LoopDelegates:Events:Keys:Contains("MECO"). // This is confusing code but the intent is to return False if g_LooopDelegates contains the "MECO" event. 
+                                                                                          // Once that event has fired, it should be removed from g_LoopDelegates, at which point this will return True.
+
+                    OutInfo("Checking DecoupleDelegate [MECO:{0}]":Format(g_LoopDelegates:Events:Keys:Contains("MECO")), 2). // This is backwards from the actual value but more human readable / maybe less confusing?
+                    return MECOResult.
+                }.                
+                set registerFlag to True.
+            }
+            else
+            {
+                set resultCode to 96.
+            }
+
+            if registerFlag
+            {
                 local actionDel to 
                 { 
                     parameter _params is list(). 
@@ -617,40 +665,71 @@
                     {
                         local dc to _dcList[i].
                         
-                        if dcIDList:Contains(dc:CID)
+                        if dcIDList:Contains(dc:UID)
                         {
-                            local dcModule to choose decoupleMod if dc:HasModule(decoupleMod) else choose anchoredDCMod if dc:HasModule(anchoredDCMod) else choose fairingDCMod if dc:HasModule(fairingDCMod) else core.
+                            local dc         to _dcList[i].
+                            local dcEventStr to "". 
+                            local dcModule   to core.
+
+                            for m in modEvents:Keys 
+                            {
+                                if dc:HasModule(m)
+                                {
+                                    set dcModule to dc:GetModule(m).
+                                    set dcEventStr to modEvents[m].
+                                }
+                            }
                             if dcModule:Name <> "kOSProcessor"
                             {
-                                local event to choose "jettison fairing" if dcModule:Name = fairingDCMod else "decouple".
-                                DoEvent(dcModule, event).
-                                dcIDList:Remove(dcIDList:Find(dc:CID)).
+                                DoEvent(dcModule, dcEventStr).
+                                dcIDList:Remove(dcIDList:Find(dc:UID)).
                             }
                         }
                     }
                     wait 0.01. 
                     return false.
                 }.
-                
+
                 if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
-                local dcEvent to CreateLoopEvent(dcEventID, "DecoupleEvent", list(dcIDList, decoupleMET), checkDel@, actionDel@).
+                local dcEvent to CreateLoopEvent(dcEventID, "DecoupleEvent", list(dcIDList, eventCheckVal), checkDel@, actionDel@).
                 if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
-                if RegisterLoopEvent(dcEvent)
-                {
-                    set resultFlag to True.// OutDebug("MECO Handler Created").
-                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
-                }
-                else
-                {
-                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration failed").
-                }
+                set resultFlag to RegisterLoopEvent(dcEvent).
+
+                set resultCode to resultCode + 1.
+            }
+            else
+            {
+                set resultCode to 99.
             }
         }
-        else
+        
+        if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), 1).
+        if resultCode > 0 // = 0 means we no-op'd
         {
-            if g_Debug OutDebug("[SetupDecoupleEventHandler] EventRegistration Failed (decoupleMET [{0}] <= 0)":Format(decoupleMET)).
+            if resultCode < 10 // 1-9 are success codes
+            {
+                set resultFlag to True.
+                if resultCode = 1
+                {
+                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
+                }
+                else if resultCode = 9
+                {
+                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID)).    
+                }
+            }
+            else if resultCode = 99
+            {
+                OutDebug("[SetupDecoupleEventHandler] Registration failed [Error: Unknown]", 2, "Red").
+            }
         }
-        return resultFlag.
+        else 
+        {
+            if g_Debug OutDebug("[SetupDecoupleEventHandler] No-Op / Bypassed").
+            set resultCode to 21.
+        }
+
+        return resultFlag or g_LoopDelegates:Events:HasKey(dcEventID) or g_DecouplerEventArmed.
     }
     // #endregion
 

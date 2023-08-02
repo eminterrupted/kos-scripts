@@ -71,12 +71,14 @@ else if g_LESArmed
 
 // Check if we have any special MECO engines to handle
 local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
+
+if g_Debug local dcCounter to 0.
 if ascentEventParts:Length > 0
 {
     for eventPart in ascentEventParts
     {
         local epTag to eventPart:Tag:Replace("Ascent|","").
-
+        local epTagSplit to epTag:Split("|").
         if epTag:MatchesPattern("MECO\|\d*")
         {
             if not g_LoopDelegates:Events:HasKey("MECO")
@@ -85,25 +87,61 @@ if ascentEventParts:Length > 0
             }
         }
 
-        if epTag:MatchesPattern("^Decouple\|\d*$")
+        if epTagSplit[0] = "Decouple"
         {   
-            local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
-            if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
-            wait 1.
-            local dcEventId to "DC_{0}":Format(dcMET).
-            if not g_LoopDelegates:Events:HasKey(dcEventId)
+            if epTagSplit:Length > 1 
             {
-                local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|{0}":Format(dcMET:ToString:Replace(".","\."))).
-                OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
-                local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
-                OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format(dcEventID, g_DecouplerEventArmed),1).
-                set g_DecouplerEventArmed to choose True if g_DecouplerEventArmed else dcEventRegistrationResult.
+                if epTagSplit[1]:ToNumber(-808) = -808
+                {
+                    if epTagSplit[1]:Split(";"):length > 1
+                    {
+                    }
+                    else if epTagSplit[1] = "MECO"
+                    {
+                        if not g_LoopDelegates:Events:HasKey("MECO_DC")
+                        {
+                            if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache miss [MECO_DC]":Format(dcCounter)).
+                            local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|MECO").
+                            OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
+                            local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
+                            OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult),2).
+                            set g_DecouplerEventArmed to choose g_DecouplerEventArmed if g_DecouplerEventArmed else dcEventRegistrationResult.
+                        }
+                        else
+                        {
+                            if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache hit [MECO_DC]":Format(dcCounter)).
+                        }
+                    }
+                    else
+                    {
+                        if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache error (123) [MECO_DC]":Format(dcCounter)).
+                    }
+                }
+                else
+                {
+                    local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
+                    if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
+                    wait 1.
+                    local dcEventId to "DC_{0}":Format(dcMET).
+                    if not g_LoopDelegates:Events:HasKey(dcEventId)
+                    {
+                        local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|{0}":Format(dcMET:ToString:Replace(".","\."))).
+                        OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
+                        local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
+                        OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult),2).
+                        wait 0.5.
+                        set g_DecouplerEventArmed to choose g_DecouplerEventArmed if g_DecouplerEventArmed else dcEventRegistrationResult.
+                        OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format(dcEventID, g_DecouplerEventArmed),1).
+                    }
+                }
+            set dcCounter to dcCounter + 1.
             }
         }
     }
 }
 
 DispStateFlags().
+OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
 
 Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
 ClearScreen.
