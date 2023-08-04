@@ -44,7 +44,7 @@
     // *- Global (Adds new globals specific to this library, and updates existing globals)
     // #region
     global g_UllageTS to -1.
-    // New entries IN global objects
+    // New entries in global objects
     set g_PartInfo["LES"] to list(
         "ROC-MercuryLESBDB"
     ).
@@ -86,7 +86,7 @@
             parameter _conditionType,
                       _actionType.
 
-            set g_LoopDelegates["Staging"] to LEX(
+            set g_LoopDelegates["Staging"] to lexicon(
                 "Check", GetStagingConditionDelegate(_conditionType)
                 ,"Action", GetStagingActionDelegate(_actionType)
             ).
@@ -129,12 +129,12 @@
             {
                 local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
 
-                set g_LoopDelegates["Staging"] to LEX(
-                    "Check", selectedCondition@
-                    ,"Action", SafeStage@
-                ).
+                if not g_LoopDelegates:HasKey("Staging")
+                {
+                    set g_LoopDelegates["Staging"] to lexicon().
+                }
 
-                if g_LoopDelegates:HASKEY("Staging") set resultCode to 1.
+                if g_LoopDelegates:HasKey("Staging") set resultCode to 1.
             }
 
             return resultCode.
@@ -146,44 +146,47 @@
         }
 
         // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
-        // Writes events to g_LoopDelegates to fire hot staging if applicable FOR a given stage (next by default)
+        // Writes events to g_LoopDelegates to fire hot staging if applicable for a given stage (next by default)
         global function ArmHotStaging
         {
             local ActionDel to {}.
             local CheckDel to {}.
-            local Engine_Obj to LEX().
-            local HotStage_List to Ship:PARTSTAGGEDPATTERN("(HotStg|HotStage|HS)").
-            
+            local Engine_Obj to lexicon().
+            local HotStage_List to Ship:PartsTaggedPattern("(HotStg|HotStage|HS)").
+            // if g_Debug OutDebug("HotStage_List: {0}":Format(HotStage_List:Join(";")), -3).
             if HotStage_List:Length > 0
             {
-                if not g_LoopDelegates:HASKEY("Staging")
+                if not g_LoopDelegates:HasKey("Staging")
                 {
-                    set g_LoopDelegates["Staging"] to LEX().
+                    set g_LoopDelegates["Staging"] to lexicon().
                 }
 
-                g_LoopDelegates:Staging:Add("HotStaging", LEX()).
+                g_LoopDelegates:Staging:Add("HotStaging", lexicon()).
 
-                FOR p IN HotStage_List
+                for p in HotStage_List
                 {
-                    if p:isTYPE("Engine")
+                    if p:IsType("Engine")
                     {
-                        if Engine_Obj:HASKEY(p:Stage)
+                        if Engine_Obj:HasKey(p:Stage)
                         {
-                            Engine_Obj[p:Stage]:ADD(p).
+                            Engine_Obj[p:Stage]:Add(p).
                         }
                         else
                         {
-                            set Engine_Obj[p:Stage] to LisT(p).
+                            set Engine_Obj[p:Stage] to list(p).
                         }
                     }
                 }
-                
-                FOR HotStageID IN Engine_Obj:KEYS
+
+                // if g_Debug OutDebug("Engine_Obj Keys: {0}":Format(Engine_Obj:Keys:Join(";")), -6).
+                wait 1.
+
+                for HotStageID in Engine_Obj:KEYS
                 {
-                    OutInfo("Arming Hot Staging for Engine(s): {0}":Format(HotStageID)).
+                    OutInfo("Arming Hot Staging for ID: {0}":Format(HotStageID)).
                     
                     // Set up the g_LoopDelegates object
-                    g_LoopDelegates:Staging:HotStaging:ADD(HotStageID, LEX(
+                    g_LoopDelegates:Staging:HotStaging:Add(HotStageID, lexicon(
                         "Engines", Engine_Obj[HotStageID]
                         ,"EngSpecs", GetEnginesSpecs(Engine_Obj[HotStageID])
                         )
@@ -191,32 +194,46 @@
                     local stageEngines to list().
                     local stageEngines_BT to 999999.
 
-                    for eng in g_ActiveEngines
+                    local hitFlag to False.
+                    from { local i to HotStageID + 1.} until hitFlag step { set i to i + 1.} do
                     {
-                        if eng:DecoupledIn >= HotStageID
+                        if g_ShipEngines_Spec:HasKey(i)
                         {
-                            stageEngines:Add(eng).
+                            for eng in g_ShipEngines_Spec[i]:EngList
+                            {
+                                if eng:DecoupledIn >= HotStageID
+                                {
+                                    stageEngines:Add(eng).
+                                }
+                            }
+                            set hitFlag to True.
                         }
                     }
 
                     set checkDel  to {
-                        set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
-                        if Stage:Number - 1 = HotStageID {
-                            local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
-                            OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
-                            return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
-                            // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
-                            // return (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
-                        }
-                        else
+                        // parameter _stageEngs.
+
+                        if MissionTime > 0 and g_ActiveEngines:Length > 0
                         {
-                            return false.
+                            set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
+                            if Stage:Number - 1 = HotStageID {
+                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
+                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
+                                return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
+                                // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
+                                // return (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                            }
+                            else
+                            {
+                                return false.
+                            }
                         }
+                        return false.
                     }.
 
                     set actionDel to { 
                         OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(HotStageID, "Ignition")).
-                        FOR eng IN g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines
+                        for eng in g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines
                         {
                             if not eng:Ignition { eng:Activate.}
                         }
@@ -252,8 +269,8 @@
                     }.
 
                     // Add the delegates to the previously set up object
-                    g_LoopDelegates:Staging:HotStaging[HotStageID]:ADD("Check", checkDel@).
-                    g_LoopDelegates:Staging:HotStaging[HotStageID]:ADD("Action", actionDel@).
+                    g_LoopDelegates:Staging:HotStaging[HotStageID]:Add("Check", checkDel@).
+                    g_LoopDelegates:Staging:HotStaging[HotStageID]:Add("Action", actionDel@).
                 }
 
                 return True.
@@ -309,7 +326,7 @@
         }
         
         
-        // GetStagingConditionDelegate :: (_checkType)<string> -> (Result)<kOSDelegate>   // TODO: Implement other check types here (only thrust value FOR now)
+        // GetStagingConditionDelegate :: (_checkType)<string> -> (Result)<kOSDelegate>   // TODO: Implement other check types here (only thrust value for now)
         // Given a staging check type string, performs that condition check and returns the result
         local function GetStagingConditionDelegate
         {
@@ -403,7 +420,7 @@
             return StageResult.
         }
 
-        // Checks FOR ullage before staging
+        // Checks for ullage before staging
         local function SafeStageWithUllage
         {
             parameter _engList,
@@ -452,7 +469,7 @@
 
 
         // SafeStage :: <none> -> <none>
-        // Performs a staging function after waiting FOR the stage to report it is ready first
+        // Performs a staging function after waiting for the stage to report it is ready first
         local function SafeStageState
         {
             local ullageDelegate to { return true. }.
@@ -535,7 +552,7 @@
 
     global function GetOrbitalSteeringDelegate
     {
-        // parameter _delDependency is LEX().
+        // parameter _delDependency is lexicon().
         parameter _steerPair is "Flat:Sun",
                   _fShape    is 0.975.
 
@@ -557,7 +574,7 @@
         else if _steerPair = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            if g_Debug OutDebug("g_MissionTag:Params: {0}":Format(g_MissionTag:Params:Join(";"))).
+            // if g_Debug OutDebug("g_MissionTag:Params: {0}":Format(g_MissionTag:Params:Join(";"))).
             set del to GetAscentSteeringDelegate(g_MissionTag:Params[1], g_MissionTag:Params[0], g_AzData).
             // set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
@@ -1011,8 +1028,8 @@
         if not _boosterObj:HasKey(_setIdx)
         {
             set _boosterObj[_setIdx] to lexicon(
-                "DC", lex(
-                    dc:UID, lex(
+                "DC", lexicon(
+                    dc:UID, lexicon(
                         "P", dc
                         ,"M", m
                         ,"E", event
@@ -1126,7 +1143,7 @@
                 "ALLTHRUST", 0
                 ,"AVLTHRUST", 0
                 ,"PCTTHRUST", 0
-                ,"PARTS", lex()
+                ,"PARTS", lexicon()
             ).
         }
         if not _beObj[_setIdx]:HasKey("SEP")
@@ -1424,13 +1441,13 @@
         // Will jettison fairings provided
         global function JettisonFairings
         {
-            parameter _fairings is LisT().
+            parameter _fairings is list().
 
             if _fairings:Length > 0
             {
-                FOR f IN _fairings
+                for f in _fairings
                 {
-                    if f:isTYPE("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
+                    if f:IsType("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
                     DoEvent(f, "jettison fairing").
                 }
             }

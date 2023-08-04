@@ -208,8 +208,10 @@
         print "Current Periapsis: {0}m":Format(Round(Ship:Periapsis)).
         print "---".
 
-        local burnDir to "Retrograde".
-        local retroMotors to Ship:PartsTaggedPattern("RetroMotor").
+        local burnDir           to "Retrograde".
+        local retroMotors       to Ship:PartsTaggedPattern("RetroMotor").
+        local retroMotorSpecs   to lexicon().
+        local retrosArmed       to False.
 
         if retroMotors:Length > 0
         {
@@ -217,49 +219,75 @@
             {
                 set burnDir to "Prograde".
             }
+            set retroMotorSpecs to GetShipEnginesSpecs(retroMotors).
+            set retrosArmed to True.
         }
+
         print "Aligning to {0}} for retro fire":Format(burnDir).
         local proDel to { return Ship:Prograde.}.
         local retDel to { return Ship:Retrograde.}.
+
+        RCS On.
+        For m in Ship:ModulesNamed("ModuleRCSFX")
+        {
+            m:SetField("RCS", True).
+        }
 
         local steeringDelegate to choose retDel@ if burnDir = "Retrograde" else proDel@.
         set s_Val to steeringDelegate:Call().
         lock steering to s_Val.
 
-        until vAng(Ship:Facing:Vector, s_Val:Vector) <= 10
+        until vAng(Ship:Facing:Vector, s_Val:Vector) <= 15
         {
             set s_Val to steeringDelegate:Call().
             wait 0.25.
         }
+
         print "Retro fire alignment complete".
         wait 0.25.
+
         print "Ignition sequence start".
         local retros to ship:PartsTaggedPattern("RetroMotor").
-        if retros:Length > 0
+
+        if retrosArmed
         {
-            for eng in retros { if not eng:Ignition eng:Activate.}
+            for eng in retros 
+            { 
+                if not eng:Ignition eng:Activate.
+            }
+            wait 0.01.
+            if Ship:AvailableThrust > 0
+            {
+                print "Ignition sequence success".
+                until Ship:AvailableThrust <= 0.1
+                {
+                    set s_Val to steeringDelegate:Call().
+                }
+            }
         }
         else
         {
-            set Ship:Control:Fore to 1.
-            wait 3.
-            set t_Val to 1.
-            wait 0.01.
-            for eng in Ship:Engines
-            {
-                if not eng:Ignition { eng:Activate.}
-            }
-            wait 0.01.
+            set Ship:Control:Fore to choose (1) if burnDir = "Retrograde" else -1.
+            // set t_Val to 1.
+            
+            // wait 0.01.
+            // for eng in Ship:Engines
+            // {
+            //     if not eng:Ignition { eng:Activate.}
+            // }
+            // wait 0.01.
         }
-        if Ship:AvailableThrust > 0
+
+        local doneFlag to False.
+        set g_TS to Time:Seconds + 60.
+        until doneFlag or Time:Seconds >= g_TS
         {
-            print "Ignition sequence success".
-            until Ship:AvailableThrust <= 0.1
+            if retrosArmed
             {
-                set s_Val to steeringDelegate:Call().
+                if Ship:AvailableThrust < 0.01 set doneFlag to True.
             }
+            wait 0.1.
         }
-        wait 1.
         print "-".
         print "Retro burn complete!".
         print "New Periapsis: {0}m":Format(Round(Ship:Periapsis)).

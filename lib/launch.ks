@@ -535,7 +535,7 @@
             {
                 PID_Alt:Reset().
                 PID_Apo:Reset().
-                if g_Debug OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
+// if g_Debug OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:RESET_PIDS to false.
         }
@@ -545,7 +545,7 @@
             {
                 set PID_Alt:Setpoint to _ascAngObj:ALT_SETPOINT.
                 set PID_Apo:Setpoint to _ascAngObj:APO_SETPOINT.
-                if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
+// if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:UPDATE_SETPOINT to false.
         }

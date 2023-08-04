@@ -29,7 +29,7 @@
         // By default, timeout is 0 which is indefinite
         global function Breakpoint
         {
-            parameter _timeout is -1,
+            parameter _timeout is 0,
                     _waitMsg is "BREAKPOINT".
 
             local doneFlag      to false.
@@ -74,7 +74,7 @@
                     }
                 }
                 
-                print infoStr at (infoCol, infoLine).
+                // print infoStr at (infoCol, infoLine).
                 wait 0.1.
             }
 
@@ -598,7 +598,7 @@
 
         local dcTag to _dcList[0]:Tag.
         local _partTagSplit to dcTag:Split("|").
-        if g_Debug OutDebug("[SetupDecoupleEventHandler] dcTag: [{0}]":Format(dcTag)).
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] dcTag: [{0}]":Format(dcTag)).
         
         local eventCheckVal to _partTagSplit[_partTagSplit:Length - 1].
         local eventCheckScalar to eventCheckVal:ToNumber(-1).
@@ -613,7 +613,7 @@
         {
             set resultCode to 1.
 
-            if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
 
             for p in _dcList
             {
@@ -690,9 +690,9 @@
                     return false.
                 }.
 
-                if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
                 local dcEvent to CreateLoopEvent(dcEventID, "DecoupleEvent", list(dcIDList, eventCheckVal), checkDel@, actionDel@).
-                if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
                 set resultFlag to RegisterLoopEvent(dcEvent).
 
                 set resultCode to resultCode + 1.
@@ -703,7 +703,7 @@
             }
         }
         
-        if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), 1).
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), 1).
         if resultCode > 0 // = 0 means we no-op'd
         {
             if resultCode < 10 // 1-9 are success codes
@@ -711,21 +711,21 @@
                 set resultFlag to True.
                 if resultCode = 1
                 {
-                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
                 }
                 else if resultCode = 9
                 {
-                    if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID)).    
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID)).    
                 }
             }
             else if resultCode = 99
             {
-                OutDebug("[SetupDecoupleEventHandler] Registration failed [Error: Unknown]", 2, "Red").
+                OutDebug("[SetupDecoupleEventHandler] Registration failed [Error: Unknown]", 0, "Red").
             }
         }
         else 
         {
-            if g_Debug OutDebug("[SetupDecoupleEventHandler] No-Op / Bypassed").
+// if g_Debug OutDebug("[SetupDecoupleEventHandler] No-Op / Bypassed").
             set resultCode to 21.
         }
 

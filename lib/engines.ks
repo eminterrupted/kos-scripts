@@ -312,17 +312,17 @@
             set isSepStage      to choose true if isSepStage or engSpecs:IsSepMotor else false.
             if engStgObj:HasKey(eng:Stage)
             {
-                set engStgObj[eng:Stage]["Engines"][eng:CID] to engSpecs.
-                engStgObj[eng:Stage]["Engines"]["List"]:Add(eng).
+                set engStgObj[eng:Stage]["EngSpecs"][eng:CID] to engSpecs.
+                engStgObj[eng:Stage]["EngList"]:Add(eng).
             }
             else
             {
                 set engStgObj[eng:Stage] to lexicon(
-                    "Engines", lexicon(
+                    "EngSpecs", lexicon(
                         eng:CID, engSpecs
-                        ,"List", list(eng)
                     )
                     ,"StgSpec", lexicon()
+                    ,"EngList", list(eng)
                 ).
             }
             set engStgObj[eng:Stage]["IsSepStage"] to isSepStage.
@@ -330,7 +330,7 @@
 
         for _stgKey in engStgObj:Keys
         {
-            local stgEngs to engStgObj[_stgKey]:Engines:List.
+            local stgEngs to engStgObj[_stgKey]:EngList.
             if stgEngs:Length > 0
             {
                 set engStgObj[_stgKey]:StgSpec to GetEnginesSpecs(stgEngs).
@@ -550,7 +550,7 @@
                     }
                     else
                     {
-                        aggFailureObj[engLex:Status]:Add(eng:CID, lex("Name", eng:name, "Cause", engLex:FailureCause)).
+                        aggFailureObj[engLex:Status]:Add(eng:CID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
                     }
                 }
                 
@@ -615,77 +615,95 @@
     {
         parameter _engList.
 
-        local fuelMass to 0.
-        local fuelMassTracker to 0.
-        local massFlow to 0.
-        local burnTimeRemaining to 0.
-        local engineResiduals   to 0.
-        local cachedMassFlow to 0.
-        local cachedTotalMassFlow to 0.
-
+        local cachedMassFlow    to 0.
+        local estBurnTime       to 0.
+        local fuelMass          to 0.
+        local massFlow          to 0.
+        local maxMassFlow       to 0.
+        local totalFuelMass     to 0.
+        local totalMassFlow     to 0.
+        
         local engBurnTimeLex to lexicon(
-            "Resources", lex(
+            "Resources", lexicon(
                  "TotalFuelMass", 0
                 ,"TotalMassFlow", 0
+                ,"MaxMassFlow", 0
             )
+            ,"EngData", lexicon()
+            ,"EstBurnTime", -1
         ).
-
+        
         //for eng in _engList
         from { local i to 0. local c to 1. } until i = _engList:Length step { set i to i + 1. set c to c + 1.} do
         {
             local eng to _engList[i].
             local m to eng:GetModule("ModuleEnginesRF").
-            set engineResiduals to choose m:GetField("Predicted Residuals") if m:HasField("Predicted Residuals") else 0.
+            local engineResiduals to choose Round(m:GetField("Predicted Residuals"), 7) if m:HasField("Predicted Residuals") else 0.
 
-            local engFuelMass to 0.
+            engBurnTimeLex:EngData:Add(eng:UID, lexicon()).
 
-            set cachedTotalMassFlow to engBurnTimeLex:Resources:TotalMassFlow.
-
+            engBurnTimeLex:EngData[eng:UID]:Add("ConsumedResources", eng:ConsumedResources:Values).
+            engBurnTimeLex:EngData[eng:UID]:Add("FlowMass", eng:MassFlow).
+            engBurnTimeLex:EngData[eng:UID]:Add("EstBurnTime", -1).
+            engBurnTimeLex:EngData[eng:UID]:Add("Residuals", engineResiduals).
+            
             for res in eng:ConsumedResources:Values
             {
+                // set fuelFlow to choose res:MassFlow else res:MaxMassFlow.
                 local resMass to 0.
-                if res:MassFlow > 0
+                
+                if engBurnTimeLex:Resources:Keys:Contains(res:Name)
                 {
-                    if engBurnTimeLex:Resources:Keys:Contains(res:Name)
-                    {
-                        set cachedMassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow.
-                        // OutDebug("Resource Cached: {0}":Format(res:Name)).
-                    }
-                    else
-                    {
-                        set cachedMassFlow to 0.
-                        // OutDebug("Processing Resource: {0}":Format(res:Name)).
-                        set resMass to (res:amount * res:density).
-                        set fuelMass to fuelMass + (resMass *  (1 - engineResiduals)).
-                        set fuelMassTracker to fuelMassTracker + fuelMass.
-                        engBurnTimeLex:Resources:Add(res:Name, lex("Res", res, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow, "Mass", resMass)).
-                        set engBurnTimeLex:Resources:TotalFuelMass to engBurnTimeLex:Resources:TotalFuelMass + fuelMass.
-                    }
-                    set massFlow to cachedMassFlow + res:MassFlow.
-                    set engBurnTimeLex:Resources:TotalMassFlow to massFlow.
-                    set engBurnTimeLex:Resources[res:Name]:MassFlow to res:MassFlow.
+                    // if g_Debug OutDebug("Resource Cached: {0}":Format(res:Name)).
+                    // set resMass to (res:amount * res:density).
                 }
+                else
+                {
+                    // if g_Debug OutDebug("Processing Resource: {0}":Format(res:Name)).
+                    set resMass to (res:amount * res:density).
+                    set fuelMass to fuelMass + (resMass *  (1 - engineResiduals)).
+                    set totalFuelMass to totalFuelMass + fuelMass.
+                    set engBurnTimeLex:Resources:TotalFuelMass to engBurnTimeLex:Resources:TotalFuelMass + fuelMass.
+                    // engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow, "FuelMass", resMass)).
+                    engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "FuelMass", resMass)).
+                }
+                set totalMassFlow to totalMassFlow + res:MassFlow.
+                                
+                set massFlow to massFlow + res:MassFlow.
+                set maxMassFlow to maxMassFlow + res:MaxMassFlow.
+                set engBurnTimeLex:Resources:TotalFuelMass to totalFuelMass.
+                set engBurnTimeLex:Resources:TotalMassFlow to totalMassFlow.
+                set engBurnTimeLex:Resources:MaxMassFlow to maxMassFlow.
             }
-
-            //local engBurnTime to choose fuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.
-            local engBurnTime to choose fuelMass / massFlow if massFlow > 0 else 0.
-            set burnTimeRemaining to burnTimeRemaining + engBurnTime.
-
-            set engBurnTimeLex[eng:UID] to lexicon(
-                "FuelMass",  engFuelMass
-                ,"FlowMass", eng:MassFlow
-                ,"BurnTimeEstimate", engBurnTime
-                ,"Residuals", round(engineResiduals, 5)
-            ).
         }
 
+        // if g_Debug OutDebug("MaxMassFlow        : {0}":Format(Round(maxMassFlow, 7)), 1).
+        // if g_Debug OutDebug("MaxMassFlow(Lex)   : {0}":Format(Round(engBurnTimeLex:Resources:MaxMassFlow, 7)), 2).
+        // if g_Debug OutDebug("TotalFuelMass      : {0}":Format(Round(TotalFuelMass, 7)), 3).
+        // if g_Debug OutDebug("TotalFuelMass(Lex) : {0}":Format(Round(engBurnTimeLex:Resources:TotalFuelMass, 7)), 4).
+        
+        set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else fuelMass / maxMassFlow.
+        set engBurnTimeLex:EstBurnTime to estBurnTime.
+
+        //local engBurnTime to choose fuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.
+        // local engBurnTime to choose engBurnTimeLex:Resources["TotalFuelMass"] / engBurnTimeLex:Resources:MassFlow if massFlow > 0 else engBurnTimeLex:Resources["TotalFuelMass"] / engBurnTimeLex:Resources:MaxMassFlow.
+        // set burnTimeRemaining to burnTimeRemaining + engBurnTime.
+        // set engBurnTimeLex:EngData[eng:UID]:BurnTimeEstimate to burnTimeRemaining.
+        
+        // set engBurnTimeLex:EngData[eng:UID] to lexicon(
+        //     "ConsumedResources", eng:ConsumedResources:Values
+        //     ,"FlowMass", eng:MassFlow
+        //     ,"BurnTimeEstimate", engBurnTime
+        //     ,"Residuals", round(engineResiduals, 5)
+        // ).
+
         // local burnTimeTotal to choose fuelMass / massFlow if (fuelMass > 0 and massFlow > 0) else 0.
-        local burnTimeTotal to choose burnTimeRemaining / _engList:Length if _engList:Length > 0 else 0.
+        // local burnTimeTotal to choose burnTimeRemaining / _engList:Length if _engList:Length > 0 else 0.
         // local burnTimeTotal to burnTimeRemaining.
 
         // OutDebug("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeTotal, 2))).
         
-        return burnTimeTotal.
+        return estBurnTime.
     }
 
 

@@ -57,8 +57,9 @@ if rcsPresent
     set g_RCSArmed to RegisterLoopEvent(rcsEventData).
 }
 
-set g_FairingsArmed to ArmFairingJettison("ascent").
-set g_LESArmed      to ArmLESTower().
+set g_FairingsArmed     to ArmFairingJettison("ascent").
+set g_LESArmed          to ArmLESTower().
+set g_HotStagingArmed   to ArmHotStaging().
 
 if g_FairingsArmed 
 {
@@ -68,6 +69,8 @@ else if g_LESArmed
 {
     OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
 }
+
+
 
 // Check if we have any special MECO engines to handle
 local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
@@ -98,29 +101,30 @@ if ascentEventParts:Length > 0
                     }
                     else if epTagSplit[1] = "MECO"
                     {
-                        if not g_LoopDelegates:Events:HasKey("MECO_DC")
+                        if not g_LoopDelegates:Events:HasKey("DC_MECO")
                         {
-                            if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache miss [MECO_DC]":Format(dcCounter)).
+                            // if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache miss [MECO_DC]":Format(dcCounter)).
                             local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|MECO").
                             OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
                             local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
-                            OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult),2).
+                            OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult)).
                             set g_DecouplerEventArmed to choose g_DecouplerEventArmed if g_DecouplerEventArmed else dcEventRegistrationResult.
+                            OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format("DC_MECO", g_DecouplerEventArmed)).
                         }
                         else
                         {
-                            if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache hit [MECO_DC]":Format(dcCounter)).
+                        // if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache hit [MECO_DC]":Format(dcCounter)).
                         }
                     }
                     else
                     {
-                        if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache error (123) [MECO_DC]":Format(dcCounter)).
+                    // if g_Debug OutDebug("[g_LoopDelegates][DC{0}] Event cache error (123) [MECO_DC]":Format(dcCounter)).
                     }
                 }
                 else
                 {
                     local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
-                    if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
+                    // if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
                     wait 1.
                     local dcEventId to "DC_{0}":Format(dcMET).
                     if not g_LoopDelegates:Events:HasKey(dcEventId)
@@ -128,10 +132,10 @@ if ascentEventParts:Length > 0
                         local dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|{0}":Format(dcMET:ToString:Replace(".","\."))).
                         OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
                         local dcEventRegistrationResult to SetupDecoupleEventHandler(dcList).
-                        OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult),2).
+                        OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult)).
                         wait 0.5.
                         set g_DecouplerEventArmed to choose g_DecouplerEventArmed if g_DecouplerEventArmed else dcEventRegistrationResult.
-                        OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format(dcEventID, g_DecouplerEventArmed),1).
+                        OutInfo("g_DecouplerEventArmed[{0}]: {1}":Format(dcEventID, g_DecouplerEventArmed)).
                     }
                 }
             set dcCounter to dcCounter + 1.
@@ -143,13 +147,14 @@ if ascentEventParts:Length > 0
 DispStateFlags().
 OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
 
-Breakpoint(Terminal:Input:Enter, "*** Press ENTER to launch ***").
+OutMsg("Waiting for launch command").
+Breakpoint(Terminal:Input:Enter, "Press [ENTER] to hopefully go to space today").
 ClearScreen.
 // DispTermGrid().
 DispMain(ScriptPath()).
 
 lock Throttle to 1.
-OutMsg("Launch initiated!").
+OutMsg("GO for launch! Commencing countdown").
 wait 0.25.
 LaunchCountdown().
 OutInfo().
@@ -170,15 +175,6 @@ OutInfo("g_StageLimit = {0}":Format(g_StageLimit), 1).
 local autoStageResult to ArmAutoStaging().
 set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 
-// Arm hot staging if present
-set g_HotStagingArmed to ArmHotStaging().
-
-// if AutoStageResult = 1
-// {
-//     set stagingDelegateCheck  to g_LoopDelegates:Staging["Check"].
-//     set stagingDelegateAction to g_LoopDelegates:Staging["Action"].
-// }
-
 // set g_BoostersArmed to ArmBoosterStaging().
 set g_BoostersArmed to False.
 OutInfo("g_BoostersArmed: {0}":Format(g_BoostersArmed)).
@@ -186,7 +182,6 @@ set s_Val to Ship:Facing.
 lock steering to s_Val.
 
 OutMsg().
-// OutInfo().
 OutInfo("g_DecouplerEventArmed: {0}":Format(g_DecouplerEventArmed),1).
 
 OutMsg("Liftoff! ").

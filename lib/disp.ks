@@ -11,13 +11,25 @@
     // *- Global
     // #region
     global g_GridAssignments to lexicon().
-    global g_TermHeight to 64.
-    global g_TermWidth  to 72.
+    global g_MsgInfoLoopActive to False.
+    global g_TermHeight to 120.
+    global g_TermWidth  to 80.
 
     // #endregion
 
     // *- Local
     // #region
+    local  l_OutQueue to lexicon(
+        "MSG", lexicon(
+            "QUEUE", list()
+            ,"TIMEOUT", -1
+        ),
+        "INFO", lexicon(
+            "QUEUE", list()
+            ,"TIMEOUT", -1
+        )
+    ).
+    local  l_OutDefTimeout to 3.
     local  l_GridSpaceIdx to 0.
     local  l_GridSpaceLex to lexicon().
     local  l_LastAssignedBlock to 0.
@@ -77,6 +89,53 @@
     // *- Message Display Functions
     // #region
     
+    global function OutMsgLoop
+    {
+        from { local i to 0.} until i = l_OutQueue:Keys:Length step { set i to i + 1.} do
+        {
+            local outVal to l_OutQueue:Values[i].
+            local outType to l_OutQueue:Keys[i].
+
+            if outVal:QUEUE:Length > 0
+            {
+                if Time:Seconds > outVal:TIMEOUT and outVal:Timeout > 0
+                {
+                    outVal:QUEUE:Remove(0).
+                    local outStr to choose outVal:QUEUE[0] if outVal:QUEUE:Length > 0 else "".
+                    local msgTimer to choose Time:Seconds + l_OutDefTimeout if outStr:Length > 0 else 0.
+
+                    if outType = "MSG"
+                    {
+                        OutMsg(outStr).
+                    }
+                    else
+                    {
+                        OutInfo(outStr).
+                        set outVal:TIMEOUT to msgTimer.
+                    }
+                }
+            }
+            else
+            {
+                set g_MsgInfoLoopActive to False.
+            }
+        }
+    }
+
+    // OutString :: _string, _type, [_param] -> (none)
+    // Adds a string to the automated information display queue
+    global function OutString
+    {
+        parameter _string,
+                  _type,
+                  _param is 0.
+
+        l_OutQueue[_type]:QUEUE:Add(_string).
+        set l_OutQueue[_type]:TIMEOUT to Time:Seconds + l_OutDefTimeout.
+
+        set g_MsgInfoLoopActive to True.
+    }
+
     // OutMsg :: (Message)<string>, [(ErrorLevel)<Scalar>], [(TeeHUD)<bool>] -> (none)
     // Writes a message at line 5. 
     // TODO: If the ErrorLevel is 2 or higher, color codes the string for visibility
@@ -148,7 +207,7 @@
 
         if _lineIdx < 0 
         {
-            set line to anchor - Max(-5, _lineIdx).
+            set line to anchor - Max(-5, abs(_lineIdx)).
         }
         else if _lineIdx > 0
         {
@@ -256,6 +315,8 @@
         set Terminal:Width to Max(16, _termWidth).
         set Terminal:Height to Max(24, _termHeight).
         DoEvent(Core, "Open Terminal").
+
+        ClearScreen.
 
         set g_Line to 0.
         local progName      to "KASA MISSION CONTROL".
@@ -527,12 +588,12 @@
                 {
                     print " ":PadRight(colStop) at (col, cr()).
                 }
-                if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
+// if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
                 set g_GridAssignments[blockID] to "".
             }
             else
             {
-                if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
+// if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
             }
         }
     }
@@ -554,7 +615,7 @@
             }
             else
             {
-                if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).
+// if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).
                 // set blockAnchor to l_GridSpaceLex[1].
             }
         }

@@ -128,14 +128,16 @@ if _stgAtETA < 0
 
         local maxETAFlag to False.
         local maxETAIndicator to "".
-        set g_TS to Time:Seconds + 10.
+        local userInputActive to False.
 
+        set g_TS to Time:Seconds + 15.
+        set g_TS to Min(g_TS, Max(Time:Seconds + ETA:Apoapsis - _stgAtETA - 5)). // Adjust the user input timeout if we're already close to the burn point
+    
         until Time:Seconds >= g_TS or doneFlag
         {
             set g_TermChar to "".
             local charReady to GetTermChar().
             local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
-
 
             if g_TermChar = Terminal:Input:DownCursorOne
             {
@@ -189,7 +191,7 @@ if _stgAtETA < 0
 
             if charReady
             {
-                set g_TS to Min(Time:Seconds + ((g_TS - Time:Seconds) + 3), Time:Seconds + 5). 
+                set g_TS to 15.
                 set g_TermChar to "".
             }
             
@@ -198,7 +200,7 @@ if _stgAtETA < 0
             if doneFlag
             {
                 OutMsg("stgWaitValue Set Value: {1}{0,-5}s":Format(Round(stgWaitVal, 2), maxETAIndicator)).
-                OutInfo("*** User Bypassed ***").
+                OutInfo().
                 OutInfo("", 1).
                 OutInfo("", 2).
             }
