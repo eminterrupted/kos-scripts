@@ -252,6 +252,74 @@
         DispPrintBlock(_dispBlockIdx, _statLex).
     }
 
+    // Mnv details
+        global function DispBurnData
+        {
+            parameter _dvToGo is 0, 
+                      _burnETA is 0, 
+                      _burnDur is 0,
+                      _dispBlockIdx is -1.
+
+            if _dispBlockIdx < 0
+            {
+                set _dispBlockIdx to NextOrAssignedTermBlock("BURN_DATA").
+            }
+            
+            if _burnETA >= 0 
+            {
+                set _burnETA to abs(_burnETA).
+                if _burnETA > 60
+                {
+                    set _burnETA to TimeSpan(_burnETA):full.
+                }
+                else
+                {
+                    set _burnETA to round(_burnETA, 2).
+                }
+            }
+            
+            local dispList to choose list(
+                "BURN DATA"
+                ,"BURN ETA      : {0}":Format(_burnETA)
+                ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
+                ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
+            ) if _burnETA > 0 else list(
+                "BURN DATA"
+                ,"DV REMAINING  : {0}     ":Format(round(_dvToGo, 2))
+                ,"BURN DURATION : {0}     ":Format(Round(_burnDur, 2))
+                ,"                              "
+            ).
+            
+            DispPrintBlock(_dispBlockIdx, dispList).
+        }
+
+        // Displays active burn data
+        global function DispBurnPerfData
+        {
+            parameter _dispBlockIdx is -1.
+
+            if _dispBlockIdx < 0
+            {
+                set _dispBlockIdx to NextOrAssignedTermBlock("BURN_PERF_DATA").
+            }
+
+            local engList to GetActiveEngines().
+            local perfObj to GetEnginesPerformanceData(engList).
+
+            local dispList to list(
+                "ENGINE BURN PERF"
+                ,"ENGINE COUNT   : {0}":Format(engList:length)
+                ,"THRUST         : {0}":Format(round(perfObj["Thrust"], 2))
+                ,"THRUST (AVAIL) : {0}":Format(round(perfObj["ThrustAvailPres"], 2))
+                ,"THRUST (PCT)   : {0}":Format(round(perfObj["ThrustPct"], 2))
+                ,"MASS FLOW      : {0}":format(round(perfObj["MassFlow"], 4))
+                ,"MASS FLOW (MAX): {0}":Format(round(perfObj["MassFlowMax"], 4))
+                ,"MASS FLOW (PCT): {0}":Format(round(perfObj["MassFlowPct"] * 100, 1), 2)
+            ).
+
+            DispPrintBlock(_dispBlockIdx, dispList).
+        }
+
     global function DispEngineTelemetry
     {
         parameter _dispBlockIdx is -1,
@@ -259,7 +327,7 @@
 
         if _dispBlockIdx < 0
         {
-            set _dispBlockIdx to NextOrAssignedTermBlock("LAUNCH_TELEMETRY").
+            set _dispBlockIdx to NextOrAssignedTermBlock("ENGINE_TELEMETRY").
         }
 
         if Time:Seconds > g_LastUpdate
@@ -592,12 +660,12 @@
                 {
                     print " ":PadRight(colStop) at (col, cr()).
                 }
-// if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
+                // if g_Debug OutDebug("[DispClearBlock] Completed for Block [ID:{0}]":Format(blockID)).
                 set g_GridAssignments[blockID] to "".
             }
             else
             {
-// if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
+                // if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
             }
         }
     }
@@ -611,29 +679,36 @@
                   _numColumns is 1.
 
         local blockAnchor to list().
-        if _blockIdx:IsType("Scalar")
+
+        if _blockIdx:IsType("String")
         {
-            if l_GridSpaceLex:HasKey(_blockIdx)
-            {
-                set blockAnchor to l_GridSpaceLex[_blockIdx].
-            }
-            else
-            {
-// if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).
-                // set blockAnchor to l_GridSpaceLex[1].
-            }
+            set _blockIdx to _blockIdx:ToNumber(1).
         }
-        else if _blockIdx:IsType("String")
+
+        // if _blockIdx:IsType("Scalar")
+        // {
+        if l_GridSpaceLex:HasKey(_blockIdx)
         {
-            if g_GridAssignments:Values:Contains(_blockIdx)
-            {
-                set blockAnchor to l_GridSpaceLex[g_GridAssignments:Values:Find(_blockIdx)].
-            }
-            else
-            {
-                set blockAnchor to l_GridSpaceLex[NextOrAssignedTermBlock(_blockIdx)].
-            }
+            set blockAnchor to l_GridSpaceLex[_blockIdx].
         }
+            // else
+            // {
+            //     // if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).
+            //     // set blockAnchor to l_GridSpaceLex[1].
+            // }
+        // }
+        // else if _blockIdx:IsType("String")
+        // {
+        //     if g_GridAssignments:Values:Contains(_blockIdx)
+        //     {
+        //         set blockAnchor to l_GridSpaceLex[g_GridAssignments:Values:Find(_blockIdx)].
+        //     }
+        //     else
+        //     {
+        //         set blockAnchor to l_GridSpaceLex[NextOrAssignedTermBlock(_blockIdx)].
+        //     }
+        // }
+
 
         set g_Col to blockAnchor[0] + 1.
         set g_line to blockAnchor[2].

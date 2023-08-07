@@ -119,7 +119,7 @@ if _stgAtETA < 0
     {
         // set stgWaitVal to 30.
         local doneFlag to False.
-
+        
         OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format("30","15","5","1")).
         OutInfo(" {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ":Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
 

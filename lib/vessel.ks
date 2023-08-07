@@ -925,6 +925,65 @@
     }
     // #endregion
 
+    // -- Mass
+    // #region
+
+    // StageMass :: (<scalar>) -> <lexicon>
+    // Returns a lex containing mass statistics for a given stage number
+    global function GetStageMass
+    {
+        parameter stg.
+
+        local stgMass to 0.
+
+        //ISSUE: stgFuelMass appears to be about half (or at least, lower than) 
+        //what it should be
+        local stgFuelMass to 0.
+        local stgShipMass to 0.
+        
+        local stgEngs to GetEnginesForStage(stg).
+        local engResUsed to list().
+        for eng in stgEngs
+        {
+            for k in eng:ConsumedResources:Keys 
+            {
+                if not engResUsed:Contains(k) engResUsed:Add(k:replace(" ", "")).
+            }
+        }
+
+        for p in Ship:parts
+        {
+            if p:typeName = "Decoupler" 
+            {
+                if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
+                if p:Stage = stg set stgMass to stgMass + p:Mass.
+            }
+            else if p:DecoupledIn <= stg
+            {
+                set stgShipMass to stgShipMass + p:Mass.
+                if p:DecoupledIn = stg 
+                {
+                    set stgMass to stgMass + p:Mass.
+                }
+            }
+
+            if p:DecoupledIn = stg - 1 and p:Resources:Length > 0 
+            {
+                for res in p:Resources
+                {
+                    if engResUsed:Contains(res:Name) 
+                    {
+                        // print "Calculating: " + res:Name.
+                        set stgFuelMass to stgFuelMass + (res:amount * res:density).
+                    }
+                }
+            }
+        }
+
+        return lex("stage", stgMass, "fuel", stgFuelMass, "ship", stgShipMass).
+    }
+    // #endregion
+
     // ** Steering
     // #region
 

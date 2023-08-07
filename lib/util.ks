@@ -130,6 +130,100 @@
             }
         }
 
+
+        global function UpdateTermScalar
+        {
+            parameter _scalar,
+                      _intList is list(1, 5, 15, 30).
+        
+            // local doneFlag  to False.
+            local scalarVal to _scalar.
+
+            OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format(_intList[3],_intList[2], _intList[1], _intList[0])).
+            OutInfo(" {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ":Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+
+            local maxValFlag to False.
+            local maxValIndicator to "".
+
+            // set g_TS to Time:Seconds + 15.
+            
+            local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+
+            if g_TermChar = Terminal:Input:DownCursorOne
+            {
+                set scalarVal to scalarVal - 1.
+                set keyMapActiveStr to " {0} | {1} | {2} |[{3}]| {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:UpCursorOne
+            {
+                set scalarVal to scalarVal + 1.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} |[{5}]| {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:LeftCursorOne
+            {
+                set scalarVal to scalarVal - 5.
+                set keyMapActiveStr to " {0} | {1} |[{2}]| {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:RightCursorOne
+            {
+                set scalarVal to scalarVal + 5.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:DeleteRight
+            {
+                set scalarVal to scalarVal - 15.
+                set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = "\"
+            {
+                set scalarVal to scalarVal + 15.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
+            }
+            else if g_TermChar = Terminal:Input:EndCursor
+            {
+                set scalarVal to scalarVal - 30.
+                set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:HomeCursor
+            {
+                set scalarVal to scalarVal + 30.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".
+            }
+            else if g_TermChar = "0"
+            {
+                set scalarVal to 0.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} |[{4}]| {5} | {6} | {7} | {8} ".
+            }
+            set g_TermChar to "".
+            // else if g_TermChar = Terminal:Input:Enter
+            // {
+            //     set doneFlag to True.
+            // }
+
+            // if scalarVal <> _scalar
+            // {
+            //     set g_TS to Time:Seconds + 15.
+            //     set g_TermChar to "".
+            // }
+            
+            // if doneFlag
+            // {
+            //     OutMsg("{0} Set Value: {1}{2,-5}s":Format(_scalarLabel, maxValIndicator, Round(scalarVal, 2))).
+            //     OutInfo().
+            //     OutInfo("", 1).
+            //     OutInfo("", 2).
+            // }
+            // else
+            // {
+            set maxValIndicator to choose "*" if maxValFlag else "".
+
+            // OutMsg("Current {0} Value: {1}{2}s":Format(_scalarLabel, maxValIndicator, scalarVal)).
+            OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+            // OutInfo("Continuing in {0,-5}s":Format(Round(g_TS - Time:Seconds, 2)), 2).
+
+            return scalarVal.
+        }
+
     // #endregion
 
     // *- Part Module Utilities

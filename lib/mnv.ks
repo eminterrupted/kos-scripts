@@ -60,23 +60,40 @@
 
             ArmAutoStaging().
 
-            //InitWarp(burnEta, "Burn ETA").
+            local burnLeadTime to UpdateTermScalar(60, list(1, 5, 15, 30)).
+            local warpFlag to False.
 
             until time:seconds >= burnEta
             {
+                if Kuniverse:TimeWarp = 0 set warpFlag to False.
+                if not warpFlag OutMsg("Press Enter to warp to [maneuver - {0}s]":Format(burnLeadTime)).
                 GetTermChar().
                 wait 0.01.
-                if g_termChar = "" 
+                if g_termChar = ""
                 {
                 }
-                else if g_termChar = Terminal:Input:Enter
+                else if g_termChar = Char(87)
                 {
-                    WarpTo(_inNode:Time - 30).
+                    if _inNode:ETA > burnLeadTime 
+                    {
+                        set warpFlag to True. 
+                        OutMsg("Warping to maneuver").
+                        OutInfo().
+                        OutInfo("", 1).
+                        OutInfo("", 2).
+                        WarpTo(burnEta - burnLeadTime).
+                    }
+                    else
+                    {
+                        OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
+                    }
                     set g_termChar to "".
                 }
-                else if g_termChar = Terminal:Input:HomeCursor
+                else if g_termChar = Char(82)
                 {
                     OutInfo("Recalculating burn parameters").
+                    OutInfo("", 1).
+                    OutInfo("", 2).
                     wait 0.25.
                     set burnDur to CalcBurnDur(_inNode:deltaV:mag).
                     set fullDur to burnDur[0].
@@ -88,13 +105,12 @@
                 }
                 else
                 {
-                    set g_termChar to "".
+                    set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
                 }
 
-                set sVal to lookDirUp(_inNode:burnvector, Sun:Position).
+                set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
                 // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
-                DispLaunchTelemetry().
-
+                DispBurnData(dvRemaining, burnEta - Time:Seconds, burnDur[0]).
             }
 
             local dv0 to _inNode:deltav.
@@ -103,18 +119,21 @@
             OutMsg("Executing burn").
             OutInfo().
             OutInfo("", 1).
-            ClearDispBlock().
+            // ClearDispBlock().
+            local burnTimer         to Time:Seconds + burnDur[0].
+            local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
             set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
+
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
-                set tVal to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
-                // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
-                // DispBurnPerfData(10).
-                DispLaunchTelemetry().
+                set burnTimeRemaining to burnTimer - Time:Seconds.
+                set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
+                DispBurnData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
+                DispBurnPerfData().
                 wait 0.01.
             }
-            set tVal to 0.
+            set t_Val to 0.
 
             OutInfo("Maneuver Complete!").
             wait 1.

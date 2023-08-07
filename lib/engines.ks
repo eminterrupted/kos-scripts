@@ -206,6 +206,7 @@
             ,"ThrottleMin",     _eng:MinThrottle
             ,"ThrottleLock",    _eng:ThrottleLock
             ,"ThrustPoss",      _eng:PossibleThrust
+            ,"ThrustAvail",     _eng:AvailableThrust
             ,"Ullage",          _eng:Ullage
         ).
         return engSpecObj.
@@ -226,11 +227,12 @@
         ).
         
         local engsSpecs to lexicon(
-            "SpoolTime", 0
-            ,"FuelStabilityAvg", 0
-            , "FuelStabilityMin", 0
-            ,"EstBurnTime", 0
-            ,"Ullage", false
+            "SpoolTime",            0
+            ,"FuelStabilityAvg",    0
+            ,"FuelStabilityMin",    0
+            ,"EstBurnTime",         0
+            ,"StgThrust",           0
+            ,"Ullage",              false
         ).
 
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
@@ -240,6 +242,8 @@
             local engSpecs to GetEngineSpecs(eng).
             set engsSpecs["SpoolTime"] to max(engsSpecs:SpoolTime, engSpecs:SpoolTime).
             
+            set engsSpecs["StgThrust"] to engsSpecs["StgThrust"] + engSpecs["ThrustPoss"].
+
             set fuelStabilityMin to min(engSpecs:FuelStability, fuelStabilityMin).
             set engsSpecs["FuelStabilityMin"] to fuelStabilityMin.
             
@@ -511,7 +515,7 @@
         local aggISPAt              to 0.
         local aggMassFlow           to 0.
         local aggMassFlowMax        to 0.
-        local aggMassRemaining      to 0.
+        local aggMassFlowPct        to 0.
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
         // local aggTWR                to 0.
@@ -590,18 +594,22 @@
         // set aggISPAt to max(aggThrustAvailPres, 0.000000001) / max(aggMassFlowMax * 1000000, 0.00001).
         // set aggISP   to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.00001).
         // set thrustPct to max(aggThrust, 0.000000001) / max(aggThrustAvailPres, 0.00001).
-        set aggISPAt  to choose aggThrustAvailPres / aggMassFlowMax if aggThrustAvailPres > 0 and aggMassFlowMax > 0     else 0.
-        set aggISP    to choose aggThrust / aggMassFlow             if aggThrust > 0          and aggMassFlow > 0        else 0.
-        set thrustPct to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
+        set aggISPAt        to choose aggThrustAvailPres / aggMassFlowMax if aggThrustAvailPres > 0 and aggMassFlowMax > 0     else 0.
+        set aggISP          to choose aggThrust / aggMassFlow             if aggThrust > 0          and aggMassFlow > 0        else 0.
+        set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
+        set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
-        set aggEngPerfObj["ISP"]                to aggISP.
-        set aggEngPerfObj["ISPAt"]              to aggISPAt.
-        set aggEngPerfObj["Thrust"]             to aggThrust.
-        set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
-        set aggEngPerfObj["ThrustPct"]          to thrustPct.
         set aggEngPerfObj["BurnTimeRemaining"]  to round(burnTimeRemaining, 3).
         set aggEngPerfObj["Failures"]           to aggFailureCount.
         set aggEngPerfObj["FailureSet"]         to aggFailureObj.
+        set aggEngPerfObj["ISP"]                to aggISP.
+        set aggEngPerfObj["ISPAt"]              to aggISPAt.
+        set aggEngPerfObj["MassFlow"]           to aggMassFlow.
+        set aggEngPerfObj["MassFlowMax"]        to aggMassFlowMax.
+        set aggEngPerfObj["MassFlowPct"]        to aggMassFlowPct.
+        set aggEngPerfObj["Thrust"]             to aggThrust.
+        set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
+        set aggEngPerfObj["ThrustPct"]          to thrustPct.
 
         // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
 

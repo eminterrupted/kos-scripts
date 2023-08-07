@@ -203,9 +203,11 @@
 
         for key in dvStgObj["Full"]:keys
         {
+            local stgEngs to GetEnginesForStage(key).
+            local stgSpecs to GetEnginesSpecs(stgEngs).
             local exhVel to GetExhVel(GetEnginesForStage(key)).
-            local stgThr to GetStageThrust(key, "poss").
-            local vesMass to StageMass(key)["ship"].
+            local stgThr to stgSpecs:StgThrust.
+            local vesMass to GetStageMass(key)["ship"].
             // print "exhVel: " + exhVel.
             // print "stgThr: " + stgThr.
             // print "vesMass: " + vesMass.
@@ -323,8 +325,8 @@
         parameter stg, mode is "vac".
 
         //Problem is in calculating fuel mass in StageMass function
-        local stgMass to StageMass(stg).
-        local exhVel to GetExhVel(GetEnginesByStage(stg), mode).
+        local stgMass to GetStageMass(stg).
+        local exhVel to GetExhVel(GetEnginesForStage(stg), mode).
         
         //clrDisp(30).
         // print "AvailStageDV".

@@ -55,7 +55,8 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
             }
         }
     }
-    runPath("0:/main/launch/circAtApo", list(g_StageLimit, burnTime, tgtEcc, azObj)).
+    // runPath("0:/main/launch/circAtApo", list(g_StageLimit, burnTime, tgtEcc, azObj)).
+    runPath("0:/main/launch/circMnvAtApo").
 
     if g_StageLimitSet:Length > 1
     {
