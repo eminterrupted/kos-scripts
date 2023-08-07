@@ -191,6 +191,7 @@
                             if Stage:Number - 1 = HotStageID {
                                 local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 1. 
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
+                                // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
                                 return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
                                 // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
                                 // return (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
@@ -618,6 +619,62 @@
             return eventRegisteredCount.
         }
 
+        // SetupOnDeployHandler :: [_partList<Part>] -> resultFlag<bool>
+        // Creates and registers new events for the OnDeploy event type
+        global function SetupOnDeployHandler
+        {
+            parameter _partList is Ship:PartsTaggedPattern("OnDeploy\|\d*").
+
+            local deployStage to _partList[0]:DecoupledIn + 1.
+            local paramList to list(_partList, deployStage).
+
+            local checkDel to { 
+                parameter _params is list().
+                
+                local _deployStage to _params[1].
+                
+                if Stage:Number <= _deployStage + 1
+                {
+                    return True.
+                }
+                return False.
+            }.
+
+            local actionDel to 
+            { 
+                parameter _params is list(). 
+
+                local partList to _params[0].
+                local maxSet to 0.
+
+                for p in partList
+                {
+                    set maxSet to max(p:tag:Split("|")[1]:ToNumber(-1)).
+                }
+
+                from { local i to 0.} until i > maxSet step { set i to i + 1.} do
+                {
+                    for p in ship:PartsTaggedPattern("OnDeploy\|{0}":Format(i))
+                    {
+                        if p:HasModule("ModuleDeployableAntenna")
+                        {
+                            DoEvent(p:GetModule("ModuleDeployableAntenna"), "extend antenna").
+                        }
+                        if p:HasModule("ModuleDeployableSolarPanel")
+                        {
+                            DoEvent(p:GetModule("ModuleDeployableSolarPanel"), "extend panel").
+                        }
+                    }
+                }
+                return false.
+            }.
+
+            local deployEvent to CreateLoopEvent("OnDeploy", "OnDeployEvent", paramList, checkDel@, actionDel@).
+            local resultFlag to RegisterLoopEvent(deployEvent).
+
+            return resultFlag.
+        }
+
         // SetupDecoupleEventHandler :: _dcEventID<String>, _dcList<List[Decoupler]> -> resultFlag<bool>
         // Creates a new decouple event for auto-staging outside of MECO. Uses a tag on the decoupler to control.
         global function SetupDecoupleEventHandler
@@ -709,10 +766,10 @@
                                 }
                                 else if booster:MassFlow > 0
                                 {
-                                    local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.525).
-                                    if conRes:Amount <= resCalc
+                                    local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.9).
+                                    OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
+                                    if conRes:Amount <= resCalc and booster:Thrust <= 1
                                     {
-                                        OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
                                         pendingStaging:Add(booster).
                                     }
                                 }

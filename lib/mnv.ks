@@ -53,10 +53,10 @@
             set burnEta to _inNode:time - halfDur. 
             set g_MECO    to burnEta + fullDur.
 
-            set sVal to lookDirUp(_inNode:burnvector, Sun:Position).
-            set tVal to 0.
-            lock steering to sVal.
-            lock throttle to tVal.
+            set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
+            set t_Val to 0.
+            lock steering to s_Val.
+            lock throttle to t_Val.
 
             ArmAutoStaging().
 
@@ -64,19 +64,19 @@
 
             until time:seconds >= burnEta
             {
-                GetInputChar().
+                GetTermChar().
                 wait 0.01.
                 if g_termChar = "" 
                 {
                 }
                 else if g_termChar = Terminal:Input:Enter
                 {
-                    InitWarp(burnEta, "Burn ETA", 15, true).
+                    WarpTo(_inNode:Time - 30).
                     set g_termChar to "".
                 }
                 else if g_termChar = Terminal:Input:HomeCursor
                 {
-                    OutTee("Recalculating burn parameters").
+                    OutInfo("Recalculating burn parameters").
                     wait 0.25.
                     set burnDur to CalcBurnDur(_inNode:deltaV:mag).
                     set fullDur to burnDur[0].
@@ -92,7 +92,8 @@
                 }
 
                 set sVal to lookDirUp(_inNode:burnvector, Sun:Position).
-                DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
+                // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
+                DispLaunchTelemetry().
 
             }
 
@@ -101,22 +102,23 @@
 
             OutMsg("Executing burn").
             OutInfo().
-            OutInfo2().
-            clrDisp(10).
-            set tVal to 1.
-            set sVal to lookDirUp(_inNode:burnVector, Sun:Position).
+            OutInfo("", 1).
+            ClearDispBlock().
+            set t_Val to 1.
+            set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
                 set tVal to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
-                DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
-                DispBurnPerfData(10).
+                // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
+                // DispBurnPerfData(10).
+                DispLaunchTelemetry().
                 wait 0.01.
             }
             set tVal to 0.
 
-            OutTee("Maneuver Complete!").
+            OutInfo("Maneuver Complete!").
             wait 1.
-            ClrDisp().
+            ClearDispBlock().
 
             unlock steering.
         }

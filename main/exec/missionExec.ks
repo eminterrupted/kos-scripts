@@ -48,13 +48,10 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
         local tagParam to tagSplit[1]:Split(";").
         if tagParam:Length > 1 
         {
-            if tagParam[1]:Contains("km")
+            local tgtAp to ParseStringScalar(tagParam[1]).
+            if tgtAp <= Ship:Apoapsis
             {
                 set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
-            }
-            else
-            {
-                set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tgtAlt), "{0}":Format(Round(Ship:Apoapsis))).
             }
         }
     }

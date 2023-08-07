@@ -656,14 +656,16 @@
                 {
                     // if g_Debug OutDebug("Resource Cached: {0}":Format(res:Name)).
                     // set resMass to (res:amount * res:density).
+                    // set resMass to (res:amount * res:density).
+                    // set fuelMass to resMass *  (1 - engineResiduals).
                 }
                 else
                 {
                     // if g_Debug OutDebug("Processing Resource: {0}":Format(res:Name)).
                     set resMass to (res:amount * res:density).
-                    set fuelMass to fuelMass + (resMass *  (1 - engineResiduals)).
-                    set totalFuelMass to totalFuelMass + fuelMass.
+                    set fuelMass to resMass *  (1 - engineResiduals).
                     set engBurnTimeLex:Resources:TotalFuelMass to engBurnTimeLex:Resources:TotalFuelMass + fuelMass.
+                    set totalFuelMass to totalFuelMass + fuelMass.
                     // engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow, "FuelMass", resMass)).
                     engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "FuelMass", resMass)).
                 }
@@ -684,7 +686,7 @@
         
         set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else fuelMass / maxMassFlow.
         set engBurnTimeLex:EstBurnTime to estBurnTime.
-
+        
         //local engBurnTime to choose fuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.
         // local engBurnTime to choose engBurnTimeLex:Resources["TotalFuelMass"] / engBurnTimeLex:Resources:MassFlow if massFlow > 0 else engBurnTimeLex:Resources["TotalFuelMass"] / engBurnTimeLex:Resources:MaxMassFlow.
         // set burnTimeRemaining to burnTimeRemaining + engBurnTime.

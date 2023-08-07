@@ -110,6 +110,7 @@
     global g_RCSArmed               to false.
 
     // Ship control
+    global g_MECO to 0.
     global t_Val to 0.
     global s_Val to Ship:Facing.
 
