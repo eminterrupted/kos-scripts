@@ -128,6 +128,30 @@ global g_LoopDelegates  to lexicon(
     // ,"Staging", lexicon()
     ,"Events", lexicon()
 ).
+global g_ModEvents to lexicon(
+    "Antenna", lexicon(
+        "ModuleDeployableAntenna", lexicon(
+            "Extend",   "extend antenna"
+            ,"Retract", "retract antenna"
+            ,"Toggle",  "toggle antenna"
+        )
+        ,"ModuleRealAntenna", lexicon(
+            "Transmit",  "transmit data"
+        )
+    )
+    ,"Decoupler", lexicon(
+        "ModuleAnchoredDecoupler", lexicon(
+            "Decouple", "decouple"
+        )
+        ,"ModuleDecouple", lexicon(
+            "Decouple", "decouple"
+        )
+        ,"ProceduralFairingDecoupler", lexicon(
+            "Decouple", "jettison fairing"
+        )
+    )
+).
+
 global g_PartInfo       to lexicon().
 global g_PropInfo       to lexicon().
 // #endregion

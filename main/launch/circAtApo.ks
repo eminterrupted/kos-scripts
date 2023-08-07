@@ -131,7 +131,7 @@ if _stgAtETA < 0
         local userInputActive to False.
 
         set g_TS to Time:Seconds + 15.
-        set g_TS to Min(g_TS, Max(Time:Seconds + ETA:Apoapsis - _stgAtETA - 5)). // Adjust the user input timeout if we're already close to the burn point
+        set g_TS to Min(g_TS, Max(Time:Seconds + ETA:Apoapsis - _stgAtETA - 5, g_TS)). // Adjust the user input timeout if we're already close to the burn point
     
         until Time:Seconds >= g_TS or doneFlag
         {
@@ -191,8 +191,9 @@ if _stgAtETA < 0
 
             if charReady
             {
-                set g_TS to 15.
+                set g_TS to Time:Seconds + 15.
                 set g_TermChar to "".
+                set userInputActive to True.
             }
             
             set stgWaitVal to Max(0, Min(ETA:Apoapsis, stgWaitVal)).

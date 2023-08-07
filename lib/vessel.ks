@@ -61,35 +61,32 @@
 
         // -- Global
         // #region
-
-        // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
-        global function StagingCheck
+        // ArmAutoStaging :: (_stgLimit)<type> -> (ResultCode)<scalar>
+        // Arms automatic staging based on current thrust levels. if they fall below 0.1, we stage
+        global function ArmAutoStaging
         {
-            parameter _program,
-                      _runmode,
-                      _checkType is 0.
+            parameter _stgLimit is g_StageLimit,
+                      _stgCondition is 0. // 0: ThrustValue < 0.01
 
-            if Stage:Number <= g_StageLimit
+            local resultCode to 0.
+            set g_StageLimit to _stgLimit.
+            if Stage:Number <= g_StageLimit 
             {
-                return false.
+                set resultCode to 2.
             }
             else
             {
-                return TRUE.
+                local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
+
+                if not g_LoopDelegates:HasKey("Staging")
+                {
+                    set g_LoopDelegates["Staging"] to lexicon().
+                }
+                
+                if g_LoopDelegates:HasKey("Staging") set resultCode to 1.
             }
-        }
 
-        // InitStagingDelegate :: 
-        // Adds the proper staging check and action delegates to the g_LoopDelegates object
-        global function InitStagingDelegate
-        {
-            parameter _conditionType,
-                      _actionType.
-
-            set g_LoopDelegates["Staging"] to lexicon(
-                "Check", GetStagingConditionDelegate(_conditionType)
-                ,"Action", GetStagingActionDelegate(_actionType)
-            ).
+            return resultCode.
         }
 
         global function ArmAutoStagingNext
@@ -112,34 +109,6 @@
             return resultCode.
         }
 
-        // ArmAutoStaging :: (_stgLimit)<type> -> (ResultCode)<scalar>
-        // Arms automatic staging based on current thrust levels. if they fall below 0.1, we stage
-        global function ArmAutoStaging
-        {
-            parameter _stgLimit is g_StageLimit,
-                      _stgCondition is 0. // 0: ThrustValue < 0.01
-
-            local resultCode to 0.
-            set g_StageLimit to _stgLimit.
-            if Stage:Number <= g_StageLimit 
-            {
-                set resultCode to 2.
-            }
-            else
-            {
-                local selectedCondition to GetStagingConditionDelegate(_stgCondition). 
-
-                if not g_LoopDelegates:HasKey("Staging")
-                {
-                    set g_LoopDelegates["Staging"] to lexicon().
-                }
-
-                if g_LoopDelegates:HasKey("Staging") set resultCode to 1.
-            }
-
-            return resultCode.
-        }
-
         global function DisableAutoStaging
         {
             g_LoopDelegates:Remove("Staging").
@@ -153,7 +122,6 @@
             local CheckDel to {}.
             local Engine_Obj to lexicon().
             local HotStage_List to Ship:PartsTaggedPattern("(HotStg|HotStage|HS)").
-            // if g_Debug OutDebug("HotStage_List: {0}":Format(HotStage_List:Join(";")), -3).
             if HotStage_List:Length > 0
             {
                 if not g_LoopDelegates:HasKey("Staging")
@@ -201,12 +169,16 @@
                         {
                             for eng in g_ShipEngines_Spec[i]:EngList
                             {
-                                if eng:DecoupledIn >= HotStageID
+                                if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:Contains("booster")
                                 {
                                     stageEngines:Add(eng).
                                 }
                             }
-                            set hitFlag to True.
+
+                            if stageEngines:Length > 0 
+                            {
+                                set hitFlag to True.
+                            }
                         }
                     }
 
@@ -217,7 +189,7 @@
                         {
                             set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
                             if Stage:Number - 1 = HotStageID {
-                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
+                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 1. 
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
                                 return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
                                 // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
@@ -246,16 +218,14 @@
                             set s_Val                to g_LoopDelegates:Steering:CALL().
                             set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                             set NextEngines_Data     to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
-                            OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
+                            OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2))).
                             wait 0.01.
                         }
-                        OutInfo().
                         OutInfo("Staging").
                         wait until Stage:Ready.
                         Stage.
                         wait 0.5.
                         OutInfo().
-                        OutInfo("", 1).
                         g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
                         if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
                         {
@@ -280,6 +250,45 @@
                 return False.
             }
         }
+
+        // InitStagingDelegate :: 
+        // Adds the proper staging check and action delegates to the g_LoopDelegates object
+        global function InitStagingDelegate
+        {
+            parameter _conditionType,
+                      _actionType.
+
+            if g_LoopDelegates:HasKey("Staging")
+            {
+                g_LoopDelegates:Staging:Add("Check", GetStagingConditionDelegate(_conditionType)).
+                g_LoopDelegates:Staging:Add("Action", GetStagingActionDelegate(_actionType)).
+            }
+            else
+            {
+                set g_LoopDelegates["Staging"] to lexicon(
+                    "Check", GetStagingConditionDelegate(_conditionType)
+                    ,"Action", GetStagingActionDelegate(_actionType)
+                ).
+            }
+        }
+
+        // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
+        global function StagingCheck
+        {
+            parameter _program,
+                      _runmode,
+                      _checkType is 0.
+
+            if Stage:Number <= g_StageLimit
+            {
+                return false.
+            }
+            else
+            {
+                return TRUE.
+            }
+        }
+        
         // #endregion
 
         // -- Local
@@ -345,14 +354,24 @@
             // }
         }
 
-
         // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> thrustDelegate (Delegate)
         local function GetShipThrustConditionDelegate
         {
             parameter _ves,
                       _checkVal is 0.01.
 
-            local conditionDelegate to { parameter __ves is _ves, checkVal is _checkVal. if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 { return 1.} else {return 0.}}.
+            local conditionDelegate to { 
+                parameter __ves is _ves, checkVal is _checkVal. 
+                
+                if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
+                { 
+                    return 1.
+                } 
+                else 
+                {
+                    return 0.
+                }
+            }.
             return conditionDelegate@.
         }
 
@@ -512,6 +531,318 @@
         // #endregion
     // #endregion
 
+    // Vessel Event Loop Handlers
+    // #region
+
+        // ArmAscentEvents :: <none> -> eventRegisteredCount<Scalar>
+        global function ArmAscentEvents
+        {
+            parameter _eventParts to Ship:PartsTaggedPattern("^ascent\|.*").
+
+            local eventID to "".
+            local eventRegisteredCount to 0.
+
+            for eventPart in _eventParts
+            {
+                local epTag to eventPart:Tag:Replace("Ascent|","").
+                local epTagSplit to epTag:Split("|").
+
+                if epTag:MatchesPattern("^MECO\|\d*")
+                {
+                    if not g_LoopDelegates:Events:HasKey("MECO")
+                    {
+                        set g_MECOArmed to SetupMECOEventHandler("Ascent").
+                        set eventRegisteredCount to eventRegisteredCount + 1.
+                    }
+                }
+
+                if epTagSplit[0] = "Decouple"
+                {   
+                    set eventID to "DC".
+                    local dcList to list().
+
+                    if epTagSplit:Length > 1
+                    {
+                        if epTagSplit[1]:ToNumber(-808) = -808
+                        {
+                            local epConditionSplit to epTagSplit[1]:Split(";").
+                            if epConditionSplit:length > 1
+                            {
+                                if epConditionSplit[0] = "BOOSTER"
+                                {
+                                    set eventID to ("DC_BOOSTER_{0}"):Format(epConditionSplit[1]).
+                                    set dcList to Ship:PartsTaggedPattern("Booster\|{0}":Format(epConditionSplit[1])).
+                                }
+                            }
+                            else if epTagSplit[1] = "MECO"
+                            {
+                                set eventID to "DC_MECO".
+                                if not g_LoopDelegates:Events:HasKey(eventID)
+                                {
+                                    set dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|MECO").
+                                }
+                            }
+                        }
+                        else if epTagSplit[1]:MatchesPattern("\d*")
+                        {
+                            local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
+                            set eventID to "DC_{0}":Format(dcMET).
+                            if not g_LoopDelegates:Events:HasKey(eventID)
+                            {
+                                set dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|\d*").
+                            }
+                        }
+                        else
+                        {
+                        }
+                    }
+                    else
+                    {
+                    }
+                    
+                    if not g_LoopDelegates:Events:HasKey(eventID) 
+                    {
+                        OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
+                        local dcEventRegistrationResult to SetupDecoupleEventHandler(eventID, dcList).
+                        if dcEventRegistrationResult 
+                        {
+                            set eventRegisteredCount to eventRegisteredCount + 1.
+                            set g_DecouplerEventArmed to True.
+                        }
+
+                        OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult)).
+                    }
+                }
+            }
+
+            return eventRegisteredCount.
+        }
+
+        // SetupDecoupleEventHandler :: _dcEventID<String>, _dcList<List[Decoupler]> -> resultFlag<bool>
+        // Creates a new decouple event for auto-staging outside of MECO. Uses a tag on the decoupler to control.
+        global function SetupDecoupleEventHandler
+        {
+            parameter _dcEventID, 
+                    _dcList is list().
+
+            local boosterEngs   to list().
+            local dcUIDList     to list().
+            local registerFlag  to False.
+            local resultCode    to 0.
+            local resultFlag    to False.
+            local paramList     to list().
+
+            local resultCodeLex to lexicon(
+                "SUCCESS",  list(10, 11, 20, 21, 30, 31)
+                ,"ERROR",   list(96, 99)
+                ,"NOOP",    list(0, 19)
+            ).
+
+            // local dcTag to _dcList[0]:Tag.
+            // local _partTagSplit to dcTag:Split("|").
+            // if g_Debug OutDebug("[SetupDecoupleEventHandler] dcTag: [{0}]":Format(dcTag)).
+            
+            // local eventCheckVal to _partTagSplit[_partTagSplit:Length - 1]:Split(";").
+            local eventCheckVal    to _dcEventID:Replace("DC_", ""):Split("_").
+            local eventCheckScalar to choose eventCheckVal[0]:ToNumber(-1) if eventCheckVal:Length = 1 else eventCheckVal[1]:ToNumber(-1).
+
+            // local _dcEventID to "DC_{0}":Format(eventCheckVal).
+            if g_LoopDelegates:Events:HasKey(_dcEventID)
+            {
+            }
+            else
+            {
+                // if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
+                set resultCode to 1.
+
+                for _dc in _dcList
+                {
+                    for m in g_ModEvents:Decoupler:Keys
+                    {
+                        if _dc:Modules:Contains(m) 
+                        {
+                            dcUIDList:Add(_dc:UID).
+                            for child in _dc:PartsTagged("")
+                            {
+                                if child:IsType("Engine") 
+                                {
+                                    boosterEngs:Add(child).
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                local checkDel to { return False.}.
+                if eventCheckVal[0] = "MECO"
+                {
+                    set resultCode to 10.
+                    set checkDel to { 
+                        parameter _params is list(). 
+
+                        local MECOResult to not g_LoopDelegates:Events:Keys:Contains("MECO"). // This is confusing code but the intent is to return False if g_LooopDelegates contains the "MECO" event. 
+                                                                                            // Once that event has fired, it should be removed from g_LoopDelegates, at which point this will return True.
+
+                        OutInfo("Checking DecoupleDelegate MECO[{0}]":Format(g_LoopDelegates:Events:Keys:Contains("MECO")), 2). // This is backwards from the actual value but more human readable / maybe less confusing?
+                        return MECOResult.
+                    }.
+                    set paramList to list(dcUIDList).
+                    set registerFlag to True.
+                }
+                else if eventCheckVal[0] = "BOOSTER"
+                {
+                    set resultCode to 20.
+                    set checkDel to {
+                        parameter _params is list().
+
+                        local checkFlag to False.
+                        local pendingStaging to list().
+                        
+                        for booster in _params[1]
+                        {
+                            if booster:Ignition
+                            {
+                                local conRes to choose booster:Resources[0] if g_PropInfo:Solids:Contains(booster:ConsumedResources:Values[0]:Name) else booster:ConsumedResources[0].
+                                if booster:Thrust <= 0.1 or booster:Flameout
+                                {
+                                    pendingStaging:Add(booster).
+                                }
+                                else if booster:MassFlow > 0
+                                {
+                                    local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.525).
+                                    if conRes:Amount <= resCalc
+                                    {
+                                        OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
+                                        pendingStaging:Add(booster).
+                                    }
+                                }
+                            }
+                        }
+                        
+                        set checkFlag to pendingStaging:Length = _params[1]:Length.
+                        OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
+                        return checkFlag.
+                    }.
+                    set paramList to list(dcUIDList, boosterEngs).
+                    set registerFlag to True.
+                }
+                else if eventCheckScalar > -1
+                {
+                    set resultCode to 30.
+
+                    set checkDel to { 
+                        parameter _params is list(). 
+                        OutInfo("Checking DecoupleDelegate ETA[{0}s]":Format(Round(_params[1] - MissionTime, 2))).
+                        return MissionTime >= _params[1].
+                    }.
+                    set paramList to list(dcUIDList, eventCheckScalar, boosterEngs).
+                    set registerFlag to True.
+                }
+                else
+                {
+                    set resultCode to 96.
+                }
+
+                if registerFlag
+                {
+                    local actionDel to 
+                    { 
+                        parameter _params is list(). 
+
+                        OutInfo("Decouple Action Delegate [#DC:{0}]":Format(_dcList:Length)).
+                        set dcUIDList to _params[0].
+                        from { local i to 0.} until i = _dcList:Length or _dcList:Length = 0 step { set i to i + 1.} do
+                        {
+                            local dc to _dcList[i].
+                            
+                            if dcUIDList:Contains(dc:UID)
+                            {
+                                local dcEventStr to "". 
+                                local dcModule   to core.
+
+                                for m in g_ModEvents:Decoupler:Keys 
+                                {
+                                    if dc:HasModule(m)
+                                    {
+                                        set dcModule to dc:GetModule(m).
+                                        set dcEventStr to choose g_ModEvents:Decoupler[m]:Decouple if g_ModEvents:Decoupler:HasKey(m) else "decouple".
+                                    }
+                                }
+
+                                if dcModule:Name <> "kOSProcessor"
+                                {
+                                    DoEvent(dcModule, dcEventStr).
+                                    dcUIDList:Remove(dcUIDList:Find(dc:UID)).
+                                }
+                            }
+                        }
+                        // wait 0.01. 
+                        return false.
+                    }.
+
+                    // if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
+                    local dcEvent to CreateLoopEvent(_dcEventID, "DecoupleEvent", paramList, checkDel@, actionDel@).
+                    // if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
+                    set resultFlag to RegisterLoopEvent(dcEvent).
+
+                    set resultCode to resultCode + 1.
+                }
+                else
+                {
+                    set resultCode to 99.
+                }
+            }
+            
+            // if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), 1).
+            if resultCode > 0 // = 0 means we no-op'd
+            {
+                if resultCodeLex:NOOP:Contains(resultCode)
+                {
+                }
+                else if resultCodeLex:SUCCESS:Contains(resultCode)
+                {
+                    set resultFlag to True.
+                    // if resultCode = 1
+                    // {
+                    //     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Registration successful").
+                    // }
+                    // else if resultCode = 9
+                    // {
+                    //     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID)).    
+                    // }
+                }
+                else if resultCodeLex:ERROR:Contains(resultCode)
+                {
+                    OutDebug("[SetupDecoupleEventHandler] Registration failed [ResultCode: {0}]":format(resultCode), 0, "Red").
+                }
+                else
+                {
+                    set resultCode to 31.
+                }
+            }
+            else 
+            {
+                // if g_Debug OutDebug("[SetupDecoupleEventHandler] No-Op / Bypassed").
+                set resultCode to 21.
+            }
+
+            return resultFlag or g_LoopDelegates:Events:HasKey(_dcEventID) or g_DecouplerEventArmed.
+        }
+
+        // TODO SetupOnStageEventHandler :: [_partList<List[Parts]>] -> resultFlag<bool>
+        // Creates and registers event delegates for parts that need actions to happen when the vessel reaches a specific stage number
+        // Stage number and action derived from tags
+        global function SetupOnStageEventHandler
+        {
+            parameter _partList is Ship:PartsTaggedPattern("OnStage\|.*\|\d*").
+
+            for p in _partList
+            {
+
+            }
+        }
+    // #endregion
+
     // Spin-stabilization
     // #region
     
@@ -664,6 +995,34 @@
         return g_BoostersArmed.
     }
 
+    global function ArmBoosterStaging_NextReally
+    {
+        local boosterDCList to Ship:PartsTaggedPattern("Booster\|\d*").
+        local armedFlag to False.
+
+        if boosterDCList:Length > 0
+        {
+            from { local i to 0.} until i = boosterDCList:Length step { set i to i + 1.} do
+            {
+                local ep to boosterDCList[i].
+                local epTagSplit to ep:Tag:Split("|").
+
+                local dcEventId to "DC_BOOSTER_0".
+                
+                if epTagSplit:Length > 1 
+                {
+                    set dcEventID to "DC_BOOSTER_{0}":Format(epTagSplit[1]).
+                }
+                
+                if not g_LoopDelegates:Events:HasKey(dcEventId)
+                {
+                    SetupDecoupleEventHandler(dcEventId, boosterDCList).
+                    set armedFlag to True.
+                }
+            }
+        }
+        return armedFlag.
+    }
 
     local function GetBoosterUpdateDel
     {
@@ -1010,7 +1369,7 @@
                 _setIdx,
                 _boosterObj.
 
-        OutInfo("Processing booster tree for part: {0} ({1})":Format(_p:name, _p:UID), 1).
+        OutInfo("Processing booster tree for part: {0} ({1})":Format(_p:name, _p:UID)).
 
         local dc to choose _p if _p:IsType("Decoupler") else _p:Decoupler.
         local m to choose dc:GetModule("ModuleAnchoredDecoupler") if dc:HasModule("ModuleAnchoredDecoupler") else dc:GetModule("ModuleDecouple").
@@ -1261,7 +1620,7 @@
 
                             print "KEY [{0}] | ENG [{1}] | ALL [{2}] | AVL [{3}]":Format(bsetKey, engPresent, allPresent, avlPresent) at (0, 35).
                             set ThrustThresh to Max(ThrustThresh, bSet["ENG"]:AVLTHRUST * _pctThresh).
-                            OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2)), 1).
+                            OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2))).
                             if bSet["ENG"]:ALLTHRUST < ThrustThresh
                             {
                                 OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]":Format(g_Counter)).

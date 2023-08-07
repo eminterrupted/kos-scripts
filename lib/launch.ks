@@ -473,7 +473,7 @@
                 set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.275)).// 1.0625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                set output_pitch        to max(pitch_limit_min, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
             }
             else
             {
@@ -481,7 +481,7 @@
                 set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
                 set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                set output_pitch        to max(pitch_limit_min, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
             }
         }
         if ETA:Apoapsis > ETA:Periapsis
@@ -535,7 +535,7 @@
             {
                 PID_Alt:Reset().
                 PID_Apo:Reset().
-// if g_Debug OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
+                // if g_Debug OutDebug("RESET_PIDS triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:RESET_PIDS to false.
         }
@@ -545,7 +545,7 @@
             {
                 set PID_Alt:Setpoint to _ascAngObj:ALT_SETPOINT.
                 set PID_Apo:Setpoint to _ascAngObj:APO_SETPOINT.
-// if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
+                // if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:UPDATE_SETPOINT to false.
         }
@@ -812,7 +812,7 @@
                             wait until Stage:READY. 
                             stage.
                         }
-                        OutMsg("Liftoff!").
+                        MsgInfoString("MSG", "Liftoff!").
                         OutInfo().
                     }
                     else

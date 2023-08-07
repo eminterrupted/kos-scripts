@@ -12,8 +12,8 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
-    global g_TermHeight to 120.
-    global g_TermWidth  to 80.
+    global g_TermHeight to 56.
+    global g_TermWidth  to 72.
 
     // #endregion
 
@@ -23,10 +23,12 @@
         "MSG", lexicon(
             "QUEUE", list()
             ,"TIMEOUT", -1
+            ,"PARAMS", list()
         ),
         "INFO", lexicon(
             "QUEUE", list()
             ,"TIMEOUT", -1
+            ,"PARAMS", list()
         )
     ).
     local  l_OutDefTimeout to 3.
@@ -89,12 +91,13 @@
     // *- Message Display Functions
     // #region
     
-    global function OutMsgLoop
+    global function MsgInfoLoop
     {
         from { local i to 0.} until i = l_OutQueue:Keys:Length step { set i to i + 1.} do
         {
             local outVal to l_OutQueue:Values[i].
             local outType to l_OutQueue:Keys[i].
+            local msgParam to outVal:Params[0].
 
             if outVal:QUEUE:Length > 0
             {
@@ -103,14 +106,14 @@
                     outVal:QUEUE:Remove(0).
                     local outStr to choose outVal:QUEUE[0] if outVal:QUEUE:Length > 0 else "".
                     local msgTimer to choose Time:Seconds + l_OutDefTimeout if outStr:Length > 0 else 0.
-
+                    
                     if outType = "MSG"
                     {
-                        OutMsg(outStr).
+                        OutMsg(outStr, msgParam).
                     }
                     else
                     {
-                        OutInfo(outStr).
+                        OutInfo(outStr, msgParam).
                         set outVal:TIMEOUT to msgTimer.
                     }
                 }
@@ -122,17 +125,18 @@
         }
     }
 
-    // OutString :: _string, _type, [_param] -> (none)
+    // MsgInfoString :: _string, _type, [_param] -> (none)
     // Adds a string to the automated information display queue
-    global function OutString
+    global function MsgInfoString
     {
-        parameter _string,
-                  _type,
-                  _param is 0.
+        parameter _type,
+                  _string,
+                  _param is -99.
 
         l_OutQueue[_type]:QUEUE:Add(_string).
         set l_OutQueue[_type]:TIMEOUT to Time:Seconds + l_OutDefTimeout.
-
+        local paramVal to choose 0 if _param = -99 else _param.
+        l_OutQueue[_type]:PARAMS:Add(paramVal).
         set g_MsgInfoLoopActive to True.
     }
 
