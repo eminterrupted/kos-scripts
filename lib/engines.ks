@@ -664,27 +664,31 @@
                 {
                     // if g_Debug OutDebug("Resource Cached: {0}":Format(res:Name)).
                     // set resMass to (res:amount * res:density).
-                    // set resMass to (res:amount * res:density).
                     // set fuelMass to resMass *  (1 - engineResiduals).
                 }
                 else
                 {
                     // if g_Debug OutDebug("Processing Resource: {0}":Format(res:Name)).
                     set resMass to (res:amount * res:density).
-                    set fuelMass to resMass *  (1 - engineResiduals).
+                    set fuelMass to resMass * (1 - engineResiduals).
                     set engBurnTimeLex:Resources:TotalFuelMass to engBurnTimeLex:Resources:TotalFuelMass + fuelMass.
                     set totalFuelMass to totalFuelMass + fuelMass.
                     // engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow, "FuelMass", resMass)).
                     engBurnTimeLex:Resources:Add(res:Name, lexicon("ResObj", res, "FuelMass", resMass)).
                 }
-                set totalMassFlow to totalMassFlow + res:MassFlow.
-                                
-                set massFlow to massFlow + res:MassFlow.
-                set maxMassFlow to maxMassFlow + res:MaxMassFlow.
-                set engBurnTimeLex:Resources:TotalFuelMass to totalFuelMass.
-                set engBurnTimeLex:Resources:TotalMassFlow to totalMassFlow.
-                set engBurnTimeLex:Resources:MaxMassFlow to maxMassFlow.
+                // set totalMassFlow to totalMassFlow + res:MassFlow.
+                // set massFlow to massFlow + res:MassFlow.
+                // set maxMassFlow to maxMassFlow + res:MaxMassFlow.
+                // set engBurnTimeLex:Resources:TotalFuelMass to totalFuelMass.
+                // set engBurnTimeLex:Resources:TotalMassFlow to totalMassFlow.
+                // set engBurnTimeLex:Resources:MaxMassFlow to maxMassFlow.
             }
+            set totalMassFlow to totalMassFlow + eng:MassFlow.
+            set massFlow to massFlow + eng:MassFlow.
+            set maxMassFlow to maxMassFlow + eng:MaxMassFlow.
+            set engBurnTimeLex:Resources:TotalFuelMass to totalFuelMass.
+            set engBurnTimeLex:Resources:TotalMassFlow to totalMassFlow.
+            set engBurnTimeLex:Resources:MaxMassFlow to maxMassFlow.
         }
 
         // if g_Debug OutDebug("MaxMassFlow        : {0}":Format(Round(maxMassFlow, 7)), 1).

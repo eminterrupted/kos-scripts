@@ -108,6 +108,10 @@
                     set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
                 }
 
+                if Time:Seconds >= burnETA - 5
+                {
+                    set Ship:Control:Fore to 1.
+                }
                 set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
                 // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
                 DispBurnData(dvRemaining, burnEta - Time:Seconds, burnDur[0]).
@@ -124,7 +128,8 @@
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
             set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
-
+            set Ship:Control:Fore to 0.
+            
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
                 set burnTimeRemaining to burnTimer - Time:Seconds.
@@ -236,7 +241,7 @@
 
         if retroMotors:Length > 0
         {
-            if core:tag:contains("Pro") or vAng(retroMotors[0]:Facing:Vector, Ship:Facing) < 90
+            if core:tag:contains("Pro") or vAng(retroMotors[0]:Facing:Vector, Ship:Facing:Vector) < 90
             {
                 set burnDir to "Prograde".
             }

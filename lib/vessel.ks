@@ -189,7 +189,7 @@
                         {
                             set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
                             if Stage:Number - 1 = HotStageID {
-                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 1. 
+                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25. 
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
                                 // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
                                 return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
@@ -767,7 +767,7 @@
                                 else if booster:MassFlow > 0
                                 {
                                     local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.9).
-                                    OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
+                                    // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
                                     if conRes:Amount <= resCalc and booster:Thrust <= 1
                                     {
                                         pendingStaging:Add(booster).
