@@ -569,13 +569,13 @@
         {
             // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments error [Length: {0}]":Format(l_GridAssignments:Values:Length)).
             set l_LastAssignedBlock to blockIdx.
-            return l_LastAssignedBlock.
+            // return l_LastAssignedBlock.
         }
         else if g_GridAssignments:Values:Contains(_dispId)
         {
             set blockIdx to g_GridAssignments:Keys[g_GridAssignments:Values:find(_dispId)].
             // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments _dispId cache hit [{0}]":Format(blockIdx)).
-            return blockIdx.
+            // return blockIdx.
         }
         else
         {

@@ -125,7 +125,7 @@ wait 1.
 OutMsg("Vertical Ascent").
 set g_ActiveEngines to GetActiveEngines().
 
-ClearDispBlock().
+DispMain(ScriptPath()).
 
 until Alt:Radar >= towerHeight
 {
