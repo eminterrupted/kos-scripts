@@ -104,10 +104,11 @@
     global g_BoostersArmed          to False.
     global g_DecouplerEventArmed    to False.
     global g_HotStagingArmed        to False.
-    global g_FairingsArmed          to false.
+    global g_FairingsArmed          to False.
+    global g_OnStageEventArmed      to False.
     global g_MECOArmed              to False.
-    global g_LESArmed               to false.
-    global g_RCSArmed               to false.
+    global g_LESArmed               to False.
+    global g_RCSArmed               to False.
 
     // Ship control
     global g_MECO to 0.

@@ -62,6 +62,12 @@ set g_LESArmed          to ArmLESTower().
 set g_HotStagingArmed   to ArmHotStaging().
 set g_BoostersArmed     to ArmBoosterStaging_NextReally().
 
+local onStageParts to Ship:PartsTaggedPattern("^OnStage").
+if onStageParts:Length > 0
+{
+    set g_OnStageEventArmed to SetupOnStageEventHandler(onStageParts).
+}
+
 local autoStageResult to ArmAutoStagingNext().
 set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 

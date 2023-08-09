@@ -72,6 +72,7 @@ else
     OutInfo("Stage: {0} (Lim: {1}) | Pe: {2} (Tgt: {3}) | {4}":Format(Stage:Number, g_StageLimit, Round(Ship:Periapsis), Round(tgtAlt), g_MissionTag:Mission)).
     wait 2.
 }
+SetupOnStageEventHandler(Ship:PartsTaggedPattern("(OnDeploy|OnStage)")).
 ClearScreen.
 DispMain(ScriptPath()).
 

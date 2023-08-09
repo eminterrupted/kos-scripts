@@ -273,6 +273,42 @@
             return g_ResultCode.
         }
 
+        // GetFormattedAction :: _m<PartModule>, _actionStr<String> -> <String>
+        // Returns a properly formatted action name if present on the provided module.
+        // If no action found, returns an empty string.
+        global function GetFormattedAction
+        {
+            parameter _m,
+                      _actionStr.
+
+            for act in _m:AllActions
+            {
+                if act:Contains(_actionStr)
+                {
+                    return act:Replace("(callable) _, ",""):Replace(" is KSPAction","").
+                }
+            }
+            return "".
+        }
+
+        // GetFormattedEvent :: _m<PartModule>, _eventStr<String> -> <String>
+        // Returns a properly formatted event name if present on the provided module.
+        // If no event found, returns an empty string.
+        global function GetFormattedEvent
+        {
+            parameter _m,
+                      _eventStr.
+
+            for ev in _m:AllEvents
+            {
+                if ev:Contains(_eventStr)
+                {
+                    return ev:Replace("(callable) _, ",""):Replace(" is KSPEvent","").
+                }
+            }
+            return "".
+        }
+
         // GetField :: (_m)<Module>, (_field)<string> -> (fieldValue)<any>
         // Given a module and name of a field, retrieve it if present
         global function GetField
@@ -340,7 +376,7 @@
     {
         parameter _tag is core:tag.
 
-        local newStopStage         to 0.
+        local newStopStage      to 0.
         local parsedMission     to "".
         local parsedParams      to list().
         local parsedStageStop   to 0.

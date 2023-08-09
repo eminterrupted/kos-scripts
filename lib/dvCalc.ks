@@ -35,8 +35,8 @@
                   tgtPe,
                   tgtAp,
                   xfrAp,
-                  mnvBody is ship:body,
-                  compMode is "pe".
+                  compMode is "pe",
+                  mnvBody is ship:body.
 
         local dv1 to 0. // First transfer burn, boost up to xfrAp
         local dv2 to 0. // Second transfer burn at xfrAp to tgtPe

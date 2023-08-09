@@ -489,6 +489,7 @@
             ,"IsSepMotor",      sepMotorCheck
             ,"MassFlow",        GetField(m, "Mass Flow")
             ,"MaxThrust",       _eng:MaxThrust
+            ,"Module",          m
             ,"Status",          statusString
             ,"Thrust",          _eng:Thrust
             ,"ThrustAvailPres", availThrustPres
@@ -505,8 +506,13 @@
         parameter _engList.
 
         local aggEngPerfObj to lexicon(
-            "Engines", lexicon()
-            ,"SepStg", true
+            "Engines", lexicon(
+                "Resources", lexicon(
+                    "TotalMass", 0
+                    ,"TotalMassFlow", 0
+                )
+            )
+            ,"SepStg", False
         ).
 
         local aggFailureCount       to 0.
@@ -518,98 +524,106 @@
         local aggMassFlowPct        to 0.
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
-        // local aggTWR                to 0.
+        local averageResiduals      to 0.
+        // local aggTWR             to 0.
         local thrustPct             to 0.
-        local totalMassFlow         to 0.
+        local totalUsableFuelMass         to 0.
         local aggFailureObj         to lexicon().
 
         local burnTimeRemaining     to 999999999.
 
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
         {
-            local eng       to _engList[i].
+            local eng to _engList[i].
             // if eng:Decoupler <> "None" and eng:Decoupler:Tag:MatchesPattern("booster")
             // {
-                local engLex    to GetEnginePerformanceData(eng).    
+            local engLex    to GetEnginePerformanceData(eng).    
 
-                set aggThrust           to aggThrust + engLex:Thrust.
-                set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
-                set aggMassFlow         to aggMassFlow + eng:MassFlow.
-                set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
-                if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
-                if engLex:FailureCause:Length > 0
-                {   
-                    set aggFailureCount to aggFailureCount + 1.
-                    if not aggFailureObj:HasKey(engLex:Status)
-                    {
-                        set aggFailureObj[engLex:Status] to 
-                        (
-                            lexicon(
-                                eng:CID, list(
-                                    eng:Name,
-                                    engLex:FailureCause
-                                )
+            local m to engLex:Module.
+            set averageResiduals to averageResiduals + m:GetField("Predicted Residuals").
+
+            set aggThrust           to aggThrust + engLex:Thrust.
+            set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
+            set aggMassFlow         to aggMassFlow + eng:MassFlow.
+            set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
+            if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
+            if engLex:FailureCause:Length > 0
+            {   
+                set aggFailureCount to aggFailureCount + 1.
+                if not aggFailureObj:HasKey(engLex:Status)
+                {
+                    set aggFailureObj[engLex:Status] to 
+                    (
+                        lexicon(
+                            eng:CID, list(
+                                eng:Name,
+                                engLex:FailureCause
                             )
-                        ).
-                    }
-                    else
-                    {
-                        aggFailureObj[engLex:Status]:Add(eng:CID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
-                    }
+                        )
+                    ).
                 }
-                
-                set aggEngPerfObj["Engines"][eng:CID] to engLex.
-                if aggEngPerfObj["SepStg"] 
+                else
                 {
-                    if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name) set aggEngPerfObj["SepStg"] to true.
-                    else set aggEngPerfObj["SepStg"] to false.
+                    aggFailureObj[engLex:Status]:Add(eng:CID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
                 }
-                // local aggResources to 0.
-                // from { local i to 0.} until i >= eng:ConsumedResources:Keys:Length step { set i to i + 1.} do
-                // {
-                //     set aggResources to aggResources + (eng:ConsumedResources:Values[i]:Amount * eng:ConsumedResources:Values[i]:Density).
-                // }
-                // set burnTimeRemaining to aggResources / // (Stage:ResourcesLex[eng:ConsumedResources:Keys[0]]:Amount) / min(999999999, eng:Thrust).
+            }
                 
-                local _am to 0.
-                for res in eng:ConsumedResources:Values
+            set aggEngPerfObj["Engines"][eng:CID] to engLex.
+
+            if aggEngPerfObj["SepStg"] 
+            {
+                if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name) set aggEngPerfObj["SepStg"] to true.
+                else set aggEngPerfObj["SepStg"] to false.
+            }
+            
+            local resMass to 0.
+            for res in eng:ConsumedResources:Values
+            {
+                if  not aggEngPerfObj:Engines:Resources:HasKey(res:Name) 
                 {
-                    set _am to _am + (res:amount * res:density).
-                    if res:MassFlow > 0 
-                    {
-                        set burnTimeRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
-                        // if g_ActiveEngines:Length > 0
-                        // {
-                        //     set burnTimeRemaining to max(burnTimeRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
-                        // }
-                    }
-                    else 
-                    {
-                        set burnTimeRemaining to 999999.//  min(burnTimeRemaining, (res:amount * res:density) / max(res:massFlow, 0.00000000001)).
-                    }
+                    set resMass to resMass + (res:amount * res:density).
+                    set totalUsableFuelMass to totalUsableFuelMass + resMass.
+                    aggEngPerfObj:Engines:Resources:Add(res:Name, lexicon("Amount", res:Amount, "Capacity", res:Capacity, "Mass", resMass, "MassFlow", res:MassFlow)).
+                    // if res:MassFlow > 0 
+                    // {
+                    //     set totalMassFlow to totalMassFlow + res:MassFlow.
+                    //     // set burnTimeRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
+                    //     // if g_ActiveEngines:Length > 0
+                    //     // {
+                    //     //     set burnTimeRemaining to max(burnTimeRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
+                    //     // }
+                    // }
+                    // else 
+                    // {
+                    //     set burnTimeRemaining to 999999.//  min(burnTimeRemaining, (res:amount * res:density) / max(res:massFlow, 0.00000000001)).
+                    // }
                 }
-            // }
+            }
         }
 
-        // set aggISPAt to max(aggThrustAvailPres, 0.000000001) / max(aggMassFlowMax * 1000000, 0.00001).
-        // set aggISP   to max(aggThrust, 0.000000001) / max(aggMassFlow * 1000000, 0.00001).
-        // set thrustPct to max(aggThrust, 0.000000001) / max(aggThrustAvailPres, 0.00001).
         set aggISPAt        to choose aggThrustAvailPres / aggMassFlowMax if aggThrustAvailPres > 0 and aggMassFlowMax > 0     else 0.
         set aggISP          to choose aggThrust / aggMassFlow             if aggThrust > 0          and aggMassFlow > 0        else 0.
         set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
         set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
-        set aggEngPerfObj["BurnTimeRemaining"]  to round(burnTimeRemaining, 3).
-        set aggEngPerfObj["Failures"]           to aggFailureCount.
-        set aggEngPerfObj["FailureSet"]         to aggFailureObj.
-        set aggEngPerfObj["ISP"]                to aggISP.
-        set aggEngPerfObj["ISPAt"]              to aggISPAt.
-        set aggEngPerfObj["MassFlow"]           to aggMassFlow.
-        set aggEngPerfObj["MassFlowMax"]        to aggMassFlowMax.
-        set aggEngPerfObj["MassFlowPct"]        to aggMassFlowPct.
-        set aggEngPerfObj["Thrust"]             to aggThrust.
-        set aggEngPerfObj["ThrustAvailPres"]    to aggThrustAvailPres.
-        set aggEngPerfObj["ThrustPct"]          to thrustPct.
+        set averageResiduals to choose 0 if averageResiduals <= 0 else averageResiduals / _engList:Length.
+        set totalUsableFuelMass to totalUsableFuelMass * (1 - averageResiduals).
+
+        set burnTimeRemaining to choose -1 if aggMassFlow <= 0 or totalUsableFuelMass <= 0 else totalUsableFuelMass / aggMassFlow.
+
+        set aggEngPerfObj["AverageResiduals"]    to Round(averageResiduals, 5).
+        set aggEngPerfObj["BurnTimeRemaining"]   to Round(burnTimeRemaining, 3).
+        set aggEngPerfObj["Failures"]            to aggFailureCount.
+        set aggEngPerfObj["FailureSet"]          to aggFailureObj.
+        set aggEngPerfObj["ISP"]                 to aggISP.
+        set aggEngPerfObj["ISPAt"]               to aggISPAt.
+        set aggEngPerfObj["MassFlow"]            to aggMassFlow.
+        set aggEngPerfObj["MassFlowMax"]         to aggMassFlowMax.
+        set aggEngPerfObj["MassFlowPct"]         to aggMassFlowPct.
+        set aggEngPerfObj["Thrust"]              to aggThrust.
+        set aggEngPerfObj["ThrustAvailPres"]     to aggThrustAvailPres.
+        set aggEngPerfObj["ThrustPct"]           to thrustPct.
+        set aggEngPerfObj["TotalUsableFuelMass"] to totalUsableFuelMass.
 
         // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
 

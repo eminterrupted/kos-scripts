@@ -58,8 +58,6 @@
             lock steering to s_Val.
             lock throttle to t_Val.
 
-            ArmAutoStaging().
-
             local burnLeadTime to UpdateTermScalar(60, list(1, 5, 15, 30)).
             local warpFlag to False.
 
@@ -103,7 +101,8 @@
                     set g_MECO    to burnEta + fullDur.
                     set g_termChar to "".
                 }
-                else
+                
+                if not warpFlag 
                 {
                     set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
                 }
@@ -123,12 +122,14 @@
             OutMsg("Executing burn").
             OutInfo().
             OutInfo("", 1).
-            // ClearDispBlock().
+            
             local burnTimer         to Time:Seconds + burnDur[0].
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
             set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
             set Ship:Control:Fore to 0.
+            
+            ArmAutoStagingNext().
             
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
@@ -137,6 +138,17 @@
                 DispBurnData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
                 DispBurnPerfData().
                 wait 0.01.
+                
+                if g_LoopDelegates:HasKey("Staging")
+                {
+                    OutInfo("Checking staging delegate", 2).
+                    local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+                    if stagingCheckResult = 1
+                    {
+                        OutInfo("Staging", 2).
+                        g_LoopDelegates:Staging["Action"]:Call().
+                    }
+                }
             }
             set t_Val to 0.
 

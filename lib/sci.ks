@@ -34,7 +34,7 @@
 
         for exp in _part:ModulesNamed("Experiment")
         {
-             if exp:AllEvents[0] <> "(callable) _, is KSPEvent" 
+             if exp:AllEvents[0] <> "(callable) _, is KSPEvent"
              {
                 local expAction to GetKSPActionFromExperiment(exp:AllEvents[0]).
                 if not expAction[1]:Contains("running") and expAction[1]:Length > 0

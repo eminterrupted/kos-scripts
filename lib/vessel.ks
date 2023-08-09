@@ -48,6 +48,15 @@
     set g_PartInfo["LES"] to list(
         "ROC-MercuryLESBDB"
     ).
+
+    set g_PartInfo["EventTypeRef"] to lexicon(
+        "Antenna", list("ModuleDeployableAntenna", "extend")
+        ,"Solar",  list("ModuleDeployableSolarPanel", "extend")
+    ).
+
+    set g_PartInfo["PartModuleRef"] to lexicon(
+        "longAntenna", list("ModuleDeployableAntenna", "extend")
+    ).
     // #endregion
 // #endregion
 
@@ -187,19 +196,22 @@
 
                         if MissionTime > 0 and g_ActiveEngines:Length > 0
                         {
-                            set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
                             if Stage:Number - 1 = HotStageID {
                                 local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25. 
-                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(round(stageEngines_BT - SpoolTime, 2), 1)).
-                                // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
-                                return (stageEngines_BT <= SpoolTime) or (Ship:AvailableThrust <= 0.1).
-                                // OutInfo("HotStaging Armed: (ETS: {0}s) ":Format(ROUND(g_ActiveEngines_Data:BurnTimeRemaining - g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25, 2)), 1).
-                                // return (g_ActiveEngines_Data:BurnTimeRemaining <= g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25) or (Ship:AvailableThrust <= 0.1).
+                                set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
+                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(stageEngines_BT - SpoolTime, 2), 1)).
+                                return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                // OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_ActiveEngines_Data:BurnTimeRemaining - SpoolTime, 2), 1)).
+                                // return (g_ActiveEngines_Data:BurnTimeRemaining <= SpoolTime) or (g_ActiveEngines_Data:ThrustPct <= 0.1).
                             }
                             else
                             {
-                                return false.
+                                OutDebug("Stage[{0}] mismatch HotStageID [{1}]":Format(Stage:Number - 1, HotStageID)).
                             }
+                        }
+                        else
+                        {
+                            OutDebug("Failed MissionTime [{0}] / g_ActiveEngines [{1}]":Format(MissionTime, g_ActiveEngines:Length)).
                         }
                         return false.
                     }.
@@ -364,7 +376,8 @@
             local conditionDelegate to { 
                 parameter __ves is _ves, checkVal is _checkVal. 
                 
-                if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
+                //if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
+                if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
                 { 
                     return 1.
                 } 
@@ -740,7 +753,7 @@
                         local MECOResult to not g_LoopDelegates:Events:Keys:Contains("MECO"). // This is confusing code but the intent is to return False if g_LooopDelegates contains the "MECO" event. 
                                                                                             // Once that event has fired, it should be removed from g_LoopDelegates, at which point this will return True.
 
-                        OutInfo("Checking DecoupleDelegate MECO[{0}]":Format(g_LoopDelegates:Events:Keys:Contains("MECO")), 2). // This is backwards from the actual value but more human readable / maybe less confusing?
+                        // OutInfo("Checking DecoupleDelegate MECO[{0}]":Format(g_LoopDelegates:Events:Keys:Contains("MECO")), 2). // This is backwards from the actual value but more human readable / maybe less confusing?
                         return MECOResult.
                     }.
                     set paramList to list(dcUIDList).
@@ -777,7 +790,7 @@
                         }
                         
                         set checkFlag to pendingStaging:Length = _params[1]:Length.
-                        OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
+                        // OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
                         return checkFlag.
                     }.
                     set paramList to list(dcUIDList, boosterEngs).
@@ -886,17 +899,125 @@
             return resultFlag or g_LoopDelegates:Events:HasKey(_dcEventID) or g_DecouplerEventArmed.
         }
 
-        // TODO SetupOnStageEventHandler :: [_partList<List[Parts]>] -> resultFlag<bool>
+        // SetupOnStageEventHandler :: [_partList<List[Parts]>] -> resultFlag<bool>
         // Creates and registers event delegates for parts that need actions to happen when the vessel reaches a specific stage number
         // Stage number and action derived from tags
+        // Tag format: OnStage|<StgNum>|<SetIdx>|<EventType>;<Params>
+        // Accepted values for EventType:
+        // - Antenna
+        // - Solar
+        // - Science (defaults to all; use param with name of experiment for specific experiements)
         global function SetupOnStageEventHandler
         {
-            parameter _partList is Ship:PartsTaggedPattern("OnStage\|.*\|\d*").
+            parameter _partList.
+
+            local actionDel to { parameter _params is list(). return False. }.
+            local checkDel to  { parameter _params is list(). return True.  }. // By Default, if no modification this will automatically unregister.
+            local maxSetIdx to 0.
+            local deployStg to 0.
+            local partMatrix to lexicon().
 
             for p in _partList
             {
+                local eventType to "".
+                local setIdx to 0.
+                local tagSplit to p:tag:Split("|").
 
+                if tagSplit:Length > 1
+                {
+                    set deployStg to tagSplit[1].
+                    if tagSplit:Length > 2
+                    {
+                        set setIdx to tagSplit[2].
+                        set maxSetIdx to Max(maxSetIdx, setIdx).
+                    }
+
+                    if partMatrix:HasKey(setIdx)
+                    {
+                        partMatrix[setIdx]:Add(lexicon(p:UID, list(p))).
+                        if tagSplit:Length > 3
+                        {
+                            set eventType to tagSplit[3].
+                        }
+                        partMatrix[setIdx][p:UID]:Add(eventType).
+                    }
+                    else
+                    {
+                        set partMatrix[setIdx] to lexicon(
+                            p:UID, list(p, eventType)
+                        ).
+                    }
+                }
             }
+            
+            local osEventID to "ONSTAGE_{0}":Format(deployStg).
+            local paramList to list(partMatrix).
+
+            if g_LoopDelegates:Events:HasKey(osEventID)
+            {
+            }
+            else
+            {
+                set checkDel to { 
+                    parameter _params is list().
+
+                    return Stage:Number = deployStg.
+                }.
+
+                set actionDel to 
+                { 
+                    parameter _params is list(). 
+
+                    local onStageMatrix to _params[0].
+                    
+                    from { local i to 0.} until i >= maxSetIdx or i >= onStageMatrix:Keys:Length step { set i to i + 1.} do
+                    {
+                        local partSet to onStageMatrix[i].
+
+                        for pObj in partSet
+                        {
+                            local event         to "".
+                            // local eventData     to "".
+                            // local eventParam    to "".
+                            local eventType     to "".
+                            local eventRef      to list().
+                            local m             to "".
+
+                            if pObj:Length > 0
+                            {
+                                local p to pObj[0].
+                                if pObj:Length > 1
+                                {
+                                    set eventType to pObj[1].
+                                    // TODO: Add eventData param handler
+                                    // set eventData to pObj[1]:Split(";").
+                                    // if eventData:Length > 1
+                                    // {
+                                    //     set eventParam to eventData[1].
+                                    // }
+
+                                    set eventRef to g_PartInfo:EventTypeRef[eventType].
+                                }
+                                else
+                                {
+                                    set eventRef to g_PartInfo:PartModuleRef[p:Name].
+                                }
+                                set m to eventRef[0].
+                                set event to GetFormattedEvent(eventRef[1]).
+
+                                DoEvent(m, event).
+                            }
+                        }
+                    }
+
+                    return False.
+                }.
+            }
+
+            local osEvent to CreateLoopEvent(osEventID, "OnStageEvent", paramList, checkDel@, actionDel@).
+            local resultFlag to RegisterLoopEvent(osEvent).
+
+            return resultFlag.
         }
     // #endregion
 

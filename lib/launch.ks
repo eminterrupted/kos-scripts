@@ -819,6 +819,10 @@
                     {
                         OutMsg("*** ABORT ***").
                         set t_Val to 0.
+                        for eng in g_ActiveEngines
+                        {
+                            eng:Shutdown.
+                        }
                         OutInfo().
                         Breakpoint().
                         wait 10.
@@ -904,7 +908,7 @@
     {
         set t_Val to 1.
         stage.
-        wait 0.025.
+        wait 0.01.
         set g_ActiveEngines to GetActiveEngines().
     }
 
