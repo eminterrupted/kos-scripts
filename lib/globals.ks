@@ -111,12 +111,13 @@
     global g_RCSArmed               to False.
 
     // Ship control
-    global g_MECO to 0.
     global t_Val to 0.
     global s_Val to Ship:Facing.
 
     global g_AngDependency to lexicon().
+    global g_MECO to 0.
     global g_StartTurn to 3750.
+    global g_SteeringDelegate to { return Ship:Facing.}.
 
     global g_PIDS to lexicon(). // This will hold all PID loops we use across multiple scripts
 // #endregion

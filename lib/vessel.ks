@@ -196,22 +196,21 @@
 
                         if MissionTime > 0 and g_ActiveEngines:Length > 0
                         {
-                            if Stage:Number - 1 = HotStageID {
-                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.25. 
-                                set stageEngines_BT to GetEnginesBurnTimeRemaining(stageEngines).
+                            if Stage:Number - 1 = HotStageID
+                            {
+                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
+                                set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoSRB")).
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(stageEngines_BT - SpoolTime, 2), 1)).
                                 return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
-                                // OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_ActiveEngines_Data:BurnTimeRemaining - SpoolTime, 2), 1)).
-                                // return (g_ActiveEngines_Data:BurnTimeRemaining <= SpoolTime) or (g_ActiveEngines_Data:ThrustPct <= 0.1).
                             }
                             else
                             {
-                                OutDebug("Stage[{0}] mismatch HotStageID [{1}]":Format(Stage:Number - 1, HotStageID)).
+                                OutDebug("Failed MissionTime > 0 [{0}] and g_ActiveEngines:Length [{1}]":Format(MissionTime, g_ActiveEngines:Length)).
                             }
                         }
                         else
                         {
-                            OutDebug("Failed MissionTime [{0}] / g_ActiveEngines [{1}]":Format(MissionTime, g_ActiveEngines:Length)).
+                            OutDebug("Stage[{0}] mismatch HotStageID [{1}]":Format(Stage:Number - 1, HotStageID)).
                         }
                         return false.
                     }.
@@ -925,10 +924,10 @@
 
                 if tagSplit:Length > 1
                 {
-                    set deployStg to tagSplit[1].
+                    set deployStg to tagSplit[1]:ToNumber().
                     if tagSplit:Length > 2
                     {
-                        set setIdx to tagSplit[2].
+                        set setIdx to tagSplit[2]:ToNumber().
                         set maxSetIdx to Max(maxSetIdx, setIdx).
                     }
 

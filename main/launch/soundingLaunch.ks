@@ -45,7 +45,7 @@ if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 }
 
 set g_azData to _azObj.
-set g_LoopDelegates["Steering"] to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
+set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
 
 ConfigureLaunchPad().
 
@@ -245,7 +245,7 @@ until Stage:Number <= g_StageLimit
         ExecGLoopEvents().
     }
 
-    set s_Val to g_LoopDelegates:Steering:Call().
+    set s_Val to g_SteeringDelegate:Call().
     DispStateFlags().
     DispLaunchTelemetry().
     // DispEngineTelemetry().
@@ -279,7 +279,7 @@ OutMsg("Final Burn").
 wait 0.25.
 until Ship:AvailableThrust <= 0.1
 {
-    set s_Val to g_LoopDelegates:Steering:Call().
+    set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
     if g_BoostersArmed { CheckBoosterStageCondition().}

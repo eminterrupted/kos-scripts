@@ -38,10 +38,10 @@ else if _azData:Length = 0
 
 set g_StageLimit to _stpStg.
 
-local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun").
+set g_SteeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun").
 
 OutMsg("Waiting until timestamp").
-set s_Val to steeringDelegate:Call().
+set s_Val to g_SteeringDelegate:Call().
 lock steering to s_Val.
 set t_Val to 0.
 lock throttle to t_Val.
@@ -49,7 +49,7 @@ OutInfo("Home: Warp | End: CancelWarp | Arrows (L/R): -/+ 1s | (U/D): -/+ 5s", 1
 until ETA:Apoapsis <= _stgAtETA + 5
 {
     // set s_Val to heading(compass_for(Ship, Ship:Prograde), 0, 0).
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
 
     GetTermChar().
     if g_TermChar = Terminal:Input:HomeCursor
@@ -116,7 +116,7 @@ else
 
 until ETA:Apoapsis <= _stgAtETA
 {
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
     OutInfo("Time Remaining: {0}s  ":Format(round(ETA:Apoapsis - _stgAtETA, 2))).
     DispLaunchTelemetry().
 }
@@ -144,7 +144,7 @@ until Stage:Number = g_StageLimit
         ExecGLoopEvents().
     }
 
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
     DispLaunchTelemetry().
     wait 0.01.
 }
@@ -152,7 +152,7 @@ wait 1.
 set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
 until g_ActiveEngines_Data:Thrust <= 0.01
 {
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     DispLaunchTelemetry().
     wait 0.01.

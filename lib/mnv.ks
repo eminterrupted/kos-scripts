@@ -271,13 +271,13 @@
             m:SetField("RCS", True).
         }
 
-        local steeringDelegate to choose retDel@ if burnDir = "Retrograde" else proDel@.
-        set s_Val to steeringDelegate:Call().
+        set g_SteeringDelegate to choose retDel@ if burnDir = "Retrograde" else proDel@.
+        set s_Val to g_SteeringDelegate:Call().
         lock steering to s_Val.
 
         until vAng(Ship:Facing:Vector, s_Val:Vector) <= 15
         {
-            set s_Val to steeringDelegate:Call().
+            set s_Val to g_SteeringDelegate:Call().
             wait 0.25.
         }
 
@@ -299,7 +299,7 @@
                 print "Ignition sequence success".
                 until Ship:AvailableThrust <= 0.1
                 {
-                    set s_Val to steeringDelegate:Call().
+                    set s_Val to g_SteeringDelegate:Call().
                 }
             }
         }

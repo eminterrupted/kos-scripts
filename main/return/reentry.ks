@@ -365,7 +365,7 @@ local sciDrive to "".
 if ship:partsNamed("RP0-SampleReturnCapsule"):Length > 0  // If we have a proper sample return capsule, use it
 {
     set sciDrive to ship:PartsNamed("RP0-SampleReturnCapsule")[0]:GetModule("HardDrive").
-    DoEvent(sciDrive:Part:GetModule("ModuleAnimateGeneric"), "Close").
+    DoEvent(sciDrive:Part:GetModule("ModuleAnimateGeneric"), "Close"). // Close the door if open
 }
 else if core:Part:HasModule("HardDrive")  // Otherwise, use the core's hard drive if present
 {
@@ -384,7 +384,7 @@ else
 {
     OutMsg("No HDD for data collection").
 }
-wait 1.
+wait 2.
 
 for m in ship:ModulesNamed("ModuleRCSFX")
 {
@@ -415,7 +415,7 @@ if stage:number > 1
     until stage:number <= 1 
     {
         stage.
-        wait 3.25.
+        wait 5.
     }
 }
 

@@ -81,7 +81,7 @@
     // GetActiveEngines :: [(_ves)<Ship>] -> (ActiveEngines)<List)
     // Gets all engines that are active right now, no matter what stage they were
     // activated in. 
-    // Valid _engType values are "All" and "NoSep" (excludes sep motors) 
+    // Valid _engType values are "All", "NoSRB" (excludes all solid rocket motors), and "NoSep" (excludes sep motors) 
     global function GetActiveEngines
     {
         parameter _ves is ship,
@@ -94,6 +94,20 @@
             if _engType = "all" or eng:tag:length > 0
             {
                 if eng:ignition and not eng:flameout
+                {
+                    engList:add(eng).
+                }
+            }
+            else if _engType = "NoSRB"
+            {
+                if eng:ignition and not eng:flameout and not g_PropInfo:Solids:Contains(eng:ConsumedResources:Keys[0])
+                {
+                    engList:add(eng).
+                }
+            }
+            else if _engType = "NoSep"
+            {
+                if eng:ignition and not eng:flameout and not g_PartInfo:Engines:SepRef[eng:Name]
                 {
                     engList:add(eng).
                 }
@@ -710,7 +724,7 @@
         // if g_Debug OutDebug("TotalFuelMass      : {0}":Format(Round(TotalFuelMass, 7)), 3).
         // if g_Debug OutDebug("TotalFuelMass(Lex) : {0}":Format(Round(engBurnTimeLex:Resources:TotalFuelMass, 7)), 4).
         
-        set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else fuelMass / maxMassFlow.
+        set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else choose fuelMass / maxMassFlow if fuelMass > 0 else 0.
         set engBurnTimeLex:EstBurnTime to estBurnTime.
         
         //local engBurnTime to choose fuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.

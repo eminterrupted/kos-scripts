@@ -99,7 +99,7 @@ local eccCheckDelegate to choose eccApCheckDelegate@ if eccCheckAtAp else eccPeC
 
 set g_StageLimit to _stpStg.
 
-local steeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun", 0.9925).
+set g_SteeringDelegate to GetOrbitalSteeringDelegate("AngErr:Sun", 0.9925).
 
 // TODO: getting burntime from the burn time remaining of the engines to be burned
 if _stgAtETA < 0 
@@ -256,13 +256,13 @@ wait 2.
 
 OutMsg("Waiting until timestamp").
 SAS Off.
-set s_Val to steeringDelegate:Call().
+set s_Val to g_SteeringDelegate:Call().
 lock steering to s_Val.
 
 until ETA:Apoapsis <= _stgAtETA + 5
 {
     // set s_Val to heading(compass_for(Ship, Ship:Prograde), 0, 0).
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
 
     GetTermChar().
     if g_TermChar = Terminal:Input:HomeCursor
@@ -328,7 +328,7 @@ until ETA:Apoapsis <= _stgAtETA + 5
 
 until ETA:Apoapsis <= _stgAtETA
 {
-    set s_Val to steeringDelegate:Call().
+    set s_Val to g_SteeringDelegate:Call().
     OutInfo("Time Remaining: {0}s  ":Format(round(ETA:Apoapsis - _stgAtETA, 2))).
     DispLaunchTelemetry().
     wait 0.01.
@@ -398,7 +398,7 @@ until Stage:Number = _stpStg
     }
 
 
-    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if apoFlag else steeringDelegate:Call().
+    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if apoFlag else g_SteeringDelegate:Call().
     
     DispLaunchTelemetry().
     wait 0.01.
@@ -453,7 +453,7 @@ until eccCheckDelegate:Call() or MECOFlag
     }
     set g_TermChar to "".
 
-    set s_Val to choose steeringDelegate:Call():Vector if rollFlag else steeringDelegate:Call().
+    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else g_SteeringDelegate:Call().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_ActiveEngines_Data:HasKey("Thrust") 
     {
@@ -473,7 +473,7 @@ if Ship:AvailableThrust > 0.01
     OutMsg("Waiting for engine burnout").
     until g_ActiveEngines_Data:Thrust <= 0.01
     {
-        set s_Val to steeringDelegate:Call().
+        set s_Val to g_SteeringDelegate:Call().
         set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
         DispLaunchTelemetry().
         wait 0.01.

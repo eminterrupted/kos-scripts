@@ -45,7 +45,7 @@ if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 }
 
 set g_azData to _azObj.
-set g_LoopDelegates["Steering"] to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
+set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
 
 ConfigureLaunchPad().
 
