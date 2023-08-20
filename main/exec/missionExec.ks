@@ -33,7 +33,7 @@ ClearScreen.
 DispMain(ScriptPath()).
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(SubOrbital|Orbit|Circularize)")
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(Orbit|Circularize)")
 {
     local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
 
@@ -42,13 +42,43 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
     // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|", "Circularize|").
     // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|{0}":Format(), "Circularize|{0}":Format(Round(Ship:Apoapsis)):Replace("km", "")).
     
+    local tgtAp to Ship:Body:ATM:Height + 25000.
+    local tgtPe to tgtAp.
+    
     local tagSplit to Core:Part:Tag:Split("|").
     if tagSplit:Length > 2
     {
         local tagParam to tagSplit[1]:Split(";").
-        if tagParam:Length > 1 
+        if tagParam:Length > 2
         {
-            local tgtAp to ParseStringScalar(tagParam[1]).
+            local p2 to ParseStringScalar(tagParam[2]).
+            if p2 <= 1
+            {
+                set tgtEcc to p2.
+                if tgtEcc < 0
+                {
+                    set tgtPe to GetPeFromApEcc(tgtAp, abs(p2), Ship:Body).
+                }
+                else
+                {
+                    set tgtPe to Ship:Apoapsis.
+                    set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
+                }
+            }
+            else if p2 > Ship:Apoapsis
+            {
+                set tgtAp to p2.
+                set tgtPe to Ship:Apoapsis.
+            }
+            else
+            {
+                set tgtAp to Ship:Apoapsis.
+                set tgtPe to p2.
+            }
+        }
+        else
+        {
+            set tgtAp to ParseStringScalar(tagParam[1]).
             if tgtAp <= Ship:Apoapsis
             {
                 set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
@@ -56,7 +86,7 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
         }
     }
     // runPath("0:/main/launch/circAtApo", list(g_StageLimit, burnTime, tgtEcc, azObj)).
-    runPath("0:/main/launch/circMnvAtApo").
+    runPath("0:/main/launch/circMnvAtApo", list(tgtAp)).
 
     if g_StageLimitSet:Length > 1
     {

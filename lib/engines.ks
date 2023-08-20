@@ -33,9 +33,6 @@
     set g_PartInfo["Engines"] to lexicon( 
         "SepRef", list(
             "ROSmallSpinMotor"              // Spin Motor (Small)
-            ,"CREI_RO_IntSep_33"            // Internal sep motor (33% scale)
-            ,"CREI_RO_IntSep_100"           // Internal sep motor (normal scale)
-            ,"CREI_RO_IntSep_166"           // Internal sep motor (166% scale)
             ,"ROE-1204sepMotor"             // UA1204 Nosecone & Separation Motor
             ,"ROE-1205sepMotor"             // UA1205 Nosecone & Separation Motor
             ,"ROE-1206sepMotor"             // UA1206 Nosecone & Separation Motor
@@ -45,7 +42,8 @@
             ,"sepMotor1"                    // Radial Separation Motor (Medium)
             ,"sepMotorLarge"                // Radial Separation Motor (Large)
             ,"SnubOtron"                    // Separation Motor (Small)
-            ,"CREI_RO_IntSep_50"            // InternalRCS SRB (CREI 50% Resize)
+            ,"CREI_RO_IntSep_33"            // InternalRCS SRB (CREI 33%  Resize)
+            ,"CREI_RO_IntSep_50"            // InternalRCS SRB (CREI 50%  Resize)
             ,"CREI_RO_IntSep_100"           // InternalRCS SRB (CREI 100% Resize)
             ,"CREI_RO_IntSep_166"           // InternalRCS SRB (CREI 166% Resize)
             ,"CREI_RO_IntSep_200"           // InternalRCS SRB (CREI 200% Resize)
@@ -53,6 +51,7 @@
             ,"B9_Engine_T2_SRBS_CREI_25"    // B9 Radial Sep Motor (CREI 25% Resize)
             ,"B9_Engine_T2_SRBS_CREI_50"    // B9 Radial Sep Motor (CREI 50% Resize)
             ,"B9_Engine_T2_SRBS_CREI_150"   // B9 Radial Sep Motor (CREI 150% Resize)
+            ,"ROC-MercuryPosigradeBDB"      // RO Mercury Posigrade Kick Motor
             // ,"B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
             // ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
             // ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
@@ -69,6 +68,7 @@
     // This adds propellant collections
     set g_PropInfo["Solids"] to list(
         "PSPC"
+        ,"PUPE"
     ).
 // #endregion
 
@@ -724,7 +724,8 @@
         // if g_Debug OutDebug("TotalFuelMass      : {0}":Format(Round(TotalFuelMass, 7)), 3).
         // if g_Debug OutDebug("TotalFuelMass(Lex) : {0}":Format(Round(engBurnTimeLex:Resources:TotalFuelMass, 7)), 4).
         
-        set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else choose fuelMass / maxMassFlow if fuelMass > 0 else 0.
+        // set estBurnTime to choose fuelMass / massFlow if massFlow > 0 else choose fuelMass / maxMassFlow if fuelMass > 0 else 0.
+        set estBurnTime to choose fuelMass / maxMassFlow if fuelMass > 0 else 0.
         set engBurnTimeLex:EstBurnTime to estBurnTime.
         
         //local engBurnTime to choose fuelMass / eng:MassFlow if eng:MassFlow > 0 else 0.

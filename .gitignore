@@ -17,4 +17,4 @@ ves_stage_stats-stgMass.json
 # _plan/*/*
 # data/*
 data/*.json
-data/debug/*.json
+data/debug/**

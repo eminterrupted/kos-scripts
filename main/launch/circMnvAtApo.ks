@@ -7,7 +7,9 @@ RunOncePath("0:/lib/libLoader").
 
 DispMain(ScriptPath()).
 
-local tgtAp   to Ship:Body:ATM:Height + 25000.
+ParseCoreTag(Core:Tag).
+
+local tgtAp   to Ship:Apoapsis.
 local tgtPe   to tgtAp.
 local tgtEcc  to 0.0025.
 local compVal to "pe".
@@ -17,30 +19,41 @@ if _params:Length > 0
     set tgtAp to _params[0].
     if _params:Length > 1
     {
-        local p2 to ParseStringScalar(_params[2]).
+        local p1 to ParseStringScalar(_params[2]).
         if _params[2] < 1
         {
-            set tgtEcc to p2.
+            set tgtEcc to p1.
             if tgtEcc < 0
             {
                 set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
             }
             else
             {
-                set tgtPe to tgtAp.
+                set tgtPe to Ship:Apoapsis.
                 set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
                 set compVal to "ap".
             }
         }
-        else if p2 > Ship:Body:ATM:Height
+        else if p1 > Ship:Body:ATM:Height
         {
-            set tgtPe to p2.
+            if p1 > Ship:Apoapsis
+            {
+                set tgtAp to p1.
+                set compVal to "ap".
+            }
+            else
+            {
+                set tgtPe to p1.
+                set compVal to "pe".
+            }
             set tgtEcc to GetEccFromApPe(tgtAp, tgtPe, Ship:Body).
         }
     }
+    else
+    {
+        set tgtPe to tgtAp.
+    }
 }
-
-
 
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
 // local dvNeeded to CalcDvHoh(Ship:Periapsis, Ship:Apoapsis, Ship:Apoapsis).

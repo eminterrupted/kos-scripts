@@ -495,6 +495,7 @@
             local tagSplit to _tag:Split("|").
             set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
             set g_MissionTag:STGSTP to g_StageLimit.
+            OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).
             g_StageLimitSet:Remove(0).
         }
         set core:tag to _tag.

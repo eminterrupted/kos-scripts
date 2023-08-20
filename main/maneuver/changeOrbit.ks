@@ -18,8 +18,8 @@ local xfrTS     to 0.
 if _params:Length > 0
 {
     set burnTgt to ParseStringScalar(_params[0]).
-    if _params:Length > 1 set trackVal to _params[1].
-    if _params:Length > 2 set burnAt   to _params[2].
+    if _params:Length > 1 set burnAt   to _params[1].
+    if _params:Length > 2 set trackVal to _params[2].
 }
 
 if burnTgt < 1
@@ -28,7 +28,6 @@ if burnTgt < 1
     {
         if trackVal = "PE"
         {
-            set tgtAp to tgtAp.
             set tgtPe to GetPeFromApEcc(tgtAp, burnTgt).
         }
         else
@@ -48,7 +47,6 @@ if burnTgt < 1
         }
         else
         {
-            set tgtPe to tgtAp.
             set tgtAp to GetApFromPeEcc(tgtAp, burnTgt).
         }
         set xfrTgt to Ship:Periapsis.
@@ -56,7 +54,7 @@ if burnTgt < 1
     }
 }
 
-local burnDV   to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, xfrTgt, Ship:Body, trackVal).
+local burnDV   to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, xfrTgt, trackVal, Ship:Body).
 local burnNode to Node(xfrTS, 0, 0, burnDV[1]).
 
 until not HasNode

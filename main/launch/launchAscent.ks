@@ -304,7 +304,7 @@ until Stage:Number <= g_StageLimit
         ExecGLoopEvents().
     }
 
-    set s_Val to g_LoopDelegates:Steering:Call().
+    set s_Val to g_SteeringDelegate:Call().
     if g_MsgInfoLoopActive MsgInfoLoop().
     DispStateFlags().
     DispLaunchTelemetry().
@@ -339,7 +339,7 @@ MsgInfoString("MSG","Final Burn").
 wait 0.25.
 until Ship:AvailableThrust <= 0.1
 {
-    set s_Val to g_LoopDelegates:Steering:Call().
+    set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
     if g_BoostersArmed { CheckBoosterStageCondition().}

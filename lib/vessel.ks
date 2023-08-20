@@ -208,11 +208,12 @@
                                 OutDebug("Failed MissionTime > 0 [{0}] and g_ActiveEngines:Length [{1}]":Format(MissionTime, g_ActiveEngines:Length)).
                             }
                         }
-                        else
+                        else if t_Val > 0
                         {
-                            OutDebug("Stage[{0}] mismatch HotStageID [{1}]":Format(Stage:Number - 1, HotStageID)).
+                            OutDebug("Fuel Exhausted, hot staging").
+                            return True.
                         }
-                        return false.
+                        return False.
                     }.
 
                     set actionDel to { 
@@ -227,7 +228,7 @@
                         local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                         until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
                         {
-                            set s_Val                to g_LoopDelegates:Steering:CALL().
+                            set s_Val                to g_SteeringDelegate:CALL().
                             set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                             set NextEngines_Data     to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                             OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2))).
@@ -242,7 +243,7 @@
                         if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
                         {
                             g_LoopDelegates:Staging:Remove("HotStaging").
-                            set g_HotStagingArmed to  false.
+                            set g_HotStagingArmed to  False.
                         }
                         else
                         {
@@ -293,11 +294,11 @@
 
             if Stage:Number <= g_StageLimit
             {
-                return false.
+                return False.
             }
             else
             {
-                return TRUE.
+                return True.
             }
         }
         
@@ -417,7 +418,7 @@
         // Simpler version of SafeStageWithUllage using new GetEngineFuelStability function
         local function SafeStageWithUllage2
         {
-            local StageResult to false.
+            local StageResult to False.
             local FuelStabilityMin to 0.98.
 
             set g_NextEngines to GetNextEngines().
@@ -440,7 +441,7 @@
             if StageResult
             {
                 local RCSResult to RCS. // Stores current RCS state
-                set RCS to false. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
+                set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
                 // lock throttle to 0.
                 wait until Stage:Ready.
                 Stage.
@@ -461,7 +462,7 @@
             // set g_NextEngines     to GetNextEngines().
             // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
 
-            local stageResult to false.
+            local stageResult to False.
             
             if _engList_Spec:Keys:Length = 0
             {
@@ -488,7 +489,7 @@
             if stageResult
             {
                 local rcsResult to RCS. // Stores current RCS state
-                set RCS to false. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
+                set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
                 wait until Stage:Ready.
                 Stage.
                 wait 0.01.
@@ -678,7 +679,7 @@
                         }
                     }
                 }
-                return false.
+                return False.
             }.
 
             local deployEvent to CreateLoopEvent("OnDeploy", "OnDeployEvent", paramList, checkDel@, actionDel@).
@@ -696,10 +697,10 @@
 
             local boosterEngs   to list().
             local dcUIDList     to list().
+            local paramList     to list().
             local registerFlag  to False.
             local resultCode    to 0.
             local resultFlag    to False.
-            local paramList     to list().
 
             local resultCodeLex to lexicon(
                 "SUCCESS",  list(10, 11, 20, 21, 30, 31)
@@ -733,7 +734,7 @@
                             dcUIDList:Add(_dc:UID).
                             for child in _dc:PartsTagged("")
                             {
-                                if child:IsType("Engine") 
+                                if child:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(child:Name)
                                 {
                                     boosterEngs:Add(child).
                                 }
@@ -780,7 +781,7 @@
                                 {
                                     local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.9).
                                     // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
-                                    if conRes:Amount <= resCalc and booster:Thrust <= 1
+                                    if conRes:Amount <= resCalc and booster:Thrust <= 0.25
                                     {
                                         pendingStaging:Add(booster).
                                     }
@@ -840,13 +841,23 @@
 
                                 if dcModule:Name <> "kOSProcessor"
                                 {
+                                    for p in dc:PartsTagged("")
+                                    {
+                                        if g_PartInfo:Engines:SepRef:Contains(p:Name)
+                                        {
+                                            if not p:Ignition 
+                                            {
+                                                p:Activate.
+                                            }
+                                        }
+                                    }
                                     DoEvent(dcModule, dcEventStr).
                                     dcUIDList:Remove(dcUIDList:Find(dc:UID)).
                                 }
                             }
                         }
                         // wait 0.01. 
-                        return false.
+                        return False.
                     }.
 
                     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
@@ -1025,7 +1036,7 @@
     
     global function ArmSpinStabilization
     {
-        local spinArmed to false.
+        local spinArmed to False.
         if g_ActiveEngines:Length > 0
         {
             local dc to g_ActiveEngines[0]:Decoupler.
@@ -1034,7 +1045,7 @@
                 local spinTime to dc:Tag:Replace("Spin|"):ToNumber(15).
 
                 local checkDel to { parameter _params is list(). if params:length  = 0 { set _params to list(spinTime).} if g_ActiveEngines_Data:BurnTimeRemaining <= _params[0] { return 1.} else { return 0.}}.
-                local actionDel to { if g_ActiveEngines_Data:BurnTimeRemaining > 0.25 { if Ship:Control:Roll = 0 { set Ship:Control:Roll to 1.} return true.} else { set Ship:Control:Roll to 0. return false.}}.
+                local actionDel to { if g_ActiveEngines_Data:BurnTimeRemaining > 0.25 { if Ship:Control:Roll = 0 { set Ship:Control:Roll to 1.} return true.} else { set Ship:Control:Roll to 0. return False.}}.
 
                 local spinEventData to CreateLoopEvent("SpinStabilization", "Spin", list(15), checkDel@, actionDel@).
                 set spinArmed to RegisterLoopEvent(spinEventData).
@@ -1196,7 +1207,7 @@
         else 
         {
             OutInfo("BoosterParts:Length = 0"). wait 1.
-            set g_BoostersArmed to false.
+            set g_BoostersArmed to False.
         }
         return g_BoostersArmed.
     }
@@ -1226,7 +1237,7 @@
         }
         else 
         {
-            set g_BoostersArmed to false.
+            set g_BoostersArmed to False.
         }
         return g_BoostersArmed.
     }
@@ -1655,7 +1666,7 @@
         }
         
         // Check to see if we need to airstart this booster set
-        local as to false.
+        local as to False.
         if _p:Tag:Split("|"):Length > 2
         {
             if _p:Tag:Split("|")[1] = "as"
@@ -1829,7 +1840,7 @@
             if g_BoosterObj:Keys:Length > 0
             {
                 OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]":Format(g_Counter)).
-                local doneFlag to false.
+                local doneFlag to False.
                 local ThrustThresh to 0.
                 print g_BoosterObj:Keys at (2, 48).
                 print g_BoosterObj[0] at (2, 50).
@@ -1851,8 +1862,8 @@
                             // if bSet["ENG"]:Values[0]:P:Thrust < 0.1
                             local bSetKey to bSet:Keys[i].
                             local engPresent to bSet:HasKey("Eng").
-                            local allPresent to choose bSet["ENG"]:HasKey("AllThrust") if engPresent else false.
-                            local avlPresent to choose bSet["ENG"]:HasKey("AvlThrust") if engPresent else false.
+                            local allPresent to choose bSet["ENG"]:HasKey("AllThrust") if engPresent else False.
+                            local avlPresent to choose bSet["ENG"]:HasKey("AvlThrust") if engPresent else False.
 
                             print "KEY [{0}] | ENG [{1}] | ALL [{2}] | AVL [{3}]":Format(bsetKey, engPresent, allPresent, avlPresent) at (0, 35).
                             set ThrustThresh to Max(ThrustThresh, bSet["ENG"]:AVLTHRUST * _pctThresh).
@@ -1868,7 +1879,7 @@
                                 
                                 if g_BoosterObj:Keys:Length < 1
                                 {
-                                    set g_BoostersArmed to false.
+                                    set g_BoostersArmed to False.
                                 }
                                 else
                                 {
@@ -1891,7 +1902,7 @@
             else
             {
                 OutInfo("Boosters disarmed").
-                set g_BoostersArmed to false.
+                set g_BoostersArmed to False.
             }
         }
     }
@@ -1945,7 +1956,7 @@
         }
         else
         {
-            return false.
+            return False.
         }
         
     }
@@ -1978,7 +1989,7 @@
                 
                     if Ship:PartsTaggedPattern("booster.\d*"):Length < 1
                     {
-                        set boostersArmed to false.
+                        set boostersArmed to False.
                     }
                     else
                     {
@@ -2003,7 +2014,7 @@
             local fairing_tag_ext_regex to "fairing\|{0}":Format(_fairingTag).
 
             local op to choose "gt" if _fairingTag:MATCHESPATTERN("(ascent|asc|launch)") else "lt".
-            local result to false.
+            local result to False.
 
             local fairingSet to Ship:PartsTaggedPattern(fairing_tag_ext_regex).
             if fairingSet:Length > 0
@@ -2023,7 +2034,7 @@
                     
                     JettisonFairings(_params[1]).
                     OutInfo("Fairing jettison").
-                    return false.
+                    return False.
                 }.
 
                 local fairingEvent to CreateLoopEvent("Fairings", "CheckAction", list(jettison_alt, fairingSet), checkDel@, actionDel@). 
@@ -2090,7 +2101,7 @@
 
             if LES:IsType("String")
             {
-                return false.
+                return False.
             }
             else
             {
@@ -2103,7 +2114,7 @@
                     }
                     else
                     {
-                        return false.
+                        return False.
                     }
                 }.
                 
@@ -2141,7 +2152,7 @@
                         }
                         OutMsg("LES Tower Jettison").
                     }
-                    return false.
+                    return False.
                 }.
                 
                 local lesEvent to CreateLoopEvent("LES", "event", list(LES, AbortDCModuleList), checkDel@, actionDel@).

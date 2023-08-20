@@ -522,26 +522,23 @@ for f in fairings
 }
 LIGHTS on.
 
-until alt:radar <= 2500
+until alt:radar <= 500
 {
     DispReentryTelemetry().
 }
 
-// if ship:ModulesNamed("ProceduralFairingDecoupler"):Length > 0
-// {
-//     until ship:ModulesNamed("ProceduralFairingDecoupler"):Length = 0
-//     {
-//         stage.
-//         wait 1.
-//     }
-// }
-
-OutMsg("Chute deploy").
-// until stage:number <= 0
-// {
-//     stage.
-//     wait 0.25.
-// }
+local aniMods to Ship:ModulesNamed("ModuleAnimateGeneric").
+if aniMods:Length > 0
+{
+    for m in aniMods
+    {
+        if DoEvent(m, "Deploy Landing Bag") 
+        {
+            OutMsg("Landing bag deploy").
+            Break.
+        }
+    }
+}
 
 until alt:radar <= 5
 {

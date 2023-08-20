@@ -129,7 +129,7 @@
             set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
             set Ship:Control:Fore to 0.
             
-            ArmAutoStagingNext().
+            local g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
             
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
@@ -139,15 +139,24 @@
                 DispBurnPerfData().
                 wait 0.01.
                 
-                if g_LoopDelegates:HasKey("Staging")
+                if g_AutoStageArmed
                 {
-                    OutInfo("Checking staging delegate", 2).
-                    local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-                    if stagingCheckResult = 1
+                    if g_LoopDelegates:HasKey("Staging")
                     {
-                        OutInfo("Staging", 2).
-                        g_LoopDelegates:Staging["Action"]:Call().
+                        OutInfo("Checking staging delegate", 2).
+                        local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+                        if stagingCheckResult = 1
+                        {
+                            OutInfo("Staging", 2).
+                            g_LoopDelegates:Staging["Action"]:Call().
+                        }
                     }
+                }
+                
+                if Stage:Number <= g_StageLimit
+                {
+                    OutInfo("AutoStaging disabled", 2).
+                    DisableAutoStaging().
                 }
             }
             set t_Val to 0.
