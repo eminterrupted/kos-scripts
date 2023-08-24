@@ -409,8 +409,11 @@
                   _termWidth is g_TermWidth,
                   _termHeight is g_TermHeight.
 
-        set Terminal:Width to Max(16, _termWidth).
-        set Terminal:Height to Max(24, _termHeight).
+        local col0Size to list(68, 4).
+        local col1Size to list(Floor(col0Size[0] / 2), 16).
+
+        set Terminal:Width to Max(col0Size[0] + 4, _termWidth).
+        set Terminal:Height to Max(48, _termHeight).
         DoEvent(Core, "Open Terminal").
 
         ClearScreen.
@@ -435,9 +438,9 @@
         print "PROGRAM: {0}":Format(_scriptPath)                at (0, cr()).
         cr().
         
-        DispTermGrid(10, 68, 4, 1, True).
+        DispTermGrid(10, col0Size[0], col0Size[1], 1, True).
         set g_GridAssignments[0] to "MAIN".
-        DispTermGrid(g_Line, 34, 16, 2, False).
+        DispTermGrid(g_Line, col1Size[0], col1Size[1], 2, False).
 
         return g_Line.
     }
@@ -522,7 +525,10 @@
 
         set g_Line to _startAt.
 
-        local colWidthFloor to Floor(_colWidth).
+        set Terminal:Width to Max(Terminal:Width, _colWidth + 4).
+        set Terminal:Height to Max(Terminal:Height, _StartAt + _rowHeight + 10).
+
+        local colWidthFloor to _colWidth - 2.
         local colCount      to Floor((Terminal:Width) / (colWidthFloor + 2)).
         local colStr        to l_GridColLine:Call(_colWidth, "|").
         local colIdxList    to list(2). // Prepopulated with 2 because that's where the safe column space always starts
@@ -531,7 +537,7 @@
         local headerStr     to l_GridRowLine:Call(rowLineWidth, "=").
         local rowStr        to l_GridRowLine:Call(rowLineWidth, "_").
 
-        local rowCount      to choose _rowCount if _rowCount > 0 else Floor((Terminal:Height - g_Line - 5) / _rowHeight).
+        local rowCount      to choose _rowCount if _rowCount > 0 else Floor((Terminal:Height - g_Line - 10) / _rowHeight).
         local rowInnerIdx   to 0.
         local rowTotalIdx   to 0.
 

@@ -11,6 +11,10 @@
     // *- Local
     // #region
     local _ti to Terminal:Input.
+
+    local l_sfxReference to lexicon(
+        0, "0:/sfx/ZeldaUnlock.json"
+    ).
     // #endregion
 
     // *- Global
@@ -38,7 +42,7 @@
 // *~ Functions ~* //
 // #region
 
-    // *- System / Terminal Utilities
+    // *- Terminal Utilities
     // #region
     
         // Breakpoint :: [(Time to wait)<scalar>], [(Wait Message)<string>] -> (Continue)<bool>
@@ -109,29 +113,7 @@
             return true.
         }
 
-
-        // global function CheckKerbaliKode
-        // {
-        //     if not g_TermHasChar // Check if a new character is available
-        //     {
-        //         return.
-        //     }
-
-        //     if g_TermChar = g_kKode[g_kKodeCheckIdx] // if next entry is successful
-        //     {
-        //         set g_kKodeCheckIdx to g_kKodeCheckIdx + 1.
-        //         if g_kKodeCheckIdx = g_kKode:Length
-        //         {
-        //             set g_Debug to True.
-        //         }
-        //     }
-        //     else // reset
-        //     {
-        //         set g_kKodeCheckIdx to 0.
-        //     }
-        //     set g_TermHasChar to False.
-        // }
-
+        // SECRET SECRET
         global function CheckKerbaliKode
         {
             if g_TermQueue:EMPTY // If queue has no elements, no-op
@@ -149,7 +131,7 @@
                     // fireworks explodes everywhere
                     // a small pixelated kerbal waddles away into the sunset
                     OutInfo("KerbaliKode activated", 1).
-                    wait 1.
+                    PlaySFX(0).
                     OutInfo("", 1).
                     set g_Debug to not g_Debug. //toggle debug on or off
                 }
@@ -550,7 +532,6 @@
         return parsedTagObject.
     }
 
-
     global function SetNextStageLimit
     {
         parameter _tag is core:tag.
@@ -768,6 +749,25 @@
             g_LoopDelegates:Events:Remove(_eventID).
         }
         return g_LoopDelegates:Events:Keys:Contains(_eventID).
+    }
+    // #endregion
+
+    // Sound
+    // #region
+
+    // PlaySFX :: <int> -> <none>
+    // Plays a sound effect based chosen by param idx
+    global function PlaySFX
+    {
+        parameter sfxId is 0.
+
+        local sfxData to readJson(l_sfxReference[Min(sfxId, l_sfxReference:Length - 1)]).
+        local v0 to getVoice(9).
+        from { local idx to 0.} until idx = sfxData:length step { set idx to idx + 1.} do
+        {
+            v0:play(sfxData[idx]).
+            wait 0.13.
+        }
     }
     // #endregion
 
