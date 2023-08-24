@@ -36,6 +36,9 @@
     local  l_GridSpaceIdx to 0.
     local  l_GridSpaceLex to lexicon().
     local  l_LastAssignedBlock to 0.
+
+    local l_Col0Size to list(68, 4).
+    local l_Col1Size to list(Floor(l_Col0Size[0] / 2), 16).
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -409,10 +412,7 @@
                   _termWidth is g_TermWidth,
                   _termHeight is g_TermHeight.
 
-        local col0Size to list(68, 4).
-        local col1Size to list(Floor(col0Size[0] / 2), 16).
-
-        set Terminal:Width to Max(col0Size[0] + 4, _termWidth).
+        set Terminal:Width to Max(l_Col0Size[0] + 4, _termWidth).
         set Terminal:Height to Max(48, _termHeight).
         DoEvent(Core, "Open Terminal").
 
@@ -438,9 +438,9 @@
         print "PROGRAM: {0}":Format(_scriptPath)                at (0, cr()).
         cr().
         
-        DispTermGrid(10, col0Size[0], col0Size[1], 1, True).
+        DispTermGrid(10, l_Col0Size[0], l_Col0Size[1], 1, True).
         set g_GridAssignments[0] to "MAIN".
-        DispTermGrid(g_Line, col1Size[0], col1Size[1], 2, False).
+        DispTermGrid(g_Line, l_Col1Size[0], l_Col1Size[1], 2, False).
 
         return g_Line.
     }
