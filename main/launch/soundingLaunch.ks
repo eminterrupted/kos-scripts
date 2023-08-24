@@ -93,7 +93,29 @@ DispStateFlags().
 OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
 
 OutMsg("Waiting for launch command").
-Breakpoint(Terminal:Input:Enter, "Press [ENTER] to hopefully go to space today").
+set g_TS to Time:Seconds.
+local launchStr to "Press [ENTER] to hopefully go to space today".
+local launchChars to list(
+    ""
+    ,"*"
+    ,"**"
+    ,"***"
+).
+
+until g_TermChar = Terminal:Input:Enter
+{
+    local idx to Mod(Round(Time:Seconds - g_TS), launchChars:Length).
+    local launchChar to launchChars[idx].
+    local tempStr to "{0,3} {1} {0,-3}":Format(launchChar, launchStr).
+    print tempStr at (Round((Terminal:Width - tempStr:Length) / 2), Terminal:Height - 5).
+    GetTermChar().
+    if not g_Debug
+    {
+        CheckKerbaliKode().
+    }
+}
+
+// Breakpoint(Terminal:Input:Enter, "Press [ENTER] to hopefully go to space today").
 ClearScreen.
 // DispTermGrid().
 DispMain(ScriptPath()).

@@ -14,6 +14,7 @@
     global g_MsgInfoLoopActive to False.
     global g_TermHeight to 56.
     global g_TermWidth  to 72.
+    global g_TermSize to g_TermHeight + g_TermWidth.
 
     // #endregion
 
@@ -243,7 +244,11 @@
         parameter _dispBlockIdx is -1,
                   _statLex is lexicon().
 
-        
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+        }
+
         if _dispBlockIdx < 0
         {
             set _dispBlockIdx to NextOrAssignedTermBlock("ASCENT_ANGLE_STATS").
@@ -260,6 +265,11 @@
                       _burnDur is 0,
                       _dispBlockIdx is -1.
 
+            if Terminal:Height + Terminal:Width <> g_TermSize
+            {
+                DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            }
+            
             if _dispBlockIdx < 0
             {
                 set _dispBlockIdx to NextOrAssignedTermBlock("BURN_DATA").
@@ -298,6 +308,11 @@
         {
             parameter _dispBlockIdx is -1.
 
+            if Terminal:Height + Terminal:Width <> g_TermSize
+            {
+                DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            }
+
             if _dispBlockIdx < 0
             {
                 set _dispBlockIdx to NextOrAssignedTermBlock("BURN_PERF_DATA").
@@ -324,6 +339,11 @@
     {
         parameter _dispBlockIdx is -1,
                   _statLex is g_ActiveEngines_Data.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+        }
 
         if _dispBlockIdx < 0
         {
@@ -356,6 +376,11 @@
     global function DispLaunchTelemetry
     {
         parameter _dispBlockIdx is -1.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+        }
 
         if _dispBlockIdx < 0
         {
@@ -424,6 +449,11 @@
     {
         parameter _dispBlockIdx is -1.
 
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+        }
+
         if _dispBlockIdx < 0
         {
             set _dispBlockIdx to NextOrAssignedTermBlock("REENTRY_TELEMETRY").
@@ -447,6 +477,11 @@
     global function DispStateFlags
     {
         parameter _dispBlockIdx is -1.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+        }
 
         if _dispBlockIdx < 0
         {
@@ -552,6 +587,8 @@
             if rowTotalIdx < rowCount print rowStr at (0, cr()).
         }
         print headerStr at (0, cr()).
+
+        set g_TermSize to Terminal:Height + Terminal:Width.
         // Neat
     }
 

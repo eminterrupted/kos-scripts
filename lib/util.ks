@@ -10,10 +10,27 @@
 // #region
     // *- Local
     // #region
+    local _ti to Terminal:Input.
     // #endregion
 
     // *- Global
     // #region
+    global g_kKode to list(
+                _ti:UpCursorOne, 
+                _ti:UpCursorOne, 
+                _ti:DownCursorOne,
+                _ti:DownCursorOne,
+                _ti:LeftCursorOne,
+                _ti:RightCursorOne,
+                _ti:LeftCursorOne,
+                _ti:RightCursorOne,
+                "b",
+                "a"
+            ).
+    global g_correctKodeInputsProvided to 0.
+    global g_correctKodeInputsRequired to g_kKode:Length.
+
+    global g_TermQueue to queue().
     // #endregion
 // #endregion
 
@@ -92,6 +109,57 @@
             return true.
         }
 
+
+        // global function CheckKerbaliKode
+        // {
+        //     if not g_TermHasChar // Check if a new character is available
+        //     {
+        //         return.
+        //     }
+
+        //     if g_TermChar = g_kKode[g_kKodeCheckIdx] // if next entry is successful
+        //     {
+        //         set g_kKodeCheckIdx to g_kKodeCheckIdx + 1.
+        //         if g_kKodeCheckIdx = g_kKode:Length
+        //         {
+        //             set g_Debug to True.
+        //         }
+        //     }
+        //     else // reset
+        //     {
+        //         set g_kKodeCheckIdx to 0.
+        //     }
+        //     set g_TermHasChar to False.
+        // }
+
+        global function CheckKerbaliKode
+        {
+            if g_TermQueue:EMPTY // If queue has no elements, no-op
+            {
+                return.
+            }
+
+            if g_kKode[g_correctKodeInputsProvided] = g_TermQueue:Pop()
+            {
+                set g_correctKodeInputsProvided to g_correctKodeInputsProvided + 1.
+                OutInfo("kKode [{0}/{1}]":Format(g_correctKodeInputsProvided, g_correctKodeInputsRequired), 1).
+
+                if g_correctKodeInputsProvided = g_correctKodeInputsRequired
+                {
+                    // fireworks explodes everywhere
+                    // a small pixelated kerbal waddles away into the sunset
+                    OutInfo("KerbaliKode activated", 1).
+                    wait 1.
+                    OutInfo("", 1).
+                    set g_Debug to not g_Debug. //toggle debug on or off
+                }
+                return.
+            }
+
+            OutInfo("", 1).
+            set g_correctKodeInputsProvided to 0.
+        }
+
         // CheckTermChar :: (Char to check)<TerminalInput> -> (Match)<bool>
         // Returns the boolean result of a check of the provided value against g_TermChar. 
         // _updateGlobal will set g_TermChar to the next char in the queue for comparison if available
@@ -99,15 +167,11 @@
         global function CheckTermChar
         {
             parameter _char,
-                    _updateGlobal is false.
+                    _updateGlobal is False.
 
             if _updateGlobal
             {
-                if Terminal:Input:HasChar
-                {
-                    set g_TermChar to Terminal:Input:GetChar.
-                    Terminal:Input:Clear().
-                }
+                GetTermChar().
             }
             local result to _char = g_TermChar.
             return result.
@@ -121,13 +185,15 @@
             if Terminal:Input:HasChar 
             { 
                 set g_TermChar to Terminal:Input:GetChar.
+                g_TermQueue:Push(g_TermChar).
+                set g_TermHasChar to True.
                 Terminal:Input:Clear().
-                return true.
             }
-            else
-            {
-                return false.
-            }
+            // else
+            // {
+            //     set g_TermHasChar to False.
+            // }
+            return g_TermHasChar.
         }
 
 
@@ -718,7 +784,7 @@
 
         if Addons:Available("Career")
         {
-            local waitTimer to 15.
+            local waitTimer to 5.
             set g_TS to Time:Seconds + waitTimer.
             local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
             set g_TermChar to "".

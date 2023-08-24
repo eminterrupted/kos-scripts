@@ -20,7 +20,7 @@
     // Program flow control
 
     global g_Counter to 0.
-    global g_Debug to True.
+    global g_Debug to False.
     global g_Debug_Max to True.
     global g_Slowbug to False.
     global g_LastUpdate to 0.
@@ -95,6 +95,7 @@
     // Terminal Input
     global g_TermChar to "".
     global g_TermGrid to lexicon().
+    global g_TermHasChar to False.
 
     // Engines
     global g_BoosterObj      to lexicon().
