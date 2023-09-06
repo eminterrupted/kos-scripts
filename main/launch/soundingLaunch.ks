@@ -220,7 +220,7 @@ until Stage:Number <= g_StageLimit
                         g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
                     }
                     set doneFlag to true.
-                    wait until Ship:AvailableThrust > 1.
+                    // wait until Ship:AvailableThrust > 1.
                 }
             }
         }

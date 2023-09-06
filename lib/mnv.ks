@@ -58,13 +58,13 @@
             lock steering to s_Val.
             lock throttle to t_Val.
 
-            local burnLeadTime to UpdateTermScalar(60, list(1, 5, 15, 30)).
+            local burnLeadTime to UpdateTermScalar(30, list(1, 5, 15, 30)).
             local warpFlag to False.
 
             until time:seconds >= burnEta
             {
                 if Kuniverse:TimeWarp = 0 set warpFlag to False.
-                if not warpFlag OutMsg("Press Enter to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+                if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
                 GetTermChar().
                 wait 0.01.
                 if g_termChar = ""
@@ -157,6 +157,11 @@
                 {
                     OutInfo("AutoStaging disabled", 2).
                     DisableAutoStaging().
+                }
+
+                if g_LoopDelegates["Events"]:Keys:Length > 0 
+                {
+                    ExecGLoopEvents().
                 }
             }
             set t_Val to 0.

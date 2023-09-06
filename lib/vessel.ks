@@ -50,12 +50,12 @@
     ).
 
     set g_PartInfo["EventTypeRef"] to lexicon(
-        "Antenna", list("ModuleDeployableAntenna", "extend")
+        "Antenna", list("ModuleDeployableAntenna", "extend antenna")
         ,"Solar",  list("ModuleDeployableSolarPanel", "extend")
     ).
 
     set g_PartInfo["PartModuleRef"] to lexicon(
-        "longAntenna", list("ModuleDeployableAntenna", "extend")
+        "longAntenna", list("ModuleDeployableAntenna", "extend antenna")
     ).
     // #endregion
 // #endregion
@@ -200,12 +200,9 @@
                             {
                                 local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
                                 set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoSRB")).
+                                // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(stageEngines_BT - SpoolTime, 2), 1)).
                                 return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
-                            }
-                            else
-                            {
-                                OutDebug("Failed MissionTime > 0 [{0}] and g_ActiveEngines:Length [{1}]":Format(MissionTime, g_ActiveEngines:Length)).
                             }
                         }
                         else if t_Val > 0
@@ -224,7 +221,7 @@
                         }
 
                         OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(HotStageID, "SpoolUp")).
-                        set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                        // set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                         local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[HotStageID]:Engines).
                         until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
                         {
@@ -944,7 +941,7 @@
 
                     if partMatrix:HasKey(setIdx)
                     {
-                        partMatrix[setIdx]:Add(lexicon(p:UID, list(p))).
+                        partMatrix[setIdx]:Add(p:UID, list(p)).
                         if tagSplit:Length > 3
                         {
                             set eventType to tagSplit[3].

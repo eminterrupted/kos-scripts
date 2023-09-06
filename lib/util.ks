@@ -217,22 +217,22 @@
                 set scalarVal to scalarVal + 5.
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
             }
-            else if g_TermChar = Terminal:Input:DeleteRight
+            else if g_TermChar = "("
             {
                 set scalarVal to scalarVal - 15.
                 set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
-            else if g_TermChar = "\"
+            else if g_TermChar = ")"
             {
                 set scalarVal to scalarVal + 15.
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
             }
-            else if g_TermChar = Terminal:Input:EndCursor
+            else if g_TermChar = "{"
             {
                 set scalarVal to scalarVal - 30.
                 set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
-            else if g_TermChar = Terminal:Input:HomeCursor
+            else if g_TermChar = "}"
             {
                 set scalarVal to scalarVal + 30.
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".

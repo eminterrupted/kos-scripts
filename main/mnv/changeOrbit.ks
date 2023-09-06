@@ -22,36 +22,61 @@ if _params:Length > 0
     if _params:Length > 2 set trackVal to _params[2].
 }
 
-if burnTgt < 1
+if burnAt = "AP"
 {
-    if burnAt = "AP"
+    if trackVal = "PE"
     {
-        if trackVal = "PE"
+        if burnTgt < 1    
         {
-            set tgtPe to GetPeFromApEcc(tgtAp, burnTgt).
+            set tgtPe to GetPeFromApEcc(Ship:Apoapsis, burnTgt).
         }
-        else
+        else 
         {
-            set tgtPe to tgtAp.
-            set tgtAp to GetApFromPeEcc(tgtAp, burnTgt).
+            set tgtPe to burnTgt.
         }
-        set xfrTgt to Ship:Apoapsis. 
-        set XfrTS  to Time:Seconds + ETA:Apoapsis.
     }
     else
     {
-        if trackVal = "PE"
+        if burnTgt < 1
         {
-            set tgtAp to tgtPe.
-            set tgtPe to GetPeFromApEcc(tgtAp, burnTgt).
+            set tgtPe to tgtAp.
+            set tgtAp to GetApFromPeEcc(Ship:Periapsis, burnTgt).
         }
         else
         {
-            set tgtAp to GetApFromPeEcc(tgtAp, burnTgt).
+            set tgtAp to burnTgt.
         }
-        set xfrTgt to Ship:Periapsis.
-        set xfrTS  to Time:Seconds + ETA:Periapsis.
     }
+    set xfrTgt to Ship:Apoapsis. 
+    set XfrTS  to Time:Seconds + ETA:Apoapsis.
+}
+else
+{
+    if trackVal = "PE"
+    {
+        if burnTgt < 1    
+        {
+            set tgtAp to tgtPe.
+            set tgtPe to GetPeFromApEcc(Ship:Apoapsis, burnTgt).
+        }
+        else
+        {
+            set tgtPe to burnTgt.
+        }
+    }
+    else
+    {
+        if burnTgt < 1
+        {
+            set tgtAp to GetApFromPeEcc(Ship:Periapsis, burnTgt).
+        }
+        else
+        {
+            set tgtAp to burnTgt.
+        }
+    }
+    set xfrTgt to Ship:Periapsis.
+    set xfrTS  to Time:Seconds + ETA:Periapsis.
 }
 
 local burnDV   to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, xfrTgt, trackVal, Ship:Body).
