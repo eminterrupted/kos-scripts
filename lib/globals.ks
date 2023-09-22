@@ -96,6 +96,7 @@
     global g_TermChar to "".
     global g_TermGrid to lexicon().
     global g_TermHasChar to False.
+    global g_TermCharRead to False.
 
     // Engines
     global g_BoosterObj      to lexicon().
@@ -110,10 +111,12 @@
     global g_MECOArmed              to False.
     global g_LESArmed               to False.
     global g_RCSArmed               to False.
+    global g_OnDeployActive         to False.
 
     // Ship control
-    global t_Val to 0.
+    global r_Val to 0.
     global s_Val to Ship:Facing.
+    global t_Val to 0.
 
     global g_AngDependency to lexicon().
     global g_MECO to 0.
@@ -127,15 +130,25 @@
 
 // *~ Collection Variables ~* //
 // #region
+
+// Terminal input mappings by script or context
+global g_InputMappings to lexicon(
+    "Script", lexicon()
+    ,"Context", lexicon()
+).
+
+// loop delegate / event container
 global g_LoopDelegates  to lexicon(
     "Program", lexicon()
     // ,"Staging", lexicon()
     ,"Events", lexicon()
 ).
+
+// Dictionary of module events mapped to friendly names
 global g_ModEvents to lexicon(
     "Antenna", lexicon(
         "ModuleDeployableAntenna", lexicon(
-            "Extend",   "extend antenna"
+            "Deploy",   "extend antenna"
             ,"Retract", "retract antenna"
             ,"Toggle",  "toggle antenna"
         )
@@ -154,9 +167,23 @@ global g_ModEvents to lexicon(
             "Decouple", "jettison fairing"
         )
     )
+    ,"Solar", lexicon(
+        "ModuleROSolar", lexicon(
+            "Deploy", "extend solar panel"
+        )
+    )
 ).
 
-global g_PartInfo       to lexicon().
+// Dictionary of miscellaneous part info and mappings
+global g_PartInfo       to lexicon(
+    "PartModRef", lexicon(
+        "Antenna",     list("ModuleDeployableAntenna", "ModuleRealAntenna")
+        ,"Decoupler",  list("ModuleAnchoredDecoupler", "ModuleDecouple", "ProceduralFairingDecoupler")
+        ,"Solar",      list("ModuleROSolar")
+    )
+).
+
+// Dictionary of miscellaneous propellant info and mappings
 global g_PropInfo       to lexicon().
 // #endregion
 

@@ -56,7 +56,6 @@ if _params:Length > 0
 }
 
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
-// local dvNeeded to CalcDvHoh(Ship:Periapsis, Ship:Apoapsis, Ship:Apoapsis).
 OutMsg("Calculated DV Needed: {0}":Format(Round(dvNeeded[1], 2))).
 
 local circNode to Node(Time:Seconds + ETA:Apoapsis, 0, 0, dvNeeded[1]).
@@ -67,7 +66,37 @@ until not hasNode
     remove nextNode. 
 }
 add circNode.
-ExecNodeBurn(circNode).
 
-OutMsg("Maneuver complete").
+local execFlag to True.
+
+if circNode:DeltaV:Mag < 25 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:Height
+{
+    set g_TS to Time:Seconds + 5.
+    OutInfo("DV Below skip threshold!").
+    until Time:Seconds > g_TS or not execFlag
+    {
+        OutInfo("[{0}] Press Backspace to skip maneuver":Format(Round(g_TS - Time:Seconds)), 2).
+
+        if CheckTermChar(Terminal:Input:Backspace, True)
+        {
+            OutInfo("Skipping manuever").
+            OutInfo("", 2).
+            set execFlag to False.
+        }
+    }
+}
+
+OutInfo().
+
+if execFlag 
+{
+    ExecNodeBurn(circNode).
+    OutMsg("Maneuver complete").
+}
+else
+{
+    remove circNode.
+    OutMsg("Manuever skipped by user").
+}
+
 wait 1.

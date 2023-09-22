@@ -14,6 +14,8 @@ local azObj        to choose l_az_calc_init(tgtAlt, tgtInc) if g_GuidedAscentMis
 
 local scr to "0:/main/launch/soundingLaunch.ks".
 
+SetupOnDeployHandler(Ship:PartsTaggedPattern("OnDeploy\|\d")).
+
 if Ship:Status = "PRELAUNCH"
 {
     OutMsg("Executing path: {0}":Format(scr)).
@@ -102,14 +104,29 @@ else
     OutInfo("Stage: {0} (Lim: {1}) | Pe: {2} (Tgt: {3}) | {4}":Format(Stage:Number, g_StageLimit, Round(Ship:Periapsis), Round(tgtAlt), g_MissionTag:Mission)).
     wait 2.
 }
-SetupOnStageEventHandler(Ship:PartsTaggedPattern("(OnDeploy|OnStage)")).
+set g_OnDeployActive to True.
 ClearScreen.
 DispMain(ScriptPath()).
 
+local doneFlag to False.
+until doneFlag
+{
+    if g_LoopDelegates:Events:Keys:Length = 0
+    {
+        set doneFlag to True.
+    }
+    else
+    {
+        ExecGLoopEvents().
+    }
+    wait 0.01.
+}
 // TODO: Extend Antenna Function
 
+wait 1.
 // Extend any solar panels
-ExtendSolarPanels().
+// ExtendSolarPanels().
+set g_OnDeployActive to False.
 
 if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("RealChuteModule"):Length > 0
 {

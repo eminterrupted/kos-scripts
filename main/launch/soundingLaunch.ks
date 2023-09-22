@@ -38,6 +38,10 @@ if _tgtAlt < 0
 wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + 100).
 
+
+ConfigureLaunchPad().
+
+// Launch event setup
 // Set the steering delegate
 if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 {
@@ -46,8 +50,6 @@ if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 
 set g_azData to _azObj.
 set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
-
-ConfigureLaunchPad().
 
 if rcsPresent
 {
@@ -71,15 +73,6 @@ if onStageParts:Length > 0
 local autoStageResult to ArmAutoStagingNext().
 set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 
-if g_FairingsArmed 
-{
-    OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
-}
-else if g_LESArmed
-{
-    OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
-}
-
 // Check if we have any special MECO engines to handle
 local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
 local ascentEventCount to 0.
@@ -87,10 +80,16 @@ if ascentEventParts:Length > 0
 {
     set ascentEventCount to ArmAscentEvents(ascentEventParts).
 }
-OutInfo("ArmAscentEvents() ascentEventCount: [{0}]":Format(ascentEventCount)).
+
+if g_Debug
+{
+    OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
+    OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
+    OutInfo("ArmAscentEvents() ascentEventCount: [{0}]":Format(ascentEventCount)).
+    OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
+}
 
 DispStateFlags().
-OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
 
 OutMsg("Waiting for launch command").
 set g_TS to Time:Seconds.
@@ -115,14 +114,12 @@ until g_TermChar = Terminal:Input:Enter
     }
 }
 
-// Breakpoint(Terminal:Input:Enter, "Press [ENTER] to hopefully go to space today").
 ClearScreen.
-// DispTermGrid().
 DispMain(ScriptPath()).
 
 lock Throttle to 1.
 OutMsg("GO for launch! Commencing countdown").
-wait 0.25.
+wait 0.05.
 LaunchCountdown().
 OutInfo().
 OutInfo("",1).
@@ -130,17 +127,6 @@ OutInfo("",1).
 set g_ActiveEngines to GetActiveEngines().
 set g_NextEngines   to GetNextEngines().
 
-// local MECO_Engines to Ship:PartsTaggedPattern("Ascent\|MECO\|\d*").
-// if MECO_Engines:Length > 0
-// {
-//     SetupMECOEventHandler(MECO_Engines, "Ascent").
-// }
-// local AutoStageResult to ArmAutoStaging().
-// ArmAutoStagingNext(g_StageLimit, 0, 1).
-
-// set g_BoostersArmed to ArmBoosterStaging().
-set g_BoostersArmed to False.
-OutInfo("g_BoostersArmed: {0}":Format(g_BoostersArmed)).
 set s_Val to Ship:Facing.
 lock steering to s_Val.
 
@@ -154,6 +140,7 @@ OutMsg("Vertical Ascent").
 set g_ActiveEngines to GetActiveEngines().
 
 DispMain(ScriptPath()).
+ClearDispBlock().
 
 until Alt:Radar >= towerHeight
 {
@@ -197,15 +184,18 @@ until Alt:Radar >= towerHeight
     
     DispStateFlags().
     DispLaunchTelemetry().
-    // DispEngineTelemetry().
+    DispEngineTelemetry().
 }
+ClearDispBlock().
 
 OutMsg("Gravity Turn").
 until Stage:Number <= g_StageLimit
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
     if g_BoostersArmed { CheckBoosterStageCondition().}
+
     if g_LoopDelegates:HasKey("Staging")
     {
         if g_HotStagingArmed 
@@ -220,7 +210,6 @@ until Stage:Number <= g_StageLimit
                         g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
                     }
                     set doneFlag to true.
-                    // wait until Ship:AvailableThrust > 1.
                 }
             }
         }
@@ -234,122 +223,62 @@ until Stage:Number <= g_StageLimit
         }
     }
     
-    // if fairingsArmed
-    // {
-    //     if Ship:Altitude >= fairingJetAlt
-    //     {
-    //         if g_LoopDelegates:Events:HasKey("Fairings")
-    //         {
-    //             if g_LoopDelegates:Events:Fairings:HasKey("Check")
-    //             {
-    //                 g_LoopDelegates:Events:Fairings:Check:Call().
-    //             }
-    //             else
-    //             {
-    //                 JettisonFairings(Ship:PartsTaggedPattern("fairing|ascent")).
-    //             }
-    //         }
-    //         set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-    //     }
-    // }
-    if rcsPresent
-    {
-        if Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= 0.001 or g_ActiveEngines_Data:BurnTimeRemaining <= 5
-        {
-            RCS on.
-            set rcsPresent to False.
-        }
-    }
-    
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        // OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
         ExecGLoopEvents().
     }
 
     set s_Val to g_SteeringDelegate:Call().
     DispStateFlags().
     DispLaunchTelemetry().
-    // DispEngineTelemetry().
-    wait 0.01.
+    DispEngineTelemetry().
 }
-
-// set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-// until g_ActiveEngines_Data:Thrust >= 0.2
-// {
-//     if g_BoostersArmed { CheckBoosterStageCondition().}
-//     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
-
-//     if fairingsArmed
-//     {
-//         if Ship:Altitude >= fairingJetAlt
-//         {
-//             g_LoopDelegates:Events["fairing"]:Delegate:Call().
-//             set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-//         }
-//     }
-
-//     DispLaunchTelemetry().
-//     // DispEngineTelemetry().
-//     wait 0.01.
-// }
+ClearDispBlock().
 
 OutInfo("Disabling Autostaging").
 DisableAutoStaging().
 
 OutMsg("Final Burn").
-wait 0.25.
+wait 0.05.
 until Ship:AvailableThrust <= 0.1
 {
     set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
     if g_BoostersArmed { CheckBoosterStageCondition().}
-    // if fairingsArmed
-    // {
-    //     g_LoopDelegates:Events["Fairings"]:Check:Call().
-    //     set fairingsArmed to g_LoopDelegates:Events:HasKey("fairing").
-    // }
 
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
-        // OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
+        if g_Debug OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
         ExecGLoopEvents().
     }
 
     DispStateFlags().
     DispLaunchTelemetry().
-    // DispEngineTelemetry().
-    wait 0.01.
-    // if g_ActiveEngines_Data:Thrust <= 0.1
-    // {
-    //     set doneFlag to true.
-    //     OutDebug("[289]: DoneFlag triggered").
-    // }
+    DispEngineTelemetry().
 }
-ClearDispBlock("ENGINE_TELEMETRY").
-ClearDispBlock("SYSTEMS ARMED STATUS").
+ClearDispBlock().
 
 set t_Val to 0.
 OutMsg("Coasting out of atmosphere").
 unlock throttle.
-Until Ship:Altitude >= Body:ATM:Height
+
+// Coast out of atmosphere
+until Ship:Altitude >= Body:ATM:Height
 {
     set s_Val to Ship:Prograde.
+
+    if g_LoopDelegates["Events"]:Keys:Length > 0 
+    {
+        if g_Debug OutDebug("Events executed this loop: {0}":Format(g_LoopDelegates:Events:Keys:Length)).
+        ExecGLoopEvents().
+    }
+
+    DispStateFlags().
     DispLaunchTelemetry().
     wait 0.01.
 }
 
-if g_StageLimitSet:Length > 0
-{
-    set core:tag to SetNextStageLimit(core:tag).
-}
-
 OutMsg("Launch script complete, performing exit actions").
 unlock throttle.
-wait 1.
-
-
-
-
-// Test Functions
+wait 0.25.

@@ -18,6 +18,47 @@
     // #region
     local stagingState to 0.
     local localTS to 0.
+    
+    local l_rollCheck            to 0.
+    local l_rollCheckWeightAvg   to 0.
+    local l_rollCheckWeightAvgs  to list().
+    local l_rollCheckTimout      to 3.
+    local l_rollCheckTimestamp   to 0.
+    local l_rollCheckTimeMark    to 0.
+    local l_rollCheckTimeWindup  to 0.
+    local l_rollCheckWindupLimit to list(-1, 1).
+
+    local l_rollOffset to 0.
+    local l_rollOffsets to list(
+        
+    ).
+
+   global g_rollCheckObj to lex(
+        "CTRL_REF", lex(
+            -1, list(Terminal:Input:Backspace, Terminal:Input:DeleteRight)
+            ,0, list()
+            ,1, list(Terminal:Input:UpCursorOne, Terminal:Input:DownCursorOne)
+            ,2, list(")", "(")
+            ,3, list("}", "{")
+        )
+        ,"DEL", lex(
+            "UPDATE", UpdateReentryRollOffsets@
+        )
+        ,"ROLL_OFFSETS", list(
+            0
+            ,0.25
+            ,0.5
+            ,1
+            ,2.5
+            ,5
+            ,10
+            ,22.5
+            ,30
+            ,45
+            ,90
+        )
+    ).
+    local l_rollOffsets_UpperBound to g_rollCheckObj:ROLL_OFFSETS:Length - 1.
 
     // Making copies of this object instead of specifying multiple times in code
     local boosterSetTemplate to lexicon(
@@ -633,54 +674,67 @@
         // Creates and registers new events for the OnDeploy event type
         global function SetupOnDeployHandler
         {
-            parameter _partList is Ship:PartsTaggedPattern("OnDeploy\|\d*").
+            parameter _partList is Ship:PartsTaggedPattern("OnDeploy\|\d+")
+                      ,_deployStage is -1.
 
-            local deployStage to _partList[0]:DecoupledIn + 1.
-            local paramList to list(_partList, deployStage).
+            local resultFlag to False.
+            
+            if _partList:Length > 0
+            {
+                local deployStage to choose _partList[0]:DecoupledIn + 1 if _deployStage < 0 else _deployStage.
+                local paramList to list(_partList, deployStage).
 
-            local checkDel to { 
-                parameter _params is list().
-                
-                local _deployStage to _params[1].
-                
-                if Stage:Number <= _deployStage + 1
-                {
-                    return True.
-                }
-                return False.
-            }.
-
-            local actionDel to 
-            { 
-                parameter _params is list(). 
-
-                local partList to _params[0].
-                local maxSet to 0.
-
-                for p in partList
-                {
-                    set maxSet to max(p:tag:Split("|")[1]:ToNumber(-1)).
-                }
-
-                from { local i to 0.} until i > maxSet step { set i to i + 1.} do
-                {
-                    for p in ship:PartsTaggedPattern("OnDeploy\|{0}":Format(i))
+                local checkDel to { 
+                    parameter _params is list().
+                    
+                    local _deployStage to _params[1].
+                    
+                    if Stage:Number <= _deployStage or g_OnDeployActive
                     {
-                        if p:HasModule("ModuleDeployableAntenna")
-                        {
-                            DoEvent(p:GetModule("ModuleDeployableAntenna"), "extend antenna").
-                        }
-                        if p:HasModule("ModuleDeployableSolarPanel")
-                        {
-                            DoEvent(p:GetModule("ModuleDeployableSolarPanel"), "extend panel").
-                        }
+                        return True.
                     }
-                }
-                return False.
-            }.
+                    return False.
+                }.
 
-            local deployEvent to CreateLoopEvent("OnDeploy", "OnDeployEvent", paramList, checkDel@, actionDel@).
-            local resultFlag to RegisterLoopEvent(deployEvent).
+                local actionDel to 
+                { 
+                    parameter _params is list(). 
+
+                    local partList to _params[0].
+                    local maxSet to 0.
+
+                    for p in partList
+                    {
+                        set maxSet to Max(maxSet, p:tag:Split("|")[1]:ToNumber(-1)).
+                    }
+
+                    from { local i to 0.} until i > maxSet step { set i to i + 1.} do
+                    {
+                        OutInfo("OnDeploy.{0}: Active":Format(i)).
+                        for p in ship:PartsTaggedPattern("OnDeploy\|{0}":Format(i))
+                        {
+                            for pType in g_PartInfo:PartModRef:Keys
+                            {
+                                for m in g_PartInfo:PartModRef[pType]
+                                {
+                                    if p:HasModule(m)
+                                    {
+                                        if g_ModEvents[pType][m]:HasKey("Deploy")
+                                        {
+                                            DoEvent(p:GetModule(m), g_ModEvents[pType][m]:Deploy).
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        wait 0.25.
+                    }
+                    return False.
+                }.
+
+                local deployEvent to CreateLoopEvent("OnDeploy", "OnDeployEvent", paramList, checkDel@, actionDel@).
+                set resultFlag to RegisterLoopEvent(deployEvent).
+            }
 
             return resultFlag.
         }
@@ -906,6 +960,63 @@
             return resultFlag or g_LoopDelegates:Events:HasKey(_dcEventID) or g_DecouplerEventArmed.
         }
 
+        // SetupOnDeployEventHandler :: [_partList<List[Parts]>] -> resultFlag<bool>
+        global function SetupOnDeployEventHandler
+        {
+            SetupOnDeployHandler().
+        }
+
+        // ArmOnReentryEvents :: [optionsList<List>] -> resultFlag<bool>
+        global function ArmOnReentryEvents
+        {
+            parameter _options is list().
+
+            local armState to lexicon( // #TODO Finish individual arm state delegates!
+                "Fairing", lex( // Arms any tagged fairings for separation after atmospheric reentry
+                    "Armed", False
+                    ,"Del", ArmFairingJettison("reentry")@
+                )
+                ,"Gemini", lex( // Gemini has controls for CoM offsets
+                    "Armed", False
+                    ,"Del", {} // ArmGeminiCoMOffset@
+                )
+                ,"JettisonDrogue", lex( // Arms a tagged drogue parachute to be jettisoned at a given altitude
+                    "Armed", False
+                    ,"Del",  {} // ArmPartJettisonOnAltitude@
+                )
+                ,"Mercury", lex( // Arms the Mercury landing bag
+                    "Armed", False
+                    ,"Del", {} // ArmMercuryPartJettison@
+                )
+                ,"Parachute", lex( // Arms any parachutes present
+                    "Armed", False
+                    ,"Del",  {} // ArmParachutes@
+                )
+                ,"SciCollect", lex( // Attempts to collect science
+                    "Armed", False
+                    ,"Del", {} // ArmSciCollection@
+                )
+            ).
+
+            for opt in _options
+            {
+                if      opt = "Gemini"          set armState:Gemini         to True.
+                else if opt = "JettisonDrogue"  set armState:JettisonDrogue to True.
+                else if opt = "Fairing"         set armState:Fairing        to True.
+                else if opt = "Mercury"         set armState:Mercury        to True. 
+                else if opt = "Parachute"       set armState:Parachute      to True.
+                else if opt = "CollectSci"      set armState:SciCollect     to True.
+            }
+
+            from { local i to 0.} until i = armState:Keys:Length step { set i to i + 1.} do
+            {
+                if armState:Values[i]:Armed
+                {
+                    armState:Values[i]:Del:Call().
+                }
+            }
+        }
+
         // SetupOnStageEventHandler :: [_partList<List[Parts]>] -> resultFlag<bool>
         // Creates and registers event delegates for parts that need actions to happen when the vessel reaches a specific stage number
         // Stage number and action derived from tags
@@ -960,10 +1071,7 @@
             local osEventID to "ONSTAGE_{0}":Format(deployStg).
             local paramList to list(partMatrix).
 
-            if g_LoopDelegates:Events:HasKey(osEventID)
-            {
-            }
-            else
+            if not g_LoopDelegates:Events:HasKey(osEventID)
             {
                 set checkDel to { 
                     parameter _params is list().
@@ -1089,7 +1197,7 @@
             else if p:DecoupledIn <= stg
             {
                 set stgShipMass to stgShipMass + p:Mass.
-                if p:DecoupledIn = stg 
+                if p:DecoupledIn = stg
                 {
                     set stgMass to stgMass + p:Mass.
                 }
@@ -1114,6 +1222,196 @@
 
     // ** Steering
     // #region
+
+    // CheckReentryRollControl :: <none> -> (_effectiveRollValue)<Scalar>
+    // Returns the current rotation value to apply to the current steering vector based on keyboard input 
+    global function CheckReentryRollControl
+    {
+        local effectiveRollValue to r_Val.
+        local rollModifierValue to 0.
+        
+        local l_Reentry_Control_Obj to lexicon(
+            "CTRL_REF", l_rollControlRef
+        ).
+
+        local l_Reentry_Control_Priority_List to list().
+
+        if g_TermChar <> ""
+        {
+            if g_TermChar = Terminal:Input:Backspace
+            {
+                set l_rollCheck to 0.
+            }
+            else if g_TermChar = Terminal:Input:DeleteRight
+            {
+                set l_rollCheck to 0.
+                set r_Val to 0.
+            }
+            else if g_TermChar = "+"
+            {
+                set l_rollCheck to choose 0 if l_rollCheck < 0 else l_rollOffsets_UpperBound.
+            }
+            else if g_TermChar = "_"
+            {
+                set l_rollCheck to choose 0 if l_rollCheck > 0 else -l_rollOffsets_UpperBound.
+            }
+            else if g_TermChar = Terminal:Input:UpCursorOne
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck + 1, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = Terminal:Input:RightCursorOne
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck + 2, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = Terminal:Input:DownCursorOne
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck - 1, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = Terminal:Input:LeftCursorOne
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck + 2, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = ")"
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck + 3, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = "}"
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck + 5, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = "("
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck - 3, l_rollOffsets_UpperBound)).
+            }
+            else if g_TermChar = "{"
+            {
+                set l_rollCheck to Max(-(l_rollOffsets_UpperBound), Min(l_rollCheck - 5, l_rollOffsets_UpperBound)).
+            }
+            set l_rollCheckTimeMark to Time:Seconds.
+            set l_rollCheckTimestamp to l_rollCheckTimestamp + Min(1, l_rollCheckTimeMark - (l_rollCheckTimeStamp - l_rollCheckTimout)).
+            set g_TermCharRead to True.
+        }
+        set l_rollCheckWeightAvg to Abs(Time:Seconds - l_rollCheckTimestamp).
+        
+        set rollModifierValue  to choose l_rollCheckObj:ROLL_OFFSETS[l_rollCheck] if l_rollCheck > 0 else -(l_rollCheckObj:ROLL_OFFSETS[Abs(l_rollCheck)]).
+        
+        if l_rollCheck <> 0
+        {
+            set effectiveRollValue to Mod(Ship:Facing:Roll + rollModifierValue, 360).
+        }
+        
+        return effectiveRollValue.
+    }
+
+    local function UpdateReentryRollOffsets
+    {
+        parameter _pChar is g_TermChar. 
+
+        local curRollPosition to VAng(Ship:Up:Vector, -Body:Position).
+        local doneFlag to False.
+        local effectiveOffset to l_rollOffset.
+        local incr to 0.
+        local sign to 0.
+        
+        from { local i to 0.} until i = g_rollCheckObj:CTRL_REF:Keys:Length or doneFlag step { set i to i + 1.} do
+        {
+            local refListId to g_rollCheckObj:CTRL_REF:Keys[i].
+
+            if g_rollCheckObj:CTRL_REF[refListId]:Contains(_pChar)
+            {
+                set sign to (-1 + (g_rollCheckObj:CTRL_REF[refListId]:IndexOf(_pChar) * 2)).
+                set incr to incr + (g_rollCheckObj:CTRL_REF:Keys[g_rollCheckObj:CTRL_REF:Keys:Find(refListId)] * sign).
+                set doneFlag to True.
+            }
+
+            if refListId > 0
+            {
+                set effectiveOffset to curRollPosition + incr.
+            }
+            else
+            {
+                if sign > 0 
+                {
+                    set l_rollCheck to 0.
+                    set l_rollCheckWeightAvg to 0.
+                    l_rollCheckWeightAvgs:Clear().
+                    set effectiveOffset to curRollPosition.
+                }
+                else
+                {
+                    set effectiveOffset to curRollPosition.
+                }
+            }
+        }
+        set r_Val to effectiveOffset.
+
+        return effectiveOffset.
+    }
+
+    local function UpdateReentryRollOffsets_Old
+    {
+        parameter _pChar is g_TermChar. 
+
+        local curRollPosition to VAng(Ship:Up:Vector, -Body:Position).
+        local doneFlag to False.
+        local effectiveOffset to l_rollOffset.
+        local incr to 0.
+        local sign to 0.
+        local tgtTimeDelta to 0.
+        
+        local l_rollCheckWeightedAvg_UpperBound to l_rollCheckWeightAvgs:Length - 1.
+
+        from { local i to 0.} until i = g_rollCheckObj:CTRL_REF:Keys:Length or doneFlag step { set i to i + 1.} do
+        {
+            local refListId to g_rollCheckObj:CTRL_REF:Keys[i].
+
+            if g_rollCheckObj:CTRL_REF[refListId]:Contains(_pChar)
+            {
+                set sign to (-1 + (g_rollCheckObj:CTRL_REF[refListId]:IndexOf(_pChar) * 2)).
+                set incr to incr + (g_rollCheckObj:CTRL_REF:Keys[g_rollCheckObj:CTRL_REF:Keys:Find(refListId)] * sign).
+                set l_rollCheckTimestamp to Min(l_rollCheckTimestamp + 1, Time:Seconds + l_rollCheckTimout).
+                set l_rollCheckTimeMark to Time:Seconds.
+                
+                l_rollCheckWeightAvgs:Add(Max(l_rollCheckWeightAvgs(0) * 1, 1)).
+                
+                set l_rollCheckTimestamp to l_rollCheckTimeMark + (1 + l_rollCheckTimeWindup).
+                set doneFlag to True.
+            }
+            set tgtTimeDelta to Max(0, l_rollCheckTimestamp - l_rollCheckTimeMark).
+
+            if refListId > 0
+            {
+                if l_rollCheckWeightAvgs:length > 8
+                {
+                    set l_rollCheckWeightAvg to (l_rollCheckWeightAvg * 8) - l_rollCheckWeightAvgs[l_rollCheckWeightedAvg_UpperBound].
+                    l_rollCheckWeightAvgs:Remove(l_rollCheckWeightedAvg_UpperBound).
+                }
+
+                local curInputWeight to Max(l_rollCheckWindupLimit[0], Min(l_rollCheckWindupLimit[1], (tgtTimeDelta / l_rollCheckTimout) - 0.00125)).
+                set l_rollCheckWeightAvg to (l_rollCheckWeightAvg + curInputWeight) / l_rollCheckWeightAvgs:Length.
+                
+                set l_rollCheck to Round(l_rollCheck + (g_rollCheckObj:CTRL_REF[l_rollCheck] * sign)).
+                set effectiveOffset to curRollPosition + (l_rollCheckWeightAvg * (g_rollCheckObj:ROLL_OFFSETS[refListId])).
+            }
+            else
+            {
+                if sign > 0 
+                {
+                    set l_rollCheck to 0.
+                    set l_rollCheckWeightAvg to 0.
+                    l_rollCheckWeightAvgs:Clear().
+                    set effectiveOffset to curRollPosition.
+                }
+                else
+                {
+                    set effectiveOffset to curRollPosition.
+                }
+            }
+        }
+        set r_Val to effectiveOffset.
+
+        return sign.
+    }
 
     global function GetSteeringError
     {

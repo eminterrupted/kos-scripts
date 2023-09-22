@@ -201,11 +201,11 @@
             "Half", 0
         ).
 
-        for key in dvStgObj["Full"]:keys
+        for key in dvStgObj:Full:keys
         {
             local stgEngs to GetEnginesForStage(key).
             local stgSpecs to GetEnginesSpecs(stgEngs).
-            local exhVel to GetExhVel(GetEnginesForStage(key)).
+            local exhVel to GetExhVel(stgEngs).
             local stgThr to stgSpecs:StgThrust.
             local vesMass to GetStageMass(key)["ship"].
             // print "exhVel: " + exhVel.
@@ -325,18 +325,24 @@
         parameter stg, mode is "vac".
 
         //Problem is in calculating fuel mass in StageMass function
-        local stgMass to GetStageMass(stg).
-        local exhVel to GetExhVel(GetEnginesForStage(stg), mode).
-        
-        //clrDisp(30).
-        // print "AvailStageDV".
-        // print "stg : " + stg.
-        // print "stgMass: " + stgMass.
-        // print "exhVel: " + exhVel.
-        // Breakpoint().
-        local dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
-        // print "Stg dV: " + dv.
-        // print "---".
+
+        local dv to 0.
+        local stgEngs to GetEnginesForStage(stg).
+        if stgEngs:Length > 0
+        {
+            local stgMass to GetStageMass(stg).
+            local exhVel to GetExhVel(stgEngs, mode).
+            
+            // print "AvailStageDV         ".
+            // print "stg : " + stg + "        ".
+            // print "stgMass[Ship]: " + stgMass:Ship + "        ".
+            // print "stgMass[Fuel]: " + stgMass:Fuel + "        ".
+            // print "exhVel: " + exhVel + "        ".
+            // Breakpoint().
+            set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
+            // print "Stg dV: " + dv.
+            // print "---".
+        }
         return dv.
     }
 //#endregion

@@ -20,11 +20,13 @@ local spinStab to false.
 local stagingAlt to ship:body:atm:height.
 local ts to time:seconds.
 
+set r_Val to 0.
 set s_Val to ship:facing.
 lock steering to s_Val.
 
 set t_Val to 0.
 lock throttle to t_Val.
+
 
 ///Params
 //retroFire: bool, fire rockets to deorbit
@@ -250,70 +252,16 @@ if retroFire and ship:periapsis > reentryTgt
 }
 
 set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
-// lock steering to s_Val.
 
 OutMsg("Waiting until altitude <= " + startAlt).
-// local dir to choose "down" if startAlt <= ship:altitude else "up".
-// local warpFlag to false.
 Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from an old keypress
-// Get Timestamp for target alt
-// local tsAlt to ship:orbit:eta:periapsis.
-// local shipPos to positionAt(ship, tsAlt).
-// local altPos  to shipPos - positionAt(body, tsAlt).
-// local warpTS to tsAlt.
-// until false
-// {
-//     set tsAlt to tsAlt - 5.
-//     set shipPos to positionAt(ship, tsAlt).
-//     set shipPos to positionAt(ship, tsAlt).
-//     // set altPos  to shipPos - positionAt(body, tsAlt).
-//     // if CheckValRange(altPos, startAlt, startAlt + 5000)
-//     // {
-//     //     local warpTS to tsAlt.
-//     // }
-// }
 
-// until false
-// {
-//     if ship:altitude <= startAlt 
-//     {
-//         // set warp to 0.
-//         break.
-//     }
-//     // else 
-//     // {
-//     //     InitWarp(warpTS).
-//     //     //OutTee("Press Enter in terminal to warp " + dir + " to " + startAlt).
-//     //     until ship:altitude <= startAlt 
-//     //     {
-//     //         // if CheckWarpKey()
-//     //         // {
-//     //         //     OutInfo("Warping to startAlt: " + startAlt).
-//     //         //     set warpFlag to true.
-//     //         // }
-//     //         // if warpFlag
-//     //         // {
-//     //         //     WarpToAlt(startAlt).
-//     //         //     If ship:altitude <= startAlt
-//     //         //     {
-//     //         //         set warpFlag to false.
-//     //         //     }
-//     //         // }
-//     //         set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
-//     //         DispTelemetry().
-//     //         wait 0.01. 
-//     //     }
-//     //     break.
-//     // }
-// }
-
-// if warp > 0 set warp to 0.
-// wait until kuniverse:timewarp:issettled.
 
 OutInfo("Press Home to take control, End to relinquish").
 until ship:altitude <= startAlt
 {
     GetTermChar().
+    
     if g_TermChar = Terminal:Input:HomeCursor
     {
         OutInfo("Control released").
@@ -326,8 +274,10 @@ until ship:altitude <= startAlt
     }
     else
     {
+        // set s_Val to Ship:Retrograde. 
+        set r_Val to g_rollCheckObj:DEL:UPDATE:Call(g_TermChar).
+        set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
         Terminal:Input:Clear().
-        set s_Val to Ship:Retrograde. 
     }
     set g_TermChar to "".
     DispReentryTelemetry().
@@ -436,12 +386,13 @@ until ship:altitude <= body:atm:height + 1000
     }
     else
     {
+        // set s_Val to Ship:SrfRetrograde. 
+        set r_Val to g_rollCheckObj:DEL:UPDATE:Call(g_TermChar).
+        set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val).
         Terminal:Input:Clear().
-        set s_Val to Ship:SrfRetrograde. 
     }
     set g_TermChar to "".
     
-    set s_Val to Ship:SrfRetrograde.
     DispReentryTelemetry().
     
     // DispGeneric().
@@ -457,30 +408,21 @@ OutInfo().
 until ship:altitude <= body:atm:height
 {
     GetTermChar().
-    if g_TermChar = Terminal:Input:HomeCursor
-    {
-        OutInfo("Control released").
-        unlock steering.
-    }
-    else if g_TermChar = Terminal:Input:EndCursor
-    {
-        OutInfo("Control locked").
-        lock steering to s_Val.
-    }
-    else
-    {
-        Terminal:Input:Clear().
-        set s_Val to Ship:SrfRetrograde. 
-    }
-    set g_TermChar to "".
+    
+    set r_Val to g_rollCheckObj:DEL:UPDATE:Call(g_TermChar).
+    set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val).
     
     DispReentryTelemetry().
 }
+
 OutMsg("Reentry Interface").
 
 until ship:groundspeed <= 1350 and ship:altitude <= 10000
 {
     GetTermChar().
+
+    set r_Val to g_rollCheckObj:DEL:UPDATE:Call(g_TermChar).
+
     if g_TermChar = Terminal:Input:HomeCursor
     {
         OutInfo("Control released").
@@ -494,7 +436,7 @@ until ship:groundspeed <= 1350 and ship:altitude <= 10000
     else
     {
         Terminal:Input:Clear().
-        set s_Val to Ship:SrfRetrograde. 
+        set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val). 
     }
     set g_TermChar to "".
     
@@ -527,6 +469,7 @@ until alt:radar <= 500
     DispReentryTelemetry().
 }
 
+// Deploy the Mercury capsule landing bag
 local aniMods to Ship:ModulesNamed("ModuleAnimateGeneric").
 if aniMods:Length > 0
 {

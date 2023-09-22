@@ -58,7 +58,7 @@
             lock steering to s_Val.
             lock throttle to t_Val.
 
-            local burnLeadTime to UpdateTermScalar(30, list(1, 5, 15, 30)).
+            local burnLeadTime to UpdateTermScalar(15, list(1, 5, 15, 30)).
             local warpFlag to False.
 
             until time:seconds >= burnEta
@@ -113,7 +113,7 @@
                 }
                 set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
                 // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
-                DispBurnData(dvRemaining, burnEta - Time:Seconds, burnDur[0]).
+                DispBurnNodeData(dvRemaining, burnEta - Time:Seconds, burnDur[0]).
             }
 
             local dv0 to _inNode:deltav.
@@ -129,13 +129,18 @@
             set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
             set Ship:Control:Fore to 0.
             
-            local g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
-            
+            set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
+            wait 0.01.
+
+            set g_ActiveEngines to GetActiveEngines().
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
+                set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                 set burnTimeRemaining to burnTimer - Time:Seconds.
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
-                DispBurnData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
+
+                
+                DispBurnNodeData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
                 DispBurnPerfData().
                 wait 0.01.
                 

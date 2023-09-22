@@ -12,7 +12,7 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
-    global g_TermHeight to 56.
+    global g_TermHeight to 64.
     global g_TermWidth  to 72.
     global g_TermSize to g_TermHeight + g_TermWidth.
 
@@ -36,9 +36,17 @@
     local  l_GridSpaceIdx to 0.
     local  l_GridSpaceLex to lexicon().
     local  l_LastAssignedBlock to 0.
+    local  l_MaxAvailGridIdx to 0.
+    local  l_Col0Size to list(68, 4).
+    local  l_Col1Size to list(Floor(l_Col0Size[0] / 2), 16).
 
-    local l_Col0Size to list(68, 4).
-    local l_Col1Size to list(Floor(l_Col0Size[0] / 2), 16).
+    local l_InputMappings_D_Idx to 0.
+    local l_InputMappings_D_Vals to list(
+         { return "l_GridSpaceLex_Keys: [{0}]    ":Format(l_GridSpaceLex:Keys:Join(";")).   }
+        ,{ return "l_GridSpaceLex_Vals: [{0}]    ":Format(l_GridSpaceLex:Values:Join(";")). }
+        ,{ return "g_GridAssignments_Keys: [{0}] ":Format(g_GridAssignments:Keys:Join(";")).}
+    ).
+    
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -70,6 +78,15 @@
         }
         return str.
     }.
+    // #endregion
+
+    // *- Global variable modifiers
+    // #region
+    
+    // TODO: Continue building on contextual input mappings idea
+    set g_InputMappings:Context["Disp"] to lexicon(
+        "D", { OutDebug(l_InputMappings_D_Vals[l_InputMappings_D_Idx]). }
+    ).
     // #endregion
 // #endregion
 
@@ -228,7 +245,7 @@
             // set newStr to newStr:Replace("`","{"):Replace("~","}").
             // set newStr to newStr:Format("*DBG", _str).
             // print newStr:PadRight(Terminal:Width - 2) at (1, line).
-            print "<color={2}>[{0}]</color> {1} ":Format("*DBG", _str, _color):PadRight(Terminal:Width - 2) at (1, line).
+            print "<color={2}>[{0}]</color> {1}     ":Format("*DBG", _str, _color) at (0, line).//:PadRight(Max(0, (Terminal:Width - 1) - (_str:Length + 8))) at (0, line).
         }
         else
         {
@@ -261,7 +278,7 @@
     }
 
     // Mnv details
-        global function DispBurnData
+        global function DispBurnNodeData
         {
             parameter _dvToGo is 0, 
                       _burnETA is 0, 
@@ -275,32 +292,38 @@
             
             if _dispBlockIdx < 0
             {
-                set _dispBlockIdx to NextOrAssignedTermBlock("BURN_DATA").
+                set _dispBlockIdx to NextOrAssignedTermBlock("BURN_NODE_DATA").
             }
             
-            if _burnETA >= 0 
+            if _burnETA >= 60 
             {
-                set _burnETA to abs(_burnETA).
-                if _burnETA > 60
-                {
-                    set _burnETA to TimeSpan(_burnETA):full.
-                }
-                else
-                {
-                    set _burnETA to round(_burnETA, 2).
-                }
+
+                set _burnETA to TimeSpan(_burnETA):full.
+            }
+            else
+            {
+                set _burnETA to round(_burnETA, 2).
             }
             
+            // local burnDurStr to "BURN DURATION : {0}":Format(Round(_burnDur, 2)).
+            // local burnETAStr to choose "BURN ETA      : {0}":Format(_burnETA) if _burnETA <> 0 else " ".
+            // local dvToGoStr  to "DV REMAINING  : {0}":Format(Round(_dvToGo, 2)).
+            
+            // local dispList to list(
+            //     "BURN NODE DATA"
+            //     ,dvToGoStr:PadRight(l_GridSpaceLex[_dispBlockIdx][1] - dvToGoStr:Length)
+            //     ,burnDurStr
+            // ).
             local dispList to choose list(
-                "BURN DATA"
+                "BURN NODE DATA"
                 ,"BURN ETA      : {0}":Format(_burnETA)
                 ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
                 ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
             ) if _burnETA > 0 else list(
                 "BURN DATA"
-                ,"DV REMAINING  : {0}     ":Format(round(_dvToGo, 2))
-                ,"BURN DURATION : {0}     ":Format(Round(_burnDur, 2))
-                ,"                              "
+                ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
+                ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
+                ," "
             ).
             
             DispPrintBlock(_dispBlockIdx, dispList).
@@ -321,18 +344,28 @@
                 set _dispBlockIdx to NextOrAssignedTermBlock("BURN_PERF_DATA").
             }
 
-            local engList to GetActiveEngines().
-            local perfObj to GetEnginesPerformanceData(engList).
+            // local engList to GetActiveEngines().
+            // local perfObj to GetEnginesPerformanceData(engList).
 
-            local dispList to list(
+            local dispList to choose list(
                 "ENGINE BURN PERF"
-                ,"ENGINE COUNT   : {0}":Format(engList:length)
-                ,"THRUST         : {0}":Format(round(perfObj["Thrust"], 2))
-                ,"THRUST (AVAIL) : {0}":Format(round(perfObj["ThrustAvailPres"], 2))
-                ,"THRUST (PCT)   : {0}":Format(round(perfObj["ThrustPct"], 2))
-                ,"MASS FLOW      : {0}":format(round(perfObj["MassFlow"], 4))
-                ,"MASS FLOW (MAX): {0}":Format(round(perfObj["MassFlowMax"], 4))
-                ,"MASS FLOW (PCT): {0}":Format(round(perfObj["MassFlowPct"] * 100, 1), 2)
+                ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
+                ,"THRUST         : {0}":Format(round(g_ActiveEngines_Data["Thrust"], 2))
+                ,"THRUST (AVAIL) : {0}":Format(round(g_ActiveEngines_Data["ThrustAvailPres"], 2))
+                ,"THRUST (PCT)   : {0}":Format(round(g_ActiveEngines_Data["ThrustPct"], 2))
+                ,"MASS FLOW      : {0}":format(round(g_ActiveEngines_Data["MassFlow"], 4))
+                ,"MASS FLOW (MAX): {0}":Format(round(g_ActiveEngines_Data["MassFlowMax"], 4))
+                ,"MASS FLOW (PCT): {0}":Format(round(g_ActiveEngines_Data["MassFlowPct"] * 100, 1), 2)
+            ) if g_ActiveEngines_Data:HasKey("Thrust") 
+            else list(
+                "ENGINE BURN PERF"
+                ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
+                ,"THRUST         : {0}":Format("NUL")
+                ,"THRUST (AVAIL) : {0}":Format("NUL")
+                ,"THRUST (PCT)   : {0}":Format("NUL")
+                ,"MASS FLOW      : {0}":format("NUL")
+                ,"MASS FLOW (MAX): {0}":Format("NUL")
+                ,"MASS FLOW (PCT): {0}":Format("NUL")
             ).
 
             DispPrintBlock(_dispBlockIdx, dispList).
@@ -361,13 +394,33 @@
 
         local timeRemaining to choose TimeSpan(_statLex:BurnTimeRemaining) if _statLex:HasKey("BurnTimeRemaining") else TimeSpan(0).
         local trStr to "{0}m {1}s  ":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 3)).
-        local dispList to list(
-            "ENGINE TELEMETRY"
-            ,"THRUST    : {0}  ":Format(Round(_statLex:Thrust, 2))
-            ,"AVL THRUST: {0}  ":Format(Round(_statLex:ThrustAvailPres, 2))
-            ,"THRUST PCT: {0}% ":Format(Round(_statLex:ThrustPct * 100, 2))
-            ,"ISP       : {0}s ":Format(Round(_statLex:ISPAt, 2))
-            ,"BURN TIME : {0}":Format(trStr)
+        // local dispList to list(
+        //     "ENGINE TELEMETRY"
+        //     ,"THRUST    : {0}  ":Format(Round(_statLex:Thrust, 2))
+        //     ,"AVL THRUST: {0}  ":Format(Round(_statLex:ThrustAvailPres, 2))
+        //     ,"THRUST PCT: {0}% ":Format(Round(_statLex:ThrustPct * 100, 2))
+        //     ,"ISP       : {0}s ":Format(Round(_statLex:ISPAt, 2))
+        //     ,"BURN TIME : {0}":Format(trStr)
+        // ).
+        local dispList to choose list(
+            "ENGINE PERFORMANCE"
+            ,"ENGINES ACTIVE : {0}  ":format(g_ActiveEngines:length)
+            ,"MASS FLOW      : {0}  ":format(round(_statLex["MassFlow"], 4))
+            ,"MASS FLOW (MAX): {0}  ":format(round(_statLex["MassFlowMax"], 4))
+            ,"MASS FLOW (PCT): {0}% ":format(round(_statLex["MassFlowPct"] * 100, 1), 2)
+            ,"THRUST         : {0}kn":format(round(_statLex["Thrust"], 2))
+            ,"THRUST (AVAIL) : {0}kn":format(round(_statLex["ThrustAvailPres"], 2))
+            ,"THRUST (PCT)   : {0}% ":format(round(_statLex["ThrustPct"], 2))
+        ) if g_ActiveEngines_Data:HasKey("Thrust") 
+        else list(
+            "ENGINE BURN PERF"
+            ,"ENGINES ACTIVE : {0}":format(g_ActiveEngines:length)
+            ,"MASS FLOW      : {0}":format("NUL")
+            ,"MASS FLOW (MAX): {0}":format("NUL")
+            ,"MASS FLOW (PCT): {0}":format("NUL")
+            ,"THRUST         : {0}":format("NUL")
+            ,"THRUST (AVAIL) : {0}":format("NUL")
+            ,"THRUST (PCT)   : {0}":format("NUL")
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).
@@ -549,18 +602,35 @@
             ClearDispBlock().
         }
 
+        if g_Debug
+        {
+            OutDebug("DispTermGrid|colCount/rowCount: [{0}/{1}]":Format(colCount, rowCount), -4).
+        }
+
         // This bit adds the column position for each possible column beyond the start.
-        from { local i to 1.} until i = colCount step { set i to i + 1.} do
+        from { local i to 1.} until i > colCount step { set i to i + 1.} do
         {
             colIdxList:Add(2 + (i * _colWidth)). 
         }
 
-        from { local iRow to 0.} until iRow = _rowCount step { set iRow to iRow + 1.} do
+        from { local iRow to 0.} until iRow > rowCount step { set iRow to iRow + 1.} do
         {
-            local rowLine to _startAt + 1 + Mod(iRow * _rowHeight, _rowHeight).
+            local rowLine to _startAt + 1 + Max(0, (iRow - 1) * _rowHeight).
+            
+            if g_Debug
+            {
+                OutDebug("DispTermGrid|iRow/rowLine: [{0}/{1}]":Format(iRow, rowLine), -3).
+            }
+
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
                 set l_GridSpaceIdx to iCol + iRow.
+
+                if g_Debug
+                {
+                    OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).
+                }
+
                 if g_GridAssignments:HasKey(l_GridSpaceIdx)
                 {
                     if g_GridAssignments[l_GridSpaceIdx] = ""
@@ -573,7 +643,7 @@
                     set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
                     set g_GridAssignments[l_GridSpaceIdx] to "".
                 }
-                set l_GridSpaceIdx to l_GridSpaceIdx + 1.
+                set l_MaxAvailGridIdx to Max(l_MaxAvailGridIdx, l_GridSpaceIdx).
             }
         }
     
@@ -593,6 +663,12 @@
             if rowTotalIdx < rowCount print rowStr at (0, cr()).
         }
         print headerStr at (0, cr()).
+
+        if g_Debug
+        {
+            OutDebug("DispTermGrid|l_GridSpaceLex: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), -1).
+            wait 0.25.
+        }
 
         set g_TermSize to Terminal:Height + Terminal:Width.
         // Neat
@@ -624,28 +700,25 @@
         {
             // if g_Debug OutDebug("[NextOrAssignedTermBlock] l_GridAssignments _dispId cache miss [{0}]":Format(blockIdx)).
             
-            local doneFlag to False.
-            from { local i to 0.} until doneFlag step { set i to i + 1.} do
+            from { local i to blockIdx. local doneFlag to False. } until i > l_MaxAvailGridIdx or doneFlag step { set i to i + 1.} do
             {
                 local processFlag   to False.
-                set blockIdx to blockIdx + i.
-                if g_GridAssignments:HasKey(blockIdx)
+                if g_GridAssignments:HasKey(i)
                 {
-                    if g_GridAssignments[blockIdx]:Length = 0
+                    if g_GridAssignments[i]:Length = 0
                     {
                         set processFlag to True.
                     }
                 }
-                else
+                else if i < l_MaxAvailGridIdx
                 {
                     set processFlag to True.
                 }
 
                 if processFlag 
                 {
-                    // set assignedBlock to i.// max(l_LastAssignedBlock, i).
-                    set l_LastAssignedBlock to max(l_LastAssignedBlock, blockIdx).
-                    set g_GridAssignments[blockIdx] to _dispId.
+                    set g_GridAssignments[i] to _dispId.
+                    set blockIdx to i.
                     set doneFlag to True.
                 }
             }
@@ -723,6 +796,11 @@
 
         local blockAnchor to list().
 
+        if g_Debug 
+        {
+            OutDebug("DispPrintBlock|Params: [{0}][{1}][{2}]":Format(_blockIdx, _dispData, _numColumns)).
+        }
+
         if _blockIdx:IsType("String")
         {
             set _blockIdx to _blockIdx:ToNumber(1).
@@ -733,6 +811,12 @@
         if l_GridSpaceLex:HasKey(_blockIdx)
         {
             set blockAnchor to l_GridSpaceLex[_blockIdx].
+        }
+
+        if g_Debug
+        {
+            OutDebug("DispPrintBlock|l_GridSpaceLex:HasKey({0}): [{1}]":Format(_blockIdx, l_GridSpaceLex:HasKey(_blockIdx)), 1).
+            OutDebug("DispPrintBlock|l_GridSpaceLex:Keys: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), 2).
         }
             // else
             // {
@@ -752,8 +836,8 @@
         //     }
         // }
 
-
         set g_Col to blockAnchor[0] + 1.
+        local g_ColLim to blockAnchor[1] - 1. 
         set g_line to blockAnchor[2].
        
         from { local i to 0.} until i = _dispData:Length step { set i to i + _numColumns.} do
@@ -761,7 +845,15 @@
             local bulletStr to choose "{0} ":Format(Char(9500)) if i > 0 else "".
             local str to _dispData[i].
 
-            
+            if str:Length > g_ColLim
+            {
+                set str to str:SubString(0, g_ColLim).
+            }
+            else
+            {
+                set str to str:PadRight(Max(0, g_ColLim - str:Length)).
+            }
+
             if i > 0
             {
                 print "{0}{1,-16}":Format(bulletStr, _dispData[i]) at (g_Col, cr()).

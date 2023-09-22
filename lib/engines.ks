@@ -666,7 +666,7 @@
             local btResList to list().
             for res in aggEngPerfObj:Resources:Values
             {
-                btResList:Add(res:FuelMass / res:MassFlow).
+                btResList:Add(Max(res:FuelMass, 0.0001) / Max(res:MassFlow, 0.00001)).
             }
             for _bt in btResList
             {
@@ -738,7 +738,7 @@
             set maxMassFlow to maxMassFlow + eng:MaxMassFlow.
         }
 
-        set avgResiduals to 1 - (avgResiduals / _engList:Length).
+        set avgResiduals to choose 1 - (avgResiduals / _engList:Length) if avgResiduals <> 0 and _engList:Length > 0 else 1.
         
         if (totalFuelMass > 0 and massFlow > 0)
         {
