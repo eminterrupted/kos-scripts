@@ -133,8 +133,8 @@
 
 // Terminal input mappings by script or context
 global g_InputMappings to lexicon(
-    "Script", lexicon()
-    ,"Context", lexicon()
+    "Context", lexicon()
+    ,"Script", lexicon()
 ).
 
 // loop delegate / event container

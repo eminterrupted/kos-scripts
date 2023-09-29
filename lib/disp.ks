@@ -84,9 +84,10 @@
     // #region
     
     // TODO: Continue building on contextual input mappings idea
-    set g_InputMappings:Context["Disp"] to lexicon(
+    local l_InputMappings to lexicon(
         "D", { OutDebug(l_InputMappings_D_Vals[l_InputMappings_D_Idx]). }
     ).
+    g_InputMappings:Context:Add("Disp", l_InputMappings).
     // #endregion
 // #endregion
 
@@ -266,7 +267,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -287,7 +288,7 @@
 
             if Terminal:Height + Terminal:Width <> g_TermSize
             {
-                DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+                DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
             }
             
             if _dispBlockIdx < 0
@@ -334,41 +335,42 @@
         {
             parameter _dispBlockIdx is -1.
 
-            if Terminal:Height + Terminal:Width <> g_TermSize
-            {
-                DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
-            }
+            DispEngineTelemetry(_dispBlockIdx).
+            // if Terminal:Height + Terminal:Width <> g_TermSize
+            // {
+            //     DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+            // }
 
-            if _dispBlockIdx < 0
-            {
-                set _dispBlockIdx to NextOrAssignedTermBlock("BURN_PERF_DATA").
-            }
+            // if _dispBlockIdx < 0
+            // {
+            //     set _dispBlockIdx to NextOrAssignedTermBlock("BURN_PERF_DATA").
+            // }
 
-            // local engList to GetActiveEngines().
-            // local perfObj to GetEnginesPerformanceData(engList).
+            // // local engList to GetActiveEngines().
+            // // local perfObj to GetEnginesPerformanceData(engList).
 
-            local dispList to choose list(
-                "ENGINE BURN PERF"
-                ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
-                ,"THRUST         : {0}":Format(round(g_ActiveEngines_Data["Thrust"], 2))
-                ,"THRUST (AVAIL) : {0}":Format(round(g_ActiveEngines_Data["ThrustAvailPres"], 2))
-                ,"THRUST (PCT)   : {0}":Format(round(g_ActiveEngines_Data["ThrustPct"], 2))
-                ,"MASS FLOW      : {0}":format(round(g_ActiveEngines_Data["MassFlow"], 4))
-                ,"MASS FLOW (MAX): {0}":Format(round(g_ActiveEngines_Data["MassFlowMax"], 4))
-                ,"MASS FLOW (PCT): {0}":Format(round(g_ActiveEngines_Data["MassFlowPct"] * 100, 1), 2)
-            ) if g_ActiveEngines_Data:HasKey("Thrust") 
-            else list(
-                "ENGINE BURN PERF"
-                ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
-                ,"THRUST         : {0}":Format("NUL")
-                ,"THRUST (AVAIL) : {0}":Format("NUL")
-                ,"THRUST (PCT)   : {0}":Format("NUL")
-                ,"MASS FLOW      : {0}":format("NUL")
-                ,"MASS FLOW (MAX): {0}":Format("NUL")
-                ,"MASS FLOW (PCT): {0}":Format("NUL")
-            ).
+            // local dispList to choose list(
+            //     "ENGINE BURN PERF"
+            //     ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
+            //     ,"THRUST         : {0}":Format(round(g_ActiveEngines_Data["Thrust"], 2))
+            //     ,"THRUST (AVAIL) : {0}":Format(round(g_ActiveEngines_Data["ThrustAvailPres"], 2))
+            //     ,"THRUST (PCT)   : {0}":Format(round(g_ActiveEngines_Data["ThrustPct"], 2))
+            //     ,"MASS FLOW      : {0}":format(round(g_ActiveEngines_Data["MassFlow"], 4))
+            //     ,"MASS FLOW (MAX): {0}":Format(round(g_ActiveEngines_Data["MassFlowMax"], 4))
+            //     ,"MASS FLOW (PCT): {0}":Format(round(g_ActiveEngines_Data["MassFlowPct"] * 100, 1), 2)
+            // ) if g_ActiveEngines_Data:HasKey("Thrust") 
+            // else list(
+            //     "ENGINE BURN PERF"
+            //     ,"ENGINE COUNT   : {0}":Format(g_ActiveEngines:length)
+            //     ,"THRUST         : {0}":Format("NUL")
+            //     ,"THRUST (AVAIL) : {0}":Format("NUL")
+            //     ,"THRUST (PCT)   : {0}":Format("NUL")
+            //     ,"MASS FLOW      : {0}":format("NUL")
+            //     ,"MASS FLOW (MAX): {0}":Format("NUL")
+            //     ,"MASS FLOW (PCT): {0}":Format("NUL")
+            // ).
 
-            DispPrintBlock(_dispBlockIdx, dispList).
+            // DispPrintBlock(_dispBlockIdx, dispList).
         }
 
     global function DispEngineTelemetry
@@ -378,7 +380,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -393,7 +395,7 @@
         }
 
         local timeRemaining to choose TimeSpan(_statLex:BurnTimeRemaining) if _statLex:HasKey("BurnTimeRemaining") else TimeSpan(0).
-        local trStr to "{0}m {1}s  ":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 3)).
+        local trStr to choose "{0}m {1}":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 1)) if Floor(timeRemaining:Minutes) > 0 else "{0}":Format(Round(Mod(timeRemaining:Seconds, 60), 1)).
         // local dispList to list(
         //     "ENGINE TELEMETRY"
         //     ,"THRUST    : {0}  ":Format(Round(_statLex:Thrust, 2))
@@ -404,13 +406,14 @@
         // ).
         local dispList to choose list(
             "ENGINE PERFORMANCE"
-            ,"ENGINES ACTIVE : {0}  ":format(g_ActiveEngines:length)
-            ,"MASS FLOW      : {0}  ":format(round(_statLex["MassFlow"], 4))
-            ,"MASS FLOW (MAX): {0}  ":format(round(_statLex["MassFlowMax"], 4))
-            ,"MASS FLOW (PCT): {0}% ":format(round(_statLex["MassFlowPct"] * 100, 1), 2)
-            ,"THRUST         : {0}kn":format(round(_statLex["Thrust"], 2))
-            ,"THRUST (AVAIL) : {0}kn":format(round(_statLex["ThrustAvailPres"], 2))
-            ,"THRUST (PCT)   : {0}% ":format(round(_statLex["ThrustPct"], 2))
+            ,"ENGINES ACTIVE : {0,9}  ":format(g_ActiveEngines:length)
+            ,"MASS FLOW      : {0,9}  ":format(round(_statLex["MassFlow"], 4))
+            ,"MASS FLOW (MAX): {0,9}  ":format(round(_statLex["MassFlowMax"], 4))
+            ,"MASS FLOW (PCT): {0,9}% ":format(round(_statLex["MassFlowPct"] * 100, 1))
+            ,"THRUST         : {0,9}kn":format(round(_statLex["Thrust"], 2))
+            ,"THRUST (AVAIL) : {0,9}kn":format(round(_statLex["ThrustAvailPres"], 2))
+            ,"THRUST (PCT)   : {0,9}% ":format(round(_statLex["ThrustPct"] * 100, 2))
+            ,"BURN TIME (EST): {0,9}s ":format(trStr)
         ) if g_ActiveEngines_Data:HasKey("Thrust") 
         else list(
             "ENGINE BURN PERF"
@@ -421,6 +424,7 @@
             ,"THRUST         : {0}":format("NUL")
             ,"THRUST (AVAIL) : {0}":format("NUL")
             ,"THRUST (PCT)   : {0}":format("NUL")
+            ,"BURN TIME (EST): {0}":format(trStr)
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).
@@ -435,7 +439,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -462,12 +466,16 @@
     global function DispMain
     {
         parameter _scriptPath is ScriptPath(),
+                  _initTerm is True,
                   _termWidth is g_TermWidth,
                   _termHeight is g_TermHeight.
 
-        set Terminal:Width to Max(l_Col0Size[0] + 4, _termWidth).
-        set Terminal:Height to Max(48, _termHeight).
-        DoEvent(Core, "Open Terminal").
+        if _initTerm
+        {
+            set Terminal:Width to Max(l_Col0Size[0] + 4, _termWidth).
+            set Terminal:Height to Max(48, _termHeight).
+            DoEvent(Core, "Open Terminal").
+        }
 
         ClearScreen.
 
@@ -507,7 +515,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -536,7 +544,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -682,7 +690,7 @@
     {
         parameter _dispId.
 
-        local blockIdx to 1.
+        local blockIdx to 0.
 
         if g_GridAssignments:Values:Length = 0
         {
@@ -710,7 +718,7 @@
                         set processFlag to True.
                     }
                 }
-                else if i < l_MaxAvailGridIdx
+                else if i <= l_MaxAvailGridIdx
                 {
                     set processFlag to True.
                 }

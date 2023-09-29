@@ -727,7 +727,7 @@
                                 }
                             }
                         }
-                        wait 0.25.
+                        wait 1.
                     }
                     return False.
                 }.

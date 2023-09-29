@@ -11,7 +11,7 @@ ksptot/*
 log/**
 main/maneuver/vessel.json
 tmp/*
-vscode/**
+# vscode/**
 ves_stage_stats-engStats.json
 ves_stage_stats-stgMass.json
 # _plan/*/*

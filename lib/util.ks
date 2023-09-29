@@ -15,6 +15,13 @@
     local l_sfxReference to lexicon(
         0, "0:/sfx/ZeldaUnlock.json"
     ).
+    local l_timeTable to lexicon(
+        "d", Earth:Orbit:Period
+        ,"h", 3600
+        ,"m", 60
+        ,"s", 1
+        ,"ms", 0.001
+    ).
     // #endregion
 
     // *- Global
@@ -72,6 +79,7 @@
                 if CheckTermChar(Terminal:Input:Enter, True) // Adding update _updateGlobal flag to perform the update and check in one call
                 {
                     set doneFlag to true. // User pressed Enter, we are done here
+                    set g_TermChar to "".
                 }
 
                 if _timeout > 0 
@@ -406,7 +414,7 @@
         local parsedTag         to list(_tag).
         local prmResult         to "".
         local prmSplit          to list().
-        local prmSet            to list("0", "0").
+        local prmSet            to list().
         local stageExitGate     to "".
         local tempStageStop     to "".
         local tempStopSplit     to list().
@@ -509,19 +517,44 @@
 
     global function SetNextStageLimit
     {
-        parameter _tag is core:tag.
-
-        if g_StageLimitSet:Length > 1
+        parameter _setStage is -1.
+        
+        local cTag to core:tag.
+        local lastStgLim to g_StageLimit.
+        if _setStage < 0
         {
-            set _tag to _tag:replace("|{0};":Format(g_StageLimit:ToString), "|").
-            local tagSplit to _tag:Split("|").
-            set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
-            set g_MissionTag:STGSTP to g_StageLimit.
-            OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).
-            g_StageLimitSet:Remove(0).
+            if g_StageLimitSet:Length > 1
+            {
+                set cTag to cTag:replace("|{0};":Format(g_StageLimit:ToString), "|").
+                local tagSplit to cTag:Split("|").
+                set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
+                set g_MissionTag:STGSTP to g_StageLimit.
+                g_StageLimitSet:Remove(0).
+            }
+            else
+            {
+                set g_StageLimit to 0.
+                set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
+                g_StageLimitSet:Clear().
+                g_StageLimitSet:Add(g_StageLimit).
+                set g_MissionTag:STGSTP to g_StageLimit.
+            }
         }
-        set core:tag to _tag.
-        return _tag.
+        else
+        {
+            set g_StageLimit to _setStage.
+            set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
+            g_StageLimitSet:Clear().
+            g_StageLimitSet:Add(g_StageLimit).
+            set g_MissionTag:STGSTP to g_StageLimit.
+        }
+
+        if g_StageLimit <> lastStgLim
+        {
+            set core:tag to cTag.
+            OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).
+        }
+        return cTag.
     }
 
 
@@ -530,6 +563,8 @@
         parameter _inputString.
 
         local scalar_result to -1.
+        
+
         if _inputString:IsType("Scalar") // if it's already a scalar, well...
         {
             set scalar_result to _inputString.
@@ -545,6 +580,21 @@
                 else if _inputString:MatchesPattern("(^\d*(mm$))")
                 {
                     set scalar_result to _inputString:Replace("mm", ""):ToNumber() * 1000000.
+                }
+            }
+            else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
+            {
+                set scalar_result to 0.
+                local strSet to list(_inputString).
+                
+                for key in l_timeTable:Keys
+                {
+                    if strSet[0]:MatchesPattern("(^\d*{0}})":Format(key))
+                    {
+                        set strSet to _inputString[0]:Split(key).
+                        set scalar_result to scalar_result + strSet[0]:ToNumber * l_timeTable[key].
+                        strSet:Remove(0).
+                    }
                 }
             }
             else if _inputString:MatchesPattern("(^\d*$)")

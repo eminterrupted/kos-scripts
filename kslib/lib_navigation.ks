@@ -154,11 +154,11 @@ function kslib_nav_phase_angle {
     local my_ancestors is list().
     local your_ancestors is list().
 
-    my_ancestors:Add(ship:Body).
+    my_ancestors:Add(thisVes:Body).
     until not(my_ancestors[my_ancestors:Length-1]:hasBody) {
         my_ancestors:Add(my_ancestors[my_ancestors:Length-1]:Body).
     }
-    your_ancestors:Add(target:Body).
+    your_ancestors:Add(tgtVes:Body).
     until not(your_ancestors[your_ancestors:Length-1]:hasBody) {
         your_ancestors:Add(your_ancestors[your_ancestors:Length-1]:Body).
     }
@@ -177,7 +177,7 @@ function kslib_nav_phase_angle {
         }
     }
 
-    local vel is ship:velocity:orbit.
+    local vel is thisVes:velocity:orbit.
     local my_ancestor is my_ancestors[0].
     until my_ancestor = common_ancestor {
         set vel to vel + my_ancestor:velocity:orbit.
@@ -187,11 +187,11 @@ function kslib_nav_phase_angle {
 
     local phase is vang(
         -common_ancestor:position:normalized,
-        vxcl(binormal, target:position - common_ancestor:position):normalized
+        vxcl(binormal, tgtVes:position - common_ancestor:position):normalized
     ).
     local signVector is vcrs(
         -common_ancestor:position:normalized,
-        (target:position - common_ancestor:position):normalized
+        (tgtVes:position - common_ancestor:position):normalized
     ).
     local sign is vdot(binormal, signVector).
     if sign < 0 {

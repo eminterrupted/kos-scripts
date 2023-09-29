@@ -68,7 +68,7 @@
         {
             if g_MissionTag:Params:Length > 0
             {
-                set _tgtAlt to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 250000.
+                set _tgtAlt to choose ParseStringScalar(g_MissionTag:Params[1]) if g_MissionTag:Params:Length > 1 else 250000.
             }
             else
             {
@@ -106,7 +106,11 @@
         set g_AngDependency to _delDependency.
 
         // Mission types and ascent angle profiles
-        if g_MissionTag:Mission = "SSO" // Sounder - Suborbital (Unguided ascent, guided reentry) :: No Params
+        if g_MissionTag:Mission = "Sounder"
+        {
+            set del to { return Ship:Facing:Vector.}.
+        }
+        else if g_MissionTag:Mission = "SSO" // Sounder - Suborbital (Unguided ascent, guided reentry) :: No Params
         {
             set del to { return Ship:Facing:Vector.}.
         }

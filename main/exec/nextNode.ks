@@ -5,6 +5,9 @@ RunOncePath("0:/lib/libLoader.ks").
 
 DispMain(ScriptPath()).
 
+SAS off.
+RCS on.
+
 SetupOnDeployHandler(Ship:PartsTaggedPattern("OnDeploy")).
 
 local doneFlag to False.

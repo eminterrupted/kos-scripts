@@ -417,7 +417,7 @@ until ship:altitude <= body:atm:height
 
 OutMsg("Reentry Interface").
 
-until ship:groundspeed <= 1350 and ship:altitude <= 10000
+until ship:groundspeed <= 1350 and ship:altitude <= 20000
 {
     GetTermChar().
 
@@ -442,6 +442,11 @@ until ship:groundspeed <= 1350 and ship:altitude <= 10000
     
     // set s_Val to ship:SrfRetrograde.
     DispReentryTelemetry().
+}
+
+if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0
+{
+    DoEvent(Ship:PartsNamed("ROC-GeminiParachuteBDB")[0]:GetModule("ModuleDecouple"), "decouple").
 }
 
 wait 1.

@@ -22,7 +22,104 @@
 
 // *~ Functions ~* //
 // #region
-  
+    // *- Maneuver Type Calcs
+    // #region
+    
+    // AddLunarTransferNode :: [_minETA(seconds)<scalar>], [_tgtPe(m)<scalar>] -> mnvNode<Node>
+    // Uses helpers to add a lunar transfer node to the flight plan
+    global function AddLunarTransferNode
+    {
+        parameter _minETA is 0,
+                  _tgtPe is 100000.
+
+        local tgtAlt            to Moon:Orbit:Semimajoraxis - Earth:Radius - Moon:Radius - _tgtPe.
+        local transPhase        to GetLunarTransferPhase(_tgtPe).
+        // local currMeanAnomaly   to GetMeanAnomaly(Ship:Orbit).
+        local timeToTransPhase  to GetTimeToPhase(transPhase, Moon, Ship, _minETA).
+
+        local transMnvDv  to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, Ship:Periapsis, tgtAlt, tgtAlt, "Ap", Earth).
+        local transNode   to Node(Time:Seconds + timeToTransPhase, 0, 0, transMnvDv[0]).
+        add transNode.
+
+        return transNode.
+    }
+
+    // #endregion
+
+    // *- Maneuver Calc Helpers (Local)
+    // #region
+
+    // GetLunarTransferPhase :: _arrivalAlt(m)<Scalar> -> transferPhase<scalar>
+    // Returns a transfer phase to arrive at the desired altitude
+    // https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm
+    local function GetLunarTransferPhase
+    {
+        parameter _arrivalAlt.
+
+        local arrivalSMA to choose _arrivalAlt + Moon:Radius if _arrivalAlt > 0 else 0.
+        local tgtAlt to Moon:Orbit:SemiMajorAxis - arrivalSMA - Earth:Radius.
+        local transSMA to GetTransferSMA(tgtAlt + Earth:Radius, Ship:Orbit:SemiMajorAxis).  
+        local transPeriod to GetTransferPeriod(transSMA). // (2 * Constant:pi * Sqrt((transMnv:SMA^3) / Earth:Mu)).
+        local tgtAngVelo to (360 / (2 * Constant:pi)) * (Earth:Mu / Moon:Orbit:SemiMajorAxis^3).
+
+        OutDebug("{0}: [{1}]":Format("_arrivalAlt", _arrivalAlt), -1).
+        OutDebug("{0}: [{1}]":Format("arrivalSMA", Round(arrivalSMA))).
+        OutDebug("{0}: [{1}]":Format("tgtAlt", Round(tgtAlt)), 1).
+        OutDebug("{0}: [{1}]":Format("transSMA", Round(transSMA)), 2).
+        OutDebug("{0}: [{1}]":Format("transPeriod", Round(transPeriod, 1)), 3).
+        OutDebug("{0}: [{1}]":Format("tgtAngVelo", Round(tgtAngVelo, 15)), 4).
+
+        Breakpoint().
+
+        OutDebug("", -1).
+        OutDebug().
+        OutDebug("", 1).
+        OutDebug("", 2).
+        OutDebug("", 3).
+        OutDebug("", 4).
+        wait 0.25.
+
+        return 180 - (0.5 * transPeriod * tgtAngVelo). // Transfer Phase
+    }
+
+    // GetTimeToPhase :: _tgtPhase(deg)<Scalar>, _curPhase(deg)<Scalar>, [_minETA(s)<Scalar>] -> phaseETA(s)(Scalar) 
+    local function GetTimeToPhase
+    {
+        parameter _tgtPhase,
+                  _tgtObj,
+                  _ogObj,
+                  _minETA is 0.
+
+        local phaseTS       to Time:Seconds + _minETA.
+        local startPhase    to GetPhaseAngleAtTime(_tgtObj, _ogObj, phaseTS).
+        local phaseDiff     to Mod(360 + _tgtPhase - startPhase, 360).
+        local tgtMeanAngMotion  to (2 * Constant:Pi) / _tgtObj:Orbit:Period.
+        local ogMeanAngMotion   to  (2 * Constant:Pi) / _ogObj:Orbit:Period.
+        local timeToTgtPhase    to phaseDiff / Abs(tgtMeanAngMotion - ogMeanAngMotion).
+        
+        OutDebug("{0}: [{1}]":Format("_tgtPhase", Round(_tgtPhase, 2)), -1).
+        OutDebug("{0}: [{1}]":Format("startPhase", Round(startPhase, 2))).
+        OutDebug("{0}: [{1}]":Format("phaseDiff", Round(phaseDiff, 2)), 1).
+        OutDebug("{0}: [{1}]":Format("tgtMeanAngMotion", Round(tgtMeanAngMotion, 15)), 2).
+        OutDebug("{0}: [{1}]":Format("ogMeanAngMotion", Round(ogMeanAngMotion, 15)), 3).
+        OutDebug("{0}: [{1}]":Format("timeToTgtPhase", Round(timeToTgtPhase, 5)), 4).
+
+        Breakpoint().
+
+        OutDebug("", -1).
+        OutDebug().
+        OutDebug("", 1).
+        OutDebug("", 2).
+        OutDebug("", 3).
+        OutDebug("", 4).
+
+        wait 0.25.
+
+        return timeToTgtPhase + _minETA.
+    }
+
+    // #endregion
+
     // *- Maneuver Exec
     // #region
 
@@ -122,7 +219,8 @@
             OutMsg("Executing burn").
             OutInfo().
             OutInfo("", 1).
-            
+            ClearDispBlock().
+
             local burnTimer         to Time:Seconds + burnDur[0].
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
@@ -132,10 +230,11 @@
             set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
             wait 0.01.
 
-            set g_ActiveEngines to GetActiveEngines().
             until vdot(dv0, _inNode:deltaV) <= 0.01
             {
+                set g_ActiveEngines to GetActiveEngines().
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                
                 set burnTimeRemaining to burnTimer - Time:Seconds.
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
 

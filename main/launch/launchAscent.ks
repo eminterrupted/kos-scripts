@@ -382,7 +382,7 @@ Until Ship:Altitude >= Body:ATM:Height
 
 if g_StageLimitSet:Length > 0
 {
-    set core:tag to SetNextStageLimit(core:tag).
+    set core:tag to SetNextStageLimit().
     if g_MsgInfoLoopActive MsgInfoLoop().
 }
 

@@ -136,5 +136,7 @@ if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("R
 
 set core:bootfilename to "".
 
+if g_StageLimit > 0 SetNextStageLimit(0).
+
 OutInfo().
 OutMsg("Exiting missionExec").
