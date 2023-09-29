@@ -8,9 +8,11 @@ runOncePath("0:/lib/libLoader").
 DispMain(scriptPath()).
 SAS off.
 
+local chuteStatus to "N/A".
 local fairings to ship:PartsTaggedPattern("fairing\|reentry").
 local jettAlt to 5000.
 
+local gemBDBChute to choose Ship:PartsNamed("ROC-GeminiParachuteBDB")[0] if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0 else Core:Part.
 local parachutes to ship:modulesnamed("RealChuteModule").
 local payloadStage to g_StageLimit.
 local reentryTgt to (ship:body:atm:height * 0.425).
@@ -51,29 +53,6 @@ if fairings:length > 0
 }
 OutMsg("Fairings present: {0} ({1})":Format(fairings:Length, jettAlt)).
 wait 3.
-
-OutMsg("Arming Parachute(s)").
-if parachutes:length > 0 
-{
-    if parachutes[0]:name = "RealChuteModule" 
-    {
-        for c in parachutes 
-        {
-            DoEvent(c, "arm parachute").
-        }
-    }
-    else if parachutes[0]:name = "ModuleParachute"
-    {
-        when parachutes[0]:getField("safe to deploy?") = "Safe" then 
-        {
-            for c in parachutes
-            {
-                DoEvent(c, "deploy chute").
-            }
-        }
-    }
-}
-wait 1.
 
 local mode to "descent".
 local doneFlag to choose false if Ship:VerticalSpeed > 0 else true.
@@ -291,9 +270,31 @@ if parachutes:length > 0
 {
     if parachutes[0]:name = "RealChuteModule" 
     {
+        set chuteStatus to "CHUTE_FOUND".
         for c in parachutes 
         {
-            DoEvent(c, "arm parachute").
+            if DoEvent(c, "arm parachute")
+            {
+                set chuteStatus to "ARMED(E)".
+            }
+            else
+            {
+                if DoAction(c, "arm parachute", True) 
+                {
+                    set chuteStatus to "ARMED(A)".
+                }
+                else
+                {
+                    set chuteStatus to "ARM_AUTO_ERR".
+                    when Alt:Radar < 20000 then
+                    {
+                        if not DoEvent(c, "deploy parachute")
+                        {
+                            DoAction(c, "deploy parachute", True).
+                        }
+                    }
+                }
+            }
         }
     }
     else if parachutes[0]:name = "ModuleParachute"
@@ -302,11 +303,15 @@ if parachutes:length > 0
         {
             for c in parachutes
             {
-                DoEvent(c, "deploy chute").
+                if not DoEvent(c, "deploy chute")
+                {
+                    DoAction(c, "deploy chute", True).
+                }
             }
         }
     }
 }
+wait 1.
 
 // Science data collection
 OutMsg("Checking Science Data").
@@ -417,7 +422,7 @@ until ship:altitude <= body:atm:height
 
 OutMsg("Reentry Interface").
 
-until ship:groundspeed <= 1350 and ship:altitude <= 20000
+until ship:groundspeed <= 1500 and ship:altitude <= 20000
 {
     GetTermChar().
 
@@ -443,16 +448,11 @@ until ship:groundspeed <= 1350 and ship:altitude <= 20000
     // set s_Val to ship:SrfRetrograde.
     DispReentryTelemetry().
 }
-
-if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0
-{
-    DoEvent(Ship:PartsNamed("ROC-GeminiParachuteBDB")[0]:GetModule("ModuleDecouple"), "decouple").
-}
-
 wait 1.
 
+if gemBDBChute:UID <> Core:Part:UID DoEvent(gemBDBChute:GetModule("ModuleDecouple"), "decouple").
 unlock steering.
-OutMsg("Control released").
+OutMsg("Control released | Parachute Status: [{0}]":Format(chuteStatus)).
 
 until ALT:RADAR <= jettAlt
 {
@@ -474,7 +474,7 @@ until alt:radar <= 500
     DispReentryTelemetry().
 }
 
-// Deploy the Mercury capsule landing bag
+// Deploy the Mercury capsule landing bag if present
 local aniMods to Ship:ModulesNamed("ModuleAnimateGeneric").
 if aniMods:Length > 0
 {

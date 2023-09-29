@@ -91,7 +91,7 @@
         if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            local fShape to 0.9875.
+            local fShape to 0.975.
             local minPit to 5.
             local pitLim to 45.
             if g_MissionTag:Mission = "DownRange"
