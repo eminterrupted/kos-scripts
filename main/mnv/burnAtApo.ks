@@ -6,6 +6,7 @@ parameter params is list().
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 
+set g_MainProcess to ScriptPath().
 DispMain().
 
 set Core:Part:Tag to Core:Part:Tag:Replace("Orbit", "Circularize").

@@ -4,7 +4,8 @@ ClearScreen.
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
-DispMain(ScriptPath()).
+set g_MainProcess to ScriptPath().
+DispMain().
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 local tgtInc       to choose g_MissionTag:Params[0] if g_MissionTag:Params:Length > 0 else 0.

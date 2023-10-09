@@ -5,7 +5,8 @@ parameter _params is list().
 
 RunOncePath("0:/lib/libLoader").
 
-DispMain(ScriptPath()).
+set g_MainProcess to ScriptPath().
+DispMain().
 
 ParseCoreTag(Core:Tag).
 

@@ -465,11 +465,17 @@
     // Prints the main terminal header, and returns the next available line for printing
     global function DispMain
     {
-        parameter _scriptPath is ScriptPath(),
+        parameter _currentProcess is g_MainProcess,
                   _initTerm is True,
                   _termWidth is g_TermWidth,
                   _termHeight is g_TermHeight.
 
+        if _currentProcess:IsType("Path") 
+        {
+            set _currentProcess to _currentProcess:ToString.
+        }
+        set _currentProcess to _currentProcess:Replace("0:/main", "").
+        
         if _initTerm
         {
             set Terminal:Width to Max(l_Col0Size[0] + 4, _termWidth).
@@ -496,7 +502,7 @@
         print "MISSION: {0}":Format(Ship:Name)                  at (0, cr()).
         print "STATUS : {0}":Format(Ship:Status)                at (0, cr()).
         print "MET    : {0}":Format(TimeSpan(MissionTime):Full) at (0, cr()).
-        print "PROGRAM: {0}":Format(_scriptPath)                at (0, cr()).
+        print "PROGRAM: {0}":Format(_currentProcess)                at (0, cr()).
         cr().
         
         DispTermGrid(10, l_Col0Size[0], l_Col0Size[1], 1, True).
@@ -612,7 +618,7 @@
 
         if g_Debug
         {
-            OutDebug("DispTermGrid|colCount/rowCount: [{0}/{1}]":Format(colCount, rowCount), -4).
+            if g_Debug { OutDebug("DispTermGrid|colCount/rowCount: [{0}/{1}]":Format(colCount, rowCount), -4).}
         }
 
         // This bit adds the column position for each possible column beyond the start.
@@ -627,7 +633,7 @@
             
             if g_Debug
             {
-                OutDebug("DispTermGrid|iRow/rowLine: [{0}/{1}]":Format(iRow, rowLine), -3).
+                if g_Debug { OutDebug("DispTermGrid|iRow/rowLine: [{0}/{1}]":Format(iRow, rowLine), -3).}
             }
 
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
@@ -636,7 +642,7 @@
 
                 if g_Debug
                 {
-                    OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).
+                    if g_Debug { OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).}
                 }
 
                 if g_GridAssignments:HasKey(l_GridSpaceIdx)
@@ -674,7 +680,7 @@
 
         if g_Debug
         {
-            OutDebug("DispTermGrid|l_GridSpaceLex: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), -1).
+            if g_Debug { OutDebug("DispTermGrid|l_GridSpaceLex: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), -1).}
             wait 0.25.
         }
 
@@ -806,7 +812,7 @@
 
         if g_Debug 
         {
-            OutDebug("DispPrintBlock|Params: [{0}][{1}][{2}]":Format(_blockIdx, _dispData, _numColumns)).
+            if g_Debug { OutDebug("DispPrintBlock|Params: [{0}][{1}][{2}]":Format(_blockIdx, _dispData, _numColumns)).}
         }
 
         if _blockIdx:IsType("String")
@@ -823,8 +829,8 @@
 
         if g_Debug
         {
-            OutDebug("DispPrintBlock|l_GridSpaceLex:HasKey({0}): [{1}]":Format(_blockIdx, l_GridSpaceLex:HasKey(_blockIdx)), 1).
-            OutDebug("DispPrintBlock|l_GridSpaceLex:Keys: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), 2).
+            if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:HasKey({0}): [{1}]":Format(_blockIdx, l_GridSpaceLex:HasKey(_blockIdx)), 1).}
+            if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:Keys: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), 2).}
         }
             // else
             // {

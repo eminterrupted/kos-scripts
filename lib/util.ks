@@ -141,6 +141,9 @@
                     OutInfo("KerbaliKode activated", 1).
                     PlaySFX(0).
                     OutInfo("", 1).
+                    set g_TermHeight to g_TermHeight + 16.
+                    set g_TermWidth to g_TermWidth + 34.
+                    DispMain(g_MainProcess).
                     set g_Debug to not g_Debug. //toggle debug on or off
                 }
                 return.
@@ -552,7 +555,7 @@
         if g_StageLimit <> lastStgLim
         {
             set core:tag to cTag.
-            OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).
+            if g_Debug { OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).}
         }
         return cTag.
     }

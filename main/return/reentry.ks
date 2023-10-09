@@ -6,7 +6,9 @@ parameter params is list().
 runOncePath("0:/lib/libLoader").
 runOncePath("0:/lib/sci").
 
-DispMain(scriptPath()).
+set g_MainProcess to ScriptPath().
+DispMain().
+
 SAS off.
 
 local chuteStatus to "N/A".

@@ -52,6 +52,15 @@
             ,"B9_Engine_T2_SRBS_CREI_50"    // B9 Radial Sep Motor (CREI 50% Resize)
             ,"B9_Engine_T2_SRBS_CREI_150"   // B9 Radial Sep Motor (CREI 150% Resize)
             ,"ROC-MercuryPosigradeBDB"      // RO Mercury Posigrade Kick Motor
+            ,"CREI.RO.IntSep.33"            // InternalRCS SRB (CREI 33%  Resize)1
+            ,"CREI.RO.IntSep.50"            // InternalRCS SRB (CREI 50%  Resize)
+            ,"CREI.RO.IntSep.100"           // InternalRCS SRB (CREI 100% Resize)
+            ,"CREI.RO.IntSep.166"           // InternalRCS SRB (CREI 166% Resize)
+            ,"CREI.RO.IntSep.200"           // InternalRCS SRB (CREI 200% Resize)
+            ,"B9.Engine.T2.SRBS"            // B9 Radial Sep Motor
+            ,"B9.Engine.T2.SRBS.CREI.25"    // B9 Radial Sep Motor (CREI 25% Resize)
+            ,"B9.Engine.T2.SRBS.CREI.50"    // B9 Radial Sep Motor (CREI 50% Resize)
+            ,"B9.Engine.T2.SRBS.CREI.150"   // B9 Radial Sep Motor (CREI 150% Resize)
             // ,"B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
             // ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
             // ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
@@ -62,6 +71,10 @@
             ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
             ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
             ,"B9_Engine_T2A_SRBS_CREI_150"  // B9 Radial Retro Motor (CREI 150% Resize)
+            ,"B9.Engine.T2A.SRBS"           // B9 Radial Retro Motor
+            ,"B9.Engine.T2A.SRBS.CREI.25"   // B9 Radial Retro Motor (CREI 25% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.50"   // B9 Radial Retro Motor (CREI 50% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.150"  // B9 Radial Retro Motor (CREI 150% Resize)
         )
     ).
 

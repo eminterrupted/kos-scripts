@@ -3,7 +3,8 @@ ClearScreen.
 
 RunOncePath("0:/lib/libLoader.ks").
 
-DispMain(ScriptPath()).
+set g_MainProcess to ScriptPath().
+DispMain().
 
 SAS off.
 RCS on.

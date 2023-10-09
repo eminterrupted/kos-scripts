@@ -250,12 +250,12 @@
                         }
                         else if MissionTime > 0 and t_Val > 0
                         {
-                            OutDebug("Fuel Exhausted, hot staging").
+                            if g_Debug { OutDebug("Fuel Exhausted, hot staging").}
                             return True.
                         }
                         else
                         {
-                            OutDebug("Fell through HotStaging checkdel").
+                            if g_Debug { OutDebug("Fell through HotStaging checkdel").}
                         }
                         return False.
                     }.
@@ -750,11 +750,11 @@
         global function SetupDecoupleEventHandler
         {
             parameter _dcEventID, 
-                    _dcList is list(),
-                    _fireSep is false.
+                      _dcList is list(),
+                      _fireSep is false.
 
             local boosterEngs   to list().
-            local boosterSepRM  to list().
+            local dcSepRM       to lexicon().
             local dcUIDList     to list().
             local paramList     to list().
             local registerFlag  to False.
@@ -799,7 +799,14 @@
                                     {
                                         if not child:ignition
                                         {
-                                            boosterSepRM:Add(Child).
+                                            if dcSepRM:HasKey(_dc:UID)
+                                            {
+                                                dcSepRM[_dc:UID]:Add(child).
+                                            }
+                                            else
+                                            {
+                                                set dcSepRM[_dc:UID] to list(child).
+                                            }
                                         }
                                     }
                                     else
@@ -825,7 +832,7 @@
                         // OutInfo("Checking DecoupleDelegate MECO[{0}]":Format(g_LoopDelegates:Events:Keys:Contains("MECO")), 2). // This is backwards from the actual value but more human readable / maybe less confusing?
                         return MECOResult.
                     }.
-                    set paramList to list(dcUIDList).
+                    set paramList to list(dcUIDList, dcSepRM).
                     set registerFlag to True.
                 }
                 else if eventCheckVal[0] = "BOOSTER"
@@ -837,12 +844,12 @@
                         local checkFlag to False.
                         local pendingStaging to list().
                         
-                        for booster in _params[1]
+                        for booster in _params[2]
                         {
-                            if booster:Ignition
+                            if booster:Ignition and not booster:Flameout
                             {
                                 local conRes to choose booster:Resources[0] if g_PropInfo:Solids:Contains(booster:ConsumedResources:Values[0]:Name) else booster:ConsumedResources:Values[0].
-                                if booster:Thrust <= 0.1 or booster:Flameout
+                                if booster:Thrust <= 0.1
                                 {
                                     pendingStaging:Add(booster).
                                 }
@@ -856,13 +863,19 @@
                                     }
                                 }
                             }
+                            else if booster:flameout
+                            {
+                                pendingStaging:Add(booster).
+                            }
                         }
                         
-                        set checkFlag to pendingStaging:Length = _params[1]:Length.
+                        set checkFlag to pendingStaging:Length = _params[2]:Length.
+                        if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), 7).
+
                         // OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
                         return checkFlag.
                     }.
-                    set paramList to list(dcUIDList, boosterEngs).
+                    set paramList to list(dcUIDList, dcSepRM, boosterEngs).
                     set registerFlag to True.
                 }
                 else if eventCheckScalar > -1
@@ -871,10 +884,10 @@
 
                     set checkDel to { 
                         parameter _params is list(). 
-                        OutInfo("Checking DecoupleDelegate ETA[{0}s]":Format(Round(_params[1] - MissionTime, 2))).
-                        return MissionTime >= _params[1].
+                        OutInfo("Checking DecoupleDelegate ETA[{0}s]":Format(Round(_params[3] - MissionTime, 2))).
+                        return MissionTime >= _params[3].
                     }.
-                    set paramList to list(dcUIDList, eventCheckScalar, boosterEngs).
+                    set paramList to list(dcUIDList, dcSepRM, boosterEngs, eventCheckScalar).
                     set registerFlag to True.
                 }
                 else
@@ -890,9 +903,11 @@
 
                         OutInfo("Decouple Action Delegate [#DC:{0}]":Format(_dcList:Length)).
                         set dcUIDList to _params[0].
+                        set dcSepRM   to _params[1].
+
                         from { local i to 0.} until i = _dcList:Length or _dcList:Length = 0 step { set i to i + 1.} do
                         {
-                            local dc to _dcList[i].
+                            local dc    to _dcList[i].
                             
                             if dcUIDList:Contains(dc:UID)
                             {
@@ -910,16 +925,28 @@
 
                                 if dcModule:Name <> "kOSProcessor"
                                 {
-                                    for p in dc:PartsTagged("")
+                                    if dcSepRM:HasKey(dc:UID)
                                     {
-                                        if g_PartInfo:Engines:SepRef:Contains(p:Name)
+                                        for sep in dcSepRM[dc:UID]
                                         {
-                                            if not p:Ignition 
+                                            if not sep:Ignition
                                             {
-                                                p:Activate.
+                                                sep:Activate.
                                             }
                                         }
                                     }
+                
+                                    // for p in dc:PartsTagged("")
+                                    // {
+                                    //     if g_PartInfo:Engines:SepRef:Contains(p:Name)
+                                    //     {
+                                    //         if not p:Ignition 
+                                    //         {
+                                    //             p:Activate.
+                                    //         }
+                                    //     }
+                                    // }
+
                                     DoEvent(dcModule, dcEventStr).
                                     dcUIDList:Remove(dcUIDList:Find(dc:UID)).
                                 }
@@ -962,7 +989,7 @@
                 }
                 else if resultCodeLex:ERROR:Contains(resultCode)
                 {
-                    OutDebug("[SetupDecoupleEventHandler] Registration failed [ResultCode: {0}]":format(resultCode), 0, "Red").
+                    if g_Debug { OutDebug("[SetupDecoupleEventHandler] Registration failed [ResultCode: {0}]":format(resultCode), 0, "Red").}
                 }
                 else
                 {
@@ -1564,6 +1591,8 @@
 
     global function ArmBoosterStaging_NextReally
     {
+        set g_BoosterObj to lexicon().
+
         local boosterDCList to Ship:PartsTaggedPattern("Booster\|\d*").
         local armedFlag to False.
 
@@ -2135,7 +2164,7 @@
             set _brObj[_setIdx]["RES"] to lexicon(
                 "AMOUNT", 0
                 ,"CAPACITY", 0
-                ,"RESLisT", list()
+                ,"RESLIST", list()
             ).
         }
 

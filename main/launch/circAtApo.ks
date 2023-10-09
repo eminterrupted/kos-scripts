@@ -6,6 +6,7 @@ parameter params is list().
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 
+set g_MainProcess to ScriptPath().
 DispMain().
 
 set g_MissionTag to ParseCoreTag(Core:Part:Tag).
@@ -201,19 +202,19 @@ until MECOFlag
     {
         if g_ActiveEngines_Data:Thrust <= 0.01
         {
-            OutDebug("g_ActiveEngines_Data:Thrust ({0}) < 0.01":Format(g_ActiveEngines_Data:Thrust), 5).
+            if g_Debug { OutDebug("g_ActiveEngines_Data:Thrust ({0}) < 0.01":Format(g_ActiveEngines_Data:Thrust), 5).}
             set MECOFlag to true.
         }
     }
 
     if Ship:Periapsis >= (tgtAp * 0.9975)
     {
-        OutDebug("ShipPeriapsis >= {0} * 0.9975 [{1}]":Format(tgtAp, (tgtAp * 0.9975)), 5).
+        if g_Debug { OutDebug("ShipPeriapsis >= {0} * 0.9975 [{1}]":Format(tgtAp, (tgtAp * 0.9975)), 5).}
         set MECOFlag to True.
     }
     else if Time:Seconds >= mecoTS
     {
-        OutDebug("Time:Seconds({0}) >= mecoTS({1})":Format(Time:Seconds, mecoTS), 5). 
+        if g_Debug { OutDebug("Time:Seconds({0}) >= mecoTS({1})":Format(Time:Seconds, mecoTS), 5). }
         // set MECOFlag to True.
     }
     else 

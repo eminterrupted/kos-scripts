@@ -7,7 +7,8 @@ parameter params is list().
 RunOncePath("0:/lib/libLoader").
 RunOncePath("0:/lib/launch").
 
-DispMain(ScriptPath():name).
+set g_MainProcess to ScriptPath().
+DispMain().
 
 // Declare Variables
 local runmode to 0. // Used to identify which loop to use

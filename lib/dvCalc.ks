@@ -350,7 +350,7 @@
             // print "Stg dV: " + dv.
             // print "---".
         }
-        OutDebug("Stage {0} dV: [{1}]":Format(stg, Round(dv, 2))).
+        if g_Debug { OutDebug("Stage {0} dV: [{1}]":Format(stg, Round(dv, 2))).}
         wait 0.25.
         return dv.
     }

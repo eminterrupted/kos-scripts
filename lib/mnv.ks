@@ -62,21 +62,21 @@
         local transPeriod to GetTransferPeriod(transSMA). // (2 * Constant:pi * Sqrt((transMnv:SMA^3) / Earth:Mu)).
         local tgtAngVelo to (360 / (2 * Constant:pi)) * (Earth:Mu / Moon:Orbit:SemiMajorAxis^3).
 
-        OutDebug("{0}: [{1}]":Format("_arrivalAlt", _arrivalAlt), -1).
-        OutDebug("{0}: [{1}]":Format("arrivalSMA", Round(arrivalSMA))).
-        OutDebug("{0}: [{1}]":Format("tgtAlt", Round(tgtAlt)), 1).
-        OutDebug("{0}: [{1}]":Format("transSMA", Round(transSMA)), 2).
-        OutDebug("{0}: [{1}]":Format("transPeriod", Round(transPeriod, 1)), 3).
-        OutDebug("{0}: [{1}]":Format("tgtAngVelo", Round(tgtAngVelo, 15)), 4).
+        if g_Debug { OutDebug("{0}: [{1}]":Format("_arrivalAlt", _arrivalAlt), -1).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("arrivalSMA", Round(arrivalSMA))).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("tgtAlt", Round(tgtAlt)), 1).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("transSMA", Round(transSMA)), 2).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("transPeriod", Round(transPeriod, 1)), 3).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("tgtAngVelo", Round(tgtAngVelo, 15)), 4).}
 
         Breakpoint().
 
-        OutDebug("", -1).
-        OutDebug().
-        OutDebug("", 1).
-        OutDebug("", 2).
-        OutDebug("", 3).
-        OutDebug("", 4).
+        if g_Debug { OutDebug("", -1).}
+        if g_Debug { OutDebug().}
+        if g_Debug { OutDebug("", 1).}
+        if g_Debug { OutDebug("", 2).}
+        if g_Debug { OutDebug("", 3).}
+        if g_Debug { OutDebug("", 4).}
         wait 0.25.
 
         return 180 - (0.5 * transPeriod * tgtAngVelo). // Transfer Phase
@@ -97,21 +97,21 @@
         local ogMeanAngMotion   to  (2 * Constant:Pi) / _ogObj:Orbit:Period.
         local timeToTgtPhase    to phaseDiff / Abs(tgtMeanAngMotion - ogMeanAngMotion).
         
-        OutDebug("{0}: [{1}]":Format("_tgtPhase", Round(_tgtPhase, 2)), -1).
-        OutDebug("{0}: [{1}]":Format("startPhase", Round(startPhase, 2))).
-        OutDebug("{0}: [{1}]":Format("phaseDiff", Round(phaseDiff, 2)), 1).
-        OutDebug("{0}: [{1}]":Format("tgtMeanAngMotion", Round(tgtMeanAngMotion, 15)), 2).
-        OutDebug("{0}: [{1}]":Format("ogMeanAngMotion", Round(ogMeanAngMotion, 15)), 3).
-        OutDebug("{0}: [{1}]":Format("timeToTgtPhase", Round(timeToTgtPhase, 5)), 4).
+        if g_Debug { OutDebug("{0}: [{1}]":Format("_tgtPhase", Round(_tgtPhase, 2)), -1).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("startPhase", Round(startPhase, 2))).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("phaseDiff", Round(phaseDiff, 2)), 1).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("tgtMeanAngMotion", Round(tgtMeanAngMotion, 15)), 2).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("ogMeanAngMotion", Round(ogMeanAngMotion, 15)), 3).}
+        if g_Debug { OutDebug("{0}: [{1}]":Format("timeToTgtPhase", Round(timeToTgtPhase, 5)), 4).}
 
         Breakpoint().
 
-        OutDebug("", -1).
-        OutDebug().
-        OutDebug("", 1).
-        OutDebug("", 2).
-        OutDebug("", 3).
-        OutDebug("", 4).
+        if g_Debug { OutDebug("", -1).}
+        if g_Debug { OutDebug().}
+        if g_Debug { OutDebug("", 1).}
+        if g_Debug { OutDebug("", 2).}
+        if g_Debug { OutDebug("", 3).}
+        if g_Debug { OutDebug("", 4).}
 
         wait 0.25.
 

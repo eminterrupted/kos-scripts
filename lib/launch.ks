@@ -769,7 +769,7 @@
         local desired_change_apo to (PID_Apo:Update(Time:Seconds, Ship:Apoapsis)).
         set output_pitch to Max(-pitch_limit_max, Min(existing_pitch + desired_change_apo, pitch_limit_max)).
 
-        OutDebug("Existing_Pitch [{0}] | Desired_Change_Apo [{1}] | output_pitch [{2}]":Format(Round(existing_pitch, 2), Round(desired_change_apo, 2), Round(output_pitch, 2)), 1).
+        if g_Debug { OutDebug("Existing_Pitch [{0}] | Desired_Change_Apo [{1}] | output_pitch [{2}]":Format(Round(existing_pitch, 2), Round(desired_change_apo, 2), Round(output_pitch, 2)), 1).}
 
         return output_pitch.
     }

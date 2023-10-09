@@ -18,7 +18,7 @@
 // *~ Simple Variables ~* //
 // #region
     // Program flow control
-
+    global g_MainProcess to ScriptPath().
     global g_Counter to 0.
     global g_Debug to False.
     global g_Debug_Max to True.
