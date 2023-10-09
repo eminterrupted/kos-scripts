@@ -20,7 +20,7 @@
 
 // *~ Functions ~* //
 // #region
-    // *- Function Group
+    // *- Experiment parsing
     // #region
     // GetValidExperiments :: (_part)<Part> -> (validExperiements)<Lexicon>
     // Given a part with Experiment modules, returns the ones that are currently active
@@ -46,29 +46,85 @@
         
         return expObj.
     }
-    // #endregion
-// #endregion
 
+    // GetKSPActionFromExperiment :: _string<String> -> list(expName<String>, expAction<ModuleAction>)
+    global function GetKSPActionFromExperiment
+    {
+        parameter _string.
 
+        local expName to "".
+        local expAction to "".
 
-global function GetKSPActionFromExperiment
-{
-    parameter _string.
-
-    local expName to "".
-    local expAction to "".
-
-    local stringSplit to _string:Split("<b>").
-    if stringSplit:Length > 1 {
-      set expName to stringSplit[1]:Substring(0, stringSplit[1]:Find("<")).
-      set expAction to _string:Replace("(callable) ",""):Replace(", is KSPAction").
+        local stringSplit to _string:Split("<b>").
+        if stringSplit:Length > 1 {
+        set expName to stringSplit[1]:Substring(0, stringSplit[1]:Find("<")).
+        set expAction to _string:Replace("(callable) ",""):Replace(", is KSPAction").
+        }
+        return list(expName, expAction).
     }
-    return list(expName, expAction).
-}
+    // #endregion
 
-global function StoreSciResults
-{
-    parameter _destPart is core:part.
+    // *- Data transfer
+    // #region
 
-    if g_ActiveEngines:length > 0 {}
-}
+    // GetDataDrive :: [_dataPart<Part>] -> dataDrive<Module>
+    // Returns a HardDrive module for a given part; falls back to root core if no part provided
+    global function GetDataDrive
+    {
+        parameter _dataPart to "".
+
+        local dataDrive to "".
+
+        if _dataPart:IsType("String")
+        {
+            if Core:Part:HasModule("HardDrive")
+            {
+                set dataDrive to Core:Part:GetModule("HardDrive").
+            }
+        }
+        else if _dataPart:HasModule("HardDrive")
+        {
+            set dataDrive to Core:Part:GetModule("HardDrive").
+        }
+        
+        return dataDrive.
+    }
+
+    // TransferSciData :: [_tgtDrive<Part>]
+    global function TransferSciData
+    {
+        parameter _tgtDrivePart is "".
+
+        local result to False.
+        
+        OutMsg("Checking Science Data").
+        
+        if _tgtDrivePart:IsType("String") 
+        {
+            if ship:partsNamed("RP0-SampleReturnCapsule"):Length > 0  // If we have a proper sample return capsule, use it
+            {
+                set _tgtDrivePart to GetDataDrive(ship:PartsNamed("RP0-SampleReturnCapsule")[0]).
+                DoEvent(_tgtDrivePart:GetModule("ModuleAnimateGeneric"), "Close"). // Close the door if open
+            }
+            else 
+            {
+                set _tgtDrivePart to Core:Part.
+            }
+        }
+        local sciDrive to GetDataDrive(_tgtDrivePart).
+
+        if not sciDrive:IsType("String")
+        {
+            OutMsg("Collecting Data").
+            set result to DoEvent(sciDrive, "transfer data here").
+        }
+        else
+        {
+            OutMsg("No HDD for data collection").
+        }
+
+        if g_Debug OutDebug("Exiting TransferSciData with exit code: [{0}]":Format(result)).
+        return result.
+    }
+    //#endregion
+// #endregion

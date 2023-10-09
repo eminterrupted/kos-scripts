@@ -15,7 +15,7 @@ local stagingCheckResult to 0.
 // Parameter default values.
 local _tgtAlt        to -1.
 local _tgtInc        to 0.
-local _azObj         to list().
+local _azObj         to g_azData.
 
 if g_MissionTag:Params:Length > 0
 {
@@ -39,17 +39,20 @@ wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + 100).
 
 
-ConfigureLaunchPad().
+ConfigureLaunchPlatform().
 
 // Launch event setup
 // Set the steering delegate
 if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 {
-    set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
+    set g_azData to l_az_calc_init(_tgtAlt, _tgtInc).
+}
+else
+{
+    set g_azData to _azObj.
 }
 
-set g_azData to _azObj.
-set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
+set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, g_azData).
 
 if rcsPresent
 {
@@ -144,12 +147,11 @@ ClearDispBlock().
 
 until Alt:Radar >= towerHeight
 {
-    if engineCounter <> g_ActiveEngines:Length
-    {
-        set g_ActiveEngines to GetActiveEngines().
-    } 
+    set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
     if g_BoostersArmed { CheckBoosterStageCondition().}
+    
     if g_LoopDelegates:HasKey("Staging")
     {
         if g_HotStagingArmed 

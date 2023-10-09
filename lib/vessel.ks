@@ -242,14 +242,20 @@
                                 local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
                                 set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoSRB")).
                                 // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
-                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(stageEngines_BT - SpoolTime, 2), 1)).
+                                set g_TR to stageEngines_BT - SpoolTime.
+                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
+
                                 return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
                             }
                         }
-                        else if t_Val > 0
+                        else if MissionTime > 0 and t_Val > 0
                         {
                             OutDebug("Fuel Exhausted, hot staging").
                             return True.
+                        }
+                        else
+                        {
+                            OutDebug("Fell through HotStaging checkdel").
                         }
                         return False.
                     }.
@@ -744,9 +750,11 @@
         global function SetupDecoupleEventHandler
         {
             parameter _dcEventID, 
-                    _dcList is list().
+                    _dcList is list(),
+                    _fireSep is false.
 
             local boosterEngs   to list().
+            local boosterSepRM  to list().
             local dcUIDList     to list().
             local paramList     to list().
             local registerFlag  to False.
@@ -785,9 +793,19 @@
                             dcUIDList:Add(_dc:UID).
                             for child in _dc:PartsTagged("")
                             {
-                                if child:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(child:Name)
+                                if child:IsType("Engine")
                                 {
-                                    boosterEngs:Add(child).
+                                    if g_PartInfo:Engines:SepRef:Contains(child:Name)
+                                    {
+                                        if not child:ignition
+                                        {
+                                            boosterSepRM:Add(Child).
+                                        }
+                                    }
+                                    else
+                                    {
+                                        boosterEngs:Add(child).
+                                    }
                                 }
                             }
                         }
@@ -823,7 +841,7 @@
                         {
                             if booster:Ignition
                             {
-                                local conRes to choose booster:Resources[0] if g_PropInfo:Solids:Contains(booster:ConsumedResources:Values[0]:Name) else booster:ConsumedResources[0].
+                                local conRes to choose booster:Resources[0] if g_PropInfo:Solids:Contains(booster:ConsumedResources:Values[0]:Name) else booster:ConsumedResources:Values[0].
                                 if booster:Thrust <= 0.1 or booster:Flameout
                                 {
                                     pendingStaging:Add(booster).
@@ -1426,7 +1444,7 @@
     global function GetOrbitalSteeringDelegate
     {
         // parameter _delDependency is lexicon().
-        parameter _steerPair is "Flat:Sun",
+        parameter _steerDelID is "Flat:Sun",
                   _fShape    is 0.975.
 
         local del to {}.
@@ -1435,30 +1453,37 @@
         {
             set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
         }
+
+
+
         if g_AngDependency:Keys:Length = 0
         {
             set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 22.5).
         }
 
-        if _steerPair = "Flat:Sun"
+        if _steerDelID = "Flat:Sun"
         {
             set del to { return HEADING(compass_for(Ship, Ship:Prograde), 0, 0).}.
         }
-        else if _steerPair = "AngErr:Sun"
+        else if _steerDelID = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
             // if g_Debug OutDebug("g_MissionTag:Params: {0}":Format(g_MissionTag:Params:Join(";"))).
             set del to GetAscentSteeringDelegate(g_MissionTag:Params[1], g_MissionTag:Params[0], g_AzData).
             // set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
-        else if _steerPair = "ApoErr:Sun"
+        else if _steerDelID = "ApoErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
             set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
         }
-        else if _steerPair = "lazCalc:Sun"
+        else if _steerDelID = "lazCalc:Sun"
         {
             set del to { return Ship:Facing.}.
+        }
+        else if _steerDelID = "PIDApoErr:Sun"
+        {
+            set del to { return HEADING(l_az_calc(g_azData), GetPIDPitchAngle(g_AngDependency), 0).}.
         }
         
         return del@.
@@ -1953,7 +1978,6 @@
                 ,"E", event
                 ,"S", dc:Stage
             ).
-
             if not _boosterObj[_setIdx]:HasKey("UPDATE")
             {
                 set _boosterObj[_setIdx]["UPDATE"] to GetBoosterUpdateDel(dc).

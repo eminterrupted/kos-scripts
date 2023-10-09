@@ -29,6 +29,7 @@
     global g_RunMode to 0.
 
     // Global timestamp / timer placeholders
+    global g_TR to 0.
     global g_TS to 0.
     global g_TS0 to 0.
     global g_TS1 to 0.
@@ -61,6 +62,7 @@
         ,"Orbit"
         ,"PIDOrbit"
         ,"SubOrbital"
+        ,"PIDSubOrbital"
     ).
 
     // Terminal Metadata
@@ -130,6 +132,9 @@
 
 // *~ Collection Variables ~* //
 // #region
+
+// Launch azimuth data object
+global g_azData to list().
 
 // Terminal input mappings by script or context
 global g_InputMappings to lexicon(

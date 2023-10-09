@@ -35,7 +35,7 @@ ClearScreen.
 DispMain(ScriptPath()).
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(Orbit|Circularize)")
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(Orbit|Circularize|PIDSubOrbital)")
 {
     local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
 
@@ -87,8 +87,15 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
             }
         }
     }
-    // runPath("0:/main/launch/circAtApo", list(g_StageLimit, burnTime, tgtEcc, azObj)).
-    runPath("0:/main/launch/circMnvAtApo", list(tgtAp)).
+
+    if Career():CanMakeNodes 
+    {
+        runPath("0:/main/launch/circMnvAtApo", list(tgtAp)).
+    }
+    else
+    {
+        runPath("0:/main/launch/circAtApo", list(tgtAp, azObj)).
+    }
 
     if g_StageLimitSet:Length > 1
     {

@@ -171,6 +171,9 @@
 
         local stgObj to BurnStagesUsed(dv).
         local durObj to BurnDurStage(stgObj).
+
+        WriteJson(stgObj, "0:/log/{0}_stgObj.json":Format(Ship:Name:Replace(" ","_"))).
+        WriteJson(durObj, "0:/log/{0}_durObj.json":Format(Ship:Name:Replace(" ","_"))).
         
         local fullDurWithStaging to durObj["Full"].
         local halfDurWithStaging to durObj["Half"].
@@ -187,7 +190,11 @@
         set durObj["FullStaged"] to fullDurWithStaging.
         set durObj["HalfStaged"] to halfDurWithStaging.
         
-        return list(durObj["Full"], durObj["FullStaged"], durObj["Half"], durObj["HalfStaged"]).
+        local burnDurCalcs to list(durObj["Full"], durObj["FullStaged"], durObj["Half"], durObj["HalfStaged"]).
+
+        WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
+
+        return burnDurCalcs.
     }
 
     // BurnDurStage :: (<lexicon>) -> <lexicon>
@@ -230,14 +237,14 @@
     // Given a target burn dV, returns a nested lex of stages->dV to be used for full and half-duration burn calcs
     global function BurnStagesUsed
     {
-        parameter dv.
+        parameter _dv.
 
-        set dv to abs(dv).
+        local dv to abs(_dv).
         local dvHalf to dv / 2.
         local dvFullObj to lex().
         local dvHalfObj to lex().
 
-        from { local stg to stage:number.} until dv <= 0 or stg < -1 step { set stg to stg - 1.} do {
+        from { local stg to stage:number.} until dv <= 0 or stg <= -1 step { set stg to stg - 1.} do {
             local breakFlag to false.
             local dvStg to AvailStageDV(stg).
             if dvStg > 0 
@@ -343,6 +350,8 @@
             // print "Stg dV: " + dv.
             // print "---".
         }
+        OutDebug("Stage {0} dV: [{1}]":Format(stg, Round(dv, 2))).
+        wait 0.25.
         return dv.
     }
 //#endregion

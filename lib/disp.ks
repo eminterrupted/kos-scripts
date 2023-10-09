@@ -228,7 +228,7 @@
                   _color is "White".
                   //_teeHUD is False. TODO: implement TeeHud function
         
-        local anchor to g_TermHeight - 7.
+        local anchor to g_TermHeight - 17.
         local line to anchor.
 
         if _lineIdx < 0 
@@ -237,7 +237,7 @@
         }
         else if _lineIdx > 0
         {
-            set line to anchor + Min(5, _lineIdx).
+            set line to anchor + Min(10, _lineIdx).
         }
 
         if _str:length > 0

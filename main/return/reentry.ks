@@ -4,6 +4,7 @@ clearScreen.
 parameter params is list().
 
 runOncePath("0:/lib/libLoader").
+runOncePath("0:/lib/sci").
 
 DispMain(scriptPath()).
 SAS off.
@@ -314,31 +315,7 @@ if parachutes:length > 0
 wait 1.
 
 // Science data collection
-OutMsg("Checking Science Data").
-local sciDrive to "".
-
-if ship:partsNamed("RP0-SampleReturnCapsule"):Length > 0  // If we have a proper sample return capsule, use it
-{
-    set sciDrive to ship:PartsNamed("RP0-SampleReturnCapsule")[0]:GetModule("HardDrive").
-    DoEvent(sciDrive:Part:GetModule("ModuleAnimateGeneric"), "Close"). // Close the door if open
-}
-else if core:Part:HasModule("HardDrive")  // Otherwise, use the core's hard drive if present
-{
-    if core:Part:GetModule("HardDrive"):HasEvent("Transfer Data Here")
-    {
-        set sciDrive to core:Part:GetModule("HardDrive").
-    }
-}
-
-if not sciDrive:IsType("String")
-{
-    OutMsg("Collecting Data").
-    DoEvent(sciDrive, "transfer data here").
-}
-else
-{
-    OutMsg("No HDD for data collection").
-}
+TransferSciData(Core:Part).
 wait 2.
 
 for m in ship:ModulesNamed("ModuleRCSFX")
