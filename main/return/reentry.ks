@@ -21,6 +21,7 @@ local payloadStage to g_StageLimit.
 local reentryTgt to (ship:body:atm:height * 0.425).
 local retroFire to false.
 local retroStage to payloadStage.
+local retroType to 1. // 1 = Mnv, 0 = Manual at Apo
 local spinStab to false.
 local stagingAlt to ship:body:atm:height.
 local ts to time:seconds.
@@ -42,8 +43,9 @@ if params:length > 0
 {
     set stagingAlt to params[0].
     if params:length > 1 set retroFire to params[1].
-    if params:length > 2 set retroStage to params[2].
-    if params:length > 3 set spinStab to params[3].
+    if params:length > 2 set retroType to params[2].
+    if params:length > 3 set retroStage to params[3].
+    if params:length > 4 set spinStab to params[4].
 }
 local startAlt to stagingAlt + 10000.
 
@@ -51,7 +53,7 @@ if fairings:length > 0
 {
     if fairings[0]:Tag:Split("|"):Length > 2 
     {
-        set jettAlt to fairings[0]:Tag:Split("|")[2]:ToNumber(5000).
+        set jettAlt to ParseStringScalar(fairings[0]:Tag:Split("|")[2], 5000).
     }
 }
 OutMsg("Fairings present: {0} ({1})":Format(fairings:Length, jettAlt)).
@@ -59,6 +61,17 @@ wait 3.
 
 local mode to "descent".
 local doneFlag to choose false if Ship:VerticalSpeed > 0 else true.
+
+if retroFire
+{
+    OutMsg("Retro burn initiated").
+    if retroType = 1
+    {
+        SetNextStageLimit(retroStage).
+        ExecNodeBurn(NextNode).
+    }
+}
+
 
 OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
 OutInfo("Down: Wait until descent | Up: Wait until ascent").

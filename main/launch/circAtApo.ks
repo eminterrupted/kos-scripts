@@ -9,16 +9,39 @@ RunOncePath("0:/lib/launch.ks").
 set g_MainProcess to ScriptPath().
 DispMain().
 
-set g_MissionTag to ParseCoreTag(Core:Part:Tag).
-set g_MissionTag:Params to g_MissionTag:PARAMS.
+set g_TS to Time:Seconds + 3.
 
-local azData   to g_azData.
-local tgtAp   to Ship:Apoapsis.
+until g_TermChar = Terminal:Input:Enter or Time:Seconds >= g_TS
+{
+    GetTermChar().
+    if not g_Debug
+    {
+        CheckKerbaliKode().
+    }
+    else
+    {
+        Break.
+    }
+    wait 0.01.
+}
+
+set g_MissionTag to ParseCoreTag(Core:Part:Tag).
+// set g_MissionTag:Params to g_MissionTag:PARAMS.
+
+local azData    to g_azData.
+local tgtAp     to Ship:Apoapsis.
+local tgtPe     to Ship:Apoapsis.
+
+if g_MissionTag:Params:Length > 2
+{
+    set tgtAp to g_MissionTag:Params[2].
+}
 
 if params:length > 0
 {
     set tgtAp to params[0].
-    if params:length > 1 set azData to params[1].
+    if params:length > 1 set tgtPe to params[1].
+    if params:length > 2 set azData to params[2].
 }
 
 if azData:Length = 1
@@ -30,9 +53,18 @@ else if azData:Length = 0
     set azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], Ship:Latitude).
 }
 
-local dvNeeded to CalcDvHoh(Ship:Periapsis, 0, Ship:Apoapsis, Ship:Body)[0].
+//local dvNeeded to CalcDvHoh(Ship:Periapsis, 0, Ship:Apoapsis, Ship:Body)[0].
+local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, Ship:Apoapsis, "PE")[1].
+OutInfo("dvNeeded: {0}":Format(Round(dvNeeded, 1)), 1).
 local burnDur  to CalcBurnDur(dvNeeded).
-local burnTS to Time:Seconds + (ETA:Apoapsis - burnDur[3]).
+
+// TODO Experimental
+if false
+{
+    local burnObj to CalcBurnStageData(dvNeeded).
+}
+
+local burnTS to choose (Time:Seconds + ETA:Apoapsis - burnDur[3]) if ETA:Apoapsis < ETA:Periapsis else Time:Seconds + 10.
 local mecoTS to burnTS + burnDur[1].
 
 set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun", 0.9925).
@@ -93,9 +125,9 @@ set Ship:Control:Fore to 0.
 set g_SteeringDelegate to GetOrbitalSteeringDelegate("PIDApoErr:Sun").
 
 local rollFlag to false.
-local apoFlag to false.
+local doneFlag to false.
 
-until Stage:Number = g_StageLimit or apoFlag// or Time:Seconds >= mecoTS or apoFlag
+until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or apoFlag
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
@@ -141,9 +173,10 @@ until Stage:Number = g_StageLimit or apoFlag// or Time:Seconds >= mecoTS or apoF
     }
     set g_TermChar to "".
 
-    if Ship:Apoapsis >= tgtAp - 10000 and Ship:Apoapsis <= tgtAp + 10000 
+    // if (Ship:Periapsis >= tgtPe - 5000 and Ship:Periapsis <= tgtPe + 5000)
+    if Ship:Periapsis >= tgtPe - 5000
     {
-        set apoFlag to true.
+        set doneFlag to true.
     }
     else 
     {
@@ -151,19 +184,19 @@ until Stage:Number = g_StageLimit or apoFlag// or Time:Seconds >= mecoTS or apoF
     }
 
 
-    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if apoFlag else g_SteeringDelegate:Call().
+    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else g_SteeringDelegate:Call().
     
     DispLaunchTelemetry().
     wait 0.01.
 }
-
-wait 0.25.
+OutInfo().
+wait 0.05.
 OutMsg("Final Stage").
 set g_ActiveEngines to GetActiveEngines().
 
 local MECOFlag to False.
 
-until MECOFlag
+until MECOFlag or doneFlag
 {
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
 
@@ -207,16 +240,16 @@ until MECOFlag
         }
     }
 
-    if Ship:Periapsis >= (tgtAp * 0.9975)
+    if Ship:Periapsis >= (tgtPe * 0.995)
     {
         if g_Debug { OutDebug("ShipPeriapsis >= {0} * 0.9975 [{1}]":Format(tgtAp, (tgtAp * 0.9975)), 5).}
         set MECOFlag to True.
     }
-    else if Time:Seconds >= mecoTS
-    {
-        if g_Debug { OutDebug("Time:Seconds({0}) >= mecoTS({1})":Format(Time:Seconds, mecoTS), 5). }
-        // set MECOFlag to True.
-    }
+    // else if Time:Seconds >= mecoTS
+    // {
+    //     if g_Debug { OutDebug("Time:Seconds({0}) >= mecoTS({1})":Format(Time:Seconds, mecoTS), 5). }
+    //     // set MECOFlag to True.
+    // }
     else 
     {
         OutInfo("TIME TO MECO: {0} ":Format(Round(mecoTS - Time:Seconds))).
@@ -226,7 +259,9 @@ until MECOFlag
     wait 0.01.
 }
 set t_Val to 0.
-wait 1.
+OutInfo().
+wait 0.25.
+
 if Ship:AvailableThrust > 0.01
 {
     OutMsg("Waiting for engine burnout").

@@ -162,6 +162,72 @@
 // Burn Duration / Stages
 // #region
 
+    // TODO: CalcBurnStageData :: _dv<Scalar>, [_startStg<Scalar>] -> BurnStageDataObj<Lexicon>
+    global function CalcBurnStageData
+    {
+        parameter _dvToBurn,
+                  _startAtStg.
+
+        local BurnStageDataObj to lexicon(
+            "STG", lexicon()
+            ,"NEXT", lexicon()
+        ).
+
+    //
+        // Determine how much dv is available in each stage
+        local dv to abs(_dvToBurn).
+        local dvHalf to dv / 2.
+        local dvFullObj to lex().
+        local dvHalfObj to lex().
+        local firstPassFlag to True.
+        local stageMatchType to 1.
+
+        from { local stg to _startAtStg.} until dv <= 0 or stg = -1 step { set stg to stg - 1.} do {
+            local breakFlag to false.
+            
+            local stgEngs to GetEnginesForStage(stg, "All", stageMatchType).
+            local stgMass to GetStageMass2(stg).
+
+            local dvStg to AvailStageDV(stg).
+            
+            if dvStg > 0 
+            {
+                // Full
+                if dv > dvStg
+                {
+                    set dvFullObj[stg] to dvStg.
+                    set dv to dv - dvStg.
+                }
+                else
+                {
+                    set dvFullObj[stg] to dv.
+                    set breakFlag to true.
+                }
+
+                // Half
+                if dvHalf > 0 and dvHalf > dvStg
+                {
+                    set dvHalfObj[stg] to dvStg.
+                    set dvHalf to dvHalf - dvStg.
+                }
+                else if dvHalf > 0
+                {
+                    set dvHalfObj[stg] to dvHalf.
+                    set dvHalf to 0.
+                }
+            }
+
+            if breakFlag break.
+        }
+
+        local foo to lex("Full", dvFullObj, "Half", dvHalfObj).
+
+        return BurnStageDataObj.
+    }
+
+
+
+
     // CalcBurnDur :: (<scalar>) -> <list>scalar [Full, Half]
     // Returns the time to burn a given dV, including the halfway burn dur for burn start timing
     // Also returns values with staging time included
@@ -244,33 +310,34 @@
         local dvFullObj to lex().
         local dvHalfObj to lex().
 
-        from { local stg to stage:number.} until dv <= 0 or stg <= -1 step { set stg to stg - 1.} do {
+        from { local stg to stage:number.} until dv <= 0 or stg = -1 step { set stg to stg - 1.} do {
             local breakFlag to false.
             local dvStg to AvailStageDV(stg).
+            
             if dvStg > 0 
             {
                 // Full
-                if dv <= dvStg
-                {
-                    set dvFullObj[stg] to dv.
-                    set breakFlag to true.
-                }
-                else
+                if dv > dvStg
                 {
                     set dvFullObj[stg] to dvStg.
                     set dv to dv - dvStg.
                 }
+                else
+                {
+                    set dvFullObj[stg] to dv.
+                    set breakFlag to true.
+                }
 
                 // Half
-                if dvHalf > 0 and dvHalf <= dvStg
-                {
-                    set dvHalfObj[stg] to dvHalf.
-                    set dvHalf to 0.
-                }
-                else if dvHalf > 0 
+                if dvHalf > 0 and dvHalf > dvStg
                 {
                     set dvHalfObj[stg] to dvStg.
                     set dvHalf to dvHalf - dvStg.
+                }
+                else if dvHalf > 0
+                {
+                    set dvHalfObj[stg] to dvHalf.
+                    set dvHalf to 0.
                 }
             }
 
@@ -333,25 +400,37 @@
 
         //Problem is in calculating fuel mass in StageMass function
 
+
         local dv to 0.
+        local exhVel to 0.
         local stgEngs to GetEnginesForStage(stg).
+        local stgMass to Lexicon("Ship", 0 , "Fuel", 0).
+
         if stgEngs:Length > 0
         {
-            local stgMass to GetStageMass(stg).
-            local exhVel to GetExhVel(stgEngs, mode).
+            set stgMass to GetStageMass(stg).
+            set exhVel to GetExhVel(stgEngs, mode).
             
+            if stgMass["Fuel"] > 0
+            {
+                set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
+            }
             // print "AvailStageDV         ".
             // print "stg : " + stg + "        ".
             // print "stgMass[Ship]: " + stgMass:Ship + "        ".
             // print "stgMass[Fuel]: " + stgMass:Fuel + "        ".
             // print "exhVel: " + exhVel + "        ".
             // Breakpoint().
-            set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
             // print "Stg dV: " + dv.
             // print "---".
         }
-        if g_Debug { OutDebug("Stage {0} dV: [{1}]":Format(stg, Round(dv, 2))).}
-        wait 0.25.
+
+        if g_Debug 
+        { 
+            OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stg, Round(dv, 2), Round(exhVel, 2)), 10).
+            OutDebug("- stgMass: Ship[{0}] | Fuel[{1}]    ":Format(round(stgMass["Ship"], 3), Round(stgMass["Fuel"], 3)), 11).
+            wait 2.5.
+        }
         return dv.
     }
 //#endregion

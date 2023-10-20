@@ -131,11 +131,14 @@
 
         local dv to _inNode:deltaV:mag.
         local burnDur to list(0, 0).
+        local burnEngs to list().
+        local burnEngsSpec to lexicon().
         local fullDur to 0.
         local halfDur to 0.
         local burnEta to 0.
-        lock dvRemaining to abs(_inNode:burnVector:mag).
-        //Breakpoint("pre DV eval").
+        local f_BurnUllage to False.
+        local burnSpool to 0.
+        lock dvRemaining to abs(dv).
 
         if dv <= 0.1 
         {
@@ -146,8 +149,14 @@
             set burnDur to CalcBurnDur(dv).
             set fullDur to burnDur[0].
             set halfDur to burnDur[3].
-
-            set burnEta to _inNode:time - halfDur. 
+            
+            set burnEta to _inNode:time - halfDur.
+            
+            // Spool Adjustments
+            set burnEngs to GetNextEngines(Stage:Number).
+            set burnEngsSpec to GetEnginesSpecs(burnEngs).
+            set f_BurnUllage to burnEngsSpec:Ullage.
+            set burnEta to burnEta - burnEngsSpec:SpoolTime - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
             set g_MECO    to burnEta + fullDur.
 
             set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
@@ -204,9 +213,12 @@
                     set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
                 }
 
-                if Time:Seconds >= burnETA - 5
+                if f_BurnUllage
                 {
-                    set Ship:Control:Fore to 1.
+                    if Time:Seconds >= burnETA - 5
+                    {
+                        set Ship:Control:Fore to 1.
+                    }
                 }
                 set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
                 // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).

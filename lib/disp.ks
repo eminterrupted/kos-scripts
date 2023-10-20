@@ -230,14 +230,14 @@
         
         local anchor to g_TermHeight - 17.
         local line to anchor.
-
+        
         if _lineIdx < 0 
         {
-            set line to anchor - Max(-5, abs(_lineIdx)).
+            set line to anchor + Max(-5, abs(_lineIdx)).
         }
         else if _lineIdx > 0
         {
-            set line to anchor + Min(10, _lineIdx).
+            set line to anchor + Min(g_TermHeight - 2 - _lineIdx, _lineIdx).
         }
 
         if _str:length > 0
@@ -512,6 +512,37 @@
         return g_Line.
     }
 
+    // DispPIDLoopValues :: _PID<PIDLoop> -> <none>
+    global function DispPIDLoopValues
+    {
+        parameter _PID,
+                  _dispBlockIdx is -1.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+        }
+
+        if _dispBlockIdx < 0
+        {
+            set _dispBlockIdx to NextOrAssignedTermBlock("REENTRY_TELEMETRY").
+        }
+
+        local dispList to list(
+            "PID VALUES"
+            ,"KP | KI | KD", "{0} | {1} | {2}":Format(_PID:KP, _PID:KI, _PID:KD)
+            ,"MIN | MAX", "{0} | {1}":Format(_PID:MinOutput, _PID:MaxOutput)
+            ,"SETPOINT", _PID:Setpoint
+            ,"LAST OUTPUT", _PID:Output
+            ,"LAST ERROR", _PID:Error
+            ,"ERROR SUM", _PID:ErrorSum
+            ,"TERM [P | I | D]", "{0} | {1} | {2}":format(_PID:PTerm,  _PID:ITerm, _PID:DTerm)
+            ,"CHANGE RATE", Round(_PID:ChangeRate, 3) 
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
     // DispReetryTelemetry :: [(_dispBlockIdx)<scalar>] -> <none>
     // Displays reentry telemetry in the terminal grid. 
     // Defaults to next available grid space, can be pointed to a specific one
@@ -616,10 +647,10 @@
             ClearDispBlock().
         }
 
-        if g_Debug
-        {
-            if g_Debug { OutDebug("DispTermGrid|colCount/rowCount: [{0}/{1}]":Format(colCount, rowCount), -4).}
-        }
+        // if g_Debug
+        // {
+        //     // if g_Debug { OutDebug("DispTermGrid|colCount/rowCount: [{0}/{1}]":Format(colCount, rowCount), -4).}
+        // }
 
         // This bit adds the column position for each possible column beyond the start.
         from { local i to 1.} until i > colCount step { set i to i + 1.} do
@@ -631,19 +662,19 @@
         {
             local rowLine to _startAt + 1 + Max(0, (iRow - 1) * _rowHeight).
             
-            if g_Debug
-            {
-                if g_Debug { OutDebug("DispTermGrid|iRow/rowLine: [{0}/{1}]":Format(iRow, rowLine), -3).}
-            }
+            // if g_Debug
+            // {
+            //     if g_Debug { OutDebug("DispTermGrid|iRow/rowLine: [{0}/{1}]":Format(iRow, rowLine), -3).}
+            // }
 
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
                 set l_GridSpaceIdx to iCol + iRow.
 
-                if g_Debug
-                {
-                    if g_Debug { OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).}
-                }
+                // if g_Debug
+                // {
+                //     if g_Debug { OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).}
+                // }
 
                 if g_GridAssignments:HasKey(l_GridSpaceIdx)
                 {
@@ -678,11 +709,11 @@
         }
         print headerStr at (0, cr()).
 
-        if g_Debug
-        {
-            if g_Debug { OutDebug("DispTermGrid|l_GridSpaceLex: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), -1).}
-            wait 0.25.
-        }
+        // if g_Debug
+        // {
+        //     if g_Debug { OutDebug("DispTermGrid|l_GridSpaceLex: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), -1).}
+        //     wait 0.25.
+        // }
 
         set g_TermSize to Terminal:Height + Terminal:Width.
         // Neat
@@ -858,6 +889,7 @@
         {
             local bulletStr to choose "{0} ":Format(Char(9500)) if i > 0 else "".
             local str to _dispData[i].
+            if not str:IsType("String") set str to str:ToString.
 
             if str:Length > g_ColLim
             {

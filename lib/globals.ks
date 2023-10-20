@@ -52,6 +52,7 @@
     
     global g_ReturnMissionList to list(
         "DownRange"     // Guided downrange suborbital, no reentry guidance
+        ,"DownRanger"   // ^
         ,"MaxAlt"       // Guided or unguided max altitude
         ,"SSO"          // Unguided launch, guided reentry
         ,"SubOrbital"   // Fully guided launch and reentry
@@ -59,6 +60,7 @@
 
     global g_GuidedAscentMissions to list(
         "DownRange"
+        ,"DownRanger"
         ,"Orbit"
         ,"PIDOrbit"
         ,"SubOrbital"
@@ -136,6 +138,8 @@
 // Launch azimuth data object
 global g_azData to list().
 
+global g_ShipStageCache to lexicon().
+
 // Terminal input mappings by script or context
 global g_InputMappings to lexicon(
     "Context", lexicon()
@@ -167,6 +171,7 @@ global g_ModEvents to lexicon(
         )
         ,"ModuleDecouple", lexicon(
             "Decouple", "decouple"
+            ,"DecoupleInterstage", "decouple top node"
         )
         ,"ProceduralFairingDecoupler", lexicon(
             "Decouple", "jettison fairing"

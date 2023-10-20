@@ -106,21 +106,39 @@
         {
             if _engType = "all" or eng:tag:length > 0
             {
-                if eng:ignition and not eng:flameout
+                if eng:Ignition and not eng:flameout
                 {
                     engList:add(eng).
                 }
             }
+            else if _engType = "NoBooster"
+            {
+                // OutDebug("Eng in NoBooster: {0} | Decoupler: {1}":Format(eng, eng:Decoupler), 10).
+                // wait 0.01.
+                if eng:Decoupler <> "None"
+                {
+                    if eng:Decoupler:Tag:MatchesPattern("^Booster.*")
+                    {
+                    }
+                    else
+                    {
+                        if eng:Ignition and not eng:flameout
+                        {
+                            engList:add(eng).    
+                        }
+                    }
+                }
+            }
             else if _engType = "NoSRB"
             {
-                if eng:ignition and not eng:flameout and not g_PropInfo:Solids:Contains(eng:ConsumedResources:Keys[0])
+                if eng:Ignition and not eng:flameout and not g_PropInfo:Solids:Contains(eng:ConsumedResources:Keys[0])
                 {
                     engList:add(eng).
                 }
             }
             else if _engType = "NoSep"
             {
-                if eng:ignition and not eng:flameout and not g_PartInfo:Engines:SepRef[eng:Name]
+                if eng:Ignition and not eng:flameout and not g_PartInfo:Engines:SepRef[eng:Name]
                 {
                     engList:add(eng).
                 }
@@ -134,13 +152,22 @@
     global function GetEnginesForStage
     {
         parameter _stg, 
-                  _type is "All".
+                  _type is "All",
+                  _stgCheckType is 0. // -1: <=
+                                      // 0: ==
+                                      // 1: >=
 
         local engList to list().
+        local checkDel to _EQ_@.
+
+        if _stgCheckType <> 0 
+        {
+            set checkDel to choose _GE_@ if _stgCheckType > 0 else _LE_@. 
+        }
 
         for eng in ship:engines
         {
-            if eng:Stage = _stg
+            if checkDel:Call(eng:Stage, _stg)
             { 
                 if _type = "All" 
                 {
@@ -160,19 +187,28 @@
                         engList:Add(eng).
                     }
                 }
+                else if _type = "Booster"
+                {
+                    if eng:Decoupler:Tag:MatchesPattern("^Booster\|\d*")
+                    {
+                        engList:Add(eng).
+                    }
+                }
             }
         }
         return engList.
     }
 
 
-    // GetNextEngines :: -> (engList)<List>
-    // Returns the next set of engines, starting with current stage - 1, and iterating towards 0 until it finds them (or doesn't)
+    // GetNextEngines :: [_startAtStg<Scalar>] -> (engList)<List>
+    // Returns the next set of engines, starting with the provided stage number (by default current stage - 1), and iterating towards 0 until it finds them (or doesn't)
     global function GetNextEngines
     {
+        parameter _startAtStg is Stage:Number - 1.
+
         local engList to list().
 
-        from { local i to Stage:Number - 1.} until i <= 0 step { set i to i - 1.} do
+        from { local i to _startAtStg - 1.} until i <= 0 step { set i to i - 1.} do
         {
             set engList  to GetEnginesForStage(i).
             if engList:Length > 0 
@@ -181,6 +217,29 @@
             }
         }
         return engList.
+    }
+
+    global function GetNextEngineStage
+    {
+        parameter _startStg is Stage:Number,
+                  _engTypes is "ALL".
+
+        local nextStg is 0.
+
+        for eng in Ship:Engines
+        {
+            if eng:Stage < _startStg
+            {
+                if _engTypes = "ALL"
+                {
+                    if not g_PartInfo:Engines:SepRef:Contains(eng:name) or eng:Tag:Length > 0
+                    {
+                        if eng:Ignitions > 0 set nextStg to Max(nextStg, eng:Stage).
+                    }
+                }
+            }
+        }
+        return nextStg.
     }
     // #endregion
 
@@ -861,13 +920,13 @@
                     
                     if engIDList:Contains(eng:CID)
                     {
-                        if eng:ignition and not eng:flameout
+                        if eng:Ignition and not eng:flameout
                         {
                             eng:shutdown.
-                            if eng:HasGimbal 
-                            {
-                                DoAction(eng:Gimbal, "Lock Gimbal", true).
-                            }
+                            // if eng:HasGimbal 
+                            // {
+                            //     DoAction(eng:Gimbal, "Lock Gimbal", true).
+                            // }
                             engIDList:Remove(engIDList:Find(eng:CID)).
                         }
                     }

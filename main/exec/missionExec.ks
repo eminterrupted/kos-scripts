@@ -33,10 +33,11 @@ OutMsg("Exited soundingLaunch").
 wait 1.
 
 ClearScreen.
-DispMain(ScriptPath()).
+set g_MainProcess to ScriptPath().
+DispMain().
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^(Orbit|Circularize|PIDSubOrbital)")
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mission:MatchesPattern("^((PID)?Orbit|Circularize|PIDSubOrbital)")
 {
     local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
 
@@ -45,8 +46,8 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
     // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|", "Circularize|").
     // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|{0}":Format(), "Circularize|{0}":Format(Round(Ship:Apoapsis)):Replace("km", "")).
     
-    local tgtAp to Ship:Body:ATM:Height + 25000.
-    local tgtPe to tgtAp.
+    local tgtAp to Ship:Apoapsis. // Ship:Body:ATM:Height + 25000.
+    local tgtPe to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 else tgtAp.
     
     local tagSplit to Core:Part:Tag:Split("|").
     if tagSplit:Length > 2
@@ -95,7 +96,7 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtAlt and g_MissionTag:Mis
     }
     else
     {
-        runPath("0:/main/launch/circAtApo", list(tgtAp, azObj)).
+        runPath("0:/main/launch/circAtApo", list(tgtAp, tgtPe, azObj)).
     }
 
     if g_StageLimitSet:Length > 1

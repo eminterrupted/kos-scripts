@@ -48,12 +48,12 @@ if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
 set g_azData to _azObj.
 set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, _azObj).
 
-ConfigureLaunchPad().
+ConfigureLaunchPlatform().
 
 if rcsPresent
 {
     local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
-    local rcsActionDel to { parameter _params is list(). RCS on. return false.}.
+    local rcsActionDel to { parameter _params is list(). RCS on. set g_RCSArmed to False. return false.}.
     local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
     set g_RCSArmed to RegisterLoopEvent(rcsEventData).
 }
@@ -124,7 +124,7 @@ if ascentEventParts:Length > 0
                 }
                 else
                 {
-                    local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
+                    local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""), -1).
                     // if g_Debug OutDebug("[soundingLaunch] dcMET Parsed [{0}]":Format(dcMET)).
                     wait 1.
                     local dcEventId to "DC_{0}":Format(dcMET).

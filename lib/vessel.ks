@@ -240,7 +240,7 @@
                             if Stage:Number - 1 = HotStageID
                             {
                                 local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
-                                set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoSRB")).
+                                set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                 // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                 set g_TR to stageEngines_BT - SpoolTime.
                                 OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
@@ -447,15 +447,6 @@
             wait until Stage:Ready.
             stage.
             wait 0.01.
-
-            // if Ship:PartsTaggedPattern("Spin\|"):Length > 0
-            // {
-            //     ArmSpinStabilization().
-            // }
-            // if g_HotStageArmed
-            // {
-            //     set g_HotStageArmed to ArmHotStaging().
-            // }
         }
 
 
@@ -593,6 +584,7 @@
     // #region
 
         // ArmAscentEvents :: <none> -> eventRegisteredCount<Scalar>
+        // Arms events that should run during launches
         global function ArmAscentEvents
         {
             parameter _eventParts to Ship:PartsTaggedPattern("^ascent\|.*").
@@ -607,6 +599,8 @@
 
                 if epTag:MatchesPattern("^MECO\|\d*")
                 {
+                    if g_Debug OutDebug("[{0}|{1}] epTag MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
+                    wait 0.1.
                     if not g_LoopDelegates:Events:HasKey("MECO")
                     {
                         set g_MECOArmed to SetupMECOEventHandler("Ascent").
@@ -614,8 +608,9 @@
                     }
                 }
 
-                if epTagSplit[0] = "Decouple"
-                {   
+                if epTagSplit[0]:MatchesPattern("(Decouple|DC)")
+                {
+                    wait 0.1.
                     set eventID to "DC".
                     local dcList to list().
 
@@ -628,16 +623,18 @@
                             {
                                 if epConditionSplit[0] = "BOOSTER"
                                 {
+                                    if g_Debug OutDebug("[{0}|{1}] epTag DC_Booster Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
                                     set eventID to ("DC_BOOSTER_{0}"):Format(epConditionSplit[1]).
                                     set dcList to Ship:PartsTaggedPattern("Booster\|{0}":Format(epConditionSplit[1])).
                                 }
                             }
                             else if epTagSplit[1] = "MECO"
                             {
+                                if g_Debug OutDebug("[{0}|{1}] epTag DC_MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 11).
                                 set eventID to "DC_MECO".
                                 if not g_LoopDelegates:Events:HasKey(eventID)
                                 {
-                                    set dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|MECO").
+                                    set dcList to Ship:PartsTaggedPattern("Ascent\|(Decouple|DC)\|MECO").
                                 }
                             }
                         }
@@ -647,7 +644,7 @@
                             set eventID to "DC_{0}":Format(dcMET).
                             if not g_LoopDelegates:Events:HasKey(eventID)
                             {
-                                set dcList to Ship:PartsTaggedPattern("Ascent\|Decouple\|\d*").
+                                set dcList to Ship:PartsTaggedPattern("Ascent\|(Decouple|DC)\|\d*").
                             }
                         }
                         else
@@ -661,7 +658,8 @@
                     if not g_LoopDelegates:Events:HasKey(eventID) 
                     {
                         OutInfo("Arming DecouplerEvent [Count:{0}]":Format(dcList:Length)).
-                        local dcEventRegistrationResult to SetupDecoupleEventHandler(eventID, dcList).
+                        wait 1.
+                        local dcEventRegistrationResult to SetupDecoupleEventHandler(eventID, dcList, "DecoupleEvent").
                         if dcEventRegistrationResult 
                         {
                             set eventRegisteredCount to eventRegisteredCount + 1.
@@ -749,9 +747,9 @@
         // Creates a new decouple event for auto-staging outside of MECO. Uses a tag on the decoupler to control.
         global function SetupDecoupleEventHandler
         {
-            parameter _dcEventID, 
+            parameter _dcEventID,
                       _dcList is list(),
-                      _fireSep is false.
+                      _dcEventType is "DecoupleEvent".
 
             local boosterEngs   to list().
             local dcSepRM       to lexicon().
@@ -797,7 +795,7 @@
                                 {
                                     if g_PartInfo:Engines:SepRef:Contains(child:Name)
                                     {
-                                        if not child:ignition
+                                        if not child:Ignition
                                         {
                                             if dcSepRM:HasKey(_dc:UID)
                                             {
@@ -919,7 +917,27 @@
                                     if dc:HasModule(m)
                                     {
                                         set dcModule to dc:GetModule(m).
-                                        set dcEventStr to choose g_ModEvents:Decoupler[m]:Decouple if g_ModEvents:Decoupler:HasKey(m) else "decouple".
+                                        for event in dcModule:allevents
+                                        {
+                                            if event:Contains("decouple")
+                                            {
+                                                set dcEventStr to event:Replace("(callable) ", ""):Replace(", is KSPEvent", "").
+                                            }
+                                        }
+                                        
+                                        // if g_ModEvents:Decoupler:HasKey(m)
+                                        // {
+                                        //     if dcModule:HasEvent("decouple")
+                                        //     {
+                                        //         //set dcEventStr to g_ModEvents:Decoupler[m]:Decouple if g_ModEvents:Decoupler:HasKey(m) else "decouple".
+                                        //         set dcEventStr to "decouple".
+                                        //     }
+                                        //     else if dcModule:HasEvent("decouple top node")
+                                        //     {
+                                        //         set dcEventStr to "decouple top node".
+                                        //     }
+
+                                        // }
                                     }
                                 }
 
@@ -952,12 +970,16 @@
                                 }
                             }
                         }
-                        // wait 0.01. 
+                        // wait 0.01.
+                        if Ship:PartsDubbedPattern("^Booster\|.*"):Length = 0
+                        {
+                            set g_BoostersArmed to False.
+                        }
                         return False.
                     }.
 
                     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Creating Loop Event").
-                    local dcEvent to CreateLoopEvent(_dcEventID, "DecoupleEvent", paramList, checkDel@, actionDel@).
+                    local dcEvent to CreateLoopEvent(_dcEventID, _dcEventType, paramList, checkDel@, actionDel@).
                     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Registering Loop Event").
                     set resultFlag to RegisterLoopEvent(dcEvent).
 
@@ -1223,6 +1245,8 @@
         local stgShipMass to 0.
         
         local stgEngs to GetEnginesForStage(stg).
+        local nextEngStg to GetNextEngineStage(stg).
+
         local engResUsed to list().
         for eng in stgEngs
         {
@@ -1248,7 +1272,7 @@
                 }
             }
 
-            if p:DecoupledIn = stg - 1 and p:Resources:Length > 0 
+            if p:DecoupledIn >= nextEngStg and p:Resources:Length > 0 
             {
                 for res in p:Resources
                 {
@@ -1263,6 +1287,112 @@
 
         return lex("stage", stgMass, "fuel", stgFuelMass, "ship", stgShipMass).
     }
+
+    // GetStageMass2 :: _stg<scalar>, [_shipStageCache<Lexicon>] -> shipStageCacheUpdated<Lexicon>
+    // Utilizes cached data model
+    global function GetStageMass2
+    {
+        parameter _stg,
+                  _stgObject is g_ShipStageCache.
+
+        local stgMass to 0.
+
+        //ISSUE: stgFuelMass appears to be about half (or at least, lower than) 
+        //what it should be
+        local stgEngs to list().
+        local stgFuelMass to 0.
+        local stgShipMass to 0.
+        local nextStg to Max(-1, _stg - 1).
+        
+        // Stage base caching
+        if not _stgObject:HasKey(_stg)
+        {
+            _stgObject:Add(_stg, lexicon()).
+        }
+
+        if _stgObject[_stg]:HasKey("ENG")
+        {
+            set stgEngs to _stgObject[_stg]:ENG.
+        }
+        else
+        {
+            set stgEngs to GetEnginesForStage(_stg).
+            set _stgObject[_stg]["ENG"] to stgEngs.
+        }
+
+        // Resources
+        local engResUsed to list().
+        if stgEngs:Length > 0
+        {
+            if _stgObject[_stg]:HasKey("FUELMASS")
+            {
+                set engResUsed to _stgObject[_stg]:FUELMASS.
+            }
+            else
+            {       
+                for eng in stgEngs
+                {
+                    for k in eng:ConsumedResources:Keys 
+                    {
+                        if not engResUsed:Contains(k) engResUsed:Add(k:replace(" ", "")).
+                        if _stgObject[_stg]:HasKey("CONRES")
+                        {
+                            if not _stgObject[_stg]:CONRES:HasKey(k)
+                            {
+                                _stgObject[_stg]:CONRES:Add(k, eng:ConsumedResources[k]).
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Actual mass calculation
+        local partMassObj to lexicon("STAGE", 0, "FUEL", 0, "SHIP", 0).
+
+        if _stgObject[_stg]:HasKey("PARTMASS")
+        {
+            set partMassObj to _stgObject[_stg]:PARTMASS.
+        }
+        else
+        {
+            for p in Ship:Parts
+            {
+                if p:typeName = "Decoupler" 
+                {
+                    if p:Stage <= _stg set stgShipMass to stgShipMass + p:Mass.
+                    if p:Stage = _stg set stgMass to stgMass + p:Mass.
+                }
+                else if p:DecoupledIn <= _stg
+                {
+                    set stgShipMass to stgShipMass + p:Mass.
+                    if p:DecoupledIn = _stg
+                    {
+                        set stgMass to stgMass + p:Mass.
+                    }
+                }
+
+                if p:DecoupledIn >= nextStg and p:Resources:Length > 0 
+                {
+                    for res in p:Resources
+                    {
+                        if engResUsed:Contains(res:Name) 
+                        {
+                            // print "Calculating: " + res:Name.
+                            set stgFuelMass to stgFuelMass + (res:amount * res:density).
+                        }
+                    }
+                }
+            }
+
+            set partMassObj to lexicon("stage", stgMass, "fuel", stgFuelMass, "ship", stgShipMass).
+        }
+
+        set _stgObject[_stg]["PARTMASS"] to partMassObj.
+
+        return _stgObject.
+    }
+
     // #endregion
 
     // ** Steering
@@ -1510,7 +1640,12 @@
         }
         else if _steerDelID = "PIDApoErr:Sun"
         {
-            set del to { return HEADING(l_az_calc(g_azData), GetPIDPitchAngle(g_AngDependency), 0).}.
+            OutInfo("Transitioning to PIDApoErr:Sun guidance").
+            set del to { 
+                local pidPit to GetAscentAng_PIDyParty(g_AngDependency).
+                DispPIDLoopValues(g_PIDS[g_AngDependency:APO_PID]).
+                return HEADING(l_az_calc(g_azData), pidPit, 0).
+            }.
         }
         
         return del@.
@@ -1604,7 +1739,8 @@
                 local epTagSplit to ep:Tag:Split("|").
 
                 local dcEventId to "DC_BOOSTER_0".
-                
+                local dcEventGenericID to "DC_BOOSTER".
+
                 if epTagSplit:Length > 1 
                 {
                     set dcEventID to "DC_BOOSTER_{0}":Format(epTagSplit[1]).
@@ -1612,7 +1748,7 @@
                 
                 if not g_LoopDelegates:Events:HasKey(dcEventId)
                 {
-                    SetupDecoupleEventHandler(dcEventId, boosterDCList).
+                    SetupDecoupleEventHandler(dcEventId, boosterDCList, dcEventGenericID).
                     set armedFlag to True.
                 }
             }
@@ -2247,6 +2383,10 @@
                     }
                 }
             }
+            else if g_LoopDelegates["Events"]:HasKey("DC_BOOSTER")
+            {
+                
+            }
             else
             {
                 OutInfo("Boosters disarmed").
@@ -2382,6 +2522,7 @@
                     
                     JettisonFairings(_params[1]).
                     OutInfo("Fairing jettison").
+                    set g_FairingsArmed to False.
                     return False.
                 }.
 
@@ -2499,6 +2640,7 @@
                             DoAction(m, "Decouple", true).
                         }
                         OutMsg("LES Tower Jettison").
+                        set g_LESArmed to False.
                     }
                     return False.
                 }.

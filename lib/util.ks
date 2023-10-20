@@ -22,6 +22,10 @@
         ,"s", 1
         ,"ms", 0.001
     ).
+
+    local l_logInit to False.
+    local l_LogPathMask to "0:/log/mission/log_{0}.txt".
+    local l_Log to l_LogPathMask:Format(Ship:Name:Replace(" ", "_")).
     // #endregion
 
     // *- Global
@@ -48,6 +52,87 @@
 
 // *~ Functions ~* //
 // #region
+
+    // ## Anonymous Globals
+    // #region
+
+        // _EQ_ :: _a<scalar>, _b<scalar> -> isAEqualB<Bool> 
+        global _EQ_ to { parameter _a, _b. return _a = _b.}.
+
+        // _GE_ :: _a<scalar>, _b<scalar> -> isAGreaterThanOrEqualB<Bool> 
+        global _GE_ to { parameter _a, _b. return _a >= _b.}.
+        // _GT_ :: _a<scalar>, _b<scalar> -> isAGreaterThanB<Bool> 
+        global _GT_ to { parameter _a, _b. return _a > _b.}.
+
+        // _LE_ :: _a<scalar>, _b<scalar> -> isALessThanEqualB<Bool> 
+        global _LE_ to { parameter _a, _b. return _a <= _b.}.
+        // _LT_ :: _a<scalar>, _b<scalar> -> isALessThanB<Bool> 
+        global _LT_ to { parameter _a, _b. return _a < _b.}.
+
+
+    // #endregion
+
+    // *- #TODO Caching
+    // #region
+
+        global g_CacheDel to lexicon(
+            "STG",    { parameter _inObj, _val. local retVal to 0. if not _inObj:HasKey(_val) { set retVal to lexicon(). set _inObj[_val] to retVal. } else { set retVal to _inObj[_val].} return _inObj. } // 0: Root 
+            ,"ENG",   { parameter _inObj, _val. local retVal to 0. if not _inObj[_val]:HasKey("ENG") { set retVal to GetEnginesForStage(_val). set _inObj[_val]["ENG"] to retVal. } else { set retVal to _inObj[_val]["ENG"].} return retVal.}
+        ).
+
+        global function GetFromCache
+        {
+            parameter _nodeList is list(),
+                    _cache is g_ShipStageCache.
+            
+            local curData to _cache.
+            local curLvl to 0.
+            local cMiss  to False.
+
+            for n in _nodeList
+            {
+                if curData:HasKey(n) 
+                {
+                    set curData to curData[n]. 
+                    set curLvl to curLvl + 1.
+                }
+                else
+                {
+                    set cMiss to True.
+
+                    break.
+                }
+            }
+
+            return curData.
+        }
+
+        global function SetCache
+        {
+            parameter _nodeList,
+                      _val,
+                      _cache is g_ShipCache.
+
+            local curLvl to _cache.
+
+            from { local i to 0.} until i = _nodeList:Length - 1 step { set i to i + 1.} do
+            {
+                local n to _nodeList[i].
+                if curLvl:HasKey(n)
+                {
+                    set curLvl to curLvl[n].
+                }
+                else
+                {
+                    curLvl:Add(n, lexicon()).
+                }
+            }
+            set curLvl[_nodeList[_nodeList:Length - 1]] to _val.
+            return _cache.
+        }
+
+
+    // #endregion
 
     // *- Terminal Utilities
     // #region
@@ -256,6 +341,105 @@
             OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
 
             return scalarVal.
+        }
+
+    // #endregion
+
+    // #TODO: *- Logging Utilities
+    // #region
+
+        // InitLog :: _logPath<String>, [_resetLog<Bool>] -> logReady<bool> 
+        global function InitLog
+        {
+            parameter _logPath is l_Log,
+                      _resetLog is 0. // 0: Append or Create, 1:Reset:Archive old, 2:Reset:Delete old
+
+            local logPtr to "".
+            local logHeader to "*** MISSION LOG INITIALIZATION ***".
+            local newLog to True.
+
+            if exists(_logPath)
+            {
+                if _resetLog > 0
+                {
+                    if _resetLog > 1
+                    {
+                        DeletePath(_logPath).
+                    }
+                    else
+                    {
+                        local logArchivePath to "0:/log/mission/archive/{0}/logArchive_{0}_{1}.log":Format(Ship:Name:Replace(" ","_"), Ship:Name:Replace(" ","_"), Round(MissionTime)).
+                        if exists(logArchivePath) MovePath(logArchivePath, logArchivePath:Replace(".log", "_1.log")).
+                        MovePath(_logPath, logArchivePath).
+                    }
+                }
+                else
+                {
+                    set newLog to False.
+                }
+            }
+
+            if newLog
+            {
+                set logPtr to Create(_logPath).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("*** MISSION LOG INITIALIZATION ***").
+                logPtr:WriteLn("*** VESSEL: {0} ***":Format(Ship:Name)).
+                logPtr:WriteLn("*** MET   : {0} ***":Format(Round(MissionTime))).
+                logPtr:WriteLn("*** UT    : {0} ***":Format(Round(Time:Seconds))).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("").
+            }
+            else
+            {
+                set logPtr to Open(_logPath).
+                logPtr:WriteLn("").
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("** MISSION LOG REINITIALIZATION **").
+                logPtr:WriteLn("*** MET   : {0} ***":Format(Round(MissionTime))).
+                logPtr:WriteLn("*** UT    : {0} ***":Format(Round(Time:Seconds))).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("").
+            }
+
+            set l_logInit to Exists(_logPath).
+            return l_logInit.
+        }
+
+        // OutLog :: _str<String>, [_level<Scalar>], [_tee<Boolean>] -> <none>
+        global function OutLog
+        {
+            parameter _str,
+                      _level is 0,
+                      _tee   is False.
+
+            if not l_logInit InitLog().
+
+            local ut to TimeSpan(Time:Seconds).
+            local mt to TimeSpan(MissionTime).
+
+            local logUTimeStr to "{0}-{1}-{2}T{3}:{4}:{5}":Format(ct:Year + 1951, g_CalLookup:GetMonth:Call(ut:Day), ut:Day, ut:Hour, ut:Minute, Round(Mod(ut:Seconds, 60), 3)).
+            local logMTimeStr to "{0}-{1}-{2}T{3}:{4}:{5}":Format(mt:Year, g_Cal:Convert:DaysToMonths:Call(mt:Day), mt:Day, mt:Hour, mt:Minute, Round(Mod(mt:Seconds, 60), 3)).
+            l_log:WriteLn().
+        }
+
+        global g_Cal to lexicon(
+            "Convert", lexicon(
+                "DaysToMonths", ConvertDaysToMonths@
+            )
+        ).
+
+        local function ConvertDaysToMonths
+        {
+            parameter _days.
+
+            local isLeapYear to g_Cal:Reference:LeapYear:Contains(1951 + TimeSpan(Time:Seconds):Year).
+            
+            if      _days < 30 return 0.
+            else 
+            {
+
+            }
         }
 
     // #endregion
@@ -563,7 +747,8 @@
 
     global function ParseStringScalar
     {
-        parameter _inputString.
+        parameter _inputString,
+                  _fallbackValue is 0.
 
         local scalar_result to -1.
         
@@ -574,15 +759,15 @@
         }
         else
         {
-            if _inputString:MatchesPattern("\d*(km$|mm$)")
+            if _inputString:MatchesPattern("\d*(\.\d*)?(km$|mm$)")
             {
-                if _inputString:MatchesPattern("(^\d*(km$))")
+                if _inputString:MatchesPattern("(^\d*(\.\d*)?(km$))")
                 {
-                    set scalar_result to _inputString:Replace("km", ""):ToNumber() * 1000.
+                    set scalar_result to _inputString:Replace("km", ""):ToNumber(_fallbackValue) * 1000.
                 }
-                else if _inputString:MatchesPattern("(^\d*(mm$))")
+                else if _inputString:MatchesPattern("(^\d*(\.\d*)?(mm$))")
                 {
-                    set scalar_result to _inputString:Replace("mm", ""):ToNumber() * 1000000.
+                    set scalar_result to _inputString:Replace("mm", ""):ToNumber(_fallbackValue) * 1000000.
                 }
             }
             else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
@@ -603,12 +788,12 @@
             else if _inputString:MatchesPattern("(^\d*$)")
             {
                 OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
-                set scalar_result to _inputString:ToNumber().
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
                 wait 0.1.
             }
             else
             {
-                set scalar_result to _inputString:ToNumber(-1).
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
             }
         }
         return scalar_result.
