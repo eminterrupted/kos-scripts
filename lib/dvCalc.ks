@@ -406,6 +406,8 @@
         local stgEngs to GetEnginesForStage(stg).
         local stgMass to Lexicon("Ship", 0 , "Fuel", 0).
 
+        OutDebug("[AvailStageDV][{0}] stgEngs:":Format(stg, stgEngs:Join(";")), crDbg(0)).
+
         if stgEngs:Length > 0
         {
             set stgMass to GetStageMass(stg).
@@ -413,6 +415,9 @@
             
             if stgMass["Fuel"] > 0
             {
+                OutDebug("[AvailStageDV]({0}) stgMass[ship]: [{1}]":Format(stg, stgMass["ship"]), crDbg()).
+                OutDebug("[AvailStageDV]({0}) stgMass[fuel]: [{1}]":Format(stg, stgMass["fuel"]), crDbg()).
+                OutDebug("[AvailStageDV]({0}) exhVel({1})":Format(stg, exhVel), crDbg()).
                 set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
             }
             // print "AvailStageDV         ".

@@ -18,6 +18,9 @@
     // #region
     local stagingState to 0.
     local localTS to 0.
+    local l_SteeringDelegate_Standby to { return Ship:Facing.}.
+
+    local l_curBoosterSetId      to -1.
     
     local l_rollCheck            to 0.
     local l_rollCheckWeightAvg   to 0.
@@ -29,9 +32,7 @@
     local l_rollCheckWindupLimit to list(-1, 1).
 
     local l_rollOffset to 0.
-    local l_rollOffsets to list(
-        
-    ).
+    local l_rollOffsets to list().
 
    global g_rollCheckObj to lex(
         "CTRL_REF", lex(
@@ -401,10 +402,10 @@
 
             // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
             // {
-                local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
+                // local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
                 // local boundCondition to condition:BIND(Ship, 0.1).
                 // return boundCondition.
-                return condition.
+                return GetShipThrustConditionDelegate(Ship, _checkVal).
             // }
             // else if _checkType = 1
             // {
@@ -423,10 +424,12 @@
                 //if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
                 if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
                 { 
+                    // OutDebug("[{0}] StagingCheckDel TRUE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 1).
                     return 1.
                 } 
                 else 
                 {
+                    // OutDebug("[{0}] StagingCheckDel FALSE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 1).
                     return 0.
                 }
             }.
@@ -497,6 +500,7 @@
             // set g_NextEngines     to GetNextEngines().
             // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
 
+            // OutDebug("[{0}] Running SafeStageWithUllage":Format(Round(MissionTime, 1)), 3).
             local stageResult to False.
             
             if _engList_Spec:Keys:Length = 0
@@ -506,6 +510,7 @@
                         
             if _engList_Spec:HasKey("FuelStabilityMin")
             {
+                // OutDebug("[{0}] FuelStabilityMin Key Found":Format(Round(MissionTime, 1)), 4).
                 if _engList_Spec:FuelStabilityMin > 0.925
                 {
                     OutInfo("Ullage Check Passed!").
@@ -516,13 +521,15 @@
                     OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(_engList_Spec:FuelStabilityMin * 100, 2))).
                 }
             }
-            else 
+            else
             {
+                // OutDebug("[{0}] FuelStabilityMin Key Missing":Format(Round(MissionTime, 1)), 4).
                 set stageResult to true.
             }
 
             if stageResult
             {
+                // OutDebug("[{0}] Staging triggered":Format(Round(MissionTime, 1)), 5).
                 local rcsResult to RCS. // Stores current RCS state
                 set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
                 wait until Stage:Ready.
@@ -745,6 +752,8 @@
 
         // SetupDecoupleEventHandler :: _dcEventID<String>, _dcList<List[Decoupler]> -> resultFlag<bool>
         // Creates a new decouple event for auto-staging outside of MECO. Uses a tag on the decoupler to control.
+        // The tag depends on what type of decoupling event it is.
+        // Ugh, this is too complicated isn't it
         global function SetupDecoupleEventHandler
         {
             parameter _dcEventID,
@@ -844,21 +853,30 @@
                         
                         for booster in _params[2]
                         {
+                            // OutDebug("[{0}][{1}]({2})<booster>thr:{3}|avlthr:{4}  ":Format(Round(MissionTime, 1), booster:name + "|" + booster:Decoupler:Tag, _params[2]:Length, Round(booster:Thrust, 1), Round(booster:AvailableThrust, 1)), 5).
                             if booster:Ignition and not booster:Flameout
                             {
+                                // OutDebug("[{0}][{3}] Booster Check [IGN: {1} FLM: {2}]":Format(Round(MissionTime, 2), booster:Ignition, booster:Flameout, booster:name), 6).
                                 local conRes to choose booster:Resources[0] if g_PropInfo:Solids:Contains(booster:ConsumedResources:Values[0]:Name) else booster:ConsumedResources:Values[0].
                                 if booster:Thrust <= 0.1
                                 {
+                                    // OutDebug("[{0}][{3}] Booster thrust trigger: {1} / {2} ":Format(Round(MissionTime, 2), booster:Thrust, 0.1, booster:name), 7).
                                     pendingStaging:Add(booster).
                                 }
                                 else if booster:MassFlow > 0
                                 {
+                                    // OutDebug("[{0}][{2}] Booster Mass Flow: {1} ":Format(Round(MissionTime, 2), booster:MassFlow, booster:name), 7).
                                     local resCalc to conRes:Capacity * (booster:GetModule("ModuleEnginesRF"):GetField("predicted residuals") * 0.9).
                                     // OutDebug("Amt: {0} | Cap: {1} | ResCalc: {2}":Format(Round(conRes:Amount, 2), Round(conRes:Capacity, 2), Round(resCalc, 2))).
                                     if conRes:Amount <= resCalc and booster:Thrust <= 0.25
                                     {
+                                        // OutDebug("[{0}] conRes:Amount / resCalc / booster:Thrust: {1} / {2} / {3} ":Format(Round(MissionTime, 2), conRes:Amount, resCalc, booster:Thrust), 9).
                                         pendingStaging:Add(booster).
                                     }
+                                }
+                                else
+                                {
+                                    // OutDebug("Whoops, what's happening here.", 10).
                                 }
                             }
                             else if booster:flameout
@@ -868,7 +886,7 @@
                         }
                         
                         set checkFlag to pendingStaging:Length = _params[2]:Length.
-                        if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), 7).
+                        // if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), 7).
 
                         // OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
                         return checkFlag.
@@ -965,6 +983,7 @@
                                     //     }
                                     // }
 
+                                    set dcModule:Part:Tag to "".
                                     DoEvent(dcModule, dcEventStr).
                                     dcUIDList:Remove(dcUIDList:Find(dc:UID)).
                                 }
@@ -974,6 +993,10 @@
                         if Ship:PartsDubbedPattern("^Booster\|.*"):Length = 0
                         {
                             set g_BoostersArmed to False.
+                        }
+                        else
+                        {
+                            ArmBoosterStaging_NewShinyNext().
                         }
                         return False.
                     }.
@@ -1201,12 +1224,218 @@
 
             return resultFlag.
         }
+
+        global function SetupSpinStabilizationEventHandler
+        {
+            parameter _partList is Ship:PartsTaggedPattern("SpinDC\|.*").
+
+            local resultFlag to False.
+
+            for dc in _partList
+            {
+                if ArmSpinStabilizationDC(dc) set resultFlag to True.
+            }
+
+            return resultFlag.
+        }
     // #endregion
 
     // Spin-stabilization
     // #region
     
-    global function ArmSpinStabilization
+    global function ArmSpinStabilizationDC
+    {
+        parameter _spinDC.
+
+        local ctrlModules to list().
+        local ctrlRCSModules to Ship:ModulesNamed("ModuleRCSFX").
+        local ctrlSrfModules to Ship:ModulesNamed("FARControllableSurface").
+        
+        local resultFlag to False.
+
+        local spinForce to 1.
+        local spinPreload to 15.
+        local spinType to 0. // 0: Auto, prefers control surfaces in atmosphere and RCS in vacuum
+                              // 1: Control Surfaces
+                              // 2: RCS
+                              // 3: #TODO Specific engines
+        local spinTag to _spinDC:Tag:Split("|").
+
+        if spinTag:Length > 1
+        {
+            set spinPreload to ParseStringScalar(spinTag[1], 0).
+            if spinTag:Length > 2 set spinType to ParseStringScalar(spinTag[2], 15).
+            if spinTag:Length > 3 set spinForce to ParseStringScalar(spinTag[3], 1).
+        }
+
+        if spinType = 0
+        {
+            if ctrlSrfModules:Length > 0
+            {
+                for m in ctrlSrfModules
+                {
+                    if m:Part:DecoupledIn <= _spinDC:Stage or m:Part:Tag:Contains("Spin")
+                    {
+                        ctrlModules:Add(m).
+                        set spinType to 1.
+                    }
+                }
+            }
+            
+            if ctrlModules:Length = 0 
+            {
+                for m in ctrlRCSModules
+                {    
+                    if m:Part:DecoupledIn >= _spinDC:Stage or m:Part:Tag:Contains("Spin")
+                    {
+                        ctrlModules:Add(m).
+                        set spinType to 2.
+                    }
+                }
+            }
+        }
+        else
+        {
+            if spinType = 1 and ctrlSrfModules:Length > 0
+            {
+                for m in ctrlSrfModules
+                {
+                    if m:Part:DecoupledIn <= _spinDC:Stage or m:Part:Tag:Contains("Spin")
+                    {
+                        ctrlModules:Add(m).
+                    }
+                }
+            }
+            else if spinType = 2 and ctrlRCSModules:Length > 0
+            {
+                for m in ctrlRCSModules
+                {    
+                    if m:Part:DecoupledIn >= _spinDC:Stage or m:Part:Tag:Contains("Spin")
+                    {
+                        ctrlModules:Add(m).
+                    }
+                }
+            }
+        }
+        
+        if spinType > 0
+        {
+            local paramList to list(
+                ctrlModules,
+                spinType,
+                spinForce
+            ).
+            
+            set g_SpinActive to False.
+            set g_TS0Ref to spinPreload.
+
+            // check del
+            local checkDel to {
+                parameter _params is list().
+
+                local doActionFlag to False.
+
+                if g_SpinActive
+                {
+                    // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
+                    OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
+                    if Time:Seconds >= g_TS0
+                    {
+                        set doActionFlag to True.
+                        set g_TS0 to -1.
+                        set g_TS0Ref to 0.
+                    }
+                }
+                else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
+                {
+                    local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
+                    // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
+                    OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
+                    if timeRem <= 0
+                    {
+                        if not g_SpinActive
+                        {
+                            set doActionFlag to True.
+                            set g_TS0 to Time:Seconds + spinPreload.
+                        }
+                    }
+                }
+
+                return doActionFlag.
+            }.
+
+            // action del
+            local steerVal to Ship:Facing.
+            local l_SpinSteerDelHolder to { return steerVal.}.
+
+            local actionDel to {
+                parameter _params is list().
+
+                local keepAlive to False.
+
+                if g_SpinActive
+                {
+                    OutInfo("Spin Stabilization Disarmed   ", 1).
+                    set Ship:Control:Roll to 0.
+                    set g_SteeringDelegate to l_SpinSteerDelHolder.
+                    unset l_SpinSteerDelHolder.
+                    set g_SpinActive to False.
+                    set g_SpinArmed to False.
+                }
+                else
+                {
+                    OutInfo("Initiating Spin Stabilization   ", 1).
+                    set l_SpinSteerDelHolder to g_SteeringDelegate.
+                    set steerVal to Ship:Facing.
+                    set g_SteeringDelegate to { return steerVal.}.
+
+                    if _params[1] = 1 and Body:ATM:AltitudePressure(Ship:Altitude) >= 0.1
+                    {
+                        for m in _params[0]
+                        {
+                            if not m:GetField("std. ctrl") m:SetField("std. ctrl", True).
+                        }
+                    }
+                    else if _params[1] = 2 or Body:ATM:AltitudePressure(Ship:Altitude) < 0.1
+                    {
+                        for m in _params[0]
+                        {
+                            if m:Name = "ModuleRCSFX" m:SetField("RCS", True).
+                        }
+                    }
+                    // set l_SteeringDelegate_Standby to g_SteeringDelegate.
+                    // set g_SteeringDelegate to { return Ship:Facing.}.
+                    set Ship:Control:Roll to _params[2].
+                    set g_SpinActive to True.
+                }
+
+                if g_SpinActive
+                {
+                    set keepAlive to True.
+                }
+                else
+                {
+                    set keepAlive to False.
+                }
+
+                return keepAlive.
+            }.
+
+            local spinEvent to lexicon().
+            local spinEventID to "SPIN_{0}":Format(_spinDC:Stage).
+
+            if not g_LoopDelegates:Events:HasKey(spinEventID)
+            {
+                set spinEvent to CreateLoopEvent(spinEventID, "SpinEvent", paramList, checkDel@, actionDel@).
+                set resultFlag to RegisterLoopEvent(spinEvent).   
+            }
+        }
+
+        return resultFlag.
+    }
+
+
+    global function ArmSpinStabilization_Old
     {
         local spinArmed to False.
         if g_ActiveEngines:Length > 0
@@ -1241,32 +1470,63 @@
 
         //ISSUE: stgFuelMass appears to be about half (or at least, lower than) 
         //what it should be
+        local stgFlowMass to 0.
         local stgFuelMass to 0.
+        local stgFuelUsableMass to 0.
+        local stgResidual to 0.
         local stgShipMass to 0.
+        local totalResFlow to 0.
         
-        local stgEngs to GetEnginesForStage(stg).
+        local stgEngs    to GetEnginesForStage(stg).
+        local stgDC      to GetEnginesDC(stgEngs).
+        local nextDCStg  to choose stgDC:Stage if stgDC:IsType("Decoupler") else -1.
         local nextEngStg to GetNextEngineStage(stg).
+        
 
-        local engResUsed to list().
-        for eng in stgEngs
-        {
+        local engResUsed to lexicon(
+            "RSRC", list()
+            ,"RSDL", list()
+            ,"FLOW", list()
+        ).
+
+        for eng in stgEngs {
+            engResUsed:FLOW:Add(eng:MaxMassFlow).
+            set stgFlowMass to stgFlowMass + eng:MaxMassFlow.
+
+            local m to eng:GetModule("ModuleEnginesRF").
+            local engResidual to m:GetField("predicted residuals").
+            engResUsed:RSDL:Add(engResidual).
+
             for k in eng:ConsumedResources:Keys 
             {
-                if not engResUsed:Contains(k) engResUsed:Add(k:replace(" ", "")).
+                if not engResUsed:RSRC:Contains(k) engResUsed:RSRC:Add(k:replace(" ", "")).
             }
         }
+        
+        from { local i to 0.} until i >= engResUsed:RSDL:Length step { set i to i + 1.} do {
+            local rsdl to engResUsed:RSDL[i].
+            local flow to engResUsed:FLOW[i].
+            local flowRes    to flow * (1 - rsdl).
+            set totalResFlow to totalResFlow + flowRes.
+        }
+        set stgResidual to (stgFlowMass - totalResFlow) / stgFlowMass.
+
+        OutDebug("[GetStageMass][{0}] engResUsed:RSRC [{1}]":Format(stg, engResUsed:RSRC:Join(";")), crDbg()).
 
         for p in Ship:parts
         {
+            OutDebug("[GetStageMass][{0}] Processing part: [{1}]":Format(stg, p), -3).
             if p:typeName = "Decoupler" 
             {
                 if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
                 if p:Stage = stg set stgMass to stgMass + p:Mass.
+                OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), -2).
             }
             else if p:DecoupledIn <= stg
             {
+                OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), -2).
                 set stgShipMass to stgShipMass + p:Mass.
-                if p:DecoupledIn = stg
+                if p:DecoupledIn = stg - 1// >= nextDCStg and p:DecoupledIn <= stg
                 {
                     set stgMass to stgMass + p:Mass.
                 }
@@ -1276,16 +1536,17 @@
             {
                 for res in p:Resources
                 {
-                    if engResUsed:Contains(res:Name) 
+                    if engResUsed:RSRC:Contains(res:Name) 
                     {
                         // print "Calculating: " + res:Name.
                         set stgFuelMass to stgFuelMass + (res:amount * res:density).
                     }
                 }
+                set stgFuelUsableMass to stgFuelMass * (1 - stgResidual).
             }
         }
 
-        return lex("stage", stgMass, "fuel", stgFuelMass, "ship", stgShipMass).
+        return lex("stage", stgMass, "fuel", stgFuelMass, "fuelActual", stgFuelUsableMass, "ship", stgShipMass).
     }
 
     // GetStageMass2 :: _stg<scalar>, [_shipStageCache<Lexicon>] -> shipStageCacheUpdated<Lexicon>
@@ -1672,7 +1933,7 @@
     {
         set g_BoosterObj to lexicon().
 
-        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+((\||\.)\d*)+").
+        local BoosterParts to Ship:PartsTaggedPattern("(^booster)+((\||\.)\d*)+(\|AS)?").
 
         local setIdxList to UniqueSet().
         if BoosterParts:Length > 0
@@ -1735,6 +1996,7 @@
         {
             from { local i to 0.} until i = boosterDCList:Length step { set i to i + 1.} do
             {
+                local airStart to False.
                 local ep to boosterDCList[i].
                 local epTagSplit to ep:Tag:Split("|").
 
@@ -1744,6 +2006,7 @@
                 if epTagSplit:Length > 1 
                 {
                     set dcEventID to "DC_BOOSTER_{0}":Format(epTagSplit[1]).
+                    if epTagSplit:Length > 2 set airStart to True.
                 }
                 
                 if not g_LoopDelegates:Events:HasKey(dcEventId)
@@ -1755,6 +2018,140 @@
         }
         return armedFlag.
     }
+
+
+    global function ArmBoosterStaging_NewShinyNext
+    {
+        parameter _setId is -1.
+
+        set g_BoosterObj to lexicon().
+
+        if _setId < 0
+        {
+            if l_curBoosterSetId >= 0
+            {
+                set _setId to l_curBoosterSetId.
+            }
+            else
+            {
+                set _setId to 0.
+                set l_curBoosterSetId to _setId.
+            }
+        }
+        else
+        {
+            set l_curBoosterSetId to _setId.
+        }
+
+        local armedFlag to False.
+        
+        if Ship:PartsTaggedPattern("Booster\|\d+"):Length > 0
+        {
+            local doneFlag to False.
+            local endAfterNext to False.
+            from { local setId to _setId.} until doneFlag or setId > 9 step { set setId to setId + 1.} do
+            {
+                if endAfterNext 
+                {
+                    set doneFlag to true.
+                }
+                
+                local dcRegex to "Booster\|{0}":Format(setId).
+                local setDCList to Ship:PartsTaggedPattern(dcRegex).
+
+                if setDCList:Length > 0 
+                {
+                    if setDCList[0]:Tag:EndsWith("AS")
+                    {
+                        local asEventId to "AS_BOOSTER_{0}":Format(setId).
+                        local checkEventId to "DC_BOOSTER_{0}":Format(Max(0, setId - 1):ToString).
+                        if not g_LoopDelegates:Events:HasKey(asEventId)
+                        {
+                            set g_BoosterAirStart to SetupBoosterAirStartHandler(setDCList, setId, checkEventId).
+                        }
+                    }
+                    else
+                    {
+                        local dcEventID to "DC_BOOSTER_{0}":Format(setId).
+                        local dcEventGenericID to "DC_BOOSTER".
+                        if not g_LoopDelegates:Events:HasKey(dcEventId)
+                        {
+                            set armedFlag to SetupDecoupleEventHandler(dcEventId, setDCList, dcEventGenericID).
+                        }
+                    }
+                    set endAfterNext to True.
+                }
+            }
+        }
+        return armedFlag.
+    }
+
+    // SetupBoosterAirstartHandler :: [_partList<List[Part]>] -> resultFlag<bool>
+    global function SetupBoosterAirStartHandler
+    {
+        parameter _dcList is Ship:PartsTaggedPattern("(^Booster\|\d*)+(\|AS$)+"),
+                  _setId is 0,
+                  _checkId  is "".
+
+        local asEngList to list().
+        local resultFlag to False.
+        if _checkId:Length = 0
+        {
+            set _checkId to "DC_BOOSTER_{0}":Format((Max(0, _setId - 1))).
+        }
+
+        if _dcList:Length > 0
+        {
+            // set _setId to _dcList[0]:Tag:Split("|")[1]:ToNumber(_setId).
+            local asEventId to "AS_BOOSTER_{0}":Format(_setId).
+
+            for p in _dcList
+            {
+                for m in p:ModulesNamed("ModuleEnginesRF")
+                {
+                    local mp to m:Part.
+                    if not g_PartInfo:Engines:SepRef:Contains(mp:Name) or mp:Tag:Length > 0
+                    {
+                        asEngList:Add(mp).
+                    }
+                }
+            }
+
+            local paramList to list(asEventId, _dcList, asEngList, _setId, _checkId).
+
+            local checkDel to {
+                parameter _params is list().
+                // OutInfo("[{0}] Checking for key: {1} [{2}] ":Format(Round(MissionTime, 2), _checkId, g_LoopDelegates:Events:HasKey(_params[4])), 1).
+                return not g_LoopDelegates:Events:HasKey(_params[4]).
+            }.
+
+            local actionDel to {
+                parameter _params is list().
+
+                for eng in _params[2]
+                {
+                    if (not eng:Ignition and not eng:Flameout) // and eng:Ignitions > 0
+                    {
+                        eng:Activate.
+                        if eng:Decoupler:Tag:EndsWith("|AS")
+                        {
+                            set eng:Decoupler:Tag to eng:Decoupler:Tag:Replace("|AS", "").
+                        }
+                    }
+                }
+
+                set g_BoostersArmed to ArmBoosterStaging_NewShinyNext(_params[3]).
+                return False.
+            }.
+
+            local asEvent to CreateLoopEvent(asEventId, "AS_BOOSTER", paramList, checkDel@, actionDel@).
+            set resultFlag to RegisterLoopEvent(asEvent).
+        }
+
+        return resultFlag.
+    }
+
+
 
     local function GetBoosterUpdateDel
     {
@@ -1785,6 +2182,7 @@
                 }
                 set _boosterObj[setIdx]["ENG"]:ALLTHRUST to GetThrustForEngines(boosterEngs).
                 return _boosterObj.
+
             }.
         }
         else
@@ -2317,82 +2715,78 @@
     {
         parameter _pctThresh to 0.0625.
 
+        local result to False.
+
         if g_BoostersArmed 
         {
             // writeJson(g_BoosterObj, "0:/data/g_boosterobj.json").
-            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set( )] [Update( )] [Cond( )]":Format(g_Counter)).
-            if g_BoosterObj:Keys:Length > 0
-            {
-                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]":Format(g_Counter)).
-                local doneFlag to False.
-                local ThrustThresh to 0.
-                print g_BoosterObj:Keys at (2, 48).
-                print g_BoosterObj[0] at (2, 50).
-                from { local i to 0.} until i = g_BoosterObj:Keys:Length or doneFlag step { set i to i + 1.} do
-                {
-                    local bSet to g_BoosterObj:Values[i].
-                    if not g_BoosterObj:Keys[i] = "UPDATE"
-                    {
-                        // local bSet to g_BoosterObj[g_BoosterObj:Keys[i]].
-                        if bSet:HasKey("UPDATE") 
-                        {
-                            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond( )]":Format(g_Counter)).
-                            set g_BoosterObj to bSet:UPDATE:Call().
-                            wait 0.01.
-                            // writeJson(g_BoosterObj, Path("0:/data/g_BoosterObj.json")).
-                            // local check to bSet["RES"]["PCTLEFT"] <= _pctThresh.
-                            // OutInfo("BoosterStageCondition: {0} ({1})":Format(check, bSet["RES"]["PCTLEFT"]), 2).
-                            // if bSet["RES"]["PCTLEFT"] <= _pctThresh
-                            // if bSet["ENG"]:Values[0]:P:Thrust < 0.1
-                            local bSetKey to bSet:Keys[i].
-                            local engPresent to bSet:HasKey("Eng").
-                            local allPresent to choose bSet["ENG"]:HasKey("AllThrust") if engPresent else False.
-                            local avlPresent to choose bSet["ENG"]:HasKey("AvlThrust") if engPresent else False.
+            // OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set( )] [Update( )] [Cond( )]":Format(g_Counter)).
+            // if g_BoosterObj:Keys:Length > 0
+            // {
+            //     OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update( )] [Cond( )]":Format(g_Counter)).
+            //     local doneFlag to False.
+            //     local ThrustThresh to 0.
+            //     print g_BoosterObj:Keys at (2, 48).
+            //     print g_BoosterObj[0] at (2, 50).
+            //     from { local i to 0.} until i = g_BoosterObj:Keys:Length or doneFlag step { set i to i + 1.} do
+            //     {
+            //         local bSet to g_BoosterObj:Values[i].
+            //         if not g_BoosterObj:Keys[i] = "UPDATE"
+            //         {
+            //             // local bSet to g_BoosterObj[g_BoosterObj:Keys[i]].
+            //             if bSet:HasKey("UPDATE") 
+            //             {
+            //                 OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond( )]":Format(g_Counter)).
+            //                 set g_BoosterObj to bSet:UPDATE:Call().
+            //                 wait 0.01.
+            //                 // writeJson(g_BoosterObj, Path("0:/data/g_BoosterObj.json")).
+            //                 // local check to bSet["RES"]["PCTLEFT"] <= _pctThresh.
+            //                 // OutInfo("BoosterStageCondition: {0} ({1})":Format(check, bSet["RES"]["PCTLEFT"]), 2).
+            //                 // if bSet["RES"]["PCTLEFT"] <= _pctThresh
+            //                 // if bSet["ENG"]:Values[0]:P:Thrust < 0.1
+            //                 local bSetKey to bSet:Keys[i].
+            //                 local engPresent to bSet:HasKey("Eng").
+            //                 local allPresent to choose bSet["ENG"]:HasKey("AllThrust") if engPresent else False.
+            //                 local avlPresent to choose bSet["ENG"]:HasKey("AvlThrust") if engPresent else False.
 
-                            print "KEY [{0}] | ENG [{1}] | ALL [{2}] | AVL [{3}]":Format(bsetKey, engPresent, allPresent, avlPresent) at (0, 35).
-                            set ThrustThresh to Max(ThrustThresh, bSet["ENG"]:AVLTHRUST * _pctThresh).
-                            OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2))).
-                            if bSet["ENG"]:ALLTHRUST < ThrustThresh
-                            {
-                                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]":Format(g_Counter)).
-                                StageBoosterSet(i).
-                                // set bSet to "".
-                                wait 0.025.
-                                g_BoosterObj:Remove(i).
-                                wait 0.01.
+            //                 print "KEY [{0}] | ENG [{1}] | ALL [{2}] | AVL [{3}]":Format(bsetKey, engPresent, allPresent, avlPresent) at (0, 35).
+            //                 set ThrustThresh to Max(ThrustThresh, bSet["ENG"]:AVLTHRUST * _pctThresh).
+            //                 OutInfo("THRUST: {0} ({1})":Format(Round(bSet["ENG"]:ALLTHRUST, 2), Round(ThrustThresh, 2))).
+            //                 if bSet["ENG"]:ALLTHRUST < ThrustThresh
+            //                 {
+            //                     OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(X)]":Format(g_Counter)).
+            //                     StageBoosterSet(i).
+            //                     // set bSet to "".
+            //                     wait 0.025.
+            //                     g_BoosterObj:Remove(i).
+            //                     wait 0.01.
                                 
-                                if g_BoosterObj:Keys:Length < 1
-                                {
-                                    set g_BoostersArmed to False.
-                                }
-                                else
-                                {
+            //                     if g_BoosterObj:Keys:Length < 1
+            //                     {
+            //                         set g_BoostersArmed to False.
+            //                     }
+            //                     else
+            //                     {
                                     
-                                }
-                                set doneFlag to true.
-                            }
-                            else
-                            {
-                                OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(-)]":Format(g_Counter)).
-                            }
-                        }
-                        else
-                        {
-                            OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(-)] [Cond( )]":Format(g_Counter)).
-                        }
-                    }
-                }
-            }
-            else if g_LoopDelegates["Events"]:HasKey("DC_BOOSTER")
-            {
-                
-            }
-            else
-            {
-                OutInfo("Boosters disarmed").
-                set g_BoostersArmed to False.
-            }
+            //                     }
+            //                     set doneFlag to true.
+            //                 }
+            //                 else
+            //                 {
+            //                     OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(X)] [Cond(-)]":Format(g_Counter)).
+            //                 }
+            //             }
+            //             else
+            //             {
+            //                 OutInfo("[{0,-7}]Boosters: [Armed(X)] [Set(X)] [Update(-)] [Cond( )]":Format(g_Counter)).
+            //             }
+            //         }
+            //     }
+            // }
+            
+            set result to (g_LoopDelegates["RegisteredEventTypes"]:HasKey("DC_BOOSTER")) or (g_LoopDelegates["RegisteredEventTypes"]:HasKey("AS_BOOSTER")).
         }
+        return result.
     }
 
     local function StageBoosterSet

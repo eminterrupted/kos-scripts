@@ -26,7 +26,6 @@ until g_TermChar = Terminal:Input:Enter or Time:Seconds >= g_TS
 }
 
 set g_MissionTag to ParseCoreTag(Core:Part:Tag).
-// set g_MissionTag:Params to g_MissionTag:PARAMS.
 
 local azData    to g_azData.
 local tgtAp     to Ship:Apoapsis.
@@ -66,6 +65,8 @@ if false
 
 local burnTS to choose (Time:Seconds + ETA:Apoapsis - burnDur[3]) if ETA:Apoapsis < ETA:Periapsis else Time:Seconds + 10.
 local mecoTS to burnTS + burnDur[1].
+local burnLeadTime to 15.
+local warpToTS to burnTS - burnLeadTime.
 
 set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun", 0.9925).
 
@@ -75,32 +76,66 @@ SAS Off.
 set s_Val to g_SteeringDelegate:Call().
 lock steering to s_Val.
 
+local warpFlag to False.
+
 until Time:Seconds >= burnTS - 5
 {
     // set s_Val to heading(compass_for(Ship, Ship:Prograde), 0, 0).
-    set s_Val to g_SteeringDelegate:Call().
-
     GetTermChar().
-    if g_TermChar = Terminal:Input:HomeCursor
+
+    set s_Val to g_SteeringDelegate:Call().
+    
+    local burnETA to Round(burnTS - Time:Seconds, 2).
+
+    if Kuniverse:TimeWarp = 0 set warpFlag to False.
+    // if g_TermChar = Terminal:Input:HomeCursor
+    // {
+    //     OutMsg("Warping to timestamp - 30s").
+    //     wait 0.01.
+    //     set warp to 1.
+    //     wait until KUniverse:TimeWarp:IsSettled.
+    //     WarpTo(burnTS - 30).
+    // }
+    // else if g_TermChar = Terminal:Input:EndCursor
+    // {
+    //     set warp to 0.
+    //     OutMsg("Warp Cancelled").
+    //     wait until KUniverse:TimeWarp:IsSettled.
+    // }
+    if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+    
+    if g_termChar = ""
     {
-        OutMsg("Warping to timestamp - 30s").
-        wait 0.01.
-        set warp to 1.
-        wait until KUniverse:TimeWarp:IsSettled.
-        WarpTo(burnTS - 30).
     }
-    else if g_TermChar = Terminal:Input:EndCursor
+    else if g_termChar = Char(87)
     {
-        set warp to 0.
-        OutMsg("Warp Cancelled").
-        wait until KUniverse:TimeWarp:IsSettled.
+        if burnETA > burnLeadTime 
+        {
+            set warpFlag to True. 
+            OutMsg("Warping to maneuver").
+            OutInfo().
+            OutInfo("", 1).
+            OutInfo("", 2).
+            WarpTo(warpToTS).
+        }
+        else
+        {
+            OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
+        }
+        set g_termChar to "".
+    }
+    
+    if not warpFlag 
+    {
+        set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
+        set warpToTS to (burnTS - burnLeadTime).
     }
     set g_TermChar to "".
 
-    OutInfo("Time Remaining: {0}s  ":Format(round(burnTS - Time:Seconds, 2))).
+    OutInfo("Time Remaining: {0}s  ":Format(burnETA), 2).
     DispLaunchTelemetry().
 }
-
+OutInfo("",-1).
 RCS on.
 OutMsg("Performing ullage manuever").
 set Ship:Control:Fore to 1.
@@ -182,7 +217,6 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
     {
         OutInfo("TIME TO MECO: {0} ":Format(Round(mecoTS - Time:Seconds))).
     }
-
 
     set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else g_SteeringDelegate:Call().
     

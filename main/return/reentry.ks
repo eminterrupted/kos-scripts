@@ -47,7 +47,7 @@ if params:length > 0
     if params:length > 3 set retroStage to params[3].
     if params:length > 4 set spinStab to params[4].
 }
-local startAlt to stagingAlt + 10000.
+local startAlt to stagingAlt + 2500.
 
 if fairings:length > 0
 {
@@ -73,12 +73,15 @@ if retroFire
 }
 
 
-OutMsg("Enter: Warp to Ap | Home: Warp to Pe").
-OutInfo("Down: Wait until descent | Up: Wait until ascent").
-OutInfo("End: Begin reentry procedures now | PageDown: Skip reentry burn", 1).
+// OutMsg("Enter: Warp to Ap | Home: Update Reentry Alt").
+// OutInfo("Down: Wait until descent | Up: Wait until ascent").
+// OutInfo("End: Begin reentry procedures now | PageDown: Skip reentry burn", 1).
 
 until doneFlag
 {
+    OutMsg("Enter: Continue to Ap | Home: Update Reentry Alt").
+    OutInfo("Down: Wait until descent | Up: Wait until ascent").
+    OutInfo("End: Begin reentry procedures now | PageDown: Skip reentry burn", 1).
     GetTermChar().
     if g_TermChar <> ""
     {
@@ -91,7 +94,24 @@ until doneFlag
         else if g_TermChar = Terminal:Input:HomeCursor
         {
             //InitWarp(time:seconds + eta:periapsis, "periapsis").
-            set mode to "pe".
+            local workingAlt to stagingAlt.
+            local updateDoneFlag to False.
+            set g_TermChar to "".
+
+            until updateDoneFlag
+            {
+                GetTermChar().
+                OutMsg("Update staging altitude target [{0}]":Format(workingAlt)).
+                set workingAlt to UpdateTermScalar(workingAlt, list(250, 1000, 5000, 10000)).
+                if g_TermChar = Terminal:Input:Enter
+                {
+                    set updateDoneFlag to True.
+                    set stagingAlt to workingAlt.
+                    OutMsg("Staging Altitude Target updated! [{0}]":Format(stagingAlt)).
+                    OutInfo().
+                    OutInfo("",1).
+                }
+            }
         }
         else if g_TermChar = Terminal:Input:UpCursorOne
         {

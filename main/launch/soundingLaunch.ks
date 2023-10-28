@@ -10,13 +10,12 @@ set g_MainProcess to ScriptPath().
 DispMain().
 
 local engineCounter      to 0.
-local rcsPresent         to Ship:ModulesNamed("ModuleRCSFX"):Length > 0.
 local stagingCheckResult to 0.
 
 // Parameter default values.
 local _tgtAlt        to -1.
 local _tgtInc        to 0.
-local _azObj         to g_azData.
+local _azObj         to g_AzData.
 
 if g_MissionTag:Params:Length > 0
 {
@@ -37,63 +36,9 @@ if _tgtAlt < 0
 }
 
 wait until Ship:Unpacked.
-local towerHeight to (Ship:Bounds:Size:Mag + 100).
+local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.50)).
 
-
-ConfigureLaunchPlatform().
-
-// Launch event setup
-// Set the steering delegate
-if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
-{
-    set g_azData to l_az_calc_init(_tgtAlt, _tgtInc).
-}
-else
-{
-    set g_azData to _azObj.
-}
-
-set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, g_azData).
-
-if rcsPresent
-{
-    local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
-    local rcsActionDel to { parameter _params is list(). RCS on. set g_RCSArmed to False. return False.}.
-    local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
-    set g_RCSArmed to RegisterLoopEvent(rcsEventData).
-}
-
-set g_FairingsArmed     to ArmFairingJettison("ascent").
-set g_LESArmed          to ArmLESTower().
-set g_HotStagingArmed   to ArmHotStaging().
-set g_BoostersArmed     to ArmBoosterStaging_NextReally().
-
-local onStageParts to Ship:PartsTaggedPattern("^OnStage").
-if onStageParts:Length > 0
-{
-    set g_OnStageEventArmed to SetupOnStageEventHandler(onStageParts).
-}
-
-local autoStageResult to ArmAutoStagingNext().
-set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
-
-// Check if we have any special MECO engines to handle
-local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
-local ascentEventCount to 0.
-if ascentEventParts:Length > 0 
-{
-    set ascentEventCount to ArmAscentEvents(ascentEventParts).
-}
-
-if g_Debug
-{
-    OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
-    OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
-    OutInfo("ArmAscentEvents() ascentEventCount: [{0}]":Format(ascentEventCount)).
-    OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
-}
-
-DispStateFlags().
+PreLaunchInit().
 
 OutMsg("Waiting for launch command").
 set g_TS to Time:Seconds.
@@ -105,7 +50,8 @@ local launchChars to list(
     ,"***"
 ).
 
-until g_TermChar = Terminal:Input:Enter
+local launchCommit to False.
+until launchCommit
 {
     local idx to Mod(Round(Time:Seconds - g_TS), launchChars:Length).
     local launchChar to launchChars[idx].
@@ -116,6 +62,53 @@ until g_TermChar = Terminal:Input:Enter
     {
         CheckKerbaliKode().
     }
+
+    if g_TermChar = Terminal:Input:Enter
+    {
+        set launchCommit to True.
+    }
+    else if g_TermChar = Terminal:Input:HomeCursor
+    {
+        OutMsg("Reinitializing launch configuration").
+        print " ":PadRight(Terminal:Width) at (0, Terminal:Height - 5).
+
+        PreLaunchInit().
+        wait 0.25.
+        OutInfo().
+        OutMsg("Waiting for launch command").
+    }
+    else if g_TermChar = Terminal:Input:DeleteRight
+    {
+        ResetLaunchPlatform().
+        set g_TS2 to Time:Seconds + 5.
+        set g_TermChar to "".
+        print " ":PadRight(Terminal:Width) at (0, Terminal:Height - 5).
+
+        local doneFlag to False.
+        until doneFlag
+        {
+            GetTermChar().
+            if g_TermChar = Terminal:Input:DeleteRight or g_TermChar = Terminal:Input:EndCursor
+            {
+                set doneFlag to True.
+            }
+            else if g_TS2 - Time:Seconds < 0
+            {
+                set doneFlag to True.
+            }
+            else
+            {
+                OutMsg("[{0,-4}s] Resetting launch pad configuration...":Format(Round(g_TS2 - Time:Seconds, 2))).
+            }
+            OutInfo().
+            set g_TermChar to "".
+        }
+        unset doneFlag.
+        
+        OutMsg("Waiting for launch command").
+    }
+    
+    set g_TermChar to "".
 }
 
 ClearScreen.
@@ -282,6 +275,89 @@ until Ship:Altitude >= Body:ATM:Height
     wait 0.01.
 }
 
+if g_FairingsArmed
+{
+    JettisonFairings(Ship:PartsTaggedPattern("Fairing|Ascent.*")).
+}
+
 OutMsg("Launch script complete, performing exit actions").
 unlock throttle.
 wait 0.25.
+
+
+
+// Launch event setup
+local function PreLaunchInit
+{
+    // If this is a re-init, clear the existing variables
+    if g_TermChar = Terminal:Input:HomeCursor
+    {
+        if g_LoopDelegates:Events:Keys:Length > 0
+        {
+            g_LoopDelegates:Events:Clear.
+            g_LoopDelegates:Program:Clear.
+            if g_LoopDelegates:HasKey("Staging") 
+            {
+                g_LoopDelegates:Remove("Staging").  
+            }
+        }
+
+        set _azObj to list().
+        set g_AzData to list().
+    }
+
+    ConfigureLaunchPlatform().
+    // Set the steering delegate
+    if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
+    {
+        set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
+        set g_AzData to _azObj.
+    }
+    else
+    {
+        set g_AzData to _azObj.
+    }
+
+    set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, g_AzData).
+
+    if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
+    {
+        local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
+        local rcsActionDel to { parameter _params is list(). RCS on. set g_RCSArmed to False. return False.}.
+        local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
+        set g_RCSArmed to RegisterLoopEvent(rcsEventData).
+    }
+
+    set g_FairingsArmed     to ArmFairingJettison("ascent").
+    set g_LESArmed          to ArmLESTower().
+    set g_HotStagingArmed   to ArmHotStaging().
+    set g_BoostersArmed     to ArmBoosterStaging_NewShinyNext().
+    set g_SpinArmed         to SetupSpinStabilizationEventHandler().
+
+    local onStageParts to Ship:PartsTaggedPattern("^OnStage").
+    if onStageParts:Length > 0
+    {
+        set g_OnStageEventArmed to SetupOnStageEventHandler(onStageParts).
+    }
+
+    local autoStageResult to ArmAutoStagingNext().
+    set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
+
+    // Check if we have any special MECO engines to handle
+    local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
+    local ascentEventCount to 0.
+    if ascentEventParts:Length > 0 
+    {
+        set ascentEventCount to ArmAscentEvents(ascentEventParts).
+    }
+
+    if g_Debug
+    {
+        OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
+        OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
+        OutInfo("ArmAscentEvents() ascentEventCount: [{0}]":Format(ascentEventCount)).
+        OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
+    }
+
+    DispStateFlags().
+}

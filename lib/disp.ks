@@ -108,6 +108,28 @@
         set g_Line to _inLine + _lineIncrement.
         return g_Line.
     }
+
+    // crDbg :: (_lineOffset<scalar>) -> [newOffset]<scalar>
+    // Sets or increments the debug offset value
+    global function crDbg 
+    {
+        parameter _lineOffset is g_DbgOffset.
+
+        if _lineOffset <> g_DbgOffset
+        {
+            set g_DbgOffset to Max(-15, Min(_lineOffset, 15)).
+        }
+        else if g_DbgOffset = 15
+        {
+            set g_DbgOffset to 0.
+        }
+        else
+        {
+            set g_DbgOffset to Max(-15, Min(g_DbgOffset + 1, 15)).
+        }
+
+        return g_DbgOffset.
+    }
     // #endregion
 
     // *- Message Display Functions
@@ -215,11 +237,23 @@
         }
         else
         {
-            print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            if _lineIdx >= 0
+            {
+                print _str:PadRight(Terminal:Width - 2) at (2, line + _lineIdx).
+            }
+            else
+            {
+                for idx in list(0, 1, 2)
+                {
+                    print _str:PadRight(Terminal:Width - 2) at (2, line + idx).
+                }
+            }
         }
     }
 
-    // OutInfo :: (Message)<string>, (LineIndex)<scalar> -> (none)
+
+
+    // OutDebug :: (Message)<string>, (LineIndex)<scalar> -> (none)
     // Writes a non-critical message at lines 6-8 depending on the line provided. 
     global function OutDebug
     {
@@ -591,14 +625,14 @@
 
         local dispList to list(
             "ARMED SYSTEMS"
-            ,"AutoStage : {0,-5}":Format(g_AutoStageArmed)
-            ,"Boosters  : {0,-5}":Format(g_BoostersArmed)
-            ,"Decouplers: {0,-5}":Format(g_DecouplerEventArmed)
-            ,"Fairings  : {0,-5}":Format(g_FairingsArmed)
-            ,"HotStage  : {0,-5}":Format(g_HotStagingArmed)
-            ,"AutoMECO  : {0,-5}":Format(g_MECOArmed)
-            ,"LES       : {0,-5}":Format(g_LESArmed)
-            ,"RCS       : {0,-5}":Format(g_RCSArmed)
+            ,"AutoStage (HS): {0,-5} ({1})":Format(g_AutoStageArmed, g_HotStagingArmed)
+            ,"Boosters (AS) : {0,-5} ({1})":Format(g_BoostersArmed, g_BoosterAirStart)
+            ,"Decouplers    : {0,-5}":Format(g_DecouplerEventArmed)
+            ,"Fairings      : {0,-5}":Format(g_FairingsArmed)
+            ,"AutoMECO      : {0,-5}":Format(g_MECOArmed)
+            ,"LES           : {0,-5}":Format(g_LESArmed)
+            ,"RCS           : {0,-5}":Format(g_RCSArmed)
+            ,"SpinStab      : {0,-5}":Format(g_SpinArmed)
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).

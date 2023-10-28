@@ -82,6 +82,7 @@
     set g_PropInfo["Solids"] to list(
         "PSPC"
         ,"PUPE"
+        ,"NGNC"
     ).
 // #endregion
 
@@ -145,6 +146,25 @@
             }
         }
         return engList.
+    }
+    
+    // GetEnginesDC :: _engList<List> -> bestDC<Decoupler>
+    global function GetEnginesDC
+    {
+        parameter _engList.
+
+        local minDCStg to Stage:Number.
+        local bestDC to "".
+        
+        for eng in _engList
+        {
+            if eng:DecoupledIn < minDCStg
+            {
+                set minDCStg to eng:DecoupledIn.
+                set bestDC to eng:Decoupler.
+            }
+        }
+        return bestDC.
     }
 
     // GetEnginesForStage :: (Stage Number)<scalar> -> (Engines activated by that stage)<List>
@@ -226,6 +246,7 @@
 
         local nextStg is 0.
 
+        OutDebug("[GetNextEngineStage][{0}] _engTypes: [{1}]":Format(_startStg, _engTypes), crDbg()).
         for eng in Ship:Engines
         {
             if eng:Stage < _startStg
@@ -239,6 +260,7 @@
                 }
             }
         }
+        OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
         return nextStg.
     }
     // #endregion

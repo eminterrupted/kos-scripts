@@ -6,6 +6,36 @@ parameter _prms to list().
 runOncePath("0:/lib/libLoader").
 runOncePath("0:/lib/launch").
 
+
+clearScreen.
+wait 1.
+local engList to list().
+for eng in ship:engines { if eng:Name:MatchesPattern("ROE-NikeM5E1") engList:Add(eng).}
+local dispList to list().
+local line to 5.
+until false {
+  dispList:Clear().
+  if MissionTime = 0 { dispList:Add("...Awaiting liftoff..."). wait 0.25.} else {  
+    set line to 5.
+    dispList:Add(" MET: {0}":Format(Round(MissionTime, 2))). //  at (2, line).
+    dispList:Add(" ").
+    for p in engList { dispList:Add(" [{0}]({1}) {2}/{3} | {4} | {5}     ":Format(p:name, p:Decoupler:Tag, p:Thrust, Round(p:GetModule("ModuleEnginesRF"):GetField("Thrust"), 1), Round(p:MaxMassFlow, 3), Round(p:Resources[0]:Amount / p:Resources[0]:Capacity, 4) * 100)).}
+  }
+  from { local i to 0.} until i = dispList:Length step { set i to i + 1.} do { print dispList[i] at (0, line + i).}
+}
+
+Breakpoint().
+
+
+
+
+
+
+
+
+
+
+
 ArmAutoStaging(0).
 local stagingCheckResult to lexicon().
 local stagingDelegateAction to g_LoopDelegates:Staging:Action.

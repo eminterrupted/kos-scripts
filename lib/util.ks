@@ -292,42 +292,42 @@
 
             if g_TermChar = Terminal:Input:DownCursorOne
             {
-                set scalarVal to scalarVal - 1.
+                set scalarVal to scalarVal - _intList[0].
                 set keyMapActiveStr to " {0} | {1} | {2} |[{3}]| {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:UpCursorOne
             {
-                set scalarVal to scalarVal + 1.
+                set scalarVal to scalarVal + _intList[0].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} |[{5}]| {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:LeftCursorOne
             {
-                set scalarVal to scalarVal - 5.
+                set scalarVal to scalarVal - _intList[1].
                 set keyMapActiveStr to " {0} | {1} |[{2}]| {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:RightCursorOne
             {
-                set scalarVal to scalarVal + 5.
+                set scalarVal to scalarVal + _intList[1].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
             }
             else if g_TermChar = "("
             {
-                set scalarVal to scalarVal - 15.
+                set scalarVal to scalarVal - _intList[2].
                 set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = ")"
             {
-                set scalarVal to scalarVal + 15.
+                set scalarVal to scalarVal + _intList[2].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
             }
             else if g_TermChar = "{"
             {
-                set scalarVal to scalarVal - 30.
+                set scalarVal to scalarVal - _intList[3].
                 set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = "}"
             {
-                set scalarVal to scalarVal + 30.
+                set scalarVal to scalarVal + _intList[3].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".
             }
             else if g_TermChar = "0"
@@ -937,6 +937,7 @@
             set g_LoopDelegates["Events"] to lexicon().
         }
 
+
         local doneFlag to false.
         from { local i to 0.} until doneFlag = true or i > g_LoopDelegates:Events:Keys:Length step { set i to i + 1.} do
         {
@@ -945,8 +946,24 @@
             {
                 g_LoopDelegates:Events:Add(localID, _eventData).
                 set doneFlag to true.
+                if g_LoopDelegates:HasKey("RegisteredEventTypes")
+                {
+                    if g_LoopDelegates:RegisteredEventTypes:HasKey(_eventData:type)
+                    {
+                        set g_LoopDelegates:RegisteredEventTypes[_eventData:type] to g_LoopDelegates:RegisteredEventTypes[_eventData:type] + 1.
+                    }
+                    else
+                    {
+                        g_LoopDelegates:RegisteredEventTypes:Add(_eventData:type, 1).
+                    }
+                }
+                else
+                {
+                    g_LoopDelegates:Add("RegisteredEventTypes", Lexicon(_eventData:type, 1)).
+                }
             }
         }
+
         return doneFlag.
     }
 
@@ -959,7 +976,18 @@
 
         if g_LoopDelegates:Events:Keys:Contains(_eventID)
         {
+            local type to g_LoopDelegates:Events[_eventID]:type.
+            local typeCount to choose g_LoopDelegates:RegisteredEventTypes[type] if g_LoopDelegates:RegisteredEventTypes:HasKey(type) else 0.
             g_LoopDelegates:Events:Remove(_eventID).
+            if typeCount > 0
+            {
+                g_LoopDelegates:RegisteredEventTypes:Remove(type).
+                g_LoopDelegates:RegisteredEventTypes:Add(type, (typeCount - 1)).
+                if g_LoopDelegates:RegisteredEventTypes[type] = 0
+                {
+                    g_LoopDelegates:RegisteredEventTypes:Remove(type).
+                }
+            }
         }
         return g_LoopDelegates:Events:Keys:Contains(_eventID).
     }

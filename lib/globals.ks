@@ -22,6 +22,7 @@
     global g_Counter to 0.
     global g_Debug to False.
     global g_Debug_Max to True.
+    global g_DbgOffset to 0.
     global g_Slowbug to False.
     global g_LastUpdate to 0.
     global g_Program to 0.
@@ -29,13 +30,17 @@
     global g_RunMode to 0.
 
     // Global timestamp / timer placeholders
-    global g_TR to 0.
-    global g_TS to 0.
-    global g_TS0 to 0.
-    global g_TS1 to 0.
-    global g_TS2 to 0.
-    global g_TS3 to 0.
-    global g_TSi to 0.
+    global g_TR     to 0.
+    global g_TS     to 0.
+    global g_TS0    to 0.
+    global g_TS0Ref to 0.
+    global g_TS1    to 0.
+    global g_TS1Ref to 0.
+    global g_TS2    to 0.
+    global g_TS2Ref to 0.
+    global g_TS3    to 0.
+    global g_TS3Ref to 0.
+    global g_TSi    to 0.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(
@@ -108,14 +113,17 @@
     // State Flags
     global g_AutoStageArmed         to False.
     global g_BoostersArmed          to False.
+    global g_BoosterAirStart        to False.
     global g_DecouplerEventArmed    to False.
-    global g_HotStagingArmed        to False.
     global g_FairingsArmed          to False.
-    global g_OnStageEventArmed      to False.
-    global g_MECOArmed              to False.
+    global g_HotStagingArmed        to False.
     global g_LESArmed               to False.
-    global g_RCSArmed               to False.
+    global g_MECOArmed              to False.
     global g_OnDeployActive         to False.
+    global g_OnStageEventArmed      to False.
+    global g_RCSArmed               to False.
+    global g_SpinActive             to False.
+    global g_SpinArmed              to False.
 
     // Ship control
     global r_Val to 0.
@@ -151,6 +159,7 @@ global g_LoopDelegates  to lexicon(
     "Program", lexicon()
     // ,"Staging", lexicon()
     ,"Events", lexicon()
+    ,"RegisteredEventTypes", lexicon()
 ).
 
 // Dictionary of module events mapped to friendly names
