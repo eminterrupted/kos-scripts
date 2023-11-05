@@ -246,7 +246,7 @@
 
         local nextStg is 0.
 
-        OutDebug("[GetNextEngineStage][{0}] _engTypes: [{1}]":Format(_startStg, _engTypes), crDbg()).
+        // OutDebug("[GetNextEngineStage][{0}] _engTypes: [{1}]":Format(_startStg, _engTypes), crDbg()).
         for eng in Ship:Engines
         {
             if eng:Stage < _startStg
@@ -260,7 +260,7 @@
                 }
             }
         }
-        OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
+        // OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
         return nextStg.
     }
     // #endregion
@@ -485,6 +485,7 @@
             }
         }
         set engStgObj["TotalBurnTime"] to totalBurnTime.
+
         return engStgObj.
     }
     // #endregion

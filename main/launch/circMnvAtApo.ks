@@ -59,8 +59,12 @@ if _params:Length > 0
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
 OutMsg("Calculated DV Needed: {0}":Format(Round(dvNeeded[1], 2))).
 
-local circNode to Node(Time:Seconds + ETA:Apoapsis, 0, 0, dvNeeded[1]).
-wait 1.
+local nodeTS to Time:Seconds + ETA:Apoapsis.
+if ETA:Apoapsis > ETA:Periapsis and Ship:Periapsis < Ship:Body:ATM:Height
+{
+    set nodeTS to Time:Seconds + 5.
+} 
+local circNode to Node(nodeTS, 0, 0, dvNeeded[1]).
 
 until not hasNode
 {
@@ -76,8 +80,7 @@ if circNode:DeltaV:Mag < 25 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:
     OutInfo("DV Below skip threshold!").
     until Time:Seconds > g_TS or not execFlag
     {
-        OutInfo("[{0}] Press Backspace to skip maneuver":Format(Round(g_TS - Time:Seconds)), 2).
-
+        OutInfo("[{0}] Press Backspace to skip maneuver":Format(Round(g_TS - Time:Seconds)), 1).
         if CheckTermChar(Terminal:Input:Backspace, True)
         {
             OutInfo("Skipping manuever").

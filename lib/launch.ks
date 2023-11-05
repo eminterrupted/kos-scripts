@@ -105,19 +105,23 @@
         if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            local fShape to 1.125.
+            local fShape to 1.25.
             local minPit to 5.
-            local pitLim to 45.
+            local pitLim to 32.5.
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
-                set fShape to 1.025.
+                set fShape to 1.3250.
                 set minPit to 3.
-                set pitLim to 40.
+                set pitLim to 50.
             }
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
             set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim).
         }
         set g_AngDependency to _delDependency.
+
+        // local rollAngle to choose { return 180.} if Ship:CrewCapacity > 0
+        // else choose { return vAng(VXCL(Ship:SrfPrograde:Vector, Sun:Position)).} if Ship:ModulesNamed("ModuleROSolar"):Length > 0
+        // else { return 0.}.
 
         // Mission types and ascent angle profiles
         if g_MissionTag:Mission = "Sounder"

@@ -1,3 +1,4 @@
+@LazyGlobal off.
 // This loader, well, loads stuff. 
 // Specifically the libraries, and in a specific order
 
@@ -16,4 +17,6 @@ RunOncePath("0:/lib/dvCalc.ks").
 
 // Initiate any global objects here
 set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+SetupUpdateUIDEventHandler(True).
+
 if g_Debug WriteJson(g_ShipEngines_Spec, "0:/data/debug/{0}_g_ShipEngines_Spec.json":Format(Ship:Name:Replace(" ","_"))).

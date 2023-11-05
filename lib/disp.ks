@@ -117,9 +117,9 @@
 
         if _lineOffset <> g_DbgOffset
         {
-            set g_DbgOffset to Max(-15, Min(_lineOffset, 15)).
+            set g_DbgOffset to Max(-18, Min(_lineOffset, 15)).
         }
-        else if g_DbgOffset = 15
+        else if g_DbgOffset >= 15
         {
             set g_DbgOffset to 0.
         }
@@ -262,7 +262,7 @@
                   _color is "White".
                   //_teeHUD is False. TODO: implement TeeHud function
         
-        local anchor to g_TermHeight - 17.
+        local anchor to g_TermHeight - 20.
         local line to anchor.
         
         if _lineIdx < 0 
@@ -349,15 +349,37 @@
             //     ,dvToGoStr:PadRight(l_GridSpaceLex[_dispBlockIdx][1] - dvToGoStr:Length)
             //     ,burnDurStr
             // ).
+            local durSpan to TimeSpan(_burnDur).
+            local durStr to "".
+            if durSpan:Hour > 0 
+            {
+                local durHour to durSpan:Hour:ToString().
+                if durHour:Length = 1 set durHour to "0" + durHour.
+                set durStr to durStr + "{0}h":Format(durHour).
+            }
+            if durSpan:Minutes > 0
+            {
+                local durMin to durSpan:Minute:ToString().
+                if durMin:Length = 1 set durMin to "0" + durMin.
+                set durStr to durStr + " {0}m":Format(durMin).
+            }
+            if durSpan:Seconds > 0
+            {
+                local durSec to Round(durSpan:Minute, 2):ToString().
+                if durSec:Split(".")[0]:Length = 1 set durSec to "0" + durSec.
+                set durStr to durStr + " {0}s":Format(durSec).
+            }
             local dispList to choose list(
                 "BURN NODE DATA"
                 ,"BURN ETA      : {0}":Format(_burnETA)
                 ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
                 ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
+                ,"                {0}":Format(durStr)
             ) if _burnETA > 0 else list(
                 "BURN DATA"
                 ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
                 ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
+                ,"                {0}":Format(durStr)
                 ," "
             ).
             
@@ -633,6 +655,7 @@
             ,"LES           : {0,-5}":Format(g_LESArmed)
             ,"RCS           : {0,-5}":Format(g_RCSArmed)
             ,"SpinStab      : {0,-5}":Format(g_SpinArmed)
+            ,"UIDUpdater    : {0,-5}":Format(g_UIDUpdaterArmed)
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).

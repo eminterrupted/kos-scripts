@@ -110,6 +110,9 @@
     // Engines
     global g_BoosterObj      to lexicon().
 
+    // Ship Metadata
+    global g_ShipUIDs to list().
+
     // State Flags
     global g_AutoStageArmed         to False.
     global g_BoostersArmed          to False.
@@ -124,6 +127,7 @@
     global g_RCSArmed               to False.
     global g_SpinActive             to False.
     global g_SpinArmed              to False.
+    global g_UIDUpdaterArmed        to False.
 
     // Ship control
     global r_Val to 0.

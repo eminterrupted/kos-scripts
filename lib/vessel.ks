@@ -941,6 +941,10 @@
                                             {
                                                 set dcEventStr to event:Replace("(callable) ", ""):Replace(", is KSPEvent", "").
                                             }
+                                            else if event:Contains("Jettison Fairing")
+                                            {
+                                                set dcEventStr to "Jettison Fairing".
+                                            }
                                         }
                                         
                                         // if g_ModEvents:Decoupler:HasKey(m)
@@ -1233,8 +1237,46 @@
 
             for dc in _partList
             {
-                if ArmSpinStabilizationDC(dc) set resultFlag to True.
+                set resultFlag to ArmSpinStabilizationDC(dc).
             }
+
+            return resultFlag.
+        }
+
+        // SetupUpdateUIDEventHandler :: _init<Bool> -> _resultFlag<Bool>
+        global function SetupUpdateUIDEventHandler
+        {
+            parameter _init to False.
+
+            local curStage to Stage:Number.
+
+            local paramList to list(
+                curStage
+            ).
+
+            local checkDel to {
+                parameter _params is list().
+
+                return Stage:Number <> _params[0].
+            }.
+
+            local actionDel to {
+                parameter _params is list().
+
+                g_ShipUIDs:Clear().
+
+                for p in ship:Parts
+                {
+                    g_ShipUIDs:Add(p:UID).
+                }
+                
+                return Stage:Number > 0.
+            }.
+
+            if _init actionDel:Call().
+
+            local osEvent to CreateLoopEvent("UIDUpdater", "GlobalUpdateEvent", paramList, checkDel@, actionDel@).
+            local resultFlag to RegisterLoopEvent(osEvent).
 
             return resultFlag.
         }
@@ -1250,6 +1292,7 @@
         local ctrlModules to list().
         local ctrlRCSModules to Ship:ModulesNamed("ModuleRCSFX").
         local ctrlSrfModules to Ship:ModulesNamed("FARControllableSurface").
+        local ctrlUIDs    to list().
         
         local resultFlag to False.
 
@@ -1260,6 +1303,8 @@
                               // 2: RCS
                               // 3: #TODO Specific engines
         local spinTag to _spinDC:Tag:Split("|").
+
+        local spinStage to _spinDC:Stage.
 
         if spinTag:Length > 1
         {
@@ -1277,6 +1322,7 @@
                     if m:Part:DecoupledIn <= _spinDC:Stage or m:Part:Tag:Contains("Spin")
                     {
                         ctrlModules:Add(m).
+                        ctrlUIDs:Add(m:Part:UID).
                         set spinType to 1.
                     }
                 }
@@ -1289,6 +1335,7 @@
                     if m:Part:DecoupledIn >= _spinDC:Stage or m:Part:Tag:Contains("Spin")
                     {
                         ctrlModules:Add(m).
+                        ctrlUIDs:Add(m:Part:UID).
                         set spinType to 2.
                     }
                 }
@@ -1303,16 +1350,19 @@
                     if m:Part:DecoupledIn <= _spinDC:Stage or m:Part:Tag:Contains("Spin")
                     {
                         ctrlModules:Add(m).
+                        ctrlUIDs:Add(m:Part:UID).
                     }
                 }
             }
             else if spinType = 2 and ctrlRCSModules:Length > 0
             {
+                
                 for m in ctrlRCSModules
-                {    
+                {
                     if m:Part:DecoupledIn >= _spinDC:Stage or m:Part:Tag:Contains("Spin")
                     {
                         ctrlModules:Add(m).
+                        ctrlUIDs:Add(m:Part:UID).
                     }
                 }
             }
@@ -1321,7 +1371,9 @@
         if spinType > 0
         {
             local paramList to list(
+                spinStage,
                 ctrlModules,
+                ctrlUIDs,
                 spinType,
                 spinForce
             ).
@@ -1335,28 +1387,34 @@
 
                 local doActionFlag to False.
 
-                if g_SpinActive
+                if g_ActiveEngines:Length > 0
                 {
-                    // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
-                    OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
-                    if Time:Seconds >= g_TS0
+                    if _params[0] = g_ActiveEngines[0]:DecoupledIn
                     {
-                        set doActionFlag to True.
-                        set g_TS0 to -1.
-                        set g_TS0Ref to 0.
-                    }
-                }
-                else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
-                {
-                    local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
-                    // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
-                    OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
-                    if timeRem <= 0
-                    {
-                        if not g_SpinActive
+                        if g_SpinActive
                         {
-                            set doActionFlag to True.
-                            set g_TS0 to Time:Seconds + spinPreload.
+                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
+                            OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
+                            if Time:Seconds >= g_TS0
+                            {
+                                set doActionFlag to True.
+                                set g_TS0 to -1.
+                                set g_TS0Ref to 0.
+                            }
+                        }
+                        else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
+                        {
+                            local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
+                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
+                            OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
+                            if timeRem <= 0
+                            {
+                                if not g_SpinActive
+                                {
+                                    set doActionFlag to True.
+                                    set g_TS0 to Time:Seconds + spinPreload.
+                                }
+                            }
                         }
                     }
                 }
@@ -1389,23 +1447,33 @@
                     set steerVal to Ship:Facing.
                     set g_SteeringDelegate to { return steerVal.}.
 
-                    if _params[1] = 1 and Body:ATM:AltitudePressure(Ship:Altitude) >= 0.1
+                    if _params[3] = 1 and Body:ATM:AltitudePressure(Ship:Altitude) >= 0.1
                     {
-                        for m in _params[0]
+                        from { local i to 0.} until i = _params[2]:Length step { set i to i + 1.} do
                         {
-                            if not m:GetField("std. ctrl") m:SetField("std. ctrl", True).
+                            if g_ShipUIDs:Contains(_params[2][i])
+                            {
+                                local m to _params[1][i].
+                                if not m:GetField("std. ctrl") m:SetField("std. ctrl", True).
+                            }
                         }
                     }
-                    else if _params[1] = 2 or Body:ATM:AltitudePressure(Ship:Altitude) < 0.1
+                    else if _params[3] = 2 or Body:ATM:AltitudePressure(Ship:Altitude) < 0.1
                     {
-                        for m in _params[0]
+                        // OutDebug(_params[1]:TypeName, 5).
+                        // if _params[1]:IsType("List") OutDebug(_params[1][0]:TypeName, 6).
+                        from { local i to 0.} until i = _params[2]:Length step { set i to i + 1.} do
                         {
-                            if m:Name = "ModuleRCSFX" m:SetField("RCS", True).
+                            if g_ShipUIDs:Contains(_params[2][i])
+                            {
+                                local m to _params[1][i].
+                                if m:Name = "ModuleRCSFX" m:SetField("RCS", True).
+                            }
                         }
                     }
                     // set l_SteeringDelegate_Standby to g_SteeringDelegate.
                     // set g_SteeringDelegate to { return Ship:Facing.}.
-                    set Ship:Control:Roll to _params[2].
+                    set Ship:Control:Roll to _params[4].
                     set g_SpinActive to True.
                 }
 
@@ -1432,28 +1500,6 @@
         }
 
         return resultFlag.
-    }
-
-
-    global function ArmSpinStabilization_Old
-    {
-        local spinArmed to False.
-        if g_ActiveEngines:Length > 0
-        {
-            local dc to g_ActiveEngines[0]:Decoupler.
-            if dc:Tag:MatchesPattern("Spin\|")
-            {
-                local spinTime to dc:Tag:Replace("Spin|"):ToNumber(15).
-
-                local checkDel to { parameter _params is list(). if params:length  = 0 { set _params to list(spinTime).} if g_ActiveEngines_Data:BurnTimeRemaining <= _params[0] { return 1.} else { return 0.}}.
-                local actionDel to { if g_ActiveEngines_Data:BurnTimeRemaining > 0.25 { if Ship:Control:Roll = 0 { set Ship:Control:Roll to 1.} return true.} else { set Ship:Control:Roll to 0. return False.}}.
-
-                local spinEventData to CreateLoopEvent("SpinStabilization", "Spin", list(15), checkDel@, actionDel@).
-                set spinArmed to RegisterLoopEvent(spinEventData).
-            }
-        }
-
-        return spinArmed.
     }
     // #endregion
 
@@ -1511,28 +1557,28 @@
         }
         set stgResidual to (stgFlowMass - totalResFlow) / stgFlowMass.
 
-        OutDebug("[GetStageMass][{0}] engResUsed:RSRC [{1}]":Format(stg, engResUsed:RSRC:Join(";")), crDbg()).
+        // OutDebug("[GetStageMass][{0}] engResUsed:RSRC [{1}]":Format(stg, engResUsed:RSRC:Join(";")), crDbg()).
 
         for p in Ship:parts
         {
-            OutDebug("[GetStageMass][{0}] Processing part: [{1}]":Format(stg, p), -3).
+            // OutDebug("[GetStageMass][{0}] Processing part: [{1}]":Format(stg, p), crDbg()).
             if p:typeName = "Decoupler" 
             {
                 if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
                 if p:Stage = stg set stgMass to stgMass + p:Mass.
-                OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), -2).
+                // OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), crDbg()).
             }
             else if p:DecoupledIn <= stg
             {
-                OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), -2).
+                // OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), crDbg()).
                 set stgShipMass to stgShipMass + p:Mass.
-                if p:DecoupledIn = stg - 1// >= nextDCStg and p:DecoupledIn <= stg
+                if p:DecoupledIn >= nextDCStg // p:Stg <= stg and p:DecoupledIn >= nextDCStg and p:Stage <= stg // >= nextDCStg and p:DecoupledIn <= stg
                 {
                     set stgMass to stgMass + p:Mass.
                 }
             }
 
-            if p:DecoupledIn >= nextEngStg and p:Resources:Length > 0 
+            if p:DecoupledIn <= stg and p:DecoupledIn >= nextDCStg and p:Resources:Length > 0 
             {
                 for res in p:Resources
                 {
@@ -3058,6 +3104,24 @@
         {
             DoAction(m, "extend solar panel", true).
         }
+    }
+    // #endregion
+
+    // ** Vessel Metadata
+    // #region
+
+    // GetShipUIDs :: <none> -> uidList<list>
+    // Returns a list of UIDs for all parts currently on the vessel. Useful for ensuring a part exists before trying to take action on it.
+    global function GetShipUIDs
+    {
+        local uidList to list().
+
+        for p in ship:Parts
+        {
+            uidList:Add(p:UID).
+        }
+
+        return uidList.
     }
     // #endregion
 

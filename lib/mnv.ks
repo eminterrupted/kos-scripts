@@ -137,7 +137,6 @@
         local halfDur to 0.
         local burnEta to 0.
         local f_BurnUllage to False.
-        local burnSpool to 0.
         lock dvRemaining to abs(dv).
 
         if dv <= 0.1 
@@ -159,7 +158,17 @@
             set burnEta to burnEta - burnEngsSpec:SpoolTime - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
             set g_MECO    to burnEta + fullDur.
 
-            set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
+            local rollUpVector to { return -Body:Position.}.
+            if Ship:CrewCapacity > 0
+            {
+                set rollUpVector to { return Body:Position. }.
+            }
+            else if Ship:ModulesNamed("ModuleROSolar"):Length > 0
+            {
+                set rollUpVector to { return Sun:Position. }.
+            }
+
+            set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
             set t_Val to 0.
             lock steering to s_Val.
             lock throttle to t_Val.
@@ -198,7 +207,7 @@
                     OutInfo("Recalculating burn parameters").
                     OutInfo("", 1).
                     OutInfo("", 2).
-                    wait 0.25.
+                    wait 0.1.
                     set burnDur to CalcBurnDur(_inNode:deltaV:mag).
                     set fullDur to burnDur[0].
                     set halfDur to burnDur[3].
@@ -220,9 +229,8 @@
                         set Ship:Control:Fore to 1.
                     }
                 }
-                set s_Val to lookDirUp(_inNode:burnvector, Sun:Position).
-                // DispBurn(dvRemaining, burnEta - time:seconds, g_MECO - burnEta).
-                DispBurnNodeData(dvRemaining, burnEta - Time:Seconds, burnDur[0]).
+                set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                DispBurnNodeData(dv, burnEta - Time:Seconds, burnDur[0]).
             }
 
             local dv0 to _inNode:deltav.
@@ -236,10 +244,11 @@
             local burnTimer         to Time:Seconds + burnDur[0].
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
-            set s_Val to lookDirUp(_inNode:burnVector, Sun:Position).
+            set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
             
             set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
+            SetupSpinStabilizationEventHandler().
             wait 0.01.
 
             until vdot(dv0, _inNode:deltaV) <= 0.01
@@ -250,11 +259,9 @@
                 set burnTimeRemaining to burnTimer - Time:Seconds.
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
 
-                
                 DispBurnNodeData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
                 DispBurnPerfData().
-                wait 0.01.
-                
+
                 if g_AutoStageArmed
                 {
                     if g_LoopDelegates:HasKey("Staging")
