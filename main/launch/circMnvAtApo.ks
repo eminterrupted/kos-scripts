@@ -10,18 +10,23 @@ DispMain().
 
 ParseCoreTag(Core:Tag).
 
-local tgtAp   to Ship:Apoapsis.
-local tgtPe   to tgtAp.
-local tgtEcc  to 0.0025.
+local burnAt  to "ap".
 local compVal to "pe".
+local tgtAp   to Ship:Apoapsis.
+local tgtEcc  to 0.0025.
+local tgtPe   to tgtAp.
+set t_Val     to 0.
+lock throttle to t_Val.
+
+local tgtApTag to Round(tgtAp / 1000):ToString + "Km".
 
 if _params:Length > 0
 {
     set tgtAp to _params[0].
     if _params:Length > 1
     {
-        local p1 to ParseStringScalar(_params[2]).
-        if _params[2] < 1
+        local p1 to ParseStringScalar(_params[1]).
+        if p1 < 1
         {
             set tgtEcc to p1.
             if tgtEcc < 0
@@ -37,38 +42,60 @@ if _params:Length > 0
         }
         else if p1 > Ship:Body:ATM:Height
         {
-            if p1 > Ship:Apoapsis
+            if p1 > Ship:Apoapsis * 1.125 and Ship:Periapsis > Body:ATM:Height
             {
                 set tgtAp to p1.
                 set compVal to "ap".
+                set burnAt to "pe".
             }
             else
             {
                 set tgtPe to p1.
-                set compVal to "pe".
             }
             set tgtEcc to GetEccFromApPe(tgtAp, tgtPe, Ship:Body).
         }
     }
     else
     {
+        if _params[0] > Ship:Apoapsis * 1.125 and Ship:Periapsis > Body:ATM:Height
+        {
+            set tgtAp to _params[0].
+            set compVal to "ap".
+            set burnAt to "pe".
+        }
+        else
+        {
+            set tgtPe to _params[0].
+        }
         set tgtPe to tgtAp.
     }
 }
 
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
 OutMsg("Calculated DV Needed: {0}":Format(Round(dvNeeded[1], 2))).
-
+// OutInfo("[Params] TgtAp: {0} | burnAt: {1} | compVal: {2}":Format(tgtAP, burnAt, compVal)).
+// Breakpoint().
 local nodeTS to Time:Seconds + ETA:Apoapsis.
-if ETA:Apoapsis > ETA:Periapsis and Ship:Periapsis < Ship:Body:ATM:Height
+if burnAt = "Ap"
 {
-    set nodeTS to Time:Seconds + 5.
-} 
+    if ETA:Apoapsis > ETA:Periapsis and Ship:Periapsis < Ship:Body:ATM:Height
+    {
+        set nodeTS to Time:Seconds + 5.
+    }
+}
+else
+{
+     set nodeTS to Time:Seconds + ETA:Periapsis.
+}
 local circNode to Node(nodeTS, 0, 0, dvNeeded[1]).
 
-until not hasNode
+if hasNode
 {
-    remove nextNode. 
+    until not hasNode
+    {
+        remove nextNode. 
+        wait 0.01.
+    }
 }
 add circNode.
 
@@ -89,6 +116,8 @@ if circNode:DeltaV:Mag < 25 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:
         }
     }
 }
+
+SetupSpinStabilizationEventHandler().
 
 OutInfo().
 

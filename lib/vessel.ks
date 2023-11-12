@@ -1242,44 +1242,6 @@
 
             return resultFlag.
         }
-
-        // SetupUpdateUIDEventHandler :: _init<Bool> -> _resultFlag<Bool>
-        global function SetupUpdateUIDEventHandler
-        {
-            parameter _init to False.
-
-            local curStage to Stage:Number.
-
-            local paramList to list(
-                curStage
-            ).
-
-            local checkDel to {
-                parameter _params is list().
-
-                return Stage:Number <> _params[0].
-            }.
-
-            local actionDel to {
-                parameter _params is list().
-
-                g_ShipUIDs:Clear().
-
-                for p in ship:Parts
-                {
-                    g_ShipUIDs:Add(p:UID).
-                }
-                
-                return Stage:Number > 0.
-            }.
-
-            if _init actionDel:Call().
-
-            local osEvent to CreateLoopEvent("UIDUpdater", "GlobalUpdateEvent", paramList, checkDel@, actionDel@).
-            local resultFlag to RegisterLoopEvent(osEvent).
-
-            return resultFlag.
-        }
     // #endregion
 
     // Spin-stabilization

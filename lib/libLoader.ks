@@ -17,6 +17,6 @@ RunOncePath("0:/lib/dvCalc.ks").
 
 // Initiate any global objects here
 set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
-SetupUpdateUIDEventHandler(True).
+set g_UIDUpdaterArmed to SetupUpdateUIDEventHandler(True).
 
 if g_Debug WriteJson(g_ShipEngines_Spec, "0:/data/debug/{0}_g_ShipEngines_Spec.json":Format(Ship:Name:Replace(" ","_"))).

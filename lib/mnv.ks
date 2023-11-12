@@ -170,6 +170,7 @@
 
             set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
             set t_Val to 0.
+            wait 0.01.
             lock steering to s_Val.
             lock throttle to t_Val.
 
@@ -224,7 +225,7 @@
 
                 if f_BurnUllage
                 {
-                    if Time:Seconds >= burnETA - 5
+                    if Time:Seconds >= burnETA - 6.25
                     {
                         set Ship:Control:Fore to 1.
                     }
@@ -247,7 +248,7 @@
             set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
             
-            set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit) = 1 else False.
+            set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit, 0.01, 0) = 1 else False.
             SetupSpinStabilizationEventHandler().
             wait 0.01.
 
@@ -259,7 +260,7 @@
                 set burnTimeRemaining to burnTimer - Time:Seconds.
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
 
-                DispBurnNodeData(dvRemaining, burnEta - time:seconds, burnTimeRemaining).
+                DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
                 DispBurnPerfData().
 
                 if g_AutoStageArmed

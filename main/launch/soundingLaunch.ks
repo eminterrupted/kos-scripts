@@ -13,26 +13,34 @@ local engineCounter      to 0.
 local stagingCheckResult to 0.
 
 // Parameter default values.
-local _tgtAlt        to -1.
+local _tgtAp         to -1.
 local _tgtInc        to 0.
+local _tgtPe         to -1.
 local _azObj         to g_AzData.
 
 if g_MissionTag:Params:Length > 0
 {
     set _tgtInc to g_MissionTag:Params[0].
-    if g_MissionTag:Params:Length > 1 set _tgtAlt to g_MissionTag:Params[1].
+    if g_MissionTag:Params:Length > 1 set _tgtAp to g_MissionTag:Params[1].
+    if g_MissionTag:Params:Length > 2 set _tgtPe to g_MissionTag:Params[2].
+    if g_MissionTag:Params:Length > 3 set _azObj to g_MissionTag:Params[3].
 }
 
 if params:length > 0
 {
     set _tgtInc to params[0].
-    if params:length > 1 set _tgtAlt to params[1].
-    if params:length > 2 set _azObj to params[2].
+    if params:length > 1 set _tgtAp to params[1].
+    if params:length > 2 set _tgtPe to params[2].
+    if params:length > 3 set _azObj to params[3].
 }
 
-if _tgtAlt < 0
+if _tgtAp < 0
 {
-    set _tgtAlt to 250000.
+    set _tgtAp to 250000.
+}
+if _tgtPe < 0
+{
+    set _tgtPe to _tgtAp.
 }
 
 wait until Ship:Unpacked.
@@ -236,7 +244,7 @@ DisableAutoStaging().
 
 OutMsg("Final Burn").
 wait 0.05.
-until Ship:AvailableThrust <= 0.1
+until Ship:AvailableThrust <= 0.1 or Ship:Periapsis >= _tgtPe
 {
     set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
@@ -256,8 +264,8 @@ until Ship:AvailableThrust <= 0.1
 ClearDispBlock().
 
 set t_Val to 0.
-OutMsg("Coasting out of atmosphere").
 unlock throttle.
+OutMsg("Coasting out of atmosphere").
 
 // Coast out of atmosphere
 until Ship:Altitude >= Body:ATM:Height
@@ -281,7 +289,6 @@ if g_FairingsArmed
 }
 
 OutMsg("Launch script complete, performing exit actions").
-unlock throttle.
 wait 0.25.
 
 
@@ -310,7 +317,7 @@ local function PreLaunchInit
     // Set the steering delegate
     if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
     {
-        set _azObj to l_az_calc_init(_tgtAlt, _tgtInc).
+        set _azObj to l_az_calc_init(_tgtAp, _tgtInc).
         set g_AzData to _azObj.
     }
     else
@@ -318,7 +325,7 @@ local function PreLaunchInit
         set g_AzData to _azObj.
     }
 
-    set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAlt, _tgtInc, g_AzData).
+    set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAp, _tgtInc, g_AzData).
 
     if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
     {

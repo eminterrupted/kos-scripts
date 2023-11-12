@@ -30,6 +30,10 @@
 
     // *- Global
     // #region
+    global g_Colors to lexicon(
+                "white", RGB(1,1,1)
+            ).
+
     global g_kKode to list(
                 _ti:UpCursorOne, 
                 _ti:UpCursorOne, 
@@ -444,6 +448,74 @@
 
     // #endregion
 
+    // *- Part Utilities
+    // #region
+
+        // HighlightPart :: (_p)<Part>, [(_colorStr)<String>] -> _hlHandle<Highlight>
+        // Given a part and optional color, highlights it. Uses white if not specified.
+        global function HighlightPart
+        {
+            parameter _p,
+                      _colorStr is "white".
+
+            local hlHandle to Highlight(_p, g_Colors[_colorStr]).
+            return hlHandle.
+        }
+
+        // SetupUpdateUIDEventHandler :: _init<Bool> -> _resultFlag<Bool>
+        // Setups an event which will, when the stage number changes, update a list of all current parts (by UID) on the vessel
+        global function SetupUpdateUIDEventHandler
+        {
+            parameter _init to False.
+
+            set g_StageTracker to Stage:Number.
+
+            local paramList to list(
+                g_StageTracker
+            ).
+            
+            local checkDel to {
+                parameter _params is list().
+
+                return Stage:Number <> _params[0] or g_InOrbit.
+            }.
+
+            local actionDel to {
+                parameter _params is list().
+
+                g_ShipUIDs:Clear().
+                
+                set g_StageTracker to Stage:Number.
+
+                for p in ship:Parts
+                {
+                    g_ShipUIDs:Add(p:UID).
+                }
+                
+                if Stage:Number > 0
+                {
+                    if g_inOrbit
+                    {
+                        return False.
+                    }
+                    else
+                    {
+                        return True.
+                    }
+                }
+                else
+                {
+                    return False.
+                }
+            }.
+            if _init actionDel:Call().
+
+            local osEvent to CreateLoopEvent("UIDUpdater", "GlobalUpdateEvent", paramList, checkDel@, actionDel@).
+            local resultFlag to RegisterLoopEvent(osEvent).
+            return resultFlag.
+        }
+    // #endregion
+
     // *- Part Module Utilities
     // #region
         // DoAction :: (_m)<Module>, (_action)<string>, [(_state)<bool>] -> (ResultCode)<scalar>
@@ -477,7 +549,6 @@
                       _event.
 
             set g_ResultCode to 0.
-
             if _m:HasEvent(_event)
             {
                 _m:DoEvent(_event).
@@ -759,7 +830,7 @@
         }
         else
         {
-            if _inputString:MatchesPattern("\d*(\.\d*)?(km$|mm$)")
+            if _inputString:MatchesPattern("\d*(\.\d*)?(km$|mm$)+")
             {
                 if _inputString:MatchesPattern("(^\d*(\.\d*)?(km$))")
                 {
@@ -785,11 +856,11 @@
                     }
                 }
             }
-            else if _inputString:MatchesPattern("(^\d*$)")
+            else if _inputString:MatchesPattern("(^\d*(\.\d{1,})?$)")
             {
                 OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
                 set scalar_result to _inputString:ToNumber(_fallbackValue).
-                wait 0.1.
+                wait 0.01.
             }
             else
             {

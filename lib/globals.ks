@@ -9,7 +9,7 @@
 
 // *~ Config Settings ~* //
 // #region
-    set Config:IPU to 1000.
+    set Config:IPU to 1600.
 
     global g_DualCore to ship:partsTagged("Core2"):Length > 0.
 // #endregion
@@ -49,8 +49,12 @@
     ).
 
     // Staging
+    global g_StageCurrent to Stage:Number.
+    global g_StageLast to Stage:Number.
+    global g_StageNext to Stage:Number - 1.
     global g_StageLimit to 3.
     global g_StageLimitSet to list().
+    global g_StageTracker to Stage:Number.
 
     // Tags
     global g_MissionTag to lexicon().
@@ -120,6 +124,7 @@
     global g_DecouplerEventArmed    to False.
     global g_FairingsArmed          to False.
     global g_HotStagingArmed        to False.
+    global g_InOrbit                to False.
     global g_LESArmed               to False.
     global g_MECOArmed              to False.
     global g_OnDeployActive         to False.

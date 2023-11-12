@@ -26,7 +26,7 @@ local spinStab to false.
 local stagingAlt to ship:body:atm:height.
 local ts to time:seconds.
 
-set r_Val to 0.
+set r_Val to 180.
 set s_Val to ship:facing.
 lock steering to s_Val.
 
@@ -350,8 +350,20 @@ if parachutes:length > 0
 wait 1.
 
 // Science data collection
-TransferSciData(Core:Part).
-wait 2.
+local dataDrive to Core:Part.
+if Ship:PartsNamedPattern("SampleReturnCapsule"):Length > 0
+{
+    set dataDrive to Ship:PartsNamedPattern("SampleReturnCapsule")[0].
+}
+local sciTransferResult to TransferSciData(Core:Part).
+if sciTransferResult
+{
+    wait 2.
+}
+else
+{
+    
+}
 
 for m in ship:ModulesNamed("ModuleRCSFX")
 {
@@ -492,7 +504,7 @@ if aniMods:Length > 0
 {
     for m in aniMods
     {
-        if DoEvent(m, "Deploy Landing Bag") 
+        if DoEvent(m, "Deploy Landing Bag")
         {
             OutMsg("Landing bag deploy").
             Break.
@@ -500,11 +512,18 @@ if aniMods:Length > 0
     }
 }
 
+until alt:radar <= 25
+{
+    DispReentryTelemetry().
+}
+if Kuniverse:Timewarp:Warp > 0 
+{
+    set Kuniverse:Timewarp:Warp to 0.
+}
 until alt:radar <= 5
 {
     DispReentryTelemetry().
 }
-
 OutMsg("Preparing for recovery").
 wait 1.
 

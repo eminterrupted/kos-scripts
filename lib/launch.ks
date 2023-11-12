@@ -510,7 +510,7 @@
 
             if ETA:Apoapsis > ETA:Periapsis
             {
-                set output_pitch to max(-12.5, min(12.5, -output_pitch)).
+                set output_pitch to max(-12.5, min(12.5, output_pitch)).
             }
         }
 

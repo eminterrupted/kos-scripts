@@ -123,7 +123,7 @@
             OutMsg("No HDD for data collection").
         }
 
-        if g_Debug OutDebug("Exiting TransferSciData with exit code: [{0}]":Format(result)).
+        if g_Debug OutDebug("Exiting TransferSciData with result: [{0}]":Format(result)).
         return result.
     }
     //#endregion
