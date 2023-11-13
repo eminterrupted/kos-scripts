@@ -94,7 +94,7 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Miss
 
     if Career():CanMakeNodes 
     {
-        runPath("0:/main/launch/circMnvAtApo", list(tgtAp)).
+        runPath("0:/main/launch/circMnvAtApo", list(tgtAp, tgtPe, azObj)).
     }
     else
     {

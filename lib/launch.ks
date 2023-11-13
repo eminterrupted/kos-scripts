@@ -20,7 +20,7 @@
     local ascent_Blend_End          to Body:Atm:Height.
     local ascent_Blend_Window       to ascent_Blend_End - ascent_Blend_Start.
 
-    local Ascent_AoA_Max            to 45.
+    local Ascent_AoA_Max            to 30.
     local Ascent_AoA_Min            to 7.5.
     local PID_AoA_Max               to 15.
     local PID_AoA_Min               to -15.
@@ -378,7 +378,7 @@
         local pid_Apo_ID to "TurnApo".
         // set g_PIDS[pid_Apo_ID]       to PIDLoop(0.05, 0.0075, 0.000825, -_pidChangeRate, _pidChangeRate).
         //set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 0.5, _pidChangeRate * 0.25, _pidChangeRate * 0.125, -_pidChangeRate, _pidChangeRate). 
-        set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 1, _pidChangeRate * 0.625, _pidChangeRate * 0.250, -_pidChangeRate, _pidChangeRate). 
+        set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 0.25, _pidChangeRate * 0.075, _pidChangeRate * 0.025, -_pidChangeRate, _pidChangeRate). 
         set g_PIDS[pid_Apo_ID]:Setpoint to _tgtAlt.
         
         local pid_Alt_ID to "TurnAlt".
@@ -518,7 +518,7 @@
     }
 
     // With PID Control too I guess because I'm dumb
-    global function GetAscentAng_PIDyParty
+    global function GetAscentAng_PIDyParty 
     {
         parameter _ascAngObj.
 
@@ -593,7 +593,7 @@
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
                 set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
             }
-            else if g_MissionTag:Mission:StartsWith("PID")
+            // else if g_MissionTag:Mission:StartsWith("PID")
             {
                 // OutDebug("In PIDLoop!").
                 if _ascAngObj:RESET_PIDS
@@ -613,20 +613,20 @@
                 set error_pitch to 90 * (1 - apo_error).
                 set output_pitch to max(PID_AoA_Min, min(apo_PID:Update(Time:Seconds, Ship:Apoapsis), PID_AoA_Max)).
             }
-            else
-            {
-                set error_pitch         to 90 * (1 - apo_error).
-                set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
-                set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
-                set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
-                set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
-            }
+            // else
+            // {
+            //     set error_pitch         to 90 * (1 - apo_error).
+            //     set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
+            //     set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+            //     set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
+            //     set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
+            // }
         }
-        if ETA:Apoapsis > ETA:Periapsis
-        {
-            //set output_pitch to max(5, min(-5, -output_pitch)).
-            set output_pitch to -output_pitch.
-        }
+        // if ETA:Apoapsis > ETA:Periapsis
+        // {
+        //     //set output_pitch to max(5, min(-5, -output_pitch)).
+        //     set output_pitch to -output_pitch.
+        // }
 
         return output_pitch.
     }
@@ -1124,13 +1124,12 @@
         {
             local stgMaxSpool to 0.
             local stgEngSpecs to GetEnginesSpecs(GetEnginesForStage(i)).
-            for eng in stgEngSpecs:Values
+            // print stgEngSpecs at(0, 50).
+            // Breakpoint().
+            for eng in stgEngSpecs:Engines:Values
             {
-                if eng:IsType("Lexicon")
-                {
-                    set stgMaxSpool  to max(stgMaxSpool, eng:SpoolTime).
-                    set maxSpoolTime to max(eng:SpoolTime, maxSpoolTime).
-                }
+                set stgMaxSpool  to max(stgMaxSpool, eng:SpoolTime).
+                set maxSpoolTime to max(maxSpoolTime, eng:SpoolTime).
             }
             set totalSpoolTime to totalSpoolTime + stgMaxSpool.
             set engSpoolLex[i] to stgMaxSpool.

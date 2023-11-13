@@ -15,8 +15,6 @@ local compVal to "pe".
 local tgtAp   to Ship:Apoapsis.
 local tgtEcc  to 0.0025.
 local tgtPe   to tgtAp.
-set t_Val     to 0.
-lock throttle to t_Val.
 
 local tgtApTag to Round(tgtAp / 1000):ToString + "Km".
 

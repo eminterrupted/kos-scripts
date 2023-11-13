@@ -129,14 +129,18 @@
     {
         parameter _inNode is node().
 
+        local curEngs to list().
+        local curEngsSpecs to lexicon().
+        local dvRateList to list().
+        local dvRate to 0.
         local dv to _inNode:deltaV:mag.
+        local lastDv    to 0.
         local burnDur to list(0, 0).
         local burnEngs to list().
         local burnEngsSpec to lexicon().
         local fullDur to 0.
         local halfDur to 0.
         local burnEta to 0.
-        local f_BurnUllage to False.
         lock dvRemaining to abs(dv).
 
         if dv <= 0.1 
@@ -151,10 +155,50 @@
             
             set burnEta to _inNode:time - halfDur.
             
-            // Spool Adjustments
-            set burnEngs to GetNextEngines(Stage:Number).
-            set burnEngsSpec to GetEnginesSpecs(burnEngs).
-            set f_BurnUllage to burnEngsSpec:Ullage.
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+
+            local useNext to False.
+            if g_ActiveEngines_Spec:AllowRestart
+            {
+                if g_ActiveEngines_Spec:Ignitions = 0
+                {
+                    // OutInfo("Failed Ignitions test [{0}]":Format(g_ActiveEngines_Spec:Ignitions), 1).
+                    set useNext to True.
+                }
+                else if g_ActiveEngines_Spec:EstBurnTime <= g_ActiveEngines_Spec:SpoolTime + 0.25 
+                {
+                    // OutInfo("Failed burnTimeTest [{0}|{1}]":Format(Round(g_ActiveEngines_Spec:EstBurnTime, 2), Round(g_ActiveEngines_Spec:SpoolTime + 0.25, 2)), 1).
+                    set useNext to True.
+                }
+                // else
+                // {
+                //     OutInfo("Passed checks for active engines", 1).
+                // }
+            }
+            else
+            {
+                // OutInfo("Failed AllowRestart test [{0}]":Format(g_ActiveEngines_Spec:AllowRestart), 1).
+                set useNext to True.
+            }
+            if useNext 
+            {
+                // OutInfo("Using NextEngines").
+                set burnEngs to GetNextEngines(Stage:Number).
+                set burnEngsSpec to GetEnginesSpecs(burnEngs).
+            }
+            else
+            {
+                // OutInfo("Using active engines").
+                set burnEngs to g_ActiveEngines.
+                set burnEngsSpec to g_ActiveEngines_Spec.
+            }
+            // Breakpoint().
+            // set f_BurnUllage to burnEngsSpec:Ullage.
+            // OutInfo("Ullage check: {0}":Format(f_BurnUllage), 1).
+            // OutDebug("Engines: {0}":Format(g_ActiveEngines:Join(";")), 1).
+            // Breakpoint().
+
             set burnEta to burnEta - burnEngsSpec:SpoolTime - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
             set g_MECO    to burnEta + fullDur.
 
@@ -172,8 +216,7 @@
             set t_Val to 0.
             wait 0.01.
             lock steering to s_Val.
-            lock throttle to t_Val.
-
+            
             local burnLeadTime to UpdateTermScalar(15, list(1, 5, 15, 30)).
             local warpFlag to False.
 
@@ -223,10 +266,13 @@
                     set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
                 }
 
-                if f_BurnUllage
+                if burnEngsSpec:Ullage
                 {
-                    if Time:Seconds >= burnETA - 6.25
+                    set g_UllageTS to burnETA - 10.
+                    OutDebug("Ullage Armed (ETA: {0}s)":Format(Round(g_UllageTS - Time:Seconds, 2)), 4).
+                    if Time:Seconds >= g_UllageTS
                     {
+                        OutDebug("Ullage Active", 4).
                         set Ship:Control:Fore to 1.
                     }
                 }
@@ -242,22 +288,37 @@
             OutInfo("", 1).
             ClearDispBlock().
 
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+            set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
             local burnTimer         to Time:Seconds + burnDur[0].
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
+            lock throttle to t_Val.
             set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
             
             set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit, 0.01, 0) = 1 else False.
             SetupSpinStabilizationEventHandler().
             wait 0.01.
-
-            until vdot(dv0, _inNode:deltaV) <= 0.01
-            {
+            set g_TS0 to Time:Seconds.
+            set lastDV to _inNode:DeltaV.
+            set dvRate to 0.
+            
+            local softShutdownDV to max(0.01, dvRate * (g_ActiveEngines_Spec:SpoolTime * 0.2)).
+            until vdot(dv0, _inNode:DeltaV) <= softShutdownDV // 0.0025
+            {   
                 set g_ActiveEngines to GetActiveEngines().
+                set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-                
+
+                if g_ActiveEngines_Spec:SpoolTime > 0.1
+                {
+                    set softShutdownDV to dvRate * (g_ActiveEngines_Spec:SpoolTime * 0.1).
+                }
                 set burnTimeRemaining to burnTimer - Time:Seconds.
+                
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
 
                 DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).

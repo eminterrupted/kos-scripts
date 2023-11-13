@@ -340,7 +340,18 @@
             ,"FuelStabilityMin",    0
             ,"EstBurnTime",         0
             ,"StgThrust",           0
-            ,"Ullage",              false
+            ,"Ignitions",           0
+            ,"AllowRestart",        False
+            ,"AllowShutdown",       False
+            ,"AllowThrottle",       False
+            ,"HasGimbal",           False
+            ,"Multimode",           False
+            ,"PressureFed",         False
+            ,"PrimaryMode",         False
+            ,"Ullage",              False
+            ,"Modes",               list()
+            ,"Configs",             lexicon()
+            ,"Engines",             lexicon()
         ).
 
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
@@ -362,10 +373,38 @@
             set AggregateMassLex["Engines"] to lexicon(
                 eng:Name, lexicon()
             ).
+            if eng:AllowRestart
+            {
+                set engsSpecs:AllowRestart to True.
+            }
+            if eng:AllowShutdown
+            {
+                set engsSpecs:AllowShutdown to True.
+            }
             if eng:Ullage
             {
-                set engsSpecs:Ullage to true.
+                set engsSpecs:Ullage to True.
             }
+            if eng:HasGimbal
+            {
+                set engsSpecs:HasGimbal to True.
+            }
+            // set engsSpecs:AllowThrottle  to "".
+            // set engsSpecs:Ullage         to eng:Ullage or engsSpecs:Ullage.
+            // set engsSpecs:PressureFed    to eng:PressureFed.
+            set engsSpecs:Ignitions      to choose 99 if eng:Ignitions < 0 else max(engsSpecs:Ignitions, eng:Ignitions).
+            
+            // local cfg to eng:Config.
+            // if engsSpecs:Configs:HasKey(cfg)
+            // {
+            //     engsSpecs:Configs[cfg]:Add(eng:UID).
+            // }
+            // else
+            // {
+            //     engsSpecs:Configs:Add(cfg, list(eng:UID)).
+            // }
+
+            
 
             for resName in eng:ConsumedResources:Keys
             {
@@ -413,7 +452,7 @@
                     }
                 }
             }
-            set engsSpecs[eng:CID] to engSpecs.
+            engsSpecs:Engines:Add(eng:CID, engSpecs).
         }
 
         if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)

@@ -200,6 +200,18 @@ global g_ModEvents to lexicon(
             "Deploy", "extend solar panel"
         )
     )
+    ,"Science", lexicon(
+        "Experiment", lexicon(
+            "Deploy", list(
+                "start: magnetic scan"
+                ,"start: micrometeorite detection"
+            )
+            ,"Retract", list(
+                "stop: magnetic scan"
+                ,"stop: micrometeorite detection"
+            )
+        )
+    )
 ).
 
 // Dictionary of miscellaneous part info and mappings
@@ -208,6 +220,7 @@ global g_PartInfo       to lexicon(
         "Antenna",     list("ModuleDeployableAntenna", "ModuleRealAntenna")
         ,"Decoupler",  list("ModuleAnchoredDecoupler", "ModuleDecouple", "ProceduralFairingDecoupler")
         ,"Solar",      list("ModuleROSolar")
+        ,"Science",    list("Experiment")
     )
 ).
 

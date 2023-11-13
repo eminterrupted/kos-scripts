@@ -730,9 +730,33 @@
                                 {
                                     if p:HasModule(m)
                                     {
-                                        if g_ModEvents[pType][m]:HasKey("Deploy")
+                                        local deployMod to p:GetModule(m).
+                                        local modEventTypes to g_ModEvents[pType][m].
+                                        if modEventTypes:HasKey("Deploy")
                                         {
-                                            DoEvent(p:GetModule(m), g_ModEvents[pType][m]:Deploy).
+                                            local deployMap to modEventTypes:Deploy.
+                                            if deployMap:IsType("List")
+                                            {
+                                                local modActions to deployMod:AllActions.
+                                                from { local iE to 0. local doneFlag to False.} until iE = modActions:Length or doneFlag step { set iE to iE + 1.} do
+                                                {
+                                                    local eventAction to GetFormattedAction(deployMod, modActions[iE]).
+                                                    if deployMap:Contains(eventAction)
+                                                    {
+                                                        if DoEvent(deployMod, eventAction) <> 1
+                                                        {
+                                                            DoAction(deployMod, eventAction).
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if DoEvent(p:GetModule(m), deployMap) <> 1
+                                                {
+                                                    DoAction(p:GetModule(m), deployMap).
+                                                }
+                                            }
                                         }
                                     }
                                 }
