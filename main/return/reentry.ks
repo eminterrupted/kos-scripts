@@ -30,8 +30,8 @@ set r_Val to 180.
 set s_Val to ship:facing.
 lock steering to s_Val.
 
-set t_Val to 0.
-lock throttle to t_Val.
+// set t_Val to 0.
+// lock throttle to t_Val.
 
 
 ///Params
@@ -166,105 +166,105 @@ OutInfo("", 1).
 OutMsg("Beginning Reentry Procedure").
 wait 1.
 
-if retroFire and ship:periapsis > reentryTgt
-{
-    OutInfo("Target reentry alt: " + round(reentryTgt) + " (" + round(ship:periapsis) + ")", 1).
-    set s_Val to ship:retrograde.
-    local settleTime to 5.
-    local progCounter to 0.
-    local progTimer to time:seconds + 2.5.
-    local progMarker to "".
-    set ts to time:seconds + settleTime.
-    until time:seconds >= ts
-    {
-        if not GetSteeringError(0.050)
-        {
-            set ts to time:seconds + settleTime.
-            set progCounter to progTimer - time:seconds.
-            if progCounter <= 0 
-            {
-                set progMarker to "".
-                set progTimer to time:seconds + 2.5.
-            }
-            else if progCounter >= 2 set progMarker to "".
-            else if progCounter >= 1.5 set progMarker to ".".
-            else if progCounter >= 1 set progMarker to "..".
-            else if progCounter >= 0.5 set progMarker to "...".
-            OutMsg("Retro alignment in progress" + progMarker).
-            set progCounter to 0.
-        }
-        else
-        {
-            OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
-        }
+// if retroFire and ship:periapsis > reentryTgt
+// {
+//     OutInfo("Target reentry alt: " + round(reentryTgt) + " (" + round(ship:periapsis) + ")", 1).
+//     set s_Val to ship:retrograde.
+//     local settleTime to 5.
+//     local progCounter to 0.
+//     local progTimer to time:seconds + 2.5.
+//     local progMarker to "".
+//     set ts to time:seconds + settleTime.
+//     until time:seconds >= ts
+//     {
+//         if not GetSteeringError(0.050)
+//         {
+//             set ts to time:seconds + settleTime.
+//             set progCounter to progTimer - time:seconds.
+//             if progCounter <= 0 
+//             {
+//                 set progMarker to "".
+//                 set progTimer to time:seconds + 2.5.
+//             }
+//             else if progCounter >= 2 set progMarker to "".
+//             else if progCounter >= 1.5 set progMarker to ".".
+//             else if progCounter >= 1 set progMarker to "..".
+//             else if progCounter >= 0.5 set progMarker to "...".
+//             OutMsg("Retro alignment in progress" + progMarker).
+//             set progCounter to 0.
+//         }
+//         else
+//         {
+//             OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
+//         }
 
-        // DispTelemetry().
-        wait 0.05.
-    }
-    OutInfo().
-    OutInfo("", 1).
+//         // DispTelemetry().
+//         wait 0.05.
+//     }
+//     OutInfo().
+//     OutInfo("", 1).
 
-    // if stage:number > payloadStage
-    // {
-    //     OutMsg("[" + stage:number + "] Staging to payloadStage [" + payloadStage + "] for retro fire").
-    //     until false 
-    //     {
-    //         if stage:number = payloadStage break.
-    //         wait 0.50.
-    //         if stage:ready stage.
-    //         wait 0.50.
-    //     }
-    // }
+//     // if stage:number > payloadStage
+//     // {
+//     //     OutMsg("[" + stage:number + "] Staging to payloadStage [" + payloadStage + "] for retro fire").
+//     //     until false 
+//     //     {
+//     //         if stage:number = payloadStage break.
+//     //         wait 0.50.
+//     //         if stage:ready stage.
+//     //         wait 0.50.
+//     //     }
+//     // }
     
-    if spinStab
-    {
-        OutMsg("Initiating spin stabilization").
-        unlock steering.
-        set ts to time:seconds + 7.5.
-        until time:seconds > ts 
-        {
-            set ship:control:roll to 0.5.
-            // DispTelemetry().
-            wait 0.01.
-        }
-        OutMsg("Spin stabilization complete").
-    }
+//     if spinStab
+//     {
+//         OutMsg("Initiating spin stabilization").
+//         unlock steering.
+//         set ts to time:seconds + 7.5.
+//         until time:seconds > ts 
+//         {
+//             set ship:control:roll to 0.5.
+//             // DispTelemetry().
+//             wait 0.01.
+//         }
+//         OutMsg("Spin stabilization complete").
+//     }
 
-    OutMsg("Firing retro rockets to stage " + retroStage).
-    set t_Val to 1.
-    until stage:number <= retroStage
-    {
-        stage.
-        wait until stage:ready.
-    }
-    wait 0.05.
-    local perfObj to GetEnginePerformanceData(GetActiveEngines()).
-    until perfObj:ThrustAvailPres <= 0.1 or ship:periapsis <= reentryTgt
-    {
-        if stage = 1 set t_Val to 0.
-        else if ship:periapsis <= reentryTgt + 10000
-        {
-            set t_Val to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
-        }
-        // DispTelemetry().
-    }
-    set t_Val to 0.
-    OutMsg("Retro fire complete").
-    wait 1.
-    if spinStab
-    {
-        OutMsg("Stabilizing spin").
-        set ts to time:seconds + 7.5.
-        until time:seconds > ts
-        {
-            set ship:control:roll to -1.
-            // DispTelemetry().
-            wait 0.01.
-            set ship:control:neutralize to true.
-        }
-    }
-    OutInfo("", 1).
-}
+//     OutMsg("Firing retro rockets to stage " + retroStage).
+//     set t_Val to 1.
+//     until stage:number <= retroStage
+//     {
+//         stage.
+//         wait until stage:ready.
+//     }
+//     wait 0.05.
+//     local perfObj to GetEnginePerformanceData(GetActiveEngines()).
+//     until perfObj:ThrustAvailPres <= 0.1 or ship:periapsis <= reentryTgt
+//     {
+//         if stage = 1 set t_Val to 0.
+//         else if ship:periapsis <= reentryTgt + 10000
+//         {
+//             set t_Val to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
+//         }
+//         // DispTelemetry().
+//     }
+//     set t_Val to 0.
+//     OutMsg("Retro fire complete").
+//     wait 1.
+//     if spinStab
+//     {
+//         OutMsg("Stabilizing spin").
+//         set ts to time:seconds + 7.5.
+//         until time:seconds > ts
+//         {
+//             set ship:control:roll to -1.
+//             // DispTelemetry().
+//             wait 0.01.
+//             set ship:control:neutralize to true.
+//         }
+//     }
+//     OutInfo("", 1).
+// }
 
 set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
 
@@ -375,21 +375,27 @@ for m in ship:ModulesNamed("ModuleRCSFX")
 RCS on.
 
 // Staging
+local proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
+local lastAng to proAng.
+local angDiff to lastAng - proAng.
+set doneFlag to False.
+until proAng <= 1 and angDiff <= 0.250 or doneFlag
+{
+    set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
+    set lastAng to proAng.
+    set proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
+    set angDiff to lastAng - proAng.
+    OutMsg("Aligning to retrograde ({0}/0.25)":Format(Round(angDiff, 2))).
+    if Body:ATM:AltitudePressure(Ship:Altitude) > 0.001 
+    {
+        set doneFlag to True.
+    }
+}
+set doneFlag to False.
+
+OutMsg("Aligned to retro, staging!").
 if stage:number > 1
 {
-    // set s_Val to body:position.
-    // OutMsg("Waiting until staging altitude: " + stagingAlt).
-    // until ship:altitude <= stagingAlt
-    // {
-    //     set s_Val to GetSteeringDir("body-sun").
-    //     DispTelemetry().
-    // }
-
-    // if warp > 0 set warp to 0.
-    // wait until kuniverse:timewarp:issettled.
-    // set s_Val to GetSteeringDir("body-sun").
-    // wait 5.
-
     OutMsg("Staging").
     until stage:number <= 1 
     {
@@ -398,7 +404,6 @@ if stage:number > 1
     }
 }
 
-// set ts to time:seconds + 5.
 OutMsg("Waiting for reentry interface").
 until ship:altitude <= body:atm:height + 1000
 {

@@ -268,7 +268,7 @@ unlock throttle.
 OutMsg("Coasting out of atmosphere").
 
 // Coast out of atmosphere
-until Ship:Altitude >= Body:ATM:Height
+until Ship:Altitude >= Body:ATM:Height or Ship:VerticalSpeed < 0
 {
     set s_Val to Ship:Prograde.
 

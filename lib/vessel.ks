@@ -1294,9 +1294,9 @@
 
         if spinTag:Length > 1
         {
-            set spinPreload to ParseStringScalar(spinTag[1], 0).
-            if spinTag:Length > 2 set spinType to ParseStringScalar(spinTag[2], 15).
-            if spinTag:Length > 3 set spinForce to ParseStringScalar(spinTag[3], 1).
+            set spinPreload to ParseStringScalar(spinTag[1], spinPreload).
+            if spinTag:Length > 2 set spinForce to ParseStringScalar(spinTag[2], spinForce).
+            if spinTag:Length > 3 set spinType to ParseStringScalar(spinTag[3], spinType).
         }
 
         if spinType = 0

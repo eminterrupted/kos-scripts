@@ -361,7 +361,8 @@
                   _pitLimMin is Ascent_AoA_Min,
                   _pitLimMax is Ascent_AoA_Max,
                   _fStop is 90,
-                  _pidChangeRate is Ascent_AoA_Max.
+                  _pidChangeRate is 0.005,
+                  _pidChangeLim is 1.
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
@@ -378,7 +379,8 @@
         local pid_Apo_ID to "TurnApo".
         // set g_PIDS[pid_Apo_ID]       to PIDLoop(0.05, 0.0075, 0.000825, -_pidChangeRate, _pidChangeRate).
         //set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 0.5, _pidChangeRate * 0.25, _pidChangeRate * 0.125, -_pidChangeRate, _pidChangeRate). 
-        set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 0.25, _pidChangeRate * 0.075, _pidChangeRate * 0.025, -_pidChangeRate, _pidChangeRate). 
+        // set g_PIDS[pid_Apo_ID]       to PIDLoop(_pidChangeRate * 0.05, _pidChangeRate * 0.025, _pidChangeRate * 0.01, -_pidChangeLim, _pidChangeLim). 
+        set g_PIDS[pid_Apo_ID]       to PIDLoop(0.0025, 0.0005, 0.00125, -_pidChangeLim, _pidChangeLim). 
         set g_PIDS[pid_Apo_ID]:Setpoint to _tgtAlt.
         
         local pid_Alt_ID to "TurnAlt".
@@ -527,6 +529,7 @@
         local apo_error         to 0.
         local current_alt       to Ship:Altitude.
         local current_apo       to Ship:Apoapsis.
+        local current_pit       to 90 - VAng(Ship:Up:Vector, Ship:Facing:Vector).
         local effective_error   to 0.
         local effective_limit   to 0.
         local effective_pitch   to 90.
@@ -593,6 +596,7 @@
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
                 set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
             }
+            else
             // else if g_MissionTag:Mission:StartsWith("PID")
             {
                 // OutDebug("In PIDLoop!").
@@ -610,8 +614,8 @@
                 }
 
                 local apo_PID to g_PIDS[_ascAngObj:APO_PID].
-                set error_pitch to 90 * (1 - apo_error).
-                set output_pitch to max(PID_AoA_Min, min(apo_PID:Update(Time:Seconds, Ship:Apoapsis), PID_AoA_Max)).
+                local pid_pitch to (apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
+                set output_pitch to max(PID_AoA_Min, min(pid_pitch, PID_AoA_Max)).
             }
             // else
             // {
@@ -993,6 +997,7 @@
             ,"Lower Safety Gate"
             ,"Open Upper Clamp"
             ,"Partial Retract Tower Step 1"
+            ,"Retract Crew Arm"
         ).
         for m in Ship:ModulesNamed("ModuleAnimateGenericExtra")
         {

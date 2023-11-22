@@ -224,12 +224,14 @@
             {
                 if Kuniverse:TimeWarp = 0 set warpFlag to False.
                 if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+                
                 GetTermChar().
+
                 wait 0.01.
-                if g_termChar = ""
+                if g_TermChar = ""
                 {
                 }
-                else if g_termChar = Char(87)
+                else if g_TermChar = Char(87)
                 {
                     if _inNode:ETA > burnLeadTime 
                     {
@@ -244,9 +246,9 @@
                     {
                         OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
                     }
-                    set g_termChar to "".
+                    set g_TermChar to "".
                 }
-                else if g_termChar = Char(82)
+                else if g_TermChar = Char(82)
                 {
                     OutInfo("Recalculating burn parameters").
                     OutInfo("", 1).
@@ -258,7 +260,35 @@
 
                     set burnEta to _inNode:time - halfDur. 
                     set g_MECO    to burnEta + fullDur.
-                    set g_termChar to "".
+                    set g_TermChar to "".
+                }
+                else if g_TermChar = Char(101)
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+                    OutInfo("Spin Right: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(69)
+                {
+                    set Ship:Control:Roll to 1.
+                    OutInfo("Spin Right: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(113)
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+                    OutInfo("Spin Left: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(81)
+                {
+                    set Ship:Control:Roll to -1.
+                    OutInfo("Spin Left: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(115)
+                {
+                    set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+                }
+                else if g_TermChar = Char(83)
+                {
+                    set Ship:Control:Roll to 0.
                 }
                 
                 if not warpFlag 
@@ -269,10 +299,10 @@
                 if burnEngsSpec:Ullage
                 {
                     set g_UllageTS to burnETA - 10.
-                    OutDebug("Ullage Armed (ETA: {0}s)":Format(Round(g_UllageTS - Time:Seconds, 2)), 4).
+                    // OutDebug("Ullage Armed (ETA: {0}s)":Format(Round(g_UllageTS - Time:Seconds, 2)), 4).
                     if Time:Seconds >= g_UllageTS
                     {
-                        OutDebug("Ullage Active", 4).
+                        // OutDebug("Ullage Active", 4).
                         set Ship:Control:Fore to 1.
                     }
                 }
