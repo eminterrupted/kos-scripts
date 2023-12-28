@@ -55,26 +55,42 @@
     global g_StageLimit to 3.
     global g_StageLimitSet to list().
     global g_StageTracker to Stage:Number.
+    global g_UllageDefault to 8.
 
     // Tags
     global g_MissionTag to lexicon().
     
-    global g_ReturnMissionList to list(
-        "DownRange"     // Guided downrange suborbital, no reentry guidance
-        ,"DownRanger"   // ^
-        ,"MaxAlt"       // Guided or unguided max altitude
-        ,"SSO"          // Unguided launch, guided reentry
-        ,"SubOrbital"   // Fully guided launch and reentry
+    global g_MissionRef to lexicon(
+        "GuidedAscent", list(
+            "DownRange"
+            ,"DownRanger"
+            ,"Orbit"
+            ,"PIDOrbit"
+            ,"SubOrbital"
+            ,"PIDSubOrbital"
+        )
+        ,"Return", list(
+            "DownRange"     // Guided downrange suborbital, no reentry guidance
+            ,"DownRanger"   // ^
+            ,"MaxAlt"       // Guided or unguided max altitude
+            ,"SSO"          // Unguided launch, guided reentry
+            ,"SubOrbital"   // Fully guided launch and reentry
+        )
+        ,"Types", list(
+            "DownRange"
+            ,"DownRanger"
+            ,"Orbit"
+            ,"MaxAlt"       // Guided or unguided max altitude
+            ,"PIDOrbit"
+            ,"PIDSubOrbital"
+            ,"Sounder"
+            ,"SSO"          // Unguided launch, guided reentry
+            ,"SubOrbital"
+        )
     ).
 
-    global g_GuidedAscentMissions to list(
-        "DownRange"
-        ,"DownRanger"
-        ,"Orbit"
-        ,"PIDOrbit"
-        ,"SubOrbital"
-        ,"PIDSubOrbital"
-    ).
+    global g_ReturnMissionList to g_MissionRef:Return.
+    global g_GuidedAscentMissions to g_MissionRef:GuidedAscent.
 
     // Terminal Metadata
     global g_Line   to 0.

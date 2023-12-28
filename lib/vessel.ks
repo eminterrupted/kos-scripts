@@ -1895,7 +1895,7 @@
     {
         // parameter _delDependency is lexicon().
         parameter _steerDelID is "Flat:Sun",
-                  _fShape    is 0.975.
+                  _fShape     is 1.075. // 0.975.
 
         local del to {}.
 
@@ -1904,28 +1904,31 @@
             set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
         }
 
-
-
         if g_AngDependency:Keys:Length = 0
         {
-            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 22.5).
+            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.00275, 0.00125, 0.0075, 1)). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
         }
 
         if _steerDelID = "Flat:Sun"
         {
-            set del to { return HEADING(compass_for(Ship, Ship:Prograde), 0, 0).}.
+            set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
         }
         else if _steerDelID = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
             // if g_Debug OutDebug("g_MissionTag:Params: {0}":Format(g_MissionTag:Params:Join(";"))).
             set del to GetAscentSteeringDelegate(g_MissionTag:Params[1], g_MissionTag:Params[0], g_AzData).
-            // set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
+            // set del to { return Heading(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
+        }
+        else if _steerDelID = "Apo:Sun"
+        {
+            RunOncePath("0:/lib/launch.ks").
+            set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Prograde), 0).}.
         }
         else if _steerDelID = "ApoErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            set del to { return HEADING(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
+            set del to { return Heading(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency), 0).}.
         }
         else if _steerDelID = "lazCalc:Sun"
         {
@@ -1934,10 +1937,11 @@
         else if _steerDelID = "PIDApoErr:Sun"
         {
             OutInfo("Transitioning to PIDApoErr:Sun guidance").
+            set g_AngDependency:RESET_PIDS to True.
             set del to { 
                 local pidPit to GetAscentAng_PIDyParty(g_AngDependency).
                 DispPIDLoopValues(g_PIDS[g_AngDependency:APO_PID]).
-                return HEADING(l_az_calc(g_azData), pidPit, 0).
+                return Heading(l_az_calc(g_azData), pidPit, 0).
             }.
         }
         
@@ -1954,7 +1958,7 @@
         } 
         else
         {
-            set s_Val to HEADING(90, 88, 0).
+            set s_Val to Heading(90, 88, 0).
         }
     }
     // #endregion

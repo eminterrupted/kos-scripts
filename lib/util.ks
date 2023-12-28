@@ -282,56 +282,60 @@
         global function UpdateTermScalar
         {
             parameter _scalar,
-                      _intList is list(1, 5, 15, 30).
+                      _stepList is list(1, 5, 15, 30),
+                      _allowFreeEntry to False.
         
             local scalarVal to _scalar.
 
-            OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format(_intList[3], _intList[2], _intList[1], _intList[0])).
+            OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format(_stepList[3], _stepList[2], _stepList[1], _stepList[0])).
             OutInfo(" {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ":Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
 
             local maxValFlag to False.
             local maxValIndicator to "".
+            local freeTermEntryStr to _scalar:ToString.
+
+            OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
             
             local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
 
             if g_TermChar = Terminal:Input:DownCursorOne
             {
-                set scalarVal to scalarVal - _intList[0].
+                set scalarVal to scalarVal - _stepList[0].
                 set keyMapActiveStr to " {0} | {1} | {2} |[{3}]| {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:UpCursorOne
             {
-                set scalarVal to scalarVal + _intList[0].
+                set scalarVal to scalarVal + _stepList[0].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} |[{5}]| {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:LeftCursorOne
             {
-                set scalarVal to scalarVal - _intList[1].
+                set scalarVal to scalarVal - _stepList[1].
                 set keyMapActiveStr to " {0} | {1} |[{2}]| {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = Terminal:Input:RightCursorOne
             {
-                set scalarVal to scalarVal + _intList[1].
+                set scalarVal to scalarVal + _stepList[1].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
             }
             else if g_TermChar = "("
             {
-                set scalarVal to scalarVal - _intList[2].
+                set scalarVal to scalarVal - _stepList[2].
                 set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = ")"
             {
-                set scalarVal to scalarVal + _intList[2].
+                set scalarVal to scalarVal + _stepList[2].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
             }
             else if g_TermChar = "{"
             {
-                set scalarVal to scalarVal - _intList[3].
+                set scalarVal to scalarVal - _stepList[3].
                 set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
             }
             else if g_TermChar = "}"
             {
-                set scalarVal to scalarVal + _intList[3].
+                set scalarVal to scalarVal + _stepList[3].
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".
             }
             else if g_TermChar = "0"
@@ -339,12 +343,228 @@
                 set scalarVal to 0.
                 set keyMapActiveStr to " {0} | {1} | {2} | {3} |[{4}]| {5} | {6} | {7} | {8} ".
             }
+            else if g_TermChar = "+" and _allowFreeEntry
+            {
+                local __doneFlag to False.
+                set g_TermChar to "".
+                Terminal:Input:Clear.
+                OutInfo(" Free Entry: [{0,-32}]":format(freeTermEntryStr), 2).
+                until __doneFlag
+                {
+                    GetTermChar().
+                    if g_TermChar:Length > 0
+                    {
+                        if g_TermChar = Terminal:Input:Backspace 
+                        {
+                            set freeTermEntryStr to freeTermEntryStr:Substring(0,freeTermEntryStr:Length).
+                        }
+                        else if g_TermChar = Terminal:Input:Enter
+                        {
+                            set __doneFlag to True.
+                            set scalarVal to freeTermEntryStr:ToNumber(-1).
+                            OutInfo(" Set Value: [{0,-32}] ":format(scalarVal), 2).
+                        }
+                        else
+                        {
+                            set freeTermEntryStr to freeTermEntryStr + g_TermChar.
+                        }
+                        OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
+
+                        set g_TermChar to "".
+                        Terminal:Input:Clear.
+                    }
+                }
+            }
             set g_TermChar to "".
             set maxValIndicator to choose "*" if maxValFlag else "".
 
             OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
 
             return scalarVal.
+        }
+
+
+        global function UpdateTermString
+        {
+            parameter _string,
+                      _validation is list(),
+                      _allowFreeEntry is True.
+        
+            local strVal to _string.
+
+            OutInfo("Updating string. Current value:  [{0,-21}]":format(_string)).
+            local __doneFlag to False.
+            set g_TermChar to "".
+            Terminal:Input:Clear.
+            
+            until __doneFlag
+            {
+                OutInfo("                     New value:  [{0,-21}]":format(strVal), 1).
+                GetTermChar().
+                if g_TermChar:Length > 0
+                {
+                    if g_TermChar = Terminal:Input:Backspace 
+                    {
+                        set strVal to strVal:Substring(0,strVal:Length).
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        if _validation:Length > 0
+                        {
+                            if _validation:Contains(strVal)
+                            {
+                                OutInfo("String Updated!                           ").
+                                OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                set __doneFlag to True.
+                            }
+                            else
+                            {
+                                OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
+                                OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                            }
+                        }
+                        else
+                        {
+                            OutInfo("String Updated!                           ").
+                            OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                            set __doneFlag to True.
+                        }
+                    }
+                    else if _allowFreeEntry
+                    {
+                        set strVal to strVal + g_TermChar.
+                    }
+                    else
+                    {
+
+                    }
+
+                    set g_TermChar to "".
+                    Terminal:Input:Clear.
+                }
+                wait 0.01.
+            }
+
+            return strVal.
+        }
+
+        // Yup
+        global function ReturnSelectionIdxFromList
+        {
+            parameter _inList is list(),
+                      _selectedItemIdx is -1.
+
+            local _line to 42.
+            set g_Line to _line.
+            
+            print _inList[0] at (2, g_Line).
+            local _sep to "".
+            for s in Range(0, _inList[0]:Length, 1)
+            {
+                set _sep to _sep + "=".
+            }
+            print _sep at (2, cr(g_Line)).
+            local st_line to _line + 1.
+
+            OutMsg("Choose one item by number").
+            OutInfo("Press enter to confirm").
+            OutInfo(" ** - Selection", 1).
+            local termCharNumber to -1234.
+            until false
+            {
+                GetTermChar().
+                
+                from { local i to 0.} until i >= _inList:Length step { set i to i + 1.} do
+                {
+                    local itemStr to choose "[** {0,2}] - [{1,-42}]" if i = _selectedItemIdx else "[{0,5}] - [{1,-42}]".
+                    print itemStr:format(i, _inList[i]) at (4, st_Line + i).
+                }
+                
+                if g_TermChar:Length > 0
+                {
+                    set termCharNumber to g_TermChar:ToNumber(-1234).
+                    if termCharNumber <> -1234
+                    {
+                        if termCharNumber >= 1 and termCharNumber <= _inList:Length
+                        set _selectedItemIdx to termCharNumber.
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        return i.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        return _selectedItemIdx.
+                    }
+                    else
+                    {
+                        OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
+                        wait 0.5.
+                        OutInfo("Press enter to confirm").
+                    }
+                }
+            }
+        }
+
+        // This assumes a list of lexicons, where the lex key is the display name, and the value is the actual value
+        global function ReturnSelectionIdxFromLabelledList
+        {
+            parameter _inList is list(),
+                      _selectedItemIdx is -1.
+
+            OutMsg("Choose one item by number").
+            OutInfo("Press enter to confirm").
+            OutInfo(" ** - Not Done", 2).
+            local termCharNumber to -1234.
+
+            local doneFlag to False.
+            local newSelection to -1.
+            local selection to _selectedItemIdx.
+
+            DispLaunchConfigData(_inList, _selectedItemIdx).
+            until doneFlag
+            {
+                GetTermChar().
+                OutInfo(" ** - {0}":Format(g_TermChar), 2).
+                if g_TermChar:Length > 0
+                {
+                    set termCharNumber to g_TermChar:ToNumber(-1234).
+                    if termCharNumber <> -1234
+                    {
+                        if termCharNumber >= 1 and termCharNumber <= _inList:Length
+                        set newSelection to termCharNumber.
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        if newSelection >= 0 
+                        {
+                            set selection to newSelection.
+                        }
+                        else
+                        {
+                            set selection to _selectedItemIdx.
+                        }
+                        set doneFlag to True.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        set selection to _selectedItemIdx.
+                    }
+                    else
+                    {
+                        OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
+                        wait 0.75.
+                        OutInfo("Press enter to confirm").
+                    }
+                    set g_TermChar to "".
+                }
+
+                DispLaunchConfigData(_inList, selection).
+                
+            }
+            ClearDispBlock().
+            set g_TermChar to "".
+            return selection.
         }
 
     // #endregion
@@ -699,30 +919,6 @@
                     parsedTagObject:StgStopSet:Add(stageID).
                 }
                 set parsedStageStop to parsedTagObject:StgStopSet[0]:ToNumber(-1).
-                // from { local i to 0.} until i = tempStopSplit:Length step { set i to i + 1.} do
-                // {
-                //     local s to tempStopSplit[i].
-                //     if s:Contains(":")
-                //     {
-                //         local splitStopPair to s:Split(":").
-                //         set newStopStage     to splitStopPair[0]:ToNumber(-1).
-                //         set stageExitGate to splitStopPair[1].
-                //     }
-                //     else
-                //     {
-                //         set newStopStage to s:ToNumber(-1).
-                //         set stageExitGate    to "NE".
-                //     }
-
-                //     local gateDelegate to GetTimestampDelegate(stageExitGate).
-                    
-                //     if i = 0 set parsedStageStop to newStopStage.
-                //     set parsedTagObject["STGSTOPSET"][stopIdx] to lexicon(
-                //         "C",  gateDelegate
-                //         ,"S", newStopStage
-                //     ).
-                //     set stopIdx to stopIdx + 1.
-                // }
             }
             else
             {
@@ -748,12 +944,7 @@
             {
                 set prmSplit to parsedTag[1]:Split(";"). 
                 if prmSplit:Length > 0
-                {
-                    // if prmSplit:Length = 1 
-                    // { 
-                    //     set prmSplit to parsedTag[1]:Split(","). 
-                    // }
-                
+                {               
                     set prmSet to list().
                     from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
                     {
@@ -868,6 +1059,31 @@
             }
         }
         return scalar_result.
+    }
+
+    // ParseScalarShortString :: _inScalar<scalar> -> <String>
+    // Converts a number to a shorthand string (i.e., 250000 to "250km")
+    global function ParseScalarShortString
+    {
+        parameter _inScalar.
+        
+        if _inScalar < 10000
+        {
+            return _inScalar:ToString.
+        }
+        else if _inScalar < 10000000
+        {
+            return "{0}Km":Format(Round(_inScalar / 1000, 2)).
+        }
+        else if _inScalar < 1000000000
+        {
+            return "{0}Mm":Format(Round(_inScalar / 1000000, 2)).
+        }
+        else if _inScalar <  10000000000
+        {
+            return "{0}Gm":Format(Round(_inScalar / 1000000000, 2)).
+        }
+        else return _inScalar:ToString.
     }
 
 

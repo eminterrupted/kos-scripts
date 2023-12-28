@@ -12,8 +12,8 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
-    global g_TermHeight to 64.
-    global g_TermWidth  to 72.
+    global g_TermHeight to 72.
+    global g_TermWidth  to 80.
     global g_TermSize to g_TermHeight + g_TermWidth.
 
     // #endregion
@@ -37,8 +37,8 @@
     local  l_GridSpaceLex to lexicon().
     local  l_LastAssignedBlock to 0.
     local  l_MaxAvailGridIdx to 0.
-    local  l_Col0Size to list(68, 4).
-    local  l_Col1Size to list(Floor(l_Col0Size[0] / 2), 16).
+    local  l_Col0Size to list(g_TermWidth - 4, 4).
+    
 
     local l_InputMappings_D_Idx to 0.
     local l_InputMappings_D_Vals to list(
@@ -194,7 +194,7 @@
                   //_teeHUD is False. TODO: implement TeeHud function
 
         local msg_line to 8.
-        local msg_str to "".
+        local msg_str to " ".
         if _str:length > 0
         {
             if _errLvl < 1
@@ -218,7 +218,7 @@
         }
         else
         {
-            print _str:PadRight(Terminal:Width - 1) at (1, msg_line).
+            print msg_str:PadRight(Terminal:Width - 1) at (1, msg_line).
         }
     }
 
@@ -245,7 +245,7 @@
             {
                 for idx in list(0, 1, 2)
                 {
-                    print _str:PadRight(Terminal:Width - 2) at (2, line + idx).
+                    print " ":PadRight(Terminal:Width - 2) at (2, line + idx).
                 }
             }
         }
@@ -296,8 +296,8 @@
     // it requires passing them all in via a telemetry-formatted lex
     global function DispAscentAngleStats
     {
-        parameter _dispBlockIdx is -1,
-                  _statLex is lexicon().
+        parameter _statLex is lexicon(),
+                  _dispBlockIdx is -1.
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
@@ -469,6 +469,7 @@
             ,"THRUST         : {0,9}kn":format(round(_statLex["Thrust"], 2))
             ,"THRUST (AVAIL) : {0,9}kn":format(round(_statLex["ThrustAvailPres"], 2))
             ,"THRUST (PCT)   : {0,9}% ":format(round(_statLex["ThrustPct"] * 100, 2))
+            ,"TWR            : {0,9}  ":format(round(_statLex["TWR"], 2))
             ,"BURN TIME (EST): {0,9}s ":format(trStr)
         ) if g_ActiveEngines_Data:HasKey("Thrust") 
         else list(
@@ -480,10 +481,51 @@
             ,"THRUST         : {0}":format("NUL")
             ,"THRUST (AVAIL) : {0}":format("NUL")
             ,"THRUST (PCT)   : {0}":format("NUL")
+            ,"TWR            : {0}":format("NUL")
             ,"BURN TIME (EST): {0}":format(trStr)
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
+    // DispLaunchConfigData :: 
+    //
+    global function DispLaunchConfigData
+    {
+        parameter _configData is list(),
+                  _selectionIdx is -1,
+                  _dispBlockIdx is -1.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+        }
+
+        if _configData:Length > 0
+        {
+            if _dispBlockIdx < 0
+            {
+                set _dispBlockIdx to NextOrAssignedTermBlock("LAUNCH_CONFIG").
+            }
+
+            local dispList to list("LAUNCH CONFIG DATA").
+
+            from { local i to 0.} until i = _configData:Length step { set i to i + 1.} do
+            {
+                local listStr to choose "**{0,13}: {1}" if i = _selectionIdx else "{0,15}: {1}".
+                dispList:Add(listStr:Format(_configData[i]:Keys[0], _configData[i]:Values[0])).
+            }
+            // local dispList to list(
+            //     "LAUNCH CONFIG DATA"
+            //     ,"MissionType : {0}":format(_configData[0]:MissionType)
+            //     ,"Apoapsis    : {0}":format(Round(_configData[0]:tgtAp))
+            //     ,"Periapsis   : {0}":format(Round(_configData[1]:tgtPe))
+            //     ,"Inclination : {0}":format(Round(_configData[2]:tgtInc))
+            //     ,"Stage Limits: {0}":format(_configData[3]:StageLimits)
+            // ).
+
+            DispPrintBlock(_dispBlockIdx, dispList).
+        }
     }
 
     // DispLaunchTelemetry :: [(_dispBlockIdx)<none>] -> <none>
@@ -521,10 +563,11 @@
     // Prints the main terminal header, and returns the next available line for printing
     global function DispMain
     {
-        parameter _currentProcess is g_MainProcess,
-                  _initTerm is True,
-                  _termWidth is g_TermWidth,
-                  _termHeight is g_TermHeight.
+        parameter _currentProcess   is g_MainProcess,
+                  _initTerm         is True,
+                  _termWidth        is g_TermWidth,
+                  _termHeight       is g_TermHeight,
+                  _numDataColumns   is 2.
 
         if _currentProcess:IsType("Path") 
         {
@@ -532,6 +575,8 @@
         }
         set _currentProcess to _currentProcess:Replace("0:/main", "").
         
+        local  dataColSize to list(Floor(l_Col0Size[0] / _numDataColumns), 20).
+
         if _initTerm
         {
             set Terminal:Width to Max(l_Col0Size[0] + 4, _termWidth).
@@ -563,7 +608,7 @@
         
         DispTermGrid(10, l_Col0Size[0], l_Col0Size[1], 1, True).
         set g_GridAssignments[0] to "MAIN".
-        DispTermGrid(g_Line, l_Col1Size[0], l_Col1Size[1], 2, False).
+        DispTermGrid(g_Line, dataColSize[0], dataColSize[1], _numDataColumns, False).
 
         return g_Line.
     }
@@ -581,19 +626,19 @@
 
         if _dispBlockIdx < 0
         {
-            set _dispBlockIdx to NextOrAssignedTermBlock("REENTRY_TELEMETRY").
+            set _dispBlockIdx to NextOrAssignedTermBlock("PID_VALUES").
         }
 
         local dispList to list(
             "PID VALUES"
-            ,"KP | KI | KD", "{0} | {1} | {2}":Format(_PID:KP, _PID:KI, _PID:KD)
-            ,"MIN | MAX", "{0} | {1}":Format(_PID:MinOutput, _PID:MaxOutput)
-            ,"SETPOINT", _PID:Setpoint
-            ,"LAST OUTPUT", _PID:Output
-            ,"LAST ERROR", _PID:Error
-            ,"ERROR SUM", _PID:ErrorSum
-            ,"TERM [P | I | D]", "{0} | {1} | {2}":format(_PID:PTerm,  _PID:ITerm, _PID:DTerm)
-            ,"CHANGE RATE", Round(_PID:ChangeRate, 3) 
+            ,"KP/KI/KD   : {0}/{1}/{2}":Format(_PID:KP, _PID:KI, _PID:KD)
+            ,"MIN/ MAX   : {0}/{1}":Format(_PID:MinOutput, _PID:MaxOutput)
+            ,"SETPOINT   : {0}  ":Format(_PID:Setpoint)
+            ,"LAST OUTPUT: {0}  ":Format(Round(_PID:Output, 5))
+            ,"LAST ERROR : {0}  ":Format(Round(_PID:Error, 5))
+            ,"ERROR SUM  : {0}  ":Format(Round(_PID:ErrorSum, 5))
+            ,"CHANGE RATE: {0}  ":Format(Round(_PID:ChangeRate, 3))
+            ,"TERM[P/I/D]: {0}/{1}/{2}":Format(Round(_PID:PTerm, 5), Round(_PID:ITerm, 5), Round(_PID:DTerm, 5))
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).

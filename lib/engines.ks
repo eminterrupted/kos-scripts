@@ -703,9 +703,9 @@
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
         local averageResiduals      to 0.
-        // local aggTWR             to 0.
         local thrustPct             to 0.
         local totalFuelMass         to 0.
+        local twr                   to 0.
         local aggFailureObj         to lexicon().
 
         local burnTimeRemaining     to 999999999.
@@ -807,6 +807,8 @@
                 set burnTimeRemaining to Min(burnTimeRemaining, _bt).
             }
         }
+
+        set twr to choose 0 if aggThrust = 0 else aggThrust / Ship:Mass * GetLocalGravity().
         
         // set burnTimeRemaining to choose -1 if aggMassFlow <= 0 or totalUsableFuelMass <= 0 else totalUsableFuelMass / aggMassFlow.
 
@@ -823,6 +825,7 @@
         set aggEngPerfObj["ThrustAvailPres"]     to aggThrustAvailPres.
         set aggEngPerfObj["ThrustPct"]           to thrustPct.
         set aggEngPerfObj["TotalUsableFuelMass"] to totalFuelMass.
+        set aggEngPerfObj["TWR"]                 to twr.
 
         // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
 

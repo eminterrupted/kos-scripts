@@ -50,47 +50,97 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Miss
     // local tgtAp to Ship:Apoapsis. // Ship:Body:ATM:Height + 25000.
     // local tgtPe to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 else tgtAp.
     
-    local tagSplit to Core:Part:Tag:Split("|").
-    if tagSplit:Length > 2
+    if tgtEcc > -1
     {
-        local tagParam to tagSplit[1]:Split(";").
-        if tagParam:Length > 2
+        // Set tgtAp to current Apoapsis; no sense in basing calculations of ideal vs reality
+        local tgtApTagStr to ParseScalarShortString(tgtAp).
+        set tgtAp to Round(Ship:Apoapsis).
+
+        if tgtEcc < 0
         {
-            local p2 to ParseStringScalar(tagParam[2]).
-            if p2 <= 1
-            {
-                set tgtEcc to p2.
-                if tgtEcc < 0
-                {
-                    set tgtPe to GetPeFromApEcc(tgtAp, abs(p2), Ship:Body).
-                }
-                else
-                {
-                    set tgtPe to Ship:Apoapsis.
-                    set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
-                }
-            }
-            else if p2 > Ship:Apoapsis
-            {
-                set tgtAp to p2.
-                set tgtPe to Ship:Apoapsis.
-            }
-            else
-            {
-                set tgtAp to Ship:Apoapsis.
-                set tgtPe to p2.
-            }
+            set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
         }
         else
         {
-            set tgtAp to ParseStringScalar(tagParam[1]).
             set tgtPe to tgtAp.
-            if tgtAp <= Ship:Apoapsis
-            {
-                set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
-            }
+            set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
         }
+
+        local curApTagStr to ParseScalarShortString(tgtAp).
+        local curPeTagStr to ParseScalarShortString(tgtPe).
+        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtEcc:ToString, curPeTagStr).
+
+        // Adjust make the changes to g_missionTag:Params
+        set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
     }
+    else
+    {
+        local tgtApTagStr to ParseScalarShortString(tgtAp).
+        local tgtPeTagStr to choose "-09876" if tgtPe < 0 else ParseScalarShortString(tgtPe).
+        
+        if tgtPe > Ship:Apoapsis
+        {
+            set tgtAp to tgtPe.
+            set tgtPe to Ship:Apoapsis.
+        }
+        else if tgtPe > 100000
+        {
+            // set tgtAp to Ship:Apoapsis.
+            // set tgtPe to tgtPe.
+        }
+        else
+        {
+            set tgtAp to Ship:Apoapsis.
+            set tgtPe to 175000.
+        }
+
+        local curApTagStr to ParseScalarShortString(tgtAp).
+        local curPeTagStr to ParseScalarShortString(tgtPe).
+        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtPeTagStr, curPeTagStr).
+    }
+    set g_MissionTag to ParseCoreTag(Core:Tag).
+
+    // local tagSplit to Core:Part:Tag:Split("|").
+    // if tagSplit:Length > 2
+    // {
+    //     local tagParam to tagSplit[1]:Split(";").
+    //     if tagParam:Length > 2
+    //     {
+    //         local p2 to ParseStringScalar(tagParam[2]).
+    //         if p2 <= 1
+    //         {
+    //             set tgtEcc to p2.
+    //             if tgtEcc < 0
+    //             {
+    //                 set tgtPe to GetPeFromApEcc(tgtAp, abs(p2), Ship:Body).
+    //             }
+    //             else
+    //             {
+    //                 set tgtPe to Ship:Apoapsis.
+    //                 set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
+    //             }
+    //         }
+    //         else if p2 > Ship:Apoapsis
+    //         {
+    //             set tgtAp to p2.
+    //             set tgtPe to Ship:Apoapsis.
+    //         }
+    //         else
+    //         {
+    //             set tgtAp to Ship:Apoapsis.
+    //             set tgtPe to p2.
+    //         }
+    //     }
+    //     else
+    //     {
+    //         set tgtAp to ParseStringScalar(tagParam[1]).
+    //         set tgtPe to tgtAp.
+    //         if tgtAp <= Ship:Apoapsis
+    //         {
+    //             set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
+    //         }
+    //     }
+    // }
 
     if Career():CanMakeNodes 
     {

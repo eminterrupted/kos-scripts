@@ -262,31 +262,31 @@
                     set g_MECO    to burnEta + fullDur.
                     set g_TermChar to "".
                 }
-                else if g_TermChar = Char(101)
+                else if g_TermChar = Char(101) // 'e'
                 {
                     set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
                     OutInfo("Spin Right: " + Ship:Control:Roll).
                 }
-                else if g_TermChar = Char(69)
+                else if g_TermChar = Char(69) // 'E'
                 {
                     set Ship:Control:Roll to 1.
                     OutInfo("Spin Right: " + Ship:Control:Roll).
                 }
-                else if g_TermChar = Char(113)
+                else if g_TermChar = Char(113) // 'q'
                 {
                     set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
                     OutInfo("Spin Left: " + Ship:Control:Roll).
                 }
-                else if g_TermChar = Char(81)
+                else if g_TermChar = Char(81) // 'Q'
                 {
                     set Ship:Control:Roll to -1.
                     OutInfo("Spin Left: " + Ship:Control:Roll).
                 }
-                else if g_TermChar = Char(115)
+                else if g_TermChar = Char(115) // s
                 {
                     set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
                 }
-                else if g_TermChar = Char(83)
+                else if g_TermChar = Char(83) // S
                 {
                     set Ship:Control:Roll to 0.
                 }
@@ -298,7 +298,7 @@
 
                 if burnEngsSpec:Ullage
                 {
-                    set g_UllageTS to burnETA - 10.
+                    set g_UllageTS to burnETA - g_UllageDefault.
                     // OutDebug("Ullage Armed (ETA: {0}s)":Format(Round(g_UllageTS - Time:Seconds, 2)), 4).
                     if Time:Seconds >= g_UllageTS
                     {

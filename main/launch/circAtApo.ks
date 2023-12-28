@@ -30,14 +30,18 @@ set g_MissionTag to ParseCoreTag(Core:Part:Tag).
 local azData    to g_azData.
 local tgtAp     to Ship:Apoapsis.
 local tgtPe     to Ship:Apoapsis.
+local tgtInc    to g_MissionTag:Params[0].
+local transferBurn to False.
 
 if g_MissionTag:Params:Length > 2
 {
+    if g_MissionTag:Params[2] > tgtAp * 1.1 set transferBurn to True.
     set tgtAp to g_MissionTag:Params[2].
 }
 
 if params:length > 0
 {
+    if params[0] > tgtAp * 1.1 set transferBurn to True.
     set tgtAp to params[0].
     if params:length > 1 set tgtPe to params[1].
     if params:length > 2 set azData to params[2].
@@ -45,12 +49,13 @@ if params:length > 0
 
 if azData:Length = 1
 {
-    set azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], azData[0]).
+    set azData to l_az_calc_init(tgtAp, tgtInc, azData[0]).
 }
 else if azData:Length = 0
 {
-    set azData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0], Ship:Latitude).
+    set azData to l_az_calc_init(tgtAp, tgtInc, Ship:Latitude).
 }
+set g_AngDependency to InitAscentAng_Next(tgtInc, tgtAp, 1, 2.5, 22.5, True, list(0.005, 0.002, 0.0015, 1)). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
 //local dvNeeded to CalcDvHoh(Ship:Periapsis, 0, Ship:Apoapsis, Ship:Body)[0].
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, Ship:Apoapsis, "PE")[1].
@@ -68,6 +73,10 @@ local mecoTS to burnTS + burnDur[1].
 local burnLeadTime to 15.
 local warpToTS to burnTS - burnLeadTime.
 
+set g_ActiveEngines to GetActiveEngines().
+set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+
 set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun", 0.9925).
 
 OutMsg("Waiting until timestamp").
@@ -78,7 +87,7 @@ lock steering to s_Val.
 
 local warpFlag to False.
 
-until Time:Seconds >= burnTS - 5
+until Time:Seconds >= burnTS - g_UllageDefault
 {
     // set s_Val to heading(compass_for(Ship, Ship:Prograde), 0, 0).
     GetTermChar().
@@ -157,7 +166,7 @@ ArmAutoStagingNext(g_StageLimit, 1, 2).
 wait 0.01.
 set Ship:Control:Fore to 0.
 
-set g_SteeringDelegate to GetOrbitalSteeringDelegate("PIDApoErr:Sun").
+set g_SteeringDelegate to choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
 
 local rollFlag to false.
 local doneFlag to false.
@@ -267,7 +276,7 @@ until MECOFlag or doneFlag
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_ActiveEngines_Data:HasKey("Thrust") 
     {
-        if g_ActiveEngines_Data:Thrust <= 0.01
+        if g_ActiveEngines_Data:Thrust <= 0.01 and g_ActiveEngines:Length > 0
         {
             if g_Debug { OutDebug("g_ActiveEngines_Data:Thrust ({0}) < 0.01":Format(g_ActiveEngines_Data:Thrust), 5).}
             set MECOFlag to true.

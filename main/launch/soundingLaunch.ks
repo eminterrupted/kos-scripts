@@ -18,6 +18,11 @@ local _tgtInc        to 0.
 local _tgtPe         to -1.
 local _azObj         to g_AzData.
 
+if defined g_MissionTag
+{
+    if g_MissionTag:Keys:Length = 0 set g_MissionTag to ParseCoreTag().
+}
+
 if g_MissionTag:Params:Length > 0
 {
     set _tgtInc to g_MissionTag:Params[0].
@@ -46,6 +51,7 @@ if _tgtPe < 0
 wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.50)).
 
+local launchConfig to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
 PreLaunchInit().
 
 OutMsg("Waiting for launch command").
@@ -59,6 +65,8 @@ local launchChars to list(
 ).
 
 local launchCommit to False.
+local reInitLaunchConfig to False.
+local updateConfig to False.
 until launchCommit
 {
     local idx to Mod(Round(Time:Seconds - g_TS), launchChars:Length).
@@ -75,12 +83,47 @@ until launchCommit
     {
         set launchCommit to True.
     }
-    else if g_TermChar = Terminal:Input:HomeCursor
+
+    // #TODO : Figure out UpdateLaunchConfig
+    // else if g_TermChar = Terminal:Input:Backspace
+    // {
+    //     // Provide a UI for updating values in tag
+    //     OutMsg("Update launch configuration? (Press [Y / N])").
+    //     OutInfo("", -1).
+        
+    //     set g_TermChar to "".
+    //     Terminal:Input:Clear.
+
+    //     until g_TermChar:Length > 0
+    //     {
+    //         GetTermChar().
+    //         wait 0.01.
+    //         // OutDebug("g_TermChar: {0}":Format(g_TermChar)).
+    //     }
+
+    //     if g_TermChar:MatchesPattern("(Y|y)")
+    //     {
+    //         OutInfo("* Y *").
+    //         set updateConfig to True.
+    //     }
+    //     else if g_TermChar:MatchesPattern("(N|n)")
+    //     {
+    //         OutInfo("* N *").
+    //         set updateConfig to False.
+    //     }
+    // }
+    // if updateConfig
+    // {
+    //     set reInitLaunchConfig to UpdateLaunchConfig().
+    // }
+    
+    if g_TermChar = Terminal:Input:HomeCursor or reInitLaunchConfig
     {
         OutMsg("Reinitializing launch configuration").
         print " ":PadRight(Terminal:Width) at (0, Terminal:Height - 5).
 
         PreLaunchInit().
+        set reInitLaunchConfig to False.
         wait 0.25.
         OutInfo().
         OutMsg("Waiting for launch command").

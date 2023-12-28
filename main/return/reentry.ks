@@ -11,6 +11,8 @@ DispMain().
 
 SAS off.
 
+local presLog to "0:/data/log/Earth_Pressure.csv".
+
 local chuteStatus to "N/A".
 local fairings to ship:PartsTaggedPattern("fairing\|reentry").
 local jettAlt to 5000.
@@ -61,6 +63,8 @@ wait 3.
 
 local mode to "descent".
 local doneFlag to choose false if Ship:VerticalSpeed > 0 else true.
+
+LogPressure(True).
 
 if retroFire
 {
@@ -296,6 +300,10 @@ until ship:altitude <= startAlt
     }
     set g_TermChar to "".
     DispReentryTelemetry().
+    // if Ship:Altitude <= Body:ATM:Height
+    // {
+        LogPressure().
+    // }
 }
 
 if warp > 0 set warp to 0.
@@ -347,7 +355,7 @@ if parachutes:length > 0
         }
     }
 }
-wait 1.
+wait 0.05.
 
 // Science data collection
 local dataDrive to Core:Part.
@@ -358,7 +366,7 @@ if Ship:PartsNamedPattern("SampleReturnCapsule"):Length > 0
 local sciTransferResult to TransferSciData(Core:Part).
 if sciTransferResult
 {
-    wait 2.
+    wait 0.25.
 }
 else
 {
@@ -390,6 +398,14 @@ until proAng <= 1 and angDiff <= 0.250 or doneFlag
     {
         set doneFlag to True.
     }
+    if Ship:ModulesNamed("ModuleRCSFX"):Length = 0
+    {
+        set doneFlag to True.
+    }
+    if Ship:Altitude <= Body:ATM:Height
+    {
+        LogPressure().
+    }
 }
 set doneFlag to False.
 
@@ -400,8 +416,11 @@ if stage:number > 1
     until stage:number <= 1 
     {
         stage.
-        wait 5.
+        wait 2.5.
     }
+    set Ship:Control:Fore to 1.
+    wait 2.5.
+    set Ship:Control:Fore to 0.
 }
 
 OutMsg("Waiting for reentry interface").
@@ -475,9 +494,10 @@ until ship:groundspeed <= 1500 and ship:altitude <= 20000
     set g_TermChar to "".
     
     // set s_Val to ship:SrfRetrograde.
+    LogPressure().
     DispReentryTelemetry().
 }
-wait 1.
+wait 0.05.
 
 if gemBDBChute:UID <> Core:Part:UID DoEvent(gemBDBChute:GetModule("ModuleDecouple"), "decouple").
 unlock steering.
@@ -485,6 +505,7 @@ OutMsg("Control released | Parachute Status: [{0}]":Format(chuteStatus)).
 
 until ALT:RADAR <= jettAlt
 {
+    LogPressure().
     DispReentryTelemetry().
 }
 
@@ -500,6 +521,7 @@ LIGHTS on.
 
 until alt:radar <= 500
 {
+    LogPressure().
     DispReentryTelemetry().
 }
 
@@ -519,6 +541,7 @@ if aniMods:Length > 0
 
 until alt:radar <= 25
 {
+    LogPressure().
     DispReentryTelemetry().
 }
 if Kuniverse:Timewarp:Warp > 0 
@@ -527,9 +550,34 @@ if Kuniverse:Timewarp:Warp > 0
 }
 until alt:radar <= 5
 {
+    LogPressure().
     DispReentryTelemetry().
 }
 OutMsg("Preparing for recovery").
 wait 1.
 
 TryRecoverVessel(Ship, 30).
+
+local function LogPressure
+{
+    parameter _init is False.
+
+    return False.
+}
+//     if _init
+//     {
+//         if Exists(Volume(0)) Log "MissionName,MissionTime,Altitude,Pressure(Atm),Pressure(kPa)" to presLog.
+//     }
+//     else
+//     {
+//         local pres to Ship:Body:ATM:AltitudePressure(Ship:Altitude).
+//         if HomeConnection:IsConnected
+//         {
+//             wait 0.01.
+//             if Exists(Volume(0)) 
+//             {
+//                 Log "{0},{1},{2},{3},{4}":Format(Ship:Name, Round(MissionTime, 3), Round(Ship:Altitude, 2), Round(pres, 8), Round(pres * Constant:atmtokpa, 8)) to presLog.
+//             }
+//         }
+//     }
+// }

@@ -252,4 +252,18 @@
         }
     }
     // #endregion
+
+    // Situational Parameter Calculations
+    // #region
+
+    // GetLocalGrav :: [_body<Orbitable>], [_alt<Scalar>] -> <scalar>
+    // Returns the local gravity given an orbitable and an altitude above it. Defaults to current vessel position.
+    global function GetLocalGravity
+    {
+        parameter _body is Ship:Body,
+                  _alt is Ship:Altitude.
+
+        return (Constant:g * _body:Mass) / (_body:radius + _alt)^2.
+    }
+    // #endregion
 // #endregion
