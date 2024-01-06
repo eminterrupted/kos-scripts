@@ -148,6 +148,7 @@
 
             local resultCode to 0.
             set g_StageLimit to _stgLimit.
+
             if Stage:Number <= _stgLimit
             {
                 set resultCode to 2.
@@ -403,12 +404,14 @@
             // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
             // {
                 // local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
-                // local boundCondition to condition:BIND(Ship, 0.1).
+                // local boundCondition to condition:BIND(Ship, _checkVal).
                 // return boundCondition.
-                return GetShipThrustConditionDelegate(Ship, _checkVal).
+                local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
+                return condition.
             // }
             // else if _checkType = 1
             // {
+                
             // }
         }
 
@@ -422,7 +425,8 @@
                 parameter __ves is _ves, checkVal is _checkVal. 
                 
                 //if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
-                if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
+                // if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
+                if __ves:AvailableThrust < checkVal and throttle > 0 // and Stage:Number > g_StageLimit
                 { 
                     // OutDebug("[{0}] StagingCheckDel TRUE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 1).
                     return 1.
@@ -459,21 +463,29 @@
             local StageResult to False.
             local FuelStabilityMin to 0.98.
 
-            set g_NextEngines to GetNextEngines().
+            set g_NextEngines       to GetNextEngines().
             
             if g_NextEngines:Length > 0 
             {
-                if g_NextEngines[0]:Stage < Stage:Number - 1 or not g_NextEngines[0]:Ullage
+                set g_NextEngines_Spec  to GetEnginesSpecs(g_NextEngines).
+                if g_NextEngines_Spec:Ullage
                 {
-                    set StageResult to true.
+                    if g_NextEngines[0]:Stage < Stage:Number
+                    {
+                        set StageResult to true.
+                    }
+                    else
+                    {
+                        local FuelStability to GetEngineFuelStability(g_NextEngines).
+                        OutInfo("Fuel Stability Rating (Min/Avg): {0} / {1})":format(round(FuelStability[0], 2), round(FuelStability[1], 2))). 
+                        
+                        set StageResult to FuelStability[0] >= FuelStabilityMin. 
+                    }
                 }
-                else
-                {
-                    local FuelStability to GetEngineFuelStability(g_NextEngines).
-                    OutInfo("Fuel Stability Rating (Min/Avg): {0} / {1})":format(round(FuelStability[0], 2), round(FuelStability[1], 2))). 
-                    
-                    set StageResult to FuelStability[0] >= FuelStabilityMin. 
-                }
+            }
+            else
+            {
+                
             }
 
             if StageResult

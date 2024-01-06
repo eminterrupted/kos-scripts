@@ -668,12 +668,12 @@
                     set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
                 }
                 else
-                // else if g_MissionTag:Mission:StartsWith("PID")
                 {
                     OutInfo("Switching to PID Control").
                     set l_pid_loop_control_active to True.
                     set output_pitch to current_pit.
                 }
+                // else if g_MissionTag:Mission:StartsWith("PID")
             }
             // else
             // {
@@ -1038,7 +1038,7 @@
                 {
                     local m to p:GetModule("ModuleLight"). 
 
-                    if CurrentTimeSpan:HOUR > 11 and CurrentTimeSpan:HOUR <= 23
+                    if Ship:Sensors:Light > 1 // CurrentTimeSpan:HOUR > 11 and CurrentTimeSpan:HOUR <= 23
                     {
                         DoAction(m, "Turn Light Off", true).
                     }

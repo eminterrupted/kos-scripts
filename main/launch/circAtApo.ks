@@ -55,7 +55,7 @@ else if azData:Length = 0
 {
     set azData to l_az_calc_init(tgtAp, tgtInc, Ship:Latitude).
 }
-set g_AngDependency to InitAscentAng_Next(tgtInc, tgtAp, 1, 2.5, 22.5, True, list(0.005, 0.002, 0.0015, 1)). // P, I, D, ChangeRate (upper / lower bounds for PID)
+set g_AngDependency to InitAscentAng_Next(tgtInc, tgtAp, 1, 2.5, 22.5, True, list(0.00125, 0.000925, 0.0005, 1)). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
 //local dvNeeded to CalcDvHoh(Ship:Periapsis, 0, Ship:Apoapsis, Ship:Body)[0].
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, Ship:Apoapsis, "PE")[1].
@@ -162,7 +162,27 @@ OutInfo().
 
 set t_Val to 1.
 lock throttle to t_Val.
-ArmAutoStagingNext(g_StageLimit, 1, 2).
+
+set g_HotStagingArmed   to ArmHotStaging().
+set g_SpinArmed         to SetupSpinStabilizationEventHandler().
+
+local onStageParts to Ship:PartsTaggedPattern("^OnStage").
+if onStageParts:Length > 0
+{
+    set g_OnStageEventArmed to SetupOnStageEventHandler(onStageParts).
+}
+
+// #TODO: Implement circ event handlers
+// local eventParts to Ship:PartsTaggedPattern("^Circ\|.*").
+// local eventPartCount to 0.
+// if eventParts:Length > 0 
+// {
+//     set eventPartCount to ArmAscentEvents(eventParts).
+// }
+
+local autoStageResult to ArmAutoStagingNext(g_StageLimit, 0, 2).
+set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
+
 wait 0.01.
 set Ship:Control:Fore to 0.
 

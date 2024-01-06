@@ -224,7 +224,7 @@
     // Returns the next set of engines, starting with the provided stage number (by default current stage - 1), and iterating towards 0 until it finds them (or doesn't)
     global function GetNextEngines
     {
-        parameter _startAtStg is Stage:Number - 1.
+        parameter _startAtStg is Stage:Number.
 
         local engList to list().
 

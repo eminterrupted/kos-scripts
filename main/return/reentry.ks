@@ -412,11 +412,19 @@ set doneFlag to False.
 OutMsg("Aligned to retro, staging!").
 if stage:number > 1
 {
+    // Determine where the heatshield is. We will hold for retro alignment until we are stabilized when at that stage + 1
+    local hsStage to 0.
+    
+
     OutMsg("Staging").
     until stage:number <= 1 
     {
         stage.
         wait 2.5.
+        if Stage:Number = 2
+        {
+
+        }
     }
     set Ship:Control:Fore to 1.
     wait 2.5.

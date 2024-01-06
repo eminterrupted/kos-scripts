@@ -292,9 +292,8 @@
 
             local maxValFlag to False.
             local maxValIndicator to "".
-            local freeTermEntryStr to _scalar:ToString.
 
-            OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
+            // OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
             
             local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
 
@@ -346,6 +345,7 @@
             else if g_TermChar = "+" and _allowFreeEntry
             {
                 local __doneFlag to False.
+                local freeTermEntryStr to _scalar:ToString.
                 set g_TermChar to "".
                 Terminal:Input:Clear.
                 OutInfo(" Free Entry: [{0,-32}]":format(freeTermEntryStr), 2).
@@ -363,6 +363,7 @@
                             set __doneFlag to True.
                             set scalarVal to freeTermEntryStr:ToNumber(-1).
                             OutInfo(" Set Value: [{0,-32}] ":format(scalarVal), 2).
+                            wait 0.125.
                         }
                         else
                         {
@@ -377,8 +378,8 @@
             }
             set g_TermChar to "".
             set maxValIndicator to choose "*" if maxValFlag else "".
-
             OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+            OutInfo("", 2).
 
             return scalarVal.
         }
@@ -1021,15 +1022,15 @@
         }
         else
         {
-            if _inputString:MatchesPattern("\d*(\.\d*)?(km$|mm$)+")
+            if _inputString:MatchesPattern("\d+(\.\d+)?((K|k)m$|(M|m)m$)+")
             {
-                if _inputString:MatchesPattern("(^\d*(\.\d*)?(km$))")
+                if _inputString:MatchesPattern("(^\d+(\.\d+)?((K|k)m$))")
                 {
-                    set scalar_result to _inputString:Replace("km", ""):ToNumber(_fallbackValue) * 1000.
+                    set scalar_result to _inputString:Replace("km", ""):Replace("Km", ""):ToNumber(_fallbackValue) * 1000.
                 }
-                else if _inputString:MatchesPattern("(^\d*(\.\d*)?(mm$))")
+                else if _inputString:MatchesPattern("(^\d+(\.\d+)?((M|m)m$))")
                 {
-                    set scalar_result to _inputString:Replace("mm", ""):ToNumber(_fallbackValue) * 1000000.
+                    set scalar_result to _inputString:Replace("mm", ""):Replace("Mm", ""):ToNumber(_fallbackValue) * 1000000.
                 }
             }
             else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
@@ -1237,7 +1238,13 @@
                 {
                     if g_LoopDelegates:RegisteredEventTypes:HasKey(_eventData:type)
                     {
-                        set g_LoopDelegates:RegisteredEventTypes[_eventData:type] to g_LoopDelegates:RegisteredEventTypes[_eventData:type] + 1.
+                        //set g_LoopDelegates:RegisteredEventTypes[_eventData:type] to g_LoopDelegates:RegisteredEventTypes[_eventData:type] + 1.
+
+                        local evLastTypeVal to g_LoopDelegates:RegisteredEventTypes[_eventData:Type].
+                        OutDebug("evTypeLast: [{0} ({1})]":Format(evLastTypeVal, evLastTypeVal:TypeName), 12).
+                        local evNewTypeVal to evLastTypeVal + 1.
+                        g_LoopDelegates:RegisteredEventTypes:Remove(_eventData:type).
+                        g_LoopDelegates:RegisteredEventTypes:Add(_eventData:type, evNewTypeVal).
                     }
                     else
                     {

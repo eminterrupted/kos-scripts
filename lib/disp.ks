@@ -371,15 +371,15 @@
             }
             local dispList to choose list(
                 "BURN NODE DATA"
-                ,"BURN ETA      : {0}":Format(_burnETA)
-                ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
-                ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
-                ,"                {0}":Format(durStr)
+                ,"BURN ETA      : {0,-12}":Format(_burnETA)
+                ,"DV REMAINING  : {0,-12}":Format(round(_dvToGo, 2))
+                ,"BURN DURATION : {0,-12}":Format(Round(_burnDur, 2))
+                ,"                {0,-12}":Format(durStr)
             ) if _burnETA > 0 else list(
                 "BURN DATA"
-                ,"DV REMAINING  : {0}":Format(round(_dvToGo, 2))
-                ,"BURN DURATION : {0}":Format(Round(_burnDur, 2))
-                ,"                {0}":Format(durStr)
+                ,"DV REMAINING  : {0,-12}":Format(round(_dvToGo, 2))
+                ,"BURN DURATION : {0,-12}":Format(Round(_burnDur, 2))
+                ,"                {0,-12}":Format(durStr)
                 ," "
             ).
             

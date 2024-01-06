@@ -329,7 +329,16 @@
             set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
             
-            set g_AutoStageArmed to choose True if ArmAutoStagingNext(g_StageLimit, 0.01, 0) = 1 else False.
+            local autoStageResult to ArmAutoStagingNext(g_StageLimit, 0.01, 0).
+            if autoStageResult = 1 
+            {
+                set g_AutoStageArmed to True.
+            }
+            else
+            {
+                set g_AutoStageArmed to False.
+            }
+            OutInfo("AutoStage Armed; {0}":Format(g_AutoStageArmed)).
             SetupSpinStabilizationEventHandler().
             wait 0.01.
             set g_TS0 to Time:Seconds.

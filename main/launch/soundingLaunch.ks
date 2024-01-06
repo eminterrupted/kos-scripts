@@ -83,6 +83,18 @@ until launchCommit
     {
         set launchCommit to True.
     }
+    else if g_TermChar = Terminal:Input:DeleteRight
+    {
+        set g_TS to Time:Seconds + 3.
+
+        OutInfo().
+        until Time:Seconds > g_TS
+        {
+            OutMsg("Rebooting in {0,-4}...":Format(Round(g_TS - Time:Seconds, 2))).
+            wait 0.01.
+        }
+        reboot.
+    }
 
     // #TODO : Figure out UpdateLaunchConfig
     // else if g_TermChar = Terminal:Input:Backspace

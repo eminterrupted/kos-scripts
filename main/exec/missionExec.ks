@@ -75,28 +75,23 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Miss
     }
     else
     {
-        local tgtApTagStr to ParseScalarShortString(tgtAp).
-        local tgtPeTagStr to choose "-09876" if tgtPe < 0 else ParseScalarShortString(tgtPe).
+        // local tgtApTagStr to ParseScalarShortString(tgtAp).
+        // local tgtPeTagStr to choose "-09876" if tgtPe < 0 else ParseScalarShortString(tgtPe).
         
         if tgtPe > Ship:Apoapsis
         {
             set tgtAp to tgtPe.
-            set tgtPe to Ship:Apoapsis.
+            set tgtPe to Round(Ship:Apoapsis).
         }
-        else if tgtPe > 100000
+        else if tgtPe < Ship:Body:Atm:Height
         {
-            // set tgtAp to Ship:Apoapsis.
-            // set tgtPe to tgtPe.
-        }
-        else
-        {
-            set tgtAp to Ship:Apoapsis.
-            set tgtPe to 175000.
+            set tgtAp to Round(Ship:Apoapsis).
+            set tgtPe to Ship:Body:Atm:Height + 25000.
         }
 
-        local curApTagStr to ParseScalarShortString(tgtAp).
-        local curPeTagStr to ParseScalarShortString(tgtPe).
-        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtPeTagStr, curPeTagStr).
+        // local curApTagStr to ParseScalarShortString(tgtAp).
+        // local curPeTagStr to ParseScalarShortString(tgtPe).
+        // set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtPeTagStr, curPeTagStr).
     }
     set g_MissionTag to ParseCoreTag(Core:Tag).
 

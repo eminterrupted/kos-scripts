@@ -15,6 +15,17 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
+	"NewFunction": {
+	"prefix": "NewFunction",
+	"body": [
+		"// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
+		"// Function Description",
+		"global function FunctionName",
+		"{",
+		"}"
+	],
+	"description": "New Global Function Template"
+	},
 	"NewLibrary": {
 		"prefix": "NewLib",
 		"body": [
@@ -52,28 +63,21 @@
 		  "    // #endregion",
 		  "// #endregion"
 		],
-		"description": "NewLibrary"
+		"description": "New Default Library Template"
 	  },
-	  "NewGlobalFunction": {
-		"prefix": "gblfunc",
+		"New Script Header": {
+		"prefix": "NewScript",
 		"body": [
-		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
-		  "// Function Description",
-		  "global function FunctionName",
-		  "{",
-		  "}"
+			"@LazyGlobal off.",
+			"ClearScreen.",
+			"",
+			"parameter params to list().",
+			"",
+			"RunOncePath(\"0:/lib/libLoader.ks\").",
+			"",
+			"set g_MainProcess to ScriptPath().",
+			"DispMain()."
 		],
-		"description": "NewGlobalFunction"
-	  },
-	  "NewLocalFunction": {
-		"prefix": "locfunc",
-		"body": [
-		  "// FunctionName :: (param)<type> [(optionalParam)<type>] -> (output)<type>",
-		  "// Function Description",
-		  "local function FunctionName",
-		  "{",
-		  "}"
-		],
-		"description": "NewLocalFunction"
-	  }
+		"description": "New Script Header"
+	}
 }
