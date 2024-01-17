@@ -146,7 +146,7 @@
         else if g_MissionTag:Mission:MatchesPattern("^(Suborbital|PIDSubOrbital)") // Suborbital hop :: [0] Inclination and [1]Target Alt
         {
             set _delDependency["l_az_calc"] to _azData.
-            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission:MatchesPattern("^(Orbit|PIDOrbit)$") // Orbital insertion :: [0] Inclination and [1]Target Alt
         {
@@ -155,7 +155,7 @@
             {
                 set _delDependency["TRN_ALT_START"] to Ship:Altitude + 125.
             }
-            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission = "Circularize"
         {
@@ -518,6 +518,149 @@
                 // * set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
                 set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
             }
+            // else if current_apo >= target_apo_thresh and ETA:Apoapsis <= ETA:Periapsis
+            // {
+            //     // PID STUFFS
+            //     if _ascAngObj:RESET_PIDS
+            //     {
+            //         g_PIDS[_ascAngObj:APO_PID]:Reset().
+            //         set _ascAngObj:UPDATE_SETPOINT to True.
+            //         set _ascAngObj:RESET_PIDS to False.
+            //     }
+
+            //     if _ascAngObj:UPDATE_SETPOINT
+            //     {
+            //         set g_PIDS[_ascAngObj:APO_PID]:Setpoint to target_apo.
+            //         set _ascAngObj:UPDATE_SETPOINT to False.
+            //     }
+
+            //     local pitGuard to list(1.25, 1.25).
+            //     local adjPitGuard to pitGuard[0].
+            //     if Stage:Number > g_StageLimit
+            //     {
+            //         set pitGuard  to list(0.25, 0.5).
+            //         local twrFactor to choose 1 if g_ActiveEngines_Data:TWR = 0 else g_ActiveEngines_Data:TWR.
+            //         set adjPitGuard to max(pitGuard[0], min(pitGuard[1], pitGuard[0] + ((twrFactor / Ship:Mass)))).
+            //     }
+
+            //     local apo_PID to g_PIDS[_ascAngObj:APO_PID].
+            //     local pid_pitch to (apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
+            //     set effective_pitch to max(current_pitch - adjPitGuard, min(pid_pitch, current_pitch + adjPitGuard)).
+            //     set output_pitch to max(PID_AoA_Min, min(effective_pitch, PID_AoA_Max)).
+            // }
+            else
+            {
+                set error_pitch         to 90 * (1 - apo_error).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
+                // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.375) / apo_error)). // 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_min + (pitch_limit_max / apo_error * 1.375) / apo_error)). *** Good  // 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
+                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_min + (pitch_limit_max / apo_error * 1.1125) / apo_error)). 
+                set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
+                // * set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
+            }
+
+            if ETA:Apoapsis > ETA:Periapsis
+            {
+                set output_pitch to max(-15, min(45, output_pitch)).
+            }
+        }
+
+        return output_pitch.
+    }
+
+
+    // Next with PID control
+    global function GetAscentAng_PID
+    {
+        parameter _ascAngObj.
+
+        local fShape            to _ascAngObj:FSHAPE.
+        local altitude_error    to 0.
+        local apo_error         to 0.
+        local current_alt       to Ship:Altitude.
+        local current_apo       to Ship:Apoapsis.
+        local current_pitch     to 90 - VAng(Ship:Up:Vector, Ship:Facing:Vector).
+        local effective_error   to 0.
+        local effective_limit   to 0.
+        local effective_pitch   to 90.
+        local error_limit       to 0.
+        local error_pitch       to 0.
+        local output_pitch      to 90.
+
+        local current_ap_alt    to (Ship:Altitude + (1 * (Ship:Apoapsis))) / 2.
+        
+        local prograde_pitch            to 90.
+        local prograde_surface          to Ship:SrfPrograde:Vector. // Ship:Velocity:Surface.
+        local prograde_surface_pitch    to 90 - VAng(Ship:Up:Vector, prograde_surface).
+        local prograde_orbit            to Ship:Prograde:Vector. // Ship:Velocity:Orbit.
+        local prograde_orbit_pitch      to 90 - VAng(Ship:Up:Vector, prograde_orbit).
+        
+        local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
+        local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
+        local target_apo        to _ascAngObj:APO_TGT.
+        local target_apo_thresh to target_apo * 0.925.
+        local turn_alt_blend    to _ascAngObj:TRN_ALT_BLEND.
+        local turn_alt_end      to _ascAngObj:TRN_ALT_END.
+        local turn_alt_start    to _ascAngObj:TRN_ALT_START.
+
+        if g_SpinActive 
+        {
+            set output_pitch to current_pitch.
+            // set pitch_limit_max to max(pitch_limit_min, pitch_limit_max * 0.28).
+        }
+        else if current_alt > turn_alt_start
+        {
+            set altitude_error      to current_alt / turn_alt_end.
+            set apo_error           to current_apo / target_apo.
+
+            if current_alt < 1000 and Ship:VerticalSpeed > 0
+            {
+                local blend_alt_error   to (current_alt - turn_alt_start) / (2500 - turn_alt_start).
+                local alt_error_blended to altitude_error * (1 - blend_alt_error).
+                local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
+                local apo_error_blended to apo_error * blend_apo_error.
+                local comb_err          to alt_error_blended + apo_error_blended.
+                set effective_error     to comb_err.
+                set error_pitch         to 90 * (1 - comb_err).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
+                // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.05625)). // * 1.125)).// 1.015625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.05625)).
+                set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
+                set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
+                // * set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(45, min(effective_pitch, 90)).
+            }
+
+            if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
+            {
+                set error_pitch         to 90 * (1 - altitude_error).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
+                // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.275)). // 1.25)). // 1.03125)).
+                // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.275)). // *** Good
+                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.325)).
+                set effective_pitch     to max(prograde_surface_pitch - effective_limit, min(error_pitch, prograde_surface_pitch + effective_limit)).
+                // * set output_pitch        to min(90, effective_pitch * fShape).
+                set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
+            }
+            else if current_ap_alt < turn_alt_end and Ship:VerticalSpeed > 0
+            {
+                local blend_alt_error   to (current_alt - turn_alt_blend) / (turn_alt_end - turn_alt_blend).
+                local alt_error_blended to altitude_error * (1 - blend_alt_error).
+                local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
+                local apo_error_blended to apo_error * blend_apo_error.
+                local comb_err          to alt_error_blended + apo_error_blended.
+                set effective_error     to comb_err.
+                set error_pitch         to 90 * (1 - comb_err).
+                set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
+                // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.325)). // 1.275)). // 1.0625)).
+                // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.325)). *** Good
+                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.4)).
+                set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
+                set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
+                // * set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
+                set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
+            }
             else if current_apo >= target_apo_thresh and ETA:Apoapsis <= ETA:Periapsis
             {
                 // PID STUFFS
@@ -569,7 +712,8 @@
         return output_pitch.
     }
 
-    // With PID Control too I guess because I'm dumb
+
+    // With Experimental PID Control too I guess because I'm dumb
     global function GetAscentAng_PIDyParty 
     {
         parameter _ascAngObj.

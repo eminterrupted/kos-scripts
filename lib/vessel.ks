@@ -173,7 +173,10 @@
             local ActionDel to {}.
             local CheckDel to {}.
             local Engine_Obj to lexicon().
+            local ExtraLeadTime to 0.
             local HotStage_List to Ship:PartsTaggedPattern("(HotStg|HotStage|HS)").
+            local HotStageLeadTimes to lexicon().
+
             if HotStage_List:Length > 0
             {
                 if not g_LoopDelegates:HasKey("Staging")
@@ -195,11 +198,20 @@
                         {
                             set Engine_Obj[p:Stage] to list(p).
                         }
+
+                        if p:Tag:MatchesPattern("\w*\|\d*")
+                        {
+                            set ExtraLeadTime to p:Tag:Split("|")[1]:ToNumber(0).
+                            if not HotStageLeadTimes:HasKey(p:Stage)
+                            {
+                                HotStageLeadTimes:Add(p:Stage, extraLeadTime).
+                            }
+                        }
                     }
                 }
 
                 // if g_Debug OutDebug("Engine_Obj Keys: {0}":Format(Engine_Obj:Keys:Join(";")), -6).
-                wait 1.
+                // wait 1.
 
                 for HotStageID in Engine_Obj:KEYS
                 {
@@ -214,6 +226,7 @@
                     local stageEngines to list().
                     local stageEngines_BT to 999999.
 
+                    // This must protect us against considering boosters and timed-MECO engines in hot staging calculations
                     local hitFlag to False.
                     from { local i to HotStageID + 1.} until hitFlag step { set i to i + 1.} do
                     {
@@ -234,30 +247,35 @@
                         }
                     }
 
+                    set ExtraLeadTime to choose HotStageLeadTimes[HotStageID] if HotStageLeadTimes:HasKey(HotStageID) else 0.
+
                     set checkDel  to {
                         // parameter _stageEngs.
 
-                        if MissionTime > 0 and g_ActiveEngines:Length > 0
+                        if Stage:Number - 1 = HotStageID
                         {
-                            if Stage:Number - 1 = HotStageID
+                            if MissionTime > 0 
                             {
-                                local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5. 
-                                set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
-                                // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
-                                set g_TR to stageEngines_BT - SpoolTime.
-                                OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
+                                if g_ActiveEngines:Length > 0
+                                {
+                                    local SpoolTime to g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime + 0.5 + ExtraLeadTime. 
+                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
+                                    // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
+                                    set g_TR to stageEngines_BT - SpoolTime.
+                                    OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
 
-                                return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                    return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                }
+                                else if t_Val > 0
+                                {
+                                    if g_Debug { OutDebug("Fuel Exhausted, hot staging").}
+                                    return True.
+                                }
+                                else
+                                {
+                                    if g_Debug { OutDebug("Right stage, but fell through HotStaging checkdel").}
+                                }
                             }
-                        }
-                        else if MissionTime > 0 and t_Val > 0
-                        {
-                            if g_Debug { OutDebug("Fuel Exhausted, hot staging").}
-                            return True.
-                        }
-                        else
-                        {
-                            if g_Debug { OutDebug("Fell through HotStaging checkdel").}
                         }
                         return False.
                     }.
@@ -290,6 +308,7 @@
                         {
                             g_LoopDelegates:Staging:Remove("HotStaging").
                             set g_HotStagingArmed to  False.
+                            set g_NextHotStageID to -2.
                         }
                         else
                         {
@@ -300,6 +319,10 @@
                     // Add the delegates to the previously set up object
                     g_LoopDelegates:Staging:HotStaging[HotStageID]:Add("Check", checkDel@).
                     g_LoopDelegates:Staging:HotStaging[HotStageID]:Add("Action", actionDel@).
+
+                    // Update g_NextHotStageID 
+                    set g_NextHotStageID to Max(HotStageID, g_NextHotStageID).
+                    g_HotStageIDList:Add(HotStageID).
                 }
 
                 return True.
@@ -428,12 +451,12 @@
                 // if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
                 if __ves:AvailableThrust < checkVal and throttle > 0 // and Stage:Number > g_StageLimit
                 { 
-                    // OutDebug("[{0}] StagingCheckDel TRUE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 1).
+                    // OutDebug("[{0}] StagingCheckDel TRUE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 8).
                     return 1.
                 } 
                 else 
                 {
-                    // OutDebug("[{0}] StagingCheckDel FALSE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 1).
+                    // OutDebug("[{0}] StagingCheckDel FALSE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 8).
                     return 0.
                 }
             }.
@@ -470,22 +493,26 @@
                 set g_NextEngines_Spec  to GetEnginesSpecs(g_NextEngines).
                 if g_NextEngines_Spec:Ullage
                 {
-                    if g_NextEngines[0]:Stage < Stage:Number
-                    {
-                        set StageResult to true.
-                    }
-                    else
-                    {
+                    // if g_NextEngines[0]:Stage < Stage:Number
+                    // {
+                    //     set StageResult to True.
+                    // }
+                    // else
+                    // {
                         local FuelStability to GetEngineFuelStability(g_NextEngines).
                         OutInfo("Fuel Stability Rating (Min/Avg): {0} / {1})":format(round(FuelStability[0], 2), round(FuelStability[1], 2))). 
                         
                         set StageResult to FuelStability[0] >= FuelStabilityMin. 
-                    }
+                    // }
+                }
+                else
+                {
+                    set StageResult to True.
                 }
             }
             else
             {
-                
+                OutInfo("[SafeStageWithUllage2] g_NextEngines:Length = 0", 2).   
             }
 
             if StageResult
@@ -1923,7 +1950,12 @@
 
         if _steerDelID = "Flat:Sun"
         {
-            set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+            // set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
+            set del to { return Heading(l_az_calc(g_azData), 0, 0).}.
+        }
+        else if _steerDelID = "AzFlat:Sun"
+        {
+            set del to { return Heading(l_az_calc(g_azData), 0, 0).}.
         }
         else if _steerDelID = "AngErr:Sun"
         {

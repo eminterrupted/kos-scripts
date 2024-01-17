@@ -73,6 +73,10 @@ local mecoTS to burnTS + burnDur[1].
 local burnLeadTime to 15.
 local warpToTS to burnTS - burnLeadTime.
 
+local tgtCheckDelAP to { return (Ship:Apoapsis >= tgtAp and Ship:Periapsis >= Max(Ship:Body:Atm:Height + 5000, tgtPe * 0.9875)). }.
+local tgtCheckDelPE to { return Ship:Periapsis >= tgtPe.}.
+local tgtCheckDel to choose tgtCheckDelAP@ if transferBurn else tgtCheckDelPE@.
+
 set g_ActiveEngines to GetActiveEngines().
 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
@@ -197,9 +201,22 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_LoopDelegates:Staging:Check:Call() = 1
+        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
+        { 
+            if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
+            {
+                if g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Check:CALL()
+                {
+                    g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
+                }
+            }
+        }
+        else
         {
-            g_LoopDelegates:Staging["Action"]:Call().
+            if g_LoopDelegates:Staging:Check:Call() = 1
+            {
+                g_LoopDelegates:Staging["Action"]:Call().
+            }
         }
     }
     
@@ -238,7 +255,7 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
     set g_TermChar to "".
 
     // if (Ship:Periapsis >= tgtPe - 5000 and Ship:Periapsis <= tgtPe + 5000)
-    if Ship:Periapsis >= tgtPe - 5000
+    if tgtCheckDel:Call() // Ship:Periapsis >= tgtPe - 5000
     {
         set doneFlag to true.
     }
@@ -296,16 +313,26 @@ until MECOFlag or doneFlag
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_ActiveEngines_Data:HasKey("Thrust") 
     {
-        if g_ActiveEngines_Data:Thrust <= 0.01 and g_ActiveEngines:Length > 0
+        if g_ActiveEngines_Data:Thrust = 0 and g_ActiveEngines:Length > 0
         {
-            if g_Debug { OutDebug("g_ActiveEngines_Data:Thrust ({0}) < 0.01":Format(g_ActiveEngines_Data:Thrust), 5).}
+            if g_Debug { OutDebug("g_ActiveEngines_Data:Thrust ({0}) < 0.001":Format(g_ActiveEngines_Data:Thrust), 5).}
             set MECOFlag to true.
         }
     }
 
-    if Ship:Periapsis >= (tgtPe * 0.995)
+    if tgtCheckDel:Call()// Ship:Periapsis >= (tgtPe * 0.995)
     {
-        if g_Debug { OutDebug("ShipPeriapsis >= {0} * 0.9975 [{1}]":Format(tgtAp, (tgtAp * 0.9975)), 5).}
+        if g_Debug 
+        { 
+            if transferBurn
+            {
+                OutDebug("ShipApoapsis >= {0} ":Format(tgtAp), 5).
+            }
+            else
+            {
+                OutDebug("ShipPeriapsis >= {0} ":Format(tgtPe), 5).
+            }
+        }
         set MECOFlag to True.
     }
     // else if Time:Seconds >= mecoTS

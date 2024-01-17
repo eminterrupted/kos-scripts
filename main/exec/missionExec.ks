@@ -68,7 +68,7 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Miss
 
         local curApTagStr to ParseScalarShortString(tgtAp).
         local curPeTagStr to ParseScalarShortString(tgtPe).
-        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtEcc:ToString, curPeTagStr).
+        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace("{0}|":Format(tgtEcc:ToString), "{0}|":Format(curPeTagStr)).
 
         // Adjust make the changes to g_missionTag:Params
         set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
@@ -182,12 +182,23 @@ until doneFlag
         OutInfo("Delegate: {0}":Format(g_LoopDelegates:Events:Keys[0]), 1).
         ExecGLoopEvents().
     }
-    wait 0.01.
+
+    GetTermChar().
+    if g_TermChar = Terminal:Input:DeleteRight
+    {
+        OutInfo("Skipping post-circularization delegate check").
+        OutInfo("", 1).
+        wait 1.
+
+        OutInfo().
+        OutInfo("", 1).
+        set doneFlag to True.
+    }
 }
 OutInfo().
 // TODO: Extend Antenna Function
 
-wait 1.
+wait 0.25.
 // Extend any solar panels
 // ExtendSolarPanels().
 set g_OnDeployActive to False.

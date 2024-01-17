@@ -191,7 +191,7 @@
             { 
                 if _type = "All" 
                 {
-                    engList:Add(eng). 
+                    engList:Add(eng).
                 }
                 else if _type = "Main"
                 {
@@ -202,7 +202,7 @@
                 }
                 else if _type = "Sep"
                 {
-                    if g_PartInfo:Engines:SepRef:Contains(eng:Name)
+                    if g_PartInfo:Engines:SepRef:Contains(eng:Name) and eng:Tag:Length = 0
                     {
                         engList:Add(eng).
                     }

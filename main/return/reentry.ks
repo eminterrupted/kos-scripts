@@ -106,7 +106,6 @@ until doneFlag
             {
                 GetTermChar().
                 OutMsg("Update staging altitude target [{0}]":Format(workingAlt)).
-                set workingAlt to UpdateTermScalar(workingAlt, list(250, 1000, 5000, 10000)).
                 if g_TermChar = Terminal:Input:Enter
                 {
                     set updateDoneFlag to True.
@@ -115,7 +114,13 @@ until doneFlag
                     OutInfo().
                     OutInfo("",1).
                 }
+                else
+                {
+                    set workingAlt to UpdateTermScalar(workingAlt, list(250, 1000, 5000, 10000)).
+                }
+                set g_TermChar to "".
             }
+            set startAlt to stagingAlt + 2500.
         }
         else if g_TermChar = Terminal:Input:UpCursorOne
         {
@@ -387,7 +392,8 @@ local proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
 local lastAng to proAng.
 local angDiff to lastAng - proAng.
 set doneFlag to False.
-until proAng <= 1 and angDiff <= 0.250 or doneFlag
+set g_TS0 to 0.
+until doneFlag
 {
     set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
     set lastAng to proAng.
@@ -402,18 +408,57 @@ until proAng <= 1 and angDiff <= 0.250 or doneFlag
     {
         set doneFlag to True.
     }
-    if Ship:Altitude <= Body:ATM:Height
+    if proAng < 1 and angDiff < 0.250
     {
-        LogPressure().
+        if g_TS0 = 0
+        {
+            set g_TS0 to Time:Seconds + 3.25.
+        }
+        else if Time:Seconds > g_TS0 
+        {
+            set doneFlag to True.
+        }
+        OutInfo("Settle time for retro staging: [{0}]":Format(Round(g_TS0 - Time:Seconds, 2))).
     }
+    else
+    {
+        set g_TS0 to 0.
+        OutInfo().
+    }
+    // if Ship:Altitude <= Body:ATM:Height
+    // {
+    //     LogPressure().
+    // }
 }
 set doneFlag to False.
 
-OutMsg("Aligned to retro, staging!").
+OutMsg("Aligned to retro").
+
 if stage:number > 1
 {
-    // Determine where the heatshield is. We will hold for retro alignment until we are stabilized when at that stage + 1
-    local hsStage to 0.
+    // Do we need to spin stabilize the capsule?
+    local spinDCs to Ship:PartsTaggedPattern("SpinDC\|\d*").
+
+    if spinDCs:Length > 0
+    {
+        for dc in spinDCs
+        {
+            if dc:Stage = Stage:Number - 1
+            {
+                OutMsg("Initiating Spin-Stabilization").
+                local spinTime to dc:Tag:Split("|")[1]:ToNumber(1).
+                set Ship:Control:Roll to 1.
+                set g_TS to Time:Seconds + spinTime.
+                until Time:Seconds > g_TS
+                {
+                    OutInfo("Time remaining: {0}s":Format(Round(g_TS - Time:Seconds, 2))).
+                }
+                OutInfo().
+                set Ship:Control:Roll to 0.
+                break.
+            }
+        }
+    }
     
 
     OutMsg("Staging").

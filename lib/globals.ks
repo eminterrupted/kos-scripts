@@ -49,13 +49,15 @@
     ).
 
     // Staging
-    global g_StageCurrent to Stage:Number.
-    global g_StageLast to Stage:Number.
-    global g_StageNext to Stage:Number - 1.
-    global g_StageLimit to 3.
-    global g_StageLimitSet to list().
-    global g_StageTracker to Stage:Number.
-    global g_UllageDefault to 8.
+    global g_HotStageIDList to list().
+    global g_NextHotStageID to -2.
+    global g_StageCurrent   to Stage:Number.
+    global g_StageLast      to Stage:Number.
+    global g_StageNext      to Stage:Number - 1.
+    global g_StageLimit     to 3.
+    global g_StageLimitSet  to list().
+    global g_StageTracker   to Stage:Number.
+    global g_UllageDefault  to 8.
 
     // Tags
     global g_MissionTag to lexicon().
