@@ -40,9 +40,10 @@
     global g_ascentProfile to lexicon().
     // global g_azData to list().
 
-    global g_PID_Flag       to false.
-    global g_PID_Alt_Flag   to false.
-    global g_PID_Apo_Flag   to false.
+    global g_PID_Flag       to False.
+    global g_PID_Alt_Flag   to False.
+    global g_PID_Apo_Flag   to False.
+    global g_PID_Active     to False.
 
     // Prelaunch params
     global g_PreLaunch_Data to lexicon(
@@ -106,18 +107,23 @@
 
         if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
+            OutDebug("No AngDep Keys").
+
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            local fShape to 1.25.
-            local minPit to 5.
-            local pitLim to 32.5.
+            local fShape  to 1.225.
+            local minPit  to 5.
+            local pitLim  to 27.
+            local pidVals to list(0.0075, 0.00125, 0.00325, 5). // P, I, D, ChangeRate (upper / lower bounds for PID)
+
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
                 set fShape to 1.3250.
-                set minPit to 3.
+                set minPit to 2.5.
                 set pitLim to 50.
+                set pidVals to list(0.0025, 0.00125, 0.00125, 0.5). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
-            set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True).
+            set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
         }
         set g_AngDependency to _delDependency.
 
@@ -368,7 +374,8 @@
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
         
-        local turn_alt_start      to g_la_turnAltStart.
+        local rdrAlt to Ship:GeoPosition:TerrainHeight.
+        local turn_alt_start      to Round(((Ship:Altitude - rdrAlt + Ship:Bounds:Size:Z) * 1.6) + rdrAlt).
         // local turn_alt_end        to choose 70000 if _tgtAlt <= 200000 else min(1000000, max(100000, Round(_tgtAlt / 2.75))).// 72500 
         local turn_alt_end        to choose 62500 if _tgtAlt <= 200000 else min(300000, max(62500, Round(_tgtAlt / 3.2))).// 72500 
         // local turn_alt_blend      to 500. 
@@ -406,24 +413,6 @@
         OutInfo("TurnAlt: {0}":Format(turn_alt_end)).
 
         return ascentAngObj.
-
-        // return lexicon
-        // (
-        //     "ALT_PID", pid_Alt_ID
-        //     ,"ALT_SETPOINT", turn_alt_end
-        //     ,"APO_PID", pid_Apo_ID
-        //     ,"APO_SETPOINT", _tgtAlt
-        //     ,"APO_TGT", _tgtAlt
-        //     ,"FSHAPE", _fShape
-        //     ,"PIT_LIM_MAX", _pitLimMax
-        //     ,"PIT_LIM_MIN", _pitLimMin
-        //     ,"RESET_PIDS", True
-        //     ,"TRN_ALT_START", turn_alt_start
-        //     ,"TRN_ALT_END", turn_alt_end
-        //     ,"TRN_ALT_BLEND", turn_alt_blend
-        //     ,"TRN_APO_TGT", Round(_tgtAlt * 0.825)
-        //     ,"UPDATE_SETPOINT", True
-        // ).
     }
 
     // WIP PART DEUX, electric OH MY GOD STAHP
@@ -587,6 +576,8 @@
         local error_limit       to 0.
         local error_pitch       to 0.
         local output_pitch      to 90.
+        
+        set g_PID_Active to False.
 
         local current_ap_alt    to (Ship:Altitude + (1 * (Ship:Apoapsis))) / 2.
         
@@ -614,7 +605,7 @@
             set altitude_error      to current_alt / turn_alt_end.
             set apo_error           to current_apo / target_apo.
 
-            if current_alt < 1000 and Ship:VerticalSpeed > 0
+            if current_alt < turn_alt_start and Ship:VerticalSpeed > 0
             {
                 local blend_alt_error   to (current_alt - turn_alt_start) / (2500 - turn_alt_start).
                 local alt_error_blended to altitude_error * (1 - blend_alt_error).
@@ -631,8 +622,7 @@
                 // * set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
                 set output_pitch        to max(45, min(effective_pitch, 90)).
             }
-
-            if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
+            else if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
             {
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
@@ -664,6 +654,7 @@
             else if current_apo >= target_apo_thresh and ETA:Apoapsis <= ETA:Periapsis
             {
                 // PID STUFFS
+                set g_PID_Active to True.
                 if _ascAngObj:RESET_PIDS
                 {
                     g_PIDS[_ascAngObj:APO_PID]:Reset().
@@ -1323,6 +1314,21 @@
             set launchStage to min(launchStage, m:part:stage).
         }
 
+        local swingArms to list().
+        for p in Ship:PartsNamedPattern("MLP.*Arm.*")
+        {
+            local stopFlag to False.
+            from { local i to 0.} until i > p:AllModules:Length or stopFlag step { set i to i + 1.} do
+            {
+                local m to p:GetModuleByIndex(i).
+                if m:HasEvent("retract arm") or m:HasEvent("retract arm left") or m:HasEvent("retract arm right")
+                {
+                    swingArms:Add(p).
+                    set stopFlag to True.
+                }
+            }
+        }
+
         local arm_engStartFlag   to true.
         local engSpoolLex to Lexicon().
         local totalSpoolTime to 0.
@@ -1379,6 +1385,11 @@
                         // {
                         //     RetractSwingArms(p).
                         // }
+                        for p in swingArms
+                        {
+                            RetractSwingArms(p).
+                        }
+
                         until Stage:Number = launchStage 
                         { 
                             wait until Stage:READY. 
@@ -1495,18 +1506,23 @@
     {
         parameter _part.
 
+        local stopFlag to False.
+
         if _part:Tag:MatchesPattern("left")
         {
-            from { local i to 0.} until i = _part:modules:length step { set i to i + 1.} do
+            from { local i to 0.} until i = _part:modules:length or stopFlag step { set i to i + 1.} do
             {
                 local m to _part:GetModuleByIndex(i).
-                if DoEvent(m, "retract arm left")
+                if m:Name = "ModuleAnimateGenericExtra"
                 {
-                    break.
-                }
-                else if DoAction(m, "retract arm left", true)
-                {
-                    break.
+                    if DoEvent(m, "retract arm left")
+                    {
+                        set stopFlag to True.
+                    }
+                    else if DoAction(m, "retract arm left", true)
+                    {
+                        set stopFlag to True.
+                    }
                 }
             }
         }
@@ -1515,13 +1531,20 @@
             from { local i to 0.} until i = _part:modules:length step { set i to i + 1.} do
             {
                 local m to _part:GetModuleByIndex(i).
-                if DoEvent(m, "retract arm right")
+                if m:Name = "ModuleAnimateGenericExtra"
                 {
-                    break.
-                }
-                else if DoAction(m, "retract arm right", true)
-                {
-                    break.
+                    if DoEvent(m, "retract arm")
+                    {
+                        set stopFlag to True.
+                    }
+                    else if DoEvent(m, "retract arm right")
+                    {
+                        set stopFlag to True.
+                    }
+                    else if DoAction(m, "retract arm right", true)
+                    {
+                        set stopFlag to True.
+                    }
                 }
             }
         }

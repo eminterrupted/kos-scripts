@@ -307,6 +307,14 @@ until Stage:Number <= g_StageLimit
     DispStateFlags().
     DispLaunchTelemetry().
     DispEngineTelemetry().
+    if g_PID_Active 
+    {
+        DispPIDLoopValues(g_PIDS["TurnApo"]).
+    }
+    else if g_GridAssignments:Keys:Contains("PID_VALUES")
+    {
+        ClearDispBlock("PID_VALUES").
+    }
 }
 ClearDispBlock().
 
@@ -331,6 +339,14 @@ until Ship:AvailableThrust <= 0.1 or Ship:Periapsis >= _tgtPe
     DispStateFlags().
     DispLaunchTelemetry().
     DispEngineTelemetry().
+    if g_PID_Active 
+    {
+        DispPIDLoopValues(g_PIDS["TurnApo"]).
+    }
+    else if g_GridAssignments:Keys:Contains("PID_VALUES")
+    {
+        ClearDispBlock("PID_VALUES").
+    }
 }
 ClearDispBlock().
 

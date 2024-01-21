@@ -15,7 +15,7 @@
     global g_TermHeight to 72.
     global g_TermWidth  to 80.
     global g_TermSize to g_TermHeight + g_TermWidth.
-
+    
     // #endregion
 
     // *- Local
@@ -262,7 +262,7 @@
                   _color is "White".
                   //_teeHUD is False. TODO: implement TeeHud function
         
-        local anchor to g_TermHeight - 20.
+        local anchor to g_TermHeight - 12.
         local line to anchor.
         
         if _lineIdx < 0 
@@ -606,6 +606,7 @@
         print "PROGRAM: {0}":Format(_currentProcess)                at (0, cr()).
         cr().
         
+        set l_MaxAvailGridIdx to 0.
         DispTermGrid(10, l_Col0Size[0], l_Col0Size[1], 1, True).
         set g_GridAssignments[0] to "MAIN".
         DispTermGrid(g_Line, dataColSize[0], dataColSize[1], _numDataColumns, False).
@@ -744,6 +745,7 @@
         if _refreshRef
         {
             set l_GridSpaceIdx to 0.
+            set l_LastAssignedBlock to -1.
             l_GridSpaceLex:Clear().
             g_GridAssignments:Clear().
             ClearDispBlock().
@@ -760,9 +762,10 @@
             colIdxList:Add(2 + (i * _colWidth)). 
         }
 
-        from { local iRow to 0.} until iRow > rowCount step { set iRow to iRow + 1.} do
+        from { local iRow to 0.} until iRow = rowCount step { set iRow to iRow + 1.} do
         {
-            local rowLine to _startAt + 1 + Max(0, (iRow - 1) * _rowHeight).
+            local rowLine to _startAt + 1 + Max(0, iRow * _rowHeight).
+            // local rowLine to _startAt + 1 + Max(0, (iRow - 1) * _rowHeight).
             
             // if g_Debug
             // {
@@ -771,19 +774,17 @@
 
             from { local iCol to 0.} until iCol = colIdxList:Length step { set iCol to iCol + 1.} do
             {
-                set l_GridSpaceIdx to iCol + iRow.
+                // set l_GridSpaceIdx to iCol + iRow.
+                set l_GridSpaceIdx to iCol + (iRow * 2).
 
                 // if g_Debug
                 // {
                 //     if g_Debug { OutDebug("DispTermGrid|iCol/iRow (l_GridSpaceIdx): [{0}/{1}] ({2})":Format(iRow, rowLine, l_GridSpaceIdx), -2).}
                 // }
 
-                if g_GridAssignments:HasKey(l_GridSpaceIdx)
+                if g_GridAssignments:HasKey(l_GridSpaceIdx) and g_GridAssignments[l_GridSpaceIdx] = ""
                 {
-                    if g_GridAssignments[l_GridSpaceIdx] = ""
-                    {
-                        set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
-                    }
+                    set l_GridSpaceLex[l_GridSpaceIdx] to list(colIdxList[iCol], _colWidth, rowLine, _rowHeight).
                 }
                 else
                 {
@@ -866,6 +867,7 @@
                 {
                     set g_GridAssignments[i] to _dispId.
                     set blockIdx to i.
+                    set l_LastAssignedBlock to blockIdx.
                     set doneFlag to True.
                 }
             }
@@ -928,7 +930,7 @@
             }
             else
             {
-                // if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID)).
+                if g_Debug OutDebug("[DispClearBlock] Missing blockID in l_GridSpaceLex [{0}]":Format(blockID), 2).
             }
         }
     }
