@@ -312,6 +312,60 @@
         DispPrintBlock(_dispBlockIdx, _statLex).
     }
 
+
+    // DispCoreMessage :: (_msgData)<Message>, [(_dispBlockIdx)<scalar]
+    // Displays the details of a message (from here: https://ksp-kos.github.io/KOS/structures/communication/message.html#structure:MESSAGE)
+    global function DispCoreMessage 
+    {
+        parameter _msgData,
+                _dispBlockIdx is -1.
+
+            if Terminal:Height + Terminal:Width <> g_TermSize
+            {
+                DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+            }
+
+            if _dispBlockIdx < 0
+            {
+                set _dispBlockIdx to NextOrAssignedTermBlock("CORE_MESSAGE").
+            }
+            
+            local sanitizedSender to choose _msgData:Sender if _msgData:HasSender else "N/A".
+            
+            local dispList to list(
+                "CORE MESSAGE"
+                ,"{0,-9}: {1}":Format("SENDER",   sanitizedSender)
+                ,"{0,-9}: {1}":Format("SENT",     _msgData:SentAt)
+                ,"{0,-9}: {1}":Format("RECEIVED", _msgData:ReceivedAt)
+                ,"--- DECRYPTED CONTENT BELOW ---"
+            ).
+
+            if _msgData:Content:IsType("String")
+            {
+                local splitIdx to 0.
+                local str to "".
+                local preStr to "".
+                local postStr to str.
+                local colWidth to l_GridSpaceLex[_dispBlockIdx][1] - 2.
+                
+                if str:Length >= colWidth
+                {
+                    local remChars to str:Length.
+
+                    until remChars <= 0
+                    {
+                        set preStr to postStr:SubString(0, colWidth).
+                        local cutStr to preStr:Substring(0, preStr:FindLast(" ")).
+                        set postStr to postStr:Substring(cutStr:Length + 1, postStr:Length - cutStr:Length - 1).
+                        dispList:Add(cutStr).
+                        set remChars to remChars - cutStr:Length - 1.
+                    }
+                }
+            }
+
+            DispPrintBlock(_dispBlockIdx, dispList).
+    }
+
     // Mnv details
         global function DispBurnNodeData
         {
@@ -492,7 +546,7 @@
     //
     global function DispLaunchConfigData
     {
-        parameter _configData is list(),
+        parameter _configData is lexicon(),
                   _selectionIdx is -1,
                   _dispBlockIdx is -1.
 
@@ -501,31 +555,26 @@
             DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
         }
 
-        if _configData:Length > 0
+        if _dispBlockIdx < 0
         {
-            if _dispBlockIdx < 0
-            {
-                set _dispBlockIdx to NextOrAssignedTermBlock("LAUNCH_CONFIG").
-            }
-
-            local dispList to list("LAUNCH CONFIG DATA").
-
-            from { local i to 0.} until i = _configData:Length step { set i to i + 1.} do
-            {
-                local listStr to choose "**{0,13}: {1}" if i = _selectionIdx else "{0,15}: {1}".
-                dispList:Add(listStr:Format(_configData[i]:Keys[0], _configData[i]:Values[0])).
-            }
-            // local dispList to list(
-            //     "LAUNCH CONFIG DATA"
-            //     ,"MissionType : {0}":format(_configData[0]:MissionType)
-            //     ,"Apoapsis    : {0}":format(Round(_configData[0]:tgtAp))
-            //     ,"Periapsis   : {0}":format(Round(_configData[1]:tgtPe))
-            //     ,"Inclination : {0}":format(Round(_configData[2]:tgtInc))
-            //     ,"Stage Limits: {0}":format(_configData[3]:StageLimits)
-            // ).
-
-            DispPrintBlock(_dispBlockIdx, dispList).
+            set _dispBlockIdx to NextOrAssignedTermBlock("LAUNCH_CONFIG").
         }
+        
+        if _configData:Keys:Length = 0
+        {
+            set _configData to GetLaunchParameters().
+        }
+
+        local dispList to list(
+            "LAUNCH CONFIG DATA"
+            ,"{0,-7}: {1}":Format(_configData:Keys[0], _configData:Values[0])
+            ,"{0,-7}: {1}":Format(_configData:Keys[1], _configData:Values[1])
+            ,"{0,-7}: {1}":Format(_configData:Keys[2], _configData:Values[2])
+            ,"{0,-7}: {1}":Format(_configData:Keys[3], _configData:Values[3])
+            ,"{0,-7}: {1}":Format(_configData:Keys[4], _configData:Values[4])
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).
     }
 
     // DispLaunchTelemetry :: [(_dispBlockIdx)<none>] -> <none>

@@ -66,10 +66,10 @@ local doneFlag to choose false if Ship:VerticalSpeed > 0 else true.
 
 LogPressure(True).
 
-if retroFire
+if retroFire or HasNode
 {
     OutMsg("Retro burn initiated").
-    if retroType = 1
+    if retroType = 1 or HasNode
     {
         SetNextStageLimit(retroStage).
         ExecNodeBurn(NextNode).
@@ -459,20 +459,30 @@ if stage:number > 1
             }
         }
     }
-    
+    OutMsg("Checking thrust condition").
+    // until false
+    // {
+    //     set g_ActiveEngines to GetActiveEngines().
+    //     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+    //     if g_ActiveEngines_Data:Thrust = 0 
+    //     {
+    //         break.
+    //     }
+    //     wait 0.01.
+    // }
 
     OutMsg("Staging").
     until stage:number <= 1 
     {
         stage.
-        wait 2.5.
+        wait 5.
         if Stage:Number = 2
         {
 
         }
     }
     set Ship:Control:Fore to 1.
-    wait 2.5.
+    wait 5.
     set Ship:Control:Fore to 0.
 }
 

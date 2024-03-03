@@ -50,12 +50,14 @@ if params:length > 0
 if azData:Length = 1
 {
     set azData to l_az_calc_init(tgtAp, tgtInc, azData[0]).
+    set g_azData to azData.
 }
 else if azData:Length = 0
 {
     set azData to l_az_calc_init(tgtAp, tgtInc, Ship:Latitude).
+    set g_azData to azData.
 }
-set g_AngDependency to InitAscentAng_Next(tgtInc, tgtAp, 1, 2.5, 22.5, True, list(0.00125, 0.000925, 0.0005, 1)). // P, I, D, ChangeRate (upper / lower bounds for PID)
+set g_AngDependency to InitAscentAng_Next(tgtInc, tgtAp, 1, 2.5, 22.5, True, list(0.0125, 0.000925, 0.0005, 1)). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
 //local dvNeeded to CalcDvHoh(Ship:Periapsis, 0, Ship:Apoapsis, Ship:Body)[0].
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, Ship:Apoapsis, "PE")[1].

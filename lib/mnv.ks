@@ -308,6 +308,7 @@
                 }
                 set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
                 DispBurnNodeData(dv, burnEta - Time:Seconds, burnDur[0]).
+                // OutInfo("Time Remaining: {0}s  ":Format(round(burnEta - Time:Seconds, 2)), 2).
             }
 
             local dv0 to _inNode:deltav.
@@ -316,6 +317,7 @@
             OutMsg("Executing burn").
             OutInfo().
             OutInfo("", 1).
+            OutInfo("", 2).
             ClearDispBlock().
 
             set g_ActiveEngines to GetActiveEngines().

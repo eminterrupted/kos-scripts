@@ -1528,6 +1528,191 @@
     }
     // #endregion
 
+    // Staging-stabilization
+    // #region
+    
+    global function ArmStagingStabilization
+    {
+        parameter _stabDC.
+
+        local ctrlModules to list().
+        local ctrlRCSModules to Ship:ModulesNamed("ModuleRCSFX").
+        local ctrlSrfModules to Ship:ModulesNamed("FARControllableSurface").
+        local ctrlUIDs    to list().
+        
+        local resultFlag to False.
+        local stabLeadTime to 3.
+        local stabStage to _stabDC:Stage.
+        local stabTag to _stabDC:Tag:Split("|").
+        local stabType to 0. // Prograde
+                             // Hold attitude
+
+        if stabTag:Length > 1
+        {
+            set stabLeadTime to ParseStringScalar(stabTag[1], stabLeadTime).
+            if stabTag:Length > 2 set stabMomentumLimit to ParseStringScalar(stabTag[2], stabMomentumLimit).
+            if stabTag:Length > 3 set stabType to ParseStringScalar(stabTag[3], stabType).
+        }
+
+        if ctrlSrfModules:Length > 0
+        {
+            for m in ctrlSrfModules
+            {
+                if m:Part:DecoupledIn <= _stabDC:Stage
+                {
+                    ctrlModules:Add(m).
+                    ctrlUIDs:Add(m:Part:UID).
+                }
+            }
+        }
+        
+        if ctrlModules:Length = 0 
+        {
+            for m in ctrlRCSModules
+            {    
+                if m:Part:DecoupledIn >= _stabDC:Stage
+                {
+                    ctrlModules:Add(m).
+                    ctrlUIDs:Add(m:Part:UID).
+                }
+            }
+        }
+        
+        if spinType > 0
+        {
+            local paramList to list(
+                stabStage,
+                ctrlModules,
+                ctrlUIDs,
+                spinType,
+                spinForce
+            ).
+            
+            set g_SpinActive to False.
+            set g_TS0Ref to spinPreload.
+
+            // check del
+            local checkDel to {
+                parameter _params is list().
+
+                local doActionFlag to False.
+
+                if g_ActiveEngines:Length > 0
+                {
+                    if _params[0] = g_ActiveEngines[0]:DecoupledIn
+                    {
+                        if g_SpinActive
+                        {
+                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
+                            OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
+                            if Time:Seconds >= g_TS0
+                            {
+                                set doActionFlag to True.
+                                set g_TS0 to -1.
+                                set g_TS0Ref to 0.
+                            }
+                        }
+                        else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
+                        {
+                            local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
+                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
+                            OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
+                            if timeRem <= 0
+                            {
+                                if not g_SpinActive
+                                {
+                                    set doActionFlag to True.
+                                    set g_TS0 to Time:Seconds + spinPreload.
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return doActionFlag.
+            }.
+
+            // action del
+            local steerVal to Ship:Facing.
+            local l_SpinSteerDelHolder to { return steerVal.}.
+
+            local actionDel to {
+                parameter _params is list().
+
+                local keepAlive to False.
+
+                if g_SpinActive
+                {
+                    OutInfo("Spin Stabilization Disarmed   ", 1).
+                    set Ship:Control:Roll to 0.
+                    set g_SteeringDelegate to l_SpinSteerDelHolder.
+                    unset l_SpinSteerDelHolder.
+                    set g_SpinActive to False.
+                    set g_SpinArmed to False.
+                }
+                else
+                {
+                    OutInfo("Initiating Spin Stabilization   ", 1).
+                    set l_SpinSteerDelHolder to g_SteeringDelegate.
+                    set steerVal to Ship:Facing.
+                    set g_SteeringDelegate to { return steerVal.}.
+
+                    if _params[3] = 1 and Body:ATM:AltitudePressure(Ship:Altitude) >= 0.1
+                    {
+                        from { local i to 0.} until i = _params[2]:Length step { set i to i + 1.} do
+                        {
+                            if g_ShipUIDs:Contains(_params[2][i])
+                            {
+                                local m to _params[1][i].
+                                if not m:GetField("std. ctrl") m:SetField("std. ctrl", True).
+                            }
+                        }
+                    }
+                    else if _params[3] = 2 or Body:ATM:AltitudePressure(Ship:Altitude) < 0.1
+                    {
+                        // OutDebug(_params[1]:TypeName, 5).
+                        // if _params[1]:IsType("List") OutDebug(_params[1][0]:TypeName, 6).
+                        from { local i to 0.} until i = _params[2]:Length step { set i to i + 1.} do
+                        {
+                            if g_ShipUIDs:Contains(_params[2][i])
+                            {
+                                local m to _params[1][i].
+                                if m:Name = "ModuleRCSFX" m:SetField("RCS", True).
+                            }
+                        }
+                    }
+                    // set l_SteeringDelegate_Standby to g_SteeringDelegate.
+                    // set g_SteeringDelegate to { return Ship:Facing.}.
+                    set Ship:Control:Roll to _params[4].
+                    set g_SpinActive to True.
+                }
+
+                if g_SpinActive
+                {
+                    set keepAlive to True.
+                }
+                else
+                {
+                    set keepAlive to False.
+                }
+
+                return keepAlive.
+            }.
+
+            local spinEvent to lexicon().
+            local spinEventID to "SPIN_{0}":Format(_stabDC:Stage).
+
+            if not g_LoopDelegates:Events:HasKey(spinEventID)
+            {
+                set spinEvent to CreateLoopEvent(spinEventID, "SpinEvent", paramList, checkDel@, actionDel@).
+                set resultFlag to RegisterLoopEvent(spinEvent).   
+            }
+        }
+
+        return resultFlag.
+    }
+    // #endregion
+
     // -- Mass
     // #region
 
@@ -1938,6 +2123,7 @@
 
         local del to {}.
 
+        // Dependencies
         if g_AzData:Length = 0
         {
             set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
@@ -1948,6 +2134,7 @@
             set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.00275, 0.00125, 0.0075, 1)). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
         }
 
+        // Branching
         if _steerDelID = "Flat:Sun"
         {
             // set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
@@ -1980,13 +2167,17 @@
         }
         else if _steerDelID = "PIDApoErr:Sun"
         {
-            OutInfo("Transitioning to PIDApoErr:Sun guidance").
-            set g_AngDependency:RESET_PIDS to True.
+            if g_Debug OutDebug("Transitioning to PIDApoErr:Sun guidance", -2).
+            // set g_AngDependency:RESET_PIDS to True.
             set del to { 
-                local pidPit to GetAscentAng_PIDyParty(g_AngDependency).
+                local pidPit to GetAscentAng_PID(g_AngDependency).
                 DispPIDLoopValues(g_PIDS[g_AngDependency:APO_PID]).
                 return Heading(l_az_calc(g_azData), pidPit, 0).
             }.
+        }
+        else
+        {
+            set del to { OutDebug("Orbital Steering Delegate Fallthrough!", -1). return Ship:Facing. }.
         }
         
         return del@.

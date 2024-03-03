@@ -52,7 +52,7 @@
         local veloVecTA to VelocityAt(_obj, tsTA):Orbit.
         local posVecTA  to PositionAt(_obj, tsTA). 
         local eccVecTA  to (veloVecTA * (posVecTA * veloVecTA)) / _obj:Body:Mu.
-        local ta        to ArcCos((eccVecTA * posVecTA) / (Abs(eccVecTA) * Abs(posVecTA))).
+        local ta        to ArcCos((eccVecTA * posVecTA) / (eccVecTA:Normalized * posVecTA:Normalized)).
         if (posVecTA * veloVecTA) < 0 
         {
             set ta to (2 * constant:pi) - ta.

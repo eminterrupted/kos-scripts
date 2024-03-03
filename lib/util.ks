@@ -138,6 +138,67 @@
 
     // #endregion
 
+    // *- Core Messaging System
+    // #region
+
+        // BroadcastCoreMessage
+        // _msgObj should contain at minimum a key named "Content", with the value being the message to send
+        global function SendCoreMessage
+        {
+            parameter _msgObj,
+                    _recipientUIDs is list(Core:Part:UID).
+
+            local msgContent to _msgObj.
+            if msgContent:IsType("Lexicon")
+            {
+                if msgContent:HasKey("Content") 
+                {
+                    set msgContent to msgContent:Content.
+                }
+            }
+            local procs to Ship:ModulesNamed("kOSProcessor").
+            local recipients to list().
+
+            if _recipientUIDs:Contains(Core:Part:UID)
+            {
+                _recipientUIDs:Clear().
+            
+                for m in procs
+                {
+                    if m:Part:UID <> Core:Part:UID
+                    {
+                        recipients:Add(m).
+                    }
+                }
+            }
+            else
+            {
+                from { local i to 0.} until i = procs:length step { set i to i + 1.} do
+                {
+                    local m to procs[i].
+                    for uid in _recipientUIDs
+                    {
+                        if m:Part:UID = uid
+                        {
+                            recipients:Add(m).
+                        }
+                    }
+                }
+            }
+
+            local errorList to list().
+
+            for m in recipients
+            {
+                local cx to m:Connection.
+                local msgResult to cx:SendMessage(msgContent).
+                if not msgResult errorList:Add(m:UID).
+            }
+
+            return errorList.
+        }
+    // #endregion
+
     // *- Terminal Utilities
     // #region
     
@@ -1161,6 +1222,8 @@
                   _check is { return true.},
                   _action is { return false.}.
 
+
+        set g_Program to 2320.
 
         OutInfo("CreateLoopEvent: Creating new event ({0})":Format(_id)).
 

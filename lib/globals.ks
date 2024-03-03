@@ -147,6 +147,7 @@
     global g_MECOArmed              to False.
     global g_OnDeployActive         to False.
     global g_OnStageEventArmed      to False.
+    global g_PreStagingInit         to False.
     global g_RCSArmed               to False.
     global g_SpinActive             to False.
     global g_SpinArmed              to False.
