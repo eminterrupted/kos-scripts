@@ -1,777 +1,269 @@
+// #include "0:/lib/libLoader.ks"
 @lazyGlobal off.
 
-//-- Dependencies --//
-
-//-- Variables --//
-global KSCGeoPos to lex(
-    "Launchpad", Body("Kerbin"):geoPositionLatLng(0,-74.5862)
-    ,"TSC-39B", Body("Kerbin"):geoPositionLatLng(-0.00626,-74.5862)
-).
+// *~ Dependencies ~* //
+// Required libraries not loaded by libLoader by default go here
+// #region
+// #endregion
 
 
-//-- Functions --//
+// *~ Variables ~* //
+// Local and global variables used in this library
+// #region
+    // *- Local
+    // #region
+    // #endregion
 
-//#region -- Waypoints
-// Returns the currently active waypoint
-global function GetActiveWP
-{
-    for wp in allWaypoints()
+    // *- Global
+    // #region
+    // #endregion
+// #endregion
+
+
+// *~ Functions ~* //
+// #region
+  
+    // *- Anomaly Calculation
+    // #region
+
+    // https://en.wikipedia.org/wiki/Eccentric_anomaly
+    global function GetEccAnomaly
     {
-        if wp:isSelected
+        parameter _obj,
+                  _timeFromNow is 0.
+
+        local objEcc to objObt:Eccentricity.
+        local ta to GetTrueAnomaly(_obj, _timeFromNow).
+        local cosEccAnomaly to (objEcc + Cos(ta)) / ( 1 + (objEcc * Cos(ta))).
+        local eccAnomaly to ArcCos(cosEccAnomaly).
+        // local sinEccAnomaly to (Sqrt(1 - objEcc^2) * Sin(ta)) / (1 + (objEcc * Cos(ta))).
+        // local eccAnomaly to ArcSin(sinEccAnomaly).
+
+        return eccAnomaly.
+    }
+
+    // https://en.wikipedia.org/wiki/True_anomaly
+    global function GetTrueAnomaly
+    {
+        parameter _obj,
+                  _timeFromNow is 0.
+
+        local tsTA      to Time:Seconds + _timeFromNow.
+        local veloVecTA to VelocityAt(_obj, tsTA):Orbit.
+        local posVecTA  to PositionAt(_obj, tsTA). 
+        local eccVecTA  to (veloVecTA * (posVecTA * veloVecTA)) / _obj:Body:Mu.
+        local ta        to ArcCos((eccVecTA * posVecTA) / (eccVecTA:Normalized * posVecTA:Normalized)).
+        if (posVecTA * veloVecTA) < 0 
         {
-            return wp.
+            set ta to (2 * constant:pi) - ta.
         }
+        return ta.
     }
-    return false.
-}
 
-//#region -- Patch handling
-
-// GetInterceptPatchIndex :: [<body>] -> <int>
-// Returns the 0-indexed patch ID where the current vessel intersects the target body
-global function GetInterceptPatchIndex
-{
-    parameter _tgtBody,
-              _curPatch is ship:orbit.
-              
-    from { local i to 0.} until not _curPatch:hasNextPatch step { set i to i + 1.} do
+    // Returns the mean anomaly of the provided object, with optional projection into the future
+    // https://en.wikipedia.org/wiki/Mean_anomaly
+    global function GetMeanAnomaly
     {
-        if _curPatch:body = _tgtBody return i.
-        set _curPatch to _curPatch:NextPatch.
-        wait 0.01.
-    }
-    return -1. // Default value indicates no intercept found
-}
+        parameter _obj,
+                  _timeFromNow is 0.
 
-// GetOrderedPatches :: [<vessel>Ship] -> <lexicon>
-// Returns a different view of the vessel's patches, with nextPatchETA joined to the patch it belongs to
-global function GetOrderedPatches
-{
-    parameter ves is ship.
+        local tsMA to Time:Seconds + _timeFromNow.
+        local objObt to choose _obj:Orbit if _timeFromNow = 0 else OrbitAt(_obj, tsMA).
 
-    local patchLex to lexicon().
-    if ves:patches:length > 1 
-    {
-        local patchList to ves:patches.
-        from { local i to 0.} until i >= patchList:length step { set i to i + 1.} do
+        local timeAdded to 0.
+        if _timeFromNow > objObt:ETA:Periapsis
         {
-            local patch to patchList[i].
-            local patchETA to choose patchList[i -1]:nextPatchEta if i > 0 else 0.
-            set patchLex[i] to list(patch:body:name, round(patchETA), round(patch:body:distance)).
-        }
-        return patchLex.
-    }
-    else
-    {
-        return lex(0, list(body:name, -1, round(body:distance))).
-    }
-}
-
-// GetPatchByIndex :: [<int>PatchIdx] -> <orbit> 
-global function GetPatchByIndex
-{
-    parameter _pIdx.
-
-    local curPatch to ship:orbit.
-    from { local i to 0.} until i = _pIdx step { set i to i + 1.} do
-    {
-        if curPatch:hasNextPatch 
-        {
-            set curPatch to curPatch:NextPatch.
-        }
-        else
-        {
-            return ship:orbit.
-        }
-    }
-    return curPatch.
-}
-
-// GetPatches :: [<ship>Ship] -> List<Orbit>
-// Returns all orbits (current and future) identified in the flight path
-global function GetSoiEta
-{
-    parameter _tgtBody,
-              _obj is ship.
-
-    local _eta to 0.
-    local o to _obj:patches[0].
-    until o:body = _tgtBody
-    {
-        if o:body = _tgtBody
-        {
-            return _eta.
-        }
-        else if o:hasNextPatch
-        {
-            set _eta to _eta + o:nextpatcheta.
-            set o to o:nextPatch.
-        }
-        else
-        {
-            return -1.
-        }
-    }
-    return _eta.
-}
-
-// Returns all patches for a given maneuver node
-global function GetPatchesForNode
-{
-    parameter _node is nextNode.
-
-    local curPatch to _node:orbit.
-    local patchList to list(curPatch).
-    until not curPatch:hasNextPatch
-    {
-        set curPatch to curPatch:nextPatch.
-        patchList:add(curPatch).
-    }
-    return patchList.
-}
-
-// Returns the last patch for a given node
-global function LastPatchForNode
-{
-    parameter _node.
-
-    local curPatch to _node:orbit.
-    until not curPatch:hasNextPatch 
-    {
-        set curPatch to curPatch:nextPatch.
-    }
-
-    return curPatch.
-}
-
-// Returns the next patch for a given node if one exists
-global function NextPatchForNode
-{
-    parameter _node.
-
-    local curPatch to _node:orbit.
-    if curPatch:hasNextPatch 
-    {
-        set curPatch to curPatch:nextPatch.
-    }
-    return curPatch.
-}
-//#endregion
-
-//#region -- GeoCoordinates
-// Converts longitude into degrees
-global function LngToDegress
-{
-    parameter lng.
-    return mod(lng + 360, 360).
-}
-
-//#region -- Target and Transfer data Functions
-// GetAngVelocity :: <orbitable>, <body> -> <scalar>
-// Angular velocity of a target in radians
-global function GetAngVelocity 
-{
-    parameter tgt,
-              mnvBody is ship:body.
-
-    local angVel to (360 / (2 * constant:pi)) * sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis ^ 3).
-    //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis) * constant:radtodeg.
-    //local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis).
-    //local angVel to sqrt(mnvBody:mu / tgt:orbit:semiMajorAxis^3).
-    return angVel.
-}
-
-// GetAngVelocityNext :: <orbitable>, <body> -> <scalar>
-// Angular velocity of a target using a different formula than above
-global function GetAngVelocityNext
-{
-    parameter tgt,
-              mnvBody is ship:body.
-
-    local angVel to (tgt:orbit:velocity:orbit:mag / tgt:orbit:semiMajorAxis) * constant:radtodeg.
-    return angVel.
-}
-
-// Phase angle relative to longitude
-global function LngToPhaseAng
-{
-    parameter tgt.
-
-    return mod(LngToDegress(tgt:longitude) - LngToDegress(ship:longitude) + 360, 360).
-}
-
-// Converts a string to an orbitable type
-global function GetOrbitable 
-{
-    parameter tgtStr.
-
-    if tgtStr:IsType("Vessel") or tgtStr:IsType("Body") 
-    {
-        return tgtStr.
-    }
-    else if tgtStr:IsType("Part")
-    {
-        return tgtStr:ship.
-    }
-    else
-    {
-        local iList to buildList("targets").
-        for b in buildList("bodies")
-        {
-            iList:add(b).
-        }
-
-        from { local idx to 0.} until idx = iList:length step { set idx to idx + 1.} do
-        {
-            if iList[idx]:name = tgtStr
+            until timeAdded > _timeFromNow 
             {
-                if iList[idx]:typeName = "body" return Body(tgtStr).
-                else return Vessel(tgtStr).
+                set timeAdded to timeAdded + objObt:Period.
             }
         }
+
+        local meanAngMotion to (2 * Constant:Pi) / objObt:Period.
+        local tsPe to (Time:Seconds - (objObt:Period - objObt:ETA:Periapsis)) + timeAdded.
+        return meanAngMotion * (tsMA - tsPe). // Mean Anomaly
     }
-}
+    // #endregion
 
-// GetTransferPhase :: <orbitable / string>, <scalar> -> <scalar>
-// Returns the proper phase angle to start a transfer burn. from: https://ai-solutions.com/_freeflyeruniversityguide/interplanetary_hohmann_transfe.htm#calculatinganinterplanetaryhohmanntransfer
-global function GetTransferPhase
-{
-    parameter tgt,
-              stAlt.
-    
-    local angVelTarget  to GetAngVelocity(tgt, tgt:body).
-    local tSMA          to GetSMA(stAlt, tgt:altitude, tgt:body).
-    local tHoh          to GetTransferPeriod(tSMA, tgt:body).
-    return 180 - 0.5 * (tHoh * angVelTarget).
-}
+    // *- Orbital Ap / Pe / SMA / ECC calcuations
+    // #region
 
-// KSNavPhaseAng :: <orbitable>, <vessel> -> <scalar>
-// From KSLib - Gets the phase angle relative to LAN for a target and starting ship
-global function KSNavPhaseAng {
-    parameter tgt is target, 
-              stObj is ship.
-    
-    local common_ancestor is 0.
-    local my_ancestors is list().
-    local your_ancestors is list().
+    // Apoapsis from periapsis and eccentricity
+    global function GetApFromPeEcc
+    {
+        parameter _pe,
+                  _ecc,
+                  _tgtBody is ship:body.
 
-    my_ancestors:add(stObj:body).
-    until not(my_ancestors[my_ancestors:length-1]:hasBody) {
-        my_ancestors:add(my_ancestors[my_ancestors:length-1]:body).
-    }
-    your_ancestors:add(tgt:body).
-    until not(your_ancestors[your_ancestors:length-1]:hasBody) {
-        your_ancestors:add(your_ancestors[your_ancestors:length-1]:body).
+        return (((_pe + _tgtBody:radius) / (1 - _ecc)) * (1 + _ecc)) - _tgtBody:radius.
     }
 
-    for my_ancestor in my_ancestors {
-        local found is false.
-        for your_ancestor in your_ancestors {
-            if my_ancestor = your_ancestor {
-                set common_ancestor to my_ancestor.
-                set found to true.
+    // Apoapsis and Periapsis from sma and ecc
+    global function GetApPeFromSMAEcc
+    {
+        parameter _sma,
+                  _ecc.
+
+        local pe to _sma * (1 - _ecc).
+        local ap to _sma * (1 + _ecc).
+
+        return list (pe, ap).
+    }
+
+    // Eccentricity from apoapsis and periapsis
+    global function GetEccFromApPe
+    {
+        parameter _ap,
+                  _pe,
+                  _tgtBody is ship:body.
+
+        return ((_ap + _tgtBody:radius) - (_pe + _tgtBody:radius)) / (_ap + _pe + (_tgtBody:radius * 2)).
+    }
+
+    // Periapsis from apoapsis and eccentricity
+    global function GetPeFromApEcc
+    {
+        parameter _ap,
+                  _ecc,
+                  _tgtBody is ship:body.
+
+        return (((_ap + _tgtBody:radius) / (1 + _ecc)) * (1 - _ecc)) - _tgtBody:radius.
+    }
+
+    // Period of hohmann transfer
+    global function GetPeriodFromSMA
+    {
+        parameter _tgtSMA, 
+                  _tgtBody is ship:body.
+
+        return 0.5 * sqrt((4 * constant:pi^2 * _tgtSMA^3) / _tgtBody:mu).
+    }
+
+    // Semimajoraxis from orbital period
+    global function GetSMAFromPeriod
+    {
+        parameter _period, 
+                  _tgtBody is ship:body.
+
+        return ((_tgtBody:mu * _period^2) / (4 * constant:pi^2))^(1/3).
+    }
+
+    // Semimajoraxis from apoapsis, periapsis, and body
+    global function GetSMAFromApPe
+    {
+        parameter _ap,
+                  _pe,
+                  _smaBody is ship:body.
+
+        return (_pe + _ap + (_smaBody:radius * 2)) / 2.
+    }
+
+    // Semimajoraxis of transfer orbit
+    global function GetTransferSMA
+    {
+        parameter _arrivalSMA,
+                  _parkingSMA.
+
+        return (_arrivalSMA + _parkingSMA) / 2.
+    }
+    // #endregion
+
+    // Orbital Time Calculations
+    // #region
+    // Returns the period of a transfer SMA
+    global function GetTransferPeriod
+    {
+        parameter _xfrSMA,
+                  _stBody is ship:body.
+
+        //return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
+        return 2 * constant:pi * sqrt(_xfrSMA^3 / _stBody:mu).
+    }
+    //#endregion
+
+    // Orbital Position Projections
+    // #region
+
+    // GetPhaseAngleAtTime :: _tgtObj<Orbitable>, [_ogObj<Orbitable>], [_timeFromNow<Scalar>] -> phase<Scalar>
+    // Heavily based on kslib_nav_phase_angle, modified for future phase prediction
+    global function GetPhaseAngleAtTime
+    {
+        parameter _tgtObj,
+                  _ogObj is Ship,
+                  _ts is Time:Seconds.
+
+        local common_ancestor is 0.
+        local my_ancestors is list().
+        local your_ancestors is list().
+
+        my_ancestors:Add(OrbitAt(_ogObj, _ts):Body).
+        until not(my_ancestors[my_ancestors:Length-1]:hasBody) 
+        {
+            my_ancestors:Add(my_ancestors[my_ancestors:Length-1]:Body).
+        }
+        your_ancestors:Add(OrbitAt(_tgtObj, _ts):Body).
+        until not(your_ancestors[your_ancestors:Length-1]:hasBody) 
+        {
+            your_ancestors:Add(your_ancestors[your_ancestors:Length-1]:Body).
+        }
+
+        for my_ancestor in my_ancestors 
+        {
+            local found is false.
+            for your_ancestor in your_ancestors 
+            {
+                if my_ancestor = your_ancestor 
+                {
+                    set common_ancestor to my_ancestor.
+                    set found to true.
+                    break.
+                }
+            }
+            if found {
                 break.
             }
         }
-        if found {
-            break.
+
+        local vel is VelocityAt(_ogObj, _ts):orbit.
+        local common_ancestor_pos to PositionAt(common_ancestor, _ts).
+        local my_ancestor is my_ancestors[0].
+        until my_ancestor = common_ancestor 
+        {
+            set vel to vel + VelocityAt(my_ancestor, _ts):orbit.
+            set my_ancestor to my_ancestor:Body.
+        }
+        local tgt_pos to PositionAt(_tgtObj, _ts).
+        local binormal is vcrs(-common_ancestor_pos:normalized, vel:normalized):normalized.
+
+        local phase is vang(
+            -common_ancestor_pos:normalized,
+            vxcl(binormal, tgt_pos - common_ancestor_pos):normalized
+        ).
+        local signVector is vcrs(
+            -common_ancestor_pos:normalized,
+            (tgt_pos - common_ancestor_pos):normalized
+        ).
+        local sign is vdot(binormal, signVector).
+        if sign < 0 {
+            return 360 - phase.
+        }
+        else {
+            return phase.
         }
     }
+    // #endregion
 
-    local vel is stObj:orbit:velocity:orbit.
-    local my_ancestor is my_ancestors[0].
-    until my_ancestor = common_ancestor {
-        set vel to vel + my_ancestor:orbit:velocity:orbit.
-        set my_ancestor to my_ancestor:body.
-    }
-    local binormal is vcrs(-common_ancestor:position:normalized, vel:normalized):normalized.
+    // Situational Parameter Calculations
+    // #region
 
-    local phase is vang(
-        -common_ancestor:position:normalized,
-        vxcl(binormal, tgt:position - common_ancestor:position):normalized
-    ).
-    local signVector is vcrs(
-        -common_ancestor:position:normalized,
-        (tgt:position - common_ancestor:position):normalized
-    ).
-    local sign is vdot(binormal, signVector).
-    if sign < 0 {
-        return -phase.
-    }
-    else {
-        return phase.
-    }
-}
-
-//#endregion
-
-//#region -- Orbit Calculations
-// Apoapsis from periapsis and eccentricity
-global function GetAp 
-{
-    parameter pe,
-              ecc,
-              tgtBody is ship:body.
-
-    return (((pe + tgtBody:radius) / (1 - ecc)) * (1 + ecc)) - tgtBody:radius.
-}
-
-// Eccentricity from apoapsis and periapsis
-global function GetEcc
-{
-    parameter pe,
-              ap,
-              tgtBody is ship:body.
-
-    return ((ap + tgtBody:radius) - (pe + tgtBody:radius)) / (ap + pe + (tgtBody:radius * 2)).
-}
-
-// Apoapsis and Periapsis from sma and ecc
-global function GetApPe
-{
-    parameter sma,
-              ecc.
-
-    local pe to sma * (1 - ecc).
-    local ap to sma * (1 + ecc).
-
-    return list (pe, ap).
-}
-
-// Periapsis from apoapsis and eccentricity
-global function GetPe 
-{
-    parameter ap,
-              ecc,
-              tgtBody is ship:body.
-
-    return (((ap + tgtBody:radius) / (1 + ecc)) * (1 - ecc)) - tgtBody:radius.
-}
-
-// Period of hohmann transfer
-global function GetPeriod
-{
-    parameter tgtSMA, 
-              tgtBody is ship:body.
-
-    return 0.5 * sqrt((4 * constant:pi^2 * tgtSMA^3) / tgtBody:mu).
-}
-
-// Semimajoraxis from orbital period
-global function GetSMAFromPeriod
-{
-    parameter period, 
-              tgtBody is ship:body.
-
-    return ((tgtBody:mu * period^2) / (4 * constant:pi^2))^(1/3).
-}
-
-// Semimajoraxis from apoapsis, periapsis, and body
-global function GetSMA
-{
-    parameter pe,
-              ap,
-              smaBody is ship:body.
-
-    return (pe + ap + (smaBody:radius * 2)) / 2.
-}
-
-// 
-global function GetTransferSma
-{
-    parameter arrivalRadius,
-              parkingOrbit.
-
-    return (arrivalRadius + parkingOrbit) / 2.
-}
-
-global function GetTransferPeriod
-{
-    parameter xfrSMA,
-              tgtBody is ship:body.
-
-    //return 0.5 * sqrt((4 * constant:pi^2 * xfrSMA^3) / tgtBody:mu).
-    return 2 * constant:pi * sqrt(xfrSMA^3 / tgtBody:mu).
-}
-//#endregion
-
-//#region -- Calculations of True Anomaly
-//From dunbaratu's kos tutorial (youtube.com/watch?v=NctfWrgreRI&list=PLdXwd2JlyAvowkTmfRXZrqVdRycxUIxpX)
-//ETA to a future true anomaly point in a given orbit
-global function ETAtoTA 
-{
-    parameter obtIn,  // Orbit to predict for
-              taDeg.  // true anomaly we need in degrees
-
-    local targetTime is TimePeToTA(obtIn, taDeg).
-    local curTime is TimePeToTA(obtIn, obtIn:trueanomaly).
-
-    local utimeAtTA is targetTime - curTime.
-    
-    //If negative, we've passed it so return the next orbit
-    if utimeAtTA < 0
-    { 
-        set utimeAtTA to utimeAtTA + obtIn:period. 
-    }
-
-    return utimeAtTA.
-}
-
-
-// The time it takes to get from PE to a given true anomaly
-global function TimePeToTA 
-{
-    parameter obtIn,  // Orbit to predict for
-              taDeg.  // true anomaly in degrees
-
-    local ecc is obtIn:eccentricity. 
-    local sma is obtIn:semimajoraxis.
-    local eAnomDeg is arcTan2( sqrt(1 - ecc^2) * sin(taDeg), ecc + cos(taDeg)).
-    local eAnomRad is eAnomDeg * constant:degtorad.
-    local mAnomRad is eAnomRad - ecc * sin(eAnomDeg).
-
-    return mAnomRad / sqrt( obtIn:body:mu / sma^3 ).
-}
-
-
-// Find the ascending node where orbit 0 crosses the plane of orbit 1
-// Answer is returned in the form of true anomaly of orbit 0 (angle from
-// orbit 0's Pe). Descending node inverse (+180)
-global function AscNodeTA 
-{
-    parameter obt0, // This should be the ship orbit
-              obt1. // This should be the target orbit
-
-    //Normals of the orbits
-    local nrm_0 to ObtNormal(obt0).
-    local nrm_1 to ObtNormal(obt1).
-
-    // Unit vector pointing from body's center towards the node
-    local vec_body_to_node is vcrs(nrm_0, nrm_1).
-
-    // Vector pointing from body center to obt_0 current position
-    local pos_0_body_rel is obt0:position - obt0:body:position.
-
-    // How many true anomaly degrees ahead of my current true anomaly
-    local ta_ahead is vang(vec_body_to_node, pos_0_body_rel).
-
-    // I think this will give us pos / neg depending on how 
-    // far ahead it is
-    local sign_check_vec is vcrs(vec_body_to_node, pos_0_body_rel).
-    
-    // If the sign_check_vec is negative (meaning more than 180 degrees 
-    // in front of us), it will result in the normal being negative. In
-    // this case, we subtract ta_ahead from 360 to get degrees from 
-    // current position. 
-    if vdot(nrm_0, sign_check_vec) < 0
+    // GetLocalGrav :: [_body<Orbitable>], [_alt<Scalar>] -> <scalar>
+    // Returns the local gravity given an orbitable and an altitude above it. Defaults to current vessel position.
+    global function GetLocalGravity
     {
-        set ta_ahead to 360 - ta_ahead.
+        parameter _body is Ship:Body,
+                  _alt is Ship:Altitude.
+
+        return (Constant:g * _body:Mass) / (_body:radius + _alt)^2.
     }
-
-    // Add current true anomaly to our calculated ta_ahead to get the 
-    // absolute true anomaly
-    return mod( obt0:trueanomaly + ta_ahead, 360).
-}
-
-//Get an orbit's altitude at a given true anomaly angle of it
-global function AltAtTA 
-{
-    parameter obtIn,       // Orbit to check
-              trueAnom.    // TA in degrees
-
-    local sma is obtIn:semimajoraxis.
-    local ecc is obtIn:eccentricity.
-    local r0 is sma * (1 - ecc ^ 2) / (1 + ecc * cos(trueAnom)).
-
-    // Subtract the body radius from the resulting SMA to get alt
-    return r0 - obtIn:body:radius.
-}
-
-// Converts a true anomaly to the mean anomaly. 
-global function TAtoMA
-{
-    parameter obtIn, 
-              trueAnom.
-
-    local ecc to obtIn:eccentricity.
-    local ea to arctan2(sqrt(1 - ecc^2) * sin(trueAnom), ecc + cos(trueAnom)).
-    local ma to ea - (ecc * sin(ea) * constant:radtodeg).
-    return mod(ma + 360, 360).
-}
-//#endregion
-
-//#region -- Nav vectors
-// In the direction of orbital angular momentum of ves
-// Typically same as Normal
-global function ObtBinormal 
-{
-    parameter obtIn.
-    return vcrs((obtIn:position - obtIn:body:position):normalized, ObtTangent(obtIn)):normalized.
-}
-
-//Normal of the given orbit
-global function ObtNormal 
-{
-    parameter obtIn.
-    return vcrs( obtIn:body:position - obtIn:position, obtIn:velocity:orbit):normalized.
-}
-
-//Position of the given orbit
-global function ObtPosition 
-{
-    parameter obtIn.
-    return (obtIn:body:position - obtIn:position).
-}
-
-//Tangent (velocity) of the given orbit
-global function ObtTangent 
-{
-    parameter obtIn.
-    return obtIn:velocity:orbit:normalized.
-}
-//#endregion
-
-//#region -- ksLib nav vectors
-// Same as orbital prograde vector for ves
-global function VesTangent 
-{
-    parameter ves is ship.
-    return ves:velocity:orbit:normalized.
-}
-
-// In the direction of orbital angular momentum of ves
-// Typically same as Normal
-global function VesBinormal 
-{
-    parameter ves is ship.
-    return vcrs((ves:position - ves:body:position):normalized, VesTangent(ves)):normalized.
-}
-
-// Perpendicular to both tangent and binormal
-// Typically same as Radial In
-global function VesNormal 
-{
-    parameter ves is ship.
-    return vcrs(VesBinormal(ves), VesTangent(ves)):normalized.
-}
-
-// Vector pointing in the direction of longitude of ascending node
-global function VesLAN 
-{
-    parameter ves is ship.
-    return angleAxis(ves:orbit:LAN, ves:body:angularVel:normalized) * solarPrimeVector.
-}
-
-// Same as surface prograde vector for ves
-global function VesSrfTangent 
-{
-    parameter ves is ship.
-    return ves:velocity:surface:normalized.
-}
-
-// In the direction of surface angular momentum of ves
-// Typically same as Normal
-global function VesSrfBinormal 
-{
-    parameter ves is ship.
-    return vcrs((ves:position - ves:body:position):normalized, VesSrfTangent(ves)):normalized.
-}
-
-// Perpendicular to both tangent and binormal
-// Typically same as Radial In
-global function VesSrfNormal 
-{
-    parameter ves is ship.
-    return vcrs(VesSrfBinormal(ves), VesSrfTangent(ves)):normalized.
-}
-
-// Vector pointing in the direction of longitude of ascending node
-global function VesSrfLAN 
-{
-    parameter ves is ship.
-    return angleAxis(ves:orbit:LAN - 90, ves:body:angularVel:normalized) * solarPrimeVector.
-}
-
-// Vector directly away from the body at ves' position
-global function VesLocalVertical 
-{
-    parameter ves is ship.
-    return ves:up:vector.
-}
-
-// Angle to ascending node with respect to ves' body's equator
-function AngToBodyAscNode {
-    parameter ves is ship.
-
-    local joinVector is VesLAN(ves).
-    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
-    if ves:status = "LANDED" {
-        set angle to angle - 90.
-    }
-    else {
-        local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(VesBinormal(ves), signVector).
-        if sign < 0 {
-            set angle to angle * -1.
-        }
-    }
-    return angle.
-}
-
-// Angle to descending node with respect to ves' body's equator
-function AngToBodyDescNode {
-    parameter ves is ship.
-
-    local joinVector is -VesLAN(ves).
-    local angle is vang((ves:position - ves:body:position):normalized, joinVector).
-    if ves:status = "LANDED" {
-        set angle to angle - 90.
-    }
-    else {
-        local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(VesBinormal(ves), signVector).
-        if sign < 0 {
-            set angle to angle * -1.
-        }
-    }
-    return angle.
-}
-
-// Vector directed from the relative descending node to the ascending node
-function DescToAscNodeVec {
-    parameter orbitBinormal.
-    parameter targetBinormal.
-
-    return vcrs(orbitBinormal, targetBinormal):normalized.
-}
-
-// Angle to relative ascending node determined from args
-function AngToRelAscNode {
-    parameter orbitBinormal.
-    parameter targetBinormal.
-
-    local joinVector is DescToAscNodeVec(orbitBinormal, targetBinormal).
-    local angle is vang(-body:position:normalized, joinVector).
-    local signVector is vcrs(-body:position, joinVector).
-    local sign is vdot(orbitBinormal, signVector).
-    if sign < 0 {
-        set angle to angle * -1.
-    }
-    return angle.
-}
-
-// Angle to relative descending node determined from args
-function AngToRelDescNode {
-    parameter orbitBinormal.
-    parameter targetBinormal.
-
-    local joinVector is -DescToAscNodeVec(orbitBinormal, targetBinormal).
-    local angle is vang(-body:position:normalized, joinVector).
-    local signVector is vcrs(-body:position, joinVector).
-    local sign is vdot(orbitBinormal, signVector).
-    if sign < 0 {
-        set angle to angle * -1.
-    }
-    return angle.
-}
-//#endregion
-
-//#region -- Velocity calculations
-// Transfer velocity from start and end semimajoraxis
-global function TransferVelocity
-{
-    parameter rStart,
-              endSMA,
-              mnvBody is ship:body.
-    
-    return sqrt(mnvBody:mu * ((2 / (rStart)) - (1 / endSMA))).
-}
-
-// Velocity given a true anomaly
-global function VelocityAtTA
-{
-    parameter ves,
-              orbitIn,
-              anomaly.
-
-    local etaToAnomaly to time:seconds + ETAtoTA(orbitIn, anomaly).
-    return velocityAt(ves, etaToAnomaly):orbit:mag.
-}
-
-// Orbital velocity on the surface of a planet by latitude
-global function GetOrbitalVelocityByGeoPos
-{
-    parameter _pos is ship:GeoPosition.
-
-    local _re to _pos:body:radius.
-    local _lat to _pos:lat.
-    local _sd to _pos:body:rotationperiod.
-
-    return (2 * constant:pi * _re * cos(_lat)) / _sd.
-}
-//#endregion
-
-// GetHyperAsymptoteAng :: <none> -> <scalar>
-// Returns the angle between the two asymptotes in a hyperbolic trajectory
-global function GetHyperAsymptoteAng
-{
-    return arcSin(1 / ship:orbit:eccentricity).
-}
-
-// GetHyperDepartureAng :: <none> -> <scalar>
-// 
-global function GetHyperDepatureAng
-{
-    return arcCos(-(1 / ship:orbit:eccentricity)).
-}
-
-// GetHyperTA :: <none> -> <scalar>
-//
-global function GetHyperTA 
-{
-    local peSma to ship:periapsis + body:radius.
-    local ta to arcCos((ship:orbit:semimajoraxis * (1 - ship:orbit:eccentricity^2) - (peSma)) / (ship:orbit:eccentricity * peSma)).
-    return ta.
-}
-
-// GetHyperPe :: <none> -> <scalar>
-// Returns the periapsis of the current hyperbolic orbit
-global function GetHyperPe
-{
-    return (ship:orbit:semiMajorAxis * (1 - ship:orbit:eccentricity)) - ship:body:radius.
-}
-
-// GetFlightPathAng :: <ship> -> <scalar>
-global function GetFlightPathAng
-{
-    parameter ves is ship.
-
-    local ecc to ves:orbit:eccentricity.
-    local ta to GetTA(ves).
-
-    return arcTan((ecc * sin(ta)) / (1 + (ecc * cos(ta)))).
-}
-
-// GetTA :: <ship>, <scalar> -> <scalar>
-// Returns the TA for the given ship at a specific radius
-global function GetTA
-{
-    parameter ves is ship,
-              radius is ship:altitude + body:radius.
-
-    local ecc to ves:orbit:eccentricity.
-    local a to ves:orbit:semimajoraxis.
-    
-    return arcCos((a * (1 - ecc^2) - radius) / (ecc * radius)).
-}
-
-// GetVelAtSMA :: <ship>, <scalar> -> <scalar>
-// 
-global function GetVelAtRadius
-{
-    parameter ves is ship,
-              radius is ship:altitude + body:radius.
-
-    return sqrt(body:mu * ((2 / radius) - (1 / ves:orbit:semimajoraxis))).
-}
+    // #endregion
 // #endregion

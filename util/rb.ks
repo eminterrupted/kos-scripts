@@ -1,14 +1,8 @@
-@lazyGlobal off.
+parameter _bf is "dboot.ks".
 
-parameter missionTag is core:tag, primeCore is core.
-
-print "Resetting bootloader".
-
-local arcBoot to "0:/boot/_bl.ks".
-local locBoot to "/boot/_bl.ks".
-
-if core:part:tag <> missionTag set core:part:tag to missionTag.
-
-copyPath(arcBoot, locBoot).
-set primeCore:bootfilename to locBoot.
-primeCore:activate.
+set arcBF to "0:/boot/" + _bf.
+set locBF to "/boot/" + _bf.
+copyPath(arcBF, locBF).
+wait 0.01.
+set Core:BootFileName to locBF.// if exists(Path(locBF)) else arcBF.
+reboot.

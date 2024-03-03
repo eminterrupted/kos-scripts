@@ -1,512 +1,1354 @@
+// #include "0:/lib/libLoader.ks"
 @lazyGlobal off.
 
-// Dependencies
-runOncePath("0:/lib/disp").
+// *~ Dependencies ~* //
+// #region
+// #endregion
+
 
 // *~ Variables ~* //
-//#region
-
-// -- Local
 // #region
-local dataDisk to choose "1:/" if not (defined dataDisk) else dataDisk.
+    // *- Local
+    // #region
+    local _ti to Terminal:Input.
 
-// local _logLine to 0.
-// local _arcLogPath to "0:/log/" + core:part:ship:name:replace(" ","_") + "/archived.log".
-//     set _arcLogPath to choose Path(_arcLogPath) if exists(Path(_arcLogPath)) else Create(_arcLogPath).
-// local _locLogPath to GetLogVol():keys[0] + ":/log/local.log".
-//     set _locLogPath to choose Path(_locLogPath) if exists(Path(_locLogPath)) else Create(_locLogPath).
+    local l_sfxReference to lexicon(
+        0, "0:/sfx/ZeldaUnlock.json"
+    ).
+    local l_timeTable to lexicon(
+        "d", Earth:Orbit:Period
+        ,"h", 3600
+        ,"m", 60
+        ,"s", 1
+        ,"ms", 0.001
+    ).
 
-local deployModules to list(
-    "ModuleAnimateGeneric"
-    ,"USAnimateGeneric"
-    ,"ModuleRTAntenna"
-    ,"ModuleDeployableSolarPanel"
-    ,"ModuleResourceConverter"
-    ,"ModuleGenerator"
-    ,"ModuleDeployablePart"
-    ,"ModuleRoboticServoHinge"
-    ,"ModuleRoboticServoRotor"
-    ,"ModuleDeployableReflector"
-).
+    local l_logInit to False.
+    local l_LogPathMask to "0:/log/mission/log_{0}.txt".
+    local l_Log to l_LogPathMask:Format(Ship:Name:Replace(" ", "_")).
+    // #endregion
+
+    // *- Global
+    // #region
+    global g_Colors to lexicon(
+                "white", RGB(1,1,1)
+            ).
+
+    global g_kKode to list(
+                _ti:UpCursorOne, 
+                _ti:UpCursorOne, 
+                _ti:DownCursorOne,
+                _ti:DownCursorOne,
+                _ti:LeftCursorOne,
+                _ti:RightCursorOne,
+                _ti:LeftCursorOne,
+                _ti:RightCursorOne,
+                "b",
+                "a"
+            ).
+    global g_correctKodeInputsProvided to 0.
+    global g_correctKodeInputsRequired to g_kKode:Length.
+
+    global g_TermQueue to queue().
+    // #endregion
 // #endregion
-
-// -- Global
-// #region
-global alphaNumDict to list(
-    "0","1"
-    ,"2","3"
-    ,"4","5"
-    ,"6","7"
-    ,"8","9"
-    ,"a","A"
-    ,"b","B"
-    ,"c","C"
-    ,"d","D"
-    ,"e","E"
-    ,"f","F"
-    ,"g","G"
-    ,"h","H"
-    ,"i","I"
-    ,"j","J"
-    ,"k","K"
-    ,"l","L"
-    ,"m","M"
-    ,"n","N"
-    ,"o","O"
-    ,"p","P"
-    ,"q","Q"
-    ,"r","R"
-    ,"s","S"
-    ,"t","T"
-    ,"u","U"
-    ,"v","V"
-    ,"w","W"
-    ,"x","X"
-    ,"y","Y"
-    ,"z","Z"
-    ,".",","
-    ,"'","`"
-    ,"[","]"
-    ,"{","}"
-    ,"(",")"
-    ," ","~"
-    ,"-","_"
-    ,"=","+"
-    ,"!","@"
-    ,"#","$"
-    ,"%","^"
-    ,"&","*"
-).
-
-global BodyInfo to lex(
-    "altForSci", lex(
-        "Kerbin", 625000
-        ,"Mun", 150000
-        ,"Minmus", 75000
-        ,"Moho", 200000
-        ,"Eve", 1000000
-        ,"Gilly", 15000
-        ,"Duna", 350000
-        ,"Ike", 125000
-        ,"Jool", 10000000
-        ,"Laythe", 500000
-    )
-    ,"atmAltForSci", lex(
-        "Kerbin", 18000
-        ,"Eve", 18000
-    )
-).
-
-global ColorLex to lex(
-    "Red", red
-    ,"Magenta", magenta
-    ,"Violet", rgb(0.25, 0, 0.75)
-    ,"Blue", blue
-    ,"Cyan", cyan
-    ,"Green", green
-    ,"Yellow", yellow
-    ,"Orange", rgb(1, 1, 0)
-    ,"White", white
-    ,"Black", black
-).
-
-global situMask to lex(
-    0, "000000"
-    ,1, "000001"
-    ,2, "000010"
-    ,3, "000011"
-    ,7, "000111"
-    ,12,"001100"
-    ,16,"010000"
-    ,31,"011111"
-    ,32,"100000"
-    ,48,"110000"
-    ,51,"110011"
-    ,56,"111000"
-    ,60,"111100"
-    ,61,"111101"
-    ,63,"111111"
-    ,"def", lex(
-        0,"InSpaceHigh"
-        ,1,"InSpaceLow"
-        ,2,"FlyingHigh"
-        ,3,"FlyingLow"
-        ,4,"SrfSplashed"
-        ,5,"SrfLanded"
-    )
-).
-
-global expReqMask to lex(
-    -1,"0000"
-    ,0,"1111"
-    ,1,"0001"
-    ,2,"0010"
-    ,3,"0011"
-    ,4,"0100"
-    ,5,"0101"
-    ,6,"0110"
-    ,7,"0111"
-    ,8,"1000"
-    ,"def", lex(
-        0,"ScientistCrew",
-        1,"CrewInPart",
-        2,"CrewInVessel",
-        3,"VesselControl"
-    )
-).
-
-
-global tConstants to lex(
-    "KnToKg", 0.00980665
-    ,"KgToKn", 101.97162
-).
-
-global StateFile to dataDisk + "state.json".
-
-global FuelCellResources to lex(
-    "USFuelCellMedium", list("Hydrogen", "Oxygen")
-).
-
-global verbose to true.
-// #endregion
-//#endregion
 
 
 // *~ Functions ~* //
 // #region
 
-// -- Core
-// #region
-
-    // Debug
+    // ## Anonymous Globals
     // #region
 
-    // Breakpoint <none> -> <none>
-    // Creates a breakpoint
-    global function Breakpoint
-    {
-        print "* Press any key to continue *" at (10, terminal:height - 2).
-        terminal:input:getChar().
-        print "                             " at (10, terminal:height - 2).
-    }
+        // _EQ_ :: _a<scalar>, _b<scalar> -> isAEqualB<Bool> 
+        global _EQ_ to { parameter _a, _b. return _a = _b.}.
+
+        // _GE_ :: _a<scalar>, _b<scalar> -> isAGreaterThanOrEqualB<Bool> 
+        global _GE_ to { parameter _a, _b. return _a >= _b.}.
+        // _GT_ :: _a<scalar>, _b<scalar> -> isAGreaterThanB<Bool> 
+        global _GT_ to { parameter _a, _b. return _a > _b.}.
+
+        // _LE_ :: _a<scalar>, _b<scalar> -> isALessThanEqualB<Bool> 
+        global _LE_ to { parameter _a, _b. return _a <= _b.}.
+        // _LT_ :: _a<scalar>, _b<scalar> -> isALessThanB<Bool> 
+        global _LT_ to { parameter _a, _b. return _a < _b.}.
+
+
     // #endregion
 
-    // Alarm / Caution / Warning
+    // *- #TODO Caching
     // #region
 
-    // Master alarm
-    // By default, simply shows the alarm string via OutTee
-    // Can be configured via params to block script execution and play audible alarm
-    // Can also show warning and information
-    global function MasterAlarm
-    {
-        parameter str,
-                  _errLvl is 0,
-                  blocking is false,
-                  soundOn is false.
+        global g_CacheDel to lexicon(
+            "STG",    { parameter _inObj, _val. local retVal to 0. if not _inObj:HasKey(_val) { set retVal to lexicon(). set _inObj[_val] to retVal. } else { set retVal to _inObj[_val].} return _inObj. } // 0: Root 
+            ,"ENG",   { parameter _inObj, _val. local retVal to 0. if not _inObj[_val]:HasKey("ENG") { set retVal to GetEnginesForStage(_val). set _inObj[_val]["ENG"] to retVal. } else { set retVal to _inObj[_val]["ENG"].} return retVal.}
+        ).
 
-        set errLvl to _errLvl.
-        local alarmInterval to 2.
-        local errTypeStr to choose "ALARM" if errLvl = 0
-            else choose "WARNING" if errLvl = 1
-            else "CAUTION".
-        local errStr to "[*{0}*] {1}":format(errTypeStr, str).
+        global function GetFromCache
+        {
+            parameter _nodeList is list(),
+                    _cache is g_ShipStageCache.
+            
+            local curData to _cache.
+            local curLvl to 0.
+            local cMiss  to False.
 
-        // Show alarm on interval
-        if g_alarmTimer > time:seconds
-        {
-            OutTee(errStr, 0, 0, alarmInterval).
-            set g_alarmTimer to time:seconds + alarmInterval.
-        }
-        
-        // If the alarm should block further script execution, check for dismissal.
-        // Return true to indicate alarm is dismissed / non-blocking
-        // Return false to indicate alarm has not been dismissed
-        if blocking
-        {
-            if CheckInputChar(terminal:input:endcursor) 
+            for n in _nodeList
             {
-                return true.
+                if curData:HasKey(n) 
+                {
+                    set curData to curData[n]. 
+                    set curLvl to curLvl + 1.
+                }
+                else
+                {
+                    set cMiss to True.
+
+                    break.
+                }
+            }
+
+            return curData.
+        }
+
+        global function SetCache
+        {
+            parameter _nodeList,
+                      _val,
+                      _cache is g_ShipCache.
+
+            local curLvl to _cache.
+
+            from { local i to 0.} until i = _nodeList:Length - 1 step { set i to i + 1.} do
+            {
+                local n to _nodeList[i].
+                if curLvl:HasKey(n)
+                {
+                    set curLvl to curLvl[n].
+                }
+                else
+                {
+                    curLvl:Add(n, lexicon()).
+                }
+            }
+            set curLvl[_nodeList[_nodeList:Length - 1]] to _val.
+            return _cache.
+        }
+
+
+    // #endregion
+
+    // *- Core Messaging System
+    // #region
+
+        // BroadcastCoreMessage
+        // _msgObj should contain at minimum a key named "Content", with the value being the message to send
+        global function SendCoreMessage
+        {
+            parameter _msgObj,
+                    _recipientUIDs is list(Core:Part:UID).
+
+            local msgContent to _msgObj.
+            if msgContent:IsType("Lexicon")
+            {
+                if msgContent:HasKey("Content") 
+                {
+                    set msgContent to msgContent:Content.
+                }
+            }
+            local procs to Ship:ModulesNamed("kOSProcessor").
+            local recipients to list().
+
+            if _recipientUIDs:Contains(Core:Part:UID)
+            {
+                _recipientUIDs:Clear().
+            
+                for m in procs
+                {
+                    if m:Part:UID <> Core:Part:UID
+                    {
+                        recipients:Add(m).
+                    }
+                }
             }
             else
             {
-                return false.
-            }
-        }
-        return true.
-    }
-    // #endregion
-
-    // Log
-    // #region
-
-    // GetLogVol :: [<ship>] -> Path()
-    // Returns a path of a log file after finding the best location (has most space that is not this volume if multiple available, and is not ever staged off)
-    // 
-    local function GetLogVol
-    {
-        parameter ves is ship.
-
-        local bestVol to core:volume.
-        local maxSpace to 0.
-        for cpu in ves:modulesNamed("kOSProcessor")
-        {
-            if cpu:volume:freeSpace > maxSpace and cpu:part:decoupledIn <= g_stopStage 
-            {
-                set bestVol to cpu:volume.
-                set maxSpace to cpu:volume:freeSpace.
-                
-            }
-        }
-        return lex(buildList("volumes"):find(bestVol), bestVol).
-    }
-
-
-    // Prints the input value to the mission log
-    global function OutLog
-    {
-        parameter str is "",
-                _errLvl is 0.
-
-
-        set errLvl to _errLvl.
-        set _logLine to mod(_logLine + 1, 10).
-        
-        local locLog to open(_locLogPath).
-
-        if errLvl = 0 
-        {
-            set str to "[{0,0:00}][INFO] {1}{2}":format(round(missionTime, 2), str, char(10)).
-        }
-        else if errLvl = 1 
-        {
-            set str to "[{0,0:00}][WARN] {1}{2}":format(round(missionTime, 2), str, char(10)).
-        }
-        else if errLvl = 2 
-        {
-            set str to "[{0,0:00}][ERR*] * {1} *{2}":format(round(missionTime, 2), str, char(10)).
-        }
-        else 
-        {
-            set str to "{0} *** {1}{2}":format("":padLeft(missionTime:toString():length + 7), str, char(10)).
-        }
-
-
-        if homeConnection:isConnected
-        {
-            if _logLine > 0 and _locLogPath:volume:freeSpace > str:length
-            {
-                set errLvl to choose 0 if locLog:write(str + char(10)) else 1.
-            }
-            else if _logLine = 0 or _locLogPath:volume:freeSpace <= (str:length + 1)
-            {
-                local arcLog to open("0:/log/" + ship:name:replace(" ","_") + "/archive.log").
-                set errLvl to choose 0 if arcLog:write(locLog:readAll:string + char(10)) else 1.
-                locLog:clear.
-                return errLvl.
-            }
-        }
-    }
-
-    global function OutLogTee
-    {
-        parameter str,
-                pos is "-0",
-                _errLvl is 0.
-
-        set errLvl to _errLvl.
-        if pos[1] = "1" OutHUD().
-        if pos[0]:toNumber(-1) > 0 OutMsg(str, errLvl, pos).
-        if not OutLog(str, errLvl)
-        {
-
-        }
-    }
-    // #endregion
-
-    // Flow Control
-    // #region
-
-    // Stk :: <none> -> <int>
-    // Increments a Stk pointer to a value in the Stk
-    global function Stk
-    {
-        parameter _val,
-                  _op to "+".
-
-        if _op = "=" {
-            if _val:isType("scalar") 
-            {
-                g_stack[_val].
-                return _val.
-            }
-            else 
-            {
-                local _valIdx to g_stack:values:indexOf(_val).
-                g_stack:remove(_valIdx).
-                return _valIdx.
-            }
-        }
-        else if _op = "=v"
-        {
-            local _valIdx to g_stack:values:indexOf(_val).
-            g_stack:remove(_valIdx).
-            return _valIdx.
-        }
-        else if _op = "+" 
-        {
-            set g_stack[g_stack] to _val.
-            set g_stack to 
-            {
-                if g_stack:length > 0
+                from { local i to 0.} until i = procs:length step { set i to i + 1.} do
                 {
-                    local minNum to g_stack[0].
-                    for num in g_stack
+                    local m to procs[i].
+                    for uid in _recipientUIDs
                     {
-                        if num < minNum
+                        if m:Part:UID = uid
                         {
-                            set minNum to num.
+                            recipients:Add(m).
                         }
                     }
-                    g_stack:remove(g_stack:indexOf(minNum)).
-                    return minNum.
                 }
-                return g_stack + 1.
-            }.
-        }
-        else if _op = "-" 
-        {
-            if _val:isType("scalar") 
+            }
+
+            local errorList to list().
+
+            for m in recipients
             {
-                g_stack:remove(_val).
-                if _val = g_stack
+                local cx to m:Connection.
+                local msgResult to cx:SendMessage(msgContent).
+                if not msgResult errorList:Add(m:UID).
+            }
+
+            return errorList.
+        }
+    // #endregion
+
+    // *- Terminal Utilities
+    // #region
+    
+        // Breakpoint :: [(Time to wait)<scalar>], [(Wait Message)<string>] -> (Continue)<bool>
+        // Creates a breakpoint, and will continue on any key press and/or timeout if one is provided
+        // By default, timeout is 0 which is indefinite
+        global function Breakpoint
+        {
+            parameter _timeout is 0,
+                    _waitMsg is "BREAKPOINT".
+
+            local doneFlag      to false.
+            local timeoutToggle to false.
+            local timeoutTS     to Time:Seconds + _timeout.
+            
+            local msgStr        to "*** {0} ***":Format(_waitMsg).
+            local msgCol        to (Terminal:Width - msgStr:Length) / 2.
+            local msgLine       to Terminal:Height - 5.
+
+            local infoStr       to "* Press ENTER to continue *".
+            local infoCol       to (Terminal:Width - infoStr:Length) / 2.
+            local infoLine      to Terminal:Height - 4.
+
+            print msgStr at (msgCol, msgLine).
+
+            until doneFlag
+            {
+                if CheckTermChar(Terminal:Input:Enter, True) // Adding update _updateGlobal flag to perform the update and check in one call
                 {
-                    set g_stack to g_stack - 1.   
+                    set doneFlag to true. // User pressed Enter, we are done here
+                    set g_TermChar to "".
+                }
+
+                if _timeout > 0 
+                {
+                    set infoStr to "* ENTER: Continue | END: Pause Timeout ({0, -7}s) *":Format(timeoutTS - Time:Seconds).
+                    set infoCol to (Terminal:Height - infoStr:Length) / 2.
+
+                    if g_TermChar = Terminal:Input:EndCursor // Since this is a simple check AND we know g_TermChar was already updated, we skip the function call here
+                    {
+                        set timeoutToggle to choose false if timeoutToggle 
+                            else true.
+                    }    
+
+                    if timeoutToggle
+                    {
+                        set timeoutTS to timeoutTS + 1.
+                    } 
+                    else if Time:Seconds >= timeoutTS 
+                    {
+                        set doneFlag to true. // Timeout, we are done here
+                    }
+                }
+                
+                // print infoStr at (infoCol, infoLine).
+                wait 0.1.
+            }
+
+            // Cleanup the display
+            set msgStr to "".
+            set infoStr to "".
+            for i in Range(0, Terminal:Width - 1)
+            {
+                set msgStr to msgStr + " ".
+                set infoStr to infoStr + " ".
+            }
+            print msgStr at (0, msgLine).
+            print infoStr at (0, infoLine).
+
+            return true.
+        }
+
+        // SECRET SECRET
+        global function CheckKerbaliKode
+        {
+            if g_TermQueue:EMPTY // If queue has no elements, no-op
+            {
+                return.
+            }
+
+            if g_kKode[g_correctKodeInputsProvided] = g_TermQueue:Pop()
+            {
+                set g_correctKodeInputsProvided to g_correctKodeInputsProvided + 1.
+                OutInfo("kKode [{0}/{1}]":Format(g_correctKodeInputsProvided, g_correctKodeInputsRequired), 1).
+
+                if g_correctKodeInputsProvided = g_correctKodeInputsRequired
+                {
+                    // fireworks explodes everywhere
+                    // a small pixelated kerbal waddles away into the sunset
+                    OutInfo("KerbaliKode activated", 1).
+                    PlaySFX(0).
+                    OutInfo("", 1).
+                    set g_TermHeight to g_TermHeight + 16.
+                    set g_TermWidth to g_TermWidth + 34.
+                    DispMain(g_MainProcess).
+                    set g_Debug to not g_Debug. //toggle debug on or off
+                }
+                return.
+            }
+
+            OutInfo("", 1).
+            set g_correctKodeInputsProvided to 0.
+        }
+
+        // CheckTermChar :: (Char to check)<TerminalInput> -> (Match)<bool>
+        // Returns the boolean result of a check of the provided value against g_TermChar. 
+        // _updateGlobal will set g_TermChar to the next char in the queue for comparison if available
+        // With _updateGlobal flag set, no need to call GetTermChar() first
+        global function CheckTermChar
+        {
+            parameter _char,
+                    _updateGlobal is False.
+
+            if _updateGlobal
+            {
+                GetTermChar().
+            }
+            local result to _char = g_TermChar.
+            return result.
+        }
+
+        // GetTermChar :: (none) -> (Was new char present)<bool>
+        // Checks to see if a terminal character is present. 
+        // If yes, set g_TermChar to it and return true.
+        global function GetTermChar
+        {
+            if Terminal:Input:HasChar 
+            { 
+                set g_TermChar to Terminal:Input:GetChar.
+                g_TermQueue:Push(g_TermChar).
+                set g_TermHasChar to True.
+                Terminal:Input:Clear().
+            }
+            // else
+            // {
+            //     set g_TermHasChar to False.
+            // }
+            return g_TermHasChar.
+        }
+
+
+        global function UpdateTermScalar
+        {
+            parameter _scalar,
+                      _stepList is list(1, 5, 15, 30),
+                      _allowFreeEntry to False.
+        
+            local scalarVal to _scalar.
+
+            OutInfo("-{0,-2}|-{1,-2}|-{2,-2}|-{3,-2}|-0+|+{3,-2}|+{2,-2}|+{1,-2}|+{0,-2}":Format(_stepList[3], _stepList[2], _stepList[1], _stepList[0])).
+            OutInfo(" {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ":Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+
+            local maxValFlag to False.
+            local maxValIndicator to "".
+
+            // OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
+            
+            local keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+
+            if g_TermChar = Terminal:Input:DownCursorOne
+            {
+                set scalarVal to scalarVal - _stepList[0].
+                set keyMapActiveStr to " {0} | {1} | {2} |[{3}]| {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:UpCursorOne
+            {
+                set scalarVal to scalarVal + _stepList[0].
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} |[{5}]| {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:LeftCursorOne
+            {
+                set scalarVal to scalarVal - _stepList[1].
+                set keyMapActiveStr to " {0} | {1} |[{2}]| {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = Terminal:Input:RightCursorOne
+            {
+                set scalarVal to scalarVal + _stepList[1].
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} |[{6}]| {7} | {8} ".
+            }
+            else if g_TermChar = "("
+            {
+                set scalarVal to scalarVal - _stepList[2].
+                set keyMapActiveStr to " {0} |[{1}]| {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = ")"
+            {
+                set scalarVal to scalarVal + _stepList[2].
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} |[{7}]| {8} ".
+            }
+            else if g_TermChar = "{"
+            {
+                set scalarVal to scalarVal - _stepList[3].
+                set keyMapActiveStr to "[{0}]| {1} | {2} | {3} | {4} | {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = "}"
+            {
+                set scalarVal to scalarVal + _stepList[3].
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} | {4} | {5} | {6} | {7} |[{8}]".
+            }
+            else if g_TermChar = "0"
+            {
+                set scalarVal to 0.
+                set keyMapActiveStr to " {0} | {1} | {2} | {3} |[{4}]| {5} | {6} | {7} | {8} ".
+            }
+            else if g_TermChar = "+" and _allowFreeEntry
+            {
+                local __doneFlag to False.
+                local freeTermEntryStr to _scalar:ToString.
+                set g_TermChar to "".
+                Terminal:Input:Clear.
+                OutInfo(" Free Entry: [{0,-32}]":format(freeTermEntryStr), 2).
+                until __doneFlag
+                {
+                    GetTermChar().
+                    if g_TermChar:Length > 0
+                    {
+                        if g_TermChar = Terminal:Input:Backspace 
+                        {
+                            set freeTermEntryStr to freeTermEntryStr:Substring(0,freeTermEntryStr:Length).
+                        }
+                        else if g_TermChar = Terminal:Input:Enter
+                        {
+                            set __doneFlag to True.
+                            set scalarVal to freeTermEntryStr:ToNumber(-1).
+                            OutInfo(" Set Value: [{0,-32}] ":format(scalarVal), 2).
+                            wait 0.125.
+                        }
+                        else
+                        {
+                            set freeTermEntryStr to freeTermEntryStr + g_TermChar.
+                        }
+                        OutInfo(" Free Entry: [{0,-32}] ":format(freeTermEntryStr), 2).
+
+                        set g_TermChar to "".
+                        Terminal:Input:Clear.
+                    }
+                }
+            }
+            set g_TermChar to "".
+            set maxValIndicator to choose "*" if maxValFlag else "".
+            OutInfo(keyMapActiveStr:Format(Char(8606), Char(8609), Char(8592), Char(8595), "0", Char(8593), Char(8594), Char(8607), Char(8608)), 1).
+            OutInfo("", 2).
+
+            return scalarVal.
+        }
+
+
+        global function UpdateTermString
+        {
+            parameter _string,
+                      _validation is list(),
+                      _allowFreeEntry is True.
+        
+            local strVal to _string.
+
+            OutInfo("Updating string. Current value:  [{0,-21}]":format(_string)).
+            local __doneFlag to False.
+            set g_TermChar to "".
+            Terminal:Input:Clear.
+            
+            until __doneFlag
+            {
+                OutInfo("                     New value:  [{0,-21}]":format(strVal), 1).
+                GetTermChar().
+                if g_TermChar:Length > 0
+                {
+                    if g_TermChar = Terminal:Input:Backspace 
+                    {
+                        set strVal to strVal:Substring(0,strVal:Length).
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        if _validation:Length > 0
+                        {
+                            if _validation:Contains(strVal)
+                            {
+                                OutInfo("String Updated!                           ").
+                                OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                set __doneFlag to True.
+                            }
+                            else
+                            {
+                                OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
+                                OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                            }
+                        }
+                        else
+                        {
+                            OutInfo("String Updated!                           ").
+                            OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                            set __doneFlag to True.
+                        }
+                    }
+                    else if _allowFreeEntry
+                    {
+                        set strVal to strVal + g_TermChar.
+                    }
+                    else
+                    {
+
+                    }
+
+                    set g_TermChar to "".
+                    Terminal:Input:Clear.
+                }
+                wait 0.01.
+            }
+
+            return strVal.
+        }
+
+        // Yup
+        global function ReturnSelectionIdxFromList
+        {
+            parameter _inList is list(),
+                      _selectedItemIdx is -1.
+
+            local _line to 42.
+            set g_Line to _line.
+            
+            print _inList[0] at (2, g_Line).
+            local _sep to "".
+            for s in Range(0, _inList[0]:Length, 1)
+            {
+                set _sep to _sep + "=".
+            }
+            print _sep at (2, cr(g_Line)).
+            local st_line to _line + 1.
+
+            OutMsg("Choose one item by number").
+            OutInfo("Press enter to confirm").
+            OutInfo(" ** - Selection", 1).
+            local termCharNumber to -1234.
+            until false
+            {
+                GetTermChar().
+                
+                from { local i to 0.} until i >= _inList:Length step { set i to i + 1.} do
+                {
+                    local itemStr to choose "[** {0,2}] - [{1,-42}]" if i = _selectedItemIdx else "[{0,5}] - [{1,-42}]".
+                    print itemStr:format(i, _inList[i]) at (4, st_Line + i).
+                }
+                
+                if g_TermChar:Length > 0
+                {
+                    set termCharNumber to g_TermChar:ToNumber(-1234).
+                    if termCharNumber <> -1234
+                    {
+                        if termCharNumber >= 1 and termCharNumber <= _inList:Length
+                        set _selectedItemIdx to termCharNumber.
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        return i.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        return _selectedItemIdx.
+                    }
+                    else
+                    {
+                        OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
+                        wait 0.5.
+                        OutInfo("Press enter to confirm").
+                    }
+                }
+            }
+        }
+
+        // This assumes a list of lexicons, where the lex key is the display name, and the value is the actual value
+        global function ReturnSelectionIdxFromLabelledList
+        {
+            parameter _inList is list(),
+                      _selectedItemIdx is -1.
+
+            OutMsg("Choose one item by number").
+            OutInfo("Press enter to confirm").
+            OutInfo(" ** - Not Done", 2).
+            local termCharNumber to -1234.
+
+            local doneFlag to False.
+            local newSelection to -1.
+            local selection to _selectedItemIdx.
+
+            DispLaunchConfigData(_inList, _selectedItemIdx).
+            until doneFlag
+            {
+                GetTermChar().
+                OutInfo(" ** - {0}":Format(g_TermChar), 2).
+                if g_TermChar:Length > 0
+                {
+                    set termCharNumber to g_TermChar:ToNumber(-1234).
+                    if termCharNumber <> -1234
+                    {
+                        if termCharNumber >= 1 and termCharNumber <= _inList:Length
+                        set newSelection to termCharNumber.
+                    }
+                    else if g_TermChar = Terminal:Input:Enter
+                    {
+                        if newSelection >= 0 
+                        {
+                            set selection to newSelection.
+                        }
+                        else
+                        {
+                            set selection to _selectedItemIdx.
+                        }
+                        set doneFlag to True.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        set selection to _selectedItemIdx.
+                    }
+                    else
+                    {
+                        OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
+                        wait 0.75.
+                        OutInfo("Press enter to confirm").
+                    }
+                    set g_TermChar to "".
+                }
+
+                DispLaunchConfigData(_inList, selection).
+                
+            }
+            ClearDispBlock().
+            set g_TermChar to "".
+            return selection.
+        }
+
+    // #endregion
+
+    // #TODO: *- Logging Utilities
+    // #region
+
+        // InitLog :: _logPath<String>, [_resetLog<Bool>] -> logReady<bool> 
+        global function InitLog
+        {
+            parameter _logPath is l_Log,
+                      _resetLog is 0. // 0: Append or Create, 1:Reset:Archive old, 2:Reset:Delete old
+
+            local logPtr to "".
+            local logHeader to "*** MISSION LOG INITIALIZATION ***".
+            local newLog to True.
+
+            if exists(_logPath)
+            {
+                if _resetLog > 0
+                {
+                    if _resetLog > 1
+                    {
+                        DeletePath(_logPath).
+                    }
+                    else
+                    {
+                        local logArchivePath to "0:/log/mission/archive/{0}/logArchive_{0}_{1}.log":Format(Ship:Name:Replace(" ","_"), Ship:Name:Replace(" ","_"), Round(MissionTime)).
+                        if exists(logArchivePath) MovePath(logArchivePath, logArchivePath:Replace(".log", "_1.log")).
+                        MovePath(_logPath, logArchivePath).
+                    }
                 }
                 else
                 {
-                    g_stack:add(_val).
+                    set newLog to False.
+                }
+            }
+
+            if newLog
+            {
+                set logPtr to Create(_logPath).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("*** MISSION LOG INITIALIZATION ***").
+                logPtr:WriteLn("*** VESSEL: {0} ***":Format(Ship:Name)).
+                logPtr:WriteLn("*** MET   : {0} ***":Format(Round(MissionTime))).
+                logPtr:WriteLn("*** UT    : {0} ***":Format(Round(Time:Seconds))).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("").
+            }
+            else
+            {
+                set logPtr to Open(_logPath).
+                logPtr:WriteLn("").
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("** MISSION LOG REINITIALIZATION **").
+                logPtr:WriteLn("*** MET   : {0} ***":Format(Round(MissionTime))).
+                logPtr:WriteLn("*** UT    : {0} ***":Format(Round(Time:Seconds))).
+                logPtr:WriteLn("==================================").
+                logPtr:WriteLn("").
+            }
+
+            set l_logInit to Exists(_logPath).
+            return l_logInit.
+        }
+
+        // OutLog :: _str<String>, [_level<Scalar>], [_tee<Boolean>] -> <none>
+        global function OutLog
+        {
+            parameter _str,
+                      _level is 0,
+                      _tee   is False.
+
+            if not l_logInit InitLog().
+
+            local ut to TimeSpan(Time:Seconds).
+            local mt to TimeSpan(MissionTime).
+
+            local logUTimeStr to "{0}-{1}-{2}T{3}:{4}:{5}":Format(ct:Year + 1951, g_CalLookup:GetMonth:Call(ut:Day), ut:Day, ut:Hour, ut:Minute, Round(Mod(ut:Seconds, 60), 3)).
+            local logMTimeStr to "{0}-{1}-{2}T{3}:{4}:{5}":Format(mt:Year, g_Cal:Convert:DaysToMonths:Call(mt:Day), mt:Day, mt:Hour, mt:Minute, Round(Mod(mt:Seconds, 60), 3)).
+            l_log:WriteLn().
+        }
+
+        global g_Cal to lexicon(
+            "Convert", lexicon(
+                "DaysToMonths", ConvertDaysToMonths@
+            )
+        ).
+
+        local function ConvertDaysToMonths
+        {
+            parameter _days.
+
+            local isLeapYear to g_Cal:Reference:LeapYear:Contains(1951 + TimeSpan(Time:Seconds):Year).
+            
+            if      _days < 30 return 0.
+            else 
+            {
+
+            }
+        }
+
+    // #endregion
+
+    // *- Part Utilities
+    // #region
+
+        // HighlightPart :: (_p)<Part>, [(_colorStr)<String>] -> _hlHandle<Highlight>
+        // Given a part and optional color, highlights it. Uses white if not specified.
+        global function HighlightPart
+        {
+            parameter _p,
+                      _colorStr is "white".
+
+            local hlHandle to Highlight(_p, g_Colors[_colorStr]).
+            return hlHandle.
+        }
+
+        // SetupUpdateUIDEventHandler :: _init<Bool> -> _resultFlag<Bool>
+        // Setups an event which will, when the stage number changes, update a list of all current parts (by UID) on the vessel
+        global function SetupUpdateUIDEventHandler
+        {
+            parameter _init to False.
+
+            set g_StageTracker to Stage:Number.
+
+            local paramList to list(
+                g_StageTracker
+            ).
+            
+            local checkDel to {
+                parameter _params is list().
+
+                return Stage:Number <> _params[0] or g_InOrbit.
+            }.
+
+            local actionDel to {
+                parameter _params is list().
+
+                g_ShipUIDs:Clear().
+                
+                set g_StageTracker to Stage:Number.
+
+                for p in ship:Parts
+                {
+                    g_ShipUIDs:Add(p:UID).
+                }
+                
+                if Stage:Number > 0
+                {
+                    if g_inOrbit
+                    {
+                        return False.
+                    }
+                    else
+                    {
+                        return True.
+                    }
+                }
+                else
+                {
+                    return False.
+                }
+            }.
+            if _init actionDel:Call().
+
+            local osEvent to CreateLoopEvent("UIDUpdater", "GlobalUpdateEvent", paramList, checkDel@, actionDel@).
+            local resultFlag to RegisterLoopEvent(osEvent).
+            return resultFlag.
+        }
+    // #endregion
+
+    // *- Part Module Utilities
+    // #region
+        // DoAction :: (_m)<Module>, (_action)<string>, [(_state)<bool>] -> (ResultCode)<scalar>
+        // Given a part module and name of an action, performs if if present on the module.
+        global function DoAction
+        {
+            parameter _m,
+                      _action,
+                      _state is true.
+
+            set g_ResultCode to 0.
+
+            if _m:HasAction(_action)
+            {
+                _m:DoAction(_action, _state).
+                set g_ResultCode to 1.
+            }
+            else
+            {
+                set g_ResultCode to 2.
+            }
+
+            return g_ResultCode.
+        }
+
+        // DoAction :: (_m)<Module>, (_action)<string>, [(_state)<bool>] -> (ResultCode)<scalar>
+        // Given a part module and name of an action, performs if if present on the module.
+        global function DoEvent
+        {
+            parameter _m,
+                      _event.
+
+            set g_ResultCode to 0.
+            if _m:HasEvent(_event)
+            {
+                _m:DoEvent(_event).
+                set g_ResultCode to 1.
+            }
+            else
+            {
+                set g_ResultCode to 2.
+            }
+
+            return g_ResultCode.
+        }
+
+        // GetFormattedAction :: _m<PartModule>, _actionStr<String> -> <String>
+        // Returns a properly formatted action name if present on the provided module.
+        // If no action found, returns an empty string.
+        global function GetFormattedAction
+        {
+            parameter _m,
+                      _actionStr.
+
+            for act in _m:AllActions
+            {
+                if act:Contains(_actionStr)
+                {
+                    return act:Replace("(callable) _, ",""):Replace(" is KSPAction","").
+                }
+            }
+            return "".
+        }
+
+        // GetFormattedEvent :: _m<PartModule>, _eventStr<String> -> <String>
+        // Returns a properly formatted event name if present on the provided module.
+        // If no event found, returns an empty string.
+        global function GetFormattedEvent
+        {
+            parameter _m,
+                      _eventStr.
+
+            for ev in _m:AllEvents
+            {
+                if ev:Contains(_eventStr)
+                {
+                    return ev:Replace("(callable) _, ",""):Replace(" is KSPEvent","").
+                }
+            }
+            return "".
+        }
+
+        // GetField :: (_m)<Module>, (_field)<string> -> (fieldValue)<any>
+        // Given a module and name of a field, retrieve it if present
+        global function GetField
+        {
+            parameter _m,
+                      _field.
+
+            set g_ResultCode to 0.
+
+            if _m:HasField(_field)
+            {
+                set g_ResultCode to 1.
+                return _m:GetField(_field).
+            }
+            else
+            {
+                set g_ResultCode to 2.
+                return "NUL".
+            }
+        }
+
+        // SetField :: (_m)<Module>, (_field)<string>, (_value)<any> -> (ResultCode)<scalar>
+        // Given a module and name of a field, set it to the provided value if the field is present on the module
+        // Result codes:
+        // -- 0: Nothing
+        // -- 1: Success
+        // -- 2: Warning (Field missing from module)
+        // -- 3: Error (Field set action was unsuccessful)
+        global function SetField
+        {
+            parameter _m,
+                      _field,
+                      _value.
+
+            set g_ResultCode to 0.
+
+            if _m:HasField(_field)
+            {
+                _m:SetField(_field, _value).
+                if _m:GetField(_field) = _value
+                {
+                    set g_ResultCode to 1.
+                }
+                else
+                {
+                    set g_ResultCode to 3.
                 }
             }
             else
             {
-                local _valIdx to g_stack:values:indexOf(_val).
-                g_stack:remove(_valIdx).
-                if _valIdx = g_stack
+                set g_ResultCode to 2.
+            }
+
+            return _field.
+        }
+    // #endregion
+
+    // *- Mission Tag Decoder Utilities
+    // #region
+
+    // ParseCoreTag :: (_tag)<String> -> (parsedTagObject)<Lexicon>
+    // Parses a core tag, including launch params and stop stage
+    // Format: (missionName)<string>|param1;param2;param3;param4|(stageStop)<scalar>
+    global function ParseCoreTag
+    {
+        parameter _tag is core:tag.
+
+        local newStopStage      to 0.
+        local parsedMission     to "".
+        local parsedParams      to list().
+        local parsedStageStop   to 0.
+        local parsedTag         to list(_tag).
+        local prmResult         to "".
+        local prmSplit          to list().
+        local prmSet            to list().
+        local stageExitGate     to "".
+        local tempStageStop     to "".
+        local tempStopSplit     to list().
+
+        local parsedTagObject   to lexicon(
+            "MISSION", _tag:Split("|")[0]
+            ,"PARAMS", list()
+            ,"STGSTOP", 0
+            ,"STAGESTOP", 0
+            ,"STGSTOPSET", list()
+        ).
+
+        if _tag:Contains("|")
+        {
+            set parsedTag       to _tag:Split("|").
+            set tempStageStop to parsedTag[parsedTag:Length - 1].
+            if tempStageStop:Contains(";")
+            {
+                // local stopIdx to 0.
+                set tempStopSplit to tempStageStop:Split(";").
+
+                for stageID in tempStopSplit
                 {
-                    set g_stack to g_stack - 1.   
+                    parsedTagObject:StgStopSet:Add(stageID).
                 }
-                else
-                {
-                    g_stack:add(_valIdx).
+                set parsedStageStop to parsedTagObject:StgStopSet[0]:ToNumber(-1).
+            }
+            else
+            {
+                set parsedStageStop to tempStageStop:ToNumber(-1).
+            }
+
+            set parsedTagObject["MISSION"] to parsedTag[0].
+
+            if parsedStageStop <> -1
+            {
+                set parsedTagObject["STGSTOP"] to parsedStageStop.
+                set g_StageLimit to parsedStageStop.
+                set g_StageLimitSet to parsedTagObject:StgStopSet.
+            }
+            else
+            {
+                set parsedTagObject["STGSTOP"] to 0.
+                set g_StageLimit to parsedStageStop.
+                set g_StageLimitSet to list(g_StageLimit).
+            }
+
+            if parsedTag:Length > 2 // Params
+            {
+                set prmSplit to parsedTag[1]:Split(";"). 
+                if prmSplit:Length > 0
+                {               
+                    set prmSet to list().
+                    from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
+                    {
+                        local prm to prmSplit[i].
+                        prmSet:Add(ParseStringScalar(prm)).
+                    }
                 }
             }
+            else
+            {
+            }
+
+            set parsedTagObject["PARAMS"] to prmSet.
+            set g_MissionTag:Params to prmSet.
         }
+
+        return parsedTagObject.
     }
 
-    // Pause :: [[Time to continue]<int>] -> <none>
-    // Pauses the script. Script can continue after "Enter" input.
-    // If an int is provided as a param, script will continue after that many seconds have passed OR.
-    global function Pause
+    global function SetNextStageLimit
     {
-        parameter sWait is 0.
-
-        if sWait > 0
+        parameter _setStage is -1.
+        
+        local cTag to core:tag.
+        local lastStgLim to g_StageLimit.
+        if _setStage < 0
         {
-            local pauseStr to "{0, -4} PAUSED {0, 4}".
-            local pauseFlair to list("***", "**", "*", "").
-            local contStr to "PRESS ENTER TO CONTINUE ({0})".
-            local ts to time:seconds.
-            lock timeLeft to ts - time:seconds.
-            clr(terminal:height - 5).
-            clr(terminal:height - 3).
-            until timeLeft <= 0
+            if g_StageLimitSet:Length > 1
             {
-                if CheckInputChar(Terminal:Input:Enter) break.
-
-                local pStr to pauseStr:format(pauseFlair[Mod(timeLeft, 3)]).
-                print pStr at ((terminal:width / 2) - pStr:length, terminal:height - 5).
-                
-                local cStr to contStr:format(timeLeft).
-                print cStr at ((terminal:width / 2) - cStr:length, terminal:height - 3).
+                set cTag to cTag:replace("|{0};":Format(g_StageLimit:ToString), "|").
+                local tagSplit to cTag:Split("|").
+                set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
+                set g_MissionTag:STGSTP to g_StageLimit.
+                g_StageLimitSet:Remove(0).
             }
-            unlock timeLeft.
-            clr(terminal:height - 5).
-            clr(terminal:height - 3).
+            else
+            {
+                set g_StageLimit to 0.
+                set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
+                g_StageLimitSet:Clear().
+                g_StageLimitSet:Add(g_StageLimit).
+                set g_MissionTag:STGSTP to g_StageLimit.
+            }
+        }
+        else
+        {
+            set g_StageLimit to _setStage.
+            set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
+            g_StageLimitSet:Clear().
+            g_StageLimitSet:Add(g_StageLimit).
+            set g_MissionTag:STGSTP to g_StageLimit.
+        }
+
+        if g_StageLimit <> lastStgLim
+        {
+            set core:tag to cTag.
+            if g_Debug { OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).}
+        }
+        return cTag.
+    }
+
+
+    global function ParseStringScalar
+    {
+        parameter _inputString,
+                  _fallbackValue is 0.
+
+        local scalar_result to -1.
+        
+
+        if _inputString:IsType("Scalar") // if it's already a scalar, well...
+        {
+            set scalar_result to _inputString.
+        }
+        else
+        {
+            if _inputString:MatchesPattern("\d+(\.\d+)?((K|k)m$|(M|m)m$)+")
+            {
+                if _inputString:MatchesPattern("(^\d+(\.\d+)?((K|k)m$))")
+                {
+                    set scalar_result to _inputString:Replace("km", ""):Replace("Km", ""):ToNumber(_fallbackValue) * 1000.
+                }
+                else if _inputString:MatchesPattern("(^\d+(\.\d+)?((M|m)m$))")
+                {
+                    set scalar_result to _inputString:Replace("mm", ""):Replace("Mm", ""):ToNumber(_fallbackValue) * 1000000.
+                }
+            }
+            else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
+            {
+                set scalar_result to 0.
+                local strSet to list(_inputString).
+                
+                for key in l_timeTable:Keys
+                {
+                    if strSet[0]:MatchesPattern("(^\d*{0}})":Format(key))
+                    {
+                        set strSet to _inputString[0]:Split(key).
+                        set scalar_result to scalar_result + strSet[0]:ToNumber * l_timeTable[key].
+                        strSet:Remove(0).
+                    }
+                }
+            }
+            else if _inputString:MatchesPattern("(^\d*(\.\d{1,})?$)")
+            {
+                OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
+                wait 0.01.
+            }
+            else
+            {
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
+            }
+        }
+        return scalar_result.
+    }
+
+    // ParseScalarShortString :: _inScalar<scalar> -> <String>
+    // Converts a number to a shorthand string (i.e., 250000 to "250km")
+    global function ParseScalarShortString
+    {
+        parameter _inScalar.
+        
+        if _inScalar < 10000
+        {
+            return _inScalar:ToString.
+        }
+        else if _inScalar < 10000000
+        {
+            return "{0}Km":Format(Round(_inScalar / 1000, 2)).
+        }
+        else if _inScalar < 1000000000
+        {
+            return "{0}Mm":Format(Round(_inScalar / 1000000, 2)).
+        }
+        else if _inScalar <  10000000000
+        {
+            return "{0}Gm":Format(Round(_inScalar / 1000000000, 2)).
+        }
+        else return _inScalar:ToString.
+    }
+
+
+    global function GetTimestampDelegate
+    {
+        parameter _eventStr.
+
+        local resultDel to { return true.}.
+
+        if _eventStr = "NE"
+        {
+            return resultDel@.
+        }
+        else if _eventStr:Contains(":")
+        {
+            local eventSplit to _eventStr:Split(":").
+            local eventTimeStamp to GetEventTimeStamp(eventSplit[0]).
+            local scalarEventTrig to eventSplit[1]:ToNumber(0).
+            local resultTS to eventTimeStamp + scalarEventTrig.
+            set g_TS to resultTS.
+            set resultDel to { return Time:Seconds >= resultTS. }.
+        }
+
+        return resultDel@.
+    }
+
+    local function GetEventTimeStamp
+    {
+        parameter _eventStr.
+
+        if _eventStr:MatchesPattern("(AP)+(O)?")
+        {
+            return Time:Seconds + ETA:Apoapsis.
+        }
+        else if _eventStr:MatchesPattern("(PE)+(R)?")
+        {
+            return Time:Seconds + ETA:Periapsis.
         }
     }
     // #endregion
 
-    // Basic Utilities
+    // *- Event Loop Execution and Parsing
     // #region
-
-    // Hash :: [<val>Any value to hash] :: <string>Hash
-    // Returns a hash given an object. What exactly is hashed is dependent on the object type
-    // String: The string itself
-    // Scalar: The value
-    // List: Summed and Averaged representation of all items in the list
-    global function Hash
+    
+    // ExecLoopEventDelegates :: <none> -> <none>
+    // If there are events registered in g_LoopDelegates, this executes them
+    global function ExecGLoopEvents
     {
-        parameter val.
-
-        local result to "".
-
-        local valStr to choose val if val:IsType("String") else val:toString.
-
-        for char in valStr
+        local EventSet to g_LoopDelegates["Events"].
+        local repeatEvent to false.
+        
+        for ev in EventSet:Keys
         {
-            local pIdx to alphaNumDict:indexOf(char).
-            local newChar to alphaNumDict[round(mod(pIdx + ((alphaNumDict:length - pIdx) / 2), alphaNumDict:Length - 1))].
-            set result to result + newChar.
+            if GetLoopEventResult(EventSet[ev])
+            {
+                // result indicates whether to preserve
+                set repeatEvent to DoLoopEventAction(EventSet[ev]).
+                if not repeatEvent 
+                {
+                    UnregisterLoopEvent(EventSet[ev]:ID).
+                }
+            }
         }
+    }
+    // #endregion
 
-        return result.
+    // *- Event registration and creation
+    // #region
+    global function CreateLoopEvent
+    {
+        parameter _id,
+                  _type,
+                  _params is list(),
+                  _check is { return true.},
+                  _action is { return false.}.
+
+
+        set g_Program to 2320.
+
+        OutInfo("CreateLoopEvent: Creating new event ({0})":Format(_id)).
+
+        local newEvent to lexicon(
+            "id",           _id
+            ,"type",        _type
+            ,"delegates",   lexicon(
+                "check",    _check@
+                ,"action",  _action@
+            )
+            ,"params",      _params
+            ,"repeat",      false
+        ).
+
+        return newEvent.
     }
 
-    // MakeArray :: [<int>Length, <val>StartingValue, <functionDelegate>] :: <List>Items
-    global function MakeArray
+    global function DoLoopEventAction
     {
-        parameter tLen,
-                  stVal,
-                  funcDel.
+        parameter _eventData.
 
-        local arr to list(stVal).
-        local nextVal to stVal.
-        from { local i to 1.} until i = tLen step { set i to i + 1.} do 
+        local repeatFlag to true.
+
+        if _eventData:HasKey("Delegates")                  
         {
-            set nextVal to funcDel:call(nextVal).
-            arr:add(nextVal).
+            if _eventData:Delegates:HasKey("Action")
+            {
+                return _eventData:Delegates:Action:Call(_eventData:Params).
+            }
         }
-        return arr.
+        return repeatFlag.
     }
 
-    // MakeDict :: [<list>Keys, <list>Values] -> <lexicon>
-    global function MakeDict
+    global function GetLoopEventResult
     {
-        parameter _keys,
-                  _vals.
+        parameter _eventData.
 
-        local retLex to lexicon().
-        from { local i to 0.} until i = _keys:length step { set i to i + 1.} do
+        local loopResult to false.
+
+        if _eventData:HasKey("Delegates")                  
         {
-            set retLex[_keys[i]] to _vals[i].
+            if _eventData:Delegates:HasKey("Check")
+            {
+                return _eventData:Delegates:Check:Call(_eventData:Params).
+            }
         }
-        return retLex.
+        return loopResult.
     }
 
-    // GetUnique :: [<list>] -> <list>
-    // Returns only unique values from the source list
-    global function GetUnique
+    // Register an event created in CreateEvent
+    global function RegisterLoopEvent
     {
-        parameter srcList.
+        parameter _eventData,
+                  _idOverride is "*NA*".
 
-        local outSet to uniqueSet().
-        for i in srcList
+        local localID to choose _eventData:id if _idOverride = "*NA*" else _idOverride.
+
+        OutInfo("RegisterLoopEvent: Adding event ({0})":Format(localID)).
+
+        if not g_LoopDelegates:HasKey("Events")
         {
-            outSet:add(i).
+            set g_LoopDelegates["Events"] to lexicon().
         }
-        return outSet.
+
+
+        local doneFlag to false.
+        from { local i to 0.} until doneFlag = true or i > g_LoopDelegates:Events:Keys:Length step { set i to i + 1.} do
+        {
+            // local namePair to "{0}_{1}":Format(localID, i:ToString()).
+            if not g_LoopDelegates:Events:HasKey(localID)
+            {
+                g_LoopDelegates:Events:Add(localID, _eventData).
+                set doneFlag to true.
+                if g_LoopDelegates:HasKey("RegisteredEventTypes")
+                {
+                    if g_LoopDelegates:RegisteredEventTypes:HasKey(_eventData:type)
+                    {
+                        //set g_LoopDelegates:RegisteredEventTypes[_eventData:type] to g_LoopDelegates:RegisteredEventTypes[_eventData:type] + 1.
+
+                        local evLastTypeVal to g_LoopDelegates:RegisteredEventTypes[_eventData:Type].
+                        OutDebug("evTypeLast: [{0} ({1})]":Format(evLastTypeVal, evLastTypeVal:TypeName), 12).
+                        local evNewTypeVal to evLastTypeVal + 1.
+                        g_LoopDelegates:RegisteredEventTypes:Remove(_eventData:type).
+                        g_LoopDelegates:RegisteredEventTypes:Add(_eventData:type, evNewTypeVal).
+                    }
+                    else
+                    {
+                        g_LoopDelegates:RegisteredEventTypes:Add(_eventData:type, 1).
+                    }
+                }
+                else
+                {
+                    g_LoopDelegates:Add("RegisteredEventTypes", Lexicon(_eventData:type, 1)).
+                }
+            }
+        }
+
+        return doneFlag.
     }
+
+
+    global function UnregisterLoopEvent
+    {
+        parameter _eventID.
+
+        OutInfo("UnregisterLoopEvent: Removing event ({0})":Format(_eventID)).
+
+        if g_LoopDelegates:Events:Keys:Contains(_eventID)
+        {
+            local type to g_LoopDelegates:Events[_eventID]:type.
+            local typeCount to choose g_LoopDelegates:RegisteredEventTypes[type] if g_LoopDelegates:RegisteredEventTypes:HasKey(type) else 0.
+            g_LoopDelegates:Events:Remove(_eventID).
+            if typeCount > 0
+            {
+                g_LoopDelegates:RegisteredEventTypes:Remove(type).
+                g_LoopDelegates:RegisteredEventTypes:Add(type, (typeCount - 1)).
+                if g_LoopDelegates:RegisteredEventTypes[type] = 0
+                {
+                    g_LoopDelegates:RegisteredEventTypes:Remove(type).
+                }
+            }
+        }
+        return g_LoopDelegates:Events:Keys:Contains(_eventID).
+    }
+    // #endregion
 
     // Sound
     // #region
@@ -517,2003 +1359,103 @@ global verbose to true.
     {
         parameter sfxId is 0.
 
-        if sfxId = 0 set sfxId to readJson("0:/sfx/ZeldaUnlock.json").
+        local sfxData to readJson(l_sfxReference[Min(sfxId, l_sfxReference:Length - 1)]).
         local v0 to getVoice(9).
-        from { local idx to 0.} until idx = sfxId:length step { set idx to idx + 1.} do
+        from { local idx to 0.} until idx = sfxData:length step { set idx to idx + 1.} do
         {
-            v0:play(sfxId[idx]).
+            v0:play(sfxData[idx]).
             wait 0.13.
         }
     }
     // #endregion
 
-    // Situation / Experiment decoding and checking
+    // Addon Wrappers
     // #region
 
-    // CheckCurrentSituation :: [<int>situMask] -> <bool>
-    // Checks if the vessel currently satisfies the provided situ mask
-    global function CheckCurrentSituation
-    {
-        parameter maskInt.
-
-        local curSitu to GetCurrentSituation().
-        local situStr to GetSituationFromMask(maskInt).
-        
-        return situStr:contains(curSitu).
-    }
-
-        // CheckCurrentSituation :: [<int>situMask] -> <bool>
-    // Checks if the vessel currently satisfies the provided situ mask
-    global function CheckCurrentSituationDetailed
-    {
-        parameter maskObj.
-
-        local bitMask to 0.
-        
-        local curSitu to GetCurrentSituation().
-        local situStr to GetSituationFromMask(maskObj[0]).
-        local biomeStr to GetSituationFromMask(maskObj[1]).
-        
-
-        if situStr.Contains(curSitu) 
-        {
-            set bitMask to bitMask + 1.
-            if biomeStr.Contains(curSitu) 
-            {
-                set bitMask to bitMask + 1.
-            }
-        }
-
-        if maskObj[2] = -1
-        {
-            if atm:exists 
-            {
-                set bitMask to 0.
-            }
-        }
-
-        else if maskObj[2] = 1
-        {
-            if not atm:exists
-            {
-                set bitMask to 0.
-            }
-        }
-
-        return bitmask.
-    }
-
-    // GetCurrentSituationMask :: <int> -> string
-    // Returns a semicolon-delimited string of situations indicated by mask
-    global function GetCurrentSituation
-    {
-        local curSitu to "".
-
-        if list("SUBORBITAL", "ORBITING", "ESCAPING"):contains(ship:status)
-        {
-            set terminal:height to 120.
-            set terminal:width to 300.
-            set curSitu to choose situMask:def[0] if ship:altitude >= BodyInfo:altForSci[Body:Name] else situMask:def[1].
-        }
-        else if list("FLYING"):contains(ship:status)
-        {
-            set curSitu to choose situMask:def[2] if ship:altitude >= BodyInfo:atmAltForSci[Body:Name] else situMask:def[3].
-        }
-        else 
-        {
-            set curSitu to choose situMask:def[4] if ship:status = "SPLASHED" else situMask:def[5].
-        }
-        return curSitu.
-    }
-
-    // GetSituationFromMask :: <int> -> string
-    // Returns a semicolon-delimited string of situations indicated by mask
-    global function GetSituationFromMask
-    {
-        parameter maskInt.
-
-        local bitmask to situMask[maskInt].
-        local situStr to "".
-        if bitmask:length = 6 
-        {
-                        
-            from { local bitIdx to 0.} until bitIdx = bitmask:length step { set bitIdx to bitIdx + 1.} do 
-            {
-                if bitmask[bitIdx] = "1" set situStr to "{0};{1}":format(situStr, situMask:Def[bitIdx]).
-            }
-        }
-        return situStr.
-    }
-    // #endregion
-
-// #endregion
-
-
-// -- Vessel Cache / State
-// #region
-
-// - Cache
-// #region
-
-// CacheState :: [<any>, <any>] -> <any>
-// Caches a key/value pair in the state file
-global function CacheState
-{
-    parameter lexKey,
-              lexVal.
-
-    local stateObj to lex().
-    if exists(stateFile) 
-    {
-        set stateObj to readJson(stateFile).
-    }
-    set stateObj[lexKey] to lexVal.
-    writeJson(stateObj, stateFile).
-    return readJson(stateFile):keys:contains(lexKey).
-}
-
-// CheckCacheKey :: <any> -> <bool>
-// Checks state file for existence of key and returns true/false
-global function CheckCacheKey
-{
-    parameter lexKey.
-
-    local stateObj to lex().
-    if exists(stateFile)
-    {
-        set stateObj to readJson(stateFile).
-    }
-    if stateObj:hasKey(lexKey)
-    {
-        return true.
-    }
-    else 
-    {
-        return false.
-    }
-}
-
-
-// ClearCacheKey :: <any> -> <bool>
-// Clears a value from the state file
-// Returns bool on operation success / fail
-global function ClearCacheKey
-{
-    parameter lexKey.
-
-    if exists(stateFile) 
-    {
-        local stateObj to readJson(stateFile).
-        if stateObj:hasKey(lexKey)
-        {
-            stateObj:remove(lexKey).
-            writeJson(stateObj, stateFile).
-            return true.
-        }
-        else
-        {
-            return false.
-        }
-    }
-}
-
-// DeleteCache :: <none> -> <bool>
-// Removes the entire state file
-// Returns bool on success / fail
-global function DeleteCache
-{
-    deletePath(stateFile).
-    if not exists(stateFile) 
-    {
-        return true.
-    }
-    else
-    {
-        return false.
-    }
-}
-
-// PullCache :: (cacheKey <any>) -> <any | bool>
-// Checks for key in cache. If exists, return it and 
-// remove it from the cache file.
-global function PullCache
-{
-    parameter lexKey is "".
-
-    if exists(StateFile)
-    {
-        local stateObj to readJson(stateFile).
-        if stateObj:HasKey(lexKey) 
-        {
-            local keyVal to stateObj[lexKey].
-            stateObj:remove(lexKey).
-            writeJson(stateObj, stateFile).
-            return keyVal.
-        }
-    }
-    return false.
-}
-
-// PurgeCache :: <none> -> <none>
-// Resets the entire state file to an empty state
-// Returns bool on success / fail
-global function PurgeCache
-{
-    writeJson(lex(), stateFile).
-    if readJson(stateFile):keys:length = 0
-    {
-        return true.
-    }
-    else
-    {
-        return false.
-    }
-}
-
-// ReadCache :: <any> -> <any | bool>
-// Reads the value of the passed in key in the cache. 
-// Returns 'def' if key does not exist
-global function ReadCache
-{
-    parameter lexKey,
-              def is false.
-
-    if exists(stateFile)
-    {
-        local stateObj to readJson(stateFile).
-        if stateObj:hasKey(lexKey) return stateObj[lexKey].
-    }
-    return def.
-}
-// #endregion
-
-// - Runmode
-// #region
-
-// InitRunmode :: <none> -> <int>
-// Gets the runmode from disk if exists, else returns 0
-global function InitRunmode
-{
-    if exists(stateFile) 
-    {
-        local stateObj to readJson(stateFile).
-        if stateObj:hasKey("runmode")
-        {
-            return stateObj["runmode"].
-        }
-        else
-        {
-            set stateObj["runmode"] to 0.
-            writeJson(stateObj, stateFile).
-            return 0.
-        }
-    }
-    else
-    {
-        writeJson(lex("runmode", 0), stateFile).
-    }
-    return 0.
-}
-
-// SetRunmode :: <int> -> <int>
-// Writes the runmode to disk, and returns the value back to the function
-global function SetRunmode
-{
-    parameter rm is 0.
-
-    if rm <> 0 
-    {
-        if exists(stateFile) 
-        {
-            local curState to readJson(stateFile).
-            set curState["runmode"] to rm.
-            writeJson(curState, stateFile).
-        }
-        else
-        {
-            writeJson(lex("runmode", rm), stateFile).
-        }
-    }
-    else if exists(stateFile) deletePath(stateFile).
-
-    return rm.
-}
-// #endregion
-// #endregion
-
-// -- List
-// #region
-
-    // Local Helpers
+    // Career
     // #region
-    // StepList
-    // Helper function for from loop in list sorting. 
-    local function StepList
+    // TryRecoverVessel :: [_ves<Ship>], [_recoveryWindow<Scalar>] -> <None>
+    global function TryRecoverVessel
     {
-        parameter c,
-                sortDir.
+        parameter _ves is Ship,
+                  _recoveryWindow is 30.
 
-        if sortDir = "desc" return c - 1.
-        else return c + 1.
-    }
-    // #endregion
-
-    // Sorts a list of parts by stage
-    // Possible sortDir values: asc, desc
-    global function OrderPartsByStageNumber
-    {
-        parameter inList,
-                sortDir is "desc".
-
-        local outList    to list().
-        local startCount to choose -1 if sortDir = "asc" else stage:number.
-        local endCount   to choose stage:number if sortDir = "asc" else -2.
-
-        from { local c to startCount.} until c = endCount step { set c to stepList(c, sortDir). } do
+        if Addons:Available("Career")
         {
-            for p in inList 
+            local waitTimer to 5.
+            set g_TS to Time:Seconds + waitTimer.
+            local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
+            set g_TermChar to "".
+            OutInfo("Press any key to abort").
+            local abortFlag to false.
+            until Time:Seconds > g_TS or abortFlag
             {
-                if p:stage = c
+                OutMsg(waitStr:Format(Round(g_TS - Time:Seconds, 2))).
+                GetTermChar().
+                if g_TermChar <> ""
                 {
-                    outList:add(p).
+                    set abortFlag to true.
+                    OutInfo().
                 }
-            }
-        }
-        return outList.
-    }
-// #endregion
-
-
-// -- Checks
-// #region
-// Function for use in maneuver delegates
-global function CheckMnvDelegate
-{
-    parameter checkType,
-              rangeLo,
-              rangeHi.
-    
-    local val to 0.
-
-    if checkType = "ap"         set val to ship:apoapsis.
-    else if checkType = "pe"    set val to ship:periapsis.
-    else if checkType = "inc"   set val to ship:orbit:inclination.
-
-    if val >= rangeLo and val <= rangeHi return true.
-    else return false.
-}
-
-// CheckSteering :: [<str>], [<int>]:: <bool>
-// Given a generic "angle" argument or specific control axis (roll, pitch, yaw), 
-// returns a bool if steeringManager values are within the optional zero-centered range
-global function CheckSteering
-{
-    parameter accRange is 0.50, 
-              axis is "angle".
-
-    if axis = "angle" 
-    {
-        return steeringManager:angleError >= -accRange and steeringManager:angleError <= accRange.
-    }
-    else if axis = "roll"
-    {
-        return steeringManager:rollError >= -accRange and steeringManager:rollError <= accRange.
-    }
-    else if axis = "pitch"
-    {
-        return steeringManager:pitchError >= -accRange and steeringManager:pitchError <= accRange.
-    }
-    else if axis = "yaw"
-    {
-        return steeringManager:yawError >= -accRange and steeringManager:yawError <= accRange.
-    }
-}
-
-// Checks if a value is above/below the range bounds given
-global function CheckValRange
-{
-    parameter val,
-              rangeLo,
-              rangeHi.
-
-    if val >= rangeLo and val <= rangeHi return true.
-    else return false.
-}
-// #endregion
-
-
-// -- Core Messages
-// #region
-global function CheckMsgQueue
-{
-    local msgList to list().
-    if not core:messages:empty
-    {
-        wait until core:messages:length >= 2.
-        local msgComplete to false.
-        until msgComplete
-        {
-            local sender to core:messages:pop():content.
-            local msgVal to core:messages:pop().
-            local msgTime to msgVal:receivedAt.
-            msgList:add(msgTime).
-            msgList:add(sender).
-            msgList:add(msgVal:content).
-            set msgComplete to true.
-        }
-    }
-    return msgList.
-}
-
-global function SendMsg
-{
-    parameter sendTo, 
-              msgData.
-
-    local cx to processor(sendTo):connection.
-
-    cx:sendMessage(core:part:tag). 
-    cx:sendMessage(msgData).
-}
-// #endregion
-
-
-// -- Terminal / AG Input Checks
-// #region
-// Checks if a provided value is within allowed deviation of a target value
-global function CheckValDeviation
-{
-    parameter val,
-              tgtCenter,
-              maxDeviation,
-              maxVal to -1.
-
-    if maxVal = -1 
-    {
-        if val >= tgtCenter - maxDeviation and val <= tgtCenter + maxDeviation return true.
-        else return false.
-    }
-    else 
-    {
-        if val >= Mod(maxVal + tgtCenter - maxDeviation, maxVal) and val <= Mod(maxVal + tgtCenter + maxDeviation, maxVal) return true.
-        else return false.
-    }
-}
-
-// Checks if the character matches the variable value passed in
-global function CheckChar
-{
-    parameter charToCheck.
-
-    local varToCheck to GetInputChar().
-
-    if varToCheck = charToCheck return true.
-    else return false.
-}
-
-// Checks if there is an input character, and if so, if it matches the value provided.
-global function CheckInputChar
-{
-    parameter charToCheck.
-    
-    if terminal:input:hasChar
-    {
-        if terminal:input:getChar = charToCheck
-        {
-            return true.
-        }
-        else
-        {
-            return false.
-        }
-    }
-    return false.
-}
-
-// Returns the input character if present
-global function GetInputChar
-{
-    if terminal:input:hasChar
-    {
-        set g_termChar to terminal:input:getChar.
-        terminal:input:clear.
-        return g_termChar.
-    }
-    return "".
-}
-
-global function WaitOnAllInput
-{
-    parameter keyToCheck to 0, agFlag to true.
-
-    if keyToCheck:typename = "Scalar"
-    {
-        if keyToCheck = 0 ag10 off.
-        else if keyToCheck = 1 ag1 off.
-        else if keyToCheck = 2 ag2 off.
-        else if keyToCheck = 3 ag3 off.
-        else if keyToCheck = 4 ag4 off.
-        else if keyToCheck = 5 ag5 off.
-        else if keyToCheck = 6 ag6 off.
-        else if keyToCheck = 7 ag7 off.
-        else if keyToCheck = 8 ag8 off.
-        else if keyToCheck = 9 ag9 off.
-    }
-
-    until false
-    {
-        if terminal:input:hasChar
-        {
-            if terminal:input:getChar = keyToCheck:toString break.
-        }
-        if agFlag
-        {
-            if keyToCheck = 0     if ag10 break.
-            else if keyToCheck = 1 if ag1 break.
-            else if keyToCheck = 2 if ag2 break.
-            else if keyToCheck = 3 if ag3 break.
-            else if keyToCheck = 4 if ag4 break.
-            else if keyToCheck = 5 if ag5 break.
-            else if keyToCheck = 6 if ag6 break.
-            else if keyToCheck = 7 if ag7 break.
-            else if keyToCheck = 8 if ag8 break.
-            else if keyToCheck = 9 if ag9 break.
-        }    
-        wait 0.01.
-    }
-
-    if agFlag
-    {
-        if keyToCheck = 0 ag10 off.
-        else if keyToCheck = 1 ag1 off.
-        else if keyToCheck = 2 ag2 off.
-        else if keyToCheck = 3 ag3 off.
-        else if keyToCheck = 4 ag4 off.
-        else if keyToCheck = 5 ag5 off.
-        else if keyToCheck = 6 ag6 off.
-        else if keyToCheck = 7 ag7 off.
-        else if keyToCheck = 8 ag8 off.
-        else if keyToCheck = 9 ag9 off.
-    }
-}
-
-global function WaitOnTermInput
-{
-    local tick to 0.
-
-    until false
-    {
-        if terminal:input:haschar
-        {
-            return terminal:input:getChar().
-        }
-        OutInfo2("No Char | Tick: " + tick).
-        set tick to choose 0 if tick > 999 else tick + 1.
-        wait 0.01.
-    }
-}
-// #endregion
-
-// Terminal Prompts
-// #region
-
-// PromptConfirm :: [SelectedItem<item>] -> [<bool>]
-local function PromptConfirm
-{
-    parameter selectedItem.
-
-    OutInfo("Confirm selection: " + selectedItem).
-    OutInfo2("[Enter] Confirm | [End] Cancel").
-    until false
-    {
-        set g_termChar to GetInputChar().
-        if g_termChar = terminal:input:enter 
-        {
-            OutInfo().
-            OutInfo2().
-            return true.
-        }
-        else if g_termChar = Terminal:Input:EndCursor
-        {
-            OutInfo().
-            OutInfo2().
-            return false.
-        }
-    }
-}
-
-// PromptCursorSelect :: [Prompt string<string>], [ItemList<List>], [[Default Idx<int>]] -> [Item From List<item>]
-// Allows for use of up / down keys to scroll along a list
-global function PromptCursorSelect
-{
-    parameter promptStr, 
-              choices,
-              selIdx is 0.
-
-    local _done to false.
-
-    local wPad to terminal:width - promptStr:length - 2.
-    local pStr to promptStr + ": {0, " + -wPad + "}".
-    print pStr:format(choices[selIdx]) at (0, g_line).
-    until _done
-    {
-        if Terminal:Input:HasChar
-        {
-            set g_termChar to GetInputChar().
-            if g_termChar = terminal:input:enter
-            {
-                set _done to true.
-            }
-            else if g_termChar = terminal:input:upcursorone
-            {
-                set selIdx to min(selIdx + 1, choices:length - 1).
-            }
-            else if g_termChar = terminal:input:downcursorone
-            {
-                set selIdx to max(selIdx - 1, 0).
-            }
-            else if g_termChar = terminal:input:deleteRight
-            {
-                set selIdx to 0.
-            }
-            else if g_termChar = terminal:input:endCursor
-            {
-                set selIdx to choices:length - 1.
-            }
-            else if g_termChar = terminal:input:backspace
-            {
-                set _done to true.
-            }
-            wait 0.01.
-            print pStr:format(choices[selIdx]) at (0, g_line).
-        }
-        wait 0.01.
-    }
-    return choices[selIdx].
-}
-
-// PromptFileSelect :: [fileList<list>] -> [returnVal<VolumeFile>]
-// Given a list of VolumeItems, prompts the user to enter a selection by index. 
-// Returns the resulting VolumeFile
-global function PromptFileSelect
-{
-    parameter promptStr to "Choose Item by index",
-              fileLex to Volume("Archive"):files.
-
-    local selection to fileLex.
-    local prevLevelLex to fileLex.
-
-    local dirCount is -1.
-    local fileCount is -1.
-    local page to 0.
-
-    from { local lvl to 0.} until dirCount = 0 step { set lvl to lvl + 1.} do 
-    {
-        ResetDisp().
-        print promptStr at (2, g_line).
-
-        set dirCount to 0.
-        set fileCount to 0.
-        // Set up an iterator for the file values in this level
-        //local items to choose fileLex:lex:values if fileLex:hasSuffix("lex") else fileLex:values. 
-        local items to fileLex:values.
-        for i in items
-        {
-            if i:isFile
-            {
-                set fileCount to fileCount + 1.
-            }
-            else
-            {
-                set dirCount to dirCount + 1.
-            }
-        }
-
-        local pageIdx to 0.
-        local pageLex to lex(pageIdx, list()).
-        
-        local itr to fileLex:values:iterator.
-        local paginate to false.
-
-        until not itr:next
-        {           
-            if mod(itr:index, 10) = 0 and paginate
-            {
-                set pageIdx to pageIdx + 1.
-                set paginate to false.
-            }
-            else
-            {
-                set paginate to true.
-            }
-
-            if pageLex:keys:contains(pageIdx)
-            {
-                pageLex[pageIdx]:add(itr:value).
-            }
-            else
-            {
-                set pageLex[pageIdx] to list(itr:value).
-            }
-        }
-
-        local refresh to true.
-
-        until false
-        {
-            if refresh 
-            {
-                ResetDisp().
-                print promptStr at (2, g_line).
-                DispFileList(pageLex[page]).
-                set refresh to false.
-            }
-
-            local numCheck to -1.
-            set g_termChar to GetInputChar().
-
-            if g_termChar:IsType("String")
-            {
-                set numCheck to g_termChar:ToNumber(-1).
-                print "Input: " + numCheck + " (" + numCheck:typeName + ")" at (2, 40).
-            }
-            else 
-            {
-                print "Input: " + g_termChar + " (" + g_termChar:typeName + ")" at (2, 40).
-            }
-            if numCheck >= 0
-            {
-                if 0 <= numCheck and numCheck < pageLex[page]:length
-                {
-                    set selection to pageLex[page][numCheck].
-                    if PromptConfirm(selection)
-                    {
-                        if selection:IsFile 
-                        {
-                            return selection.
-                        }
-                        else 
-                        {
-                            set fileLex to selection:lex.
-                            break.
-                        }
-                    }
-                }
-                else
-                {
-                    OutInfo2("ERROR: Selection out of range, please try again").
-                    wait 1.
-                    OutInfo2().
-                }
-            }
-            else if CheckChar(terminal:input:endCursor)
-            {
-                print "Selected item: <..>        " at (2, cr()).
-                set fileLex to prevLevelLex.
-                // break.
-                return fileLex.
-            }
-            else if CheckChar(terminal:input:rightCursorOne)
-            {
-                print "Selected item: <next page>      " at (2, cr()).
-                set page to min(page + 1, pageLex:keys:length - 1).
-                set refresh to true.
-            }
-            else if CheckChar(terminal:input:leftCursorOne)
-            {
-                print "Selected item: <prev page>      " at (2, cr()).
-                set page to max(0, page - 1).
-                set refresh to true.
-            }
-            else if not g_termChar:isType("String")
-            {
-                OutInfo2("ERROR: Selection not valid, please try again").
-                wait 1.
-                OutInfo2().
-            }
-            wait 0.1.
-        }
-    }
-}
-
-// PromptInput 
-global function PromptInput
-{
-    parameter promptStr,
-              cacheInput is false,
-              promptId is "TextEntry",
-              inputType is "",
-              limit is false.
-
-    if limit:isType("Boolean")
-    {
-        if not limit:isType(inputType)
-        {
-            local MET to round(missionTime, 2).
-            OutLogTee("[{0,0:00}][ERR] Provided limit does not equal inputType!":format(MET, "011")).
-            OutLogTee("{0} (lib/util/PromptInput) limitType: {1} reqType: {2}":format("":padLeft(MET:length + 7, limit:typename, inputType), "011")).
-            return 1 / 0.
-        }
-    }
-
-
-    clrDisp().
-    set g_line to 10.
-
-    local userStr to "".
-
-    print promptStr + ": " at (0, g_line).
-    until false
-    {
-        set g_termChar to GetInputChar().
-        if g_termChar = Terminal:Input:Enter
-        {
-            print "VALUE ENTERED: [" + userStr + "]                 " at (0, g_line).
-            wait 1.
-            clrDisp().
-            if cacheInput
-            {
-                CacheState(promptId, promptStr).
-            }
-            return userStr.
-        }
-        else if g_termChar = terminal:input:endcursor
-        {
-            // print "CANCELLING                            " at (0, g_line).
-            // wait 1.
-            clrDisp().
-            break.
-        }
-        else if g_termChar = terminal:input:backspace
-        {
-            if userStr:length > 0
-            {
-                set userStr to userStr:remove(userStr:length - 1, 1).
-            }
-        }
-        else
-        {
-            set userStr to userStr + g_termChar.
-        }
-        print promptStr + ": " + userStr + " " at (0, g_line).
-    }
-    return "".
-}
-
-// PromptItemMultiSelect :: [<list|lex> Items to select, [<scalar> itemLimit]] -> <Lexicon> Selections
-global function PromptItemMultiSelect 
-{
-    parameter _items,
-              _promptStr, 
-              _iterFunc,
-              _itemLimit is -1,
-              _cacheState is false,
-              _cacheKey is "".
-
-    local _itemSelections to lexicon().
-    if _items:isType("list")
-    {
-        if _itemLimit < 1 set _itemLimit to _items:length.
-        from { local i to 0.} until i = _itemLimit step { set i to i + 1. } do
-        {
-            local _item to PromptItemSelect(_items, _promptStr).
-            cr().
-            local confirmStr to "* Press ENTER to confirm selection / DELETE to cancel *".
-            print confirmStr at (max(0, (terminal:width - confirmStr:length) / 2), g_line).
-            until false 
-            {
-                set g_termChar to GetInputChar().
-                if g_termChar = terminal:input:enter
-                {
-                    _iterFunc:call().
-                }
-                else if g_termChar = terminal:input:deleteCursor
-                {
-                   set errLvl to _itemSelections:remove(_itemSelections:keys[_itemSelections:values:indexOf(_item)]).
-                   if errLvl = 1 OutLog("Failed to move {0} from _itemSelections to _items":format(_item)).
-                   else 
-                   {
-                    OutLog("Successfully moved {0} from _itemSelections to _items":format(_item)).
-                    Stk(_item, "-").
-
-                   _items:add(_item).
-                   }
-                }
-            }
-        }
-    }
-    else if _items:isType("Lexicon")
-    {
-
-    }
-    return _itemSelections.
-}
-// <PromptSelect> :: [<list> list of choices], [<str> prompt string], [<bool> cache option on], [<string> cacheId] -> <selected item>
-global function PromptItemSelect
-{
-    parameter choices,
-              promptStr,
-              cacheItem is false,
-              promptId is "prmpt".
-
-    clrDisp().
-    set g_line to 10.
-    
-    local curSel to -1.
-    local defVal to 0.
-    local timeout to 15.
-    local tBreak to time:seconds + timeout.
-    
-    CacheState(promptId, lex(promptId, -1)).
-
-    if choices:length > 0 
-    {
-
-        print "*** " + promptStr:toUpper + " ***" at (0, g_line).
-        print "------------------------" at (0, cr()).
-        local t_line to g_line.
-        until time:seconds >= tBreak
-        {
-            set curSel to ReadCache("PromptSelect")[promptId].
-            set g_line to t_line - 1.
-            from { local i to 0.} until i >= choices:length step { set i to i + 1.} do 
-            {
-                set g_prn to "[{0}]{1} {2}".
-                local sel to "".
-
-                if curSel = i 
-                {
-                    set sel to " (***)".
-                }
-                else if curSel < 0 and i = defVal
-                {
-                    set sel to "(DEF)".
-                }
-                print g_prn:format(i, sel, choices[i]) at (0, cr()).
-                set g_prn to "".
-            }
-
-            if terminal:input:haschar
-            {
-                set g_termChar to GetInputChar().
-                from { local i to 0.} until i > choices:length step { set i to i + 1.} do 
-                {
-                    if g_termChar = i 
-                    {
-                        CacheState("PromptSelect", lex(promptId, i)).
-                    }
-                }
-                terminal:input:clear.
                 wait 0.01.
-                local selCached to ReadCache("PromptSelect")[promptId].
-                if selCached > -1 return choices[selCached].
-            }
-            cr().   
-            print "TIME REMAINING TO SELECT: " + round(tBreak - time:seconds, 2) + "s        " at (0, g_line + 2).
-        }
-        clr(g_line).
-        clr(g_line + 2).
-        return choices[defVal].
-    }
-    else return "".
-}
-
-// <PromptPartSelect> :: [<str>] promptID (used in cache key)], [<str> prompt string], [<list> list of choices], [<bool> Whether to enable part highlighting] -> <selected item>
-global function PromptPartSelect
-{
-    parameter promptId,
-              promptStr,
-              partList,
-              hlEnable to false.
-
-    clrDisp().
-    set g_line to 10.
-
-    local curSel to -1.
-    local defVal to 0.
-    local hl to "".
-    
-    CacheState("PromptSelect", lex(promptId, curSel)).
-    if partList:length > 1
-    {
-        local function ConfirmChoice
-        {
-            cr().
-            print "CONFIRM CHOICE! ** Press [Enter] Yes | [End] No ** " at (0, g_line).
-            local timeOut to time:seconds + 5.
-            until false
-            {
-                set g_termChar to GetInputChar().
-                if g_termChar = terminal:input:enter 
-                {
-                    return true.
-                }
-                else if g_termChar = Terminal:Input:EndCursor or time:seconds > timeOut
-                {
-                    return false.
-                }
-            }
-        }
-
-        local function PartHL
-        {
-            parameter p.
-
-            local h to highlight(p, rgb(1, 0.15, 0.25)).
-            set h:enabled to false.
-            wait 0.01.
-            set h:enabled to true.
-            set hlUID to p:UID.
-            return h.
-        }
-
-        local choiceMade to false.
-        local tBreak to time:seconds + 15.
-        local hlUID to 0.
-
-        print "*** " + promptStr:toUpper + " ***" at (0, g_line).
-        print "------------------------" at (0, cr()).
-        local t_line to g_line.
-
-        until time:seconds >= tBreak
-        {
-            set curSel to ReadCache("PromptSelect")[promptId].
-            set g_line to t_line.
-            from { local i to 0.} until i >= partList:length step { set i to i + 1.} do 
-            {
-                local curPart to partList[i].
-                set g_prn to "[" + i + "] ".
-                if curSel = i 
-                {
-                    set g_prn to g_prn + "*** ".
-                    if hlEnable 
-                    {
-                        set hl to PartHL(curPart).
-                    }
-                }
-                else if curSel < 0 and i = defVal
-                {
-                    set g_prn to g_prn + "(DEF) ".
-                    if hlEnable
-                    {
-                        if hlUID <> curPart:UID
-                        {
-                            set hl to PartHL(curPart).
-                        }
-                    }
-                }
-                else
-                {
-                    set g_prn to g_prn.
-                }
-                print g_prn + curPart:name + " | " + curPart:UID + "     " at (0, cr()).
             }
 
-            if terminal:input:haschar
+            if abortFlag 
             {
-                set g_termChar to GetInputChar().
-                from { local i to 0.} until i > partList:length step { set i to i + 1.} do 
+                OutMsg("Aborting recovery attempts!").
+                wait 0.25.
+            }
+            else
+            {
+                local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
+                local recoveryStr to "Attempting recovery (Status: {0})".
+                set g_TS to Time:Seconds + _recoveryWindow.
+                local abortStr to "Press any key to abort ({0,-5}s)".
+                until Time:Seconds >= g_TS or abortFlag
                 {
-                    if g_termChar = i 
+                    local recoveryState to getRecoveryState:Call(_ves).
+                    if recoveryState[0]
                     {
-                        CacheState("PromptSelect", lex(promptId, i)).
-                        set choiceMade to true.
-                    }
-                }
-                terminal:input:clear.
-                wait 0.01.
-                local selCached to ReadCache("PromptSelect")[promptId].
-                if selCached > -1 and choiceMade
-                {
-                    if ConfirmChoice()
-                    {
-                        return partList[selCached].
+                        Addons:Career:RecoverVessel(_ves).
+                        OutMsg("Recovery in progress (Status: {0})":Format(recoveryState[1])).
+                        OutInfo().
+                        wait 0.01.
+                        break.
                     }
                     else
                     {
-                        set choiceMade to false.
-                    }
-                }
-            }
-            cr().   
-            print "TIME REMAINING TO SELECT: " + round(tBreak - time:seconds, 2) + "s        " at (0, cr()).
-        }
-        set hl:enabled to false.
-        
-        clrDisp().
-        return partList[defVal].
-    }
-    else if partList:length > 0
-    {
-        return partList[0].
-    }
-    else
-    {
-        return false.
-    }
-}
+                        OutMsg(recoveryStr:Format(recoveryState[1])).
+                        OutInfo(abortStr:Format(g_TS - Time:Seconds, 2)).
 
-global function PromptScalarEntry
-{
-    parameter _range is -1.
-
-
-}
-
-// #endregion
-// #endregion
-
-// -- Part Modules
-// #region
-
-// #region -- Part deployment helpers
-// Fresh air makers
-local function DeployAirMaker
-{
-    parameter p,
-              action is "toggle".
-
-    local m to p:getModule("SnacksConverter").
-
-    if  action = "toggle"
-    {
-        DoAction(m, "toggle converter", true).
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "start air maker").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "stop air maker").
-    }
-}
-
-// Crystallisation Facilities
-local function DeployCrystalization
-{
-    parameter p, 
-              action is "deploy".
-
-    local m to p:getModule("ModuleSystemHeatConverter").
-    
-    if action = "deploy"
-    {
-        DoAction(m, "Start Crystallisation [Cr]", true).
-    }
-    else if action = "retract"
-    {
-        DoAction(m, "Stop Crystallisation [Cr]", true).
-    }
-    else if action = "toggle"
-    {
-        DoAction(m, "toggle converter (cyrstal)", true).
-    }
-}
-
-// Fuel cells
-local function DeployFuelCell
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleResourceConverter").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "start fuel cell") DoEvent(m, "stop fuel cell").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "start fuel cell").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "stop fuel cell").
-    }
-}
-
-// Radiators
-local function DeployRadiator
-{
-    parameter p,
-              action.
-
-    local m to "". 
-    local eDeploy to "".
-    local eRetract to "".
-
-    if p:hasModule("ModuleSystemHeatRadiator")
-    {
-        set m to p:getModule("ModuleSystemHeatRadiator").
-        set eDeploy to "activate radiator".
-        set eRetract to "shutdown radiator".
-    } 
-    else if p:hasModule("ModuleDeployableRadiator")
-    {
-        set m to p:getModule("ModuleDeployableRadiator").
-        set eDeploy to "extend radiator".
-        set eRetract to "retract radiator".
-    }
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, eDeploy) 
-        {
-            DoEvent(m, eRetract).
-        }
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, eDeploy).
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, eRetract).
-    }
-}
-
-
-// Antenna Reflectors
-local function DeployReflector
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleDeployableReflector").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "extend reflector") DoEvent(m, "retract reflector").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "extend reflector").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract reflector").
-    }
-}
-
-// Robotics - Hinges
-local function DeployRoboHinge
-{
-    parameter p,
-              action.
-
-    local lockFlag to false.
-    local m to p:getModule("ModuleRoboticServoHinge").
-    if m:getField("locked") 
-    {
-        set lockFlag to true.
-        m:setField("locked", false). 
-    }
-    wait 0.05.
-    
-    if action = "toggle"
-    {
-        DoAction(m, "Toggle Hinge").
-    }
-    else if action = "deploy"
-    {
-        DoAction(m, "Toggle Hinge").
-    }
-    else if action = "retract"
-    {
-        DoAction(m, "Toggle Hinge").
-    }
-
-    if lockFlag 
-    {
-        m:setField("locked", true).
-    }
-}
-
-// Robotics - Rotors
-local function DeployRoboRotor
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleRoboticServoRotor").
-
-    if m:getField("locked") 
-    {
-        m:setField("locked", false). 
-    }
-    wait 0.05.
-
-    if action = "toggle"
-    {
-        if not m:getField("motor") 
-        {
-            m:setField("motor", true).
-            m:setField("torque limit(%)", 25).
-        }
-        else
-        {
-            m:setField("motor", false).
-            m:setField("torque limit(%)", 0).
-        }
-    }
-    else if action = "deploy"
-    {
-        m:setField("motor", true).
-        m:setField("torque limit(%)", 25).
-    }
-    else if action = "retract"
-    {
-        m:setField("motor", false).
-        m:setField("torque limit(%)", 0).
-    }
-
-    if not m:getField("motor")
-    {
-        m:setField("locked", true).
-    }
-}
-
-// RemoteTech Antennas
-local function DeployRTAntenna
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleRTAntenna").
-
-    if action = "toggle"
-    {
-        if not DoAction(m, "activate", true) DoAction(m, "deactivate", true).
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "activate").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "deactivate").
-    }
-}
-
-// RTGs
-local function DeployRTG
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleGenerator").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "activate generator") DoEvent(m, "shutdown generator").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "activate generator").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "shutdown generator").
-    }
-}
-
-// Science / miscellaneous
-local function DeploySciMisc
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("ModuleDeployablePart").
-
-    if action = "toggle"
-    {
-        if not DoEvent(m, "extend") DoEvent(m, "retract").
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "deploy").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract").
-    }
-}
-
-// Solar Panels
-local function DeploySolarPanel
-{
-    parameter p, 
-              action.
-    
-    local m to p:getModule("ModuleDeployableSolarPanel").
-    if action = "toggle"
-    {
-        if not DoAction(m, "extend solar panel", true) DoAction(m, "retract solar panel", true).
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "extend solar panel").
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "retract solar panel").
-    }
-}
-
-// TST Space Telescope
-local function DeployTSTScope
-{
-    parameter p,
-              action.
-
-    local m to p:getModule("TSTSpaceTelescope").
-    if action = "toggle"
-    {
-        if not DoEvent(m, "open camera", true) DoAction(m, "opencamera", true).
-        wait 0.01.
-    }
-    else if action = "deploy"
-    {
-        DoEvent(m, "open camera").
-        wait 0.01.
-    }
-    else if action = "retract"
-    {
-        DoEvent(m, "close camera").
-        wait 0.01.
-    }
-}
-// #endregion
-
-// Checks for an action and executes if found
-global function DoAction
-{
-    parameter m, 
-              action, 
-              state is true.
-
-    if m:hasAction(action)
-    {
-        m:doAction(action, state).
-        return true.
-    }
-    else
-    {
-        return false.
-    }
-}
-
-// Checks for an event and executes if found
-global function DoEvent
-{
-    parameter m, 
-              event.
-
-    if m:hasEvent(event)
-    {
-        m:doEvent(event).
-        return true.
-    }
-    else
-    {
-        return false.
-    }
-}
-
-// Searches a module for events / actions
-global function GetEventFromModule
-{
-    parameter m,
-              event,
-              searchActions to true.
-
-    for _e in m:allEvents
-    {
-        if _e:contains(event)
-        {
-            return _e:replace("(callable) ", ""):replace(", is KSPEvent", "").
-        }
-    }
-
-    if searchActions
-    {
-        for _a in m:allActions
-        {
-            if _a:contains(event)
-            {
-                return _a:replace("(callable) ", ""):replace(", is KSPAction", "").
-            }
-        }
-    }
-    return "".
-}
-
-// GetFuelCellTimeRemaining :: <part> | <scalar>
-// Returns the amount of time that a fuel cell has remaining based on 
-// resources it uses. 
-// If no resources are currently being used (ex: Fuel Cell is off), returns -1.
-global function GetFuelCellTimeRemaining
-{
-    parameter fc.
-
-    local startTime to time:seconds.
-    local fcTimeRemaining to startTime.
-
-    print("Checking Fuel Cell Consumption") at (2, 10).
-    if fc:getModule("ModuleResourceConverter"):hasEvent("stop fuel cell")
-    {
-        local fcResources to list().
-        local resLex to lex().
-        // set startTime to time:seconds.
-        // set fcTimeRemaining to startTime.
-
-        local fcResources to (FuelCellResources[fc:name]).
-
-        for res in Ship:Resources
-        {
-            if fcResources:contains(res:name)
-            {
-                set resLex[res:name] to res:amount.
-            }
-        }
-
-        for res in resLex:keys
-        {
-            for shipRes in Ship:Resources
-            {
-                if shipRes:Name = res
-                {
-                    print "Measuring " + res + " consumption          " at (2, 11).
-                    local resEndTime to time:seconds + 10.
-                    local resTimeRemaining to 0.
-                    local resUsed to 0.
-                    local startAmt to shipRes:amount.
-                    until time:seconds >= resEndTime
-                    {
-                        print "Time remaining: " + round(resEndTime - time:seconds, 2) + "  " at (2, 12).
-                    }
-                    set resUsed to (startAmt - shipRes:amount) * 0.1.
-                    print shipRes:Name + " usage/sec : " + round(resUsed, 2).
-                    if resUsed > 0 
-                    {
-                        set resTimeRemaining to shipRes:amount / resUsed.
-                        if fcTimeRemaining > resTimeRemaining 
+                        GetTermChar().
+                        if g_TermChar <> ""
                         {
-                            set fcTimeRemaining to resTimeRemaining.
+                            set abortFlag to true.
                         }
+                        wait 0.01.
                     }
                 }
-            }
-        }
-    }
-
-    if fcTimeRemaining = startTime {
-        return -1.
-    }
-    else
-    {
-        return fcTimeRemaining.
-    }
-}
-
-// ToggleBayDoor :: <part>, <string>, <string> | <none>
-// Deploys Stock and Universal Storage bay doors
-global function ToggleBayDoor
-{
-    parameter bay,
-              doors is "all",
-              action is "toggle".
-
-    local usBay to bay:HasModule("USAnimateGeneric").
-    local bayMod to choose bay:GetModule("USAnimateGeneric") if usBay else bay:GetModule("ModuleAnimateGeneric").
-    local priCloseEvent to "close".
-    local priOpenEvent to "open".
-    local hasSecondary to false.
-    local secCloseEvent to "retract secondary bays".
-    local secOpenEvent to "deploy secondary bays".
-
-    if usBay
-    {
-        set priCloseEvent to "retract primary bays".
-        set priOpenEvent to "deploy primary bays".
-        if (bayMod:hasEvent(secOpenEvent) or bayMod:hasEvent(secCloseEvent)) set hasSecondary to true.
-    }
-
-    if bayMod:HasEvent(priCloseEvent) or bayMod:HasEvent(priOpenEvent)
-    {
-        if doors = "all" or doors = "primary"
-        {
-            if action = "toggle" 
-            {
-                if not DoEvent(bayMod, priOpenEvent) DoEvent(bayMod, priCloseEvent).
-            }
-            else if action = "open"
-            {
-                DoEvent(bayMod, priOpenEvent).
-            }
-            else if action = "close"
-            {
-                DoEvent(bayMod, priCloseEvent).
-            }
-        }
-
-        if (doors = "all" or doors = "secondary") and hasSecondary
-        {
-            if action = "toggle" 
-            {
-                if not DoEvent(bayMod, secOpenEvent)
-                DoEvent(bayMod, secCloseEvent).
-            }
-            else if action = "open"
-            {
-                DoEvent(bayMod, secOpenEvent).
-            }
-            else if action = "close"
-            {
-                DoEvent(bayMod, secCloseEvent). 
-            }
-        }
-        wait 0.07.
-        until bayMod:GetField("status") = "Locked"
-        {
-            wait 0.01.
-        }
-
-        if bay:Tag:MatchesPattern("bay\.") 
-        {
-            local idx to bay:Tag:Split(".")[1].
-            ToggleLights(Ship:PartsTaggedPattern("bayLight." + idx)).
-        }
-    }
-}
-
-// ToggleLights :: List<parts>, <str> | <none>
-// Toggles / Activates / Deactivates a provided set of lights
-global function ToggleLights
-{
-    parameter lightList, 
-              action is "Toggle".
-
-    if lightList:length > 0
-    {
-        for p in lightList 
-        {
-            if action = "Toggle" 
-            {
-                DoAction(p:GetModule("ModuleLight"), "toggle light").
-            }
-            else if action = "Activate"
-            {
-                DoEvent(p:GetModule("ModuleLight"), "lights on").
-            }
-            else if action = "Deactivate"
-            {
-                DoEvent(p:GetModule("ModuleLight"), "lights off").
-            }
-        }
-    }
-}
-
-// InitCapacitorDischarge
-// Discharges all capacitors on vessel
-global function InitCapacitorDischarge
-{
-    local ecMon to 0.
-    local resList to list().
-    list resources in resList.
-    for res in resList
-    {
-        if res:name = "ElectricCharge" lock ecMon to res:amount / res:capacity.
-    }
-
-    when ecMon <= 0.05 then
-    {
-        for cap in ship:partsDubbedPattern("capacitor")
-        {
-            local m to cap:getModule("DischargeCapacitor").
-            DoEvent(m, "disable recharge").
-            DoEvent(m, "discharge capacitor").
-            until ecMon >= 0.99 or cap:resources[0]:amount <= 0.1
-            {
-                wait 0.01.
-            }
-        }
-    }
-}
-
-// SetGrappleHook :: <module>, <string> | <none>
-// Performs an action using the provided grappling hook module
-global function SetGrappleHook
-{
-    parameter m is ship:modulesNamed("ModuleGrappleNode")[0],
-              mode is "arm". // other values: release, pivot, decouple
-
-    local event to "".
-    if mode = "arm" {
-        set m to m:part:getModule("ModuleAnimateGeneric").
-        set event to "arm".
-    }
-    else if mode = "release" set event to "release".
-    else if mode = "pivot" set event to "free pivot".
-
-    return DoEvent(m, event).
-}
-
-// CheckPartSet :: setTag<string> | <bool>
-// Checks if parts tagged with the provided setTag are present on the vessel
-// Parts specified by their deployment tag type (i.e., "launch", "payload")
-// Example deployment tag formats: "deploy.launch.0" || "launchDeploy.0"
-global function CheckPartSet
-{
-    parameter setTag is "".
-
-    if setTag = "" 
-    {
-        return false.
-    }
-    else
-    {
-        local regEx to setTag + ".*\.{1}\d+".
-        if ship:partsTaggedPattern(regEx):length > 0 return true.
-    }
-}
-
-// DeployParts :: partList<list>, action<string> | <none>
-// Performs a deployment action on a set of parts
-// Parts are provided as a list
-global function DeployPartList
-{
-    parameter partsToDeploy is list().
-
-    if partsToDeploy:length = 0
-    {
-        OutMsg("DeployPartList: No parts provided!").
-        
-    }
-}
-
-// DeployPartSet :: setTag<string>, action<string> | <none>
-// Performs a deployment action on a set of parts
-// Parts specified by their deployment tag type (i.e., "launch", "payload")
-// Example deployment tag formats: "deploy.launch.0" || "launchDeploy.0"
-global function DeployPartSet
-{
-    parameter setTag is "", action is "deploy".
-    
-    local maxDeployStep to 0.
-    local regEx to setTag + ".*\.{1}\d+".
-    if setTag <> "" 
-    {
-        for p in Ship:PartsTaggedPattern(regEx)
-        {
-            // if p:tag:split(".")[1]:toNumber(0) > maxDeployStep set maxDeployStep to p:tag:split(".")[1].
-            local pTag to p:Tag:Split(".").
-            set maxDeployStep to max(pTag[pTag:Length - 1]:ToNumber(0), maxDeployStep).
-        }
-    }
-
-    from { local idx to 0.} until idx > maxDeployStep step { set idx to idx + 1.} do 
-    {
-        OutInfo("Step: " + idx:ToString).
-        local regEx2 to regEx:Remove(regEx:length - 3, 3) + idx:ToString.
-        local idxStepList to choose Ship:PartsTagged("") if setTag = "" else Ship:PartsTaggedPattern(regEx2).
-        for p in idxStepList
-        {
-            for m in p:AllModules
-            {
-                if deployModules:Contains(m)
+                
+                if abortFlag
                 {
-                    DeployPart(p, action).
-                    wait 0.05.
+                    OutMsg("Recovery aborted!").
+                    OutInfo().
                 }
+                else
+                {
+                    OutMsg("Recovery failed. :(").
+                }
+                OutInfo().
             }
-        }
-        wait 1.
-    }
-}
-
-// DeployPart :: <part>, action<string> -> <none>
-// Given a part, performs the specified action on it
-global function DeployPart
-{
-    parameter p, 
-              action is "deploy".
-
-    if p:hasModule("ModuleAnimateGeneric") or p:hasModule("USAnimateGeneric") // Generic and bays
-    {
-        if p:name:contains("Shroud") or p:name:contains("Bay") or p:tag:contains("bay") // Bays
-        {
-            if action = "deploy" ToggleBayDoor(p, "all", "open").
-            else ToggleBayDoor(p, "all", "close").
-        }
-        else if p:name <> "USComboLifeSupportWedge"    // Everything else that is not a USCombo Life Support Wedge
-        {
-            local m to p:getModule("ModuleAnimateGeneric").
-            DoEvent(m, "deploy").
-        }
-    }
-    
-    if p:hasModule("ModuleRTAntenna")   // RT Antennas
-    {
-        DeployRTAntenna(p, action).
-    }
-
-    if p:hasModule("ModuleDeployableSolarPanel")    // Solar panels
-    {
-        DeploySolarPanel(p, action).
-    }
-
-    if p:hasModule("ModuleResourceConverter") // Fuel Cells
-    {
-        DeployFuelCell(p, action).
-    }
-
-    if p:hasModule("ModuleGenerator") // RTGs
-    {
-        DeployRTG(p, action).
-    }
-
-    if p:hasModule("ModuleDeployablePart")  // Science parts / misc
-    {
-        DeploySciMisc(p, action).
-    }
-
-    if p:hasModule("ModuleRoboticServoHinge")
-    {
-        DeployRoboHinge(p, action).
-    }
-
-    if p:hasModule("ModuleRoboticServoRotor")
-    {
-        DeployRoboRotor(p, action).
-    }
-
-    if p:hasModule("ModuleDeployableRadiator") or p:hasModule("ModuleSystemHeatRadiator")
-    {
-        DeployRadiator(p, action).
-    }
-
-    if p:hasModule("ModuleDeployableReflector")
-    {
-        DeployReflector(p, action).
-    }
-
-    if p:hasModule("SnacksConverter")
-    {
-        if p:getModule("SnacksConverter"):hasField("air maker") DeployAirMaker(p, action).
-    }
-    
-    if p:hasModule("TSTSpaceTelescope")
-    {
-        DeployTSTScope(p, action).
-    }
-
-    if p:hasModule("ModuleSystemHeatConverter")
-    {
-        if p:name:contains("crystals")
-        {
-            DeployCrystalization(p, action).
-        }
-    }
-}
-//#endregion
-
-
-// -- Warp
-// #region
-// CheckWarpKey :: <none> -> <bool>
-// Checks if the designated warp key (Enter) is pressed.
-global function CheckWarpKey
-{
-    if Terminal:Input:HasChar 
-    {
-        until not Terminal:Input:HasChar
-        {
-            set g_termChar to Terminal:Input:GetChar.
-            if g_termChar = Terminal:Input:Enter
-            {
-                return true.
-            }
-        }
-        return false.
-    }
-    return false.
-}
-
-// Creates a trigger to warp to a timestamp using AG10
-global function InitWarp
-{
-    parameter tStamp, 
-              str is "timestamp",
-              buffer is 15,
-              warpNow to false.
-
-    set tStamp to tStamp - buffer.
-    if time:seconds <= tStamp
-    {
-        if warpNow 
-        {
-            warpTo(tStamp).
-            wait until kuniverse:timewarp:issettled.
         }
         else
         {
-            when CheckInputChar(terminal:input:enter) then
-            {
-                warpTo(tStamp).
-                wait until kuniverse:timewarp:issettled.
-            }
-            OutHUD("Press Enter in terminal to warp to " + str).
+            OutMsg("No recovery firmware found!").
+            OutInfo().
+            wait 0.25.
         }
     }
-    else
-    {
-        OutHUD("Warp not available, too close to timestamp", 1).
-    }
-}
 
-// Smooths out a warp down by altitude
-global function WarpToAlt
-{
-    parameter tgtAlt.
-    
-    local warpFactor to 1.
-
-    if tgtAlt > 1000000 set warpFactor to 1.
-    else if tgtAlt > 500000 set warpFactor to 1.01.
-    else if tgtAlt > 100000 set warpFactor to 1.03.
-    else if tgtAlt > 10000 set warpFactor to 1.05.
-    else set warpFactor to 1.075.
-
-    if ship:altitude > tgtAlt
-    {
-        if ship:altitude <= tgtAlt * 1.000625 * warpFactor set warp to 0.
-        else if ship:altitude <= tgtAlt * 1.00125 * warpFactor set warp to 1.
-        else if ship:altitude <= tgtAlt * 1.025 * warpFactor set warp to 2.
-        else if ship:altitude <= tgtAlt * 1.75 * warpFactor set warp to 3.
-        else if ship:altitude <= tgtAlt * 5 * warpFactor set warp to 4.
-        else if ship:altitude <= tgtAlt * 25 * warpFactor set warp to 5.
-        else if ship:altitude <= tgtAlt * 250 set warp to 6.
-        else set warp to 7.
-        //else set warp to 6.
-    }
-    else
-    {
-        if ship:altitude >= tgtAlt * 0.975 * warpFactor set warp to 0.
-        else if ship:altitude >= tgtAlt * 0.85 * warpFactor set warp to 1.
-        else if ship:altitude >= tgtAlt * 0.75 * warpFactor set warp to 2.
-        else if ship:altitude >= tgtAlt * 0.625 * warpFactor set warp to 3.
-        else if ship:altitude >= tgtAlt * 0.500 * warpFactor set warp to 4.
-        else if ship:altitude >= tgtAlt * 0.250 * warpFactor set warp to 5.
-        else set warp to 6.
-        //else if ship:altitude >= tgtAlt * 0.125 set warp to 6.
-        //else set warp to 7.
-    }
-}
-// #endregion
-
-// -- Vector Math
-// #region
-// Signs the angle between two vectors relative to the velocity of the vessel
-global function SignedVAng
-{
-    parameter ves,
-              vec1, 
-              vec2.
-
-    local vecAng to VAng(vec1, vec2).
-    local sign to VDot(VCrs(vec2, vec1), vCrs(ves:velocity:orbit, vec1)).
-    if sign > 0
-    {
-        set vecAng to 360 - vecAng.
-    }
-    return vecAng.
-}
-//#endregion
-
-
-// -- Misc Local
-// #region
-
+    // #endregion
+    // #endregion
 // #endregion

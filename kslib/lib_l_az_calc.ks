@@ -5,7 +5,7 @@
 //~~Created by space-is-hard~~
 //~~Updated by TDW89~~
 //~~Auto north/south switch by undercoveryankee~~
-
+// #include "0:/lib/libLoader.ks"
 //To use: RUN LAZcalc.ks. SET data TO l_az_calc_init([desired circular orbit altitude in meters],[desired orbital inclination; negative if launching from descending node, positive otherwise]). Then loop SET myAzimuth TO LAZcalc(data).
 
 @lazyGlobal off.
@@ -13,6 +13,7 @@
 global function l_az_calc_init {
     parameter   desiredAlt,             //Altitude of desired target orbit (in *meters*)
                 desiredInc,             //Inclination of desired target orbit
+                launchLat is -90,
                 autoNodeEpsilon is 10.  // How many m/s north or south
                                         // will be needed to cause a north/south switch. Pass zero to disable
                                         // the feature.
@@ -20,7 +21,7 @@ global function l_az_calc_init {
     set autoNodeEpsilon to abs(autoNodeEpsilon).
     
     //We'll pull the latitude now so we aren't sampling it multiple times
-    local launchLatitude is ship:latitude.
+    local launchLatitude to choose ship:latitude if launchLat = -90 else launchLat.
     
     local data is list().               // A list is used to store information used by LAZcalc
     
@@ -53,17 +54,22 @@ global function l_az_calc_init {
     //Does all the one time calculations and stores them in a list to help reduce the overhead or continuously updating
     local equatorialVel is (2 * constant():pi * body:radius) / body:rotationperiod.
     local targetOrbVel is sqrt(body:mu/ (body:radius + desiredAlt)).
-    data:add(desiredInc).       //[0]
-    data:add(launchLatitude).   //[1]
-    data:add(equatorialVel).    //[2]
-    data:add(targetOrbVel).     //[3]
-    data:add(launchNode).       //[4]
-    data:add(autoNodeEpsilon).  //[5]
+    data:Add(desiredInc).       //[0]
+    data:Add(launchLatitude).   //[1]
+    data:Add(equatorialVel).    //[2]
+    data:Add(targetOrbVel).     //[3]
+    data:Add(launchNode).       //[4]
+    data:Add(autoNodeEpsilon).  //[5]
     return data.
 }.
 
 function l_az_calc {
     parameter data. //pointer to the list created by l_az_calc_init
+
+    if g_SpinActive
+    {
+        return compass_for(Ship, Ship:Facing).
+    }
 
     local inertialAzimuth is arcsin(max(min(cos(data[0]) / cos(ship:latitude), 1), -1)).
     local vXRot is data[3] * sin(inertialAzimuth) - data[2] * cos(data[1]).
