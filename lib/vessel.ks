@@ -1412,7 +1412,12 @@
 
                 local doActionFlag to False.
 
-                if g_ActiveEngines:Length > 0
+                if g_TermChar = Char(83)
+                {
+                    set doActionFlag to True.
+                    set g_TermChar to "".
+                }
+                else if g_ActiveEngines:Length > 0
                 {
                     if _params[0] = g_ActiveEngines[0]:DecoupledIn
                     {
@@ -1443,7 +1448,7 @@
                         }
                     }
                 }
-
+                
                 return doActionFlag.
             }.
 

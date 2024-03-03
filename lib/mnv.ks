@@ -350,6 +350,7 @@
             local softShutdownDV to max(0.01, dvRate * (g_ActiveEngines_Spec:SpoolTime * 0.2)).
             until vdot(dv0, _inNode:DeltaV) <= softShutdownDV // 0.0025
             {   
+                GetTermChar().
                 set g_ActiveEngines to GetActiveEngines().
                 set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
@@ -389,6 +390,7 @@
                 {
                     ExecGLoopEvents().
                 }
+                set g_TermChar to "".
             }
             set t_Val to 0.
 
