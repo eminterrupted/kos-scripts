@@ -1,6 +1,8 @@
 @LazyGlobal off.
 clearscreen.
 
+parameter _params is list().
+
 RunOncePath("0:/lib/depLoader").
 
 Core:DoEvent("Open Terminal").

@@ -8,11 +8,11 @@
 
 // *~ Variables ~* //
 // #region
-    // *- Global
+    // *- Global Variables
     // #region
     global g_StateCache to "".
     // #endregion
-    
+
     // *- Local
     // #region
     // #endregion
@@ -24,14 +24,88 @@
     // *- Local Anonymous Delegates
     // #region
     // #endregion
+
+    // *- Reference Objects
+    // #region
+    global g_spaceStr to lex(
+         0, ""
+        ,1, " "
+        ,2, "  "
+        ,3, "   "
+        ,4, "    "
+        ,5, "     "
+        ,6, "      "
+        ,7, "       "
+        ,8, "        "
+        ,9, "         "
+        ,10,"          "
+        ,11,"           "
+        ,12,"            "
+        ,13,"             "
+        ,14,"              "
+        ,15,"               "
+        ,16,"                "
+        ,17,"                 "
+        ,18,"                  "
+        ,19,"                   "
+        ,20,"                    "
+        ,21,"                     "
+        ,22,"                      "
+        ,23,"                       "
+        ,24,"                        "
+        ,25,"                         "
+        ,26,"                          "
+        ,27,"                           "
+        ,28,"                            "
+        ,29,"                             "
+        ,30,"                              "
+        ,31,"                               "
+        ,32,"                                "
+        ,33,"                                 "
+        ,34,"                                  "
+        ,35,"                                   "
+        ,36,"                                    "
+        ,37,"                                     "
+        ,38,"                                      "
+        ,39,"                                       "
+        ,40,"                                        "
+        ,41,"                                         "
+        ,42,"                                          "
+    ).
+    // #endregion
+    
 // #endregion
 
 
 // *~ Functions ~* //
 // #region
 
-    // * Mission plan parsing / processing
-    // #region
+// *- Basic utilities
+// #region
+
+    // Breakpoint :: <_msg>
+    // Halts execution until any key is pressed
+    global function Breakpoint
+    {
+        parameter _msg is "*** PRESS ANY KEY TO CONTINUE ***".
+
+        local pad  to Floor((Terminal:Width - _msg:Length) / 2).
+        local padStr to choose g_spaceStr[pad] if pad <= g_spaceStr:Keys:Length - 1 else NewBlankString(pad).
+
+
+        local msgStr to "{0}{1}{0}".
+        print msgStr:Format(padStr, _msg) at (0, Terminal:Height - 3).
+        Terminal:Input:Clear.
+        Terminal:Input:GetChar.
+
+        local blankStr to NewBlankString(Terminal:Width).
+        print msgStr:Format(padStr, blankStr) at (0, Terminal:Height - 3).
+    }
+
+// #endregion
+
+// *- Mission plan parsing / processing
+// #region
 
         // ListMissionPlans :: -> (_missionPlans)<List>
         global function ListMissionPlans
@@ -152,11 +226,40 @@
         }
 
 
-    // #endregion
+// #endregion
 
 
-    // * State (Program / Runmode / Content) utilities
-    // #region
+// *- Part Module utilities
+// #region
+
+    // PMDoAction :: TODO
+
+    // PMDoEvent :: TODO
+
+    // PMGetField :: <_module>, <_fieldName>, [<_fallbackValue>] -> <fieldValue>
+    // Protected method of retrieving a field from a part module. 
+    // Will fallback to a provided or default value if the field does not exist
+    global function PMGetField
+    {
+        parameter _module,
+                _fieldName,
+                _fallbackValue is "FNA".
+
+        if _module:HasField(_fieldName)
+        {
+            return _module:GetField(_fieldName).
+        }
+        else
+        {
+            return _fallbackValue.
+        }
+    }
+
+// #endregion
+
+
+// *- State (Program / Runmode / Content) utilities
+// #region
 
     // CacheState
     global function CacheState
@@ -212,11 +315,11 @@
 
 
 
-    // #endregion
+// #endregion
 
 
-    // * Terminal Input
-    // #region
+// *- Terminal Input
+// #region
 
         // CheckTermChar :: (Char to check)<TerminalInput> -> (Match)<bool>
         // Returns the boolean result of a check of the provided value against g_TermChar. 
@@ -258,10 +361,29 @@
         }
 
 
+        // NewBlankString :: _chars<int> -> _newStr<string>
+        local function NewBlankString
+        {
+            parameter _chars to 0.
+
+            local padRem to pad.
+            local newStr to "". 
+            until padRem <= g_spaceStr:Keys:Length - 1 
+            {
+                set newStr to newStr + g_spaceStr:Values[g_spaceStr:Values:Length - 1].
+                set padRem to pad - g_spaceStr:Keys[g_spaceStr:Keys:Length - 1].
+            }
+            if padRem >= 0
+            {
+                set newStr to newStr + g_spaceStr[padRem].
+            }
+            return newStr. 
+        }
+
     // #endregion
 
-    // * Addon Wrappers
-    // #region
+// *- Addon Wrappers
+// #region
 
     // *- Career
     // #region
@@ -348,6 +470,6 @@
             }
         }
         // #endregion
-    // #endregion
+// #endregion
 
 // #endregion
