@@ -148,7 +148,7 @@
 
             local planBase to _planId:Split("_")[0].
             // local planVer  to choose _planId:Split("_")[1] if _planId:Split("_"):Length > 1 else 0.
-            local plan to lex("M", list(), "P", list()).
+            local plan to lex("M", list(), "P", list(), "S", list()).
 
             if g_MissionPlans:Contains(_planId)
             {
@@ -176,6 +176,14 @@
                     else
                     {
                         plan:P:Add("").
+                    }
+                    if mmSplit:length > 2
+                    {
+                        plan:S:Add(mmSplit[2]).
+                    }
+                    else
+                    {
+                        plan:S:Add(g_StageStop).
                     }
                 }
             }
@@ -280,9 +288,10 @@
         parameter _resetState to false.
 
         local state to list(
-            // 0    // Context (current running program module)
+            //  0    // Context (current running program module)
             // ,0    // Program
             // ,0    // Runmode
+            // ,0    // StageStop
         ).
 
         if exists(g_StateCachePath) and not _resetState
@@ -294,7 +303,7 @@
         }
         else
         {
-            set state to list(0, 0, 0).
+            set state to list(0, 0, 0, Stage:Number).
             log state:join(",") to g_StateCachePath.
         }
         set g_StateCache to Open(g_StateCachePath).
@@ -311,6 +320,72 @@
             return Open(g_StateCachePath):ReadAll:String:Split(",").
         }
         return list(-1,-1,-1).
+    }
+
+
+    // SetContext
+    global function SetContext
+    {
+        parameter _context is 0,
+                  _update is false.
+
+        set g_Context to _context.
+        if _update UpdateState().
+        return g_Context.
+    }
+
+
+    // SetProgram
+    global function SetProgram
+    {
+        parameter _prog is 0,
+                  _update is false.
+
+        set g_Program to _prog.
+        set g_Runmode to 0.
+        if _update UpdateState().
+        return g_Program.
+    }
+
+    // SetRunmode
+    global function SetRunmode
+    {
+        parameter _rm is 0,
+                  _update is false.
+
+        set g_Runmode to _rm.
+        if _update UpdateState().
+        return g_Runmode.
+    }
+
+    // SetStageStop
+    global function SetStageStop
+    {
+        parameter _stgStop is Stage:Number,
+                  _update is false.
+
+        set g_StageStop to _stgStop.
+        if _update UpdateState().
+        return g_StageStop.
+    }
+
+
+    // UpdateState
+    global function UpdateState
+    {
+        parameter _cacheEnable to false.
+
+        set g_State to list (
+            g_Context,
+            g_Program,
+            g_Runmode,
+            g_StageStop
+        ).
+
+        if _cacheEnable 
+        {
+            CacheState().
+        }
     }
 
 

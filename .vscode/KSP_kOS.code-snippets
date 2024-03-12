@@ -29,7 +29,7 @@
 	"NewLibrary": {
 		"prefix": "NewLib",
 		"body": [
-		  "// #include \"0:/lib/libLoader.ks\"",
+		  "// #include \"0:/lib/depLoader.ks\"",
 		  "@lazyGlobal off.",
 		  "",
 		  "// *~ Dependencies ~* //",
@@ -73,7 +73,7 @@
 			"",
 			"parameter params to list().",
 			"",
-			"RunOncePath(\"0:/lib/libLoader.ks\").",
+			"RunOncePath(\"0:/lib/depLoader.ks\").",
 			"",
 			"set g_MainProcess to ScriptPath().",
 			"DispMain()."
