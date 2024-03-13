@@ -19,6 +19,7 @@
     // Program Flow / Standard Output
     global g_Debug      is false.
     global g_ErrorCode  is 0.
+    global g_ExitCode   is 0.
 
     // Program State / Runmode / Context
     global g_Context    is "".
@@ -43,6 +44,34 @@
 // *~ Misc Global Reference Objects
 // #region
 
-    // 
+    // AlphabetLookup
+    global g_Alphabet to list(
+         "A"
+        ,"B"
+        ,"C"
+        ,"D"
+        ,"E"
+        ,"F"
+        ,"G"
+        ,"H"
+        ,"I"
+        ,"J"
+        ,"K"
+        ,"L"
+        ,"M"
+        ,"N"
+        ,"O"
+        ,"P"
+        ,"Q"
+        ,"R"
+        ,"S"
+        ,"T"
+        ,"U"
+        ,"V"
+        ,"W"
+        ,"X"
+        ,"Y"
+        ,"Z"      
+    ).
 
 // #endregion

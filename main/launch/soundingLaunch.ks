@@ -61,18 +61,30 @@ until g_Runmode < 0 or g_Abort
                     SetRunmode(9).
                     if engStg >= padStage 
                     {
+                        SetRunmode(10).
                         for engUID in shipEngs:IGNSTG[engStg]:UID
                         {
                             local eng to shipEngs:ENGUID[engUID]:ENG.
                             mainEngs:Add(eng).
                             
                             // While we have the MEs handy, we should determine MECO and spool time
-                            set MECO to Max(MECO, GetEngineBurnTime(eng)).
+                            set MECO to Max(MECO, shipEngs:ENGUID[engUID]:RATEDBURNTIME).
                             if engStg > padStage 
                             {
                                 set ts_MEIgnition to Min(ts_MEIgnition, shipEngs:ENGUID[engUID]:SPOOLTIME * -1.05).
                                 //set meSpoolTime to Max(meSpoolTime, shipEngs:ENGUID[engUID]:SPOOLTIME).
                             }
+                        }
+                    }
+                    else
+                    {
+                        SetRunMode(12).
+                        for engUID in shipEngs:IGNSTG[engStg]:UID
+                        {
+                            local eng to shipEngs:ENGUID[engUID]:ENG.
+                            upperEngs:Add(eng).
+
+                            set ts_SEIgnition to Min(ts_MEIgnition, shipEngs:ENGUID[engUID]:SPOOLTIME * -1.05).
                         }
                     }
                 }
@@ -138,7 +150,18 @@ until g_Runmode < 0 or g_Abort
     // Setup the countdown timers
     else if g_Program = 16
     {
-        
+        if g_Runmode > 0
+        {
+
+        }
+        else if g_Runmode < 0
+        {
+
+        }
+        else
+        {
+            SetRunmode(1).
+        }
     }
     UpdateState(True).
 

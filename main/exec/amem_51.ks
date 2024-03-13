@@ -21,7 +21,7 @@ from { local i to currentExecution.} until i = g_MissionPlan:M:Length step { set
 {
     local scr to "0:/main/{0}.ks":Format(g_MissionPlan:M[i]).
     local prm to g_MissionPlan:P[i]:Split(";").
-    set g_StageStop to 
+    set g_StageStop to g_MissionPlan:S[i].
 
     runPath(scr, prm).
 }

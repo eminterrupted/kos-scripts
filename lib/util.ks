@@ -27,7 +27,7 @@
 
     // *- Reference Objects
     // #region
-    global g_spaceStr to lex(
+    global g_SpaceStr to lex(
          0, ""
         ,1, " "
         ,2, "  "
@@ -90,7 +90,7 @@
         parameter _msg is "*** PRESS ANY KEY TO CONTINUE ***".
 
         local pad  to Floor((Terminal:Width - _msg:Length) / 2).
-        local padStr to choose g_spaceStr[pad] if pad <= g_spaceStr:Keys:Length - 1 else NewBlankString(pad).
+        local padStr to choose g_SpaceStr[pad] if pad <= g_SpaceStr:Keys:Length - 1 else NewBlankString(pad).
 
 
         local msgStr to "{0}{1}{0}".
@@ -439,19 +439,20 @@
         // NewBlankString :: _chars<int> -> _newStr<string>
         local function NewBlankString
         {
-            parameter _chars to 0.
+            parameter _width to 0.
 
-            local padRem to pad.
+            local padRem to _width.
             local newStr to "". 
-            until padRem <= g_spaceStr:Keys:Length - 1 
+            until padRem <= g_SpaceStr:Keys:Length - 1 
             {
-                set newStr to newStr + g_spaceStr:Values[g_spaceStr:Values:Length - 1].
-                set padRem to pad - g_spaceStr:Keys[g_spaceStr:Keys:Length - 1].
+                set newStr to newStr + g_SpaceStr:Values[g_SpaceStr:Values:Length - 1].
+                set padRem to padRem - g_SpaceStr:Keys[g_SpaceStr:Keys:Length - 1].
             }
             if padRem >= 0
             {
-                set newStr to newStr + g_spaceStr[padRem].
+                set newStr to newStr + g_SpaceStr[padRem].
             }
+            
             return newStr. 
         }
 
