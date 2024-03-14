@@ -71,7 +71,7 @@
         ,40,"                                        "
         ,41,"                                         "
         ,42,"                                          "
-    ).
+        ).
     // #endregion
     
 // #endregion
@@ -303,7 +303,7 @@
         }
         else
         {
-            set state to list(0, 0, 0, Stage:Number).
+            set state to list(0, 0, 0, 0).
             log state:join(",") to g_StateCachePath.
         }
         set g_StateCache to Open(g_StateCachePath).
@@ -319,7 +319,7 @@
         {
             return Open(g_StateCachePath):ReadAll:String:Split(",").
         }
-        return list(-1,-1,-1).
+        return list(-1,-1,-1,0).
     }
 
 

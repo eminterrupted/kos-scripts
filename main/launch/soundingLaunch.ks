@@ -17,84 +17,89 @@ local meSpoolTime to 0.
 local rollFlag to false.
 local seIgnitionTime to -1.
 local sePresent to false.
-local seSpoolTime to 0.
+local hsSpoolTime to 0.
 local seSpinAt to 0.
 local tgtAlt to Ship:Body:SOIRadius.
 local tgtHdg to 30.
 
-local ts_MEIgnition to 0.
+local MESpoolTime to 0.
+
+local multistage to false.
+
 local ts_MEStarted  to 0.
 local ts_MEAbortBy  to 0.
+local ts_SEIgnition to 0.
 
 local mainEngs to list().
 local padStage to Stage:Number - 1.
 local shipEngs to GetShipEngines().
+local upperEngs to list().
 
 // TODO: Create some sort of display output
 // Main loop
 until g_Runmode < 0 or g_Abort
 {    
-    // Prelaunch checks
+    // Initialize and increment
     if g_Program = 0
     {
         SetProgram(3).
     }
 
+    // Prelaunch checks
     else if g_Program = 3
     {
-        if g_Runmode > 0
+
+        // Main
+        if g_Runmode > 2
         {
-            // Check to see if we are actually in prelaunch
-            if Ship:Status = "PRELAUNCH"
+            SetRunmode(3).
+            for m in Ship:ModulesNamed("LaunchClamp")
             {
-                // Get the stage of the launch pad
-                SetRunmode(3).
-                for m in Ship:ModulesNamed("LaunchClamp")
-                {
-                    set padStage to min(padStage, m:Part:Stage).
-                }
+                set padStage to min(padStage, m:Part:Stage).
+            }
 
-                // Find the main engines and populate mainEngs with them. 
-                SetRunmode(6).
-                for engStg in shipEngs:IGNSTG:Keys
+            // Find the main engines and populate mainEngs with them. 
+            SetRunmode(4).
+            for engStg in shipEngs:IGNSTG:Keys
+            {
+                SetRunmode(5).
+                if engStg >= padStage 
                 {
-                    SetRunmode(9).
-                    if engStg >= padStage 
+                    SetRunmode(6).
+                    for engUID in shipEngs:IGNSTG[engStg]:UID
                     {
-                        SetRunmode(10).
-                        for engUID in shipEngs:IGNSTG[engStg]:UID
+                        SetRunmode(7).
+                        local eng to shipEngs:ENGUID[engUID]:ENG.
+                        mainEngs:Add(eng).
+                        
+                        // While we have the MEs handy, we should determine MECO and spool time
+                        set MECO to Max(MECO, shipEngs:ENGUID[engUID]:RATEDBURNTIME).
+                        if engStg > padStage 
                         {
-                            local eng to shipEngs:ENGUID[engUID]:ENG.
-                            mainEngs:Add(eng).
-                            
-                            // While we have the MEs handy, we should determine MECO and spool time
-                            set MECO to Max(MECO, shipEngs:ENGUID[engUID]:RATEDBURNTIME).
-                            if engStg > padStage 
-                            {
-                                set ts_MEIgnition to Min(ts_MEIgnition, shipEngs:ENGUID[engUID]:SPOOLTIME * -1.05).
-                                //set meSpoolTime to Max(meSpoolTime, shipEngs:ENGUID[engUID]:SPOOLTIME).
-                            }
-                        }
-                    }
-                    else
-                    {
-                        SetRunMode(12).
-                        for engUID in shipEngs:IGNSTG[engStg]:UID
-                        {
-                            local eng to shipEngs:ENGUID[engUID]:ENG.
-                            upperEngs:Add(eng).
-
-                            set ts_SEIgnition to Min(ts_MEIgnition, shipEngs:ENGUID[engUID]:SPOOLTIME * -1.05).
+                            SetRunmode(8).
+                            set MESpoolTime to Min(MESpoolTime, shipEngs:ENGUID[engUID]:SPOOLTIME * -1.05).
+                            //set meSpoolTime to Max(meSpoolTime, shipEngs:ENGUID[engUID]:SPOOLTIME).
                         }
                     }
                 }
-                SetProgram(12). // Setup Hotstaging
+                else
+                {
+                    SetRunMode(11).
+                    set multiStage to True.
+                }
             }
-            else
-            {
-                // VerticalAscent
-                SetProgram(30). // ExecuteVerticalAscent
-            }
+
+            // Next
+            SetProgram(12). // 12: Setup Hotstaging
+        }
+        else if g_Runmode > 1
+        {
+
+        }
+        else if g_RunMode > 0
+        {
+            // Next
+            SetProgram(30). // 30: Begin vertical ascent
         }
         else if g_Runmode < 0
         {
@@ -106,9 +111,28 @@ until g_Runmode < 0 or g_Abort
         }
         else
         {
-            SetRunmode(1).
+            if Ship:Status = "PRELAUNCH"
+            {
+                SetRunmode(3). // Do the checks
+            }
+            else
+            {
+                if Stage:Number > g_StageStop
+                {
+                    for i in range(Stage:Number - 1, g_StageStop, -1)
+                    {
+                        if ship:Engs:IGNSTG:HasKey(i)
+                        {
+                            set multistage to True.
+                            break.
+                        }
+                    }
+                }
+                SetProgram(30). // Bypass the checks since we are already airborn
+            }
         }
     }
+        
 
     // Setup Hotstaging
     else if g_Program = 12
@@ -130,7 +154,7 @@ until g_Runmode < 0 or g_Abort
                         set hsEngs[eng:Stage] to list(eng).
                     }
                     set hsFlag to true.
-                    set seSpoolTime to Max(seSpoolTime, shipEngs:ENGUID[eng:UID]:SPOOLTIME).
+                    set hsSpoolTime to Max(hsSpoolTime, shipEngs:ENGUID[eng:UID]:SPOOLTIME).
                 }
             }
             // Setup the countdown timers
@@ -146,6 +170,9 @@ until g_Runmode < 0 or g_Abort
             SetRunmode(1).
         }
     }
+
+    
+    // TODO - uhh, most everything below. You haven't really progressed beyond here, lady. 
 
     // Setup the countdown timers
     else if g_Program = 16
@@ -207,12 +234,12 @@ for eng in Ship:Engines
             set hsEngs[eng:Stage] to list(eng).
         }
         set hsFlag to true.
-        set seSpoolTime to Max(seSpoolTime, eng:GetModule("ModuleEnginesRF"):GetField("Effective Spool-Up Time")).
+        set hsSpoolTime to Max(hsSpoolTime, eng:GetModule("ModuleEnginesRF"):GetField("Effective Spool-Up Time")).
     }
 }
 if sePresent
 {
-    set seIgnitionTime to MECO - (seSpoolTime * 1.08).
+    set seIgnitionTime to MECO - (hsSpoolTime * 1.08).
     set seSpinAt to seIgnitionTime - 12.
 }
 else

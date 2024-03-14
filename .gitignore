@@ -20,3 +20,4 @@ data/*.json
 data/debug/**
 .vscode/kOS_RP1-V2-PPE.code-workspace
 test/*.json
+test/data/**

@@ -9,6 +9,14 @@
     global g_Abort     is false.
     global g_AbortCode is 0.
 
+    // Errors / Error codes
+    global g_ErrorCode  is 0.
+    // g_ErrorCodeRef is populated by scripts / libraries for later use. 
+    // Format: "EX00{0}P{1}R000{2}C{3}":Format(g_Program, (g_Runmode), g_ExeContext, g_Errorcode).
+    // "E00{g_ErrorContext}{g_Errorcode}{g_Runmode}R{g_Program}P{g_ExecutionContext}C"
+
+    global g_ErrorCodeRef is lexicon(). 
+
     // Mission plans
     global g_MissionPlan is lexicon(
         "M", list()
@@ -18,11 +26,10 @@
 
     // Program Flow / Standard Output
     global g_Debug      is false.
-    global g_ErrorCode  is 0.
     global g_ExitCode   is 0.
 
     // Program State / Runmode / Context
-    global g_Context    is "".
+    global g_Context    is 0.
     global g_Program    is 0.
     global g_Runmode    is 0.
     global g_StageStop  to Stage:Number.
