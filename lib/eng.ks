@@ -130,8 +130,6 @@
                     // Addition data options
                     if _dataMask[1]
                     {
-                        // set engObj:ENGUID[_uid] to GetEngineSuffixDataExtended(eng, engObj:ENGUID[_uid]).
-                        // GetEngineSuffixDataExtended(eng, engObj:ENGUID[_uid]).
                         engObj:ENGUID[euid]:Add("ALLOWRESTART",  eng:AllowRestart).
                         engObj:ENGUID[euid]:Add("ALLOWSHUTDOWN", eng:AllowShutdown).
                         engObj:ENGUID[euid]:Add("ISPSL",         eng:SLISP).
@@ -145,8 +143,6 @@
                     }
                     if _dataMask[2]
                     {
-                        // set engObj:ENGUID[_uid] to GetEngineModuleData(eng, engObj:ENGUID[_uid]).
-                        // GetEngineModuleData(eng, engObj:ENGUID[_uid]).
                         if eng:HasModule("ModuleEnginesRF")
                         {
                             local engRFModule to eng:GetModule("ModuleEnginesRF").
@@ -164,8 +160,6 @@
                     }
                     if _dataMask[3]
                     {
-                        // set engObj:ENGUID[_uid] to GetTestFlightModuleData(eng, engObj:ENGUID[_uid]).
-                        // GetTestFlightModuleData(eng, engObj:ENGUID[_uid]).
                         local engData           to 0.0000001.
                         local ignChance         to 1.
                         local timeSinceLastRun  to 0.
@@ -210,127 +204,14 @@
                 if _dataMask[4]
                 {
                     set engObj:IGNSTG to GroupEnginesByStage(eng, "IGN", _dataMask[5], engObj:IGNSTG).
-                    // set engObj:IGNSTG to GroupEnginesByStage(eng, "IGN", _dataMask[5], engObj:IGNSTG).
-                    // engObj:Add("IGNSTG", GroupEnginesByStage(eng, "IGN", _dataMask[5])).
                 }
 
                 // Creates a view with engines grouped by stage they are decoupled
                 if _dataMask[8]
                 {
                     set engObj:DCSTG to GroupEnginesByStage(eng, "DC", _dataMask[9], engObj:DCSTG).
-                    // set engObj:DCSTG to GroupEnginesByStage(eng, "DC", _dataMask[9]).
-                    // engObj:Add("DCSTG", GroupEnginesByStage(eng, "DC", _dataMask[9])).
                 }
             }
-
-
-            //     // Collect data from the TestFlight modules
-            //     local engFlightData to 0.
-            //     local totRunTime    to 0.
-            //     if eng:HasModule("TestFlightReliability_EngineCycle")
-            //     {
-            //         local engTFRModule to eng:GetModule("TestFlightReliability_EngineCycle").
-
-            //         set engFlightData to PMGetField(engTFRModule, "flight data", 0). 
-            //     }
-
-            //     local ignChance to 1.
-            //     local timeSinceLastRun to 0.
-            //     if eng:HasModule("TestFlightFailure_IgnitionFail")
-            //     {
-            //         local engTFFModule to eng:GetModule("TestFlightFailure_IgnitionFail").
-
-            //         set ignChance to PMGetField(engTFFModule, "ignition chance", 0).
-            //         set timeSinceLastRun to PMGetField(engTFFModule, "time since shutdown", 0).
-            //     }
-                
-            //     local overburnAddedTime to 0.
-            //     local overburnTotalTime to -1.
-            //     local ratedBurnTime     to choose g_engConfigs[eng:Config]:BTR if g_engConfigs:Keys:Contains(eng:Config) else -1.
-            //     if ratedBurnTime < 0 or engFlightData = 0
-            //     {
-            //         set overburnAddedTime to choose 0 if ratedBurnTime < 0 or engFlightData = 0 else ratedBurnTime + (ratedBurnTime * (g_engConfigs[eng:Config]:OBR * (engFlightData / l_MaxFlightData))).
-            //         set overburnTotalTime to ratedBurnTime + overburnAddedTime.
-            //     }
-
-            //     // Collect a pointer to the engine alongside all the useful data from above for later use
-            //     engObj:ENGUID:Add(eng:UID, lex(
-            //             "ENG",              eng
-            //             ,"ALLOWRESTART",    eng:AllowRestart
-            //             ,"ALLOWSHUTDOWN",   eng:AllowShutdown
-            //             ,"CONFIG",          eng:Config
-            //             ,"CONSUMEDRSRC",    eng:ConsumedResources:Keys
-            //             ,"DECOUPLEDIN",     eng:DecoupledIn
-            //             ,"FLIGHTDATA",   engFlightData
-            //             ,"ENGNAME",         eng:Name
-            //             ,"ENGTITLE",        eng:Title
-            //             ,"RESIDUALS",    estResiduals
-            //             ,"HASGIMBAL",       eng:HasGimbal
-            //             ,"IGNCHANCE",       ignChance
-            //             ,"IGNREMAIN",       eng:Ignitions
-            //             ,"ISPSL",           eng:SLISP
-            //             ,"ISPV",            eng:VISP
-            //             ,"MAXBURNTIME",     maxBurnTime
-            //             ,"MAXFUELFLOW",     eng:MaxFuelFlow
-            //             ,"MAXMASSFLOW",     eng:MaxMassFlow
-            //             ,"MAXTHRUST",       eng:MaxPossibleThrust
-            //             ,"MAXTHRUSTSL",     eng:MaxPossibleThrustAt(0)
-            //             ,"MINTHROTTLE",     eng:MinThrottle
-            //             ,"MIXRATIO",        mixRatio
-            //             ,"MODES",           eng:Modes
-            //             ,"RATEDBURNTIME",   ratedBurnTime
-            //             ,"SPOOLTIME",       spoolTime
-            //             ,"STAGE",           eng:Stage
-            //             ,"TIMESINCELASTRUN",timeSinceLastRun
-            //             ,"TOTALRUNTIME",    totRunTime
-            //         )
-            //     ).
-
-            //     if engObj:IGNSTG:HasKey(eng:Stage)
-            //     {
-            //         engObj:IGNSTG[eng:Stage]:UID:Add(eng:UID).
-            //         set engObj:IGNSTG[eng:Stage]:STGMAXTHRUST   to engObj:IGNSTG[eng:Stage]:STGMAXTHRUST   + eng:MaxPossibleThrust.
-            //         set engObj:IGNSTG[eng:Stage]:STGMAXTHRUSTSL to engObj:IGNSTG[eng:Stage]:STGMAXTHRUSTSL + eng:MaxPossibleThrustAt(0).
-            //         set engObj:IGNSTG[eng:Stage]:STGMAXFUELFLOW to engObj:IGNSTG[eng:Stage]:STGMAXFUELFLOW + eng:MaxFuelFlow.
-            //         set engObj:IGNSTG[eng:Stage]:STGMAXMASSFLOW to engObj:IGNSTG[eng:Stage]:STGMAXMASSFLOW + eng:MaxMassFlow.
-            //         set engObj:IGNSTG[eng:Stage]:STGMAXSPOOL    to Max(engObj:IGNSTG[eng:Stage]:STGMAXSPOOL, engObj:ENGUID[eng:UID]:SPOOLTIME).
-            //     }
-            //     else
-            //     {
-            //         engObj:IGNSTG:Add(eng:Stage, lex(
-            //                  "UID", list(eng:UID)
-            //                 ,"STGMAXTHRUST",    eng:MaxPossibleThrust
-            //                 ,"STGMAXTHRUSTSL",  eng:MaxPossibleThrustAt(0)
-            //                 ,"STGMAXFUELFLOW",  eng:MaxFuelFlow
-            //                 ,"STGMAXMASSFLOW",  eng:MaxMassFlow
-            //                 ,"STGMAXSPOOL",     Max(0, engObj:ENGUID[eng:UID]:SPOOLTIME)
-            //             )
-            //         ).
-
-            //     }
-
-            //     if engObj:DCSTG:HasKey(eng:DecoupledIn)
-            //     {
-            //         engObj:DCSTG[eng:DecoupledIn]:Add(eng:UID).
-            //         set engObj:DCSTG[eng:Stage]:STGMAXTHRUST   to engObj:DCSTG[eng:Stage]:STGMAXTHRUST   + eng:MaxPossibleThrust.
-            //         set engObj:DCSTG[eng:Stage]:STGMAXTHRUSTSL to engObj:DCSTG[eng:Stage]:STGMAXTHRUSTSL + eng:MaxPossibleThrustAt(0).
-            //         set engObj:DCSTG[eng:Stage]:STGMAXFUELFLOW to engObj:DCSTG[eng:Stage]:STGMAXFUELFLOW + eng:MaxFuelFlow.
-            //         set engObj:DCSTG[eng:Stage]:STGMAXMASSFLOW to engObj:DCSTG[eng:Stage]:STGMAXMASSFLOW + eng:MaxMassFlow.
-            //         set engObj:DCSTG[eng:Stage]:STGMAXSPOOL    to Max(engObj:DCSTG[eng:Stage]:STGMAXSPOOL, engObj:ENGUID[eng:UID]:SPOOLTIME).
-            //     }
-            //     else
-            //     {
-            //         engObj:DCSTG:Add(eng:DecoupledIn, lex(
-            //                 "UID", list(eng:UID)
-            //                 ,"STGMAXTHRUST",    eng:MaxPossibleThrust
-            //                 ,"STGMAXTHRUSTSL",  eng:MaxPossibleThrustAt(0)
-            //                 ,"STGMAXFUELFLOW",  eng:MaxFuelFlow
-            //                 ,"STGMAXMASSFLOW",  eng:MaxMassFlow
-            //                 ,"STGMAXSPOOL",     Max(0, engObj:ENGUID[eng:UID]:SPOOLTIME)
-            //             )
-            //         ).
-            //     }
-            // }
         }
 
         Breakpoint("[{0}]: GetShipEngs Complete":Format(Round(Time:Seconds, 2))).
