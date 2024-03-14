@@ -59,25 +59,25 @@
                                                     // CharIdx :   B1   |   B2   |   B3   
 
                                                     // Byte 1 - ENGUID
-                                                    //   [0]   : (1)000 |  0000  |  0000  : [ENGUID] Lexicon of engine data keyed by UID. First bit will add a pointer and engine status to the object. 
+                                                    //   [0]   : (1)000 |        |        : [ENGUID] Lexicon of engine data keyed by UID. First bit will add a pointer and engine status to the object. 
                                                     //                                      Additionl (Optional) switches:
-                                                    //   [1]   : 1(1)00 |  0000  |  0000     -- Include Standard Eng Suffix Specs (MaxPossibleThrust, SLISP, VISP, Ignitions, etc)
-                                                    //   [2]   : 10(1)0 |  0000  |  0000     -- Include ModuleEnginesRF data (Status, residuals, spool-up time, etc)
-                                                    //   [3]   : 100(1) |  0000  |  0000     -- Include TestFlight module data (FlightData, MTBF & other failure info, etc)                                        
+                                                    //   [1]   : 1(1)00 |        |           -- Include Standard Eng Suffix Specs (MaxPossibleThrust, SLISP, VISP, Ignitions, etc)
+                                                    //   [2]   : 10(1)0 |        |           -- Include ModuleEnginesRF data (Status, residuals, spool-up time, etc)
+                                                    //   [3]   : 100(1) |        |           -- Include TestFlight module data (FlightData, MTBF & other failure info, etc)                                        
 
                                                     // Byte 2 - IGNSTG
-                                                    //   [4]   :  0000  | (1)000 |  0000  : [IGNSTG] Lexicon of engine UIDs keyed by ignition stage. 
+                                                    //   [4]   :        | (1)000 |        : [IGNSTG] Lexicon of engine UIDs keyed by ignition stage. 
                                                     //                                      Additional (Optional) switches:
-                                                    //   [5]   :  0000  | 1(1)00 |  0000     -- Include aggregated stage specs
-                                                    //   [6]   :  0000  | 10(1)0 |  0000     -- Currently unused // TODO Include current aggregated performance data
-                                                    //   [7]   :  0000  | 100(1) |  0000     -- Currently unused
+                                                    //   [5]   :        | 1(1)00 |           -- Include aggregated stage specs
+                                                    //   [6]   :        | 10(1)0 |           -- Currently unused // TODO Include current aggregated performance data
+                                                    //   [7]   :        | 100(1) |           -- Currently unused
 
                                                     // Byte 3 - DCSTG
-                                                    //   [8]   :  0000  |  0000  | (1)000 : [DCSTG] Lexicon of engine UIDs keyed by ignition stage. 
+                                                    //   [8]   :        |        | (1)000 : [DCSTG] Lexicon of engine UIDs keyed by ignition stage. 
                                                     //                                      Additional (Optional) switches:
-                                                    //   [9]   :  0000  |  0000  | 1(1)00    -- Include aggregated stage specs
-                                                    //   [10]  :  0000  |  0000  | 10(1)0    -- Currently unused // TODO Include current aggregated performance data
-                                                    //   [11]  :  0000  |  0000  | 100(1)    -- Currently unused
+                                                    //   [9]   :        |        | 1(1)00    -- Include aggregated stage specs
+                                                    //   [10]  :        |        | 10(1)0    -- Currently unused // TODO Include current aggregated performance data
+                                                    //   [11]  :        |        | 100(1)    -- Currently unused
 
                                                     // - Example:   A _dataMask parameter of '111011000100' would return an engObj with the following (*) marked data hydrated, 
                                                     //              with any disabled ~top-level~ node(s) remaining the default initialized empty lex value. 
