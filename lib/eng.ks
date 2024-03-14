@@ -73,7 +73,7 @@
                                                     //   [7]   :        | 100(1) |           -- Currently unused
 
                                                     // Byte 3 - DCSTG
-                                                    //   [8]   :        |        | (1)000 : [DCSTG] Lexicon of engine UIDs keyed by ignition stage. 
+                                                    //   [8]   :        |        | (1)000 : [DCSTG] Lexicon of engine UIDs keyed by the stage they are decoupled in. 
                                                     //                                      Additional (Optional) switches:
                                                     //   [9]   :        |        | 1(1)00    -- Include aggregated stage specs
                                                     //   [10]  :        |        | 10(1)0    -- Currently unused // TODO Include current aggregated performance data
