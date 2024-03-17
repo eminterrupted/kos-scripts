@@ -32,9 +32,9 @@
     global g_Context    is 0.
     global g_Program    is 0.
     global g_Runmode    is 0.
-    global g_StageStop  to Stage:Number.
+    global g_StageLimit  to Stage:Number.
 
-    global g_State      is list( 0, 0, 0, g_StageStop).
+    global g_State      is list( 0, 0, 0, g_StageLimit).
     global g_StateCachePath is "1:/state.ves".
 
     // Terminal stuff

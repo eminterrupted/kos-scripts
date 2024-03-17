@@ -14,14 +14,14 @@ set g_MissionPlan to GetMissionPlan(missionPlanId).
 InitStateCache().
 
 set g_Context to max(g_Context, g_State[0]).
-set g_StageStop to g_State[3].
+set g_StageLimit to g_State[3].
 
 from { local i to g_Context.} until i = g_MissionPlan:M:Length step { set i to i + 1.} do
 {
     SetContext(i, True).
     local scr to "0:/main/{0}.ks":Format(g_MissionPlan:M[i]).
     local prm to g_MissionPlan:P[i]:Split(";").
-    set g_StageStop to g_MissionPlan:S[i].
+    set g_StageLimit to g_MissionPlan:S[i].
 
     runPath(scr, prm).
 }

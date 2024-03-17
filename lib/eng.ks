@@ -8,21 +8,23 @@
 
 // *~ Variables ~* //
 // #region
-    // *- Global
-    // #region
-    
-    // #endregion
-    
     // *- Local
     // #region
     local l_MaxFlightData to 10000.
     // #endregion
 
-    // *- Global Anonymous Delegates
+    // *- Global
+    // #region
+    global g_ActiveEngines to list().
+    global g_ShipEngines to lexicon().
+    global g_Throt to 0.
+    // #endregion
+    
+    // *- Local Anonymous Delegates
     // #region
     // #endregion
 
-    // *- Local Anonymous Delegates
+    // *- Global Anonymous Delegates
     // #region
     // #endregion
 
@@ -48,38 +50,71 @@
     // *- Engine lists
     // #region
 
+    // GetActiveEngines
+    global function GetActiveEngines
+    {
+        parameter _ship is Ship.
+
+        local engList to list().
+        for eng in Ship:Engines
+        {
+            if eng:Ignition and not eng:Flameout engList:add(eng).
+        }
+        return engList.
+    }
+
     // GetShipEngines :: [_ves<vessel>], [_bitMask<string>] -> Lexicon()
     // 
     global function GetShipEngines
     {
         parameter _ves is Ship,
-                  _dataMask is "111111001100".  // A Bitmask to determine which data to hydrate during this iteration. Returns everything by default.
+                  _dataMask is "1111110011000000".  // A 2-byte Bitmask to determine which data to hydrate during this iteration. Returns everything by default.
+
+                                                // Any bit with a value of 1 will hydrate the data based on the table below, while a value of 0 will not. 
                                                 // All non-hydrated data will retain default values (or not be included at all maybe?)
-                                                    // Legend:
-                                                    // CharIdx :   B1   |   B2   |   B3   
 
-                                                    // Byte 1 - ENGUID
-                                                    //   [0]   : (1)000 |        |        : [ENGUID] Lexicon of engine data keyed by UID. First bit will add a pointer and engine status to the object. 
-                                                    //                                      Additionl (Optional) switches:
-                                                    //   [1]   : 1(1)00 |        |           -- Include Standard Eng Suffix Specs (MaxPossibleThrust, SLISP, VISP, Ignitions, etc)
-                                                    //   [2]   : 10(1)0 |        |           -- Include ModuleEnginesRF data (Status, residuals, spool-up time, etc)
-                                                    //   [3]   : 100(1) |        |           -- Include TestFlight module data (FlightData, MTBF & other failure info, etc)                                        
+                                                    // Legend:          B0       |         B1
+                                                    // CharIdx :   NB0  |   NB1  |   NB0   |   NB1   
 
-                                                    // Byte 2 - IGNSTG
-                                                    //   [4]   :        | (1)000 |        : [IGNSTG] Lexicon of engine UIDs keyed by ignition stage. 
-                                                    //                                      Additional (Optional) switches:
-                                                    //   [5]   :        | 1(1)00 |           -- Include aggregated stage specs
-                                                    //   [6]   :        | 10(1)0 |           -- Currently unused // TODO Include current aggregated performance data
-                                                    //   [7]   :        | 100(1) |           -- Currently unused
 
-                                                    // Byte 3 - DCSTG
-                                                    //   [8]   :        |        | (1)000 : [DCSTG] Lexicon of engine UIDs keyed by the stage they are decoupled in. 
-                                                    //                                      Additional (Optional) switches:
-                                                    //   [9]   :        |        | 1(1)00    -- Include aggregated stage specs
-                                                    //   [10]  :        |        | 10(1)0    -- Currently unused // TODO Include current aggregated performance data
-                                                    //   [11]  :        |        | 100(1)    -- Currently unused
+                                                    // Byte 0, Nibble 0 - ENGUID
+                                                    //   [0]   : (1)000 |        |          |           [ENGUID] Controls initial hydration of the ENGUID object in the output. 
+                                                    //                                                  ENGUID is a lexicon of engine pointers and data data keyed by UID. 
 
-                                                    // - Example:   A _dataMask parameter of '111011000100' would return an engObj with the following (*) marked data hydrated, 
+                                                    //                                                  Additionl (Optional) switches:
+                                                    //   [1]   : 1(1)00 |        |          |            -- Include Standard Eng Suffix Specs (MaxPossibleThrust, SLISP, VISP, Ignitions, etc)
+                                                    //   [2]   : 10(1)0 |        |          |            -- Include ModuleEnginesRF data (Status, residuals, spool-up time, etc)
+                                                    //   [3]   : 100(1) |        |          |            -- Include TestFlight module data (FlightData, MTBF & other failure info, etc)                                        
+
+
+                                                    // Byte 0, Nibble 1  2 - IGNSTG
+                                                    //   [4]   :        | (1)000 |          |           [IGNSTG] Controls initial hydration of the IGNSTG object in the output. 
+                                                    //                                                  IGNSTG is a lexicon of engine UIDs keyed by ignition stage, with options for aggregated stage data available
+
+                                                    //                                                  Additional (Optional) switches:
+                                                    //   [5]   :        | 1(1)00 |          |            -- Transform / hydrate aggregated stage specs
+                                                    //   [6]   :        | 10(1)0 |          |            -- Currently unused // TODO Include current aggregated performance data
+                                                    //   [7]   :        | 100(1) |          |            -- Currently unused
+
+
+
+                                                    // Byte 1, Nibble 0 - DCSTG
+                                                    //   [8]   :        |        | (1)000   |           [DCSTG] Controls initial hydration of the DCSTG object in the output
+                                                    //                                                  DCSTG is a lexicon of engine UIDs keyed by ignition stage, with options for aggregated stage data available
+
+                                                    //                                                  Additional (Optional) switches:
+                                                    //   [9]   :        |        | 1(1)00   |            -- Transform / hydrate aggregated stage specs
+                                                    //   [10]  :        |        | 10(1)0   |            -- Currently unused // TODO Include current aggregated performance data
+                                                    //   [11]  :        |        | 100(1)   |            -- Currently unused
+
+
+                                                    // Byte 1, Nibble 1 - RESERVED FOR FUTURE USE
+                                                    //   [12]  :        |        |          |  0000     [RSRVD] Currently unused
+                                                    //                                                  This is a nibble reserved for future functionality flags
+
+
+
+                                                    // - Example:   A _dataMask parameter of '1110110001000000' would return an engObj with the following (*) marked data hydrated, 
                                                     //              with any disabled ~top-level~ node(s) remaining the default initialized empty lex value. 
                                                     //              Disabled ~child~ nodes will either not run if their parent is disabled, or remain the default initialized value if the parent is active.
                                                     //  
@@ -94,7 +129,6 @@
                                                     //                      *** NOTE how this is set to 1 in this example but the preceding 0 bit is the parent and therefore overrides it. 
                                                     //                          Basically, if the parent isn't active, none of the children can be regardless of their value
 
-        Breakpoint("[{0}]: GetShipEngs Started":Format(Round(Time:Seconds, 2))).
 
         local engObj to lexicon(
             "ENGUID", lex()
@@ -149,7 +183,9 @@
 
                             engObj:ENGUID[euid]:Add("MIXRATIO", PMGetField(engRFModule, "mixture ratio", 1)).
                             engObj:ENGUID[euid]:Add("RESIDUALS", PMGetField(engRFModule, "predicted residuals", 0)).
+                            engObj:ENGUID[euid]:Add("PREDICTEDMASSFLOW", eng:MaxMassFlow * (1 - engObj:ENGUID[euid]:Residuals)).
                             engObj:ENGUID[euid]:Add("SPOOLTIME", PMGetField(engRFModule, "effective spool-up time", 0)).
+
                         }
                         else
                         {
@@ -196,26 +232,23 @@
                         engObj:ENGUID[euid]:Add("IGNCHANCE",        ignChance).
                         engObj:ENGUID[euid]:Add("RATEDBURNTIME",    ratedBurnTime).
                         engObj:ENGUID[euid]:Add("TIMESINCELASTRUN", timeSinceLastRun).
-                        engObj:ENGUID[euid]:Add("TOTALRUNTIME",     targetBurnTime).
+                        engObj:ENGUID[euid]:Add("TARGETBURNTIME",   targetBurnTime).
                     }
                 }
 
                 // Creates a view with engines grouped by stage they are ignited
                 if _dataMask[4]
                 {
-                    set engObj:IGNSTG to GroupEnginesByStage(eng, "IGN", _dataMask[5], engObj:IGNSTG).
+                    set engObj:IGNSTG to GroupEnginesByStage(eng, engObj, "IGN", _dataMask[5], engObj:IGNSTG).
                 }
 
                 // Creates a view with engines grouped by stage they are decoupled
                 if _dataMask[8]
                 {
-                    set engObj:DCSTG to GroupEnginesByStage(eng, "DC", _dataMask[9], engObj:DCSTG).
+                    set engObj:DCSTG to GroupEnginesByStage(eng, engObj, "DC", _dataMask[9], engObj:DCSTG).
                 }
             }
         }
-
-        Breakpoint("[{0}]: GetShipEngs Complete":Format(Round(Time:Seconds, 2))).
-        WriteJson(engObj, "0:/test/data/idfk.json").
 
         return engObj.
     }
@@ -224,6 +257,32 @@
 
     // *- Engine Stats
     // #region
+
+    // GetActiveBurnTimeRemaining
+    global function GetActiveBurnTimeRemaining
+    {
+        parameter _engs is GetActiveEngines().
+
+        local btRemaining to 999999.
+        
+        for eng in _engs
+        {
+            local residuals to 0.00000000001.
+            if eng:HasModule("ModuleEnginesRF")
+            {
+                local m to eng:GetModule("ModuleEnginesRF").
+                set   residuals to 1 - PMGetField(m, "predicted residuals", 0).
+            }
+            
+            for ft in eng:ConsumedResources:Values
+            {
+                local resBT to (Stage:ResourcesLex[ft:Name]:Amount * residuals) / ft:MaxFuelFlow.
+                set btRemaining to Min(btRemaining, resBT).
+            }
+        }
+        if btRemaining = 999999 set btRemaining to 0.
+        return btRemaining.
+    }
 
     // GetEngineBurnTime
     global function GetEngineBurnTime
@@ -259,7 +318,22 @@
 
         return list(burnTimeRated, burnTimePlus, burnTimeFuel).
     }
+
     
+    // GetEngineSpoolTime
+    global function GetEngineSpoolTime
+    {
+        parameter _eng.
+
+        local spool to 0.
+
+        if _eng:HasModule("ModuleEnginesRF")
+        {
+            local m to _eng:GetModule("ModuleEnginesRF").
+            set spool to PMGetField(m, "effective spool-up time", 0).
+        }
+        return spool.
+    }
     // #endregion
 
 // #endregion
@@ -273,6 +347,7 @@
     local function GroupEnginesByStage
     {
         parameter _eng,
+                  _engObj is lex(),
                   _stgType is "IGN", // Two possible values here - IGN, or the stage it's activated in, and DC, or the stage it's decoupled in.
                   _extendedInfo is false,
                   _objRef is lex().
@@ -292,6 +367,7 @@
                 set _objRef[stageGroup]:STGMAXFUELFLOW to _objRef[stageGroup]:STGMAXFUELFLOW + _eng:MaxFuelFlow.
                 set _objRef[stageGroup]:STGMAXMASSFLOW to _objRef[stageGroup]:STGMAXMASSFLOW + _eng:MaxMassFlow.
                 set _objRef[stageGroup]:STGMAXSPOOL    to Max(_objRef[stageGroup]:STGMAXSPOOL, _eng:GetModule("ModuleEnginesRF"):GetField("effective spool-up time")).
+                set _objRef[stageGroup]:STGBURNTIME    to Max(_objRef[stageGroup]:STGBURNTIME, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME).
             }
 
         }
@@ -306,6 +382,7 @@
                     ,"STGMAXFUELFLOW",  _eng:MaxFuelFlow
                     ,"STGMAXMASSFLOW",  _eng:MaxMassFlow
                     ,"STGMAXSPOOL",     Max(0, _eng:GetModule("ModuleEnginesRF"):GetField("effective spool-up time"))
+                    ,"STGBURNTIME",     Max(0, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME)
                     )
                 ).
             }
@@ -318,6 +395,7 @@
                     ,"STGMAXFUELFLOW",  0
                     ,"STGMAXMASSFLOW",  0
                     ,"STGMAXSPOOL",     0
+                    ,"STGBURNTIME",     0
                     )
                 ).
             }

@@ -27,6 +27,12 @@
 
     // *- Reference Objects
     // #region
+    global g_Conditions to lexicon(
+        "MINTHR",  { parameter __checkVal. return Ship:AvailableThrust < __checkVal and throttle > 0.}
+        ,"MECOTS", { parameter __checkVal. return MissionTime >= __checkVal         and throttle > 0.}
+        ,"MET",    { parameter __checkVal. return MissionTime >= __checkVal.}
+        ,"TS",     { parameter __checkVal. return Time:Seconds >= __checkVal.}
+    ).
     global g_SpaceStr to lex(
          0, ""
         ,1, " "
@@ -102,136 +108,160 @@
         print msgStr:Format(padStr, blankStr) at (0, Terminal:Height - 3).
     }
 
+    // NoOp - just passes the existing value back. Not very useful except when it is.
+    global function NoOp
+    {
+        parameter _p is false.
+
+        return _p.
+    }
+
+// #endregion
+
+// *- File handling functions
+// #region
+
+    // 
+    global function GetFileTimeRT
+    {
+        parameter _realtimeSecs is Kuniverse:Realtime.
+
+        // local _2024TS to 1704067200.
+        local   dateSpan to Timespan(_realtimeSecs - 1704067200).
+
+        return "{0}-{1}_{2}{3}{4}":Format((2024 + dateSpan:Year) - 2000, dateSpan:Day, dateSpan:Hour, dateSpan:Minute, dateSpan:Second).
+    }
+
 // #endregion
 
 // *- Mission plan parsing / processing
 // #region
 
-        // ListMissionPlans :: -> (_missionPlans)<List>
-        global function ListMissionPlans
+    // ListMissionPlans :: -> (_missionPlans)<List>
+    global function ListMissionPlans
+    {
+        set g_MissionPlans to List(
+            // "sounder"
+            // ,"sounderReturn"
+            // ,"downrange"
+            // ,"suborbital"
+            // ,"orbital"
+        ).
+
+        if Volume(0):Files:HasSuffix("_plan")
         {
-            set g_MissionPlans to List(
-                // "sounder"
-                // ,"sounderReturn"
-                // ,"downrange"
-                // ,"suborbital"
-                // ,"orbital"
-            ).
+            local planPath to Volume(0):Files:_plan.
 
-            if Volume(0):Files:HasSuffix("_plan")
+            for plan in planPath:lex:keys
             {
-                local planPath to Volume(0):Files:_plan.
-
-                for plan in planPath:lex:keys
+                for plan_l2 in planPath:Lex[plan]:Lex:Values
                 {
-                    for plan_l2 in planPath:Lex[plan]:Lex:Values
+                    if plan_l2:Extension = "amp"
                     {
-                        if plan_l2:Extension = "amp"
+                        local planId to plan_l2:Name:Replace(".amp","").
+                        if not g_MissionPlans:Contains(planId) 
                         {
-                            local planId to plan_l2:Name:Replace(".amp","").
-                            if not g_MissionPlans:Contains(planId) 
-                            {
-                                g_MissionPlans:Add(planId).
-                            }
+                            g_MissionPlans:Add(planId).
                         }
-                    }                  
-                }
+                    }
+                }                  
             }
-
-            return g_MissionPlans.
         }
 
-        // GetMissionPlan
-        global function GetMissionPlan
+        return g_MissionPlans.
+    }
+
+    // GetMissionPlan
+    global function GetMissionPlan
+    {
+        parameter _planId.
+
+        local planBase to _planId:Split("_")[0].
+        // local planVer  to choose _planId:Split("_")[1] if _planId:Split("_"):Length > 1 else 0.
+        local plan to lex("M", list(), "P", list(), "S", list()).
+
+        if g_MissionPlans:Contains(_planId)
         {
-            parameter _planId.
-
-            local planBase to _planId:Split("_")[0].
-            // local planVer  to choose _planId:Split("_")[1] if _planId:Split("_"):Length > 1 else 0.
-            local plan to lex("M", list(), "P", list(), "S", list()).
-
-            if g_MissionPlans:Contains(_planId)
+            if _planId:Split("_"):Length > 1
             {
-                if _planId:Split("_"):Length > 1
-                {
-                    set planBase to _planId:Split("_")[0].
-                    // set planVer  to _planId:Split("_")[1].
-                }
+                set planBase to _planId:Split("_")[0].
+                // set planVer  to _planId:Split("_")[1].
             }
-
-            local planFolder to Volume(0):Files:_plan:Lex[planBase].
-            local planFileName to "{0}.amp":Format(_planId).
-            if planFolder:List:Keys:Contains(planFileName)
-            {
-                local planFile to planFolder:List[planFileName].
-                local planData to planFile:ReadAll:String:Split(char(10)). // Splits by newline 
-                for mm in planData
-                {
-                    local mmSplit to mm:Split("|").
-                    plan:M:Add(mmSplit[0]).
-                    if mmSplit:length > 1
-                    {
-                        plan:P:Add(mmSplit[1]).
-                    }
-                    else
-                    {
-                        plan:P:Add("").
-                    }
-                    if mmSplit:length > 2
-                    {
-                        plan:S:Add(mmSplit[2]).
-                    }
-                    else
-                    {
-                        plan:S:Add(g_StageStop).
-                    }
-                }
-            }
-            else
-            {
-
-            }
-
-            return plan.
         }
 
-
-
-        // GetMissionPlanID :: [(_missionName)<String>] -> (_missionPlanID)
-        // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
-        global function GetMissionPlanID 
+        local planFolder to Volume(0):Files:_plan:Lex[planBase].
+        local planFileName to "{0}.amp":Format(_planId).
+        if planFolder:List:Keys:Contains(planFileName)
         {
-            local planId to "".
-            local planPriorityList to list(
-                core:tag
-                ,Ship:Name:Replace(" ","_")
-            ).
-
-            from { local i to 0. local doneFlag to false. } until i = planPriorityList:Length or doneFlag step { set i to i + 1.} do 
+            local planFile to planFolder:List[planFileName].
+            local planData to planFile:ReadAll:String:Split(char(10)). // Splits by newline 
+            for mm in planData
             {
-                if planPriorityList[i]:Length > 0
+                local mmSplit to mm:Split("|").
+                plan:M:Add(mmSplit[0]).
+                if mmSplit:length > 1
                 {
-                    set planId to planPriorityList[i].
-                    if not planID:MatchesPattern("_")
-                    {
-                        set planID to planID + "_0".
-                    }
-                    print planId.
-                    set doneFlag to true.
+                    plan:P:Add(mmSplit[1]).
+                }
+                else
+                {
+                    plan:P:Add("").
+                }
+                if mmSplit:length > 2
+                {
+                    plan:S:Add(mmSplit[2]).
+                }
+                else
+                {
+                    plan:S:Add(g_StageLimit).
                 }
             }
-            
-            if g_MissionPlans:Length = 0 ListMissionPlans().
+        }
+        else
+        {
 
-            if g_MissionPlans:Contains(planID)
+        }
+
+        return plan.
+    }
+
+
+
+    // GetMissionPlanID :: [(_missionName)<String>] -> (_missionPlanID)
+    // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
+    global function GetMissionPlanID 
+    {
+        local planId to "".
+        local planPriorityList to list(
+            core:tag
+            ,Ship:Name:Replace(" ","_")
+        ).
+
+        from { local i to 0. local doneFlag to false. } until i = planPriorityList:Length or doneFlag step { set i to i + 1.} do 
+        {
+            if planPriorityList[i]:Length > 0
             {
-                return planID.
-            }
-            else
-            {
-                return "-1".
+                set planId to planPriorityList[i].
+                if not planID:MatchesPattern("_")
+                {
+                    set planID to planID + "_0".
+                }
+                print planId.
+                set doneFlag to true.
             }
         }
+        
+        if g_MissionPlans:Length = 0 ListMissionPlans().
+
+        if g_MissionPlans:Contains(planID)
+        {
+            return planID.
+        }
+        else
+        {
+            return "-1".
+        }
+    }
 
 
 // #endregion
@@ -364,9 +394,9 @@
         parameter _stgStop is Stage:Number,
                   _update is false.
 
-        set g_StageStop to _stgStop.
+        set g_StageLimit to _stgStop.
         if _update UpdateState().
-        return g_StageStop.
+        return g_StageLimit.
     }
 
 
@@ -379,7 +409,7 @@
             g_Context,
             g_Program,
             g_Runmode,
-            g_StageStop
+            g_StageLimit
         ).
 
         if _cacheEnable 
