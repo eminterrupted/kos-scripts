@@ -13,10 +13,10 @@
     global g_col to 0.
     global g_line to 0.
 
-    global g_termHeight to 60. // Terminal:Height.
-    set Terminal:Height to g_termHeight.
-    global g_termWidth  to 72. // Terminal:Width.
-    set Terminal:Width to g_termWidth.
+    global g_termH to Terminal:Height. // Terminal:Height.
+    // set Terminal:Height to g_termHeight.
+    global g_termW  to Terminal:Width. // Terminal:Width.
+    // set Terminal:Width to g_termWidth.
 
     // #endregion
     
@@ -47,7 +47,7 @@
     {
         parameter _line is g_line.
 
-        set g_line to choose _line + 1 if _line < g_termHeight else 10.
+        set g_line to choose _line + 1 if _line < g_termH else 10.
         return g_line.
     }
     

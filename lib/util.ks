@@ -225,8 +225,6 @@
         return plan.
     }
 
-
-
     // GetMissionPlanID :: [(_missionName)<String>] -> (_missionPlanID)
     // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
     global function GetMissionPlanID 
@@ -267,21 +265,146 @@
 // #endregion
 
 
+
+// *- String Parsing 
+// #region
+
+    // ParseStringScalar
+    global function ParseStringScalar
+    {
+        parameter _inputString is "",
+                  _fallbackValue is 0.
+
+        local scalar_result to -1.
+        
+        if _inputString:IsType("Scalar") // if it's already a scalar, well...
+        {
+            set scalar_result to _inputString.
+        }
+        else
+        {
+            if _inputString:MatchesPattern("\d+(\.\d+)?((K|k)m$|(M|m)m$)+")
+            {
+                if _inputString:MatchesPattern("(^\d+(\.\d+)?((K|k)m$))")
+                {
+                    set scalar_result to _inputString:Replace("km", ""):Replace("Km", ""):ToNumber(_fallbackValue) * 1000.
+                }
+                else if _inputString:MatchesPattern("(^\d+(\.\d+)?((M|m)m$))")
+                {
+                    set scalar_result to _inputString:Replace("mm", ""):Replace("Mm", ""):ToNumber(_fallbackValue) * 1000000.
+                }
+            }
+            // else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
+            // {
+            //     set scalar_result to 0.
+            //     local strSet to list(_inputString).
+                
+            //     for key in l_timeTable:Keys
+            //     {
+            //         if strSet[0]:MatchesPattern("(^\d*{0}})":Format(key))
+            //         {
+            //             set strSet to _inputString[0]:Split(key).
+            //             set scalar_result to scalar_result + strSet[0]:ToNumber * l_timeTable[key].
+            //             strSet:Remove(0).
+            //         }
+            //     }
+            // }
+            else if _inputString:MatchesPattern("(^\d*(\.\d{1,})?$)")
+            {
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
+                wait 0.01.
+            }
+            else
+            {
+                set scalar_result to _inputString:ToNumber(_fallbackValue).
+            }
+        }
+        return scalar_result.
+    }
+
+    // ParseScalarShortString :: _inScalar<scalar> -> <String>
+    // Converts a number to a shorthand string (i.e., 250000 to "250km")
+    global function ParseScalarShortString
+    {
+        parameter _inScalar.
+        
+        if _inScalar < 10000
+        {
+            return _inScalar:ToString.
+        }
+        else if _inScalar < 10000000
+        {
+            return "{0}Km":Format(Round(_inScalar / 1000, 2)).
+        }
+        else if _inScalar < 1000000000
+        {
+            return "{0}Mm":Format(Round(_inScalar / 1000000, 2)).
+        }
+        else if _inScalar <  10000000000
+        {
+            return "{0}Gm":Format(Round(_inScalar / 1000000000, 2)).
+        }
+        else return _inScalar:ToString.
+    }
+
+// #endregion
+
+
 // *- Part Module utilities
 // #region
 
-    // PMDoAction :: TODO
+    // DoAction :: (_m)<Module>, (_action)<string>, [(_state)<bool>] -> (ResultCode)<scalar>
+    // Given a part module and name of an action, performs if if present on the module.
+    global function DoAction
+    {
+        parameter _m,
+                    _action,
+                    _state is true.
 
-    // PMDoEvent :: TODO
+        local resultCode to 0.
 
-    // PMGetField :: <_module>, <_fieldName>, [<_fallbackValue>] -> <fieldValue>
+        if _m:HasAction(_action)
+        {
+            _m:DoAction(_action, _state).
+            set resultCode to 1.
+        }
+        else
+        {
+            set resultCode to 2.
+        }
+
+        return resultCode.
+    }
+
+    // DoAction :: (_m)<Module>, (_action)<string>, [(_state)<bool>] -> (ResultCode)<scalar>
+    // Given a part module and name of an action, performs if if present on the module.
+    global function DoEvent
+    {
+        parameter _m,
+                    _event.
+
+        local resultCode to 0.
+        if _m:HasEvent(_event)
+        {
+            _m:DoEvent(_event).
+            set resultCode to 1.
+        }
+        else
+        {
+            set resultCode to 2.
+        }
+
+        return resultCode.
+    }
+
+    // GetField :: <_module>, <_fieldName>, [<_fallbackValue>] -> <fieldValue>
     // Protected method of retrieving a field from a part module. 
     // Will fallback to a provided or default value if the field does not exist
-    global function PMGetField
+    global function GetField
     {
         parameter _module,
-                _fieldName,
-                _fallbackValue is "FNA".
+                  _fieldName,
+                  _fallbackValue is "FNA".
 
         if _module:HasField(_fieldName)
         {
@@ -291,6 +414,77 @@
         {
             return _fallbackValue.
         }
+    }
+
+    // GetFormattedAction :: _m<PartModule>, _actionStr<String> -> <String>
+    // Returns a properly formatted action name if present on the provided module.
+    // If no action found, returns an empty string.
+    global function GetFormattedAction
+    {
+        parameter _m,
+                    _actionStr.
+
+        for act in _m:AllActions
+        {
+            if act:Contains(_actionStr)
+            {
+                return act:Replace("(callable) _, ",""):Replace(" is KSPAction","").
+            }
+        }
+        return "".
+    }
+
+    // GetFormattedEvent :: _m<PartModule>, _eventStr<String> -> <String>
+    // Returns a properly formatted event name if present on the provided module.
+    // If no event found, returns an empty string.
+    global function GetFormattedEvent
+    {
+        parameter _m,
+                    _eventStr.
+
+        for ev in _m:AllEvents
+        {
+            if ev:Contains(_eventStr)
+            {
+                return ev:Replace("(callable) _, ",""):Replace(" is KSPEvent","").
+            }
+        }
+        return "".
+    }
+
+    // SetField :: (_m)<Module>, (_field)<string>, (_value)<any> -> (ResultCode)<scalar>
+    // Given a module and name of a field, set it to the provided value if the field is present on the module
+    // Result codes:
+    // -- 0: Nothing
+    // -- 1: Success
+    // -- 2: Warning (Field missing from module)
+    // -- 3: Error (Field set action was unsuccessful)
+    global function SetField
+    {
+        parameter _m,
+                    _field,
+                    _value.
+
+        local resultCode to 0.
+
+        if _m:HasField(_field)
+        {
+            _m:SetField(_field, _value).
+            if _m:GetField(_field) = _value
+            {
+                set resultCode to 1.
+            }
+            else
+            {
+                set resultCode to 3.
+            }
+        }
+        else
+        {
+            set resultCode to 2.
+        }
+
+        return _field.
     }
 
 // #endregion
@@ -494,88 +688,8 @@
     // *- Career
     // #region
 
-        // TryRecoverVessel :: [_ves<Ship>], [_recoveryWindow<Scalar>] -> <None>
-        global function TryRecoverVessel
-        {
-            parameter _ves is Ship,
-                    _recoveryWindow is 30.
-
-            if Addons:Available("Career")
-            {
-                local waitTimer to 3.
-                set g_TS to Time:Seconds + waitTimer.
-                // TODO local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
-                set g_TermChar to "".
-                // TODO:  OutInfo("Press any key to abort").
-                local abortFlag to false.
-                until Time:Seconds > g_TS or abortFlag
-                {
-                    // TODO OutMsg(waitStr:Format(Round(g_TS - Time:Seconds, 2))).
-                    GetTermChar().
-                    if g_TermChar <> ""
-                    {
-                        set abortFlag to true.
-                        // TODO OutInfo().
-                    }
-                    wait 0.01.
-                }
-
-                if abortFlag 
-                {
-                    // TODO OutMsg("Aborting recovery attempts!").
-                    wait 0.25.
-                }
-                else
-                {
-                    local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
-                    // TODO local recoveryStr to "Attempting recovery (Status: {0})".
-                    set g_TS to Time:Seconds + _recoveryWindow.
-                    // TODO local abortStr to "Press any key to abort ({0,-5}s)".
-                    until Time:Seconds >= g_TS or abortFlag
-                    {
-                        local recoveryState to getRecoveryState:Call(_ves).
-                        if recoveryState[0]
-                        {
-                            Addons:Career:RecoverVessel(_ves).
-                            // TODO OutMsg("Recovery in progress (Status: {0})":Format(recoveryState[1])).
-                            // TODO OutInfo().
-                            wait 0.01.
-                            break.
-                        }
-                        else
-                        {
-                            // TODO OutMsg(recoveryStr:Format(recoveryState[1])).
-                            // TODO OutInfo(abortStr:Format(g_TS - Time:Seconds, 2)).
-
-                            GetTermChar().
-                            if g_TermChar <> ""
-                            {
-                                set abortFlag to true.
-                            }
-                            wait 0.01.
-                        }
-                    }
-                    
-                    if abortFlag
-                    {
-                        // TODO OutMsg("Recovery aborted!").
-                        // TODO OutInfo().
-                    }
-                    else
-                    {
-                        // TODO OutMsg("Recovery failed. :(").
-                    }
-                    // TODO OutInfo().
-                }
-            }
-            else
-            {
-                // TODO OutMsg("No recovery firmware found!").
-                // TODO OutInfo().
-                wait 0.25.
-            }
-        }
-        // #endregion
+        
+    // #endregion
 // #endregion
 
 // #endregion

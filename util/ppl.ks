@@ -34,7 +34,7 @@ local function DispList
               _passedTip is "PRETTY PRINT LIST".
 
     local stCol to 0.
-    local stLine to 12.
+    local stLine to 5.
 
     local numCols to 2.
     local colSize to Terminal:width / numCols.

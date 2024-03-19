@@ -60,8 +60,38 @@
         }
         else
         {
-            set g_AS_Check to { print "I'm autostagin checkin!" at (0, cr()). return g_Conditions[_conditionType]@:Bind(_conditionThresh).}.
-            set g_AS_Act   to { SafeStage(). set g_AS_Act to false. if Stage:Number <= g_StageLimit { set g_AS_Armed to false.}}.
+            set g_AS_Check to { 
+                print "I'm autostagin checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh) at (0, cr()). 
+                return g_Conditions[_conditionType]:Call(_conditionThresh).
+            }.
+            set g_AS_Act   to { 
+                for m in Ship:ModulesNamed("ModuleRCSFX")
+                {
+                    if m:Part:DecoupledIn >= Stage:Number - 1
+                    {
+                        m:SetField("RCS", False).
+                    }
+                }
+                
+                wait until Stage:Ready.
+                stage.
+                wait 0.01. // Waiting for the engine state to update
+
+                if Stage:Number <= g_StageLimit { set g_AS_Armed to false.}
+                else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
+                {
+                    if g_ShipEngines:IGNSTG[Stage:Number]:SEPSTG
+                    {
+                        wait 0.5. // Wait for the sep motors to do their thing
+                        stage.
+                    }
+                }
+
+                set g_NextEngines to GetNextEngines().
+                if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
+            }.
+            
+            set g_AS_Armed to true.
             set resultCode to 1.
         }
         return resultCode.
@@ -96,7 +126,7 @@
         {
             if g_ShipEngines:IGNSTG:HasKey(hs:STG)
             {
-                set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
+                set burnTime  to g_ShipEngines:IGNSTG:STGBURNTIME.
                 set spoolTime to g_ShipEngines:IGNSTG[hs:STG]:STGSPOOLTIME.
                 set _checkVal to burnTime - (spoolTime * 1.25).
             }
@@ -137,6 +167,10 @@
     // DoHotStaging
     global function DoHotStaging
     {
+        if ship:ModulesNamed("ModuleRCSFX"):Length > 0
+        {
+            RCS on.
+        }
         if not g_HS_Active
         {
             for eng in g_HotStage:ENGS
@@ -157,6 +191,8 @@
                 set g_HS_Armed to false.
             }
         }
+        set g_NextEngines to GetNextEngines().
+
         return g_HS_Active.
     }
 
@@ -179,7 +215,7 @@
                 }
                 hotstageObj[engStgId]:ENGS:Add(eng).
                 set hotstageObj[engStgId]:ARMED to false.
-                set hotstageObj[engStgId]:SPOOL to Max(hotstageObj[engStgId]:SPOOL, GetEngineSpoolTime(eng)).
+                set hotstageObj[engStgId]:SPOOL to Max(hotstageObj[engStgId]:SPOOL, GetEngineSpoolTime(eng) * 1.15).
                 set hotstageObj[engStgId]:STG   to eng:Stage.
             }
         }
@@ -216,14 +252,6 @@
     // SafeStage
     local function SafeStage
     {
-        // Check if current stage has RCS that should be disabled before staging.
-        for m in Ship:ModulesNamed("ModuleRCSFX")
-        {
-            if m:Part:DecoupledIn >= Stage:Number - 1
-            {
-                m:SetField("RCS", False).
-            }
-        }
         wait until Stage:Ready.
         stage.
         wait 0.01.

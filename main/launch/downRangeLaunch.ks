@@ -5,25 +5,23 @@ parameter params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
-
+RunOncePath("0:/kslib/lib_navball.ks").
 
 Core:DoEvent("Open Terminal").
 
 // Local vars
-local ascAngle to 88.25.
-local launchCommit to false.
 local MECO to -1.
 local meSpoolTime to 0.
-local rollFlag to false.
-local seIgnitionTime to -1.
-local sePresent to false.
-local hsSpoolTime to 0.
-local seSpinAt to 0.
 local tgtAlt to Ship:Body:SOIRadius.
 local tgtHdg to 30.
 local launchTS to list().
 
-// TODO: Create some sort of display output
+// Param parsing
+if params:Length > 0
+{
+    set tgtAlt to ParseStringScalar(params[0]).
+    if params:length > 1 set tgtHdg to ParseStringScalar(params[1]).
+}
 
 
 // Ship systems initialization
@@ -31,11 +29,10 @@ SetProgram(1).
 local mainEngs to list().
 local multistage to false.
 local padStage to Stage:Number.
-local upperEngs to list().
 
 // Hydrate the engine object
 SetProgram(2).
-set g_ShipEngines to GetShipEnginesSpecs().
+set g_ShipEngines to GetShipEnginesSpecs(Ship).
 
 // Find the launch clamp stage if any are found
 for m in Ship:ModulesNamed("LaunchClamp")
@@ -91,8 +88,9 @@ until g_Program >= 20 or g_Abort
             GetTermChar().
             wait 0.01.
         }
-        print "Okay, we'll go to space today!" at (0, g_line).
-        wait 1.
+        print "Okay, we're gonna do it, we're gonna " at (0, g_line).
+        print "go to space today!!! Hold on to your butts!" at (0, cr()).
+        wait 2.
         SetProgram(9).
     }
 
@@ -113,7 +111,7 @@ until g_Program >= 20 or g_Abort
         if g_Runmode = 1
         {
             set launchTS to GetCountdownTimers(meSpoolTime).
-            print "LAUNCH COUNTDOWN: T-{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, g_line).
+            print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
             SetProgram(12).
         }
         else if g_Runmode < 0
@@ -142,8 +140,8 @@ until g_Program >= 20 or g_Abort
             }
             else
             {
-                print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, g_line).
-                print "ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)) at (0, cr()).
+                print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
+                print "ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)):PadRight(Terminal:Width - 24) at (0, cr()).
             }
 
         }
@@ -164,7 +162,7 @@ until g_Program >= 20 or g_Abort
     // Engine ignition
     else if g_Program = 14
     {
-        print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, g_line).
+        print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
         if g_Runmode = 1
         {
             set g_Throt to 1.
@@ -184,7 +182,7 @@ until g_Program >= 20 or g_Abort
         else if g_Runmode > 1
         {
             set g_ActiveEngines to GetActiveEngines().
-            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11110000").
+            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
             if g_Runmode < 6 and Time:Seconds >= launchTS[1]
             {
                 SetRunmode(6).
@@ -228,6 +226,7 @@ until g_Program >= 20 or g_Abort
     // Liftoff
     else if g_Program = 16
     {
+        set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
         print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, 5).
         if g_RunMode = 0
         {
@@ -272,8 +271,10 @@ until g_Program >= 20 or g_Abort
 
     }
 
-    print "P{0,-3}:R{1,3}":Format(g_Program, g_Runmode):PadRight(20) at (0, 0).
+    print "P{0,-3}:R{1,3}":Format(g_Program, g_Runmode):PadRight(30) at (0, 0).
 }
+
+set g_NextEngines to GetNextEngines(Ship, "1110").
 
 // Now we arm auto and hot staging if needed
 if multistage
@@ -286,23 +287,37 @@ if multistage
     {
         ArmSpinStabilization(g_StageLimit).
     }
-    ArmAutoStaging(g_StageLimit, "MECOTS", MECO).
+    ArmAutoStaging(g_StageLimit).
 }
 wait 0.01.
+local ascAngDel to GetAscentAngle@:Bind(tgtAlt).
+local rollDel to { return 0. }.
 
+
+SetProgram(21).
 SetRunmode(0).
 // * Main Loop
 until g_Program = 42 or g_Abort
 {
     set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
+
     set g_line to 4.
-    if g_Program = 20
+    if g_Program < 22
     {
-        if g_RunMode > 0
+        if g_Runmode > 0
         {
-            if Ship:AvailableThrust <= 0.01 and Ship:Altitude >= Ship:Body:Atm:Height
+            print "Alt:Radar":Format(Round(Alt:Radar, 1)) at (0, cr()).
+            print "g_DRTurnStartAlt: {0}":Format(g_DRTurnStartAlt) at (0, cr()).
+
+            if Alt:Radar >= g_DRTurnStartAlt
             {
-                SetProgram(30).
+                print "PASSING ALT:RADAR >= {0}":Format(g_DRTurnStartAlt) at (0, cr()).
+                SetProgram(22).
+            }
+            else
+            {
+                print "MISSING ALT:RADAR [{0}] >= {1}":Format(Round(Alt:Radar), g_DRTurnStartAlt) at (0, cr()).
             }
         }
         else if g_Runmode < 0
@@ -319,13 +334,93 @@ until g_Program = 42 or g_Abort
             SetRunmode(1).
         }
     }
+    else if g_Program = 22
+    {
+        if g_RunMode > 0
+        {
+            if Ship:Apoapsis >= tgtAlt
+            {
+                SetProgram(24).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            print "PITCH PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
+    }
+
+    else if g_Program = 24
+    {
+        if g_RunMode > 0
+        {
+            if Ship:AvailableThrust <= 0.01
+            {
+                clr(g_line).
+                clr(cr()).
+                SetProgram(30).
+            }
+            else
+            {
+                cr().
+                print "TIME TO MECO: {0}            ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)) at (0, cr()).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            print "BURNING TO MECO":PadRight(g_termW - 15) at (0, cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
+    }
+
     else if g_Program = 30
     {
-        print "TIME TO AP: {0}            ":Format(Round(ETA:Apoapsis, 2)) at (0, cr()).
-        if ETA:Apoapsis <= 30
+        if g_RunMode > 0
         {
-            SetProgram(42). 
+            if Ship:Altitude >= Ship:Body:Atm:Height and Ship:AvailableThrust <= 0.01 and Stage:Number <= g_StageLimit
+            {
+                SetProgram(42).
+            }
+            else
+            {
+                SetRunMode(2).
+            }
         }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            print "COAST PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer  to heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
     }
     UpdateState(True).
 
@@ -343,7 +438,9 @@ until g_Program = 42 or g_Abort
     if g_HS_Armed 
     {
         print "HotStaging: Armed" at (0, cr()).
-        if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
+        // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
+        local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+        if g_HS_Check:Call(btrem)
         {
             g_HS_Act:Call().
         }

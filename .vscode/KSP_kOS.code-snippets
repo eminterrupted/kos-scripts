@@ -26,6 +26,22 @@
 	],
 	"description": "New Global Function Template"
 	},
+    "New Function Group": {
+        "prefix": "NewFuncGroup",
+        "body": [
+          "//  *- GroupName",
+          "// #region",
+          "",
+          "    // FunctionName :: Input / Output",
+          "    // Description",
+          "    global function foo",
+          "    {",
+          "    }",
+          "",
+          "// #endregion"
+        ],
+        "description": "New Function Group"
+    },
     "NewLibAEA": {
         "prefix": "NewLibAEA",
         "body": [

@@ -1,2 +1,2 @@
 wait until HomeConnection:IsConnected.
-runPath("0:/main/exec/amem_51.ks").
+runPath("0:/main/exec/mpExec51.ks").

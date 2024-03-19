@@ -44,6 +44,22 @@
 // ***~~~ Functions ~~~*** //
 // #region
 
+//  *- Parachutes
+// #region
+
+    // // ArmParachutes
+    // global function ArmParachutes
+    // {
+    //     parameter _chuteList to Ship:ModulesNamed("RealChuteModule").
+
+    //     for ch in _chuteList
+    //     {
+    //         DoEvent(ch, "arm parachute").
+    //     }
+    // }
+
+// #endregion
+
 //  *- Spin Stabilization
 // #region
 
@@ -68,10 +84,10 @@
 
                     set g_Spin_Check to { 
                         parameter __checkVal. 
-                        print "I'm spin checkin!" at (0, cr()).
                         if g_SpinStab:STG = Stage:Number - 1 
                         {
-                            return g_Conditions["MET"]@:Bind(__checkVal).
+                            print "I'm spin checkin!" at (0, cr()).
+                            return MissionTime >= __checkVal.
                         }. 
                         return false. 
                     }.
@@ -104,7 +120,7 @@
         }
         else
         {
-            set g_Steer to g_Steer:Direction.
+            set g_Steer to g_Steer:Vector.
             set Ship:Control:Roll to _rollVal.
             set g_Spin_TS to Time:Seconds + _leadtime.
             set g_Spin_Active to true.
@@ -127,6 +143,7 @@
                     spinStages:Add(p:Stage, lex(
                         "ARMED", false
                         ,"LEADTIME", l_SpinMin
+                        ,"STG", p:Stage
                     )).
                 }
             }

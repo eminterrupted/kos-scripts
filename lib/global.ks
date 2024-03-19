@@ -35,7 +35,7 @@
     global g_StageLimit  to Stage:Number.
 
     global g_State      is list( 0, 0, 0, g_StageLimit).
-    global g_StateCachePath is "1:/state.ves".
+    global g_StateCachePath is "1:/state.txt".
 
     // Terminal stuff
     global g_TermChar    is "".

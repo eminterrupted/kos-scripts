@@ -1,4 +1,4 @@
-parameter _bf is "dboot.ks".
+parameter _bf is "bl_51.ks".
 
 set arcBF to "0:/boot/" + _bf.
 set locBF to "/boot/" + _bf.
