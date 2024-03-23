@@ -16,6 +16,7 @@
     // *- Global
     // #region
     global g_RecoveryFlag to false.
+    global g_RCSDisableAlt  to 25000.
     // #endregion
 // #endregion
 
@@ -77,11 +78,103 @@
     global function TryRecoverVessel
     {
         parameter _ves is Ship,
+                  _recoveryWindow is 30.
+
+        if Addons:Available("Career")
+        {
+            local waitTimer to 5.
+            set g_TS to Time:Seconds + waitTimer.
+            local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
+            set g_TermChar to "".
+            print "Press any key to abort" at (0, cr()).
+            local abortFlag to false.
+            local line to g_Line.
+
+            until Time:Seconds > g_TS or abortFlag
+            {
+                set g_Line to line.
+                GetTermChar().
+                if g_TermChar <> ""
+                {
+                    set abortFlag to true.
+                    clr(cr()).
+                    set g_Line to line.
+                }
+                else
+                {
+                    print waitStr:Format(Round(g_TS - Time:Seconds, 2)) at (0, cr()).
+                }
+                wait 0.01.
+            }
+
+            if abortFlag 
+            {
+                print "Aborting recovery attempts!" at (0, cr()).
+                wait 0.25.
+            }
+            else
+            {
+                local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
+                local recoveryStr to "Attempting recovery (Status: {0})".
+                set g_TS to Time:Seconds + _recoveryWindow.
+                local abortStr to "Press any key to abort ({0,-5}s)".
+                until Time:Seconds >= g_TS or abortFlag
+                {
+                    set g_Line to line.
+
+                    local recoveryState to getRecoveryState:Call(_ves).
+                    if recoveryState[0]
+                    {
+                        Addons:Career:RecoverVessel(_ves).
+                        print "Recovery in progress (Status: {0})":Format(recoveryState[1]) at (0, cr()).
+                        clr(cr()).
+                        wait 0.01.
+                        break.
+                    }
+                    else
+                    {
+                        print recoveryStr:Format(recoveryState[1]) at (0, cr()).
+                        print abortStr:Format(g_TS - Time:Seconds, 2) at (0, cr()).
+
+                        GetTermChar().
+                        if g_TermChar <> ""
+                        {
+                            set abortFlag to true.
+                        }
+                        wait 0.01.
+                    }
+                }
+                
+                if abortFlag
+                {
+                    print "Recovery aborted!" at (0, cr()).
+                    clr(cr()).
+                }
+                else
+                {
+                    print "Recovery failed. :(" at (0, cr()).
+                }
+                clr(cr()).
+            }
+        }
+        else
+        {
+            print "No recovery firmware found!" at (0, cr()).
+            clr(cr()).
+            wait 0.25.
+        }
+    }
+
+    // TryRecoverVessel_Old :: [_ves<Ship>], [_recoveryWindow<Scalar>] -> <None>
+    // This doesn't work
+    global function TryRecoverVessel_Old
+    {
+        parameter _ves is Ship,
                 _recoveryWindow is 30.
 
         if Addons:Available("Career")
         {
-            set g_line to 4.
+            set g_line to g_line + 5.
             local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "RECOVERING").} else { return list(False, "UNRECOVERABLE").}}.
             set g_RecoveryFlag to true.
             

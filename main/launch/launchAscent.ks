@@ -5,11 +5,11 @@ parameter params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
+RunOncePath("0:/lib/log.ks").
 RunOncePath("0:/kslib/lib_navball.ks").
 
-Core:DoEvent("Open Terminal").
-
 // Local vars
+local ascShaper to 1.
 local MECO to -1.
 local meSpoolTime to 0.
 local tgtAlt to Ship:Body:SOIRadius.
@@ -19,8 +19,9 @@ local launchTS to list().
 // Param parsing
 if params:Length > 0
 {
-    set tgtHdg to ParseStringScalar(params[0]).
-    if params:length > 1 set tgtAlt to ParseStringScalar(params[1]).
+    set tgtHdg to ParseStringScalar(params[0], tgtHdg).
+    if params:length > 1 set tgtAlt to ParseStringScalar(params[1], tgtAlt).
+    if params:length > 2 set ascShaper to ParseStringScalar(params[2], ascShaper).
 }
 
 
@@ -81,6 +82,7 @@ until g_Program >= 20 or g_Abort
     set g_line to 4.
     if g_Program = 8
     {
+        print "TgtHdg: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtHdg, tgtAlt, ascShaper).
         print "Go to space?" at (0, g_line).
         until g_TermChar = Terminal:Input:Enter
         {
@@ -91,6 +93,7 @@ until g_Program >= 20 or g_Abort
         print "Okay, we're gonna do it, we're gonna " at (0, g_line).
         print "go to space today!!! Hold on to your butts!" at (0, cr()).
         wait 2.
+        ClearScreen.
         SetProgram(9).
     }
 
@@ -289,15 +292,29 @@ if multistage
     }
     ArmAutoStaging(g_StageLimit).
 }
-wait 0.01.
-local ascAngDel to GetAscentAngle@:Bind(tgtAlt).
+
+// Arm fairings
+local fairingResult to list().
+local fairingsArmed to false.
+local fairingCheck  to { return true.}.
+local fairingAction to { return false.}.
+if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
+{
+    set fairingResult to ArmFairingJettison(Ship:PartsTaggedPattern("Ascent\|Fairing.*")).
+    set fairingsArmed to fairingResult[0].
+    set fairingCheck  to fairingResult[1].
+    set fairingAction to fairingResult[2].
+}
+
+local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
 local rollDel to { return 0. }.
 
 
 SetProgram(21).
 SetRunmode(0).
+ClearScreen.
 // * Main Loop
-until g_Program = 42 or g_Abort
+until g_Program >= 36 or g_Abort
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
@@ -338,7 +355,7 @@ until g_Program = 42 or g_Abort
     {
         if g_RunMode > 0
         {
-            if Ship:Apoapsis >= tgtAlt
+            if Ship:Apoapsis >= tgtAlt or (Ship:AvailableThrust <= 0.01 and g_Throt > 0)
             {
                 SetProgram(24).
             }
@@ -399,7 +416,7 @@ until g_Program = 42 or g_Abort
         {
             if Ship:Altitude >= Ship:Body:Atm:Height and Ship:AvailableThrust <= 0.01 and Stage:Number <= g_StageLimit
             {
-                SetProgram(42).
+                SetProgram(36).
             }
             else
             {
@@ -459,6 +476,14 @@ until g_Program = 42 or g_Abort
         if g_Spin_Check:Call()
         {
             g_Spin_Act:Call().
+        }
+    }
+    if fairingsArmed
+    {
+        print "Fairing jettison: Armed" at (0, cr()).
+        if fairingCheck:Call()
+        {
+            fairingAction:Call().
         }
     }
 }

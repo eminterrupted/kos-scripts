@@ -1,5 +1,8 @@
 @LazyGlobal off.
 
+// *~ Config ~* //
+set Config:IPU to 512.
+
 // *~ Variables ~* //
 // #region
     // *- Global
@@ -27,6 +30,7 @@
     // Program Flow / Standard Output
     global g_Debug      is false.
     global g_ExitCode   is 0.
+    global g_LogOut    is false.
 
     // Program State / Runmode / Context
     global g_Context    is 0.

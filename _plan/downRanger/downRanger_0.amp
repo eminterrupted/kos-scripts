@@ -1,2 +1,2 @@
-launch/launchAscent|90;125000|0
+launch/launchAscent|120;250000;1.025|0
 return/rangeKillBelowAlt||0

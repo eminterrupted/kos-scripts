@@ -61,8 +61,16 @@
         else
         {
             set g_AS_Check to { 
-                print "I'm autostagin checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh) at (0, cr()). 
-                return g_Conditions[_conditionType]:Call(_conditionThresh).
+                print "I'm autostage checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh):PadRight(5) at (0, cr()). 
+                if Stage:Number > g_StageLimit 
+                {
+                    return g_Conditions[_conditionType]:Call(_conditionThresh).
+                }
+                else
+                {
+                    DisableAutoStaging().
+                }
+                return false.
             }.
             set g_AS_Act   to { 
                 for m in Ship:ModulesNamed("ModuleRCSFX")
@@ -87,7 +95,7 @@
                     }
                 }
 
-                set g_NextEngines to GetNextEngines().
+                set g_NextEngines to GetNextEngines("1000").
                 if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
             }.
             
@@ -102,6 +110,7 @@
         set g_AS_Armed to false.
         set g_AS_Check to NoOp@.
         set g_AS_Act   to NoOp@.
+        print "Autostaging disarmed!" at (0, cr()).
     }
     // #endregion
 
@@ -120,19 +129,19 @@
 
         print "Arming hot stage" at (25, 20).
         local burnTime to 0.
-        local hs to GetNextHotStage(_stgLim).
+        set g_HotStage to GetNextHotStage(_stgLim).
         local spoolTime to 0.
         if _checkVal < 0
         {
-            if g_ShipEngines:IGNSTG:HasKey(hs:STG)
+            if g_ShipEngines:IGNSTG:HasKey(g_HotStage:STG)
             {
                 set burnTime  to g_ShipEngines:IGNSTG:STGBURNTIME.
-                set spoolTime to g_ShipEngines:IGNSTG[hs:STG]:STGSPOOLTIME.
-                set _checkVal to burnTime - (spoolTime * 1.25).
+                set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGSPOOLTIME.
+                set _checkVal to spoolTime * 1.5.
             }
             else
             {
-                set _checkVal to 60.
+                set _checkVal to 1.
             }
         }
         
@@ -148,12 +157,12 @@
             }
             return false.
         }.
-        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.26).
+        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.5).
         
         set g_HS_Act to DoHotStaging@.
 
-        set hs:ARMED to true.
-        set g_HotStage to hs.
+        set g_HotStage:ARMED to true.
+        set g_HotStage to g_HotStage.
         set g_HS_Armed to true.
     }
     
@@ -229,7 +238,7 @@
         parameter _stgLim.
 
         local hotstageObj to GetHotStages(_stgLim).
-        local nextHotStage to lex().
+        local nextHotStage to lex("ARMED", false, "STG", -1).
         
         from { local stg to Stage:Number - 1.} until stg < _stgLim step { set stg to stg - 1.} do
         {
@@ -237,6 +246,7 @@
             {
                 set nextHotStage to hotstageObj[stg:ToString].
                 set nextHotStage:ARMED to stg = Stage:Number - 1.
+                set nextHotStage:STG   to stg.
                 break.
             }
         }

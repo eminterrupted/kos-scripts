@@ -22,9 +22,14 @@ if params:length > 0
 }
 
 set g_Line to 4.
-set g_Steer to Ship:Facing.
+local steerDel to { return Ship:Facing.}.
+set g_Steer to steerDel:Call().
 
-set fairings to Ship:PartsTaggedPattern("(Reentry\|Fairing|Fairing\|Reentry)").
+// set g_Steer to Ship:Facing.
+lock steering to g_Steer.
+local steerActive to true.
+
+set fairings to Ship:PartsTaggedPattern("((Reentry|Descent)\|Fairing)|(Fairing\|(Reentry|Descent))").
 if fairings:length > 0
 {
     local fairingTags to fairings[0]:Tag:Split("|").
@@ -35,14 +40,48 @@ if fairings:length > 0
 }
 
 InitStateCache().
+SetStageStop(2).
 
-until g_Program = 199 or g_Abort
+until g_Program > 199 or g_Abort
 {
     set g_Line to 4.
 
-    if g_Program < 42
+    if g_Program < 40
     {
-        SetProgram(42).
+        SetProgram(40).
+    }
+
+    // Position to retrograde
+    else if g_Program = 40
+    {
+        if g_RunMode = 1
+        {
+            set steerDel to { return Ship:SrfRetrograde. }.
+            set g_TS to Time:Seconds + 10.
+            SetRunmode(2).
+        }
+        else if g_Runmode = 2
+        {
+            if Time:Seconds >= g_TS 
+            {
+                set g_TS to 0.
+                SetProgram(42).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            print "WAIT FOR AP":PadRight(g_termW - 15) at (0, cr()).
+            SetRunmode(1).
+        }
+        print "AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)) at (0, cr()).
     }
 
     // Wait until apoapsis
@@ -50,7 +89,7 @@ until g_Program = 199 or g_Abort
     {
         if g_RunMode > 0
         {
-            if ETA:Apoapsis <= 1 or ETA:Apoapsis > ETA:Periapsis
+            if ETA:Apoapsis <= 5 or ETA:Apoapsis > ETA:Periapsis
             {
                 clr(cr()).
                 if warp > 0 set warp to 0.
@@ -87,7 +126,6 @@ until g_Program = 199 or g_Abort
             {
                 SetProgram(46).
             }
-            
         }
         else if g_Runmode < 0
         {
@@ -143,7 +181,7 @@ until g_Program = 199 or g_Abort
                 SetRunmode(3).
                 if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
                 {
-                    set g_Steer to Ship:SrfRetrograde.
+                    set steerDel to { return Ship:SrfRetrograde.}.
                     if Time:Seconds > stgTimeGoGo
                     {
                         SetProgram(50).
@@ -179,7 +217,17 @@ until g_Program = 199 or g_Abort
     // Atmospheric Reentry
     else if g_Program = 50
     {
-        if g_RunMode > 0
+        if g_Runmode = 1
+        {
+            if Ship:Altitude <= g_RCSDisableAlt
+            {
+                RCS off.
+                unlock steering.
+                set steerActive to false.
+                SetRunmode(3).
+            }
+        }
+        else if g_RunMode > 1
         {
             if Ship:Altitude <= fairJettAlt
             {
@@ -307,18 +355,40 @@ until g_Program = 199 or g_Abort
     // Wait until touchdown
     else if g_Program = 58
     {
-        if g_RunMode = 1
+        if g_RunMode > 0
         {
             cr().
             print "* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
             if Time:Seconds >= g_TS 
             {
-                SetProgram(199).
+                SetProgram(99).
             }
         }
-        else if g_Runmode = 2
+        else if g_Runmode < 0
         {
-            SetProgram(69).
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
+            set g_TS to Time:Seconds + 3.
+            SetRunmode(1).
+        }
+    }
+
+    // Try to recover the sucker
+    else if g_Program = 99
+    {
+        set g_TS to 0.
+        if g_RunMode > 0
+        {
+            cr().
+            print "* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
+            TryRecoverVessel().
         }
         else if g_Runmode < 0
         {
@@ -336,15 +406,10 @@ until g_Program = 199 or g_Abort
         }
     }
     UpdateState(true).
+
+    if steerActive set g_Steer to steerDel:Call().
     
     print "P{0,-3}:R{1,3}  ":Format(g_Program, g_Runmode):PadRight(8) at (0, 0).
 
     DispDescentTelemetry(9).
-}
-
-set g_TS to 0.
-until false
-{
-    TryRecoverVessel().
-    wait 0.01.
 }

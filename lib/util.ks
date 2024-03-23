@@ -83,6 +83,11 @@
 // #endregion
 
 
+// ## Stock code that needs to run everywhere
+set g_MissionPlans to ListMissionPlans().
+
+
+
 // *~ Functions ~* //
 // #region
 
@@ -140,6 +145,8 @@
     // ListMissionPlans :: -> (_missionPlans)<List>
     global function ListMissionPlans
     {
+        parameter _planParent to "ALL".
+
         set g_MissionPlans to List(
             // "sounder"
             // ,"sounderReturn"
@@ -152,7 +159,12 @@
         {
             local planPath to Volume(0):Files:_plan.
 
-            for plan in planPath:lex:keys
+            if _planParent <> "ALL"
+            {
+                set planPath to planPath:Lex[_planParent].
+            }
+
+            for plan in planPath:Lex:Keys
             {
                 for plan_l2 in planPath:Lex[plan]:Lex:Values
                 {
@@ -180,6 +192,11 @@
         // local planVer  to choose _planId:Split("_")[1] if _planId:Split("_"):Length > 1 else 0.
         local plan to lex("M", list(), "P", list(), "S", list()).
 
+        if g_MissionPlans:Length = 0 
+        {
+            set g_MissionPlans to ListMissionPlans().
+        }
+
         if g_MissionPlans:Contains(_planId)
         {
             if _planId:Split("_"):Length > 1
@@ -189,11 +206,16 @@
             }
         }
 
-        local planFolder to Volume(0):Files:_plan:Lex[planBase].
-        local planFileName to "{0}.amp":Format(_planId).
-        if planFolder:List:Keys:Contains(planFileName)
+        local planFolder to Volume(0):Files:_plan.
+        if planFolder:Lex:HasKey(planBase) 
         {
-            local planFile to planFolder:List[planFileName].
+            set planFolder to planFolder:Lex[planBase].
+        }
+
+        local planFileName to "{0}.amp":Format(_planId).
+        if planFolder:Lex:Keys:Contains(planFileName)
+        {
+            local planFile to planFolder:Lex[planFileName].
             local planData to planFile:ReadAll:String:Split(char(10)). // Splits by newline 
             for mm in planData
             {
@@ -229,27 +251,96 @@
     // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
     global function GetMissionPlanID 
     {
+        local planPriorityList to list( core:tag, Ship:Name:Replace(" ","_")).
+        local saniTag to core:tag:split("_")[0].
+        local saniPri to choose core:tag:split("_")[1] if core:tag:split("_"):Length > 1 else -1.
         local planId to "".
-        local planPriorityList to list(
-            core:tag
-            ,Ship:Name:Replace(" ","_")
-        ).
 
-        from { local i to 0. local doneFlag to false. } until i = planPriorityList:Length or doneFlag step { set i to i + 1.} do 
+        local availablePlans to list().
+        if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
         {
-            if planPriorityList[i]:Length > 0
+            set availablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+        }
+        if saniTag:Length > 0
+        {
+
+        }
+
+        // if saniPri >= 0
+        // {
+        //     print "Rollin' with the homies, like {0}":Format(planID) at (0, cr()).
+        // }
+        // else 
+        if availablePlans:Length = 1
+        {
+            set planId to availablePlans[0]:Replace(".amp","").
+        }
+        else
+        {
+            local doneFlag  to false.
+            local doneFlag2 to false.
+            local selectedIdx to 0.
+            from { local i to 0. local dI to i + 1.} until i = availablePlans:Length step { set i to i + 1. set dI to dI + 1.} do
             {
-                set planId to planPriorityList[i].
-                if not planID:MatchesPattern("_")
+                // print "i: {0}":Format(i) at (0, 30).
+                // print "availablePlans: {0}":Format(availablePlans) at (0, 32).
+                print "{0}: {1}  ":Format(dI, availablePlans[i]) at (0, cr()).
+            }
+            print "PRESS NUMBER FOR SELECTION " at (0, cr()).
+
+            until doneFlag
+            {
+                GetTermChar().
+
+                if g_TermChar <> ""
                 {
-                    set planID to planID + "_0".
+                    if planId:Length = 0
+                    {
+                        local termCharScalar to g_TermChar:ToNumber(-1).
+                        
+                        if termCharScalar > 0
+                        {
+                            set selectedIdx to termCharScalar - 1.
+                            set planID to choose availablePlans[selectedIdx]:Replace(".amp","") if availablePlans:Length >= termCharScalar else saniTag + "_0".
+                            print "Selected PlanID: >> {0} <<           ":Format(planID) at (0, cr()).
+                            print "Confirm via ENTER" at (0, cr()).
+                            print "Cancel  via DELETE" at (0, cr()).
+
+                            set doneFlag2 to false.
+                            until doneFlag2
+                            {
+                                set g_TermChar to "".
+                                GetTermChar().
+
+                                if g_TermChar = Terminal:Input:Enter
+                                {
+                                    set doneFlag2 to true.
+                                }
+                                else if g_TermChar = Terminal:Input:DeleteRight
+                                {
+                                    break.
+                                }
+                            }
+                            clr(g_Line - 2).
+                            clr(g_Line - 1).
+                            clr(g_Line).
+                            set termCharScalar to -1.
+                        }
+                    }
                 }
-                print planId.
-                set doneFlag to true.
+                else if doneFlag2
+                {
+                    set doneFlag to true.
+                }
+
+                set g_TermChar to "".
             }
         }
-        
-        if g_MissionPlans:Length = 0 ListMissionPlans().
+
+        if g_MissionPlans:Length = 0
+        {
+            set g_MissionPlans to ListMissionPlans().
+        }
 
         if g_MissionPlans:Contains(planID)
         {
@@ -568,6 +659,7 @@
         set g_Program to _prog.
         set g_Runmode to 0.
         if _update UpdateState().
+        ClearScreen.
         return g_Program.
     }
 

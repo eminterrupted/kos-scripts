@@ -10,6 +10,7 @@
 // #region
     // *- Local
     // #region
+    local l_EngCfgPath to "0:/data/ref/eng.cfg".
     local l_MaxFlightData to 10000.
     // #endregion
 
@@ -33,19 +34,23 @@
 
     // *- Misc Reference Objects
     
-    // Manually-curated object holding info about engine configurations that isn't typically available via APIs (usually seen only in UI)
-    // Legend: 
-    //  - BTR [BurnTime(Rated)]: Rated burn time based on the engine config. 
-    //  - OBR [OverBurnRatio]  : The max percentage amount of rated burn time that can be added to the BTR value, used like this: BTR + (BTR * ((CurFlightData / MaxFlightData) * OBR). 
+    // Object holding info about engine configurations that isn't typically available via APIs (usually seen only in UI)
+    // List Legend: 
+    //  - [0] [BurnTime(Rated)]: Rated burn time based on the engine config. 
+    //  - [1] [OverBurnRatio]  : The max percentage amount of rated burn time that can be added to the BTR value, used like this: BTR + (BTR * ((CurFlightData / MaxFlightData) * OBR). 
     //                           * This results in a sliding scale of increasing overburn time as more flight data comes in, and that hopefully results in safer overburns. 
-    global g_engConfigs is lexicon(
-         "A-4",         lex("BTR", 70, "OBR", 0.14)
-        ,"A-6",         lex("BTR", 65, "OBR", 0.16)
-        ,"A-9",         lex("BTR", 115, "OBR", 0.12)
-        ,"XLR43-NA-1",  lex("BTR", 65, "OBR", 0.14)
-        ,"XLR43-NA-3",  lex("BTR", 65, "OBR", 0.18)
-        ,"Veronique",   lex("BTR", 45, "OBR", 0.20)
-        ,"U-1250",      lex("BTR", 56, "OBR", 0.22)
+    global g_EngineConfigs is lexicon(
+        //  "A-4",         list(70,  0.14)
+        // ,"A-6",         list(65,  0.16)
+        // ,"A-9",         list(115, 0.12)
+        // ,"XLR43-NA-1",  list(65,  0.14)
+        // ,"XLR43-NA-3",  list(65,  0.18)
+        // ,"Veronique",   list(45,  0.20)
+        // ,"VeroniqueAGI",list(49,  0.20)
+        // ,"U-1250",      list(56,  0.22)
+        // ,"S-3",         list(182, 0.075)
+        // ,"AJ10-27",     list(52,  0.125)
+        // ,"AJ10-37",     list(115, 0.125)
     ).
 
     global g_EngRef is lexicon(
@@ -69,6 +74,8 @@
     ).
 // #endregion
 
+// Library Initialization code
+HydrateEngineConfigs().
 
 // *~ Global Functions ~* //
 // #region
@@ -101,30 +108,35 @@
                                        // [0] Reserved / Currently unused
 
         local engList to list().
+
         from { local iStg to Stage:Number - 1.} until iStg < 0 step { set iStg to iStg - 1.} do
         {
             if g_ShipEngines:IGNSTG:HasKey(iStg)
             {
+                
                 for eng in g_ShipEngines:IGNSTG[iStg]:ENG
                 {
-                    local isSep     to g_EngRef:SEP:Contains(eng:name) and eng:Tag:Length = 0.
                     local isBooster to choose false if eng:Decoupler = "None" else eng:Decoupler:Tag:MatchesPattern("Booster").
+                    local isSep     to g_EngRef:SEP:Contains(eng:name) and eng:Tag:Length = 0.
 
-
-                    if _dataMask[0] and not isBooster and not isSep
+                    if _dataMask[0]:ToNumber(0) and (not isBooster and not isSep)
                     {
                         engList:Add(eng).
                     }
-                    else if _dataMask[1] and isBooster
+                    else if _dataMask[1]:ToNumber(0) and isBooster
                     {
                         engList:add(eng).
                     }
-                    else if _dataMask[2] and isSep
+                    else if _dataMask[2]:ToNumber(0) and isSep
                     {
                         engList:add(eng).
                     }
                 }
-                break.
+                
+                if engList:Length > 0 
+                {
+                    break.
+                }
             }
         }
 
@@ -225,17 +237,17 @@
                 local engFlightData to _eng:GetModule("TestFlightReliability_EngineCycle"):GetField("flight data").
                 set overBurnRatio to ((overburnRatio - 1.01) * (Max(engFlightData, 0.1) / 10000)) + 1.01.
             }
-            if g_engConfigs:Keys:Contains(_eng:Config)
+            if g_EngineConfigs:Keys:Contains(_eng:Config)
             {
-                set burnTimeRated to g_engConfigs[_eng]:BTR.
+                set burnTimeRated to g_EngineConfigs[_eng][0].
                 set burnTimePlus to burnTimeRated * overBurnRatio.
             }
         }
         else if _eng:IsType("String")
         {
-            if g_engConfigs:Keys:Contains(_eng)
+            if g_EngineConfigs:Keys:Contains(_eng)
             {
-                set burnTimeRated to g_engConfigs[_eng]:BTR.
+                set burnTimeRated to g_EngineConfigs[_eng][0].
                 set burnTimePlus to burnTimeRated * overBurnRatio.
             }
         }
@@ -296,52 +308,36 @@
         {
             _objRef[stageGroup]:ENG:Add(_eng).
             _objRef[stageGroup]:UID:Add(_eng:UID).
-            set _objRef[stageGroup]:STGMAXTHRUST to _objRef[stageGroup]:STGMAXTHRUST + _eng:MaxPossibleThrust.
-
-            if _extendedInfo
-            {
-                set _objRef[stageGroup]:SEPSTG         to choose isSepMotor if _objRef[stageGroup]:SEPSTG else false.
-                set _objRef[stageGroup]:STGMAXTHRUST   to _objRef[stageGroup]:STGMAXTHRUST   + _eng:MaxPossibleThrust.
-                set _objRef[stageGroup]:STGMAXTHRUSTSL to _objRef[stageGroup]:STGMAXTHRUSTSL + _eng:MaxPossibleThrustAt(0).
-                set _objRef[stageGroup]:STGMAXFUELFLOW to _objRef[stageGroup]:STGMAXFUELFLOW + _eng:MaxFuelFlow.
-                set _objRef[stageGroup]:STGMAXMASSFLOW to _objRef[stageGroup]:STGMAXMASSFLOW + _eng:MaxMassFlow.
-                set _objRef[stageGroup]:STGMAXSPOOL    to Max(_objRef[stageGroup]:STGMAXSPOOL, spoolTime).
-                set _objRef[stageGroup]:STGBURNTIME    to Max(_objRef[stageGroup]:STGBURNTIME, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME).
-            }
-
+            set _objRef[stageGroup]["SEPSTG"]    to choose isSepMotor if _objRef[stageGroup]:SEPSTG else false.
+            set _objRef[stageGroup]["STG"]       to choose _eng:Stage if _stgType = "IGN" else _eng:DECOUPLEDIN.
+            set _objRef[stageGroup]["STGBURNTIME"]  to Max(_objRef[stageGroup]:STGBURNTIME, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME).
+            set _objRef[stageGroup]["STGMAXSPOOL"]  to Max(_objRef[stageGroup]:STGMAXSPOOL, spoolTime).
+            set _objRef[stageGroup]["STGMAXTHRUST"] to _objRef[stageGroup]:STGMAXTHRUST + _eng:MaxPossibleThrust.
         }
         else
         {
-            if _extendedInfo
-            {
-                _objRef:Add(stageGroup, lex(
+            _objRef:Add(stageGroup, lex(
                     "ENG", list(_eng)
+                    ,"UID", list(_eng:UID)
                     ,"SEPSTG",          isSepMotor
-                    ,"STGMAXTHRUST",    _eng:MaxPossibleThrust
-                    ,"STGMAXTHRUSTSL",  _eng:MaxPossibleThrustAt(0)
-                    ,"STGMAXFUELFLOW",  _eng:MaxFuelFlow
-                    ,"STGMAXMASSFLOW",  _eng:MaxMassFlow
-                    ,"STGMAXSPOOL",     Max(0, spoolTime)
+                    ,"STG",             _eng:Stage
                     ,"STGBURNTIME",     Max(0, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME)
-                    ,"UID", list(_eng:UID)
-                    )
-                ).
-            }
-            else
-            {
-                _objRef:Add(stageGroup, lex(
-                    "ENG", list(_eng)
-                    ,"SEPSTG",          isSepMotor
-                    ,"STGMAXTHRUST",    0
-                    ,"STGMAXTHRUSTSL",  0
-                    ,"STGMAXFUELFLOW",  0
-                    ,"STGMAXMASSFLOW",  0
-                    ,"STGMAXSPOOL",     0
-                    ,"STGBURNTIME",     0
-                    ,"UID", list(_eng:UID)
-                    )
-                ).
-            }
+                    ,"STGMAXSPOOL",     spoolTime
+                    ,"STGMAXTHRUST",    _eng:MaxPossibleThrust
+                )
+            ).
+        }
+
+        if _extendedInfo
+        {
+
+            if _objRef[stageGroup]:HasKey("STGMAXTHRUSTSL") { set _objRef[stageGroup]:STGMAXTHRUSTSL to _objRef[stageGroup]:STGMAXTHRUSTSL + _eng:MaxPossibleThrustAt(0).} else { _objRef[stageGroup]:Add("STGMAXTHRUSTSL", _eng:MaxPossibleThrustAt(0)).}
+            if _objRef[stageGroup]:HasKey("STGMAXFUELFLOW") { set _objRef[stageGroup]:STGMAXFUELFLOW to _objRef[stageGroup]:STGMAXFUELFLOW + _eng:MaxFuelFlow.} else { _objRef[stageGroup]:Add("STGMAXFUELFLOW", _eng:MaxFuelFlow).}
+            if _objRef[stageGroup]:HasKey("STGMAXMASSFLOW") { set _objRef[stageGroup]:STGMAXMASSFLOW to _objRef[stageGroup]:STGMAXMASSFLOW + _eng:MaxMassFlow.} else { _objRef[stageGroup]:Add("STGMAXMASSFLOW", _eng:MaxMassFlow).}
+
+            // set _objRef[stageGroup]:STGMAXTHRUSTSL to _objRef[stageGroup]:STGMAXTHRUSTSL + _eng:MaxPossibleThrustAt(0).
+            // set _objRef[stageGroup]:STGMAXFUELFLOW to _objRef[stageGroup]:STGMAXFUELFLOW + _eng:MaxFuelFlow.
+            // set _objRef[stageGroup]:STGMAXMASSFLOW to _objRef[stageGroup]:STGMAXMASSFLOW + _eng:MaxMassFlow.
         }
 
         return _objRef.
@@ -352,24 +348,37 @@
     local function GetEngineModuleData
     {
         parameter _eng,
-                  _destObj to lex().
+                  _dataMask to "10". // [1] 0  - Specs
+                                     //  0 [1] - Status
+
+        local resultObj to lex(
+            // "MIXRATIO", 1
+            // ,"RESIDUALS", 0
+            // ,"SPOOLTIME", 0
+        ).
 
         if _eng:HasModule("ModuleEnginesRF")
         {
             local engRFModule to _eng:GetModule("ModuleEnginesRF").
-
-            set _destObj["MIXRATIO"]    to GetField(engRFModule, "mixture ratio", 1).
-            set _destObj["RESIDUALS"]   to GetField(engRFModule, "predicted residuals", 0).
-            set _destObj["SPOOLTIME"]   to GetField(engRFModule, "effective spool-up time", 0).              
+            if _dataMask[0]
+            {
+                set resultObj["MIXRATIO"]    to GetField(engRFModule, "mixture ratio", 1).
+                set resultObj["RESIDUALS"]   to GetField(engRFModule, "predicted residuals", 0).
+                set resultObj["SPOOLTIME"]   to GetField(engRFModule, "effective spool-up time", 0).              
+                set resultObj["THRUSTLIM"]   to GetField(engRFModule, "thrust limiter").
+            }
+            if _dataMask[1]
+            {
+                set resultObj["CURTHROTTLE"] to GetField(engRFModule, "current throttle").
+                set resultObj["MASSFLOW"]    to GetField(engRFModule, "mass flow").
+                set resultObj["ENGTEMP"]     to GetField(engRFModule, "eng. internal temp").
+                set resultObj["THRUST"]      to GetField(engRFModule, "thrust").
+                set resultObj["ISP"]         to GetField(engRFModule, "specific implulse").
+                set resultObj["STATUS"]      to GetField(engRFModule, "status").
+            }
         }
-        else
-        {
-            set _destObj["MIXRATIO"]  to 1.
-            set _destObj["RESIDUALS"] to 0.
-            set _destObj["SPOOLTIME"] to 0.
-        }
 
-        return _destObj.
+        return resultObj.
     }
 
     // GetEnginesPerformanceData
@@ -387,13 +396,10 @@
 
 
                                                     // Byte 0, Nibble 0 - ENGS
-                                                    //   [0]   : (1)000 |        |   [ENGS] Controls initial hydration of the ENGs list in the output. 
-                                                    //                               ENGS is just a list of engines. 
-
-                                                    //                               Additionl (Optional) switches:
-                                                    //   [1]   : 1(1)00 |        |    -- Include Standard Eng Perf Data (Current Thrust, ISP, Ignition, Flameout, etc)
-                                                    //   [2]   : 10(1)0 |        |    -- Include Extended Eng Perf Data (Ullage, ExhVel)
-                                                    //   [3]   : 100(1) |        |    -- Include TestFlight module data (FlightData, MTBF & other failure info, etc)                                        
+                                                    //   [0]   : (1)000 |        |   Returns basic performance data from the engine part
+                                                    //   [1]   : 0(1)00 |        |    -- Include Standard Eng Perf Data (Current Thrust, ISP, Ignition, Flameout, etc)
+                                                    //   [2]   : 10(1)0 |        |    -- Include Estimated Burn Time Remaining
+                                                    //   [3]   : 100(1) |        |    -- Include TWR data                                     
 
 
                                                     // Byte 0, Nibble 1  2 - IGNST
@@ -659,6 +665,7 @@
                             engObj:ENGUID[euid]:Add("PREDICTEDMASSFLOW", eng:MaxMassFlow * (1 - engObj:ENGUID[euid]:Residuals)).
                             engObj:ENGUID[euid]:Add("SPOOLTIME", GetField(engRFModule, "effective spool-up time", 0)).
 
+
                         }
                         else
                         {
@@ -693,12 +700,13 @@
 
                         set overburnAddedTime   to 0.
                         set targetBurnTime      to -1.
-                        set ratedBurnTime       to choose g_engConfigs[eng:Config]:BTR if g_engConfigs:Keys:Contains(eng:Config) else -1.
+                        set ratedBurnTime       to choose g_EngineConfigs[eng:Config][0] if g_EngineConfigs:Keys:Contains(eng:Config) else -1.
 
                         if ratedBurnTime > 0 and engData > 0
                         {
-                            set overburnAddedTime to ratedBurnTime + (ratedBurnTime * (g_engConfigs[eng:Config]:OBR * (engData / l_MaxFlightData))).
+                            set overburnAddedTime to ratedBurnTime * (g_EngineConfigs[eng:Config][1] * (engData / l_MaxFlightData)).
                         }
+                        
                         set targetBurnTime to ratedBurnTime + overburnAddedTime.
 
                         engObj:ENGUID[euid]:Add("FLIGHTDATA",       engData).
@@ -757,11 +765,11 @@
 
         set overburnAddedTime   to 0.
         set targetBurnTime      to -1.
-        set ratedBurnTime       to choose g_engConfigs[_eng:Config]:BTR if g_engConfigs:Keys:Contains(_eng:Config) else -1.
+        set ratedBurnTime       to choose g_EngineConfigs[_eng:Config][0] if g_EngineConfigs:Keys:Contains(_eng:Config) else -1.
 
         if ratedBurnTime > 0 and engData > 0
         {
-            set overburnAddedTime to ratedBurnTime + (ratedBurnTime * (g_engConfigs[_eng:Config]:OBR * (engData / l_MaxFlightData))).
+            set overburnAddedTime to ratedBurnTime + (ratedBurnTime * (g_EngineConfigs[_eng:Config][1] * (engData / l_MaxFlightData))).
         }
         set targetBurnTime to ratedBurnTime + overburnAddedTime.
 
@@ -772,6 +780,28 @@
         set _destObj["TOTALRUNTIME"]     to targetBurnTime.
 
         return _destObj.
+    }
+
+    // HydrateEngineConfigs
+    // Reads file at 0:/data/ref/eng.cfg if present
+    // If not present, sets a flag that these calculations must be done via fuel burn estimates. 
+    // Parameter to optionally write any new types present in g_EngineConfgs after g_ShipEngines hydration to file
+    local function HydrateEngineConfigs
+    {
+        parameter _cacheConfigs to false.
+
+        local cfgSet to lex().
+
+        if exists(l_EngCfgPath)
+        {
+            local cachedCfgs to Open(l_EngCfgPath):ReadAll:String:Split(char(10)).
+            for cfg in cachedCfgs
+            {
+                local cfgParts to cfg:Split(",").
+                cfgSet:Add(cfgParts[0], list(cfgParts[1]:ToNumber(-1), cfgParts[2]:ToNumber(0))).
+            }
+        }
+        set g_EngineConfigs to cfgSet.
     }
 
 // #endregion

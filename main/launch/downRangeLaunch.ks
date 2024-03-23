@@ -290,7 +290,7 @@ if multistage
     ArmAutoStaging(g_StageLimit).
 }
 wait 0.01.
-local ascAngDel to GetAscentAngle@:Bind(tgtAlt).
+local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(1.0325).
 local rollDel to { return 0. }.
 
 

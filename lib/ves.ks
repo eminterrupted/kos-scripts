@@ -44,19 +44,49 @@
 // ***~~~ Functions ~~~*** //
 // #region
 
-//  *- Parachutes
+//  *- Part Module Helpers
 // #region
 
-    // // ArmParachutes
-    // global function ArmParachutes
-    // {
-    //     parameter _chuteList to Ship:ModulesNamed("RealChuteModule").
+    // ArmFairingJettison
+    //
+    global function ArmFairingJettison
+    {
+        parameter _fairings is Ship:PartsTaggedPattern("Fairing").
 
-    //     for ch in _chuteList
-    //     {
-    //         DoEvent(ch, "arm parachute").
-    //     }
-    // }
+        local fairingsArmed to false.
+        local chkDel to { return true. }.
+        local actDel to { return false. }.
+
+        if _fairings:Length > 0
+        {
+            local chkAlt to 100000.
+            local tagParts to _fairings[0]:Tag:Split("|").
+            if tagParts:length > 2
+            {
+                set chkAlt to ParseStringScalar(tagParts[2], chkAlt).
+            }
+
+            set chkDel to { return Ship:Altitude >= chkAlt.}.
+            set actDel to { JettisonFairings(_fairings).}.
+            set fairingsArmed to true.
+        }
+
+        return list(fairingsArmed, chkDel, actDel).
+    }
+
+    // JettisonFairings :: 
+    // Accepts a list of either fairing parts or part modules 
+    global function JettisonFairings
+    {
+        parameter _fairings.
+
+        for f in _fairings
+        {
+            if f:IsType("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
+            DoEvent(f, "jettison fairing").
+        }
+    }
+
 
 // #endregion
 
