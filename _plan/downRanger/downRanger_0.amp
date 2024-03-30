@@ -1,2 +1,2 @@
-launch/launchAscent|120;250000;1.025|0
+launch/launchAscentForSuborbital|120;250000;1.025|0
 return/rangeKillBelowAlt||0

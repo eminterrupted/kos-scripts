@@ -66,11 +66,6 @@ global function l_az_calc_init {
 function l_az_calc {
     parameter data. //pointer to the list created by l_az_calc_init
 
-    if g_SpinActive
-    {
-        return compass_for(Ship, Ship:Facing).
-    }
-
     local inertialAzimuth is arcsin(max(min(cos(data[0]) / cos(ship:latitude), 1), -1)).
     local vXRot is data[3] * sin(inertialAzimuth) - data[2] * cos(data[1]).
     local vYRot is data[3] * cos(inertialAzimuth).

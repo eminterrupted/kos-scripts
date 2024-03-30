@@ -10,9 +10,11 @@ RunOncePath("0:/kslib/lib_navball.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
 // Local vars
-local ascAng to 88.25.
+local ascShaper to 1.
+local azObj to list().
 local MECO to -1.
 local meSpoolTime to 0.
+local tgtAlt to Ship:Body:SOIRadius.
 local tgtHdg to 30.
 local launchTS to list().
 
@@ -20,7 +22,8 @@ local launchTS to list().
 if params:Length > 0
 {
     set tgtHdg to ParseStringScalar(params[0], tgtHdg).
-    if params:length > 1 set ascAng to ParseStringScalar(params[1], ascAng).
+    if params:length > 1 set tgtAlt to ParseStringScalar(params[1], tgtAlt).
+    if params:length > 2 set ascShaper to ParseStringScalar(params[2], ascShaper).
 }
 
 
@@ -71,22 +74,17 @@ for engStg in g_ShipEngines:IGNSTG:Keys
     }
 }
 
-SetProgram(8, true).
-InitStateCache().
+SetProgram(8).
 
-CopyPath("state.txt", "0:/test/data/state.txt").
+InitStateCache().
 
 // * Launch Countdown Loop 
 until g_Program >= 20 or g_Abort
 {   
     set g_line to 4.
-    if g_Program < 8
+    if g_Program = 8
     {
-        SetProgram(8).
-    }
-    else if g_Program = 8
-    {
-        print "TgtHdg: {0} | AscAng: {1}":Format(tgtHdg, ascAng).
+        print "TgtHdg: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtHdg, tgtAlt, ascShaper).
         print "Go to space?" at (0, g_line).
         until g_TermChar = Terminal:Input:Enter
         {
@@ -104,6 +102,8 @@ until g_Program >= 20 or g_Abort
     // Setup control
     if g_Program = 9
     {
+
+
         set g_Throt to 0.
         lock Throttle to g_Throt.
 
@@ -278,7 +278,7 @@ until g_Program >= 20 or g_Abort
 
     }
 
-    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
+    print "P{0,-3}:R{1,3}":Format(g_Program, g_Runmode):PadRight(30) at (0, 0).
 }
 
 set g_NextEngines to GetNextEngines(Ship, "1110").
@@ -309,6 +309,10 @@ if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
     set fairingCheck  to fairingResult[1].
     set fairingAction to fairingResult[2].
 }
+
+local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
+local rollDel to { return 0. }.
+
 
 SetProgram(21).
 SetRunmode(0).
@@ -355,7 +359,7 @@ until g_Program >= 36 or g_Abort
     {
         if g_RunMode > 0
         {
-            if Ship:Altitude >= 40000 or (Ship:AvailableThrust <= 0.01 and g_Throt > 0)
+            if Ship:Apoapsis >= tgtAlt or (Ship:AvailableThrust <= 0.01 and g_Throt > 0)
             {
                 SetProgram(24).
             }
@@ -374,7 +378,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(tgtHdg, ascAng, 0).
+        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
     }
 
     else if g_Program = 24
@@ -385,7 +389,6 @@ until g_Program >= 36 or g_Abort
             {
                 clr(g_line).
                 clr(cr()).
-                RCS on.
                 SetProgram(30).
             }
             else
@@ -408,7 +411,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(tgtHdg, ascAng, 0).
+        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
     }
 
     else if g_Program = 30
@@ -438,7 +441,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to heading(tgtHdg, ascAng, 0).
+        set g_Steer  to heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
     }
     UpdateState(True).
 
@@ -448,7 +451,7 @@ until g_Program >= 36 or g_Abort
 
     }
 
-    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
+    print "P{0,-3}:R{1,3}  ":Format(g_Program, g_Runmode):PadRight(20) at (0, 0).
 
     DispLaunchTelemetry().
 
@@ -484,10 +487,7 @@ until g_Program >= 36 or g_Abort
         print "Fairing jettison: Armed" at (0, cr()).
         if fairingCheck:Call()
         {
-            if fairingAction:Call() 
-            {
-                set fairingsArmed to Ship:PartsTaggedPattern("Ascent\|Fairings.*").
-            }
+            fairingAction:Call().
         }
     }
 }

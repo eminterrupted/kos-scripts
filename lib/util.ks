@@ -19,6 +19,8 @@
 
     // *- Global Anonymous Delegates
     // #region
+    global g_NulCheckDel to { return true.}.
+    global g_NulActionDel to { return list(false, { return true.}, { return false.}).}.
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -221,20 +223,19 @@ set g_MissionPlans to ListMissionPlans().
             {
                 local mmSplit to mm:Split("|").
                 plan:M:Add(mmSplit[0]).
-                if mmSplit:length > 1
-                {
-                    plan:P:Add(mmSplit[1]).
-                }
-                else
-                {
-                    plan:P:Add("").
-                }
                 if mmSplit:length > 2
                 {
+                    plan:P:Add(mmSplit[1]).
                     plan:S:Add(mmSplit[2]).
+                }
+                else if mmSplit:Length > 1
+                {
+                    // plan:P:Add("").
+                    plan:S:Add(mmSplit[1]).
                 }
                 else
                 {
+                    // plan:P:Add("").
                     plan:S:Add(g_StageLimit).
                 }
             }
@@ -252,6 +253,8 @@ set g_MissionPlans to ListMissionPlans().
     global function GetMissionPlanID 
     {
         local planPriorityList to list( core:tag, Ship:Name:Replace(" ","_")).
+        local saniName to Ship:Name:Replace(" ","_").
+        if saniName:Length > 1 set saniName to saniName:SubString(0, saniName:FindLast("_")).
         local saniTag to core:tag:split("_")[0].
         local saniPri to choose core:tag:split("_")[1] if core:tag:split("_"):Length > 1 else -1.
         local planId to "".
@@ -260,6 +263,10 @@ set g_MissionPlans to ListMissionPlans().
         if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
         {
             set availablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+        }
+        else if Volume(0):Files:_PLAN:Lex:HasKey(saniName)
+        {
+            set availablePlans to Volume(0):Files:_PLAN:Lex[saniName]:Lex:Keys.
         }
         if saniTag:Length > 0
         {
@@ -590,7 +597,7 @@ set g_MissionPlans to ListMissionPlans().
         parameter _state is g_State.
 
         if g_StateCache:IsType("String") InitStateCache().
-
+        
         g_StateCache:Clear.
         g_StateCache:Write(_state:join(",")).
 
@@ -603,27 +610,40 @@ set g_MissionPlans to ListMissionPlans().
         parameter _resetState to false.
 
         local state to list(
-            //  0    // Context (current running program module)
+            // "planID", // String plan id
+            // ,0    // Context (current running program module)
             // ,0    // Program
             // ,0    // Runmode
             // ,0    // StageStop
         ).
 
+        
         if exists(g_StateCachePath) and not _resetState
         {
-            for stateStr in Open(g_StateCachePath):ReadAll:String:Split(",")
+            set g_StateCache to Open(g_StateCachePath).
+            local stateCache to g_StateCache:ReadAll:String:Split(",").
+            state:Add(stateCache[0]).
+
+            from { local i to 1.} until i = stateCache:Length step { set i to i + 1.} do
             {
-                state:Add(stateStr:ToNumber(0)).
+                 state:Add(stateCache[i]:ToNumber(0)).
             }
         }
         else
         {
-            set state to list(0, 0, 0, 0).
+            set state to list(g_MissionPlanID, 0, 0, 0, 0).
             log state:join(",") to g_StateCachePath.
+            set g_StateCache to Open(g_StateCachePath).
         }
-        set g_StateCache to Open(g_StateCachePath).
-        set g_State to state.
+        
+        set g_State         to state.
 
+        set g_MissionPlanID to g_State[0]. // print g_MissionPlanID.
+        set g_Context       to g_State[1]. // print g_Context.
+        set g_Program       to g_State[2]. // print g_Program.
+        set g_Runmode       to g_State[3]. // print g_RunMode.
+        set g_StageLimit    to g_State[4]. // print g_StageLimit.
+        
         return Exists(g_StateCachePath).
     }
 
@@ -634,7 +654,7 @@ set g_MissionPlans to ListMissionPlans().
         {
             return Open(g_StateCachePath):ReadAll:String:Split(",").
         }
-        return list(-1,-1,-1,0).
+        return list("", -1,-1,-1,0).
     }
 
 
@@ -647,6 +667,17 @@ set g_MissionPlans to ListMissionPlans().
         set g_Context to _context.
         if _update UpdateState().
         return g_Context.
+    }
+
+    // SetContext
+    global function SetMissionPlanId
+    {
+        parameter _planId is "NUL",
+                  _update is false.
+
+        set g_MissionPlanId to _planId.
+        if _update UpdateState().
+        return g_MissionPlanId.
     }
 
 
@@ -675,7 +706,7 @@ set g_MissionPlans to ListMissionPlans().
     }
 
     // SetStageStop
-    global function SetStageStop
+    global function SetStageLimit
     {
         parameter _stgStop is Stage:Number,
                   _update is false.
@@ -692,6 +723,7 @@ set g_MissionPlans to ListMissionPlans().
         parameter _cacheEnable to false.
 
         set g_State to list (
+            g_MissionPlanID,
             g_Context,
             g_Program,
             g_Runmode,

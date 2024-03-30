@@ -56,10 +56,19 @@
     global g_EngRef is lexicon(
         "SEP", list(
             "CREI_RO_IntSep_200"
+            ,"CREI.RO.IntSep.200"
             ,"CREI_RO_IntSep_150"
+            ,"CREI.RO.IntSep.150"
             ,"CREI_RO_IntSep_100"
+            ,"CREI.RO.IntSep.100"
             ,"CREI_RO_IntSep_050"
+            ,"CREI.RO.IntSep.050"
+            ,"CREI_RO_IntSep_50"
+            ,"CREI.RO.IntSep.50"
             ,"CREI_RO_IntSep_033"
+            ,"CREI.RO.IntSep.033"
+            ,"CREI_RO_IntSep_33"
+            ,"CREI.RO.IntSep.33"
             ,"ROSmallSpinMotor"
             ,"sepMotor1"
             ,"sepMotor1Short"
@@ -176,7 +185,7 @@ HydrateEngineConfigs().
         }
         else
         {
-            set btRemaining to Max(0, (btRemaining * _shaper) - 0.5).
+            set btRemaining to Max(0, (btRemaining * _shaper)).
         }
         return btRemaining.
     }
@@ -300,30 +309,32 @@ HydrateEngineConfigs().
         local stageGroup to choose _eng:DecoupledIn if _stgType = "DC" else _eng:Stage.
         // local groupIDStr to choose "DCSTG"          if _stgType = "DC" else "IGNSTG".
         local spoolTime to choose _eng:GetModule("ModuleEnginesRF"):GetField("effective spool-up time") if _eng:GetModule("ModuleEnginesRF"):HasField("effective spool-up time") else 0.
-        
         local isSepMotor to g_EngRef:SEP:Contains(_eng:Name) and _eng:Tag:Length = 0.
-
 
         if _objRef:HasKey(stageGroup)
         {
             _objRef[stageGroup]:ENG:Add(_eng).
             _objRef[stageGroup]:UID:Add(_eng:UID).
+            set _objRef[stageGroup]["FUELSTABILITY"] to Min(_eng:FuelStability, _objRef[stageGroup]:FUELSTABILITY).
             set _objRef[stageGroup]["SEPSTG"]    to choose isSepMotor if _objRef[stageGroup]:SEPSTG else false.
             set _objRef[stageGroup]["STG"]       to choose _eng:Stage if _stgType = "IGN" else _eng:DECOUPLEDIN.
             set _objRef[stageGroup]["STGBURNTIME"]  to Max(_objRef[stageGroup]:STGBURNTIME, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME).
             set _objRef[stageGroup]["STGMAXSPOOL"]  to Max(_objRef[stageGroup]:STGMAXSPOOL, spoolTime).
             set _objRef[stageGroup]["STGMAXTHRUST"] to _objRef[stageGroup]:STGMAXTHRUST + _eng:MaxPossibleThrust.
+            set _objRef[stageGroup]["ULLAGE"]    to choose true if _objRef[stageGroup]:ULLAGE else _eng:Ullage.
         }
         else
         {
             _objRef:Add(stageGroup, lex(
                     "ENG", list(_eng)
                     ,"UID", list(_eng:UID)
+                    ,"FUELSTABILITY",   _eng:FuelStability
                     ,"SEPSTG",          isSepMotor
                     ,"STG",             _eng:Stage
                     ,"STGBURNTIME",     Max(0, _engObj:ENGUID[_eng:UID]:TARGETBURNTIME)
                     ,"STGMAXSPOOL",     spoolTime
                     ,"STGMAXTHRUST",    _eng:MaxPossibleThrust
+                    ,"ULLAGE",          _eng:Ullage
                 )
             ).
         }
@@ -452,6 +463,7 @@ HydrateEngineConfigs().
             set perfObj to lex(
                 "ENGS", list()
                 ,"FUELFLOW", 0
+                ,"FUELSTABILITY", 0
                 ,"ISP", GetEnginesISP(_engList)
                 ,"MASSFLOW", 0
                 ,"THRUST", 0
@@ -483,6 +495,7 @@ HydrateEngineConfigs().
         {
             perfObj:ENGS:Add(eng).
             if perfObj:HasKey("FUELFLOW") set perfObj:FUELFLOW to perfObj:FUELFLOW + eng:FuelFlow.
+            if perfObj:HasKey("FUELSTABILITY") set perfObj:FUELSTABILITY to Min(eng:FuelStability, perfObj:FUELSTABILITY).
             if perfObj:HasKey("MASSFLOW") set perfObj:MASSFLOW to perfObj:MASSFLOW + eng:MassFlow.
             if perfObj:HasKey("THRUST")   set perfObj:THRUST   to perfObj:THRUST+ eng:Thrust.
             if perfObj:HasKey("ULLAGE")   set perfObj:ULLAGE   to choose 0 if not eng:Ullage else perfObj:ULLAGE.

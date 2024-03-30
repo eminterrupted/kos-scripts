@@ -7,19 +7,20 @@ RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 RunOncePath("0:/lib/log.ks").
 RunOncePath("0:/kslib/lib_navball.ks").
+RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
 // Local vars
 local ascShaper to 1.
 local MECO to -1.
 local meSpoolTime to 0.
 local tgtAlt to Ship:Body:SOIRadius.
-local tgtHdg to 30.
+local tgtInc to 30.
 local launchTS to list().
 
 // Param parsing
 if params:Length > 0
 {
-    set tgtHdg to ParseStringScalar(params[0], tgtHdg).
+    set tgtInc to ParseStringScalar(params[0], tgtInc).
     if params:length > 1 set tgtAlt to ParseStringScalar(params[1], tgtAlt).
     if params:length > 2 set ascShaper to ParseStringScalar(params[2], ascShaper).
 }
@@ -72,17 +73,22 @@ for engStg in g_ShipEngines:IGNSTG:Keys
     }
 }
 
-SetProgram(8).
-
+SetProgram(8, true).
 InitStateCache().
+
+CopyPath("state.txt", "0:/test/data/state.txt").
 
 // * Launch Countdown Loop 
 until g_Program >= 20 or g_Abort
 {   
     set g_line to 4.
-    if g_Program = 8
+    if g_Program < 8
     {
-        print "TgtHdg: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtHdg, tgtAlt, ascShaper).
+        SetProgram(8).
+    }
+    else if g_Program = 8
+    {
+        print "TgtInc: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtInc, tgtAlt, ascShaper).
         print "Go to space?" at (0, g_line).
         until g_TermChar = Terminal:Input:Enter
         {
@@ -97,9 +103,11 @@ until g_Program >= 20 or g_Abort
         SetProgram(9).
     }
 
-    // Initialize and increment Program
+    // Setup control
     if g_Program = 9
     {
+        set g_AzData to l_az_calc_init(tgtAlt, tgtInc).
+
         set g_Throt to 0.
         lock Throttle to g_Throt.
 
@@ -274,7 +282,7 @@ until g_Program >= 20 or g_Abort
 
     }
 
-    print "P{0,-3}:R{1,3}":Format(g_Program, g_Runmode):PadRight(30) at (0, 0).
+    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
 }
 
 set g_NextEngines to GetNextEngines(Ship, "1110").
@@ -291,6 +299,18 @@ if multistage
         ArmSpinStabilization(g_StageLimit).
     }
     ArmAutoStaging(g_StageLimit).
+}
+
+local boosterArmed to false.
+local boosterCheckDel  to { return true.}.
+local boosterActionDel to { return false.}.
+local boosterResult to list(false, boosterCheckDel, boosterActionDel).
+if Ship:PartsTaggedPattern("Booster\|"):Length > 0
+{
+    set boosterResult to ArmBoosterStaging("Ascent").
+    set boosterArmed to boosterResult[0].
+    set boosterCheckDel  to boosterResult[1].
+    set boosterActionDel to boosterResult[2].
 }
 
 // Arm fairings
@@ -374,7 +394,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
     }
 
     else if g_Program = 24
@@ -385,6 +405,7 @@ until g_Program >= 36 or g_Abort
             {
                 clr(g_line).
                 clr(cr()).
+                RCS on.
                 SetProgram(30).
             }
             else
@@ -407,7 +428,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0):Vector if g_Spin_Active else heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
     }
 
     else if g_Program = 30
@@ -437,7 +458,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer  to heading(tgtHdg, Min(90, Max(0, ascAngDel:Call())), 0).
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), 0).
     }
     UpdateState(True).
 
@@ -447,43 +468,88 @@ until g_Program >= 36 or g_Abort
 
     }
 
-    print "P{0,-3}:R{1,3}  ":Format(g_Program, g_Runmode):PadRight(20) at (0, 0).
+    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
 
     DispLaunchTelemetry().
 
     cr().
     if g_HS_Armed 
     {
-        print "HotStaging: Armed" at (0, cr()).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
         local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
             g_HS_Act:Call().
+            clr(cr()).
+        }
+        else
+        {
+            print "HotStaging: Armed" at (0, cr()).
         }
     }
     if g_AS_Armed 
     {
-        print "Autostaging: Armed" at (0, cr()).
         if g_AS_Check:Call()
         {
             g_AS_Act:Call().
+            clr(cr()).
+        }
+        else
+        {
+            print "Autostaging: Armed" at (0, cr()).
+        }
+    }
+    if boosterArmed
+    {
+        if boosterCheckDel:Call()
+        {
+            set boosterResult to boosterActionDel:Call().
+            print boosterResult at (0, 45).
+            set boosterArmed to boosterResult[0].
+            if boosterArmed
+            {
+                set boosterCheckDel  to boosterResult[1].
+                set boosterActionDel to boosterResult[2].
+            }
+            else
+            {
+                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                clr(cr()).
+            }
+        }
+        else
+        {
+            print "Booster staging: Armed" at (0, cr()).
         }
     }
     if g_Spin_Armed
     {
-        print "SpinStabilization: Armed" at (0, cr()).
         if g_Spin_Check:Call()
         {
             g_Spin_Act:Call().
+            clr(cr()).
+        }
+        else
+        {
+            print "SpinStabilization: Armed" at (0, cr()).
         }
     }
     if fairingsArmed
     {
-        print "Fairing jettison: Armed" at (0, cr()).
         if fairingCheck:Call()
         {
-            fairingAction:Call().
+            if fairingAction:Call() 
+            {
+                set fairingsArmed to Ship:PartsTaggedPattern("Ascent\|Fairings.*").
+            }
+            else 
+            { 
+                clr(cr()).
+            }
+        }
+        else
+        {
+            print "Fairing jettison: Armed" at (0, cr()).
         }
     }
 }

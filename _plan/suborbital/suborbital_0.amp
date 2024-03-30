@@ -1,2 +1,2 @@
-launch/downRangeLaunch|90;125000|3
+launch/launchAscentForSuborbital|90;125000|3
 return/subOrbitalEntry|150000|1

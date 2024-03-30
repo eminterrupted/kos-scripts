@@ -24,7 +24,9 @@ set Config:IPU to 512.
     global g_MissionPlan is lexicon(
         "M", list()
         ,"P",  list()
+        ,"S", list()
     ).
+    global g_MissionPlanID is "NUL".
     global g_MissionPlans is list().
 
     // Program Flow / Standard Output
@@ -38,7 +40,7 @@ set Config:IPU to 512.
     global g_Runmode    is 0.
     global g_StageLimit  to Stage:Number.
 
-    global g_State      is list( 0, 0, 0, g_StageLimit).
+    global g_State      is list("NUL", 0, 0, 0, g_StageLimit).
     global g_StateCachePath is "1:/state.txt".
 
     // Terminal stuff

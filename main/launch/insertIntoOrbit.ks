@@ -5,18 +5,29 @@ parameter params is list().
 
 // Dependencies
 RunOncePath("0:/lib/depLoader").
+RunOncePath("0:/lib/launch").
+RunOncePath("0:/kslib/lib_l_az_calc").
 
 // Declare Variables
+local tgtPe to Ship:Apoapsis.
 local tgtHdg to compass_for(ship, Ship:Prograde).
+local totBurnTime to 0.
 local waitTime to 0.
 
 // Parse Params
 if params:length > 0 
 {
-    set tgtHdg to ParseStringScalar(params[0], tgtHdg).
-    if params:Length > 1 set waitTime to ParseStringScalar(params[1], waitTime).
+    // set tgtHdg to ParseStringScalar(params[0], tgtHdg).
+    // if params:Length > 1 set waitTime to ParseStringScalar(params[1], waitTime).
+    set tgtPe to ParseStringScalar(params[0], tgtPe).
 }
 
+local steerDel to {  if g_Spin_Active { return heading(tgtHdg, 0, 0):Vector.} else { return heading(tgtHdg, 0, 0).}}.
+
+if g_AzData:Length > 0
+{
+    set steerDel to {  if g_Spin_Active { return heading(l_az_calc(g_AzData), 0, 0). } else { return heading(l_az_calc(g_AzData), 0, 0).}}.
+}
 set g_Steer to Ship:Facing.
 lock steering to g_Steer.
 set g_Throt to 0.
@@ -24,24 +35,34 @@ set g_Throt to 0.
 set g_ShipEngines to GetShipEnginesSpecs(Ship).
 set g_NextEngines to GetNextEngines(Ship, "1000").
 
-local nextStage to Stage:Number.
-
-if g_NextEngines:Length > 0
+from { local i to Stage:Number - 1.} until i < g_StageLimit step { set i to i - 1.} do 
 {
-    set nextStage to g_NextEngines[0]:Stage.
-    if waitTime = 0 
+    // if g_NextEngines:Length > 0
+    local stgEngsBT to 0.
+    if g_ShipEngines:IGNSTG:HasKey(i)
     {
-        if g_ShipEngines:IGNSTG:HasKey(nextStage)
-        {
-            set waitTime to g_ShipEngines:IGNSTG[nextStage]:STGBURNTIME / 2.
-            print "NEXTENGS[0]: {0}":Format(g_NextEngines:Length) at (2, 28).
-            print "STGBURNTIME: {0}":Format(g_ShipEngines:IGNSTG[nextStage]:STGBURNTIME) at (2, 29).
-            print "Wait time updated: {0}":Format(waitTime) at (2, 30).
-        }
+        // if waitTime = 0 
+        // {
+            if g_ShipEngines:IGNSTG:HasKey(i)
+            {
+                set stgEngsBT to g_ShipEngines:IGNSTG[i]:STGBURNTIME.
+                set waitTime to waitTime + (stgEngsBT / 2).
+                print "STGENGS[{0}]: {1}":Format(i, g_NextEngines:Length) at (2, 28).
+                print "STGBURNTIME: {0}":Format(stgEngsBT) at (2, 29).
+            }
+        // }
     }
+    
+    print "TOTBURNTIME: {0} ":Format(totBurnTime + stgEngsBT) at (2, 30).
 }
 
+// Adjust wait time slightly
+set waitTime to waitTime * 1.625.
+print "WAITTIME   : {0} ":Format(waitTime) at (2, 31).
+
 local line to 5.
+
+RCS on.
 
 until g_Program > 199 or g_Abort
 {
@@ -59,10 +80,24 @@ until g_Program > 199 or g_Abort
                 clr(cr()).
                 SetProgram(110).
             }
-            else
+            else if g_Runmode = 1
             {
-                print "BURN ETA: T{0}   ":Format(Round(waitTime - ETA:Apoapsis, 2)) at (0, cr()).
+                if ETA:Apoapsis <= (waitTime + 10)
+                {
+                    if g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage]:ULLAGE
+                    {
+                        SetRunmode(3).
+                        RCS On.
+                        set Ship:Control:Fore to 1.
+                    }
+                    else
+                    {
+                        SetRunmode(2).
+                    }
+                }
             }
+            
+            print "BURN ETA: T{0}   ":Format(Round(waitTime - ETA:Apoapsis, 2)) at (0, cr()).
         }
         else if g_Runmode < 0
         {
@@ -81,11 +116,16 @@ until g_Program > 199 or g_Abort
     }
     else if g_Program = 110
     {
-        if g_RunMode > 0
+        if g_RunMode = 1
         {
             ArmAutoStaging(g_StageLimit).
             set g_Throt to 1.
             lock throttle to g_Throt.
+            SetRunmode(2).
+        }
+        else if g_RunMode = 2
+        {
+            set Ship:Control:Fore to 0.
             SetProgram(120).
         }
         else if g_Runmode < 0
@@ -107,9 +147,16 @@ until g_Program > 199 or g_Abort
         if g_RunMode = 1
         {
             set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines).
-            if Stage:Number <= g_StageLimit and Ship:AvailableThrust <= 0.01
+            if Ship:Periapsis >= tgtPe
             {
                 set g_Throt to 0.
+                print "PE REACHED / ENGINE CUTOUT":PadRight(g_termW - 26) at (0, cr()).
+                SetProgram(130).
+            }
+            else if Stage:Number <= g_StageLimit and Ship:AvailableThrust <= 0.01
+            {
+                set g_Throt to 0.
+                print "ENGINE CUTOUT":PadRight(g_termW - 13) at (0, cr()).
                 SetProgram(130).
             }
             else
@@ -139,11 +186,11 @@ until g_Program > 199 or g_Abort
             if g_ActiveEngines_PerfData:Thrust <= 0.001
             {
                 unlock steering.
+                clr(cr()).
                 SetProgram(200).
             }
             else
             {
-                clr(cr()).
             }
             
         }
@@ -162,8 +209,7 @@ until g_Program > 199 or g_Abort
         }
     }
     
-
-    set g_Steer to choose heading(tgtHdg, 0, 0):Vector if g_Spin_Active else heading(tgtHdg, 0, 0).
+    set g_Steer to steerDel:Call().
     UpdateState().
 
 
@@ -193,6 +239,8 @@ until g_Program > 199 or g_Abort
             g_Spin_Act:Call().
         }
     }
+
+    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
 }
 
 ClearScreen.

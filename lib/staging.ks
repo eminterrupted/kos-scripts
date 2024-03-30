@@ -10,12 +10,17 @@
 // #region
     // *- Local
     // #region
+    local l_boosterMaxIdx to 0.
     local l_HotStage_Init to lex("ARMED", false, "ENGS", list(),"SPOOL", 0, "STG", -1).
     // #endregion
 
     // *- Global
     // #region
     global g_AS_Armed   to false.
+    global g_AS_Running to false.
+
+    global g_BSTR_Armed to false.
+
     global g_HotStage   to l_HotStage_Init.
     global g_HS_Active  to false.
     global g_HS_Armed   to false.
@@ -34,6 +39,9 @@
 
     global g_HS_Act   to { return false.}.
     global g_HS_Check to { return false.}.
+
+    global g_BSTR_Act to { return false.}.
+    global g_BSTR_Check to { return false.}.
     // #endregion
 // #endregion
 
@@ -73,30 +81,59 @@
                 return false.
             }.
             set g_AS_Act   to { 
-                for m in Ship:ModulesNamed("ModuleRCSFX")
+                if g_AS_Running
                 {
-                    if m:Part:DecoupledIn >= Stage:Number - 1
+                    if SafeStageWithUllage()
                     {
-                        m:SetField("RCS", False).
+                        if Stage:Number <= g_StageLimit 
+                        { 
+                            set g_AS_Armed to false.
+                        }
+                        else
+                        {
+                            set g_NextEngines to GetNextEngines("1000").
+                            if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
+                        }
+                        set g_AS_Running to false.
+                        // else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
+                        // {
+                        //     if g_ShipEngines:IGNSTG[Stage:Number]:SEPSTG
+                        //     {
+                        //         wait 0.5. // Wait for the sep motors to do their thing
+                        //         stage.
+                        //     }
+                        // }
+
                     }
+                }
+                else
+                {
+                    for m in Ship:ModulesNamed("ModuleRCSFX")
+                    {
+                        if m:Part:DecoupledIn >= Stage:Number - 1
+                        {
+                            m:SetField("RCS", False).
+                        }
+                    }
+                    set g_AS_Running to true.
                 }
                 
-                wait until Stage:Ready.
-                stage.
-                wait 0.01. // Waiting for the engine state to update
+                // wait until Stage:Ready.
+                // stage.
+                // wait 0.01. // Waiting for the engine state to update
 
-                if Stage:Number <= g_StageLimit { set g_AS_Armed to false.}
-                else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
-                {
-                    if g_ShipEngines:IGNSTG[Stage:Number]:SEPSTG
-                    {
-                        wait 0.5. // Wait for the sep motors to do their thing
-                        stage.
-                    }
-                }
+                // if Stage:Number <= g_StageLimit { set g_AS_Armed to false.}
+                // else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
+                // {
+                //     if g_ShipEngines:IGNSTG[Stage:Number]:SEPSTG
+                //     {
+                //         wait 0.5. // Wait for the sep motors to do their thing
+                //         stage.
+                //     }
+                // }
 
-                set g_NextEngines to GetNextEngines("1000").
-                if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
+                // set g_NextEngines to GetNextEngines("1000").
+                // if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
             }.
             
             set g_AS_Armed to true.
@@ -114,7 +151,131 @@
     }
     // #endregion
 
-    
+
+// *- Booster Staging
+    // #region
+
+    // ArmBoosterStaging
+    //
+    global function ArmBoosterStaging
+    {
+        parameter _boosterTag.
+
+        local boosterObj to lex().
+        local minIdx to 9.
+        local regStr to _boosterTag + "\|Booster\|\d".
+        for dc in Ship:PartsTaggedPattern(regStr)
+        {
+            if dc:Stage >= g_StageLimit
+            {
+                local tagSpl to dc:Tag:Split("|").
+                local boosterIdx to tagSpl[tagSpl:Length - 1]:ToNumber().
+                set l_boosterMaxIdx to Max(l_boosterMaxIdx, boosterIdx).
+                set minIdx to Min(minIdx, boosterIdx).
+
+                if boosterObj:HasKey(boosterIdx)
+                {
+                    boosterObj[boosterIdx]:DC:Add(dc).
+                }
+                else
+                {
+                    boosterObj:Add(boosterIdx, lex("DC", list(dc), "ENG", list())).
+                }
+
+                for eng in dc:PartsTagged("")
+                {
+                    if eng:IsType("Engine") and not g_EngRef:SEP:Contains(eng:Name)
+                    {
+                        boosterObj[boosterIdx]:ENG:Add(eng).
+                    }
+                }
+            }
+        }
+
+        if boosterObj:Keys:Length > 0 
+        {
+            return list(true, CheckBoosterStagingConditions@:Bind(boosterObj):Bind(minIdx), StageBoosters@:Bind(boosterObj):Bind(minIdx)).
+        }
+        else
+        {
+            return list(false, g_NulCheckDel@, g_NulActionDel@).
+        }
+    }
+
+
+    // CheckBoosterStagingConditions
+    //
+    local function CheckBoosterStagingConditions
+    {
+        parameter _boostObj,
+                  _boostIdx is 0.
+
+        // local btRem to GetActiveBurnTimeRemaining(_boostObj[_boostIdx]:ENG).
+        // print "BSTR SEP: {0} ":Format(Round(btRem, 2)) at (0, cr()).
+        local i to 0.
+        local result to false.
+        for eng in _boostObj[_boostIdx]:ENG 
+        {
+            set result to choose true if result else eng:Flameout.
+            if eng:HasModule("ModuleEnginesRF")// and not g_EngRef:SEP:Contains(eng:Name)
+            {
+                local m to eng:GetModule("ModuleEnginesRF").
+                local engStatus to GetField(m, "status").
+                // print "Booster[{0}|{1}|{2}] Status: [{3}] Thrust: [{4}]":Format(_boostIdx, i, eng:Name, engStatus) at (0, cr()).
+                local thrPct to choose eng:Thrust / eng:AvailableThrustAt(Body:Atm:AltitudePressure(Ship:Altitude)) * 100 if eng:Thrust > 0 else 0.
+                local str to "Booster[{0}|{1}|{2}] Status: [{3}] Thrust: [{4}|{5}]":Format(_boostIdx, i, eng:Name, engStatus, Round(eng:Thrust, 2), Round(thrPct, 2)).
+                print str:PadRight(Max(0, g_termW - str:length)) at (0, cr()).
+            }
+        }
+        return result.
+    }
+
+    // StageBoosters
+    //
+    local function StageBoosters
+    {
+        parameter _boostObj,
+                  _boostIdx is 0.
+
+        for eng in _boostObj[_boostIdx]:ENG
+        { 
+            eng:Shutdown.
+        } 
+        for dc in _boostObj[_boostIdx]:DC { 
+            for p in dc:PartsNamedPattern("sep|spin")
+            {
+                if p:IsType("Engine") p:Activate.
+            }
+            DoEvent(dc:GetModule("ModuleAnchoredDecoupler"), "Decouple").
+        }
+        _boostObj:Remove(_boostIdx).
+        
+        local bstCheckDel  to g_NulCheckDel.
+        local bstActionDel to g_NulActionDel.
+
+        ClearScreen.
+        if _boostObj:Keys:Length > 0
+        {
+            from { local i to _boostIdx + 1. local doneFlag to false.} until doneFlag or i > l_boosterMaxIdx step { set i to i + 1.} do
+            {
+                if _boostObj:HasKey(i)
+                {
+                    // print "BoostObj Hit on {0} ":Format(i) at (15, 40 + i).
+                    set bstCheckDel to CheckBoosterStagingConditions@:Bind(_boostObj):Bind(i).
+                    set bstActionDel to StageBoosters@:Bind(_boostObj):Bind(i).
+                    set doneFlag to true.
+                }
+                // else
+                // {
+                //     print "BoostObj Miss on {0} ":Format(i) at (15, 40 + i).
+                // }
+            }
+        }
+
+        return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
+}
+
+    // #endregion
 
 
 //  *- Hotstaging
@@ -259,12 +420,42 @@
 //  *- Staging actions and conditions
     // #region
 
+    // CheckUllage
+    //
+    local function CheckUllage
+    {
+        local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
+        if engObj:ULLAGE
+        {
+            return engObj:FuelStability >= 0.975.
+        }
+        else
+        {
+            return true.
+        }
+    }
+
     // SafeStage
     local function SafeStage
     {
         wait until Stage:Ready.
         stage.
         wait 0.01.
+    }
+
+    // SafeStageWithUllage
+    local function SafeStageWithUllage
+    {
+        if Stage:Ready
+        {
+            if CheckUllage()
+            {
+                stage.
+                wait 0.25.
+                return true.
+            }
+        }
+        return false.
     }
     // #endregion
 

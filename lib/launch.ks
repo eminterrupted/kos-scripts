@@ -25,6 +25,7 @@
 
     // *- Global
     // #region
+    global g_AzData to list().
     global g_DRTurnStartAlt to 125.
     // #endregion
 // #endregion
@@ -125,10 +126,10 @@
         local effPitAng     to Max(curProPit - adjPitLim, Min(tgtPitAngNrm, curProPit + adjPitLim)).
         // local effPitAng     to Max(curProPit - l_PitLim, Min(tgtAltPitAng, curProPit + l_PitLim)) * _shaper.
 
-        if effPitAng < 0 
-        {
-            set effPitAng to effPitAng / 0.975.
-        }
+        // if effPitAng < 0 
+        // {
+        //     set effPitAng to effPitAng.
+        // }
         
         local lastLine to g_Line.
         

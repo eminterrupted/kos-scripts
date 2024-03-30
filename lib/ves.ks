@@ -67,7 +67,7 @@
             }
 
             set chkDel to { return Ship:Altitude >= chkAlt.}.
-            set actDel to { JettisonFairings(_fairings).}.
+            set actDel to { JettisonFairings(_fairings). return false.}.
             set fairingsArmed to true.
         }
 
