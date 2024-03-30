@@ -55,18 +55,34 @@
 
     global g_EngRef is lexicon(
         "SEP", list(
-            "CREI_RO_IntSep_200"
+            "B9_Engine_T2_SRBS"
+            ,"B9.Engine.T2.SRBS"
+            ,"B9_Engine_T2_SRBS_CREI_25"
+            ,"B9.Engine.T2.SRBS.CREI.25"
+            ,"B9_Engine_T2_SRBS_CREI_50"
+            ,"B9.Engine.T2.SRBS.CREI.50"
+            ,"B9_Engine_T2_SRBS_CREI_100"
+            ,"B9.Engine.T2.SRBS.CREI.100"
+            ,"B9_Engine_T2_SRBS_CREI_150"
+            ,"B9.Engine.T2.SRBS.CREI.150"
+            ,"B9_Engine_T2A_SRBS"
+            ,"B9.Engine.T2A.SRBS"
+            ,"B9_Engine_T2A_SRBS_CREI_25"
+            ,"B9.Engine.T2A.SRBS.CREI.25"
+            ,"B9_Engine_T2A_SRBS_CREI_50"
+            ,"B9.Engine.T2A.SRBS.CREI.50"
+            ,"B9_Engine_T2A_SRBS_CREI_100"
+            ,"B9.Engine.T2A.SRBS.CREI.100"
+            ,"B9_Engine_T2A_SRBS_CREI_150"
+            ,"B9.Engine.T2A.SRBS.CREI.150"
+            ,"CREI_RO_IntSep_200"
             ,"CREI.RO.IntSep.200"
             ,"CREI_RO_IntSep_150"
             ,"CREI.RO.IntSep.150"
             ,"CREI_RO_IntSep_100"
             ,"CREI.RO.IntSep.100"
-            ,"CREI_RO_IntSep_050"
-            ,"CREI.RO.IntSep.050"
             ,"CREI_RO_IntSep_50"
             ,"CREI.RO.IntSep.50"
-            ,"CREI_RO_IntSep_033"
-            ,"CREI.RO.IntSep.033"
             ,"CREI_RO_IntSep_33"
             ,"CREI.RO.IntSep.33"
             ,"ROSmallSpinMotor"
@@ -125,7 +141,7 @@ HydrateEngineConfigs().
                 
                 for eng in g_ShipEngines:IGNSTG[iStg]:ENG
                 {
-                    local isBooster to choose false if eng:Decoupler = "None" else eng:Decoupler:Tag:MatchesPattern("Booster").
+                    local isBooster to choose eng:Decoupler:Tag:MatchesPattern("Booster") if eng:Decoupler:IsType("Decoupler") else false.
                     local isSep     to g_EngRef:SEP:Contains(eng:name) and eng:Tag:Length = 0.
 
                     if _dataMask[0]:ToNumber(0) and (not isBooster and not isSep)

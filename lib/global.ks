@@ -1,8 +1,5 @@
 @LazyGlobal off.
 
-// *~ Config ~* //
-set Config:IPU to 512.
-
 // *~ Variables ~* //
 // #region
     // *- Global

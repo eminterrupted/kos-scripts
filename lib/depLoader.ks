@@ -1,3 +1,4 @@
+RunOncePath("0:/lib/cfg.ks").
 RunOncePath("0:/lib/global.ks").
 RunOncePath("0:/kslib/lib_navball.ks").
 RunOncePath("0:/lib/disp.ks").

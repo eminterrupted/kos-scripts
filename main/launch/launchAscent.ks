@@ -504,7 +504,6 @@ until g_Program >= 36 or g_Abort
         if boosterCheckDel:Call()
         {
             set boosterResult to boosterActionDel:Call().
-            print boosterResult at (0, 45).
             set boosterArmed to boosterResult[0].
             if boosterArmed
             {

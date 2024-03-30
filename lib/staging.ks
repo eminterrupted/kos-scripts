@@ -210,22 +210,10 @@
         parameter _boostObj,
                   _boostIdx is 0.
 
-        // local btRem to GetActiveBurnTimeRemaining(_boostObj[_boostIdx]:ENG).
-        // print "BSTR SEP: {0} ":Format(Round(btRem, 2)) at (0, cr()).
-        local i to 0.
         local result to false.
         for eng in _boostObj[_boostIdx]:ENG 
         {
             set result to choose true if result else eng:Flameout.
-            if eng:HasModule("ModuleEnginesRF")// and not g_EngRef:SEP:Contains(eng:Name)
-            {
-                local m to eng:GetModule("ModuleEnginesRF").
-                local engStatus to GetField(m, "status").
-                // print "Booster[{0}|{1}|{2}] Status: [{3}] Thrust: [{4}]":Format(_boostIdx, i, eng:Name, engStatus) at (0, cr()).
-                local thrPct to choose eng:Thrust / eng:AvailableThrustAt(Body:Atm:AltitudePressure(Ship:Altitude)) * 100 if eng:Thrust > 0 else 0.
-                local str to "Booster[{0}|{1}|{2}] Status: [{3}] Thrust: [{4}|{5}]":Format(_boostIdx, i, eng:Name, engStatus, Round(eng:Thrust, 2), Round(thrPct, 2)).
-                print str:PadRight(Max(0, g_termW - str:length)) at (0, cr()).
-            }
         }
         return result.
     }
@@ -260,15 +248,10 @@
             {
                 if _boostObj:HasKey(i)
                 {
-                    // print "BoostObj Hit on {0} ":Format(i) at (15, 40 + i).
                     set bstCheckDel to CheckBoosterStagingConditions@:Bind(_boostObj):Bind(i).
                     set bstActionDel to StageBoosters@:Bind(_boostObj):Bind(i).
                     set doneFlag to true.
                 }
-                // else
-                // {
-                //     print "BoostObj Miss on {0} ":Format(i) at (15, 40 + i).
-                // }
             }
         }
 
