@@ -112,4 +112,32 @@
     }
     // #endregion
 
+    // *- Display Modules
+    // #region
+
+    // DispPlans
+    global function DispPlans
+    {
+        parameter _pageIdx is 0
+                 ,_line is g_Line
+                 ,_planList is g_AvailablePlans.
+
+        set g_Line to _line.
+
+        OutStr("[PAGE:{0}/{1}]":Format(_pageIdx, Ceiling(g_AvailablePlans:Length / 10)), g_line).
+        OutStr("--------------", cr()).
+        local startIdx to 10 * _pageIdx.
+        local stopIdx to choose (startIdx + 10) if (g_AvailablePlans:Length - startIdx) >= 10 else g_AvailablePlans:Length - startIdx - 1.
+        from { local i to startIdx. } until i = stopIdx step { set i to i + 1. } do
+        {
+            print "Printing: [{0}|{1}|{2}|{3}|{4}]":Format(_pageIdx, startIdx, stopIdx, i, Ceiling(g_AvailablePlans:Length / 10)) at (2, Terminal:Height - 5).
+            OutStr("|- {0}: {1}  ":Format(i + 1, _planList[i]), cr()).
+        }
+        cr().
+        OutStr("PRESS NUMBER FOR SELECTION ", cr()).
+        OutStr("PRESS - / + TO PAGE", cr()).
+    }
+
+    // #endregion
+
 // #endregion

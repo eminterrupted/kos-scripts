@@ -273,8 +273,7 @@
             engResUsed:FLOW:Add(eng:MaxMassFlow).
             set stgFlowMass to stgFlowMass + eng:MaxMassFlow.
 
-            local m to eng:GetModule("ModuleEnginesRF").
-            local engResidual to m:GetField("predicted residuals").
+            local engResidual to choose eng:GetModule("ModuleEnginesRF"):GetField("predicted residuals") if eng:HasModule("ModuleEnginesRF") else 0.
             engResUsed:RSDL:Add(engResidual).
 
             for k in eng:ConsumedResources:Keys 

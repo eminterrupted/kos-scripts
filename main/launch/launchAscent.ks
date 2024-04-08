@@ -298,7 +298,8 @@ if multistage
 {
     if Ship:PartsTaggedPattern("HS|HotStage"):Length > 0 
     {
-        ArmHotStaging(g_StageLimit, MECO).
+        // ArmHotStaging(g_StageLimit, MECO).
+        ArmHotStaging(g_StageLimit).
     }
     if Ship:PartsTaggedPattern("SpinDC"):Length > 0
     {

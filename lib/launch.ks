@@ -14,7 +14,7 @@
     local l_Countdown_Base to 5.
     local l_PitLim to 30.
 
-    local l_PitchProgram_StartAlt   to 125.
+    local l_PitchProgram_StartAlt   to 50.
     local l_PitchProgram_EndAlt     to 70000.
     local l_PitchTransitionWindow   to l_PitchProgram_EndAlt - l_PitchProgram_StartAlt.
     

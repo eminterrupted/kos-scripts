@@ -250,7 +250,7 @@
                 local engSpec to g_ShipEngines:ENGUID[eng:UID].
                 if not g_ActiveSpecs:ALLOWRESTART set g_ActiveSpecs:ALLOWRESTART to eng:ALLOWRESTART.
                 set g_ActiveSpecs:IGNITIONS to max(g_ActiveSpecs:IGNITIONS, eng:IGNITIONS).
-                set g_ActiveSpecs:RATEDBURNTIME to max(g_ActiveSpecs:RATEDBURNTIME, g_EngineConfigs[eng:Config][0]).
+                set g_ActiveSpecs:RATEDBURNTIME to choose max(g_ActiveSpecs:RATEDBURNTIME, g_EngineConfigs[eng:Config][0]) if g_EngineConfigs:HasKey(eng:Config) else -1.
                 set g_ActiveSpecs:SPOOLTIME to max(g_ActiveSpecs:SPOOLTIME, g_ShipEngines:ENGUID[eng:UID]:SPOOLTIME).
                 g_ActiveSpecs:Add(eng:UID, engSpec).
             }

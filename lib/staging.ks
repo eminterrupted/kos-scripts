@@ -303,8 +303,8 @@
         {
             if g_ShipEngines:IGNSTG:HasKey(g_HotStage:STG)
             {
-                set burnTime  to g_ShipEngines:IGNSTG:STGBURNTIME.
-                set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGSPOOLTIME.
+                if g_ShipEngines:IGNSTG:HasKey("STGBURNTIME") set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
+                if g_ShipEngines:IGNSTG:HasKey("STGSPOOLTIME") set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGSPOOLTIME.
                 set _checkVal to spoolTime * 1.5.
             }
             else

@@ -10,6 +10,7 @@
 // #region
     // *- Global Variables
     // #region
+    global g_AvailablePlans to list().
     global g_StateCache to "".
     // #endregion
 
@@ -264,14 +265,14 @@ set g_MissionPlans to ListMissionPlans().
         local saniPri to choose core:tag:split("_")[1] if core:tag:split("_"):Length > 1 else -1.
         local planId to "".
 
-        local availablePlans to list().
+        set g_AvailablePlans to list().
         if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
         {
-            set availablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+            set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
         }
         else if Volume(0):Files:_PLAN:Lex:HasKey(saniName)
         {
-            set availablePlans to Volume(0):Files:_PLAN:Lex[saniName]:Lex:Keys.
+            set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniName]:Lex:Keys.
         }
         if saniTag:Length > 0
         {
@@ -283,9 +284,9 @@ set g_MissionPlans to ListMissionPlans().
         //     OutStr("Rollin' with the homies, like {0}":Format(planID), cr()).
         // }
         // else 
-        if availablePlans:Length = 1
+        if g_AvailablePlans:Length = 1
         {
-            set planId to availablePlans[0]:Replace(".amp","").
+            set planId to g_AvailablePlans[0]:Replace(".amp","").
         }
         else
         {
@@ -293,19 +294,16 @@ set g_MissionPlans to ListMissionPlans().
             local doneFlag  to false.
             local doneFlag2 to false.
             local selectedIdx to 0.
-            from { local i to 0. local dI to i + 1.} until i = availablePlans:Length step { set i to i + 1. set dI to dI + 1.} do
-            {
-                // OutStr("i: {0}":Format(i), 30).
-                // OutStr("availablePlans: {0}":Format(availablePlans), 32).
-                OutStr("{0}: {1}  ":Format(dI, availablePlans[i]), cr()).
-            }
-            OutStr("PRESS NUMBER FOR SELECTION ", cr()).
+            local pageIdx to 0.
 
             local _line to g_line.
 
             until doneFlag
             {
                 set g_Line to _line.
+
+                DispPlans(pageIdx).
+
                 GetTermChar().
 
                 if g_TermChar <> ""
@@ -314,10 +312,24 @@ set g_MissionPlans to ListMissionPlans().
                     {
                         local termCharScalar to g_TermChar:ToNumber(-1).
                         
-                        if termCharScalar > 0
+                        if g_TermChar:MatchesPattern("[-_]")
                         {
-                            set selectedIdx to termCharScalar - 1.
-                            set planID to choose availablePlans[selectedIdx]:Replace(".amp","") if availablePlans:Length >= termCharScalar else saniTag + "_0".
+                            set pageIdx to Max(0, pageIdx - 1).
+                        }
+                        else if g_TermChar:MatchesPattern("[\+=]")
+                        {
+                            set pageIdx to Max(0, pageIdx + 1).
+                        }
+                        else if termCharScalar >= 0
+                        {
+                            if Mod(termCharScalar, 10) = 0 
+                            {
+                                set termCharScalar to termCharScalar + 10.
+                            }
+
+                            set selectedIdx to Max(0, Min(g_AvailablePlans:Length - 1, termCharScalar - 1)).
+                            set planID to choose g_AvailablePlans[selectedIdx]:Replace(".amp","") if g_AvailablePlans:Length >= termCharScalar else saniTag + "_0".
+
                             OutStr("Selected PlanID: >> {0} << ":Format(planID), cr()).
                             OutStr("Confirm via ENTER", cr()).
                             OutStr("Cancel  via DELETE", cr()).
@@ -337,11 +349,25 @@ set g_MissionPlans to ListMissionPlans().
                                     set cancelFlag to true.
                                     break.
                                 }
+                                else if g_TermChar = "-"
+                                {
+                                    set pageIdx to Max(0, pageIdx - 1).
+                                    break.
+                                }
+                                else if g_TermChar = "+"
+                                {
+                                    set pageIdx to Max(0, pageIdx + 1).
+                                    break.
+                                }
                             }
                             clr(g_Line - 2).
                             clr(g_Line - 1).
                             clr(g_Line).
                             set termCharScalar to -1.
+                        }
+                        else
+                        {
+                            
                         }
                     }
                     OutMsg("Selected PlanID: >> {0} <<           ":Format(planID), cr()).

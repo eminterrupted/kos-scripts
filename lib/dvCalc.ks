@@ -35,17 +35,17 @@
 // *- Basic Calculations
     // #region
 
-    // CalcDvBE :: (<scalar>, <scalar>, <scalar>, <scalar>, [<body>]) -> <list>scalar
+    // CalcDvBE :: _stPe<scalar>, _stAp<scalar>, _tgtPe<scalar>, _tgtAp<scalar>, _xfrAp<scalar>, [_compMode<string>], [_mnvBody<body>] -> <list>scalar
     // Bi-elliptic transfer delta-v calc (https://en.wikipedia.org/wiki/Bi-elliptic_transfer)
     global function CalcDvBE
     {
-        parameter stPe,
-                  stAp,
-                  tgtPe,
-                  tgtAp,
-                  xfrAp,
-                  compMode is "pe",
-                  mnvBody is ship:body.
+        parameter _stPe,
+                  _stAp,
+                  _tgtPe,
+                  _tgtAp,
+                  _xfrAp,
+                  _compMode is "pe",
+                  _mnvBody is ship:body.
 
         local dv1 to 0. // First transfer burn, boost up to xfrAp
         local dv2 to 0. // Second transfer burn at xfrAp to tgtPe
@@ -56,35 +56,35 @@
         local rB to 0.
 
         // Orbiting radii for initial, target, and transfer orbits
-        if compMode = "ap" 
+        if _compMode = "ap" 
         {
-            set r1 to stAp + mnvBody:radius.
-            set r2 to tgtAp + mnvBody:radius.
+            set r1 to _stAp + _mnvBody:radius.
+            set r2 to _tgtAp + _mnvBody:radius.
         }
-        else if compMode = "pe"
+        else if _compMode = "pe"
         {
-            set r1  to stPe + mnvBody:radius.
-            set r2  to tgtPe + mnvBody:radius.
+            set r1  to _stPe + _mnvBody:radius.
+            set r2  to _tgtPe + _mnvBody:radius.
         }
-        else if compMode = "ap:pe" // Compare the starting apoapsis to the target periapsis
+        else if _compMode = "ap:pe" // Compare the starting apoapsis to the target periapsis
         {
-            set r1 to stAp + mnvBody:radius.
-            set r2 to tgtPe + mnvBody:radius.
+            set r1 to _stAp + _mnvBody:radius.
+            set r2 to _tgtPe + _mnvBody:radius.
         }
-        else if compMode = "pe:ap" // Compare the starting periapsis to the target apoapsis
+        else if _compMode = "pe:ap" // Compare the starting periapsis to the target apoapsis
         {
-            set r1 to stPe + mnvBody:radius.
-            set r2 to tgtAp + mnvBody:radius.
+            set r1 to _stPe + _mnvBody:radius.
+            set r2 to _tgtAp + _mnvBody:radius.
         }
-        set rB  to xfrAp + mnvBody:radius.
+        set rB  to _xfrAp + _mnvBody:radius.
 
         // Semimajor-axis for transfer 1 and 2
         local a1 to (r1 + rb) / 2.
         local a2 to (r2 + rb) / 2.
 
-        set dv1 to sqrt(((2 * mnvBody:mu) / r1) - (mnvBody:mu / a1)) - sqrt(mnvBody:mu / r1).
-        set dv2 to sqrt(((2 * mnvBody:mu) / rB) - (mnvBody:mu / a2)) - sqrt(((2 * mnvBody:mu) / rB) - (mnvBody:mu / a1)).
-        set dv3 to sqrt(((2 * mnvBody:mu) / r2) - (mnvBody:mu / a2)) - sqrt(mnvBody:mu / r2).
+        set dv1 to sqrt(((2 * _mnvBody:mu) / r1) - (_mnvBody:mu / a1)) - sqrt(_mnvBody:mu / r1).
+        set dv2 to sqrt(((2 * _mnvBody:mu) / rB) - (_mnvBody:mu / a2)) - sqrt(((2 * _mnvBody:mu) / rB) - (_mnvBody:mu / a1)).
+        set dv3 to sqrt(((2 * _mnvBody:mu) / r2) - (_mnvBody:mu / a2)) - sqrt(_mnvBody:mu / r2).
 
         return list(dv1, dv2, dv3).
     }

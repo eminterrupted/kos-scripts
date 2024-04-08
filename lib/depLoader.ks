@@ -7,4 +7,5 @@ RunOncePath("0:/lib/ves.ks").
 RunOncePath("0:/lib/nav.ks").
 RunOncePath("0:/lib/eng.ks").
 RunOncePath("0:/lib/dvCalc.ks").
+RunOncePath("0:/lib/mnv.ks").
 RunOncePath("0:/lib/staging.ks").
