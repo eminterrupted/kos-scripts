@@ -82,11 +82,11 @@
 
         if Addons:Available("Career")
         {
-            local waitTimer to 5.
+            local waitTimer to 2.
             set g_TS to Time:Seconds + waitTimer.
             local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
             set g_TermChar to "".
-            print "Press any key to abort" at (0, cr()).
+            OutMsg("Press any key to abort", cr()).
             local abortFlag to false.
             local line to g_Line.
 
@@ -102,14 +102,14 @@
                 }
                 else
                 {
-                    print waitStr:Format(Round(g_TS - Time:Seconds, 2)) at (0, cr()).
+                    OutInfo(waitStr:Format(Round(g_TS - Time:Seconds, 2)), cr()).
                 }
                 wait 0.01.
             }
 
             if abortFlag 
             {
-                print "Aborting recovery attempts!" at (0, cr()).
+                OutMsg("Aborting recovery attempts!", cr()).
                 wait 0.25.
             }
             else
@@ -126,15 +126,15 @@
                     if recoveryState[0]
                     {
                         Addons:Career:RecoverVessel(_ves).
-                        print "Recovery in progress (Status: {0})":Format(recoveryState[1]) at (0, cr()).
+                        OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]), cr()).
                         clr(cr()).
                         wait 0.01.
                         break.
                     }
                     else
                     {
-                        print recoveryStr:Format(recoveryState[1]) at (0, cr()).
-                        print abortStr:Format(g_TS - Time:Seconds, 2) at (0, cr()).
+                        OutInfo(recoveryStr:Format(recoveryState[1]), cr()).
+                        OutStr(abortStr:Format(g_TS - Time:Seconds, 2), cr()).
 
                         GetTermChar().
                         if g_TermChar <> ""
@@ -147,19 +147,19 @@
                 
                 if abortFlag
                 {
-                    print "Recovery aborted!" at (0, cr()).
+                    OutMsg("Recovery aborted!", cr()).
                     clr(cr()).
                 }
                 else
                 {
-                    print "Recovery failed. :(" at (0, cr()).
+                    OutMsg("Recovery failed. :(", cr()).
                 }
                 clr(cr()).
             }
         }
         else
         {
-            print "No recovery firmware found!" at (0, cr()).
+            OutMsg("No recovery firmware found!", cr()).
             clr(cr()).
             wait 0.25.
         }
@@ -186,19 +186,19 @@
             if Time:Seconds >= g_TS
             {
                 local recoveryState to getRecoveryState:Call(_ves).
-                print "Attempting recovery":Format(recoveryState[1]):PadRight(g_termW - 15) at (0, cr()).
+                OutMsg("Attempting recovery":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
                 if recoveryState[0]
                 {
                     Addons:Career:RecoverVessel(_ves).
                     
-                    print "Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15) at (0, cr()).
+                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
                     clr(cr()).
                     wait 0.01.
                 }
                 else
                 {
-                    print "Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15) at (0, cr()).
-                    print "Time remaining for recovery: {0}s":Format(g_TS - Time:Seconds):PadRight(g_termW - 15) at (0, cr()).
+                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
+                    OutStr("Time remaining for recovery: {0}s":Format(g_TS - Time:Seconds):PadRight(g_termW - 15), cr()).
 
                     GetTermChar().
                     if g_TermChar <> ""
@@ -211,7 +211,7 @@
         }
         else
         {
-            print "No recovery firmware found!":PadRight(g_termW - 15) at (0, cr()).
+            OutMsg("No recovery firmware found!":PadRight(g_termW - 15), cr()).
             clr(cr()).
             clr(cr()).
             wait 0.25.

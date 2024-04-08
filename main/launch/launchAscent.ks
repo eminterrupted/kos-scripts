@@ -59,6 +59,11 @@ for engStg in g_ShipEngines:IGNSTG:Keys
             
             // While we have the MEs handy, we should determine MECO and spool time
             set MECO to Max(MECO, g_ShipEngines:ENGUID[engUID]:TARGETBURNTIME).
+            if eng:Tag:MatchesPattern("Ascent\|MECO\|\d*")
+            {
+                set MECO to ParseStringScalar(eng:Tag:Split("|")[2], -1).
+                set g_MECO_Armed to true.
+            }
             if engStg > padStage 
             {
                 SetRunmode(8).
@@ -88,16 +93,17 @@ until g_Program >= 20 or g_Abort
     }
     else if g_Program = 8
     {
-        print "TgtInc: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtInc, tgtAlt, ascShaper).
-        print "Go to space?" at (0, g_line).
+        OutMsg("TgtInc: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtInc, tgtAlt, ascShaper), g_line).
+        OutMsg("Stage Limit: {0}":Format(g_StageLimit), cr()).
+        OutMsg("Go to space?", cr()).
         until g_TermChar = Terminal:Input:Enter
         {
             set g_TermChar to "".
             GetTermChar().
             wait 0.01.
         }
-        print "Okay, we're gonna do it, we're gonna " at (0, g_line).
-        print "go to space today!!! Hold on to your butts!" at (0, cr()).
+        OutMsg("Okay, we're gonna do it, we're gonna ", cr()).
+        OutMsg("go to space today!!! Hold on to your butts!", cr()).
         wait 2.
         ClearScreen.
         SetProgram(9).
@@ -122,7 +128,7 @@ until g_Program >= 20 or g_Abort
         if g_Runmode = 1
         {
             set launchTS to GetCountdownTimers(meSpoolTime).
-            print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
+            OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
             SetProgram(12).
         }
         else if g_Runmode < 0
@@ -151,8 +157,8 @@ until g_Program >= 20 or g_Abort
             }
             else
             {
-                print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
-                print "ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)):PadRight(Terminal:Width - 24) at (0, cr()).
+                OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
+                OutMsg("ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)):PadRight(Terminal:Width - 24), cr()).
             }
 
         }
@@ -173,7 +179,7 @@ until g_Program >= 20 or g_Abort
     // Engine ignition
     else if g_Program = 14
     {
-        print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24) at (0, g_line).
+        OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
         if g_Runmode = 1
         {
             set g_Throt to 1.
@@ -202,13 +208,13 @@ until g_Program >= 20 or g_Abort
             set g_line to 7.
             for eng in mainEngs
             {
-                print " - {0} THRUST: {1} [{2}%]   ":Format(eng:CONFIG, Round(eng:Thrust, 2), Round(100 * (eng:Thrust / eng:MaxPossibleThrustAt(Ship:Altitude)), 2)) at (0, cr()).
+                OutMsg(" - {0} THRUST: {1} [{2}%]   ":Format(eng:CONFIG, Round(eng:Thrust, 2), Round(100 * (eng:Thrust / eng:MaxPossibleThrustAt(Ship:Altitude)), 2)), cr()).
                 set aggThrustModifier to aggThrustModifier + GetField(eng:GetModule("TestFlightReliability_EngineCycle"), "thrust modifier", 1).
             }
             
             if g_Runmode = 6
             {
-                print aggThrustModifier at (20, 0).
+                OutMsg(aggThrustModifier, cr()).
                 if aggThrustModifier >= 0.925
                 {
                     SetRunmode(9).
@@ -229,7 +235,7 @@ until g_Program >= 20 or g_Abort
         }
         else
         {
-            print "* ENGINE IGNITION SEQUENCE START *" at (0, cr()).
+            OutMsg("* ENGINE IGNITION SEQUENCE START *", cr()).
             SetRunmode(1).
         }
     }
@@ -238,10 +244,10 @@ until g_Program >= 20 or g_Abort
     else if g_Program = 16
     {
         set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
-        print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, 5).
+        OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)), 5).
         if g_RunMode = 0
         {
-            print "* LIFTOFF *":PadRight(29) at (0, 6).
+            OutMsg("* LIFTOFF *":PadRight(29), 6).
             SetRunmode(1).
         }
         else if g_Runmode = 1
@@ -282,10 +288,10 @@ until g_Program >= 20 or g_Abort
 
     }
 
-    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
+    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20), 0).
 }
 
-set g_NextEngines to GetNextEngines(Ship, "1110").
+set g_NextEngines to GetNextEngines("1110").
 
 // Now we arm auto and hot staging if needed
 if multistage
@@ -301,11 +307,16 @@ if multistage
     ArmAutoStaging(g_StageLimit).
 }
 
+if g_AzData:Length = 0
+{
+    set g_AzData to l_az_calc_init(tgtAlt, tgtInc).
+}
+
 local boosterArmed to false.
 local boosterCheckDel  to { return true.}.
 local boosterActionDel to { return false.}.
 local boosterResult to list(false, boosterCheckDel, boosterActionDel).
-if Ship:PartsTaggedPattern("Booster\|"):Length > 0
+if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
 {
     set boosterResult to ArmBoosterStaging("Ascent").
     set boosterArmed to boosterResult[0].
@@ -326,6 +337,18 @@ if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
     set fairingAction to fairingResult[2].
 }
 
+// Arm RCS
+local rcsModules to Ship:ModulesNamed("ModuleRCSFX").
+local rcsArmed to false.
+local rcsStage to -2.
+for m in rcsModules
+{
+    set rcsStage to Max(rcsStage, m:Part:Stage).
+}
+set rcsArmed to rcsStage >= g_StageLimit.
+
+
+
 local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
 local rollDel to { return 0. }.
 
@@ -344,17 +367,17 @@ until g_Program >= 36 or g_Abort
     {
         if g_Runmode > 0
         {
-            print "Alt:Radar":Format(Round(Alt:Radar, 1)) at (0, cr()).
-            print "g_DRTurnStartAlt: {0}":Format(g_DRTurnStartAlt) at (0, cr()).
+            OutMsg("Alt:Radar":Format(Round(Alt:Radar, 1)), cr()).
+            OutMsg("g_DRTurnStartAlt: {0}":Format(g_DRTurnStartAlt), cr()).
 
             if Alt:Radar >= g_DRTurnStartAlt
             {
-                print "PASSING ALT:RADAR >= {0}":Format(g_DRTurnStartAlt) at (0, cr()).
+                OutMsg("PASSING ALT:RADAR >= {0}":Format(g_DRTurnStartAlt), cr()).
                 SetProgram(22).
             }
             else
             {
-                print "MISSING ALT:RADAR [{0}] >= {1}":Format(Round(Alt:Radar), g_DRTurnStartAlt) at (0, cr()).
+                OutMsg("MISSING ALT:RADAR [{0}] >= {1}":Format(Round(Alt:Radar), g_DRTurnStartAlt), cr()).
             }
         }
         else if g_Runmode < 0
@@ -367,7 +390,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "VERTICAL ASCENT":PadRight(g_termW - 15) at (0, cr()).
+            OutMsg("VERTICAL ASCENT":PadRight(g_termW - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -390,7 +413,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "PITCH PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            OutMsg("PITCH PROGRAM":PadRight(g_termW - 15), cr()).
             SetRunmode(1).
         }
         
@@ -411,7 +434,7 @@ until g_Program >= 36 or g_Abort
             else
             {
                 cr().
-                print "TIME TO MECO: {0}            ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)) at (0, cr()).
+                OutMsg("TIME TO MECO: {0}            ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)), cr()).
             }
         }
         else if g_Runmode < 0
@@ -424,7 +447,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "BURNING TO MECO":PadRight(g_termW - 15) at (0, cr()).
+            OutMsg("BURNING TO MECO":PadRight(g_termW - 15), cr()).
             SetRunmode(1).
         }
         
@@ -454,7 +477,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "COAST PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            OutMsg("COAST PROGRAM":PadRight(g_termW - 15), cr()).
             SetRunmode(1).
         }
         
@@ -468,7 +491,7 @@ until g_Program >= 36 or g_Abort
 
     }
 
-    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
+    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20), 0).
 
     DispLaunchTelemetry().
 
@@ -479,24 +502,52 @@ until g_Program >= 36 or g_Abort
         local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
-            g_HS_Act:Call().
-            clr(cr()).
+            if rcsArmed
+            {
+                if Stage:Number - 1 = rcsStage 
+                {
+                    RCS on.
+                    set rcsArmed to false.
+                }
+            }
+            set g_HS_Active to g_HS_Action:Call().
+
+            if g_HS_Active
+            {
+                OutMsg("HotStaging: Action").
+                clr(cr()).
+            }
+            else
+            {
+                OutMsg("HotStaging: Complete").
+                clr(cr()).
+            }
         }
         else
         {
-            print "HotStaging: Armed" at (0, cr()).
+            OutMsg("HotStaging: Armed", cr()).
+            clr(cr()).
         }
     }
+    
     if g_AS_Armed 
     {
         if g_AS_Check:Call()
         {
-            g_AS_Act:Call().
+            if rcsArmed
+            {
+                if Stage:Number - 1 = rcsStage 
+                {
+                    RCS on.
+                    set rcsArmed to false.
+                }
+            }
+            g_AS_Action:Call().
             clr(cr()).
         }
         else
         {
-            print "Autostaging: Armed" at (0, cr()).
+            OutMsg("Autostaging: Armed", cr()).
         }
     }
     if boosterArmed
@@ -518,40 +569,55 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "Booster staging: Armed" at (0, cr()).
+            OutMsg("Booster staging: Armed", cr()).
         }
     }
     if g_Spin_Armed
     {
         if g_Spin_Check:Call()
         {
-            g_Spin_Act:Call().
+            g_Spin_Action:Call().
             clr(cr()).
         }
         else
         {
-            print "SpinStabilization: Armed" at (0, cr()).
+            OutMsg("SpinStabilization: Armed", cr()).
         }
     }
     if fairingsArmed
     {
         if fairingCheck:Call()
         {
-            if fairingAction:Call() 
-            {
-                set fairingsArmed to Ship:PartsTaggedPattern("Ascent\|Fairings.*").
-            }
-            else 
-            { 
-                clr(cr()).
-            }
+            set fairingsArmed to fairingAction:Call().
+            clr(cr()).
         }
         else
         {
-            print "Fairing jettison: Armed" at (0, cr()).
+            OutMsg("Fairing jettison: Armed", cr()).
+        }
+    }
+    if g_MECO_Armed
+    {
+        if MissionTime >= MECO
+        {
+            for eng in Ship:PartsDubbedPattern("MECO")
+            {
+                eng:Shutdown.
+            }
+            set g_MECO_Armed to false.
+        }
+    }
+    if not HomeConnection:IsConnected()
+    {
+        if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
+        {
+            for m in Ship:ModulesNamed("ModuleDeployableAntenna")
+            {
+                DoEvent(m, "extend antenna").
+            }
         }
     }
 }
 
 
-print "THAT'S ALL FOLKS             " at (0, 5).
+OutMsg("THAT'S ALL FOLKS", 5).

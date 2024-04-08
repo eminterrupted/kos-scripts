@@ -135,12 +135,12 @@
         
         set g_Line to 25.
 
-        print "PIT (FACING) : {0}":Format(Round(pitch_for(ship, Ship:Facing), 2)) at (0, g_Line).
-        print "PIT (TGT RAW): {0}":Format(Round(tgtRawAng, 2)) at (0, cr()).
-        print "PIT (TGT SHP): {0}":Format(Round(tgtShapedAng, 2)) at (0, cr()).
-        print "PIT (TGT NRM): {0}":Format(Round(tgtPitAngNrm, 2)) at (0, cr()).
-        print "PITLIM (ADJ) : {0}":Format(Round(adjPitLim, 2)) at (0, cr()).
-        print "PIT (EFF OUT): {0}":Format(Round(effPitAng, 2)) at (0, cr()).
+        OutStr("PIT (FACING) : {0}":Format(Round(pitch_for(ship, Ship:Facing), 2)), g_Line).
+        // OutStr("PIT (TGT RAW): {0}":Format(Round(tgtRawAng, 2)), cr()).
+        // OutStr("PIT (TGT SHP): {0}":Format(Round(tgtShapedAng, 2)), cr()).
+        // OutStr("PIT (TGT NRM): {0}":Format(Round(tgtPitAngNrm, 2)), cr()).
+        // OutStr("PITLIM (ADJ) : {0}":Format(Round(adjPitLim, 2)), cr()).
+        OutStr("PIT (EFF OUT): {0}":Format(Round(effPitAng, 2)), cr()).
 
         set g_Line to lastLine.
 

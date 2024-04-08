@@ -21,7 +21,10 @@
     global g_NextEngines            to list().
     global g_ShipEngines            to lexicon().
 
-    global g_Throt to 0.
+    global g_MECO_Armed to false.
+
+    
+
     // #endregion
     
     // *- Local Anonymous Delegates
@@ -105,6 +108,13 @@ HydrateEngineConfigs().
 // *~ Global Functions ~* //
 // #region
 
+// *- Engine Actions
+// #region
+
+     
+
+// #endregion
+
 // *- Engine lists
 // #region
 
@@ -126,23 +136,21 @@ HydrateEngineConfigs().
     // Optional datamask parameter to scope to engine types (regular, booster, sep/ullage motors)
     global function GetNextEngines
     {
-        parameter _ship is Ship,
-                  _dataMask is "1110". // [0] Regular engines
+        parameter _dataMask is "1110". // [0] Regular engines
                                        // [1] Booster engines
                                        // [2] Sep motors
                                        // [0] Reserved / Currently unused
 
         local engList to list().
 
-        from { local iStg to Stage:Number - 1.} until iStg < 0 step { set iStg to iStg - 1.} do
+        from { local iStg to Stage:Number.} until iStg < 0 step { set iStg to iStg - 1.} do
         {
             if g_ShipEngines:IGNSTG:HasKey(iStg)
             {
-                
                 for eng in g_ShipEngines:IGNSTG[iStg]:ENG
                 {
-                    local isBooster to choose eng:Decoupler:Tag:MatchesPattern("Booster") if eng:Decoupler:IsType("Decoupler") else false.
-                    local isSep     to g_EngRef:SEP:Contains(eng:name) and eng:Tag:Length = 0.
+                    local isBooster to choose eng:Decoupler:Tag:MatchesPattern(".*Booster.*") if eng:Decoupler:IsType("Decoupler") else false.
+                    local isSep to g_EngRef:SEP:Contains(eng:Name) and eng:Tag:Length = 0.
 
                     if _dataMask[0]:ToNumber(0) and (not isBooster and not isSep)
                     {
@@ -166,6 +174,25 @@ HydrateEngineConfigs().
         }
 
         return engList.
+    }
+
+    // GetStageEngines :: <stageNumber> -> list(engines)
+    global function GetStageEngines
+    {
+        parameter _stgId is Stage:Number.
+
+        if not g_ShipEngines:HasKey("IGNSTG")
+        {
+            set g_ShipEngines to GetShipEnginesSpecs().
+        }
+        if g_ShipEngines:IGNSTG:HasKey(_stgId)
+        {
+            return g_ShipEngines:IGNSTG[_stgID]:ENG.
+        }
+        else
+        {
+            return list().
+        }
     }
 // #endregion
 
@@ -280,7 +307,6 @@ HydrateEngineConfigs().
         return list(burnTimeRated, burnTimePlus, burnTimeFuel).
     }
 
-    
     // GetEngineSpoolTime
     global function GetEngineSpoolTime
     {
@@ -294,6 +320,19 @@ HydrateEngineConfigs().
             set spool to GetField(m, "effective spool-up time", 0).
         }
         return spool.
+    }
+
+    // GetEngsThrust
+    global function GetEngsThrust
+    {
+        parameter _engList is g_ActiveEngines.
+
+        local aggThr to 0.
+        for eng in _engList
+        {
+            set aggThr to aggThr + eng:Thrust.
+        }
+        return aggThr.
     }
     // #endregion
 
@@ -569,11 +608,11 @@ HydrateEngineConfigs().
         return _destObj.
     }
 
-    // GetShipEnginesSpecs :: [_ves<vessel>], [_bitMask<string>] -> Lexicon()
+    // GetEnginesSpecs :: [_ves<vessel>], [_bitMask<string>] -> Lexicon()
     // 
-    global function GetShipEnginesSpecs
+    global function GetEnginesSpecs
     {
-        parameter _ves is Ship,
+        parameter _engList to Ship:Engines,
                   _dataMask is "1111110011000000".  // A 2-byte Bitmask to determine which data to hydrate during this iteration. Returns everything by default.
 
                                                 // Any bit with a value of 1 will hydrate the data based on the table below, while a value of 0 will not. 
@@ -642,125 +681,131 @@ HydrateEngineConfigs().
             ,"DCSTG", lex()
         ).
 
-        // Typechecking
-        if _ves:IsType("Vessel")
+        for eng in _engList
         {
-            for eng in _ves:Engines
+            local euid to eng:UID.
+            // Eng pointer, basic info, and status
+            if _dataMask[0]
             {
-                local euid to eng:UID.
-                // Eng pointer, basic info, and status
-                if _dataMask[0]
+                local engIgnitionStatus to choose "READY" if (not eng:Ignition and not eng:Flameout and eng:Ignitions > 0) else choose "FLAMEOUT" if eng:Flameout else "UNKNOWN".
+                local isBooster to choose false if eng:Decoupler = "None" else eng:Decoupler:Tag:Contains("Booster").
+                engObj:ENGUID:Add(euid, lex(
+                    "ENG",           eng
+                    ,"CONFIG",       eng:Config
+                    ,"CONSUMEDRSRC", eng:ConsumedResources:Keys
+                    ,"DECOUPLEDIN",  eng:DecoupledIn
+                    ,"HASGIMBAL",    eng:HasGimbal
+                    ,"IGNREMAIN",    eng:Ignitions
+                    ,"IGNSTATUS",    engIgnitionStatus
+                    ,"ISBOOSTER",    isBooster
+                    ,"ISSEPMOTOR",   g_EngRef:SEP:Contains(eng:name)
+                    ,"NAME",         eng:Name
+                    ,"STAGE",        eng:Stage
+                    ,"TITLE",        eng:Title
+                    )
+                ).
+
+                // Addition data options
+                if _dataMask[1]
                 {
-                    local engIgnitionStatus to choose "READY" if (not eng:Ignition and not eng:Flameout and eng:Ignitions > 0) else choose "FLAMEOUT" if eng:Flameout else "UNKNOWN".
-                    local isBooster to choose false if eng:Decoupler = "None" else eng:Decoupler:Tag:Contains("Booster").
-                    engObj:ENGUID:Add(euid, lex(
-                        "ENG",           eng
-                        ,"CONFIG",       eng:Config
-                        ,"CONSUMEDRSRC", eng:ConsumedResources:Keys
-                        ,"DECOUPLEDIN",  eng:DecoupledIn
-                        ,"HASGIMBAL",    eng:HasGimbal
-                        ,"IGNREMAIN",    eng:Ignitions
-                        ,"IGNSTATUS",    engIgnitionStatus
-                        ,"ISBOOSTER",    isBooster
-                        ,"ISSEPMOTOR",   g_EngRef:SEP:Contains(eng:name)
-                        ,"NAME",         eng:Name
-                        ,"STAGE",        eng:Stage
-                        ,"TITLE",        eng:Title
-                        )
-                    ).
-
-                    // Addition data options
-                    if _dataMask[1]
+                    engObj:ENGUID[euid]:Add("ALLOWRESTART",  eng:AllowRestart).
+                    engObj:ENGUID[euid]:Add("ALLOWSHUTDOWN", eng:AllowShutdown).
+                    engObj:ENGUID[euid]:Add("ISPSL",         eng:SLISP).
+                    engObj:ENGUID[euid]:Add("ISPV",          eng:VISP).
+                    engObj:ENGUID[euid]:Add("MAXFUELFLOW",   eng:MaxFuelFlow).
+                    engObj:ENGUID[euid]:Add("MAXMASSFLOW",   eng:MaxMassFlow).
+                    engObj:ENGUID[euid]:Add("MAXTHRUST",     eng:MaxPossibleThrust).
+                    engObj:ENGUID[euid]:Add("MAXTHRUSTSL",   eng:MaxPossibleThrustAt(0)).
+                    engObj:ENGUID[euid]:Add("MINTHROTTLE",   eng:MinThrottle).
+                    engObj:ENGUID[euid]:Add("MODES",         eng:Modes).
+                }
+                if _dataMask[2]
+                {
+                    if eng:HasModule("ModuleEnginesRF")
                     {
-                        engObj:ENGUID[euid]:Add("ALLOWRESTART",  eng:AllowRestart).
-                        engObj:ENGUID[euid]:Add("ALLOWSHUTDOWN", eng:AllowShutdown).
-                        engObj:ENGUID[euid]:Add("ISPSL",         eng:SLISP).
-                        engObj:ENGUID[euid]:Add("ISPV",          eng:VISP).
-                        engObj:ENGUID[euid]:Add("MAXFUELFLOW",   eng:MaxFuelFlow).
-                        engObj:ENGUID[euid]:Add("MAXMASSFLOW",   eng:MaxMassFlow).
-                        engObj:ENGUID[euid]:Add("MAXTHRUST",     eng:MaxPossibleThrust).
-                        engObj:ENGUID[euid]:Add("MAXTHRUSTSL",   eng:MaxPossibleThrustAt(0)).
-                        engObj:ENGUID[euid]:Add("MINTHROTTLE",   eng:MinThrottle).
-                        engObj:ENGUID[euid]:Add("MODES",         eng:Modes).
+                        local engRFModule to eng:GetModule("ModuleEnginesRF").
+
+                        engObj:ENGUID[euid]:Add("MIXRATIO", GetField(engRFModule, "mixture ratio", 1)).
+                        engObj:ENGUID[euid]:Add("RESIDUALS", GetField(engRFModule, "predicted residuals", 0)).
+                        engObj:ENGUID[euid]:Add("PREDICTEDMASSFLOW", eng:MaxMassFlow * (1 - engObj:ENGUID[euid]:Residuals)).
+                        engObj:ENGUID[euid]:Add("SPOOLTIME", GetField(engRFModule, "effective spool-up time", 0)).
+
+
                     }
-                    if _dataMask[2]
+                    else
                     {
-                        if eng:HasModule("ModuleEnginesRF")
-                        {
-                            local engRFModule to eng:GetModule("ModuleEnginesRF").
-
-                            engObj:ENGUID[euid]:Add("MIXRATIO", GetField(engRFModule, "mixture ratio", 1)).
-                            engObj:ENGUID[euid]:Add("RESIDUALS", GetField(engRFModule, "predicted residuals", 0)).
-                            engObj:ENGUID[euid]:Add("PREDICTEDMASSFLOW", eng:MaxMassFlow * (1 - engObj:ENGUID[euid]:Residuals)).
-                            engObj:ENGUID[euid]:Add("SPOOLTIME", GetField(engRFModule, "effective spool-up time", 0)).
-
-
-                        }
-                        else
-                        {
-                            engObj:ENGUID[euid]:Add("MIXRATIO", 1).
-                            engObj:ENGUID[euid]:Add("RESIDUALS", 0).
-                            engObj:ENGUID[euid]:Add("SPOOLTIME", 0).
-                        }
-                    }
-                    if _dataMask[3]
-                    {
-                        local engData           to 0.0000001.
-                        local ignChance         to 1.
-                        local timeSinceLastRun  to 0.
-
-                        local overburnAddedTime to 0.
-                        local targetBurnTime    to -1.
-                        local ratedBurnTime     to -1. 
-
-                        if eng:HasModule("TestFlightReliability_EngineCycle")
-                        {
-                            local engTFRModule to eng:GetModule("TestFlightReliability_EngineCycle").
-                            set engData to GetField(engTFRModule, "flight data", 0). 
-                        }
-
-                        if eng:HasModule("TestFlightFailure_IgnitionFail")
-                        {
-                            local engTFFModule to eng:GetModule("TestFlightFailure_IgnitionFail").
-
-                            set ignChance to GetField(engTFFModule, "ignition chance", 0).
-                            set timeSinceLastRun to GetField(engTFFModule, "time since shutdown", 0).
-                        }
-
-                        set overburnAddedTime   to 0.
-                        set targetBurnTime      to -1.
-                        set ratedBurnTime       to choose g_EngineConfigs[eng:Config][0] if g_EngineConfigs:Keys:Contains(eng:Config) else -1.
-
-                        if ratedBurnTime > 0 and engData > 0
-                        {
-                            set overburnAddedTime to ratedBurnTime * (g_EngineConfigs[eng:Config][1] * (engData / l_MaxFlightData)).
-                        }
-                        
-                        set targetBurnTime to ratedBurnTime + overburnAddedTime.
-
-                        engObj:ENGUID[euid]:Add("FLIGHTDATA",       engData).
-                        engObj:ENGUID[euid]:Add("IGNCHANCE",        ignChance).
-                        engObj:ENGUID[euid]:Add("RATEDBURNTIME",    ratedBurnTime).
-                        engObj:ENGUID[euid]:Add("TIMESINCELASTRUN", timeSinceLastRun).
-                        engObj:ENGUID[euid]:Add("TARGETBURNTIME",   targetBurnTime).
+                        engObj:ENGUID[euid]:Add("MIXRATIO", 1).
+                        engObj:ENGUID[euid]:Add("RESIDUALS", 0).
+                        engObj:ENGUID[euid]:Add("SPOOLTIME", 0).
                     }
                 }
-
-                // Creates a view with engines grouped by stage they are ignited
-                if _dataMask[4]
+                if _dataMask[3]
                 {
-                    set engObj:IGNSTG to GroupEnginesByStage(eng, engObj, "IGN", _dataMask[5], engObj:IGNSTG:Copy).
-                }
+                    local engData           to 0.0000001.
+                    local ignChance         to 1.
+                    local timeSinceLastRun  to 0.
 
-                // Creates a view with engines grouped by stage they are decoupled
-                if _dataMask[8]
-                {
-                    set engObj:DCSTG to GroupEnginesByStage(eng, engObj, "DC", _dataMask[9], engObj:DCSTG:Copy).
+                    local overburnAddedTime to 0.
+                    local targetBurnTime    to -1.
+                    local ratedBurnTime     to -1. 
+
+                    if eng:HasModule("TestFlightReliability_EngineCycle")
+                    {
+                        local engTFRModule to eng:GetModule("TestFlightReliability_EngineCycle").
+                        set engData to GetField(engTFRModule, "flight data", 0). 
+                    }
+
+                    if eng:HasModule("TestFlightFailure_IgnitionFail")
+                    {
+                        local engTFFModule to eng:GetModule("TestFlightFailure_IgnitionFail").
+
+                        set ignChance to GetField(engTFFModule, "ignition chance", 0).
+                        set timeSinceLastRun to GetField(engTFFModule, "time since shutdown", 0).
+                    }
+
+                    set overburnAddedTime   to 0.
+                    set targetBurnTime      to -1.
+                    set ratedBurnTime       to choose g_EngineConfigs[eng:Config][0] if g_EngineConfigs:Keys:Contains(eng:Config) else -1.
+
+                    if ratedBurnTime > 0 and engData > 0
+                    {
+                        set overburnAddedTime to ratedBurnTime * (g_EngineConfigs[eng:Config][1] * (engData / l_MaxFlightData)).
+                    }
+                    
+                    set targetBurnTime to ratedBurnTime + overburnAddedTime.
+
+                    engObj:ENGUID[euid]:Add("FLIGHTDATA",       engData).
+                    engObj:ENGUID[euid]:Add("IGNCHANCE",        ignChance).
+                    engObj:ENGUID[euid]:Add("RATEDBURNTIME",    ratedBurnTime).
+                    engObj:ENGUID[euid]:Add("TIMESINCELASTRUN", timeSinceLastRun).
+                    engObj:ENGUID[euid]:Add("TARGETBURNTIME",   targetBurnTime).
                 }
             }
-        }
 
+            // Creates a view with engines grouped by stage they are ignited
+            if _dataMask[4]
+            {
+                set engObj:IGNSTG to GroupEnginesByStage(eng, engObj, "IGN", _dataMask[5], engObj:IGNSTG:Copy).
+            }
+
+            // Creates a view with engines grouped by stage they are decoupled
+            if _dataMask[8]
+            {
+                set engObj:DCSTG to GroupEnginesByStage(eng, engObj, "DC", _dataMask[9], engObj:DCSTG:Copy).
+            }
+        }
         return engObj.
+    }
+
+
+    // GetShipEnginesSpecs
+    //
+    global function GetShipEnginesSpecs
+    {
+        parameter _ves is Ship,
+                  _dataMask is "1111110011000000".
+
+        return GetEnginesSpecs(_ves:Engines, _dataMask).
     }
 
 

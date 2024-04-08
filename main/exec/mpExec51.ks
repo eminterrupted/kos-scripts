@@ -39,5 +39,6 @@ from { local i to g_Context.} until i = g_MissionPlan:M:Length step { set i to i
     SetContext(i, true).
     CacheState().
 
+    wait until HomeConnection:IsConnected().
     runPath(scr, prm).
 }

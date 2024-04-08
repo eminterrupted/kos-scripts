@@ -274,7 +274,7 @@ until g_Program >= 20 or g_Abort
     print "P{0,-3}:R{1,3}":Format(g_Program, g_Runmode):PadRight(30) at (0, 0).
 }
 
-set g_NextEngines to GetNextEngines(Ship, "1110").
+set g_NextEngines to GetNextEngines("1110").
 
 // Now we arm auto and hot staging if needed
 if multistage
@@ -442,7 +442,7 @@ until g_Program = 42 or g_Abort
         local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
-            g_HS_Act:Call().
+            g_HS_Action:Call().
         }
     }
     if g_AS_Armed 
@@ -450,7 +450,7 @@ until g_Program = 42 or g_Abort
         print "Autostaging: Armed" at (0, cr()).
         if g_AS_Check:Call()
         {
-            g_AS_Act:Call().
+            g_AS_Action:Call().
         }
     }
     if g_Spin_Armed
@@ -458,7 +458,7 @@ until g_Program = 42 or g_Abort
         print "SpinStabilization: Armed" at (0, cr()).
         if g_Spin_Check:Call()
         {
-            g_Spin_Act:Call().
+            g_Spin_Action:Call().
         }
     }
 }

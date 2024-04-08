@@ -107,12 +107,12 @@ set g_MissionPlans to ListMissionPlans().
 
 
         local msgStr to "{0}{1}{0}".
-        print msgStr:Format(padStr, _msg) at (0, Terminal:Height - 3).
+        OutStr(msgStr:Format(padStr, _msg), Terminal:Height - 3).
         Terminal:Input:Clear.
         Terminal:Input:GetChar.
 
         local blankStr to NewBlankString(Terminal:Width).
-        print msgStr:Format(padStr, blankStr) at (0, Terminal:Height - 3).
+        OutStr(msgStr:Format(padStr, blankStr), Terminal:Height - 3).
     }
 
     // NoOp - just passes the existing value back. Not very useful except when it is.
@@ -252,9 +252,14 @@ set g_MissionPlans to ListMissionPlans().
     // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
     global function GetMissionPlanID 
     {
-        local planPriorityList to list( core:tag, Ship:Name:Replace(" ","_")).
-        local saniName to Ship:Name:Replace(" ","_").
-        if saniName:Length > 1 set saniName to saniName:SubString(0, saniName:FindLast("_")).
+        local planPriorityList to list(core:tag, Ship:Name:Replace(" ","_")).
+        local saniName to Ship:Name.
+        if Ship:Name:Contains(" ")
+        {
+            set saniName to saniName:Replace(" ", "_").
+            if saniName:Length > 1 set saniName to saniName:SubString(0, saniName:FindLast("_")).
+        }
+
         local saniTag to core:tag:split("_")[0].
         local saniPri to choose core:tag:split("_")[1] if core:tag:split("_"):Length > 1 else -1.
         local planId to "".
@@ -275,7 +280,7 @@ set g_MissionPlans to ListMissionPlans().
 
         // if saniPri >= 0
         // {
-        //     print "Rollin' with the homies, like {0}":Format(planID) at (0, cr()).
+        //     OutStr("Rollin' with the homies, like {0}":Format(planID), cr()).
         // }
         // else 
         if availablePlans:Length = 1
@@ -284,19 +289,23 @@ set g_MissionPlans to ListMissionPlans().
         }
         else
         {
+            local cancelFlag to false.
             local doneFlag  to false.
             local doneFlag2 to false.
             local selectedIdx to 0.
             from { local i to 0. local dI to i + 1.} until i = availablePlans:Length step { set i to i + 1. set dI to dI + 1.} do
             {
-                // print "i: {0}":Format(i) at (0, 30).
-                // print "availablePlans: {0}":Format(availablePlans) at (0, 32).
-                print "{0}: {1}  ":Format(dI, availablePlans[i]) at (0, cr()).
+                // OutStr("i: {0}":Format(i), 30).
+                // OutStr("availablePlans: {0}":Format(availablePlans), 32).
+                OutStr("{0}: {1}  ":Format(dI, availablePlans[i]), cr()).
             }
-            print "PRESS NUMBER FOR SELECTION " at (0, cr()).
+            OutStr("PRESS NUMBER FOR SELECTION ", cr()).
+
+            local _line to g_line.
 
             until doneFlag
             {
+                set g_Line to _line.
                 GetTermChar().
 
                 if g_TermChar <> ""
@@ -309,9 +318,9 @@ set g_MissionPlans to ListMissionPlans().
                         {
                             set selectedIdx to termCharScalar - 1.
                             set planID to choose availablePlans[selectedIdx]:Replace(".amp","") if availablePlans:Length >= termCharScalar else saniTag + "_0".
-                            print "Selected PlanID: >> {0} <<           ":Format(planID) at (0, cr()).
-                            print "Confirm via ENTER" at (0, cr()).
-                            print "Cancel  via DELETE" at (0, cr()).
+                            OutStr("Selected PlanID: >> {0} << ":Format(planID), cr()).
+                            OutStr("Confirm via ENTER", cr()).
+                            OutStr("Cancel  via DELETE", cr()).
 
                             set doneFlag2 to false.
                             until doneFlag2
@@ -325,6 +334,7 @@ set g_MissionPlans to ListMissionPlans().
                                 }
                                 else if g_TermChar = Terminal:Input:DeleteRight
                                 {
+                                    set cancelFlag to true.
                                     break.
                                 }
                             }
@@ -334,13 +344,18 @@ set g_MissionPlans to ListMissionPlans().
                             set termCharScalar to -1.
                         }
                     }
+                    OutMsg("Selected PlanID: >> {0} <<           ":Format(planID), cr()).
                 }
                 else if doneFlag2
                 {
                     set doneFlag to true.
                 }
-
+                else if cancelFlag
+                {
+                    OutMsg("Cancelling...").
+                }
                 set g_TermChar to "".
+
             }
         }
 

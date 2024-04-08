@@ -33,7 +33,7 @@ lock steering to g_Steer.
 set g_Throt to 0.
 
 set g_ShipEngines to GetShipEnginesSpecs(Ship).
-set g_NextEngines to GetNextEngines(Ship, "1000").
+set g_NextEngines to GetNextEngines("1000").
 
 from { local i to Stage:Number - 1.} until i < g_StageLimit step { set i to i - 1.} do 
 {
@@ -47,18 +47,18 @@ from { local i to Stage:Number - 1.} until i < g_StageLimit step { set i to i - 
             {
                 set stgEngsBT to g_ShipEngines:IGNSTG[i]:STGBURNTIME.
                 set waitTime to waitTime + (stgEngsBT / 2).
-                print "STGENGS[{0}]: {1}":Format(i, g_NextEngines:Length) at (2, 28).
-                print "STGBURNTIME: {0}":Format(stgEngsBT) at (2, 29).
+                OutInfo("STGENGS[{0}]: {1}":Format(i, g_NextEngines:Length), 28).
+                OutInfo("STGBURNTIME: {0}":Format(stgEngsBT), 29).
             }
         // }
     }
     
-    print "TOTBURNTIME: {0} ":Format(totBurnTime + stgEngsBT) at (2, 30).
+    OutInfo("TOTBURNTIME: {0} ":Format(totBurnTime + stgEngsBT), 30).
 }
 
 // Adjust wait time slightly
 set waitTime to waitTime * 1.625.
-print "WAITTIME   : {0} ":Format(waitTime) at (2, 31).
+OutMsg("WAITTIME   : {0} ":Format(waitTime), 31).
 
 local line to 5.
 
@@ -97,7 +97,7 @@ until g_Program > 199 or g_Abort
                 }
             }
             
-            print "BURN ETA: T{0}   ":Format(Round(waitTime - ETA:Apoapsis, 2)) at (0, cr()).
+            OutInfo("BURN ETA: T{0}   ":Format(Round(waitTime - ETA:Apoapsis, 2)), cr()).
         }
         else if g_Runmode < 0
         {
@@ -109,7 +109,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            print "ORBITAL INSERTION: COAST":PadRight(g_termW - 24) at (0, g_Line).
+            OutInfo("ORBITAL INSERTION: COAST":PadRight(g_termW - 24), g_Line).
             SetRunmode(1).
         }
         
@@ -138,7 +138,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            print "ORBITAL INSERTION: IGNITION":PadRight(g_termW - 27) at (0, g_Line).
+            OutInfo("ORBITAL INSERTION: IGNITION":PadRight(g_termW - 27), g_Line).
             SetRunmode(1).
         }
     }
@@ -150,18 +150,18 @@ until g_Program > 199 or g_Abort
             if Ship:Periapsis >= tgtPe
             {
                 set g_Throt to 0.
-                print "PE REACHED / ENGINE CUTOUT":PadRight(g_termW - 26) at (0, cr()).
+                OutInfo("PE REACHED / ENGINE CUTOUT":PadRight(g_termW - 26), cr()).
                 SetProgram(130).
             }
             else if Stage:Number <= g_StageLimit and Ship:AvailableThrust <= 0.01
             {
                 set g_Throt to 0.
-                print "ENGINE CUTOUT":PadRight(g_termW - 13) at (0, cr()).
+                OutInfo("ENGINE CUTOUT":PadRight(g_termW - 13), cr()).
                 SetProgram(130).
             }
             else
             {
-                print "BURNTIME REMAINING: {0}s ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)) at (0, cr()).
+                OutInfo("BURNTIME REMAINING: {0}s ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)), cr()).
             } 
         }
         else if g_Runmode < 0
@@ -174,7 +174,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            print "ORBITAL INSERTION: BURN":PadRight(g_termW - 23) at (0, g_Line).
+            OutInfo("ORBITAL INSERTION: BURN":PadRight(g_termW - 23), g_Line).
             SetRunmode(1).
         }
     }
@@ -204,7 +204,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            print "ORBITAL INSERTION: COMPLETE":PadRight(g_termW - 27) at (0, g_Line).
+            OutInfo("ORBITAL INSERTION: COMPLETE":PadRight(g_termW - 27), g_Line).
             SetRunmode(1).
         }
     }
@@ -215,32 +215,42 @@ until g_Program > 199 or g_Abort
 
     if g_HS_Armed 
     {
-        print "HotStaging: Armed" at (0, cr()).
+        OutMsg("HotStaging: Armed", cr()).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
         local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
-            g_HS_Act:Call().
+            g_HS_Action:Call().
         }
     }
     if g_AS_Armed 
     {
-        print "Autostaging: Armed" at (0, cr()).
+        OutMsg("Autostaging: Armed", cr()).
         if g_AS_Check:Call()
         {
-            g_AS_Act:Call().
+            g_AS_Action:Call().
         }
     }
     if g_Spin_Armed
     {
-        print "SpinStabilization: Armed" at (0, cr()).
+        OutMsg("SpinStabilization: Armed", cr()).
         if g_Spin_Check:Call()
         {
-            g_Spin_Act:Call().
+            g_Spin_Action:Call().
+        }
+    }
+    if not HomeConnection:IsConnected()
+    {
+        if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
+        {
+            for m in Ship:ModulesNamed("ModuleDeployableAntenna")
+            {
+                DoEvent(m, "extend antenna").
+            }
         }
     }
 
-    print "C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20) at (0, 0).
+    OutStr("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20), 0).
 }
 
 ClearScreen.

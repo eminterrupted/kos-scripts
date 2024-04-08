@@ -12,6 +12,8 @@
     // #region
     local l_boosterMaxIdx to 0.
     local l_HotStage_Init to lex("ARMED", false, "ENGS", list(),"SPOOL", 0, "STG", -1).
+    local l_currentStgEngs to list().
+    
     // #endregion
 
     // *- Global
@@ -20,6 +22,16 @@
     global g_AS_Running to false.
 
     global g_BSTR_Armed to false.
+
+    global g_BoosterActionDel to { return false.}.
+    global g_BoosterArmed to false.
+    global g_BoosterCheckDel to { return false.}.
+    global g_BoosterResult to 0.
+
+    global g_FairingsActionDel to { return false.}.
+    global g_FairingsArmed to false.
+    global g_FairingsCheckDel to { return false.}.
+    global g_FairingsResult to 0.
 
     global g_HotStage   to l_HotStage_Init.
     global g_HS_Active  to false.
@@ -34,10 +46,10 @@
 
     // *- Global Anonymous Delegates
     // #region
-    global g_AS_Act   to { return false.}.
+    global g_AS_Action   to { return false.}.
     global g_AS_Check to { return false.}.
 
-    global g_HS_Act   to { return false.}.
+    global g_HS_Action   to { return false.}.
     global g_HS_Check to { return false.}.
 
     global g_BSTR_Act to { return false.}.
@@ -69,7 +81,7 @@
         else
         {
             set g_AS_Check to { 
-                print "I'm autostage checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh):PadRight(5) at (0, cr()). 
+                // OutStr("I'm autostage checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh):PadRight(5), cr()). 
                 if Stage:Number > g_StageLimit 
                 {
                     return g_Conditions[_conditionType]:Call(_conditionThresh).
@@ -80,7 +92,7 @@
                 }
                 return false.
             }.
-            set g_AS_Act   to { 
+            set g_AS_Action   to { 
                 if g_AS_Running
                 {
                     if SafeStageWithUllage()
@@ -146,8 +158,8 @@
     {
         set g_AS_Armed to false.
         set g_AS_Check to NoOp@.
-        set g_AS_Act   to NoOp@.
-        print "Autostaging disarmed!" at (0, cr()).
+        set g_AS_Action   to NoOp@.
+        OutMsg("Autostaging disarmed!", cr()).
     }
     // #endregion
 
@@ -163,12 +175,12 @@
 
         local boosterObj to lex().
         local minIdx to 9.
-        local regStr to _boosterTag + "\|Booster\|\d".
+        local regStr to _boosterTag + "\|Booster\|(AS\|)?\d".
         for dc in Ship:PartsTaggedPattern(regStr)
         {
             if dc:Stage >= g_StageLimit
             {
-                local tagSpl to dc:Tag:Split("|").
+                local tagSpl to dc:Tag:Replace(" ",""):Split("|").
                 local boosterIdx to tagSpl[tagSpl:Length - 1]:ToNumber().
                 set l_boosterMaxIdx to Max(l_boosterMaxIdx, boosterIdx).
                 set minIdx to Min(minIdx, boosterIdx).
@@ -179,7 +191,8 @@
                 }
                 else
                 {
-                    boosterObj:Add(boosterIdx, lex("DC", list(dc), "ENG", list())).
+                    boosterObj:Add(boosterIdx, lex("DC", list(dc), "ENG", list(), "AS", tagSpl:Contains("AS"))).
+                    
                 }
 
                 for eng in dc:PartsTagged("")
@@ -210,12 +223,13 @@
         parameter _boostObj,
                   _boostIdx is 0.
 
-        local result to false.
+        local flameoutCount to 0.
         for eng in _boostObj[_boostIdx]:ENG 
         {
-            set result to choose true if result else eng:Flameout.
+            if eng:Flameout set flameoutCount to flameoutCount + 1.
+            OutStr("[{0} {1}]: {2} / {3}":Format(eng:Name, eng:UID, eng:Flameout, Round(eng:Thrust, 2)), cr()).
         }
-        return result.
+        return flameoutCount = _boostObj[_boostIdx]:ENG:Length.
     }
 
     // StageBoosters
@@ -227,7 +241,10 @@
 
         for eng in _boostObj[_boostIdx]:ENG
         { 
-            eng:Shutdown.
+            if eng:AllowShutdown
+            {
+                eng:Shutdown.
+            }
         } 
         for dc in _boostObj[_boostIdx]:DC { 
             for p in dc:PartsNamedPattern("sep|spin")
@@ -250,6 +267,13 @@
                 {
                     set bstCheckDel to CheckBoosterStagingConditions@:Bind(_boostObj):Bind(i).
                     set bstActionDel to StageBoosters@:Bind(_boostObj):Bind(i).
+                    if _boostObj[i]:AS
+                    {
+                        for eng in _boostObj[i]:ENG
+                        {
+                            eng:Activate.
+                        }
+                    }
                     set doneFlag to true.
                 }
             }
@@ -271,7 +295,7 @@
         parameter _stgLim is g_StageLimit,
                   _checkVal  is -1.
 
-        print "Arming hot stage" at (25, 20).
+        OutMsg("Arming hot stage", 20).
         local burnTime to 0.
         set g_HotStage to GetNextHotStage(_stgLim).
         local spoolTime to 0.
@@ -293,17 +317,16 @@
             parameter __checkVal,
                       __curVal.
 
-            print "I'm hotstage-checkin!" at (0, cr()).
             if Stage:Number = g_HotStage:STG + 1
             {
-                print "HS ETA: T{0}  ":Format(Round(__curVal, 2)) at (0, cr()).
+                OutInfo("HS ETA: T{0}  ":Format(Round(__curVal, 2)), cr()).
                 return __curVal <= __checkVal.
             }
             return false.
         }.
-        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.5).
+        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.25).
         
-        set g_HS_Act to DoHotStaging@.
+        set g_HS_Action to DoHotStaging@.
 
         set g_HotStage:ARMED to true.
         set g_HotStage to g_HotStage.
@@ -313,40 +336,53 @@
     global function DisableHotStaging
     {
         set g_HS_Armed to false.
+        set g_HS_Action   to NoOp@.
+        set g_HS_Active   to false.
         set g_HS_Check to NoOp@.
-        set g_HS_Act   to NoOp@.
     }
 
     // DoHotStaging
     global function DoHotStaging
     {
+        local curLine to g_Line.
+        set g_Line to Terminal:Height - 8.
+        OutMsg("g_HS_Active: {0}":Format(g_HS_Active)).
+        OutMsg("DoHotStaging     ").
+
         if ship:ModulesNamed("ModuleRCSFX"):Length > 0
         {
+            OutMsg("RCS Found     ").
             RCS on.
         }
-        if not g_HS_Active
+        set l_currentStgEngs to g_ActiveEngines:Copy.
+        for eng in g_HotStage:ENGS
         {
-            for eng in g_HotStage:ENGS
-            {
-                eng:Activate.
-            }
-            set g_HS_TS to Time:Seconds + g_HotStage:SPOOL.
-            set g_HS_Active to true.
+            eng:Activate.
         }
-        else
-        {
-            if Time:Seconds >= g_HS_TS
-            {
-                wait until Stage:Ready.
-                stage.
-                set g_HotStage to l_HotStage_Init.
-                set g_HS_Active to false.
-                set g_HS_Armed to false.
-            }
-        }
-        set g_NextEngines to GetNextEngines().
+        set g_HS_TS to Time:Seconds + g_HotStage:SPOOL.
+        OutMsg("HOT STAGING START ").
+        
+        local hsEngThr  to -1.
+        local curEngThr to 0.
 
-        return g_HS_Active.
+        until Time:Seconds >= g_HS_TS or hsEngThr > curEngThr
+        {
+            set hsEngThr  to GetEngsThrust(g_HotStage:ENGS).
+            set curEngThr to GetEngsThrust(l_currentStgEngs).
+            OutMsg("HOT STAGING IGNITION  ", cr()).
+            OutInfo("HSTHR / CURTHR: {0} / {1}   ":Format(Round(hsEngThr, 2), Round(curEngThr, 2)), cr()).
+            OutInfo("TIMEOUT: {0} ":Format(Round(Time:Seconds - g_HS_TS, 2)), cr()).
+        }
+
+        OutMsg("HOT STAGING SEPERATION  ", cr()).
+        wait until Stage:Ready.
+        stage.
+        set g_HS_Active to false.
+        set g_HS_Armed  to false.
+        clearScreen.
+        set g_NextEngines to GetNextEngines("1000").
+        set g_Line to curLine.
+        return false.
     }
 
     // GetHotStages
@@ -354,6 +390,7 @@
     {
         parameter _stgLim.
 
+        OutMsg("GetHotStages", Terminal:Height - 5).
         local hotstageObj to lexicon().
 
         for eng in Ship:PartsTaggedPattern("HS|HotStage")
@@ -368,7 +405,7 @@
                 }
                 hotstageObj[engStgId]:ENGS:Add(eng).
                 set hotstageObj[engStgId]:ARMED to false.
-                set hotstageObj[engStgId]:SPOOL to Max(hotstageObj[engStgId]:SPOOL, GetEngineSpoolTime(eng) * 1.15).
+                set hotstageObj[engStgId]:SPOOL to Max(hotstageObj[engStgId]:SPOOL, GetEngineSpoolTime(eng) * 1.325).
                 set hotstageObj[engStgId]:STG   to eng:Stage.
             }
         }
@@ -380,6 +417,8 @@
     global function GetNextHotStage
     {
         parameter _stgLim.
+
+        OutMsg("GetNextHotStage", Terminal:Height - 5).
 
         local hotstageObj to GetHotStages(_stgLim).
         local nextHotStage to lex("ARMED", false, "STG", -1).
@@ -407,15 +446,15 @@
     //
     local function CheckUllage
     {
-        local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
-        if engObj:ULLAGE
+        if g_NextEngines:Length > 0
         {
-            return engObj:FuelStability >= 0.975.
+            local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
+            if engObj:ULLAGE
+            {
+                return engObj:FuelStability >= 0.975.
+            }
         }
-        else
-        {
-            return true.
-        }
+        return true.
     }
 
     // SafeStage
