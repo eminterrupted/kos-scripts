@@ -1,15 +1,15 @@
 @LazyGlobal off.
 ClearScreen.
 
-parameter params is list().
+parameter _params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 
 local altThresh to 25000.
 
-if params:length > 0
+if _params:length > 0
 {
-    set altThresh to params[0].
+    set altThresh to _params[0].
 }
 
 print "P8: Waiting to RSO".

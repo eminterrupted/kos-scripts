@@ -1,7 +1,7 @@
 @LazyGlobal off.
 ClearScreen.
 
-parameter params is list().
+parameter _params is list().
 
 // Dependencies
 RunOncePath("0:/lib/depLoader").
@@ -17,11 +17,11 @@ local totBurnTime to 0.
 local waitTime to 0.
 
 // Parse Params
-if params:length > 0 
+if _params:length > 0 
 {
     // set tgtHdg to ParseStringScalar(params[0], tgtHdg).
     // if params:Length > 1 set waitTime to ParseStringScalar(params[1], waitTime).
-    set tgtPe to ParseStringScalar(params[0], tgtPe).
+    set tgtPe to ParseStringScalar(_params[0], tgtPe).
 }
 
 local steerDel to {  if g_Spin_Active { return heading(tgtHdg, 0, 0):Vector.} else { return heading(tgtHdg, 0, 0).}}.

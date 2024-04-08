@@ -1,6 +1,6 @@
 ClearScreen.
 
-parameter param is list().
+parameter _params is list().
 
 set Config:Stat to True.
 

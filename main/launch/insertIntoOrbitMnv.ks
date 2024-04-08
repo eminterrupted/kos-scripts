@@ -1,6 +1,6 @@
 @LazyGlobal off.
 ClearScreen.
 
-parameter params is list().
+parameter _params is list().
 
-RunPath("0:/main/launch/mnvIntoOrbit", params).
+RunPath("0:/main/launch/mnvIntoOrbit", _params).

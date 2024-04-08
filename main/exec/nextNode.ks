@@ -1,7 +1,7 @@
 @LazyGlobal off.
 ClearScreen.
 
-parameter params is list().
+parameter _params is list().
 
 // Dependencies
 RunOncePath("0:/lib/depLoader").
@@ -11,9 +11,9 @@ RunOncePath("0:/lib/mnv").
 local nodeToExec to choose NextNode if HasNode else node(0, 0, 0, 0).
 
 // Parse Params
-if params:length > 0 
+if _params:length > 0 
 {
-  set nodeToExec to choose params[0] if params[0]:TypeName = "Node" else nodeToExec.
+  set nodeToExec to choose _params[0] if _params[0]:TypeName = "Node" else nodeToExec.
 }
 
 set g_ShipEngines to GetShipEnginesSpecs(Ship).

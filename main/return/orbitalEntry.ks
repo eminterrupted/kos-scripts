@@ -1,7 +1,7 @@
 @LazyGlobal off.
 ClearScreen.
 
-parameter params is list().
+parameter _params is list().
 
 // Dependencies
 RunOncePath("0:/lib/depLoader.ks").
@@ -20,9 +20,9 @@ local tgtReentryAlt to 140000.
 local warpZeroAlt   to 25.
 
 // Parse Params
-if params:length > 0 
+if _params:length > 0 
 {
-  set tgtReentryAlt to params[0].
+  set tgtReentryAlt to _params[0].
 }
 
 set g_Line to 4.

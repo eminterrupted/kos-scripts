@@ -1,7 +1,7 @@
 @LazyGlobal off.
 clearscreen.
 
-parameter params is list().
+parameter _params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
@@ -18,11 +18,11 @@ local tgtInc to 30.
 local launchTS to list().
 
 // Param parsing
-if params:Length > 0
+if _params:Length > 0
 {
-    set tgtInc to ParseStringScalar(params[0], tgtInc).
-    if params:length > 1 set tgtAlt to ParseStringScalar(params[1], tgtAlt).
-    if params:length > 2 set ascShaper to ParseStringScalar(params[2], ascShaper).
+    set tgtInc to ParseStringScalar(_params[0], tgtInc).
+    if _params:length > 1 set tgtAlt to ParseStringScalar(_params[1], tgtAlt).
+    if _params:length > 2 set ascShaper to ParseStringScalar(_params[2], ascShaper).
 }
 
 

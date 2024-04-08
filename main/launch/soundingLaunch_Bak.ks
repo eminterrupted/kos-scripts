@@ -1,7 +1,7 @@
 @LazyGlobal off.
 clearscreen.
 
-parameter params is list().
+parameter _params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
