@@ -212,12 +212,12 @@ until g_Program > 199 or g_Abort
     set g_Steer to steerDel:Call().
     UpdateState().
 
-
+    local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
     if g_HS_Armed 
     {
-        OutMsg("HotStaging: Armed", cr()).
+        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
             g_HS_Action:Call().
@@ -233,8 +233,8 @@ until g_Program > 199 or g_Abort
     }
     if g_Spin_Armed
     {
-        OutMsg("SpinStabilization: Armed", cr()).
-        if g_Spin_Check:Call()
+        print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+        if g_Spin_Check:Call(btrem)
         {
             g_Spin_Action:Call().
         }

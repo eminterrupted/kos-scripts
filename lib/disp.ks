@@ -15,7 +15,7 @@
 
     global g_termH to 45. // Terminal:Height.
     set Terminal:Height to g_termH.
-    global g_termW  to 90. // Terminal:Width.
+    global g_termW  to 72. // Terminal:Width.
     set Terminal:Width to g_termW.
 
     // #endregion
@@ -128,7 +128,7 @@
         OutStr("--------------", cr()).
         local startIdx to 10 * _pageIdx.
         local stopIdx to choose (startIdx + 10) if (g_AvailablePlans:Length - startIdx) >= 10 else g_AvailablePlans:Length - startIdx - 1.
-        from { local i to startIdx. } until i = stopIdx step { set i to i + 1. } do
+        from { local i to startIdx. } until i > stopIdx step { set i to i + 1. } do
         {
             print "Printing: [{0}|{1}|{2}|{3}|{4}]":Format(_pageIdx, startIdx, stopIdx, i, Ceiling(g_AvailablePlans:Length / 10)) at (2, Terminal:Height - 5).
             OutStr("|- {0}: {1}  ":Format(i + 1, _planList[i]), cr()).

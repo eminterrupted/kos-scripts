@@ -456,11 +456,12 @@ until g_Program >= 36 or g_Abort
     DispLaunchTelemetry().
 
     cr().
+    local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
     if g_HS_Armed 
     {
-        print "HotStaging: Armed" at (0, cr()).
+        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
         if g_HS_Check:Call(btrem)
         {
             g_HS_Action:Call().
@@ -476,8 +477,8 @@ until g_Program >= 36 or g_Abort
     }
     if g_Spin_Armed
     {
-        print "SpinStabilization: Armed" at (0, cr()).
-        if g_Spin_Check:Call()
+        print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+        if g_Spin_Check:Call(btrem)
         {
             g_Spin_Action:Call().
         }

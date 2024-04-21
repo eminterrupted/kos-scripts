@@ -10,15 +10,18 @@ RunOncePath("0:/lib/reentry.ks").
 // Declare Variables
 local fairings      to list().
 local fairJettAlt   to 10000.
+local minStgAlt     to 10000.
 local preDeployAlt  to 2000.
-local stgTimeGoGo   to 5.
+local stgAtApo      to false.
+local stgTS   to 5.
 local tgtReentryAlt to 140000.
 local warpZeroAlt   to 25.
 
 // Parse Params
 if _params:length > 0 
 {
-  set tgtReentryAlt to _params[0].
+  set tgtReentryAlt to ParseStringScalar(_params[0], tgtReentryAlt).
+  if _params:Length > 1 set stgAtApo to _params[1].
 }
 
 set g_Line to 4.
@@ -40,7 +43,7 @@ if fairings:length > 0
 }
 
 InitStateCache().
-SetStageStop(2).
+SetStageLimit(2).
 
 until g_Program > 199 or g_Abort
 {
@@ -78,6 +81,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "WAIT FOR AP":PadRight(g_termW - 15) at (0, cr()).
             SetRunmode(1).
         }
@@ -94,7 +98,14 @@ until g_Program > 199 or g_Abort
                 clr(cr()).
                 if warp > 0 set warp to 0.
                 wait until Kuniverse:TimeWarp:IsSettled.
-                SetProgram(44).
+                if stgAtApo
+                {
+                    SetProgram(44).
+                }
+                else
+                {
+                    SetProgram(46).
+                }
             }
         }
         else if g_Runmode < 0
@@ -107,6 +118,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "WAIT FOR AP":PadRight(g_termW - 15) at (0, cr()).
             SetRunmode(1).
         }
@@ -137,6 +149,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* STAGING *":PadRight(g_termW - 11) at (0, cr()).
             SetRunmode(1).
         }
@@ -166,6 +179,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* ARMING CHUTE(S) *":PadRight(g_termW - 20) at (0, cr()).
             SetRunmode(1).
         }
@@ -174,29 +188,42 @@ until g_Program > 199 or g_Abort
     // Wait for reentry alt
     else if g_Program = 48
     {
-        if g_RunMode > 0
+        if g_RunMode = 1
         {
             if Ship:Altitude <= tgtReentryAlt
             {
+                set stgTS to Time:Seconds + stgTS.
                 SetRunmode(3).
-                if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
+            }
+        }
+        else if g_Runmode = 3
+        {
+            if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
+            {
+                set steerDel to { return Ship:SrfRetrograde.}.
+                if Time:Seconds > stgTS
                 {
-                    set steerDel to { return Ship:SrfRetrograde.}.
-                    if Time:Seconds > stgTimeGoGo
-                    {
-                        SetProgram(50).
-                    }
+                    SetRunmode(7).
                 }
-                else
+                else if Ship:Altitude <= minStgAlt
                 {
-                    SetRunmode(5).
-                    until Stage:Number = 1
-                    {
-                        if Stage:Ready stage.
-                    }
-                    SetProgram(50).
+                    SetRunmode(7).
                 }
             }
+            else
+            {
+                SetRunmode(7).
+            }
+        }
+        else if g_Runmode = 7
+        {
+            OutMsg("Staging [{0}->1]":Format(Stage:Number)).
+            until Stage:Number <= 1
+            {
+                if Stage:Ready stage.
+                wait 1.
+            }
+            SetProgram(50).
         }
         else if g_Runmode < 0
         {
@@ -208,7 +235,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            set stgTimeGoGo to Time:Seconds + stgTimeGoGo.
+            ClearScreen.
             print "WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33) at (0, cr()).
             SetRunmode(1).
         }
@@ -244,6 +271,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "Waiting until < {0}km ":Format(fairJettAlt) at (0, cr()).
             SetRunmode(1).
         }
@@ -262,6 +290,7 @@ until g_Program > 199 or g_Abort
                     DoAction(m, "jettison fairing", true).
                 }
             }
+            lights on.
             SetProgram(54).            
         }
         else if g_Runmode < 0
@@ -274,6 +303,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* FAIRING JETTISON *":PadRight(g_termW - 15) at (0, cr()).
             SetRunmode(1).
         }
@@ -317,6 +347,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* CHUTE DEPLOY SEQUENCE *":PadRight(g_termW - 15) at (0, cr()).
             SetRunmode(1).
         }
@@ -347,6 +378,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* WAIT FOR TOUCHDOWN *":PadRight(g_termW - 15) at (0, cr()).
             SetRunmode(1).
         }
@@ -374,6 +406,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
             set g_TS to Time:Seconds + 3.
             SetRunmode(1).
@@ -400,6 +433,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
+            ClearScreen.
             print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
             set g_TS to Time:Seconds + 3.
             SetRunmode(1).

@@ -299,14 +299,19 @@ if multistage
     if Ship:PartsTaggedPattern("HS|HotStage"):Length > 0 
     {
         // ArmHotStaging(g_StageLimit, MECO).
+        OutInfo("Arming Hot-Staging Subroutine").
         ArmHotStaging(g_StageLimit).
     }
     if Ship:PartsTaggedPattern("SpinDC"):Length > 0
     {
+        OutInfo("Arming Spin-Stabilization Subroutine").
         ArmSpinStabilization(g_StageLimit).
     }
+    OutInfo("Arming Auto-Staging Subroutine").
     ArmAutoStaging(g_StageLimit).
+    
 }
+
 
 if g_AzData:Length = 0
 {
@@ -340,14 +345,21 @@ if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
 
 // Arm RCS
 local rcsModules to Ship:ModulesNamed("ModuleRCSFX").
-local rcsArmed to false.
-local rcsStage to -2.
+set g_RCS_Armed to false.
+set g_RCS_Stage to -2.
 for m in rcsModules
 {
-    set rcsStage to Max(rcsStage, m:Part:Stage).
+    set g_RCS_Stage to Max(g_RCS_Stage, m:Part:Stage).
 }
-set rcsArmed to rcsStage >= g_StageLimit.
+set g_RCS_Armed to g_RCS_Stage >= g_StageLimit.
 
+
+OutLog("ArmHotStaging Result: {0}":Format(g_HS_Armed), 1).
+OutLog("ArmSpinStabilization Result: {0}":Format(g_Spin_Armed), 1).
+OutLog("ArmAutoStaging Result: {0}":Format(g_HS_Armed), 1).
+OutLog("ArmBoosterStaging Result: {0}":Format(boosterArmed), 1).
+OutLog("ArmFairingJettison Result: {0}":Format(fairingsArmed), 1).
+OutLog("ArmRCS Result: {0}":Format(g_RCS_Armed), 1).
 
 
 local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
@@ -457,15 +469,35 @@ until g_Program >= 36 or g_Abort
 
     else if g_Program = 30
     {
-        if g_RunMode > 0
+        if g_RunMode = 1
         {
-            if Ship:Altitude >= Ship:Body:Atm:Height and Ship:AvailableThrust <= 0.01 and Stage:Number <= g_StageLimit
+            if Ship:AvailableThrust <= 0.01 
             {
-                SetProgram(36).
+                if Stage:Number <= g_StageLimit
+                {
+                    SetRunMode(4).
+                }
+                else
+                {
+                    SetRunMode(2).
+                }
+            }
+        }
+        else if g_RunMode = 2
+        {
+            if Stage:Number > g_StageLimit
+            {
+                OutInfo("STAGING").
+                if Time:Seconds >= g_TS and Stage:Ready
+                {
+                    stage.
+                    set g_TS to Time:Seconds + 3.
+                }
             }
             else
             {
-                SetRunMode(2).
+                clr(cr()).
+                SetProgram(32).
             }
         }
         else if g_Runmode < 0
@@ -484,8 +516,42 @@ until g_Program >= 36 or g_Abort
         
         set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), 0).
     }
+
+    else if g_Program = 32
+    {
+        if g_RunMode = 1
+        {
+            if Ship:Altitude >= Ship:Body:Atm:Height
+            {
+                clr(cr()).
+                SetProgram(36).
+            }
+            else
+            {
+                OutInfo("DIST TO TGT: {0}":Format(Round(Ship:Body:Atm:Height, 1))).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("COAST PROGRAM":PadRight(g_termW - 15), cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), 0).
+    }
+
+
     UpdateState(True).
 
+        
     // TODO: Write Abort Handler here
     if g_Abort
     {
@@ -497,50 +563,24 @@ until g_Program >= 36 or g_Abort
     DispLaunchTelemetry().
 
     cr().
+    local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
     if g_HS_Armed 
     {
+        set g_HS_Armed to RunHotStageSubroutine(btrem).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
-        if g_HS_Check:Call(btrem)
-        {
-            if rcsArmed
-            {
-                if Stage:Number - 1 = rcsStage 
-                {
-                    RCS on.
-                    set rcsArmed to false.
-                }
-            }
-            set g_HS_Active to g_HS_Action:Call().
-
-            if g_HS_Active
-            {
-                OutMsg("HotStaging: Action").
-                clr(cr()).
-            }
-            else
-            {
-                OutMsg("HotStaging: Complete").
-                clr(cr()).
-            }
-        }
-        else
-        {
-            OutMsg("HotStaging: Armed", cr()).
-            clr(cr()).
-        }
+        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
     }
     
     if g_AS_Armed 
     {
         if g_AS_Check:Call()
         {
-            if rcsArmed
+            if g_RCS_Armed
             {
-                if Stage:Number - 1 = rcsStage 
+                if Stage:Number - 1 = g_RCS_Stage 
                 {
                     RCS on.
-                    set rcsArmed to false.
+                    set g_RCS_Armed to false.
                 }
             }
             g_AS_Action:Call().
@@ -575,14 +615,16 @@ until g_Program >= 36 or g_Abort
     }
     if g_Spin_Armed
     {
-        if g_Spin_Check:Call()
+        if g_Spin_Check:Call(btrem)
         {
+            OutStr("Passed g_Spin_Check", g_termH - 5).
+            OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
             g_Spin_Action:Call().
             clr(cr()).
         }
         else
         {
-            OutMsg("SpinStabilization: Armed", cr()).
+            print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
         }
     }
     if fairingsArmed

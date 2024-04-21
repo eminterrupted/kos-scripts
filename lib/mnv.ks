@@ -305,10 +305,11 @@
                 // DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
                 // DispBurnPerfData().
 
+                local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
                 if g_HS_Armed 
                 {
                     // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-                    local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+                    // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
                     if g_HS_Check:Call(btrem)
                     {
                         g_HS_Action:Call().
@@ -316,7 +317,7 @@
                     }
                     else
                     {
-                        OutMsg("HotStaging: Armed", cr()).
+                        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
                     }
                 }
                 if g_AS_Armed 
@@ -355,14 +356,14 @@
                 }
                 if g_Spin_Armed
                 {
-                    if g_Spin_Check:Call()
+                    if g_Spin_Check:Call(btRem)
                     {
                         g_Spin_Action:Call().
                         clr(cr()).
                     }
                     else
                     {
-                        OutMsg("SpinStabilization: Armed", cr()).
+                        print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
                     }
                 }
                 if g_FairingsArmed
@@ -400,6 +401,35 @@
                     DisableAutoStaging().
                 }
 
+                if g_TermChar = Char(101) // 'e'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+                    OutInfo("Spin Right: " + Ship:Control:Roll, cr()).
+                }
+                else if g_TermChar = Char(69) // 'E'
+                {
+                    set Ship:Control:Roll to 1.
+                    OutInfo("Spin Right: " + Ship:Control:Roll, cr()).
+                }
+                else if g_TermChar = Char(113) // 'q'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+                    OutInfo("Spin Left: " + Ship:Control:Roll, cr()).
+                }
+                else if g_TermChar = Char(81) // 'Q'
+                {
+                    set Ship:Control:Roll to -1.
+                    OutInfo("Spin Left: " + Ship:Control:Roll, cr()).
+                }
+                else if g_TermChar = Char(115) // s
+                {
+                    set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+                }
+                else if g_TermChar = Char(83) // S
+                {
+                    set Ship:Control:Roll to 0.
+                }
+
                 OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2)), cr()).
 
                 // if g_LoopDelegates["Events"]:Keys:Length > 0 
@@ -409,7 +439,8 @@
                 set g_TermChar to "".
             }
             set g_Throt to 0.
-
+            set Ship:Control:Roll to 0.
+            
             ClearScreen.
             OutInfo("Maneuver Complete!", cr()).
             

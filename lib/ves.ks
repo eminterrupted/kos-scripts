@@ -132,32 +132,50 @@
         local spinStages to GetSpinStages(_stgLimit).
 
         OutMsg("Arming spin stabilization", cr()).
-        from { local stg to Stage:Number.} until stg < _stgLimit step { set stg to stg - 1.} do
+        OutLog("Running ArmSpinStabilization subroutine").
+        from { local stg to Stage:Number - 1.} until stg < _stgLimit or g_Spin_Armed step { set stg to stg - 1.} do
         {
             if spinStages:HasKey(stg)
             {
+                OutLog("Stage Hit: {0}":Format(stg), 1).
                 set g_SpinStab to spinStages[stg].
-                from { local i to stg.} until i > Stage:Number step { set i to i + 1.} do
-                {
-                    local bt to choose g_ShipEngines[stg + 1]:TARGETBURNTIME if g_ShipEngines:HasKey(stg + 1) else -1.
-                    local checkVal to MissionTime + bt - g_SpinStab:LEADTIME.
+                // from { local i to stg.} until i > Stage:Number step { set i to i + 1.} do
+                // {
+                    // local bt to choose g_ShipEngines[stg + 1]:TARGETBURNTIME if g_ShipEngines:HasKey(stg + 1) else -1.
+                set g_Spin_Check to { 
+                    parameter __checkStg,
+                              __checkVal,
+                              __curVal.
 
-                    set g_Spin_Check to { 
-                        parameter __checkVal. 
-                        if g_SpinStab:STG = Stage:Number - 1 
-                        {
-                            return MissionTime >= __checkVal.
-                        }. 
-                        return false. 
-                    }.
-                    set g_Spin_Check to g_Spin_Check:Bind(checkVal).
+                    local curStgChk to Stage:Number - 1.
 
-                    set g_Spin_Action to DoSpinStabilization@:Bind(1):Bind(g_SpinStab:LEADTIME).
-                    set g_Spin_Armed to True.
+                    if curStgChk = __checkStg
+                    {
+                        OutStr("g_Spin_Check[PASS]: [{0}] <= [{1}]":Format(__curVal, __checkVal), Terminal:Height - 5).
+                        return __curVal <= __checkVal.
+                    }
+                    else if curStgChk > __checkStg
+                    {
+                        OutStr("g_Spin_Check[FAIL]: [{0}] = [{1}]":Format(curStgChk, __checkStg), Terminal:Height - 5).
+                    }
+                    else
+                    {
+                        clr(Terminal:Height - 5).
+                        set g_Spin_Armed to False.
+                    }
+                    return false. 
                 }.
+                set g_Spin_Check to g_Spin_Check:Bind(stg):Bind(g_SpinStab:LEADTIME).
+
+                set g_Spin_Action to DoSpinStabilization@:Bind(0.5):Bind(stg).
+                set g_Spin_Armed to True.
+                // }
+            }
+            else
+            {
+                OutLog("Stage Miss: {0}":Format(stg), 1).
             }
         }
-
     }
 
 
@@ -166,23 +184,32 @@
     local function DoSpinStabilization
     {
         parameter _rollVal,
-                  _leadTime.
+                  _stpStg.
+                  //_leadTime.
         
+        OutInfo("DoSpinStabilization").
+
         if g_Spin_Active
         {
-            if Time:Seconds >= g_Spin_TS
+            if Stage:Number <= _stpStg
             {
                 set Ship:Control:Roll to 0.
                 set g_Spin_Active to false.
                 set g_Spin_Armed to false.
+                ClearScreen.
+            }
+            else
+            {
+                OutInfo("Stage:Number [{0}] <= [{1}] _stpStg":Format(Stage:Number, _stpStg)).
             }
         }
         else
         {
             set g_Steer to g_Steer:Vector.
             set Ship:Control:Roll to _rollVal.
-            set g_Spin_TS to Time:Seconds + _leadtime.
+            // set g_Spin_TS to Time:Seconds + _leadtime.
             set g_Spin_Active to true.
+            OutInfo("SpinActive!").
         }
     }
 
@@ -199,9 +226,15 @@
             {
                 if not spinStages:HasKey(p:Stage)
                 {
+                    local leadTime to l_SpinMin.
+                    if p:Tag:MatchesPattern("SpinDC\|\d*")
+                    {
+                        local tagSpl to p:Tag:Split("|").
+                        set leadTime to tagSpl[tagSpl:Length - 1]:ToNumber(leadTime).
+                    }
                     spinStages:Add(p:Stage, lex(
                         "ARMED", false
-                        ,"LEADTIME", l_SpinMin
+                        ,"LEADTIME", leadTime
                         ,"STG", p:Stage
                     )).
                 }

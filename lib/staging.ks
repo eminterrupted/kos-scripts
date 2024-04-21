@@ -37,6 +37,9 @@
     global g_HS_Active  to false.
     global g_HS_Armed   to false.
     global g_HS_TS      to 0.
+
+    global g_RCS_Armed to false.
+    global g_RCS_Stage to -2.
     // #endregion
     // 
 
@@ -97,6 +100,7 @@
                 {
                     if SafeStageWithUllage()
                     {
+                        set g_ShipEngines to GetShipEnginesSpecs().
                         if Stage:Number <= g_StageLimit 
                         { 
                             set g_AS_Armed to false.
@@ -107,6 +111,7 @@
                             if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
                         }
                         set g_AS_Running to false.
+                        // OutInfo("UPDATING G_SHIPENGINES").
                         // else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
                         // {
                         //     if g_ShipEngines:IGNSTG[Stage:Number]:SEPSTG
@@ -279,6 +284,9 @@
             }
         }
 
+        // OutInfo("UPDATING G_SHIPENGINES").
+        set g_ShipEngines to GetShipEnginesSpecs().
+
         return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
 }
 
@@ -296,14 +304,13 @@
                   _checkVal  is -1.
 
         OutMsg("Arming hot stage", 20).
-        local burnTime to 0.
         set g_HotStage to GetNextHotStage(_stgLim).
         local spoolTime to 0.
         if _checkVal < 0
         {
             if g_ShipEngines:IGNSTG:HasKey(g_HotStage:STG)
             {
-                if g_ShipEngines:IGNSTG:HasKey("STGBURNTIME") set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
+                // if g_ShipEngines:IGNSTG:HasKey("STGBURNTIME") set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
                 if g_ShipEngines:IGNSTG:HasKey("STGSPOOLTIME") set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGSPOOLTIME.
                 set _checkVal to spoolTime * 1.5.
             }
@@ -324,7 +331,7 @@
             }
             return false.
         }.
-        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.25).
+        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.5).
         
         set g_HS_Action to DoHotStaging@.
 
@@ -332,7 +339,39 @@
         set g_HotStage to g_HotStage.
         set g_HS_Armed to true.
     }
-    
+
+    global function RunHotStageSubroutine
+    {
+        parameter _btRem is GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
+
+        if g_HS_Check:Call(_btrem)
+        {
+            if g_RCS_Armed
+            {
+                if Stage:Number - 1 = g_RCS_Stage
+                {
+                    RCS on.
+                    set g_RCS_Armed to false.
+                }
+            }
+            set g_HS_Active to g_HS_Action:Call().
+            
+            local hsEngs to Ship:PartsTagged("HotStage").
+            local hsKeepAlive to false.
+            from {local i to 0.} until i = hsEngs:Length or hsKeepAlive step { set i to i + 1.} do
+            {
+                local eng to hsEngs[i].
+                if eng:Stage <= Stage:Number - 1
+                {
+                    set hsKeepAlive to true.
+                }
+            }
+
+            return hsKeepAlive.
+        }
+        return true.
+    }
+
     global function DisableHotStaging
     {
         set g_HS_Armed to false.
@@ -346,7 +385,7 @@
     {
         local curLine to g_Line.
         set g_Line to Terminal:Height - 8.
-        OutMsg("g_HS_Active: {0}":Format(g_HS_Active)).
+        
         OutMsg("DoHotStaging     ").
 
         if ship:ModulesNamed("ModuleRCSFX"):Length > 0
@@ -355,6 +394,7 @@
             RCS on.
         }
         set l_currentStgEngs to g_ActiveEngines:Copy.
+        
         for eng in g_HotStage:ENGS
         {
             eng:Activate.
@@ -380,6 +420,10 @@
         set g_HS_Active to false.
         set g_HS_Armed  to false.
         clearScreen.
+
+        OutInfo("UPDATING G_SHIPENGINES").
+        set g_ShipEngines to GetShipEnginesSpecs().
+        
         set g_NextEngines to GetNextEngines("1000").
         set g_Line to curLine.
         return false.

@@ -121,12 +121,22 @@ HydrateEngineConfigs().
     // GetActiveEngines
     global function GetActiveEngines
     {
-        parameter _ship is Ship.
+        parameter _ship is Ship,
+                  _includeBoosters is True.
 
         local engList to list().
         for eng in Ship:Engines
         {
-            if eng:Ignition and not eng:Flameout engList:add(eng).
+            if eng:Ignition and not eng:Flameout
+            {
+                if eng:Decoupler:IsType("Decoupler")
+                {
+                    if not eng:Decoupler:Tag:MatchesPattern("Booster") or _includeBoosters
+                    {
+                        engList:add(eng).
+                    }
+                }
+            }
         }
         return engList.
     }
@@ -806,6 +816,13 @@ HydrateEngineConfigs().
                   _dataMask is "1111110011000000".
 
         return GetEnginesSpecs(_ves:Engines, _dataMask).
+    }
+
+    // UpdateShipEnginesSpecs
+    //
+    global function UpdateShipEnginesSpecs
+    {
+        
     }
 
 

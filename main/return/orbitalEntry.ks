@@ -72,6 +72,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 2
         {
+            set g_StageLimit to 2.
             if HasNode ExecNodeBurn(NextNode).
             set g_TS to 0.
             SetProgram(40).
@@ -334,6 +335,7 @@ until g_Program > 199 or g_Abort
                     DoAction(m, "jettison fairing", true).
                 }
             }
+            lights on.
             SetProgram(54).            
         }
         else if g_Runmode < 0

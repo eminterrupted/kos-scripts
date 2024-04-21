@@ -255,37 +255,32 @@ set g_MissionPlans to ListMissionPlans().
     // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
     global function GetMissionPlanID 
     {
-        local planPriorityList to list(core:tag, Ship:Name:Replace(" ","_")).
         local saniName to Ship:Name.
+
         if Ship:Name:Contains(" ")
         {
             set saniName to saniName:Replace(" ", "_").
             if saniName:Length > 1 set saniName to saniName:SubString(0, saniName:FindLast("_")).
         }
 
-        local saniTag to core:tag:split("_")[0].
-        local saniPri to choose core:tag:split("_")[1] if core:tag:split("_"):Length > 1 else -1.
+        set g_SanitizedTag to core:tag:split("_")[0].
         local planId to "".
 
         set g_AvailablePlans to list().
-        if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
+        if Volume(0):Files:_PLAN:Lex:HasKey(g_SanitizedTag)
         {
-            set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+            set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[g_SanitizedTag]:Lex:Keys.
         }
         else if Volume(0):Files:_PLAN:Lex:HasKey(saniName)
         {
             set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniName]:Lex:Keys.
         }
-        if saniTag:Length > 0
+        else
         {
-
+            // TODO: Choose Plan Folder
+            // TODO: Choose plan
         }
 
-        // if saniPri >= 0
-        // {
-        //     OutStr("Rollin' with the homies, like {0}":Format(planID), cr()).
-        // }
-        // else 
         if g_AvailablePlans:Length = 1
         {
             set planId to g_AvailablePlans[0]:Replace(".amp","").
@@ -300,90 +295,53 @@ set g_MissionPlans to ListMissionPlans().
 
             local _line to g_line.
 
+            local termRegLex to lexicon(
+                "check", lex(
+                    "[-_]",     { set pageIdx to Max(0, pageIdx - 1). return 0. }
+                    ,"[\+=]",   { set pageIdx to Max(0, pageIdx + 1). return 0. }
+                    ,"\d",      { return GetMissionPlanIDHelper(). }
+                ),
+                "validate", lex(
+                    char(13),   { return 1. } // Enter to confirm
+                    ,char(8),   { set cancelFlag to true. return -1.}
+                    // ,"[-_]",     { set pageIdx to Max(0, pageIdx - 1). return 0. }
+                    // ,"[\+=]",   { set pageIdx to Max(0, pageIdx + 1). return 0. }
+                )
+            ).
+
+            local checkModeIdx to 0.
+            local checkResult to CheckTermCharLex(termRegLex[Min(termRegLex:Keys:Length - 1, Max(0, checkModeIdx))]).
+            
             until doneFlag
             {
                 set g_Line to _line.
-
-                DispPlans(pageIdx).
 
                 GetTermChar().
 
                 if g_TermChar <> ""
                 {
-                    if planId:Length = 0
+                    set checkResult to CheckTermCharLex(termRegLex[Min(termRegLex:Keys:Length - 1, Max(0, checkModeIdx))]).
+                    
+                    if checkResult > 1 
                     {
-                        local termCharScalar to g_TermChar:ToNumber(-1).
-                        
-                        if g_TermChar:MatchesPattern("[-_]")
-                        {
-                            set pageIdx to Max(0, pageIdx - 1).
-                        }
-                        else if g_TermChar:MatchesPattern("[\+=]")
-                        {
-                            set pageIdx to Max(0, pageIdx + 1).
-                        }
-                        else if termCharScalar >= 0
-                        {
-                            if Mod(termCharScalar, 10) = 0 
-                            {
-                                set termCharScalar to termCharScalar + 10.
-                            }
-
-                            set selectedIdx to Max(0, Min(g_AvailablePlans:Length - 1, termCharScalar - 1)).
-                            set planID to choose g_AvailablePlans[selectedIdx]:Replace(".amp","") if g_AvailablePlans:Length >= termCharScalar else saniTag + "_0".
-
-                            OutStr("Selected PlanID: >> {0} << ":Format(planID), cr()).
-                            OutStr("Confirm via ENTER", cr()).
-                            OutStr("Cancel  via DELETE", cr()).
-
-                            set doneFlag2 to false.
-                            until doneFlag2
-                            {
-                                set g_TermChar to "".
-                                GetTermChar().
-
-                                if g_TermChar = Terminal:Input:Enter
-                                {
-                                    set doneFlag2 to true.
-                                }
-                                else if g_TermChar = Terminal:Input:DeleteRight
-                                {
-                                    set cancelFlag to true.
-                                    break.
-                                }
-                                else if g_TermChar = "-"
-                                {
-                                    set pageIdx to Max(0, pageIdx - 1).
-                                    break.
-                                }
-                                else if g_TermChar = "+"
-                                {
-                                    set pageIdx to Max(0, pageIdx + 1).
-                                    break.
-                                }
-                            }
-                            clr(g_Line - 2).
-                            clr(g_Line - 1).
-                            clr(g_Line).
-                            set termCharScalar to -1.
-                        }
-                        else
-                        {
-                            
-                        }
+                        set planId to checkResult.
+                        set doneFlag to true.
                     }
-                    OutMsg("Selected PlanID: >> {0} <<           ":Format(planID), cr()).
-                }
-                else if doneFlag2
-                {
-                    set doneFlag to true.
-                }
-                else if cancelFlag
-                {
-                    OutMsg("Cancelling...").
+                    else if checkResult = 0
+                    {
+                        clearScreen.
+                        DispPlans(pageIdx).
+                        wait 0.05.
+                    }
+                    else if checkResult = 1
+                    {
+                        OutStr("Selected PlanID: >> {0} << ":Format(planID), cr()).
+                        OutStr("Confirm via ENTER", cr()).
+                        OutStr("Cancel  via BACKSPACE", cr()).
+                    }
+                    set checkModeIdx to Min(termRegLex:Keys:Length - 1, Max(0, checkResult)).
                 }
                 set g_TermChar to "".
-
             }
         }
 
@@ -401,6 +359,70 @@ set g_MissionPlans to ListMissionPlans().
             return "-1".
         }
     }
+
+    // Local Functions
+    // #region
+    // CheckTermChar
+    local function CheckTermCharLex
+    {
+        parameter _termCharLex.
+
+        from { local i to 0.} until i = _termCharLex:Keys:Length step { set i to i + 1.} do
+        {
+            local regex to _termCharLex:Keys[i].
+            if g_TermChar:MatchesPattern(regex)
+            {
+                return _termCharLex:Values[i]:Call().
+            }
+        }
+    }
+
+    local function GetMissionPlanIDHelper
+    {
+        parameter _termChar to g_TermChar.
+
+        local termCharScalar to _termChar:ToNumber(-1).
+
+        if termCharScalar < 0 
+        {
+            return 0.
+        }
+        else if Mod(termCharScalar, 10) = 0 
+        {
+            set termCharScalar to termCharScalar + 10.
+        }
+
+        local selectedIdx to Max(0, Min(g_AvailablePlans:Length - 1, termCharScalar - 1)).
+        set g_MissionPlanID to choose g_AvailablePlans[selectedIdx]:Replace(".amp","") if g_AvailablePlans:Length >= termCharScalar else g_SanitizedTag + "_0".
+        
+        return 1.
+    }
+
+    local function GetMissionPlanIDHelper2
+    {
+        if g_TermChar = Terminal:Input:Enter
+        {
+            return 1.
+        }
+        else if g_TermChar = Terminal:Input:DeleteRight
+        {
+            set cancelFlag to true.
+            return -1.
+        }
+        else if g_TermChar = "-"
+        {
+            set pageIdx to Max(0, pageIdx - 1).
+            return 2.
+        }
+        else if g_TermChar = "+"
+        {
+            set pageIdx to Max(0, pageIdx + 1).
+            return 3.
+        }
+    }
+
+
+    // #endregion
 
 
 // #endregion

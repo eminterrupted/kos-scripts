@@ -10,7 +10,7 @@ RunOncePath("0:/kslib/lib_navball.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
 // Local vars
-local ascAng to 88.25.
+local ascAng to 89.25.
 local MECO to -1.
 local meSpoolTime to 0.
 local tgtHdg to 30.
@@ -297,6 +297,19 @@ if multistage
     ArmAutoStaging(g_StageLimit).
 }
 
+// Arm Boosters
+local boosterArmed to false.
+local boosterCheckDel  to { return true.}.
+local boosterActionDel to { return false.}.
+local boosterResult to list(false, boosterCheckDel, boosterActionDel).
+if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
+{
+    set boosterResult to ArmBoosterStaging("Ascent").
+    set boosterArmed to boosterResult[0].
+    set boosterCheckDel  to boosterResult[1].
+    set boosterActionDel to boosterResult[2].
+}
+
 // Arm fairings
 local fairingResult to list().
 local fairingsArmed to false.
@@ -453,11 +466,13 @@ until g_Program >= 36 or g_Abort
     DispLaunchTelemetry().
 
     cr().
+    local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
     if g_HS_Armed 
     {
-        print "HotStaging: Armed" at (0, cr()).
         // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
+        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+
         if g_HS_Check:Call(btrem)
         {
             g_HS_Action:Call().
@@ -471,12 +486,40 @@ until g_Program >= 36 or g_Abort
             g_AS_Action:Call().
         }
     }
+    if boosterArmed
+    {
+        if boosterCheckDel:Call()
+        {
+            set boosterResult to boosterActionDel:Call().
+            set boosterArmed to boosterResult[0].
+            if boosterArmed
+            {
+                set boosterCheckDel  to boosterResult[1].
+                set boosterActionDel to boosterResult[2].
+            }
+            else
+            {
+                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                clr(cr()).
+            }
+        }
+        else
+        {
+            OutMsg("Booster staging: Armed", cr()).
+        }
+    }
     if g_Spin_Armed
     {
-        print "SpinStabilization: Armed" at (0, cr()).
-        if g_Spin_Check:Call()
+        // print "SpinStabilization: Armed" at (0, cr()).
+        print "SpinStabilization [Armed] {0}":Format(Round(btRem - g_SpinStab:LEADTIME, 2)) at (0, cr()).
+        if g_Spin_Check:Call(btRem)
         {
+            OutInfo("SpinCheckPassed").
             g_Spin_Action:Call().
+        }
+        else
+        {
+            clr(cr()).
         }
     }
     if fairingsArmed
