@@ -26,7 +26,8 @@
     // *- Global
     // #region
     global g_AzData to list().
-    global g_DRTurnStartAlt to 125.
+    global g_DRTurnStartAlt to Ship:Bounds:Size:Z * 2.
+    global g_PitchMinSpeed to 40.
     // #endregion
 // #endregion
 

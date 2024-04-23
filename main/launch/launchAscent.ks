@@ -312,7 +312,6 @@ if multistage
     
 }
 
-
 if g_AzData:Length = 0
 {
     set g_AzData to l_az_calc_init(tgtAlt, tgtInc).
@@ -365,7 +364,6 @@ OutLog("ArmRCS Result: {0}":Format(g_RCS_Armed), 1).
 local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
 local rollDel to { return 0. }.
 
-
 SetProgram(21).
 SetRunmode(0).
 ClearScreen.
@@ -378,7 +376,7 @@ until g_Program >= 36 or g_Abort
     set g_line to 4.
     if g_Program < 22
     {
-        if g_Runmode > 0
+        if g_Runmode = 1
         {
             OutMsg("Alt:Radar":Format(Round(Alt:Radar, 1)), cr()).
             OutMsg("g_DRTurnStartAlt: {0}":Format(g_DRTurnStartAlt), cr()).
@@ -386,11 +384,23 @@ until g_Program >= 36 or g_Abort
             if Alt:Radar >= g_DRTurnStartAlt
             {
                 OutMsg("PASSING ALT:RADAR >= {0}":Format(g_DRTurnStartAlt), cr()).
-                SetProgram(22).
+                SetRunmode(2).
             }
             else
             {
                 OutMsg("MISSING ALT:RADAR [{0}] >= {1}":Format(Round(Alt:Radar), g_DRTurnStartAlt), cr()).
+            }
+        }
+        else if g_Runmode = 2
+        {
+            if Ship:VerticalSpeed >= g_PitchMinSpeed
+            {
+                OutMsg("MIN PITCH PROGRAM SPEED MET ({0} >= {1}":Format(Ship:VerticalSpeed, g_PitchMinSpeed), cr()).
+                SetProgram(22).
+            }
+            else
+            {
+                OutMsg("MIN PITCH PROGRAM SPEED MISSED ({0} >= {1}":Format(Ship:VerticalSpeed, g_PitchMinSpeed), cr()).
             }
         }
         else if g_Runmode < 0
@@ -624,7 +634,14 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+            if g_SpinStab:STG = Stage:Number - 1
+            {
+                OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
+            }
+            else
+            {
+                OutInfo("SpinStabilization [Waiting]").
+            }
         }
     }
     if fairingsArmed

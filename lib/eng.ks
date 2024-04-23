@@ -213,10 +213,10 @@ HydrateEngineConfigs().
     global function GetActiveBurnTimeRemaining
     {
         parameter _engs is GetActiveEngines(),
-                  _shaper to 0.8.
+                  _shaper to 1.
 
-        local btRemaining to 999999.
-        
+        local stgResLex to lexicon().
+
         for eng in _engs
         {
             local residuals to 0.00000000001.
@@ -226,21 +226,45 @@ HydrateEngineConfigs().
                 set   residuals to 1 - GetField(m, "predicted residuals", 0).
             }
             
-            for ft in eng:ConsumedResources:Values
+            // for ft in eng:ConsumedResources:Values
+            // {
+            //     local resBT to (Stage:ResourcesLex[ft:Name]:Amount * Stage:ResourcesLex[ft:Name]:Density * residuals) / ft:MaxMassFlow.
+            //     set btRemaining to Min(btRemaining, resBT).
+            // }
+            for cres in eng:ConsumedResources:Values
             {
-                local resBT to (Stage:ResourcesLex[ft:Name]:Amount * Stage:ResourcesLex[ft:Name]:Density * residuals) / ft:MaxMassFlow.
-                set btRemaining to Min(btRemaining, resBT).
+                if not stgResLex:HasKey(cres:Name)
+                {
+                    stgResLex:Add(cres:Name, lexicon(
+                        "Amount",           cres:Amount
+                        ,"Density",         cres:Density
+                        ,"TotalMassFlow",   0
+                        ,"Engs",            lexicon()
+                        )
+                    ).
+                }
+                stgResLex[cres:Name]:Engs:Add(eng:UID, list(cres:MaxMassFlow * residuals)).
+                set stgResLex[cres:Name]:TotalMassFlow to stgResLex[cres:Name]:TotalMassFlow + (cres:MaxMassFlow * residuals).
             }
         }
-        if btRemaining = 999999 
+
+        local btRemaining to 999999.
+        from { local i to 0.} until i = stgResLex:Keys:Length step { set i to i + 1.} do
         {
-            set btRemaining to 0.
+            local cresName to stgResLex:Keys[i].
+            local cres to stgResLex[cresName].
+            
+            set btRemaining to Min((cres:Amount * cres:Density) / cres:TotalMassFlow, btRemaining).
+        }
+
+        if btRemaining = 999999
+        {
+            return -1.
         }
         else
         {
-            set btRemaining to Max(0, (btRemaining * _shaper)).
+            return btRemaining.
         }
-        return btRemaining.
     }
 
     // GetEnginesISP :: (<list>Engines) -> <scalar>

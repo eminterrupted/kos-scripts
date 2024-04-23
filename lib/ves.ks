@@ -139,13 +139,10 @@
             {
                 OutLog("Stage Hit: {0}":Format(stg), 1).
                 set g_SpinStab to spinStages[stg].
-                // from { local i to stg.} until i > Stage:Number step { set i to i + 1.} do
-                // {
-                    // local bt to choose g_ShipEngines[stg + 1]:TARGETBURNTIME if g_ShipEngines:HasKey(stg + 1) else -1.
                 set g_Spin_Check to { 
                     parameter __checkStg,
-                              __checkVal,
-                              __curVal.
+                            __checkVal,
+                            __curVal.
 
                     local curStgChk to Stage:Number - 1.
 
@@ -169,11 +166,10 @@
 
                 set g_Spin_Action to DoSpinStabilization@:Bind(0.5):Bind(stg).
                 set g_Spin_Armed to True.
-                // }
             }
             else
             {
-                OutLog("Stage Miss: {0}":Format(stg), 1).
+                OutLog("Stage : {0}":Format(stg), 1).
             }
         }
     }

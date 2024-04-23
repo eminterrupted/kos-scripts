@@ -11,7 +11,7 @@
     
     // *- Local
     // #region
-    local l_defaultLogPath to "0:/log/AEA/{0}-{1}.log":Format(Round(Time:Seconds), Ship:Name:Replace(" ","_")).
+    local l_defaultLogPath to "0:/log/AEA/{0}-{1}.log":Format(Round(MissionTime), Ship:Name:Replace(" ","_")).
     local l_sysLog to Path(l_defaultLogPath).
     // #endregion
 

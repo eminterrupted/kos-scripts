@@ -288,12 +288,17 @@ if multistage
 {
     if Ship:PartsTaggedPattern("HS|HotStage"):Length > 0 
     {
-        ArmHotStaging(g_StageLimit, MECO).
+        // ArmHotStaging(g_StageLimit, MECO).
+        OutInfo("Arming Hot-Staging Subroutine").
+        ArmHotStaging(g_StageLimit).
     }
     if Ship:PartsTaggedPattern("SpinDC"):Length > 0
     {
+        OutInfo("Arming Spin-Stabilization Subroutine").
         ArmSpinStabilization(g_StageLimit).
+        OutStr("Next Spin Stage: [{0}]":Format(g_SpinStab:STG)).
     }
+    OutInfo("Arming Auto-Staging Subroutine").
     ArmAutoStaging(g_StageLimit).
 }
 
@@ -469,14 +474,15 @@ until g_Program >= 36 or g_Abort
     local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
     if g_HS_Armed 
     {
-        // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
-        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
 
-        if g_HS_Check:Call(btrem)
-        {
-            g_HS_Action:Call().
-        }
+        print "HotStaging [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+        set g_HS_Armed to RunHotStageSubroutine(btrem).
+
+        // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
+        // if g_HS_Check:Call(btrem)
+        // {
+        //     g_HS_Action:Call().
+        // }
     }
     if g_AS_Armed 
     {
@@ -508,18 +514,40 @@ until g_Program >= 36 or g_Abort
             OutMsg("Booster staging: Armed", cr()).
         }
     }
+    // if g_Spin_Armed
+    // {
+    //     // print "SpinStabilization: Armed" at (0, cr()).
+    //     print "SpinStabilization [Armed] {0}":Format(Round(btRem - g_SpinStab:LEADTIME, 2)) at (0, cr()).
+    //     if g_Spin_Check:Call(btRem)
+    //     {
+    //         OutInfo("SpinCheckPassed").
+    //         g_Spin_Action:Call().
+    //     }
+    //     else
+    //     {
+    //         clr(cr()).
+    //     }
+    // }
     if g_Spin_Armed
     {
-        // print "SpinStabilization: Armed" at (0, cr()).
-        print "SpinStabilization [Armed] {0}":Format(Round(btRem - g_SpinStab:LEADTIME, 2)) at (0, cr()).
-        if g_Spin_Check:Call(btRem)
+        if g_SpinStab:STG = Stage:Number - 1
         {
-            OutInfo("SpinCheckPassed").
-            g_Spin_Action:Call().
+            if g_Spin_Check:Call(btrem)
+            {
+                OutStr("Passed g_Spin_Check", g_termH - 5).
+                OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
+                g_Spin_Action:Call().
+                clr(cr()).
+            }
+            else
+            {
+                OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
+            }
         }
         else
         {
-            clr(cr()).
+            OutInfo("SpinStabilization [Waiting]").
+            OutInfo("g_SpinStab Stage: [{0}]":Format(g_SpinStab:STG)).
         }
     }
     if fairingsArmed
