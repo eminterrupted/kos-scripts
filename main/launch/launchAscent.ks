@@ -507,8 +507,12 @@ until g_Program >= 36 or g_Abort
             else
             {
                 clr(cr()).
-                SetProgram(32).
+                SetRunmode(4).
             }
+        }
+        else if g_Runmode = 4
+        {
+            SetProgram(32).
         }
         else if g_Runmode < 0
         {
@@ -529,7 +533,7 @@ until g_Program >= 36 or g_Abort
 
     else if g_Program = 32
     {
-        if g_RunMode = 1
+        if g_RunMode >= 1
         {
             if Ship:Altitude >= Ship:Body:Atm:Height
             {
@@ -623,25 +627,55 @@ until g_Program >= 36 or g_Abort
             OutMsg("Booster staging: Armed", cr()).
         }
     }
+    // if g_Spin_Armed
+    // {
+    //     if g_Spin_Check:Call(btrem)
+    //     {
+    //         OutStr("Passed g_Spin_Check", g_termH - 5).
+    //         OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
+    //         g_Spin_Action:Call().
+    //         clr(cr()).
+    //     }
+    //     else
+    //     {
+    //         if g_SpinStab:STG = Stage:Number - 1
+    //         {
+    //             OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
+    //         }
+    //         else
+    //         {
+    //             OutInfo("SpinStabilization [Waiting]").
+    //         }
+    //     }
+    // }
     if g_Spin_Armed
     {
-        if g_Spin_Check:Call(btrem)
+        if g_SpinStab:STG = Stage:Number - 1
         {
-            OutStr("Passed g_Spin_Check", g_termH - 5).
-            OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
-            g_Spin_Action:Call().
-            clr(cr()).
-        }
-        else
-        {
-            if g_SpinStab:STG = Stage:Number - 1
+            if btRem > 0 //  or Ship:AvailableThrust > 0
             {
-                OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
+                if g_Spin_Check:Call(btrem)
+                {
+                    OutStr("Passed g_Spin_Check", g_termH - 10).
+                    OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 9).
+                    g_Spin_Action:Call().
+                }
+                else
+                {
+                    OutInfo("SpinStabilization [Armed]").
+                    OutInfo("T{0})":Format(Round(g_SpinStab:LEADTIME - btRem, 2))).
+                }
             }
             else
             {
                 OutInfo("SpinStabilization [Waiting]").
+                clr(cr()).
             }
+        }
+        else
+        {
+            OutInfo("SpinStabilization [Ready]").
+            OutInfo("g_SpinStab Stage: [{0}]":Format(g_SpinStab:STG)).
         }
     }
     if fairingsArmed

@@ -431,15 +431,15 @@ until g_Program >= 36 or g_Abort
 
     else if g_Program = 30
     {
-        if g_RunMode > 0
+        if g_RunMode >= 1
         {
-            if Ship:Altitude >= Ship:Body:Atm:Height and Ship:AvailableThrust <= 0.01 and Stage:Number <= g_StageLimit
+            if Ship:Altitude >= Ship:Body:Atm:Height
             {
                 SetProgram(36).
             }
             else
             {
-                SetRunMode(2).
+                OutInfo("DIST TO TGT: {0}":Format(Round(Ship:Body:Atm:Height, 1))).
             }
         }
         else if g_Runmode < 0
@@ -532,27 +532,35 @@ until g_Program >= 36 or g_Abort
     {
         if g_SpinStab:STG = Stage:Number - 1
         {
-            if g_Spin_Check:Call(btrem)
+            if btRem > 0 //  or Ship:AvailableThrust > 0
             {
-                OutStr("Passed g_Spin_Check", g_termH - 5).
-                OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
-                g_Spin_Action:Call().
-                clr(cr()).
+                if g_Spin_Check:Call(btrem)
+                {
+                    OutStr("Passed g_Spin_Check", g_termH - 10).
+                    OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 9).
+                    g_Spin_Action:Call().
+                }
+                else
+                {
+                    OutInfo("SpinStabilization [Armed]").
+                    OutInfo("T{0})":Format(Round(g_SpinStab:LEADTIME - btRem, 2))).
+                }
             }
             else
             {
-                OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
+                OutInfo("SpinStabilization [Waiting]").
+                clr(cr()).
             }
         }
         else
         {
-            OutInfo("SpinStabilization [Waiting]").
+            OutInfo("SpinStabilization [Ready]").
             OutInfo("g_SpinStab Stage: [{0}]":Format(g_SpinStab:STG)).
         }
     }
     if fairingsArmed
     {
-        print "Fairing jettison: Armed" at (0, cr()).
+        OutInfo("Fairing jettison: Armed").
         if fairingCheck:Call()
         {
             if fairingAction:Call() 

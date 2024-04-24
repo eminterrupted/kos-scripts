@@ -1,2 +1,2 @@
-launch/launchAscent|90;272500|2
-return/subOrbitalEntry|150000|2
+launch/launchAscent|-90;272500|2
+return/subOrbitalEntry|125000|2

@@ -24,3 +24,4 @@ test/data/**
 data/test/**
 state.txt
 _plan/*
+_plan/**

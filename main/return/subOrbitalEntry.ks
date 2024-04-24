@@ -6,6 +6,7 @@ parameter _params is list().
 // Dependencies
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/reentry.ks").
+RunOncePath("0:/lib/sci.ks").
 
 // Declare Variables
 local fairings      to list().
@@ -217,6 +218,22 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 7
         {
+            TransferSciData(core:part).
+            SetRunmode(9).
+        }
+        else if g_Runmode = 9
+        {
+            if Stage:Number > 1
+            {
+                SetRunmode(11).
+            }
+            else 
+            {
+                SetProgram(50).
+            }
+        }
+        else if g_Runmode = 11
+        {
             OutMsg("Staging [{0}->1]":Format(Stage:Number)).
             until Stage:Number <= 1
             {
@@ -236,7 +253,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33) at (0, cr()).
+            OutInfo("WAITING FOR ATMOSPHERIC INTERFACE [{0}]":Format(tgtReentryAlt)).
             SetRunmode(1).
         }
     }

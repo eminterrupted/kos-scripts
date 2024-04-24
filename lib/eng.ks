@@ -257,14 +257,7 @@ HydrateEngineConfigs().
             set btRemaining to Min((cres:Amount * cres:Density) / cres:TotalMassFlow, btRemaining).
         }
 
-        if btRemaining = 999999
-        {
-            return -1.
-        }
-        else
-        {
-            return btRemaining.
-        }
+        return btRemaining.
     }
 
     // GetEnginesISP :: (<list>Engines) -> <scalar>

@@ -11,8 +11,22 @@ Core:DoEvent("Open Terminal").
 if Ship:Status = "PRELAUNCH"
 {
     InitStateCache(True).
-    set g_MissionPlans to ListMissionPlans().
-    SetMissionPlanId(GetMissionPlanID(), True).
+    local mpConfirm to false.
+    until mpConfirm
+    {
+        set g_MissionPlans to ListMissionPlans().
+        local mpId to SelectMissionPlanID().
+        if mpId > -1
+        {
+            set mpConfirm to ConfirmMissionPlan().
+            SetMissionPlanId(mpId, True).
+        }
+        else
+        {
+            ClearScreen.
+        }
+            
+    }
     set g_MissionPlan to GetMissionPlan(g_MissionPlanId).
     set g_StageLimit to g_MissionPlan:S[g_State[1]]:ToNumber(0).
     CacheState().
@@ -41,4 +55,10 @@ from { local i to g_Context.} until i = g_MissionPlan:M:Length step { set i to i
 
     wait until HomeConnection:IsConnected().
     runPath(scr, prm).
+}
+
+// TODO ConfirmMissionPlan
+local function ConfirmMissionPlan
+{
+    return true.
 }

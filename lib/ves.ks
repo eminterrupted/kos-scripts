@@ -127,7 +127,8 @@
     // 
     global function ArmSpinStabilization
     {
-        parameter _stgLimit is g_StageLimit.
+        parameter _stgLimit is g_StageLimit,
+                  _rollFactor to 1.
 
         local spinStages to GetSpinStages(_stgLimit).
 
@@ -137,7 +138,7 @@
         {
             if spinStages:HasKey(stg)
             {
-                OutLog("Stage Hit: {0}":Format(stg), 1).
+                // OutLog("Stage Hit: {0}":Format(stg), 1).
                 set g_SpinStab to spinStages[stg].
                 set g_Spin_Check to { 
                     parameter __checkStg,
@@ -148,23 +149,23 @@
 
                     if curStgChk = __checkStg
                     {
-                        OutStr("g_Spin_Check[PASS]: [{0}] <= [{1}]":Format(__curVal, __checkVal), Terminal:Height - 5).
+                        // OutInfo("g_Spin_Check[PASS]: [{0}] <= [{1}]":Format(__curVal, __checkVal)).
                         return __curVal <= __checkVal.
                     }
                     else if curStgChk > __checkStg
                     {
-                        OutStr("g_Spin_Check[FAIL]: [{0}] = [{1}]":Format(curStgChk, __checkStg), Terminal:Height - 5).
+                        // OutStr("g_Spin_Check[FAIL]: [{0}] = [{1}]":Format(curStgChk, __checkStg), Terminal:Height - 11).
                     }
                     else
                     {
-                        clr(Terminal:Height - 5).
+                        // clr(Terminal:Height - 11).
                         set g_Spin_Armed to False.
                     }
                     return false. 
                 }.
                 set g_Spin_Check to g_Spin_Check:Bind(stg):Bind(g_SpinStab:LEADTIME).
 
-                set g_Spin_Action to DoSpinStabilization@:Bind(0.5):Bind(stg).
+                set g_Spin_Action to DoSpinStabilization@:Bind(_rollFactor):Bind(stg).
                 set g_Spin_Armed to True.
             }
             else
@@ -196,7 +197,7 @@
             }
             else
             {
-                OutInfo("Stage:Number [{0}] <= [{1}] _stpStg":Format(Stage:Number, _stpStg)).
+                // OutInfo("Stage:Number [{0}] <= [{1}] _stpStg":Format(Stage:Number, _stpStg)).
             }
         }
         else
