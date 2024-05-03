@@ -232,7 +232,7 @@
         for eng in _boostObj[_boostIdx]:ENG 
         {
             if eng:Flameout set flameoutCount to flameoutCount + 1.
-            OutStr("[{0} {1}]: {2} / {3}":Format(eng:Name, eng:UID, eng:Flameout, Round(eng:Thrust, 2)), cr()).
+            OutStr("[{0} {1}]: {2} / {3}":Format(eng:Name, eng:UID, eng:Flameout, Round(eng:Thrust, 2))).
         }
         return flameoutCount = _boostObj[_boostIdx]:ENG:Length.
     }
@@ -303,16 +303,23 @@
         parameter _stgLim is g_StageLimit,
                   _checkVal  is -1.
 
-        OutMsg("Arming hot stage", 20).
+        OutMsg("Arming hot stage").
         set g_HotStage to GetNextHotStage(_stgLim).
         local spoolTime to 0.
         if _checkVal < 0
         {
             if g_ShipEngines:IGNSTG:HasKey(g_HotStage:STG)
             {
+                if g_ShipEngines:IGNSTG[g_HotStage:STG]:HasKey("STGMAXSPOOL") 
+                {
+                    set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGMAXSPOOL.
+                }
+                else
+                {
+                    set spoolTime to 0.66.
+                }
                 // if g_ShipEngines:IGNSTG:HasKey("STGBURNTIME") set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
-                if g_ShipEngines:IGNSTG:HasKey("STGSPOOLTIME") set spoolTime to g_ShipEngines:IGNSTG[g_HotStage:STG]:STGSPOOLTIME.
-                set _checkVal to spoolTime * 1.5.
+                set _checkVal to spoolTime * 1.125.
             }
             else
             {
@@ -326,12 +333,13 @@
 
             if Stage:Number = g_HotStage:STG + 1
             {
-                OutInfo("HS ETA: T{0}  ":Format(Round(__curVal, 2)), cr()).
+                OutStr("_checkVal:  {0}":Format(__checkVal), g_TermH - 10).
+                OutStr("HS ETA  : T{0}":Format(Round(__curVal - __checkVal, 2)), g_termH - 9).
                 return __curVal <= __checkVal.
             }
             return false.
         }.
-        set g_HS_Check to g_HS_Check@:Bind(spoolTime * 1.5).
+        set g_HS_Check to g_HS_Check@:Bind(_checkVal).
         
         set g_HS_Action to DoHotStaging@.
 
@@ -386,7 +394,7 @@
         local curLine to g_Line.
         set g_Line to Terminal:Height - 8.
         
-        OutMsg("DoHotStaging     ").
+        OutMsg("DoHotStaging").
 
         if ship:ModulesNamed("ModuleRCSFX"):Length > 0
         {
@@ -490,19 +498,23 @@
     //
     local function CheckUllage
     {
-        if g_NextEngines:Length > 0
+        if g_NextEngines:Length = 0
         {
-            local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
-            if engObj:ULLAGE
-            {
-                return engObj:FuelStability >= 0.975.
-            }
+            set g_NextEngines to GetNextEngines("1000", 0).
         }
-        return true.
+        local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
+        if engObj:ULLAGE
+        {
+            return engObj:FuelStability >= 0.975.
+        }
+        else
+        {
+            return true.
+        }
     }
 
     // SafeStage
-    local function SafeStage
+    global function SafeStage
     {
         wait until Stage:Ready.
         stage.
@@ -510,12 +522,14 @@
     }
 
     // SafeStageWithUllage
-    local function SafeStageWithUllage
+    global function SafeStageWithUllage
     {
         if Stage:Ready
         {
+            OutStr("Stage ready", g_termH - 5).
             if CheckUllage()
             {
+                OutStr("Ullage Check Successful", g_termH - 4).
                 stage.
                 wait 0.25.
                 return true.

@@ -21,13 +21,19 @@
     local l_SrfProToObtPro_StartAlt to 2500.
     local l_SrfProToObtPro_EndAlt   to 75000.
     local l_ProTransitionWindow     to l_SrfProToObtPro_EndAlt - l_SrfProToObtPro_StartAlt.
+
+    local l_MaxTransferAlt to 3000000.
+    local l_MinTransferAlt to 140000.
+
+    local l_PitchUpperMax to 10.
+
     // #endregion
 
     // *- Global
     // #region
     global g_AzData to list().
-    global g_DRTurnStartAlt to Ship:Bounds:Size:Z * 2.
-    global g_PitchMinSpeed to 40.
+    global g_DRTurnStartAlt to Ship:Bounds:Size:Z * 1.625.
+    global g_PitchMinSpeed to 37.5.
     // #endregion
 // #endregion
 
@@ -79,22 +85,28 @@
                   _shaper to 1,
                   _curApo is Ship:Apoapsis.
 
-        local adjAltErr            to 0.
-        local adjPitLim            to 0.
-        local curAlt               to Ship:Altitude.
-        local curAltErr            to curAlt / l_PitchProgram_EndAlt.
-        local curAltPres           to Body:Atm:AltitudePressure(curAlt).
-        local curApoErr            to _curApo / _tgtApo.
-        local curEffErr            to 0.
-        local curProAltErr         to (curAlt - l_SrfProToObtPro_StartAlt) / l_ProTransitionWindow.
-        local curTurnAltErr        to (curAlt - l_PitchProgram_StartAlt) / l_PitchTransitionWindow.
+        local adjAltErr     to 0.
+        local adjPitLim     to 0.
+        local pitMax        to 90.
+        local pitMin        to -22.5.
+        // local adjApoTgt            to _curApo * ().
+        local curAlt        to Ship:Altitude.
+        local curAltErr     to curAlt / l_PitchProgram_EndAlt.
+        local curAltPres    to Body:Atm:AltitudePressure(curAlt).
+        local curApoErr     to _curApo / _tgtApo.
+        local curEffErr     to 0.
+        local curProAltErr  to (curAlt - l_SrfProToObtPro_StartAlt) / l_ProTransitionWindow.
+        local curTurnAltErr to (curAlt - l_PitchProgram_StartAlt) / l_PitchTransitionWindow.
+         
+        local tgtTransAlt   to Max(l_MinTransferAlt, _tgtApo * (1 - ((_tgtApo / 3.25) / l_MaxTransferAlt))).
+        local curTransErr   to _curApo / tgtTransAlt. 
 
         local curProPit to Ship:Facing.
         local obtProPit to pitch_for(Ship, Ship:Prograde).
         local obtProPitAdj to obtProPit.
         local srfProPit to pitch_for(Ship, Ship:SrfPrograde).
         local srfProPitAdj to srfProPit.
-        
+
         // local tgtAltPitAng          to 0.
 
         // local selectedPit to choose srfProPitAdj if srfProPitAdj > obtProPit else obtProPit.
@@ -107,12 +119,27 @@
         else if curAlt < l_SrfProToObtPro_EndAlt
         {
             set curProPit to (obtProPit * curProAltErr) + (srfProPit * (1 - curProAltErr)).
-            set curEffErr to (curAltErr * (1 - curTurnAltErr)) + (curApoErr * curTurnAltErr).
+            if _curApo < tgtTransAlt
+            {
+                set curEffErr to (curAltErr * (1 - curTurnAltErr)) + (curTransErr * curTurnAltErr).
+            }
+            else
+            {
+                set curEffErr to (curAltErr * (1 - curTurnAltErr)) + (curApoErr * curTurnAltErr).
+                set pitMin to Min(-pitMin, Max(-l_PitLim, l_PitchUpperMax + (-pitMin * (1 - curEffErr)))).
+            }
+        }
+        else if _curApo < (tgtTransAlt * 0.75)
+        {
+            set curProPit to obtProPit.
+            set curEffErr to curTransErr.
+            set pitMin to Min(-pitMin, Max(-l_PitLim, l_PitchUpperMax + (-pitMin * (1 - curEffErr)))).
         }
         else
         {
             set curProPit to obtProPit.
-            set curEffErr to curApoErr.
+            set curEffErr to (curApoErr + curTransErr) / 2.
+            set pitMin to Min(-pitMin, Max(-l_PitLim, l_PitchUpperMax + (-pitMin * (1 - curEffErr)))).
         }
 
         // local curProPit to choose srfProPitAdj if curAlt < l_SrfProToObtPro_Alt
@@ -122,9 +149,9 @@
 
         local tgtRawAng     to 90 * (1 - curEffErr).
         local tgtShapedAng  to tgtRawAng * _shaper.
-        local tgtPitAngNrm  to Min(90, Max(-22.5, tgtShapedAng)).
+        local tgtPitAngNrm  to Min(pitMax, Max(pitMin, tgtShapedAng)).
         set   adjPitLim     to Max(1.25, l_PitLim * (1 - curAltPres)).
-        local effPitAng     to Max(curProPit - adjPitLim, Min(tgtPitAngNrm, curProPit + adjPitLim)).
+        local effPitAng     to Max(curProPit - adjPitLim, Min(tgtPitAngNrm, curProPit + l_PitchUpperMax)).
         // local effPitAng     to Max(curProPit - l_PitLim, Min(tgtAltPitAng, curProPit + l_PitLim)) * _shaper.
 
         // if effPitAng < 0 
@@ -145,7 +172,7 @@
 
         set g_Line to lastLine.
 
-        if g_LogOut log "{0},{1},{2},{3},{4},{6},{7},{8},{9},{10},{11},{12},{13},{14}":Format(MissionTime, effPitAng, adjPitLim, curAltPres, tgtPitAngNrm,curAlt, curAltErr, curApoErr, curEffErr, curTurnAltErr, curProPit, obtProPit, obtProPitAdj, srfProPit, srfProPitAdj) to g_DataLog.
+        if g_LogOut log "{0},{1},{2},{3},{4},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}":Format(MissionTime, effPitAng, adjPitLim, curAltPres, tgtPitAngNrm,curAlt, curAltErr, _curApo, curApoErr, curEffErr, curTurnAltErr, curProPit, obtProPit, obtProPitAdj, srfProPit, srfProPitAdj) to g_DataLog.
 
         return effPitAng.
     }

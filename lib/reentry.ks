@@ -83,14 +83,14 @@
         if Addons:Available("Career")
         {
             local waitTimer to 2.
-            set g_TS to Time:Seconds + waitTimer.
+            local ts0 to Time:Seconds + waitTimer.
             local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
             set g_TermChar to "".
             OutMsg("Press any key to abort", cr()).
             local abortFlag to false.
             local line to g_Line.
 
-            until Time:Seconds > g_TS or abortFlag
+            until Time:Seconds > ts0 or abortFlag
             {
                 set g_Line to line.
                 GetTermChar().
@@ -102,7 +102,7 @@
                 }
                 else
                 {
-                    OutInfo(waitStr:Format(Round(g_TS - Time:Seconds, 2)), cr()).
+                    OutInfo(waitStr:Format(Round(ts0 - Time:Seconds, 2)), cr()).
                 }
                 wait 0.01.
             }
@@ -116,9 +116,9 @@
             {
                 local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
                 local recoveryStr to "Attempting recovery (Status: {0})".
-                set g_TS to Time:Seconds + _recoveryWindow.
+                set ts0 to Time:Seconds + _recoveryWindow.
                 local abortStr to "Press any key to abort ({0,-5}s)".
-                until Time:Seconds >= g_TS or abortFlag
+                until Time:Seconds >= ts0 or abortFlag
                 {
                     set g_Line to line.
 
@@ -134,7 +134,7 @@
                     else
                     {
                         OutInfo(recoveryStr:Format(recoveryState[1]), cr()).
-                        OutStr(abortStr:Format(g_TS - Time:Seconds, 2), cr()).
+                        OutStr(abortStr:Format(ts0 - Time:Seconds, 2), cr()).
 
                         GetTermChar().
                         if g_TermChar <> ""
@@ -177,13 +177,14 @@
             set g_line to g_line + 5.
             local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "RECOVERING").} else { return list(False, "UNRECOVERABLE").}}.
             set g_RecoveryFlag to true.
-            
-            if g_TS = 0 
+            local ts0 to 0.
+
+            if ts0 = 0 
             {
-                set g_TS to Time:Seconds + _recoveryWindow.
+                set ts0 to Time:Seconds + _recoveryWindow.
             }
             
-            if Time:Seconds >= g_TS
+            if Time:Seconds >= ts0
             {
                 local recoveryState to getRecoveryState:Call(_ves).
                 OutMsg("Attempting recovery":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
@@ -198,7 +199,7 @@
                 else
                 {
                     OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
-                    OutStr("Time remaining for recovery: {0}s":Format(g_TS - Time:Seconds):PadRight(g_termW - 15), cr()).
+                    OutStr("Time remaining for recovery: {0}s":Format(ts0 - Time:Seconds):PadRight(g_termW - 15), cr()).
 
                     GetTermChar().
                     if g_TermChar <> ""

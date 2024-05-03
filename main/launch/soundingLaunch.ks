@@ -433,6 +433,7 @@ until g_Program >= 36 or g_Abort
     {
         if g_RunMode >= 1
         {
+            set g_Throt to 0.
             if Ship:Altitude >= Ship:Body:Atm:Height
             {
                 SetProgram(36).

@@ -46,7 +46,7 @@
     global g_TermQueue   is Queue().
 
     // Timestamps
-    global g_TS to 0.
+    global g_TS_0 to 0.
 
     // #endregion
 // #endregion

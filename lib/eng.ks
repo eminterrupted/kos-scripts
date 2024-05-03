@@ -125,7 +125,7 @@ HydrateEngineConfigs().
                   _includeBoosters is True.
 
         local engList to list().
-        for eng in Ship:Engines
+        for eng in _ship:Engines
         {
             if eng:Ignition and not eng:Flameout
             {
@@ -146,14 +146,15 @@ HydrateEngineConfigs().
     // Optional datamask parameter to scope to engine types (regular, booster, sep/ullage motors)
     global function GetNextEngines
     {
-        parameter _dataMask is "1110". // [0] Regular engines
+        parameter _dataMask is "1110", // [0] Regular engines
                                        // [1] Booster engines
                                        // [2] Sep motors
                                        // [0] Reserved / Currently unused
+                  _stgLimit is g_StageLimit.
 
         local engList to list().
 
-        from { local iStg to Stage:Number.} until iStg < 0 step { set iStg to iStg - 1.} do
+        from { local iStg to Stage:Number.} until iStg < _stgLimit step { set iStg to iStg - 1.} do
         {
             if g_ShipEngines:IGNSTG:HasKey(iStg)
             {
@@ -179,6 +180,11 @@ HydrateEngineConfigs().
                 if engList:Length > 0 
                 {
                     break.
+                }
+                else
+                {
+                    OutStr("GetNextEngines being weird").
+                    OutStr("g_NextEngines stage / length: [ {0} / {1} ]":Format(iStg, engList:Length)).
                 }
             }
         }
@@ -212,39 +218,44 @@ HydrateEngineConfigs().
     // GetActiveBurnTimeRemaining
     global function GetActiveBurnTimeRemaining
     {
-        parameter _engs is GetActiveEngines(),
-                  _shaper to 1.
+        parameter _engs is GetActiveEngines(Ship, False),
+                  _includeBoosters is True.
 
         local stgResLex to lexicon().
-
+        
         for eng in _engs
         {
-            local residuals to 0.00000000001.
-            if eng:HasModule("ModuleEnginesRF")
+            local processEng to true.
+
+            if not _includeBoosters and not eng:Decoupler:Tag:Contains("Booster")
             {
-                local m to eng:GetModule("ModuleEnginesRF").
-                set   residuals to 1 - GetField(m, "predicted residuals", 0).
+                set processEng to false.
             }
-            
-            // for ft in eng:ConsumedResources:Values
-            // {
-            //     local resBT to (Stage:ResourcesLex[ft:Name]:Amount * Stage:ResourcesLex[ft:Name]:Density * residuals) / ft:MaxMassFlow.
-            //     set btRemaining to Min(btRemaining, resBT).
-            // }
-            for cres in eng:ConsumedResources:Values
+
+            if processEng
             {
-                if not stgResLex:HasKey(cres:Name)
+                local residuals to 0.00000000001.
+                if eng:HasModule("ModuleEnginesRF")
                 {
-                    stgResLex:Add(cres:Name, lexicon(
-                        "Amount",           cres:Amount
-                        ,"Density",         cres:Density
-                        ,"TotalMassFlow",   0
-                        ,"Engs",            lexicon()
-                        )
-                    ).
+                    local m to eng:GetModule("ModuleEnginesRF").
+                    set   residuals to 1 - GetField(m, "predicted residuals", 0).
                 }
-                stgResLex[cres:Name]:Engs:Add(eng:UID, list(cres:MaxMassFlow * residuals)).
-                set stgResLex[cres:Name]:TotalMassFlow to stgResLex[cres:Name]:TotalMassFlow + (cres:MaxMassFlow * residuals).
+                
+                for cres in eng:ConsumedResources:Values
+                {
+                    if not stgResLex:HasKey(cres:Name)
+                    {
+                        stgResLex:Add(cres:Name, lexicon(
+                            "Amount",           cres:Amount
+                            ,"Density",         cres:Density
+                            ,"TotalMassFlow",   0
+                            ,"Engs",            lexicon()
+                            )
+                        ).
+                    }
+                    stgResLex[cres:Name]:Engs:Add(eng:UID, list(cres:MaxMassFlow * residuals)).
+                    set stgResLex[cres:Name]:TotalMassFlow to stgResLex[cres:Name]:TotalMassFlow + (cres:MaxMassFlow * residuals).
+                }
             }
         }
 
@@ -258,6 +269,134 @@ HydrateEngineConfigs().
         }
 
         return btRemaining.
+    }
+
+
+    // GetPredictedBurnTime -- Pretty much the same as above, honestly. A few tiny tweaks.
+    global function GetPredictedBurnTime
+    {
+        parameter _engs is g_NextEngines.
+
+        local btRemaining to 999999.
+        local dcStg to -1.
+        local stgResLex to lexicon().
+
+        // Get engine mass flows and residuals
+        for eng in _engs
+        {
+            set dcStg to eng:DecoupledIn.
+            local residuals to 0.00000000001.
+            if eng:HasModule("ModuleEnginesRF")
+            {
+                local m to eng:GetModule("ModuleEnginesRF").
+                set   residuals to 1 - GetField(m, "predicted residuals", 0).
+            }
+
+            for cres in eng:ConsumedResources:Values
+            {
+                if not stgResLex:HasKey(cres:Name)
+                {
+                    stgResLex:Add(cres:Name, lexicon(
+                        "Amount",           0
+                        ,"Density",         cres:Density
+                        ,"MaxMassFlow",     0
+                        ,"Engs",            lexicon()
+                        )
+                    ).
+                }
+                stgResLex[cres:Name]:Engs:Add(eng:UID, list(cres:MaxMassFlow * residuals)).
+                set stgResLex[cres:Name]:MaxMassFlow to stgResLex[cres:Name]:MaxMassFlow + (cres:MaxMassFlow * residuals).
+            }
+        }
+
+        // Based on engine stage, find the resources. This wouldn't be necessary if ConsumedResources would actually work when the engine isn't active :(
+        local resList to list().
+        list Resources in resList.
+        for res in resList
+        {
+            if stgResLex:HasKey(res:Name)
+            {
+                local resAmt to 0.
+                local resCap to 0.
+                
+                for p in res:Parts
+                {
+                    if p:DecoupledIn = dcStg
+                    {
+                        for pRes in p:Resources
+                        {
+                            if pRes:Name = res:Name
+                            {
+                                set resAmt to resAmt + pRes:Amount.
+                                set resCap to resCap + pRes:Capacity.
+                            }
+                        }
+                    }
+                }
+
+                set stgResLex[res:Name]:Amount to resAmt.
+                set stgResLex[res:Name]:Capacity to resCap.
+                
+                set btRemaining to Min((stgResLex[res:Name]:Amount * stgResLex[res:Name]:Density) / stgResLex[res:Name]:MaxMassFlow, btRemaining).
+            }
+        }
+
+        // from { local i to 0.} until i = stgResLex:Keys:Length step { set i to i + 1.} do
+        // {
+        //     local cresName to stgResLex:Keys[i].
+        //     local cres to stgResLex[cresName].
+            
+        //     set btRemaining to Min((cres:Amount * cres:Density) / cres:TotalMassFlow, btRemaining).
+        // }
+
+        return btRemaining.
+    }
+
+
+    // GetStageBurnTimes :: _startWithStage<int>, _endWithStage<int> -> Lexicon(TotalBurnTime, <int>, Stages, lexicon(stg, <time>, [stg, <time>]]))
+    // This returns burn time predictions for a range of stages based on expected fuel consumption. Heavier than the config approach but far more accurate.
+    global function GetStageBurnTimes
+    {
+        parameter _startWithStg,
+                  _endWithStg.
+
+        local totalBurnTime to 0.
+        local stageLex to lex().
+
+        from { local i to _startWithStg.} until i < _endWithStg step { set i to i - 1.} do
+        {
+            local stgEngs to list().
+            if g_ShipEngines:IGNSTG:HasKey(i)
+            {
+                set stgEngs to g_ShipEngines:IGNSTG[i]:ENG.
+            }
+            else
+            {
+                set stgEngs to GetEnginesForStage(i).
+            }
+
+            if stgEngs:Length > 0
+            {
+                local stgBurnTime to GetPredictedBurnTime(stgEngs).
+                set stageLex[i] to stgBurnTime.
+                set totalBurnTime to totalBurnTime + stgBurnTime.
+            }
+        }
+
+        return lexicon("TOTAL", totalBurnTime, "STAGE", stageLex).
+    }
+
+    // 
+    local function GetEnginesForStage
+    {
+        parameter _stg.
+
+        local engList to list().
+        for eng in Ship:Engines
+        {
+            if eng:Stage = _stg engList:Add(eng).
+        }
+        return engList.
     }
 
     // GetEnginesISP :: (<list>Engines) -> <scalar>
@@ -479,6 +618,7 @@ HydrateEngineConfigs().
     global function GetEnginesPerformanceData
     {
         parameter _engList is g_ActiveEngines,
+                  _noBoosters is false,
                   _dataMask is "11000000".      // A 1-byte Bitmask to determine which data to hydrate during this iteration. Returns the base data by default.
 
                                                 // Any bit with a value of 1 will hydrate the data based on the table below, while a value of 0 will not. 
@@ -539,6 +679,22 @@ HydrateEngineConfigs().
 
 
         local perfObj to lex().
+        local prunedEngList to list().
+        
+        if _noBoosters
+        {
+            for eng in _engList
+            {
+                if not eng:Decoupler:Tag:Contains("booster")
+                {
+                    prunedEngList:Add(eng).
+                }
+            }
+        }
+        else
+        {
+            set prunedEngList to _engList:Copy.
+        }
 
         if _dataMask[0]
         {
@@ -546,7 +702,7 @@ HydrateEngineConfigs().
                 "ENGS", list()
                 ,"FUELFLOW", 0
                 ,"FUELSTABILITY", 0
-                ,"ISP", GetEnginesISP(_engList)
+                ,"ISP", GetEnginesISP(prunedEngList)
                 ,"MASSFLOW", 0
                 ,"THRUST", 0
                 ,"ULLAGE", 1
@@ -559,21 +715,21 @@ HydrateEngineConfigs().
         {
             // perfObj:Add("FAILURES", 0).
             // perfObj:Add("FAILUREMODE", "").
-            perfObj:Add("EXHVEL", GetExhVel(_engList)).
+            perfObj:Add("EXHVEL", GetExhVel(prunedEngList)).
             perfObj:Add("MAXFUELFLOW", 0).
             perfObj:Add("MAXMASSFLOW", 0).
             perfObj:Add("MAXPOSSTHRUST", 0).
         }
         if _dataMask[2]
         {
-            perfObj:Add("BURNTIMEREMAINING", GetActiveBurnTimeRemaining(_engList)).
+            perfObj:Add("BURNTIMEREMAINING", GetActiveBurnTimeRemaining(prunedEngList)).
         }
         if _dataMask[3]
         {
             perfObj:Add("TWR", 0).
         }
 
-        for eng in _engList
+        for eng in prunedEngList
         {
             perfObj:ENGS:Add(eng).
             if perfObj:HasKey("FUELFLOW") set perfObj:FUELFLOW to perfObj:FUELFLOW + eng:FuelFlow.

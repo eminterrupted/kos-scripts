@@ -251,6 +251,363 @@ set g_MissionPlans to ListMissionPlans().
         return plan.
     }
 
+    // ModifyMissionPlan :: _missionPlanId<string> -> _planData<list>
+    // Returns updated plan data based on an initial missionPlanId. 
+    // User can modify any of the primary values
+    global function ModifyMissionPlan
+    {
+        parameter _missionPlanId is g_MissionPlanID.
+
+        local cancelFlag to False. 
+        local doneFlag to False.
+        local missionPlan to GetMissionPlan(_missionPlanId).
+        local modifiedPlan to missionPlan:Copy.
+        local planIdx to -1.
+        local rerollFlag to True.
+
+        clearScreen.
+        set g_line to 5.
+        OutStr("Plan Modification Routine", cr()).
+        cr().
+        local line to cr().
+
+        set g_TermChar to "".
+
+        set doneFlag to false.
+        until false
+        {
+            set g_line to line.
+            
+            set planIdx to PlanModMissionSelect(missionPlan).
+    
+            local planPhaseParams to list(missionPlan:M[planIdx], missionPlan:P[planIdx], missionPlan:S[planIdx]).
+            set g_line to line.
+            set planPhaseParams to PlanModParamsSelect(planPhaseParams).
+            
+            set doneFlag to false.
+
+            until doneFlag or cancelFlag or rerollflag
+            {
+                GetTermChar().
+                
+                if g_TermChar = ""
+                {
+                    OutStr("[ENTER]    : Confirm modifications", g_line).
+                    OutStr("[HOME]     : Modify another value", cr()).
+                    OutStr("[BACKSPACE]: Cancel modifications", cr()).
+                    wait 0.1.
+                }
+                else
+                {
+                    if g_TermChar = Terminal:Input:Enter
+                    {
+                        set doneFlag to True.
+                    }
+                    else if g_TermChar = char(8)
+                    {
+                        set cancelFlag to True.
+                    }
+                    else if g_TermChar = Terminal:Input:HomeCursor
+                    {
+                        set rerollFlag to true.
+                    }
+                    else 
+                    {
+                        OutStr("Invalid selection, try again", g_line).
+                        clr(cr()).
+                        wait 0.5.
+                    }
+                }
+
+                set g_TermChar to "".
+            }
+
+            if doneFlag
+            {
+                return modifiedPlan.
+            }
+            else if cancelFlag 
+            {
+                return missionPlan.
+            }
+            else if rerollFlag
+            {
+                for i in Range(line, g_termH, 1)
+                {
+                    clr(i).
+                }
+            }
+        }
+    }
+
+    // PlanModMissionSelect
+    // Helper for ModifyMissionPlan()
+    local function PlanModMissionSelect
+    {
+        parameter _missionPlan.
+
+        local line to g_Line.
+        
+        local __cancelFlag to false.
+        local __planIdx to -1.
+        local __rerollFlag to True.
+
+        set g_TermChar to "".
+        until false
+        {   
+            set __planIdx to -1.
+            set g_line to line.
+            if __rerollFlag
+            {
+                OutStr("Choose plan phase to modify", g_line).
+                cr().
+                OutStr("[ENTER]: Confirm selection", cr()).
+                OutStr("[BACKSPACE]: Cancel", cr()).
+                cr().
+                for m in _missionPlan:M
+                {
+                    set __planIdx to __planIdx + 1.
+                    OutStr("{0}: {1}":Format(__planIdx, m), cr()).
+                }
+                cr().
+                set __rerollFlag to False.
+            }
+
+            local __doneFlag to False.
+            
+            until __doneFlag
+            {
+                GetTermChar().
+                
+
+                if g_TermChar = Terminal:Input:Enter
+                {
+                    set __doneFlag to true.
+                }
+                else if g_TermChar = char(8)
+                {
+                    set __cancelFlag to true.
+                    set __doneFlag to true.
+                }
+                else 
+                {
+                    local termCharNumber to g_TermChar:ToNumber(-1).
+                    if termCharNumber < 0 or termCharNumber > __planIdx
+                    {
+                        OutStr("Invalid selection! Try again", cr()).
+                        wait 0.5.
+                        set __doneFlag to true.
+                        set __rerollFlag to true.
+                    } 
+                    else
+                    {
+                        OutStr("Selected plan: {0}":Format(_missionPlan:M[__planIdx]), cr()).
+                        OutStr("Press ENTER to confirm").
+                        wait 0.5.
+                        set __planIdx to termCharNumber.
+                        set __doneFlag to true.
+                    }
+                }
+                set g_TermChar to "".
+            }
+
+            if __rerollFlag
+            {
+            }
+            else if __cancelFlag
+            {
+                return -1.
+            }
+            else
+            {
+                return __planIdx.
+            }
+        }
+    }
+
+    // PlanModParamsSelect
+    // Helper for ModifyMissionPlan()
+    local function PlanModParamsSelect
+    {
+        parameter __missionPhaseVals.
+
+        local _ogLine to g_Line.
+        local _line to _ogLine.
+        
+        local _splitMissionPhaseVals to __missionPhaseVals[1]:Split(";").
+
+        local _cancelFlag to false.
+        local _confirmFlag to false.
+        local _doneFlag to False.
+        local _modifiedPhaseVals to __missionPhaseVals:Copy.
+        local _rerollFlag to True.
+        local _returnPhaseVals to list().
+
+        local _descriptList to list(
+            list(
+                "[1] Inclination  : {0}"
+                ,"[2] Tgt Apogee  : {0}"
+                ,"[3] Shape Factor: {0}"
+            )
+            ,list(
+                "[1] {0}"
+            )
+        ).
+
+        set g_TermChar to "".
+
+        until _doneFlag
+        {   
+            set g_line to _ogLine.
+            if _rerollFlag
+            {
+                OutStr("Modifying mission: {0}":Format(_modifiedPhaseVals[0]), g_line).
+                cr().
+                OutStr("Choose plan parameter to modify ([BACKSPACE] to cancel)", cr()).
+                local descriptors to choose _descriptList[0] if __missionPhaseVals[0]:Contains("launchAscent") else _descriptList[1].
+                from { local i to 0. } until i = _splitMissionPhaseVals:Length step { set i to i + 1.} do
+                {
+                    OutStr(descriptors[i]:Format(_splitMissionPhaseVals[i]), cr()).
+                }
+                OutStr("Stage Limit: {0}":Format(__missionPhaseVals[2]), cr()).
+                cr().
+                set _rerollFlag to False.
+            }
+
+            GetTermChar().
+                        
+            if g_TermChar = char(8)
+            {
+                set _cancelFlag to true.
+                set _doneFlag to true.
+            }
+            else if g_TermChar = Terminal:Input:Enter
+            {
+                set _confirmFlag to true.
+                set _doneFlag to true.
+            } 
+            else
+            {
+                local termCharNumber to g_TermChar:ToNumber(-1).
+                if termCharNumber < 0 or termCharNumber > 3
+                {
+                    OutStr("Invalid selection! Try again", cr()).
+                    wait 0.5.
+                    set _rerollFlag to true.
+                } 
+                else
+                {
+                    local _paramIdx to termCharNumber.
+                    local _selectedParam to list(_descriptList[_paramIdx - 1], _modifiedPhaseVals[_paramIdx]).
+                    OutStr("Selected param: {0} [{1}]":Format(_selectedParam[0], _selectedParam[1]), cr()).
+                    cr().
+
+                    set g_TermChar to "".
+                    set _line to g_line.
+                    until _confirmFlag or _cancelFlag
+                    {
+                        set g_line to _line.
+                        OutStr("[ENTER]     Confirm", cr()).
+                        OutStr("[BACKSPACE] Back", cr()).
+
+                        GetTermChar().
+
+                        if g_TermChar = char(8)
+                        {
+                            OutStr("Cancelling...", g_line - 2).
+                            clr(g_line - 1).
+                            set _cancelFlag to true.
+                        }
+                        else if g_TermChar = Terminal:Input:Enter
+                        {
+                            clr(g_line - 2).
+                            clr(g_line - 1).
+                            local _newVal to "".
+                            
+                            set g_TermChar to "".
+
+                            until _confirmFlag or _cancelFlag
+                            {
+                                GetTermChar().
+                                if g_TermChar <> ""
+                                {
+                                    if g_TermChar = Terminal:Input:Enter
+                                    {
+                                        if _newVal = ""
+                                        {
+                                            set _newVal to _selectedParam[1].
+                                            OutStr("No input! ", g_Line - 1).
+                                            wait 0.5.
+                                            clr(g_line - 1).
+                                        }
+                                        else
+                                        {
+                                            _modifiedPhaseVals:Remove(_paramIdx).
+                                            _modifiedPhaseVals:Insert(_paramIdx, _newVal).
+                                            OutStr("New value set  : [{0}] ":Format(_newVal), g_Line - 1).
+                                            wait 0.5.
+                                            cr().
+                                            set _confirmFlag to true.
+                                        }
+                                    }
+                                    else if list(char(8)):Contains(g_TermChar)
+                                    {
+                                        set _newVal to _newVal:substring(0, Max(0, _newVal:Length - 2)).
+                                        OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line - 1).
+                                    }
+                                    else if g_TermChar = Terminal:Input:DeleteRight
+                                    {
+                                        OutStr("Cancelling... ", g_Line - 2).
+                                        clr(g_line - 1).
+                                        set _cancelFlag to true.
+                                    }
+                                    else if g_TermChar:MatchesPattern("(\w|\.)")
+                                    {
+                                        set _newVal to _newVal + g_TermChar.
+                                        OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line - 1).
+                                    }
+                                    else
+                                    {
+                                        OutStr("Invalid input!", g_line - 1).
+                                        wait 0.5.
+                                        clr(g_line - 1).
+                                    }
+                                    set g_TermChar to "".
+                                    set g_TermChar to "".
+                                }
+                            }
+                            set _cancelFlag to false.
+                            set _confirmFlag to false.
+                        }
+                        set g_TermChar to "".
+                    }
+                }
+            }
+            set g_TermChar to "".
+
+            if not _rerollFlag
+            {
+                set g_line to _line.
+                if _cancelFlag
+                {
+                    set _returnPhaseVals to __missionPhaseVals.
+                }
+                else if _confirmFlag
+                {
+                    set _returnPhaseVals to _modifiedPhaseVals.
+                }
+            }
+
+            for i in Range(0, 7, 1)
+            {
+                clr(_ogLine + i).
+            }
+        }
+        set g_line to _ogLine.
+
+        return _returnPhaseVals.
+    }
+
     // GetMissionPlanID :: [(_missionName)<String>] -> (_missionPlanID)
     // Returns a pointer to the mission plan of a vessel based on core tag and vessel name
     global function SelectMissionPlanID 
@@ -269,31 +626,31 @@ set g_MissionPlans to ListMissionPlans().
         local planId to "".
 
         set g_AvailablePlans to list().
-        if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
+
+        if saniTag:Length > 0 
         {
-            set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+            if Volume(0):Files:_PLAN:Lex:HasKey(saniTag)
+            {
+                set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniTag]:Lex:Keys.
+            }
         }
         else if Volume(0):Files:_PLAN:Lex:HasKey(saniName)
         {
             set g_AvailablePlans to Volume(0):Files:_PLAN:Lex[saniName]:Lex:Keys.
         }
-        if saniTag:Length > 0
-        {
-
-        }
-
+        
         if g_AvailablePlans:Length = 1
         {
             set planId to g_AvailablePlans[0]:Replace(".amp","").
         }
         else
         {
-            set planIdx to SelectFromList(g_AvailablePlans, planIdx, true).
+            set planIdx to SelectPlanFromList(g_AvailablePlans, planIdx, true).
             if planIdx < 0
             {
                 
             }
-            else if planIdx >= 0 and planIdx <=g_AvailablePlans:Length
+            else if planIdx >= 0 and planIdx <= g_AvailablePlans:Length
             {
                 set planId to g_AvailablePlans[planIdx]:Replace(".amp","").
             }
@@ -424,7 +781,7 @@ set g_MissionPlans to ListMissionPlans().
 // #region
 
     // SelectFromList
-    global function SelectFromList
+    global function SelectPlanFromList
     {
         parameter _inList,
                   _selectIdx is 0,
@@ -443,7 +800,7 @@ set g_MissionPlans to ListMissionPlans().
         {
             set g_Line to _line.
 
-            DispPlans(pageIdx).
+            DispPlans(_inList, pageIdx, g_line).
 
             GetTermChar().
 
@@ -474,8 +831,8 @@ set g_MissionPlans to ListMissionPlans().
                         cr().
                         if _confirm
                         {
-                            OutStr("Confirm via ENTER").
-                            OutStr("Cancel  via DELETE").
+                            OutStr("[ENTER]: Confirm").
+                            OutStr("[BACKSPACE]: Cancel").
 
                             set doneFlag2 to false.
                             until doneFlag2
@@ -487,7 +844,7 @@ set g_MissionPlans to ListMissionPlans().
                                 {
                                     set doneFlag2 to true.
                                 }
-                                else if g_TermChar = Terminal:Input:DeleteRight
+                                else if g_TermChar = char(8)
                                 {
                                     set cancelFlag to true.
                                     break.

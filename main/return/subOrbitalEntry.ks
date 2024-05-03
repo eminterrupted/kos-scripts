@@ -61,14 +61,14 @@ until g_Program > 199 or g_Abort
         if g_RunMode = 1
         {
             set steerDel to { return Ship:SrfRetrograde. }.
-            set g_TS to Time:Seconds + 10.
+            set ts0 to Time:Seconds + 10.
             SetRunmode(2).
         }
         else if g_Runmode = 2
         {
-            if Time:Seconds >= g_TS 
+            if Time:Seconds >= ts0 
             {
-                set g_TS to 0.
+                set ts0 to 0.
                 SetProgram(42).
             }
         }
@@ -407,8 +407,8 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            print "* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
-            if Time:Seconds >= g_TS 
+            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
+            if Time:Seconds >= ts0 
             {
                 SetProgram(99).
             }
@@ -425,7 +425,7 @@ until g_Program > 199 or g_Abort
         {
             ClearScreen.
             print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
-            set g_TS to Time:Seconds + 3.
+            set ts0 to Time:Seconds + 3.
             SetRunmode(1).
         }
     }
@@ -433,11 +433,11 @@ until g_Program > 199 or g_Abort
     // Try to recover the sucker
     else if g_Program = 99
     {
-        set g_TS to 0.
+        set ts0 to 0.
         if g_RunMode > 0
         {
             cr().
-            print "* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
+            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -452,7 +452,7 @@ until g_Program > 199 or g_Abort
         {
             ClearScreen.
             print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
-            set g_TS to Time:Seconds + 3.
+            set ts0 to Time:Seconds + 3.
             SetRunmode(1).
         }
     }

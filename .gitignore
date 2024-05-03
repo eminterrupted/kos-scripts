@@ -23,5 +23,5 @@ test/*.json
 test/data/**
 data/test/**
 state.txt
-_plan/*
-_plan/**
+_plan/*.amp
+_plan/**/*.amp

@@ -9,10 +9,16 @@ RunOncePath("0:/lib/launch").
 RunOncePath("0:/kslib/lib_l_az_calc").
 
 // Declare Variables
-local tgtPe to Ship:Apoapsis.
-local tgtHdg to compass_for(ship, Ship:Prograde).
-local totBurnTime to 0.
-local waitTime to 0.
+local burnLeadTime      to 10.
+local burnTS            to 0.
+local stageBurnTimes    to lex().
+local tgtPe             to Ship:Apoapsis.
+local tgtHdg            to compass_for(ship, Ship:Prograde).
+local totalBurnTime     to 0.
+local waitTime          to 0.
+local warpFlag          to false.
+local ullageTime        to 10.
+local ullageTS          to 0.
 
 // Parse Params
 if _params:length > 0 
@@ -35,37 +41,22 @@ set g_Throt to 0.
 set g_ShipEngines to GetShipEnginesSpecs(Ship).
 set g_NextEngines to GetNextEngines("1000").
 
-from { local i to Stage:Number - 1.} until i < g_StageLimit step { set i to i - 1.} do 
-{
-    // if g_NextEngines:Length > 0
-    local stgEngsBT to 0.
-    if g_ShipEngines:IGNSTG:HasKey(i)
-    {
-        // if waitTime = 0 
-        // {
-            if g_ShipEngines:IGNSTG:HasKey(i)
-            {
-                set stgEngsBT to g_ShipEngines:IGNSTG[i]:STGBURNTIME.
-                set waitTime to waitTime + (stgEngsBT / 2).
-                OutInfo("STGENGS[{0}]: {1}":Format(i, g_NextEngines:Length), 28).
-                OutInfo("STGBURNTIME: {0}":Format(stgEngsBT), 29).
-            }
-        // }
-    }
-    
-    OutInfo("TOTBURNTIME: {0} ":Format(totBurnTime + stgEngsBT), 30).
-}
 
-// Adjust wait time slightly
-set waitTime to waitTime * 1.625.
-OutMsg("WAITTIME   : {0} ":Format(waitTime), 31).
+set stageBurnTimes  to GetStageBurnTimes(Stage:Number - 1, 0).
+set totalBurnTime   to stageBurnTimes:TOTAL.
+set waitTime        to totalBurnTime / 2.
+set burnTS          to Time:Seconds + ETA:Apoapsis - (waitTime * 1.1).
+set ullageTS        to burnTS - ullageTime.
 
+OutInfo("TOTALBURNTIME: {0} ":Format(totalBurnTime), 4).
 local line to 5.
 
 RCS on.
 
 until g_Program > 199 or g_Abort
 {
+    GetTermChar().
+
     set g_Line to line.
     if g_Program < 100 
     {
@@ -75,26 +66,14 @@ until g_Program > 199 or g_Abort
     {
         if g_RunMode > 0
         {
-            if ETA:Apoapsis <= waitTime
+            if Time:Seconds >= ullageTS
             {
                 clr(cr()).
                 SetProgram(110).
             }
-            else if g_Runmode = 1
+            else 
             {
-                if ETA:Apoapsis <= (waitTime + 10)
-                {
-                    if g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage]:ULLAGE
-                    {
-                        SetRunmode(3).
-                        RCS On.
-                        set Ship:Control:Fore to 1.
-                    }
-                    else
-                    {
-                        SetRunmode(2).
-                    }
-                }
+                SetProgram(104).
             }
             
             OutInfo("BURN ETA: T{0}   ":Format(Round(waitTime - ETA:Apoapsis, 2)), cr()).
@@ -114,6 +93,52 @@ until g_Program > 199 or g_Abort
         }
         
     }
+    else if g_Program = 104
+    {
+        if g_Runmode = 1
+        {
+            if Time:Seconds >= ullageTS
+            {
+                SetRunmode(2).
+            }
+            else
+            {
+            }
+        }
+        else if g_Runmode = 2
+        {
+            if g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage]:ULLAGE
+            {
+                RCS On.
+                set Ship:Control:Fore to 1.
+            }
+            SetRunmode(4).
+        }
+        else if g_Runmode = 4
+        {
+            if Time:Seconds >= burnTS
+            {
+                SetProgram(110).
+            }
+            else
+            {
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutInfo("ORBITAL INSERTION: WAIT":PadRight(g_termW - 24), g_Line).
+            SetRunmode(1).
+        }
+        OutInfo("BURN ETA: T{0}   ":Format(Round(BurnTS - Time:Seconds, 2)), cr()).
+    }
     else if g_Program = 110
     {
         if g_RunMode = 1
@@ -126,6 +151,15 @@ until g_Program > 199 or g_Abort
         else if g_RunMode = 2
         {
             set Ship:Control:Fore to 0.
+            SetRunmode(4).
+        }
+        else if g_Runmode = 4
+        {
+            ArmSpinStabilization().
+            SetRunmode(8).
+        }
+        else if g_Runmode = 8
+        {
             SetProgram(120).
         }
         else if g_Runmode < 0
@@ -146,7 +180,13 @@ until g_Program > 199 or g_Abort
     {
         if g_RunMode = 1
         {
-            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines).
+            set g_ActiveEngines to GetActiveEngines().
+            SetRunmode(2).
+        }
+        else if g_Runmode = 2
+        {   
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
             if Ship:Periapsis >= tgtPe
             {
                 set g_Throt to 0.

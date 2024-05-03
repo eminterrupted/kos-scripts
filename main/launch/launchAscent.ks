@@ -16,6 +16,7 @@ local meSpoolTime to 0.
 local tgtAlt to Ship:Body:SOIRadius.
 local tgtInc to 30.
 local launchTS to list().
+local ts0 to 0.
 
 // Param parsing
 if _params:Length > 0
@@ -37,9 +38,9 @@ SetProgram(2).
 set g_ShipEngines to GetShipEnginesSpecs(Ship).
 
 // Find the launch clamp stage if any are found
+SetProgram(3).
 for m in Ship:ModulesNamed("LaunchClamp")
 {
-    SetProgram(3).
     set padStage to min(padStage, m:Part:Stage).
 }
 
@@ -57,13 +58,7 @@ for engStg in g_ShipEngines:IGNSTG:Keys
             local eng to g_ShipEngines:ENGUID[engUID]:ENG.
             mainEngs:Add(eng).
             
-            // While we have the MEs handy, we should determine MECO and spool time
-            set MECO to Max(MECO, g_ShipEngines:ENGUID[engUID]:TARGETBURNTIME).
-            if eng:Tag:MatchesPattern("Ascent\|MECO\|\d*")
-            {
-                set MECO to ParseStringScalar(eng:Tag:Split("|")[2], -1).
-                set g_MECO_Armed to true.
-            }
+            // While we have the MEs handy, we should determine spool time
             if engStg > padStage 
             {
                 SetRunmode(8).
@@ -128,7 +123,7 @@ until g_Program >= 20 or g_Abort
         if g_Runmode = 1
         {
             set launchTS to GetCountdownTimers(meSpoolTime).
-            OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
+            OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)), g_line).
             SetProgram(12).
         }
         else if g_Runmode < 0
@@ -157,8 +152,8 @@ until g_Program >= 20 or g_Abort
             }
             else
             {
-                OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
-                OutMsg("ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)):PadRight(Terminal:Width - 24), cr()).
+                OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)), g_line).
+                OutMsg("ENGINE IGNTION  : T{0}  ":Format(Round(engIgnitionETA, 2)), cr()).
             }
 
         }
@@ -179,7 +174,7 @@ until g_Program >= 20 or g_Abort
     // Engine ignition
     else if g_Program = 14
     {
-        OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)):PadRight(Terminal:Width - 24), g_line).
+        OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)), g_line).
         if g_Runmode = 1
         {
             set g_Throt to 1.
@@ -199,7 +194,7 @@ until g_Program >= 20 or g_Abort
         else if g_Runmode > 1
         {
             set g_ActiveEngines to GetActiveEngines().
-            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
+            set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, false, "11100000").
             if g_Runmode < 6 and Time:Seconds >= launchTS[1]
             {
                 SetRunmode(6).
@@ -209,7 +204,7 @@ until g_Program >= 20 or g_Abort
             for eng in mainEngs
             {
                 OutMsg(" - {0} THRUST: {1} [{2}%]   ":Format(eng:CONFIG, Round(eng:Thrust, 2), Round(100 * (eng:Thrust / eng:MaxPossibleThrustAt(Ship:Altitude)), 2)), cr()).
-                set aggThrustModifier to aggThrustModifier + GetField(eng:GetModule("TestFlightReliability_EngineCycle"), "thrust modifier", 1).
+                if eng:HasModule("TestFlightReliability_EngineCycle") set aggThrustModifier to aggThrustModifier + GetField(eng:GetModule("TestFlightReliability_EngineCycle"), "thrust modifier", 1).
             }
             
             if g_Runmode = 6
@@ -243,11 +238,11 @@ until g_Program >= 20 or g_Abort
     // Liftoff
     else if g_Program = 16
     {
-        set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
+        set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, true, "11100000").
         OutMsg("LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)), 5).
         if g_RunMode = 0
         {
-            OutMsg("* LIFTOFF *":PadRight(29), 6).
+            OutMsg("* LIFTOFF *", 6).
             SetRunmode(1).
         }
         else if g_Runmode = 1
@@ -288,7 +283,7 @@ until g_Program >= 20 or g_Abort
 
     }
 
-    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20), 0).
+    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit), 0).
 }
 
 set g_NextEngines to GetNextEngines("1110").
@@ -342,6 +337,24 @@ if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
     set fairingAction to fairingResult[2].
 }
 
+// Arm MECO
+local MECOAction to { return false.}.
+local MECOArmed  to false.
+local MECOCheck  to { return true.}.
+local MECOResult to list().
+local MECORunning to false.
+local MECOStage  to Stage:Number.
+local MECOEngs to Ship:PartsTaggedPattern("Ascent\|MECO\|\d*").
+if MECOEngs:Length > 0
+{
+    set MECO to ParseStringScalar(MECOEngs[0]:Tag:Split("|")[2], -1).
+
+    set MECOResult to ArmMECO(Ship:PartsTaggedPattern("Ascent\|MECO.*")).
+    set MECOArmed  to MECOResult[0].
+    set MECOCheck  to MECOResult[1].
+    set MECOAction to MECOResult[2].
+}
+
 // Arm RCS
 local rcsModules to Ship:ModulesNamed("ModuleRCSFX").
 set g_RCS_Armed to false.
@@ -359,6 +372,7 @@ OutLog("ArmAutoStaging Result: {0}":Format(g_HS_Armed), 1).
 OutLog("ArmBoosterStaging Result: {0}":Format(boosterArmed), 1).
 OutLog("ArmFairingJettison Result: {0}":Format(fairingsArmed), 1).
 OutLog("ArmRCS Result: {0}":Format(g_RCS_Armed), 1).
+OutLog("ArmMECO Result: {0}":Format(MECOArmed), 1).
 
 
 local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
@@ -370,8 +384,8 @@ ClearScreen.
 // * Main Loop
 until g_Program >= 36 or g_Abort
 {
-    set g_ActiveEngines to GetActiveEngines().
-    set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, "11100000").
+    set g_ActiveEngines to GetActiveEngines(Ship, False).
+    set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, true, "11100000").
 
     set g_line to 4.
     if g_Program < 22
@@ -413,18 +427,43 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            OutMsg("VERTICAL ASCENT":PadRight(g_termW - 15), cr()).
+            OutMsg("VERTICAL ASCENT", cr()).
             SetRunmode(1).
         }
     }
     else if g_Program = 22
     {
-        if g_RunMode > 0
+        if g_RunMode = 1
         {
-            if Ship:Apoapsis >= tgtAlt or (Ship:AvailableThrust <= 0.01 and g_Throt > 0)
+            if Ship:Apoapsis >= tgtAlt
             {
-                SetProgram(24).
+                if Stage:Number = MECOStage 
+                {
+                    SetProgram(24).
+                }
+                else if Stage:Number > g_StageLimit
+                {
+                    SetProgram(26).
+                }
+                else
+                {
+                    SetProgram(28).
+                }
             }
+            else if Stage:Number = g_StageLimit
+            {
+                if Ship:AvailableThrust <= 0.01
+                {
+                    if g_Throt > 0 and Stage:Number = g_StageLimit
+                    {
+                        SetProgram(30).
+                    }
+                }
+            }
+        }
+        else if g_Runmode = 2
+        {
+
         }
         else if g_Runmode < 0
         {
@@ -436,7 +475,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            OutMsg("PITCH PROGRAM":PadRight(g_termW - 15), cr()).
+            OutMsg("PITCH PROGRAM", cr()).
             SetRunmode(1).
         }
         
@@ -452,7 +491,14 @@ until g_Program >= 36 or g_Abort
                 clr(g_line).
                 clr(cr()).
                 RCS on.
-                SetProgram(30).
+                if Stage:Number > g_StageLimit
+                {
+                    SetProgram(26).
+                }
+                else
+                {
+                    SetProgram(30).
+                }
             }
             else
             {
@@ -470,7 +516,82 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            OutMsg("BURNING TO MECO":PadRight(g_termW - 15), cr()).
+            OutMsg("BURNING TO MECO", cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+    }
+
+    else if g_Program = 26
+    {
+        if g_RunMode > 0
+        {
+            if Ship:AvailableThrust <= 0.01
+            {
+                clr(g_line).
+                clr(cr()).
+                RCS on.
+                if Stage:Number > g_StageLimit
+                {
+                    SetProgram(28).
+                }
+                else
+                {
+                    SetProgram(30).
+                }
+            }
+            else
+            {
+                cr().
+                OutMsg("TIME TO SECO: {0}            ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)), cr()).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("BURNING TO SECO", cr()).
+            SetRunmode(1).
+        }
+        
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+    }
+
+    else if g_Program = 28
+    {
+        if g_RunMode > 0
+        {
+            if Ship:AvailableThrust <= 0.01
+            {
+                clr(g_line).
+                clr(cr()).
+                RCS on.
+                SetProgram(30).
+            }
+            else
+            {
+                cr().
+                OutMsg("TIME TO TECO: {0}            ":Format(Round(g_ActiveEngines_PerfData:BURNTIMEREMAINING, 2)), cr()).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("BURNING TO TECO", cr()).
             SetRunmode(1).
         }
         
@@ -481,27 +602,28 @@ until g_Program >= 36 or g_Abort
     {
         if g_RunMode = 1
         {
-            if Ship:AvailableThrust <= 0.01 
-            {
-                if Stage:Number <= g_StageLimit
-                {
-                    SetRunMode(4).
-                }
-                else
-                {
-                    SetRunMode(2).
-                }
-            }
+            SetRunmode(4).
+            // if Ship:AvailableThrust <= 0.01
+            // {
+            //     if Stage:Number <= g_StageLimit
+            //     {
+            //         SetRunMode(4).
+            //     }
+            //     else
+            //     {
+            //         set ts0 to Time:Seconds + 3.
+            //         SetRunMode(2).
+            //     }
+            // }
         }
         else if g_RunMode = 2
         {
             if Stage:Number > g_StageLimit
             {
                 OutInfo("STAGING").
-                if Time:Seconds >= g_TS and Stage:Ready
+                if Time:Seconds >= ts0 and Stage:Ready
                 {
                     stage.
-                    set g_TS to Time:Seconds + 3.
                 }
             }
             else
@@ -524,7 +646,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            OutMsg("COAST PROGRAM":PadRight(g_termW - 15), cr()).
+            OutMsg("FINAL STAGING PROGRAM", cr()).
             SetRunmode(1).
         }
         
@@ -555,7 +677,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            OutMsg("COAST PROGRAM":PadRight(g_termW - 15), cr()).
+            OutMsg("COAST PROGRAM", cr()).
             SetRunmode(1).
         }
         
@@ -572,20 +694,17 @@ until g_Program >= 36 or g_Abort
 
     }
 
-    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit):PadRight(20), 0).
+    OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit), 0).
 
     DispLaunchTelemetry().
 
     cr().
-    local btRem to GetActiveBurnTimeRemaining(GetActiveEngines(Ship, False)).
+    local btRem to GetActiveBurnTimeRemaining().
     if g_HS_Armed 
     {
         set g_HS_Armed to RunHotStageSubroutine(btrem).
-        // if g_HS_Check:Call(GetActiveBurnTimeRemaining(g_ActiveEngines))
-        // local btrem to choose g_ActiveEngines_PerfData:BURNTIMEREMAINING if g_ActiveEngines_PerfData:HasKey("BURNTIMEREMAINING") else GetActiveBurnTimeRemaining(g_ActiveEngines).
     }
-    
-    if g_AS_Armed 
+    else if g_AS_Armed 
     {
         if g_AS_Check:Call()
         {
@@ -605,6 +724,7 @@ until g_Program >= 36 or g_Abort
             OutMsg("Autostaging: Armed", cr()).
         }
     }
+
     if boosterArmed
     {
         if boosterCheckDel:Call()
@@ -627,27 +747,7 @@ until g_Program >= 36 or g_Abort
             OutMsg("Booster staging: Armed", cr()).
         }
     }
-    // if g_Spin_Armed
-    // {
-    //     if g_Spin_Check:Call(btrem)
-    //     {
-    //         OutStr("Passed g_Spin_Check", g_termH - 5).
-    //         OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 5).
-    //         g_Spin_Action:Call().
-    //         clr(cr()).
-    //     }
-    //     else
-    //     {
-    //         if g_SpinStab:STG = Stage:Number - 1
-    //         {
-    //             OutInfo("SpinStabilization [Armed] {0}":Format(Round(btRem, 2))).
-    //         }
-    //         else
-    //         {
-    //             OutInfo("SpinStabilization [Waiting]").
-    //         }
-    //     }
-    // }
+
     if g_Spin_Armed
     {
         if g_SpinStab:STG = Stage:Number - 1
@@ -678,6 +778,7 @@ until g_Program >= 36 or g_Abort
             OutInfo("g_SpinStab Stage: [{0}]":Format(g_SpinStab:STG)).
         }
     }
+
     if fairingsArmed
     {
         if fairingCheck:Call()
@@ -690,15 +791,23 @@ until g_Program >= 36 or g_Abort
             OutMsg("Fairing jettison: Armed", cr()).
         }
     }
-    if g_MECO_Armed
+
+    if MECOArmed
     {
-        if MissionTime >= MECO
+        if MECORunning
         {
-            for eng in Ship:PartsDubbedPattern("MECO")
-            {
-                eng:Shutdown.
-            }
-            set g_MECO_Armed to false.
+            set MECOArmed to MECOAction:Call().
+            set MECORunning to false.
+            OutMsg("MECO: Complete", cr()).
+        }
+        else if MECOCheck:Call()
+        {
+            set MECORunning to true.
+            OutMsg("MECO: Running", cr()).
+        }
+        else
+        {
+            OutInfo("MECO: T-{0} ":Format(Round(MECO - MissionTime, 2)), cr()).
         }
     }
     if not HomeConnection:IsConnected()
@@ -713,5 +822,8 @@ until g_Program >= 36 or g_Abort
     }
 }
 
+SetProgram(0).
+SetRunmode(0).
+UpdateState(True).
 
 OutMsg("THAT'S ALL FOLKS", 5).

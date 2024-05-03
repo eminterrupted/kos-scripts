@@ -12,9 +12,12 @@ RunOncePath("0:/lib/mnv.ks").
 
 
 // Declare Variables
+local retroBurnTS        to Time:Seconds + ETA:Apoapsis.
 local fairings      to list().
 local fairJettAlt   to 10000.
 local preDeployAlt  to 2000.
+local retroBurn     to false.
+local settleTS      to 0.
 local stgTimeGoGo   to 5.
 local tgtReentryAlt to 140000.
 local warpZeroAlt   to 25.
@@ -23,6 +26,8 @@ local warpZeroAlt   to 25.
 if _params:length > 0 
 {
   set tgtReentryAlt to _params[0].
+  if _params:Length > 1 set retroBurn to _params[1].
+  if _params:Length > 2 set retroBurnTS to _params[2]:ToNumber(retroBurnTS).
 }
 
 set g_Line to 4.
@@ -49,6 +54,8 @@ SetStageLimit(2).
 
 until g_Program > 199 or g_Abort
 {
+    GetTermChar().
+    
     set g_Line to 4.
 
     if g_Program < 10
@@ -65,19 +72,26 @@ until g_Program > 199 or g_Abort
             {
                 SetRunmode(2).
             }
-            else
+            else if retroBurn
             {
                 SetRunmode(3).
+            }
+            else
+            {
+                SetRunmode(4).
             }
         }
         else if g_Runmode = 2
         {
-            set g_StageLimit to 2.
             if HasNode ExecNodeBurn(NextNode).
-            set g_TS to 0.
+            set settleTS to 0.
             SetProgram(40).
         }
         else if g_Runmode = 3
+        {
+            SetProgram(24).
+        }
+        else if g_Runmode = 4
         {
             print "PASSIVE START - WAITING TO 142500 " at (0, g_Line). 
             if Ship:Altitude <= 142500
@@ -101,79 +115,130 @@ until g_Program > 199 or g_Abort
         }
     }
 
-    // Position to retrograde
+    // Wait until retroBurnTS
+    else if g_Program = 24
+    {
+        if g_RunMode = 1
+        {
+            set steerDel to { return Ship:Retrograde. }.
+            set settleTS to Time:Seconds + 10.
+            SetRunmode(2).
+        }
+        else if g_Runmode = 2
+        {
+            if Time:Seconds >= settleTS
+            {
+                set settleTS to 0.
+                SetRunmode(4).
+            }
+        }
+        else if g_Runmode = 4
+        {
+            if Time:Seconds >= retroBurnTS - 15
+            {
+                // clr(cr()).
+                if warp > 0 set warp to 0.
+                wait until Kuniverse:TimeWarp:IsSettled.
+                SetRunmode(6).
+            }
+            else
+            {
+                if g_TermChar = "w"
+                {
+                    WarpTo(retroBurnTS - 15).
+                }
+                else
+                {
+                    set g_Steer to steerDel:Call().
+                }
+            }
+        }
+        else if g_Runmode = 6
+        {
+            SetProgram(27).
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("WAIT FOR REENTRY BURN", cr()).
+            SetRunmode(1).
+        }
+        OutMsg("TIME TO REENTRY BURN: [T{0}] ":Format(Time:Seconds - retroBurnTS), cr()).
+    }
+
+    // Execute Retro Burn
+    else if g_Program = 27
+    {
+        if g_RunMode = 1
+        {
+            if Stage:Number > g_StageLimit
+            {
+                wait 0.25.
+                SafeStageWithUllage().
+                wait 0.5.
+                set g_ActiveEngines to GetActiveEngines().
+                if g_ActiveEngines:Length > 0
+                {
+                    SetRunmode(2).
+                }
+            }
+            else
+            {
+                SetRunmode(4).
+            }
+        }
+        else if g_Runmode = 2
+        {
+            local btRem to GetActiveBurnTimeRemaining(g_ActiveEngines).
+            if btRem <= 0.001 or Ship:AvailableThrust = 0
+            {
+                SetRunmode(1).
+            }
+            else
+            {
+                OutMsg("BURN TIME REMAINING: [T{0}] ":Format(Round(btRem, 2)), cr()).
+            }
+        }
+        else if g_Runmode = 4
+        {
+            SetProgram(40).
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("REENTRY BURN", cr()).
+            SetRunmode(1).
+        }
+    }
+    
+    // Position to Surface retrograde
     else if g_Program = 40
     {
         if g_RunMode = 1
         {
             set steerDel to { return Ship:SrfRetrograde. }.
-            set g_TS to Time:Seconds + 10.
+            set settleTS to Time:Seconds + 3.
             SetRunmode(2).
         }
         else if g_Runmode = 2
         {
-            if Time:Seconds >= g_TS 
+            if Time:Seconds >= settleTS 
             {
-                set g_TS to 0.
-                SetProgram(42).
-            }
-        }
-        else if g_Runmode < 0
-        {
-            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
-            {
-                set g_Abort     to True.
-                set g_AbortCode to g_Program.
-            }
-        }
-        else
-        {
-            OutMsg("WAIT FOR AP", cr()).
-            SetRunmode(1).
-        }
-        OutInfo("AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)), cr()).
-    }
-
-    // Wait until apoapsis
-    else if g_Program = 42
-    {
-        if g_RunMode > 0
-        {
-            if ETA:Apoapsis <= 5 or ETA:Apoapsis > ETA:Periapsis
-            {
-                clr(cr()).
-                if warp > 0 set warp to 0.
-                wait until Kuniverse:TimeWarp:IsSettled.
-                SetProgram(44).
-            }
-        }
-        else if g_Runmode < 0
-        {
-            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
-            {
-                set g_Abort     to True.
-                set g_AbortCode to g_Program.
-            }
-        }
-        else
-        {
-            OutMsg("WAIT FOR AP":PadRight(g_termW - 15), cr()).
-            SetRunmode(1).
-        }
-        OutInfo("AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)), cr()).
-    }
-
-    // Stage to limit
-    else if g_Program = 44
-    {
-        if g_RunMode > 0
-        {
-            if Stage:Number > g_StageLimit
-            {
-                if Stage:Ready stage.
-            }
-            else
-            {
+                set settleTS to 0.
                 SetProgram(46).
             }
         }
@@ -187,21 +252,79 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* STAGING *":PadRight(g_termW - 11), cr()).
+            OutMsg("ALIGN TO SRF RETRO", cr()).
             SetRunmode(1).
         }
-        
     }
+
+    // // Wait until apoapsis
+    // else if g_Program = 42
+    // {
+    //     if g_RunMode > 0
+    //     {
+    //         if ETA:Apoapsis <= 5 or ETA:Apoapsis > ETA:Periapsis
+    //         {
+    //             clr(cr()).
+    //             if warp > 0 set warp to 0.
+    //             wait until Kuniverse:TimeWarp:IsSettled.
+    //             SetProgram(44).
+    //         }
+    //     }
+    //     else if g_Runmode < 0
+    //     {
+    //         if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+    //         {
+    //             set g_Abort     to True.
+    //             set g_AbortCode to g_Program.
+    //         }
+    //     }
+    //     else
+    //     {
+    //         OutMsg("WAIT FOR AP":PadRight(g_termW - 15), cr()).
+    //         SetRunmode(1).
+    //     }
+    //     OutInfo("AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)), cr()).
+    // }
+
+    // // Stage to limit
+    // else if g_Program = 44
+    // {
+    //     if g_RunMode > 0
+    //     {
+    //         if Stage:Number > g_StageLimit
+    //         {
+    //             if Stage:Ready stage.
+    //         }
+    //         else
+    //         {
+    //             SetProgram(46).
+    //         }
+    //     }
+    //     else if g_Runmode < 0
+    //     {
+    //         if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+    //         {
+    //             set g_Abort     to True.
+    //             set g_AbortCode to g_Program.
+    //         }
+    //     }
+    //     else
+    //     {
+    //         OutMsg("* STAGING *":PadRight(g_termW - 11), cr()).
+    //         SetRunmode(1).
+    //     }
+        
+    // }
 
     // Arm Chutes
     else if g_Program = 46
     {
-        if g_RunMode < 2
+        if g_RunMode = 1
         {
             ArmParachutes().
-            SetProgram(47).
+            SetRunmode(3).
         }
-        else if g_RunMode < 3
+        else if g_RunMode = 3
         {
             OutMsg("* CHUTE(S) ARMED *":PadRight(g_termW - 18), cr()).
             SetProgram(47).            
@@ -247,29 +370,38 @@ until g_Program > 199 or g_Abort
     // Wait for reentry alt
     else if g_Program = 48
     {
-        if g_Runmode = 5
+        if g_RunMode = 1
         {
+            if Ship:Altitude <= tgtReentryAlt
+            {
+                clr(cr()).
+                SetRunmode(3).
+            }
+            else
+            {
+                OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
+            }
+        }
+        else if g_Runmode = 3
+        {
+            if Time:Seconds > stgTimeGoGo
+            {
+                SetRunmode(5).
+            }
+            else
+            {
+                OutMsg("STAGING: {0} ":Format(Time:Seconds - stgTimeGoGo), cr()).
+            }
+        }
+        else if g_Runmode = 5
+        {
+            OutMsg("STAGING ", cr()).
             until Stage:Number = 1
             {
                 if Stage:Ready stage.
                 wait 0.5.
             }
             SetProgram(50).
-        }
-        else if g_RunMode > 0
-        {
-            if Ship:Altitude <= tgtReentryAlt
-            {
-                SetRunmode(3).
-                if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
-                {
-                    set steerDel to { return Ship:SrfRetrograde.}.
-                    if Time:Seconds > stgTimeGoGo
-                    {
-                        SetRunmode(5).
-                    }
-                }
-            }
         }
         else if g_Runmode < 0
         {
@@ -300,7 +432,7 @@ until g_Program > 199 or g_Abort
                 SetRunmode(3).
             }
         }
-        else if g_RunMode > 1
+        else if g_RunMode = 3
         {
             if Ship:Altitude <= fairJettAlt
             {
@@ -443,8 +575,8 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
-            if Time:Seconds >= g_TS 
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            if Time:Seconds >= settleTS 
             {
                 SetProgram(99).
             }
@@ -460,7 +592,7 @@ until g_Program > 199 or g_Abort
         else
         {
             OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
-            set g_TS to Time:Seconds + 3.
+            set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
     }
@@ -468,11 +600,11 @@ until g_Program > 199 or g_Abort
     // Try to recover the sucker
     else if g_Program = 99
     {
-        set g_TS to 0.
+        set settleTS to 0.
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(g_TS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -486,7 +618,7 @@ until g_Program > 199 or g_Abort
         else
         {
             OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
-            set g_TS to Time:Seconds + 3.
+            set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
     }

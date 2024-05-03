@@ -53,9 +53,24 @@
         local fullDur to 0.
         local halfDur to 0.
         local burnEta to 0.
+        local preSpin to 0.
+        local ullageFlag to false.
         local ullageSafe to false.
-
+        
         lock dvRemaining to abs(dv).
+
+        for p in Ship:PartsTaggedPattern("SpinDC")
+        {
+            if p:Stage = Stage:Number - 1
+            {
+                local pSplit to p:Tag:Split("|").
+                set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
+            }
+            set g_Spin_Armed to preSpin > 0.
+        }
+
+        local ts0 to 0.
+        local ts1 to Time:Seconds * 1.25.
 
         if dv <= 0.1 
         {
@@ -67,7 +82,7 @@
             set fullDur to burnDur[0].
             set halfDur to burnDur[3].
             
-            set burnEta to _inNode:time - halfDur.
+            set burnEta to _inNode:Time - halfDur.
             
             set g_ActiveEngines to GetActiveEngines().
             local g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
@@ -77,51 +92,43 @@
                 
                 g_ActiveSpecs:Add(eng:UID, engSpec).
             }
-            // set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
-
+            
             local useNext to False.
             if g_ActiveSpecs:AllowRestart
             {
                 if g_ActiveSpecs:Ignitions = 0
                 {
-                    // OutInfo("Failed Ignitions test [{0}]":Format(g_ActiveSpecs:Ignitions), 1).
                     set useNext to True.
                 }
                 else if g_ActiveSpecs:RatedBurnTime <= g_ActiveSpecs:SpoolTime + 0.25 
                 {
-                    // OutInfo("Failed burnTimeTest [{0}|{1}]":Format(Round(g_ActiveSpecs:EstBurnTime, 2), Round(g_ActiveSpecs:SpoolTime + 0.25, 2)), 1).
                     set useNext to True.
                 }
-                // else
-                // {
-                //     OutInfo("Passed checks for active engines", 1).
-                // }
             }
             else
             {
-                // OutInfo("Failed AllowRestart test [{0}]":Format(g_ActiveSpecs:AllowRestart), 1).
                 set useNext to True.
             }
             if useNext 
             {
-                // OutInfo("Using NextEngines").
                 set burnEngs to GetNextEngines("1100").
                 set burnEngsSpec to GetEnginesSpecs(burnEngs):IGNSTG[burnEngs[0]:Stage].
             }
             else
             {
-                // OutInfo("Using active engines").
                 set burnEngs to g_ActiveEngines.
                 set burnEngsSpec to g_ActiveSpecs.
             }
-            // Breakpoint().
-            // set f_BurnUllage to burnEngsSpec:Ullage.
-            // OutInfo("Ullage check: {0}":Format(f_BurnUllage), 1).
-            // OutDebug("Engines: {0}":Format(g_ActiveEngines:Join(";")), 1).
-            // Breakpoint().
 
-            set burnEta to burnEta - burnEngsSpec:STGMAXSPOOL - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
-            local MECO    to burnEta + fullDur.
+            
+            set burnEta to burnEta - burnEngsSpec:STGMAXSPOOL - (HalfDur * 1.1). // This allows for spool time + adds a bit of buffer
+
+            if burnEngsSpec:ULLAGE
+            {
+                set ullageFlag to true.
+                set ts0 to burnETA - 8.
+            }
+            // local MECO    to burnEta + halfDur.
 
             local rollUpVector to { return -Body:Position.}.
             if Ship:CrewCapacity > 0
@@ -138,7 +145,8 @@
             wait 0.01.
             lock steering to g_Steer.
             
-            local burnLeadTime to 15.
+            local burnLeadTime to Max(12, preSpin + 10).
+
             local warpFlag to False.
 
             local _line to 2.
@@ -162,7 +170,7 @@
                         set warpFlag to True. 
                         OutMsg("Warping to maneuver", cr()).
                         clr(cr()).
-                        WarpTo(burnEta - burnLeadTime).
+                        WarpTo(burnEta - Max(burnLeadTime * 1.1, preSpin * 1.1)).
                     }
                     else
                     {
@@ -215,34 +223,56 @@
                 
                 if not warpFlag 
                 {
-                    set burnLeadTime to 15.
+                    set burnLeadTime to Max(12, preSpin + 10).
                 }
 
-                if burnEngsSpec:ULLAGE
+                OutInfo("Time Remaining: {0}s  ":Format(round(burnEta - Time:Seconds, 2)), cr()).
+
+                if ullageFlag
                 {
-                    set g_TS to burnETA - 8.
-                    // OutDebug("Ullage Armed (ETA: {0}s)":Format(Round(g_UllageTS - Time:Seconds, 2)), 4).
-                    if Time:Seconds >= g_TS
+                    if Time:Seconds >= ts0
                     {
-                        // OutDebug("Ullage Active", 4).
                         set Ship:Control:Fore to 1.
                     }
                 }
-                set g_Steer to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
-                // DispBurnNodeData(dv, burnEta - Time:Seconds, burnDur[0]).
-                OutInfo("Time Remaining: {0}s  ":Format(round(burnEta - Time:Seconds, 2)), cr()).
+
+                if preSpin > 0 
+                {
+                    set ts1 to burnETA - preSpin.
+                    set preSpin to 0.
+                }
+                if g_Spin_Armed
+                {
+                    if Time:Seconds >= ts1
+                    {
+                        set Ship:Control:Roll to 1.
+                        set g_Steer to _inNode:burnvector.
+                    }
+                    else if Time:Seconds >= burnETA
+                    {
+                        set Ship:Control:Roll to 0.
+                        set g_Spin_Armed to false.
+                    }
+                    else 
+                    {
+                        OutInfo("Spin Armed (T-{0}) ":Format(Round(ts1 - Time:Seconds, 2))).
+                        set g_Steer to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    }
+                }
+                else
+                {
+                    set g_Steer to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                }
             }
 
+            
             local dv0 to _inNode:deltav.
             lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
 
             ClearScreen.
 
             OutMsg("Executing burn", cr()).
-            // ClearDispBlock().
-
-            // set g_ActiveEngines to GetActiveEngines().
-            // set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
+            
             set g_ActiveEngines to GetActiveEngines().
             set g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
             for eng in g_ActiveEngines
@@ -262,6 +292,7 @@
             lock throttle to g_Throt.
             set g_Steer to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
+            set Ship:Control:Roll to 0.
             
             local autoStageResult to ArmAutoStaging(g_StageLimit).
             if autoStageResult = 1 
@@ -273,9 +304,11 @@
                 set g_AS_Armed to False.
             }
             OutInfo("AutoStage Armed; {0}":Format(g_AS_Armed), cr()).
-            // SetupSpinStabilizationEventHandler().
+
+            set g_Spin_Armed to ArmSpinStabilization().
+
             wait 0.01.
-            set g_TS to Time:Seconds.
+            set ts0 to Time:Seconds.
             set lastDV to _inNode:DeltaV.
             set dvRate to 0.
             
@@ -330,6 +363,14 @@
                     else
                     {
                         OutMsg("Autostaging: Armed", cr()).
+                    }
+                }
+                if g_Spin_Armed
+                {
+                    print "SpinStabilization [Armed] {0}":Format(Round(btRem, 2)) at (0, cr()).
+                    if g_Spin_Check:Call(btrem)
+                    {
+                        g_Spin_Action:Call().
                     }
                 }
                 if g_BoosterArmed

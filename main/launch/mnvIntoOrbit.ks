@@ -43,13 +43,14 @@ local circNode to node(Time:Seconds + ETA:Apoapsis, 0, 0, dvNeeded[1]).
 add circNode.
 
 
+set g_ShipEngines to GetShipEnginesSpecs(Ship).
+set g_NextEngines to GetNextEngines("1000").
+
 ExecNodeBurn(circNode).
 
 
 
 
-// set g_ShipEngines to GetShipEnginesSpecs(Ship).
-// set g_NextEngines to GetNextEngines("1000").
 
 // from { local i to Stage:Number - 1.} until i < g_StageLimit step { set i to i - 1.} do 
 // {

@@ -99,6 +99,7 @@
                   _line is cr().
 
         set g_line to _line.
+        set _str to _str + " ".
 
         if _str:length > Terminal:Width
         {
@@ -115,12 +116,47 @@
     // *- Display Modules
     // #region
 
-    // DispPlans
+    // DispPlan - Details of single plan
+    global function DispPlan
+    {
+        parameter _plan
+                 ,_line is g_line.
+
+        set g_Line to _line - 1.
+
+        local paramSplit to choose _plan[1]:Split(";") if _plan[1]:Contains(";") else _plan[1]:Split(",").
+        local paramList to list().
+
+        from { local i to 0.} until i >= paramSplit:Length step { set i to i + 1.} do
+        {
+            if paramSplit:Length > i
+            {
+                paramList:Add(paramSplit[i]).
+            }
+            else
+            {
+                paramList:Add("N/A").
+            }
+        }
+
+        local _descriptList to list(
+            "Script      : {0}":Format(_plan[0]) 
+            ,"Params     : {0}":Format(paramList:Join(";"))
+            ,"Stop Limit : {0}":Format(_plan[2]) 
+        ).
+
+        for str in _descriptList
+        {
+            OutStr(str, cr()).
+        }
+    }
+
+    // DispPlans - paginated list of plans
     global function DispPlans
     {
-        parameter _pageIdx is 0
-                 ,_line is g_Line
-                 ,_planList is g_AvailablePlans.
+        parameter _planList
+                  ,_pageIdx is 0
+                  ,_line is g_Line.
 
         set g_Line to _line.
 
