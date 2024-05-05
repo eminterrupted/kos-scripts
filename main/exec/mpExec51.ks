@@ -58,6 +58,8 @@ from { local i to g_Context.} until i = g_MissionPlan:M:Length step { set i to i
     runPath(scr, prm).
 }
 
+set Core:BootFileName to "".
+
 // TODO ConfirmMissionPlan
 local function ConfirmOrModifyMissionPlan
 {

@@ -11,7 +11,7 @@
     
     // *- Local
     // #region
-    local l_defaultLogPath to "0:/log/AEA/{0}-{1}.log":Format(Round(MissionTime), Ship:Name:Replace(" ","_")).
+    local l_defaultLogPath to "0:/log/AEA/{0}-{1}.log":Format(Round(MissionTime), Ship:Name:Replace(" ","_"):Replace("*","_")).
     local l_sysLog to Path(l_defaultLogPath).
     // #endregion
 
@@ -100,30 +100,33 @@ if g_LogOut
         parameter _str,
                   _msgType is 0.
 
-        if not exists(l_sysLog)
+        if HomeConnection:IsConnected
         {
-            InitLog().
-        }
-
-        if not l_sysLog:IsType("VolumeFile")
-        {
-            if l_sysLog:IsType("String")
+            if not exists(l_sysLog)
             {
-                set l_sysLog to Open(Path(l_sysLog)).
+                InitLog().
             }
-            else if l_sysLog:IsType("Path")
+
+            if not l_sysLog:IsType("VolumeFile")
             {
-                set l_sysLog to Open(l_sysLog).
+                if l_sysLog:IsType("String")
+                {
+                    set l_sysLog to Open(Path(l_sysLog)).
+                }
+                else if l_sysLog:IsType("Path")
+                {
+                    set l_sysLog to Open(l_sysLog).
+                }
             }
+
+            local mtSpan to TimeSpan(MissionTime).
+            // local utSpan to TimeSpan(Time:Seconds).
+
+            local typeStr to choose "" if _msgType = 0 else choose "[INFO]: " if _msgType = 1 else choose "[WARN]: " if _msgType = 2 else "[*ERR]".
+
+            local formattedStr to "[Y{0}-D{1,0}T{2,2}:{3,2}:{4,-8}|M_{5,-8}] {6}{7}":Format(mtSpan:Year, mtSpan:Day, mtSpan:Hour, mtSpan:Minute, Round(Mod(mtSpan:Seconds, 60), 3), Round(MissionTime, 3), typeStr, _str).
+            l_sysLog:WriteLn(formattedStr).
         }
-
-        local mtSpan to TimeSpan(MissionTime).
-        // local utSpan to TimeSpan(Time:Seconds).
-
-        local typeStr to choose "" if _msgType = 0 else choose "[INFO]: " if _msgType = 1 else choose "[WARN]: " if _msgType = 2 else "[*ERR]".
-
-        local formattedStr to "[Y{0}-D{1,0}T{2,2}:{3,2}:{4,-8}|M_{5,-8}] {6}{7}":Format(mtSpan:Year, mtSpan:Day, mtSpan:Hour, mtSpan:Minute, Round(Mod(mtSpan:Seconds, 60), 3), Round(MissionTime, 3), typeStr, _str).
-        l_sysLog:WriteLn(formattedStr).
     }
     
 // #endregion

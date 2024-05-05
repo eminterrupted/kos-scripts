@@ -30,6 +30,8 @@ if _params:length > 0
   if _params:Length > 2 set retroBurnTS to _params[2]:ToNumber(retroBurnTS).
 }
 
+local tgtReentryAltWarpStop to tgtReentryAlt * 1.2.
+
 set g_Line to 4.
 local steerDel to { return Ship:SrfRetrograde.}.
 set g_Steer to steerDel:Call().
@@ -370,31 +372,66 @@ until g_Program > 199 or g_Abort
     // Wait for reentry alt
     else if g_Program = 48
     {
-        if g_RunMode = 1
+        if g_Runmode = 1
         {
-            if Ship:Altitude <= tgtReentryAlt
+            if Ship:Altitude <= (tgtReentryAltWarpStop)
             {
-                clr(cr()).
+                if Warp > 0 
+                {
+                    set Warp to 0.
+                }
                 SetRunmode(3).
             }
             else
             {
-                OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
+                clr(cr()).
+            }
+        }
+        else if g_RunMode = 3
+        {
+            if Ship:Altitude <= tgtReentryAlt
+            {
+                SetProgram(49).
+            }
+            else
+            {
+                clr(cr()).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            {
+                set g_Abort     to True.
+                set g_AbortCode to g_Program.
+            }
+        }
+        else
+        {
+            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
+            SetRunmode(1).
+        }
+        OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
+    }
+
+// Stage at reentry alt
+    else if g_Program = 49
+    {
+        if g_Runmode = 1
+        {
+            if Time:Seconds > stgTimeGoGo
+            {
+                SetRunmode(3).
+            }
+            else
+            {
+                clr(cr()).
+                OutMsg("STAGING: {0} ":Format(Time:Seconds - stgTimeGoGo), cr()).
             }
         }
         else if g_Runmode = 3
         {
-            if Time:Seconds > stgTimeGoGo
-            {
-                SetRunmode(5).
-            }
-            else
-            {
-                OutMsg("STAGING: {0} ":Format(Time:Seconds - stgTimeGoGo), cr()).
-            }
-        }
-        else if g_Runmode = 5
-        {
+            clr(cr()).
             OutMsg("STAGING ", cr()).
             until Stage:Number = 1
             {
@@ -417,6 +454,7 @@ until g_Program > 199 or g_Abort
             OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
             SetRunmode(1).
         }
+        OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
     }
 
     // Atmospheric Reentry
