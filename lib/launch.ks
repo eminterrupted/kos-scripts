@@ -199,6 +199,42 @@
             ,ignitionStart
         ).
     }
+
+    // PrepLaunchPad
+    // Method that will prep the launch pad (retract and set various parts) for imminent launch
+    global function PrepLaunchPad
+    {
+        local modList to list().
+        // Retract the crew arm first
+        for p in Ship:PartsNamedPattern("^AM.MLP.*Crew.*Arm.*")
+        {
+            from { local i to 0.} until i = p:GetModules:Length step { set i to i + 1.} do
+            {
+                local m to p:GetModuleByIndex(i).
+
+                if m:HasField("horizontal adjust") and m:HasField("status")
+                {
+                    local armStatus to GetField(m, "status"). 
+                    if armStatus = "Clamped" 
+                    {
+                        DoAction(m, "toggle", true).
+                        modList:Add(m).
+                    }
+                }
+            }
+            wait 0.01.
+
+            local doneFlag to 1.
+            until doneFlag
+            {
+                for m in modList
+                {
+                    local mState to choose 1 if GetField(m, "status") = "Clamped" else 0.
+                    set doneFlag to Min(doneFlag, mState).
+                }
+            }
+        }
+    }
     
 // #endregion
 // #endregion

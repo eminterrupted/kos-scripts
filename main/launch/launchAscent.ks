@@ -82,11 +82,11 @@ CopyPath("state.txt", "0:/test/data/state.txt").
 until g_Program >= 20 or g_Abort
 {   
     set g_line to 4.
-    if g_Program < 8
+    if g_Program < 4
     {
-        SetProgram(8).
+        SetProgram(4).
     }
-    else if g_Program = 8
+    else if g_Program = 4
     {
         OutMsg("TgtInc: {0} | TgtAlt: {1} | AscShaper: {2}":Format(tgtInc, tgtAlt, ascShaper), g_line).
         OutMsg("Stage Limit: {0}":Format(g_StageLimit), cr()).
@@ -101,11 +101,16 @@ until g_Program >= 20 or g_Abort
         OutMsg("go to space today!!! Hold on to your butts!", cr()).
         wait 2.
         ClearScreen.
-        SetProgram(9).
+        SetProgram(6).
+    }
+    else if g_Program = 6
+    {
+        PrepLaunchPad().
+        SetProgram(8).
     }
 
     // Setup control
-    if g_Program = 9
+    if g_Program = 8
     {
         set g_AzData to l_az_calc_init(tgtAlt, tgtInc).
 

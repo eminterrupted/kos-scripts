@@ -143,5 +143,12 @@
 			"DispMain()."
 		],
 		"description": "New Script Header"
-	}
+	},
+    "From Loop: List Length": {
+        "prefix": "FromListLength",
+        "body": [
+          "from { local i to 0.} until i = list__:Length step { set i to i + 1.} do {}"
+        ],
+        "description": "From Loop: List Length"
+    }
 }
