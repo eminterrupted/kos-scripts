@@ -59,16 +59,6 @@
         
         lock dvRemaining to abs(dv).
 
-        for p in Ship:PartsTaggedPattern("SpinDC")
-        {
-            if p:Stage = Stage:Number - 1
-            {
-                local pSplit to p:Tag:Split("|").
-                set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
-            }
-            set g_Spin_Armed to preSpin > 0.
-        }
-
         local ts0 to 0.
         local ts1 to Time:Seconds * 1.25.
 
@@ -86,6 +76,7 @@
             
             set g_ActiveEngines to GetActiveEngines().
             local g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
+
             for eng in g_ActiveEngines
             {
                 local engSpec to g_ShipEngines:ENGUID[eng:UID].
@@ -121,7 +112,7 @@
             }
 
             
-            set burnEta to burnEta - burnEngsSpec:STGMAXSPOOL - (HalfDur * 1.1). // This allows for spool time + adds a bit of buffer
+            set burnEta to burnEta - (burnEngsSpec:STGMAXSPOOL * 1.1). // This allows for spool time + adds a bit of buffer
 
             if burnEngsSpec:ULLAGE
             {
@@ -145,16 +136,37 @@
             wait 0.01.
             lock steering to g_Steer.
             
-            local burnLeadTime to Max(12, preSpin + 10).
+            set g_NextEngines to GetNextEngines("1100").
+
+            for p in Ship:PartsTaggedPattern("SpinDC")
+            {
+                if p:Stage = Stage:Number - 1
+                {
+                    if fullDur > GetPredictedBurnTime(g_NextEngines)
+                    {
+                        local pSplit to p:Tag:Split("|").
+                        set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
+                    }
+                }
+                set g_Spin_Armed to preSpin > 0.
+            }
+
+            local burnPreLead to 12.
+            local burnLeadTime to Max(burnPreLead, preSpin + 10).
 
             local warpFlag to False.
+
 
             local _line to 2.
             until time:seconds >= burnEta
             {
                 set g_line to _line - 1.
 
-                if Kuniverse:TimeWarp = 0 set warpFlag to False.
+                if Kuniverse:TimeWarp = 0 
+                {
+                    set warpFlag to False.
+                }
+                
                 if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime), cr()).
                 
                 GetTermChar().
@@ -170,6 +182,12 @@
                         set warpFlag to True. 
                         OutMsg("Warping to maneuver", cr()).
                         clr(cr()).
+                        if Kuniverse:TimeWarp:Mode = "PHYSICS"
+                        {
+                            set Warp to 0.
+                            wait until KUniverse:TimeWarp:IsSettled.
+                            Set KUniverse:Timewarp:Mode to "RAILS".
+                        }
                         WarpTo(burnEta - Max(burnLeadTime * 1.1, preSpin * 1.1)).
                     }
                     else
@@ -220,13 +238,33 @@
                 {
                     set Ship:Control:Roll to 0.
                 }
+                else if g_TermChar = "="
+                {
+                    set burnPreLead to burnPreLead + 5.
+                }
+                else if g_TermChar = "-"
+                {
+                    set burnPreLead to burnPreLead - 5.
+                }
+                else if g_TermChar = "+"
+                {
+                    set burnPreLead to burnPreLead + 5.
+                }
+                else if g_TermChar = "_"
+                {
+                    set burnPreLead to burnPreLead - 5.
+                }
                 
                 if not warpFlag 
                 {
-                    set burnLeadTime to Max(12, preSpin + 10).
+                    set burnLeadTime to Max(burnPreLead, preSpin + 10).
                 }
 
-                OutInfo("Time Remaining: {0}s  ":Format(round(burnEta - Time:Seconds, 2)), cr()).
+                local timeDelta to TimeSpan(burnEta - Time:Seconds):Full.
+                OutInfo("Burn Actual ETA: {0} ":Format(timeDelta), cr()).
+                
+                local leadTime to choose TimeSpan(timeDelta - burnLeadTime):Full if timeDelta > burnLeadTime else "N/A".
+                OutInfo("Burn Lead Time : {0} ":Format(leadTime), cr()).
 
                 if ullageFlag
                 {
@@ -263,6 +301,8 @@
                 {
                     set g_Steer to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
                 }
+
+                set g_TermChar to "".
             }
 
             
@@ -314,8 +354,9 @@
             
             ClearScreen.
 
+            local breakFlag to false.
             local softShutdownDV to max(0.01, dvRate * (g_ActiveSpecs:SpoolTime * 0.2)).
-            until vdot(dv0, _inNode:DeltaV) <= softShutdownDV // 0.0025
+            until vdot(dv0, _inNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
             {   
                 set g_line to _line - 1.
                 GetTermChar().
@@ -346,7 +387,7 @@
                     if g_HS_Check:Call(btrem)
                     {
                         g_HS_Action:Call().
-                        clr(cr()).
+                        ClearScreen.
                     }
                     else
                     {
@@ -358,7 +399,7 @@
                     if g_AS_Check:Call()
                     {
                         g_AS_Action:Call().
-                        clr(cr()).
+                        ClearScreen.
                     }
                     else
                     {
@@ -387,7 +428,7 @@
                         else
                         {
                             set g_BoosterResult to list(false, g_NulCheckDel, g_NulActionDel).
-                            clr(cr()).
+                            ClearScreen.
                         }
                     }
                     else
@@ -400,7 +441,7 @@
                     if g_Spin_Check:Call(btRem)
                     {
                         g_Spin_Action:Call().
-                        clr(cr()).
+                        ClearScreen.
                     }
                     else
                     {
@@ -417,7 +458,7 @@
                         }
                         else 
                         { 
-                            clr(cr()).
+                            ClearScreen.
                         }
                     }
                     else
@@ -478,6 +519,11 @@
                 //     ExecGLoopEvents().
                 // }
                 set g_TermChar to "".
+
+                if Ship:AvailableThrust = 0 and not g_AS_Armed
+                {
+                    set breakFlag to true.
+                }
             }
             set g_Throt to 0.
             set Ship:Control:Roll to 0.

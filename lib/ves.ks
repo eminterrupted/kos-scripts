@@ -11,6 +11,7 @@
     
     // *- Local
     // #region
+    local l_LESJettisonAlt to 88000.
     local l_SpinMin to 12.
     local l_SpinStab_Init to lex("ARMED", false, "LEADTIME", 0, "STG", -1).
 
@@ -28,6 +29,9 @@
 
     global g_Spin_Action   to { return false.}.
     global g_Spin_Check to { return false.}.
+
+    global g_VesSpecs to GetVesselStageSpecs("1000").
+
     // #endregion
 // #endregion
 
@@ -62,11 +66,60 @@
     {
         parameter _antModules is Ship:ModulesNamed("ModuleDeployableAntenna").
 
+        if not _antModules:IsType("List")
+        {
+            set _antModules to list(_antModules).
+        }
+
         for m in _antModules
         {
             DoEvent(m, "extend antenna").
         }
     }
+
+    // Launch Escape System
+    global function ArmLESJettison
+    {
+        parameter _les to core:part.
+
+        local lesList to list().
+
+        if _les:IsType("Part")
+        {
+            if _les:uid = core:part:uid
+            {
+                for p in Ship:PartsDubbedPattern("(.*LES.*|Launch.*Escape)")
+                {
+                    lesList:Add(p).
+                }
+            }
+        }
+        else if _les:IsType("List")
+        {
+            set lesList to _les.
+        }
+
+        local lesCheck to { parameter __checkVal. return Ship:Altitude > __checkVal.}.
+
+        return list(lesList:Length > 0, lesCheck@:Bind(l_LESJettisonAlt), JettisonLES@:Bind(lesList)).
+    }
+
+    local function JettisonLES
+    {
+        parameter _lesList.
+
+        for p in _lesList
+        {
+            p:activate.
+            if p:HasModule("ModuleDecouple")
+            {
+                local m to p:GetModule("ModuleDecouple").
+                m:DoEvent("decouple").
+            }
+        }
+        return false.
+    }
+
 
     // #endregion
 
@@ -337,6 +390,37 @@
             }
         }
         return bestDC.
+    }
+
+    // GetVesselStageSpecs
+    global function GetVesselStageSpecs
+    {
+        parameter _bitMask is "1000". // [1]000 = Stage Mass
+                                      // 0[1]00 = Fuel Mass
+                                      // 00[0]0 = (Reserved)
+                                      // 000[0] = (Reserved)
+
+        local vesLex to lex(
+            "ShipMass", lex(),
+            "FuelMass", lex()
+        ).
+
+        for p in ship:parts
+        {
+            if _bitMask[0]
+            {
+                if vesLex:ShipMass:HasKey(p:DecoupledIn)
+                {
+                    set vesLex["ShipMass"][p:DecoupledIn] to vesLex["ShipMass"][p:DecoupledIn] + p:Mass.
+                }
+                else
+                {
+                    vesLex:ShipMass:Add(p:DecoupledIn, p:Mass).
+                }
+            }
+        }
+
+        return vesLex.
     }
 
     // StageMass :: (<scalar>) -> <lexicon>

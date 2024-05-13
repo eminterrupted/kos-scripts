@@ -5,6 +5,7 @@ parameter _params is list().
 
 RunOncePath("0:/lib/depLoader.ks").
 RunOncePath("0:/lib/launch.ks").
+RunOncePath("0:/lib/abort.ks").
 RunOncePath("0:/lib/log.ks").
 RunOncePath("0:/kslib/lib_navball.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
@@ -17,6 +18,8 @@ local tgtAlt to Ship:Body:SOIRadius.
 local tgtInc to 30.
 local launchTS to list().
 local ts0 to 0.
+
+
 
 // Param parsing
 if _params:Length > 0
@@ -84,6 +87,7 @@ until g_Program >= 20 or g_Abort
     set g_line to 4.
     if g_Program < 4
     {
+        PrepLaunchPad().
         SetProgram(4).
     }
     else if g_Program = 4
@@ -105,7 +109,6 @@ until g_Program >= 20 or g_Abort
     }
     else if g_Program = 6
     {
-        PrepLaunchPad().
         SetProgram(8).
     }
 
@@ -342,6 +345,26 @@ if Ship:PartsTaggedPattern("Ascent\|Fairing.*"):Length > 0
     set fairingAction to fairingResult[2].
 }
 
+// Arm Abort System
+local AbortSysResult to ArmAbortSystem().
+local AbortSysArmed to AbortSysResult[0].
+local AbortSysCheck  to AbortSysResult[1].
+local AbortSysAction to AbortSysResult[2].
+
+// Arm LES Jettison
+local LESResult to list().
+local LESArmed to false.
+local LESCheck  to { return true.}.
+local LESAction to { return false.}.
+local LESParts to Ship:PartsDubbedPattern("(.*LES.*|.*Launch.*Escape.*)").
+if LESParts:Length > 0
+{
+    set LESResult to ArmLESJettison(LESParts).
+    set LESArmed to LESResult[0].
+    set LESCheck  to LESResult[1].
+    set LESAction to LESResult[2].
+}
+
 // Arm MECO
 local MECOAction to { return false.}.
 local MECOArmed  to false.
@@ -381,7 +404,10 @@ OutLog("ArmMECO Result: {0}":Format(MECOArmed), 1).
 
 
 local ascAngDel to GetAscentAngle@:Bind(tgtAlt):Bind(ascShaper).
-local rollDel to { return 0. }.
+
+local rollFlag to false.
+local rollVal to choose 0 if Ship:Crew:Length = 0 else 180.
+local rollVec to choose -Body:Position if rollVal = 0 else Body:Position.
 
 SetProgram(21).
 SetRunmode(0).
@@ -389,6 +415,7 @@ ClearScreen.
 // * Main Loop
 until g_Program >= 36 or g_Abort
 {
+    GetTermChar().
     set g_ActiveEngines to GetActiveEngines(Ship, False).
     set g_ActiveEngines_PerfData to GetEnginesPerformanceData(g_ActiveEngines, true, "11100000").
 
@@ -438,7 +465,13 @@ until g_Program >= 36 or g_Abort
     }
     else if g_Program = 22
     {
-        if g_RunMode = 1
+        if g_Runmode = 1
+        {
+            OutMsg("ROLL PROGRAM", g_termH - 14).
+            // set rollFlag to true.
+            SetRunmode(2).
+        }
+        else if g_RunMode = 2
         {
             if Ship:Apoapsis >= tgtAlt
             {
@@ -452,6 +485,7 @@ until g_Program >= 36 or g_Abort
                 }
                 else
                 {
+                    set g_AS_Armed to false.
                     SetProgram(28).
                 }
             }
@@ -466,7 +500,7 @@ until g_Program >= 36 or g_Abort
                 }
             }
         }
-        else if g_Runmode = 2
+        else if g_Runmode = 3
         {
 
         }
@@ -484,7 +518,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 24
@@ -502,6 +536,7 @@ until g_Program >= 36 or g_Abort
                 }
                 else
                 {
+                    set g_AS_Armed to false.
                     SetProgram(30).
                 }
             }
@@ -525,7 +560,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 26
@@ -543,6 +578,7 @@ until g_Program >= 36 or g_Abort
                 }
                 else
                 {
+                    set g_AS_Armed to false.
                     SetProgram(30).
                 }
             }
@@ -566,7 +602,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 28
@@ -600,7 +636,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), 0).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-11.25, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 30
@@ -655,7 +691,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), 0).
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 32
@@ -686,7 +722,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), 0).
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(0, ascAngDel:Call())), rollVal).
     }
 
 
@@ -694,9 +730,12 @@ until g_Program >= 36 or g_Abort
 
         
     // TODO: Write Abort Handler here
-    if g_Abort
+    if AbortSysArmed
     {
-
+        if AbortSysCheck:Call()
+        {
+            AbortSysAction:Call().
+        }
     }
 
     OutMsg("C:[{0,-1}] | P:[{1,-3}] | R:[{2,-2}] | SL:[{3,-1}]  ":Format(g_Context, g_Program, g_Runmode, g_StageLimit), 0).
@@ -783,6 +822,15 @@ until g_Program >= 36 or g_Abort
             OutInfo("g_SpinStab Stage: [{0}]":Format(g_SpinStab:STG)).
         }
     }
+    else if rollFlag
+    {
+        if VAng(Ship:Up:Vector, rollVec) <= 2.5
+        {
+            set SteeringManager:RollTorqueFactor to 0.25.
+            set rollFlag to false.
+            OutMsg("ROLL COMPLETE", g_termH - 14).
+        }
+    }
 
     if fairingsArmed
     {
@@ -794,6 +842,19 @@ until g_Program >= 36 or g_Abort
         else
         {
             OutMsg("Fairing jettison: Armed", cr()).
+        }
+    }
+
+    if LESArmed
+    {
+        if LESCheck:Call()
+        {
+            set LESArmed to LESAction:Call().
+            clr(cr()).
+        }
+        else
+        {
+            OutMsg("LES jettison: Armed", cr()).
         }
     }
 
@@ -815,6 +876,8 @@ until g_Program >= 36 or g_Abort
             OutInfo("MECO: T-{0} ":Format(Round(MECO - MissionTime, 2)), cr()).
         }
     }
+
+
     if not HomeConnection:IsConnected()
     {
         if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
@@ -825,8 +888,10 @@ until g_Program >= 36 or g_Abort
             }
         }
     }
-}
 
+    set g_TermChar to "".
+}
+set g_Throt to 0.
 SetProgram(0).
 SetRunmode(0).
 UpdateState(True).

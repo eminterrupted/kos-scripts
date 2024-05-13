@@ -12,7 +12,6 @@ RunOncePath("0:/lib/mnv.ks").
 
 
 // Declare Variables
-local deorbitNode   to Node(0, 0, 0, 0).
 local retroBurnTS        to Time:Seconds + ETA:Apoapsis.
 local fairings      to list().
 local fairJettAlt   to 10000.
@@ -20,17 +19,15 @@ local preDeployAlt  to 2000.
 local retroBurn     to false.
 local settleTS      to 0.
 local stgTimeGoGo   to 5.
-local suppressRecovery to false.
 local tgtReentryAlt to 140000.
 local warpZeroAlt   to 25.
 
 // Parse Params
 if _params:length > 0 
 {
-  set tgtReentryAlt to ParseStringScalar(_params[0], tgtReentryAlt).
-  if _params:Length > 1 set suppressRecovery to _params[1].
-  if _params:Length > 2 set retroBurn to _params[2].
-  if _params:Length > 3 set retroBurnTS to ParseStringScalar(_params[3], retroBurnTS).
+  set tgtReentryAlt to _params[0].
+  if _params:Length > 1 set retroBurn to _params[1].
+  if _params:Length > 2 set retroBurnTS to _params[2]:ToNumber(retroBurnTS).
 }
 
 local tgtReentryAltWarpStop to tgtReentryAlt * 1.2.
@@ -38,10 +35,10 @@ local tgtReentryAltWarpStop to tgtReentryAlt * 1.2.
 set g_Line to 4.
 local steerDel to { return Ship:SrfRetrograde.}.
 set g_Steer to steerDel:Call().
+lock steering to g_Steer.
 
 SAS off.
 // set g_Steer to Ship:Facing.
-lock steering to g_Steer.
 local steerActive to true.
 
 set fairings to Ship:PartsTaggedPattern("((Reentry|Descent)\|Fairing)|(Fairing\|(Reentry|Descent))").
@@ -55,17 +52,9 @@ if fairings:length > 0
 }
 
 InitStateCache().
-if g_MissionPlan:HasKey("S")
-{
-    if g_MissionPlan:S:Length > 0
-    {
-        SetStageLimit(g_MissionPlan:S[g_MissionPlan:S:Length - 1]:ToNumber(2)).
-    }
-    else
-    {
-        SetStageLimit(2).
-    }
-}
+SetStageLimit(2).
+
+OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
 
 until g_Program > 199 or g_Abort
 {
@@ -98,7 +87,9 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 2
         {
-            SetProgram(22).
+            if HasNode ExecNodeBurn(NextNode).
+            set settleTS to 0.
+            SetProgram(40).
         }
         else if g_Runmode = 3
         {
@@ -106,6 +97,11 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 4
         {
+            print "PASSIVE START - WAITING TO 142500 " at (0, g_Line). 
+            if Ship:Altitude <= 142500
+            {
+                SetProgram(40).
+            }
             SetProgram(40).
         }
         else if g_Runmode < 0
@@ -121,70 +117,6 @@ until g_Program > 199 or g_Abort
             OutMsg("CHECKING MANUEVER", cr()).
             SetRunmode(1).
         }
-        set g_Steer to steerDel:Call().
-    }
-
-    // Use ExecNodeBurn to deorbit
-    else if g_Program = 22
-    {
-        if g_RunMode = 1
-        {
-            // This is a fake node, bail
-            if deorbitNode:DeltaV:Mag = 0
-            {
-                SetProgram(40). 
-            }
-
-            set steerDel to { return deorbitNode:DeltaV.}.
-            set settleTS to Time:Seconds + 10.
-            SetRunmode(2).
-        }
-        else if g_Runmode = 2
-        {
-            if Time:Seconds >= settleTS and VAng(Ship:Facing, deorbitNode:DeltaV) <= 0.25
-            {
-                set settleTS to 0.
-                SetRunmode(4).
-            }
-        }
-        else if g_Runmode = 4
-        {
-            if Time:Seconds >= retroBurnTS - 15
-            {
-                if warp > 0 set warp to 0.
-                wait until Kuniverse:TimeWarp:IsSettled.
-                SetRunmode(6).
-            }
-            else
-            {
-                if g_TermChar = "w"
-                {
-                    WarpTo(retroBurnTS - 15).
-                }
-            }
-        }
-        else if g_Runmode = 6
-        {
-            ExecNodeBurn(deorbitNode).
-            SetProgram(27).
-        }
-        else if g_Runmode < 0
-        {
-            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
-            {
-                set g_Abort     to True.
-                set g_AbortCode to g_Program.
-            }
-        }
-        else
-        {
-            set deorbitNode to choose NextNode if HasNode else deorbitNode.
-            set retroBurnTS to Round(NextNode:Time, 2).
-            OutMsg("EXEC DEORBIT NODE", cr()).
-            SetRunmode(1).
-        }
-        OutMsg("TIME TO NODE: [T{0}] ":Format(Time:Seconds - retroBurnTS), cr()).
-        set g_Steer to steerDel:Call().
     }
 
     // Wait until retroBurnTS
@@ -192,7 +124,7 @@ until g_Program > 199 or g_Abort
     {
         if g_RunMode = 1
         {
-            set steerDel to { return Ship:Retrograde.}.
+            set steerDel to { return Ship:Retrograde. }.
             set settleTS to Time:Seconds + 10.
             SetRunmode(2).
         }
@@ -219,6 +151,10 @@ until g_Program > 199 or g_Abort
                 {
                     WarpTo(retroBurnTS - 15).
                 }
+                else
+                {
+                    set g_Steer to steerDel:Call().
+                }
             }
         }
         else if g_Runmode = 6
@@ -239,7 +175,6 @@ until g_Program > 199 or g_Abort
             SetRunmode(1).
         }
         OutMsg("TIME TO REENTRY BURN: [T{0}] ":Format(Time:Seconds - retroBurnTS), cr()).
-        set g_Steer to steerDel:Call().
     }
 
     // Execute Retro Burn
@@ -305,7 +240,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 2
         {
-            if Time:Seconds >= settleTS and VAng(Ship:Facing:Vector , Ship:SrfRetrograde:Vector) <= 0.25
+            if Time:Seconds >= settleTS 
             {
                 set settleTS to 0.
                 SetProgram(46).
@@ -326,69 +261,64 @@ until g_Program > 199 or g_Abort
         }
     }
 
-    // Wait for reentry alt
-    else if g_Program = 42
-    {
-        // First check to see if we are warping to set the appropriate runmode
-        if Warp > 0
-        {
-            SetRunmode(2).
-        }
-        else
-        {
-            SetRunmode(1).
-        }
+    // // Wait until apoapsis
+    // else if g_Program = 42
+    // {
+    //     if g_RunMode > 0
+    //     {
+    //         if ETA:Apoapsis <= 5 or ETA:Apoapsis > ETA:Periapsis
+    //         {
+    //             clr(cr()).
+    //             if warp > 0 set warp to 0.
+    //             wait until Kuniverse:TimeWarp:IsSettled.
+    //             SetProgram(44).
+    //         }
+    //     }
+    //     else if g_Runmode < 0
+    //     {
+    //         if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+    //         {
+    //             set g_Abort     to True.
+    //             set g_AbortCode to g_Program.
+    //         }
+    //     }
+    //     else
+    //     {
+    //         OutMsg("WAIT FOR AP":PadRight(g_termW - 15), cr()).
+    //         SetRunmode(1).
+    //     }
+    //     OutInfo("AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)), cr()).
+    // }
 
-        if g_RunMode = 1
-        {
-            if Time:Seconds >= settleTS
-            {
-                set settleTS to 0.
-                SetRunmode(4).
-            }
-        }
-        else if g_Runmode = 2
-        {
-            if Ship:Altitude <= tgtReentryAltWarpStop
-            {
-                Set Warp to 0.
-                SetRunmode(3).
-                clr(cr()).
-            }
-            else
-            {
-                OutInfo("WARP ACTIVE: [{0}]":Format(Warp)).
-            }
-        }
-        else if g_Runmode = 3
-        {
-            if Ship:Settled
-            {
-                SetProgram(46).
-            }
-        }
-        else if g_Runmode < 0
-        {
-            if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
-            {
-                set g_Abort     to True.
-                set g_AbortCode to g_Program.
-            }
-        }
-        else
-        {
-            OutMsg("WAIT FOR REENTRY BURN", cr()).
-            SetRunmode(1).
-        }
-
-        if g_TermChar = "w"
-        {
-            WarpTo(retroBurnTS - 15).
-        }
-
-        OutMsg("TIME TO REENTRY BURN: [T{0}] ":Format(Time:Seconds - retroBurnTS), cr()).
-        set g_Steer to steerDel:Call().
-    }
+    // // Stage to limit
+    // else if g_Program = 44
+    // {
+    //     if g_RunMode > 0
+    //     {
+    //         if Stage:Number > g_StageLimit
+    //         {
+    //             if Stage:Ready stage.
+    //         }
+    //         else
+    //         {
+    //             SetProgram(46).
+    //         }
+    //     }
+    //     else if g_Runmode < 0
+    //     {
+    //         if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+    //         {
+    //             set g_Abort     to True.
+    //             set g_AbortCode to g_Program.
+    //         }
+    //     }
+    //     else
+    //     {
+    //         OutMsg("* STAGING *":PadRight(g_termW - 11), cr()).
+    //         SetRunmode(1).
+    //     }
+        
+    // }
 
     // Arm Chutes
     else if g_Program = 46
@@ -446,14 +376,28 @@ until g_Program > 199 or g_Abort
     {
         if g_Runmode = 1
         {
+            if Ship:Altitude <= (tgtReentryAltWarpStop)
+            {
+                if Warp > 0 
+                {
+                    set Warp to 0.
+                }
+                SetRunmode(3).
+            }
+            else
+            {
+                clr(cr()).
+            }
+        }
+        else if g_RunMode = 3
+        {
             if Ship:Altitude <= tgtReentryAlt
             {
                 SetProgram(49).
             }
             else
             {
-                local timeToReentryAlt to Round((Ship:Altitude - tgtReentryAlt) / (Ship:VerticalSpeed + (Constant:g * Ship:Body:Mass) / (Ship:Altitude + Ship:Body:Radius)^2), 2).
-                OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(timeToReentryAlt), cr()).
+                clr(cr()).
             }
         }
         else if g_Runmode < 0
@@ -469,6 +413,7 @@ until g_Program > 199 or g_Abort
             OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
             SetRunmode(1).
         }
+        OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
     }
 
 // Stage at reentry alt
@@ -490,28 +435,12 @@ until g_Program > 199 or g_Abort
         {
             clr(cr()).
             OutMsg("STAGING ", cr()).
-            if Stage:Number > 1
+            until Stage:Number = 1
             {
-                set g_ActiveEngines to GetActiveEngines().
-                local thr to 0.
-                for eng in g_ActiveEngines
-                {
-                    set thr to thr + eng:Thrust.
-                }
-                if thr = 0
-                {
-                    if Stage:Ready 
-                    {
-                        stage.
-                        wait 0.1.
-                    }
-                }
+                if Stage:Ready stage.
+                wait 0.5.
             }
-            else
-            {
-                SetProgram(50).
-            }
-
+            SetProgram(50).
         }
         else if g_Runmode < 0
         {
@@ -703,7 +632,7 @@ until g_Program > 199 or g_Abort
         else
         {
             OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
-            set settleTS to choose Time:Seconds + 3 if Ship:Crew:Length = 0 else 0.25.
+            set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
     }
@@ -737,7 +666,7 @@ until g_Program > 199 or g_Abort
 
     if steerActive set g_Steer to steerDel:Call().
     
-    OutStr("P{0,-3}:R{1,3}  ":Format(g_Program, g_Runmode):PadRight(8), 0).
+    OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
 
     DispDescentTelemetry(9).
 }

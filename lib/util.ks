@@ -1137,7 +1137,6 @@ set g_MissionPlans to ListMissionPlans().
             // ,0    // Runmode
             // ,0    // StageStop
         ).
-
         
         if exists(g_StateCachePath) and not _resetState
         {
@@ -1164,7 +1163,7 @@ set g_MissionPlans to ListMissionPlans().
         set g_Program       to g_State[2]. // print g_Program.
         set g_Runmode       to g_State[3]. // print g_RunMode.
         set g_StageLimit    to g_State[4]. // print g_StageLimit.
-        
+
         return Exists(g_StateCachePath).
     }
 

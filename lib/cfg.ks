@@ -1,2 +1,2 @@
 // *~ Config ~* //
-set Config:IPU to 640.
+set Config:IPU to 896.

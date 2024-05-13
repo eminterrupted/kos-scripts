@@ -20,7 +20,12 @@ if Ship:Status = "PRELAUNCH"
         {
             SetMissionPlanId(mpId, True).
             set g_MissionPlan to GetMissionPlan(g_MissionPlanId).
-            set g_StageLimit to g_MissionPlan:S[g_State[1]]:ToNumber(0).
+            // clearScreen.
+            // print g_MissionPlan.
+            // print " ".
+            // print g_State.
+            // Breakpoint().
+            SetStageLimit(g_MissionPlan:S[0]:ToNumber(0)).
 
             set mpConfirm to ConfirmOrModifyMissionPlan(g_MissionPlanId, g_MissionPlan).
         }

@@ -267,7 +267,7 @@
         
         local burnDurCalcs to list(durObj["Full"], durObj["FullStaged"], durObj["Half"], durObj["HalfStaged"]).
 
-        WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
+        if g_LogOut WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
 
         return burnDurCalcs.
     }

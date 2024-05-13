@@ -111,6 +111,7 @@
                             if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
                         }
                         set g_AS_Running to false.
+                        ClearScreen.
                         // OutInfo("UPDATING G_SHIPENGINES").
                         // else if g_ShipEngines:IGNSTG:HasKey(Stage:Number)
                         // {
@@ -318,8 +319,7 @@
                 {
                     set spoolTime to 0.66.
                 }
-                // if g_ShipEngines:IGNSTG:HasKey("STGBURNTIME") set burnTime to g_ShipEngines:IGNSTG:STGBURNTIME.
-                set _checkVal to spoolTime * 1.125.
+                set _checkVal to spoolTime * 1.25.
             }
             else
             {
@@ -502,12 +502,20 @@
         {
             set g_NextEngines to GetNextEngines("1000", 0).
         }
-        local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
-        if engObj:ULLAGE
+
+        if g_ShipEngines:IGNSTG:HasKey(g_NextEngines[0]:Stage)
         {
-            return engObj:FuelStability >= 0.975.
+            local engObj to g_ShipEngines:IGNSTG[g_NextEngines[0]:Stage].
+            if engObj:ULLAGE
+            {
+                return engObj:FuelStability >= 0.975.
+            }
+            else
+            {
+                return true.
+            }
         }
-        else
+        else 
         {
             return true.
         }

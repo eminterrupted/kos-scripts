@@ -15,6 +15,7 @@
 	// 	],
 	// 	"description": "Log output to console"
 	// }
+    
 	"NewFunction": {
 	"prefix": "NewFunction",
 	"body": [
@@ -144,6 +145,36 @@
 		],
 		"description": "New Script Header"
 	},
+    "Program Runmode Block": {
+        "prefix": "NewProgramBlock",
+        "body": [
+          "else if g_Program = 1",
+          "{",
+          "    if g_Runmode = 1",
+          "    {",
+          "        SetRunmode(3).",
+          "    }",
+          "    else if g_Runmode = 3",
+          "    {",
+          "        SetProgram(2).",
+          "    }",
+          "    else if g_Runmode < 0",
+          "    {",
+          "        if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = \"FATAL\"",
+          "        {",
+          "            set g_Abort     to True.",
+          "            set g_AbortCode to g_Program.",
+          "        }",
+          "    }",
+          "    else",
+          "    {",
+          "        OutMsg(\"BLOCK DISP\").",
+          "        SetRunmode(1).",
+          "    }",
+          "}"
+        ],
+        "description": "Program Runmode Block"
+    },
     "From Loop: List Length": {
         "prefix": "FromListLength",
         "body": [

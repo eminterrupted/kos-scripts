@@ -39,12 +39,16 @@ global function RunOnDeploySubroutine
 
         from { local i to 0.} until i = partLex:Keys:Length step { set i to i + 1.} do
         {
-            local partsInSequence to partLex[i].
+            local partsInSequence to partLex:Values[i].
             for p in partsInSequence
             {
                 if p:HasModule("Experiment")
                 {
                     DoExperiment(p, 1).
+                }
+                if p:HasModule("ModuleDeployableAntenna")
+                {
+                    DeployAntenna(p:GetModule("ModuleDeployableAntenna")).
                 }
             }
         }
@@ -66,7 +70,7 @@ global function DoExperiment
 
     if _actionStr:Length > 0
     {
-        from { local mIdx to 0.} until mIdx = p:Modules:Length step { set mIdx to mIdx + 1.} do
+        from { local mIdx to 0.} until mIdx = _part:Modules:Length step { set mIdx to mIdx + 1.} do
         {
             local m to _part:GetModuleByIndex(mIdx).
             if m:Name = "Experiment"
