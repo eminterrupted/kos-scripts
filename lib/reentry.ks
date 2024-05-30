@@ -50,6 +50,74 @@
 
 // #endregion
 
+// *- Part Module Helpers
+// #region
+
+    // ReadCoMShiftValue
+    global function ReadCoMShiftValue
+    {
+        parameter _m.
+
+        local CoM to GetField(_m, "com offset limit").
+
+        if CoM = "FNA"
+        {
+            return -1.
+        }
+        else
+        {
+            return CoM.
+        }
+    }
+
+    // DecreaseCoMShift
+    global function DecreaseCoMShift 
+    {
+        parameter _m,
+                  _amt is 0.1.
+        
+        local curCoM to GetField(_m, "com offset limit").
+        if curCoM <> "FNA"
+        {
+            set curCoM to Max(0, Min(curCoM - _amt, 1)).
+            SetField(_m, "com offset limit", curCoM).
+        }
+        return curCoM.
+    }
+
+    // IncreaseCoMShift
+    global function IncreaseCoMShift 
+    {
+        parameter _m,
+                  _amt is 0.1.
+        
+        local curCoM to GetField(_m, "com offset limit").
+        if curCoM <> "FNA"
+        {
+            set curCoM to Max(0, Min(curCoM + _amt, 1)).
+            SetField(_m, "com offset limit", curCoM).
+        }
+        return curCoM.
+    }
+
+    // ToggleCoMDescentMode
+    global function ToggleCoMDescentMode
+    { 
+        parameter _m. 
+
+        if DoEvent(_m, "turn descent mode on") 
+        { 
+            return True.
+        }
+        else if DoEvent(_m, "turn descent mode off")
+        {
+            return False.
+        }
+        return False.
+    }
+
+// #endregion
+
 //  *- Display
 // #region
 
@@ -61,12 +129,12 @@
 
         set g_line to _line.
 
-        print "ALT (SL)  : {0,-9}":Format(Round(Ship:Altitude, 1)):PadRight(g_termW - 21)                               at (0, g_line).
-        print "ALT (RDR) : {0,-9}":Format(Round(Alt:Radar, 1)):PadRight(g_termW - 21)                                   at (0, cr()).
-        print "SRF SPEED : {0,-5}":Format(Round(Velocity:Surface:Mag, 1)):PadRight(g_termW - 17)                        at (0, cr()).
-        print "VERT SPEED: {0,-5}":Format(Round(VerticalSpeed, 1)):PadRight(g_termW - 17)                               at (0, cr()).
-        print "GRND SPEED: {0,-5}":Format(Round(Ship:GroundSpeed, 1)):PadRight(g_termW - 17)                            at (0, cr()).
-        print "ATM PRESS : {0,-10}":Format(Round(Body:Atm:AltitudePressure(Ship:Altitude), 5)):PadRight(g_termW - 21)   at (0, cr()).
+        OutStr("ALT (SL)  : {0,-9}":Format(Round(Ship:Altitude, 1)), g_line).
+        OutStr("ALT (RDR) : {0,-9}":Format(Round(Alt:Radar, 1)), cr()).
+        OutStr("SRF SPEED : {0,-5}":Format(Round(Velocity:Surface:Mag, 1)), cr()).
+        OutStr("VERT SPEED: {0,-5}":Format(Round(VerticalSpeed, 1)), cr()).
+        OutStr("GRND SPEED: {0,-5}":Format(Round(Ship:GroundSpeed, 1)), cr()).
+        OutStr("ATM PRESS : {0,-10}":Format(Round(Body:Atm:AltitudePressure(Ship:Altitude), 5)), cr()).
     }
 
 // #endregion
@@ -187,19 +255,19 @@
             if Time:Seconds >= ts0
             {
                 local recoveryState to getRecoveryState:Call(_ves).
-                OutMsg("Attempting recovery":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
+                OutMsg("Attempting recovery":Format(recoveryState[1]), cr()).
                 if recoveryState[0]
                 {
                     Addons:Career:RecoverVessel(_ves).
                     
-                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
+                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]), cr()).
                     clr(cr()).
                     wait 0.01.
                 }
                 else
                 {
-                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]):PadRight(g_termW - 15), cr()).
-                    OutStr("Time remaining for recovery: {0}s":Format(ts0 - Time:Seconds):PadRight(g_termW - 15), cr()).
+                    OutInfo("Recovery in progress (Status: {0})":Format(recoveryState[1]), cr()).
+                    OutStr("Time remaining for recovery: {0}s":Format(ts0 - Time:Seconds), cr()).
 
                     GetTermChar().
                     if g_TermChar <> ""
@@ -212,7 +280,7 @@
         }
         else
         {
-            OutMsg("No recovery firmware found!":PadRight(g_termW - 15), cr()).
+            OutMsg("No recovery firmware found!", cr()).
             clr(cr()).
             clr(cr()).
             wait 0.25.

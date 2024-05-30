@@ -21,8 +21,8 @@
 
     // *- Global Anonymous Delegates
     // #region
-    global g_NulCheckDel to { return true.}.
-    global g_NulActionDel to { return list(false, { return true.}, { return false.}).}.
+    global g_NulCheckDel to { return True.}.
+    global g_NulActionDel to { return list(False, { return True.}, { return False.}).}.
     // #endregion
 
     // *- Local Anonymous Delegates
@@ -121,7 +121,7 @@ set g_MissionPlans to ListMissionPlans().
     // NoOp - just passes the existing value back. Not very useful except when it is.
     global function NoOp
     {
-        parameter _p is false.
+        parameter _p is False.
 
         return _p.
     }
@@ -273,8 +273,8 @@ set g_MissionPlans to ListMissionPlans().
 
         set g_TermChar to "".
 
-        set doneFlag to false.
-        until false
+        set doneFlag to False.
+        until False
         {
             set g_line to line.
             
@@ -284,7 +284,7 @@ set g_MissionPlans to ListMissionPlans().
             set g_line to line.
             set planPhaseParams to PlanModParamsSelect(planPhaseParams).
             
-            set doneFlag to false.
+            set doneFlag to False.
 
             until doneFlag or cancelFlag or rerollflag
             {
@@ -309,7 +309,7 @@ set g_MissionPlans to ListMissionPlans().
                     }
                     else if g_TermChar = Terminal:Input:HomeCursor
                     {
-                        set rerollFlag to true.
+                        set rerollFlag to True.
                     }
                     else 
                     {
@@ -332,7 +332,7 @@ set g_MissionPlans to ListMissionPlans().
             }
             else if rerollFlag
             {
-                for i in Range(line, g_termH, 1)
+                for i in Range(line, g_TermHeight, 1)
                 {
                     clr(i).
                 }
@@ -348,12 +348,12 @@ set g_MissionPlans to ListMissionPlans().
 
         local line to g_Line.
         
-        local __cancelFlag to false.
+        local __cancelFlag to False.
         local __planIdx to -1.
         local __rerollFlag to True.
 
         set g_TermChar to "".
-        until false
+        until False
         {   
             set __planIdx to -1.
             set g_line to line.
@@ -382,12 +382,12 @@ set g_MissionPlans to ListMissionPlans().
 
                 if g_TermChar = Terminal:Input:Enter
                 {
-                    set __doneFlag to true.
+                    set __doneFlag to True.
                 }
                 else if g_TermChar = char(8)
                 {
-                    set __cancelFlag to true.
-                    set __doneFlag to true.
+                    set __cancelFlag to True.
+                    set __doneFlag to True.
                 }
                 else 
                 {
@@ -396,8 +396,8 @@ set g_MissionPlans to ListMissionPlans().
                     {
                         OutStr("Invalid selection! Try again", cr()).
                         wait 0.5.
-                        set __doneFlag to true.
-                        set __rerollFlag to true.
+                        set __doneFlag to True.
+                        set __rerollFlag to True.
                     } 
                     else
                     {
@@ -405,7 +405,7 @@ set g_MissionPlans to ListMissionPlans().
                         OutStr("Press ENTER to confirm").
                         wait 0.5.
                         set __planIdx to termCharNumber.
-                        set __doneFlag to true.
+                        set __doneFlag to True.
                     }
                 }
                 set g_TermChar to "".
@@ -436,8 +436,8 @@ set g_MissionPlans to ListMissionPlans().
         
         local _splitMissionPhaseVals to __missionPhaseVals[1]:Split(";").
 
-        local _cancelFlag to false.
-        local _confirmFlag to false.
+        local _cancelFlag to False.
+        local _confirmFlag to False.
         local _doneFlag to False.
         local _modifiedPhaseVals to __missionPhaseVals:Copy.
         local _rerollFlag to True.
@@ -445,9 +445,10 @@ set g_MissionPlans to ListMissionPlans().
 
         local _descriptList to list(
             list(
-                "[1] Inclination  : {0}"
-                ,"[2] Tgt Apogee  : {0}"
-                ,"[3] Shape Factor: {0}"
+                 "[{0}] Inclination       : {1}"
+                ,"[{0}] Shape Factor      : {1}"
+                ,"[{0}] Tgt Transfer Alt  : {1}"
+                ,"[{0}] Tgt Insertion Alt : {1}"
             )
             ,list(
                 "[1] {0}"
@@ -456,136 +457,152 @@ set g_MissionPlans to ListMissionPlans().
 
         set g_TermChar to "".
 
+        local descriptors    to list().
+        local _modLoopActive to False.
+        local _paramIdx      to 0.
+        local _selectedParam to list().
         until _doneFlag
         {   
+            GetTermChar().
+
             set g_line to _ogLine.
+            
+            if _modLoopActive
+            {
+                OutStr("{0}":Format(_selectedParam[0]:Format("SELECTED PARAM", _selectedParam[1])), cr()).
+                cr().
+
+                OutStr("[ENTER]     Confirm", cr()).
+                OutStr("[BACKSPACE] Back", cr()).
+
+                if g_TermChar = Terminal:Input:Backspace
+                {
+                    OutStr("Cancelling...", g_line - 2).
+                    clr(g_line - 1).
+                    clr(g_line).
+                    set _cancelFlag to True.
+                }
+                else if g_TermChar = Terminal:Input:Enter
+                {
+                    clr(g_line - 2).
+                    clr(g_line - 1).
+                    local _newVal to "".
+                    
+                    set g_TermChar to "".
+
+                    until _confirmFlag or _cancelFlag
+                    {
+                        GetTermChar().
+
+                        if g_TermChar <> ""
+                        {
+                            if g_TermChar = Terminal:Input:Enter
+                            {
+                                if _newVal = ""
+                                {
+                                    set _newVal to _selectedParam[1].
+                                    OutStr("No input! ", g_Line + 2).
+                                    wait 0.25.
+                                    clr(g_line + 2).
+                                }
+                                else
+                                {
+                                    _modifiedPhaseVals:Remove(_paramIdx).
+                                    _modifiedPhaseVals:Insert(_paramIdx, _newVal).
+                                    OutStr("New value set  : [{0}] ":Format(_newVal), g_Line).
+                                    wait 0.25.
+                                    // cr().
+                                    set _confirmFlag to True.
+                                    set _modLoopActive to False.
+                                }
+                            }
+                            else if g_TermChar = Terminal:Input:Backspace
+                            {
+                                set _newVal to _newVal:substring(0, Max(0, _newVal:Length - 1)).
+                                OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line).
+                            }
+                            else if g_TermChar = Terminal:Input:DeleteRight
+                            {
+                                OutStr("Cancelling... ", g_Line - 2).
+                                clr(g_line - 1).
+                                clr(g_line).
+                                clr(g_line + 2).
+                                set _cancelFlag to True.
+                            }
+                            else if g_TermChar:MatchesPattern("(\w|\d|\.)")
+                            {
+                                set _newVal to _newVal + g_TermChar.
+                                OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line).
+                            }
+                            else
+                            {
+                                OutStr("Invalid input!", g_line + 1).
+                                wait 0.5.
+                                clr(g_line + 1).
+                            }
+                            set g_TermChar to "".
+                        }
+                        else
+                        {
+                            wait 0.02.
+                        }
+                    }
+                    set _cancelFlag to False.
+                    set _confirmFlag to False.
+                }
+            }
+            else if g_TermChar = Terminal:Input:DeleteRight
+            {
+                set _rerollFlag to True.
+            }
+            else if g_TermChar = Terminal:Input:Backspace
+            {
+                set _cancelFlag to True.
+                set _doneFlag to True.
+            }
+            else if g_TermChar = Terminal:Input:Enter
+            {
+                set _confirmFlag to True.
+                set _doneFlag to True.
+            } 
+            else if g_TermChar:Length > 0
+            {
+                local termCharNumber to g_TermChar:ToNumber(-1).
+                if termCharNumber < 0 or termCharNumber > _splitMissionPhaseVals:Length - 1
+                {
+                    OutStr("Invalid selection! Try again", cr()).
+                    wait 0.5.
+                    set _selectedParam to list().
+                    set _rerollFlag to True.
+                } 
+                else
+                {
+                    set _paramIdx to termCharNumber.
+                    set _selectedParam to list(descriptors[_paramIdx], _splitMissionPhaseVals[_paramIdx]).
+                    set _modLoopActive to _selectedParam:Length > 0.
+
+                    for i in Range(0, 12, 1)
+                    {
+                        clr(_ogLine + i).
+                    }
+                }
+            }
+            
             if _rerollFlag
             {
                 OutStr("Modifying mission: {0}":Format(_modifiedPhaseVals[0]), g_line).
                 cr().
                 OutStr("Choose plan parameter to modify ([BACKSPACE] to cancel)", cr()).
-                local descriptors to choose _descriptList[0] if __missionPhaseVals[0]:Contains("launchAscent") else _descriptList[1].
+                set descriptors to choose _descriptList[0] if __missionPhaseVals[0]:Contains("launchAscent") else _descriptList[1].
                 from { local i to 0. } until i = _splitMissionPhaseVals:Length step { set i to i + 1.} do
                 {
-                    OutStr(descriptors[i]:Format(_splitMissionPhaseVals[i]), cr()).
+                    OutStr(descriptors[i]:Format(i, _splitMissionPhaseVals[i]), cr()).
                 }
                 OutStr("Stage Limit: {0}":Format(__missionPhaseVals[2]), cr()).
                 cr().
                 set _rerollFlag to False.
             }
-
-            GetTermChar().
-                        
-            if g_TermChar = char(8)
-            {
-                set _cancelFlag to true.
-                set _doneFlag to true.
-            }
-            else if g_TermChar = Terminal:Input:Enter
-            {
-                set _confirmFlag to true.
-                set _doneFlag to true.
-            } 
             else
-            {
-                local termCharNumber to g_TermChar:ToNumber(-1).
-                if termCharNumber < 0 or termCharNumber > 3
-                {
-                    OutStr("Invalid selection! Try again", cr()).
-                    wait 0.5.
-                    set _rerollFlag to true.
-                } 
-                else
-                {
-                    local _paramIdx to termCharNumber.
-                    local _selectedParam to list(_descriptList[_paramIdx - 1], _modifiedPhaseVals[_paramIdx]).
-                    OutStr("Selected param: {0} [{1}]":Format(_selectedParam[0], _selectedParam[1]), cr()).
-                    cr().
-
-                    set g_TermChar to "".
-                    set _line to g_line.
-                    until _confirmFlag or _cancelFlag
-                    {
-                        set g_line to _line.
-                        OutStr("[ENTER]     Confirm", cr()).
-                        OutStr("[BACKSPACE] Back", cr()).
-
-                        GetTermChar().
-
-                        if g_TermChar = char(8)
-                        {
-                            OutStr("Cancelling...", g_line - 2).
-                            clr(g_line - 1).
-                            set _cancelFlag to true.
-                        }
-                        else if g_TermChar = Terminal:Input:Enter
-                        {
-                            clr(g_line - 2).
-                            clr(g_line - 1).
-                            local _newVal to "".
-                            
-                            set g_TermChar to "".
-
-                            until _confirmFlag or _cancelFlag
-                            {
-                                GetTermChar().
-                                if g_TermChar <> ""
-                                {
-                                    if g_TermChar = Terminal:Input:Enter
-                                    {
-                                        if _newVal = ""
-                                        {
-                                            set _newVal to _selectedParam[1].
-                                            OutStr("No input! ", g_Line - 1).
-                                            wait 0.5.
-                                            clr(g_line - 1).
-                                        }
-                                        else
-                                        {
-                                            _modifiedPhaseVals:Remove(_paramIdx).
-                                            _modifiedPhaseVals:Insert(_paramIdx, _newVal).
-                                            OutStr("New value set  : [{0}] ":Format(_newVal), g_Line - 1).
-                                            wait 0.5.
-                                            cr().
-                                            set _confirmFlag to true.
-                                        }
-                                    }
-                                    else if list(char(8)):Contains(g_TermChar)
-                                    {
-                                        set _newVal to _newVal:substring(0, Max(0, _newVal:Length - 2)).
-                                        OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line - 1).
-                                    }
-                                    else if g_TermChar = Terminal:Input:DeleteRight
-                                    {
-                                        OutStr("Cancelling... ", g_Line - 2).
-                                        clr(g_line - 1).
-                                        set _cancelFlag to true.
-                                    }
-                                    else if g_TermChar:MatchesPattern("(\w|\.)")
-                                    {
-                                        set _newVal to _newVal + g_TermChar.
-                                        OutStr("Enter new value: [{0}] ":Format(_newVal), g_Line - 1).
-                                    }
-                                    else
-                                    {
-                                        OutStr("Invalid input!", g_line - 1).
-                                        wait 0.5.
-                                        clr(g_line - 1).
-                                    }
-                                    set g_TermChar to "".
-                                    set g_TermChar to "".
-                                }
-                            }
-                            set _cancelFlag to false.
-                            set _confirmFlag to false.
-                        }
-                        set g_TermChar to "".
-                    }
-                }
-            }
-            set g_TermChar to "".
-
-            if not _rerollFlag
             {
                 set g_line to _line.
                 if _cancelFlag
@@ -598,10 +615,7 @@ set g_MissionPlans to ListMissionPlans().
                 }
             }
 
-            for i in Range(0, 7, 1)
-            {
-                clr(_ogLine + i).
-            }
+            set g_TermChar to "".
         }
         set g_line to _ogLine.
 
@@ -645,7 +659,7 @@ set g_MissionPlans to ListMissionPlans().
         }
         else
         {
-            set planIdx to SelectPlanFromList(g_AvailablePlans, planIdx, true).
+            set planIdx to SelectPlanFromList(g_AvailablePlans, planIdx, True).
             if planIdx < 0
             {
                 
@@ -664,9 +678,9 @@ set g_MissionPlans to ListMissionPlans().
 
         // else
         // {
-        //     local cancelFlag to false.
-        //     local doneFlag  to false.
-        //     local doneFlag2 to false.
+        //     local cancelFlag to False.
+        //     local doneFlag  to False.
+        //     local doneFlag2 to False.
         //     local selectedIdx to 0.
         //     local pageIdx to 0.
 
@@ -708,7 +722,7 @@ set g_MissionPlans to ListMissionPlans().
         //                     OutStr("Confirm via ENTER", cr()).
         //                     OutStr("Cancel  via DELETE", cr()).
 
-        //                     set doneFlag2 to false.
+        //                     set doneFlag2 to False.
         //                     until doneFlag2
         //                     {
         //                         set g_TermChar to "".
@@ -716,11 +730,11 @@ set g_MissionPlans to ListMissionPlans().
 
         //                         if g_TermChar = Terminal:Input:Enter
         //                         {
-        //                             set doneFlag2 to true.
+        //                             set doneFlag2 to True.
         //                         }
         //                         else if g_TermChar = Terminal:Input:DeleteRight
         //                         {
-        //                             set cancelFlag to true.
+        //                             set cancelFlag to True.
         //                             break.
         //                         }
         //                         else if g_TermChar = "-"
@@ -748,7 +762,7 @@ set g_MissionPlans to ListMissionPlans().
         //         }
         //         else if doneFlag2
         //         {
-        //             set doneFlag to true.
+        //             set doneFlag to True.
         //         }
         //         else if cancelFlag
         //         {
@@ -785,11 +799,11 @@ set g_MissionPlans to ListMissionPlans().
     {
         parameter _inList,
                   _selectIdx is 0,
-                  _confirm is true.
+                  _confirm is True.
 
-        local cancelFlag to false.
-        local doneFlag  to false.
-        local doneFlag2 to false.
+        local cancelFlag to False.
+        local doneFlag  to False.
+        local doneFlag2 to False.
         local _selectIdx to 0.
         local selectedItem to "".
         local pageIdx to 0.
@@ -834,7 +848,7 @@ set g_MissionPlans to ListMissionPlans().
                             OutStr("[ENTER]: Confirm").
                             OutStr("[BACKSPACE]: Cancel").
 
-                            set doneFlag2 to false.
+                            set doneFlag2 to False.
                             until doneFlag2
                             {
                                 set g_TermChar to "".
@@ -842,11 +856,11 @@ set g_MissionPlans to ListMissionPlans().
 
                                 if g_TermChar = Terminal:Input:Enter
                                 {
-                                    set doneFlag2 to true.
+                                    set doneFlag2 to True.
                                 }
                                 else if g_TermChar = char(8)
                                 {
-                                    set cancelFlag to true.
+                                    set cancelFlag to True.
                                     break.
                                 }
                             }
@@ -872,7 +886,7 @@ set g_MissionPlans to ListMissionPlans().
             
             if doneFlag2
             {
-                set doneFlag to true.
+                set doneFlag to True.
             }
             else if cancelFlag
             {
@@ -978,7 +992,7 @@ set g_MissionPlans to ListMissionPlans().
     {
         parameter _m,
                     _action,
-                    _state is true.
+                    _state is True.
 
         local resultCode to 0.
 
@@ -1128,7 +1142,7 @@ set g_MissionPlans to ListMissionPlans().
     // InitStateCache
     global function InitStateCache
     {
-        parameter _resetState to false.
+        parameter _resetState to False.
 
         local state to list(
             // "planID", // String plan id
@@ -1182,7 +1196,7 @@ set g_MissionPlans to ListMissionPlans().
     global function SetContext
     {
         parameter _context is 0,
-                  _update is false.
+                  _update is False.
 
         set g_Context to _context.
         if _update UpdateState().
@@ -1193,7 +1207,7 @@ set g_MissionPlans to ListMissionPlans().
     global function SetMissionPlanId
     {
         parameter _planId is "NUL",
-                  _update is false.
+                  _update is False.
 
         set g_MissionPlanId to _planId.
         if _update UpdateState().
@@ -1205,7 +1219,7 @@ set g_MissionPlans to ListMissionPlans().
     global function SetProgram
     {
         parameter _prog is 0,
-                  _update is false.
+                  _update is False.
 
         set g_Program to _prog.
         set g_Runmode to 0.
@@ -1218,7 +1232,7 @@ set g_MissionPlans to ListMissionPlans().
     global function SetRunmode
     {
         parameter _rm is 0,
-                  _update is false.
+                  _update is False.
 
         set g_Runmode to _rm.
         if _update UpdateState().
@@ -1229,7 +1243,7 @@ set g_MissionPlans to ListMissionPlans().
     global function SetStageLimit
     {
         parameter _stgStop is Stage:Number,
-                  _update is false.
+                  _update is False.
 
         set g_StageLimit to _stgStop.
         if _update UpdateState().
@@ -1240,7 +1254,7 @@ set g_MissionPlans to ListMissionPlans().
     // UpdateState
     global function UpdateState
     {
-        parameter _cacheEnable to false.
+        parameter _cacheEnable to False.
 
         set g_State to list (
             g_MissionPlanID,
@@ -1283,7 +1297,7 @@ set g_MissionPlans to ListMissionPlans().
 
         // GetTermChar :: (none) -> (Was new char present)<bool>
         // Checks to see if a terminal character is present. 
-        // If yes, set g_TermChar to it and return true.
+        // If yes, set g_TermChar to it and return True.
         global function GetTermChar
         {
             if Terminal:Input:HasChar 
@@ -1293,14 +1307,14 @@ set g_MissionPlans to ListMissionPlans().
                     set g_TermChar to Terminal:Input:GetChar.
                     g_TermQueue:Push(g_TermChar).
                 }
-                set g_TermHasChar to True.
+                set g_TermHeightasChar to True.
                 Terminal:Input:Clear().
             }
             // else
             // {
-            //     set g_TermHasChar to False.
+            //     set g_TermHeightasChar to False.
             // }
-            return g_TermHasChar.
+            return g_TermHeightasChar.
         }
 
 

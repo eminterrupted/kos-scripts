@@ -331,7 +331,7 @@ until g_Program = 42 or g_Abort
         }
         else
         {
-            print "VERTICAL ASCENT":PadRight(g_termW - 15) at (0, cr()).
+            print "VERTICAL ASCENT":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
     }

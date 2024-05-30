@@ -151,79 +151,8 @@
     }
 
 
-    // ArmMECO
-    //
-    global function ArmMECO
-    {
-        parameter _MEList is Ship:PartsTaggedPattern("Ascent\|MECO.*").
-
-        local MECOArmed to false.
-        local chkDel to { return true. }.
-        local actDel to { return false. }.
-
-        if _MEList:Length > 0
-        {
-            local chkSec to 999.
-            local tagParts to _MEList[0]:Tag:Split("|").
-            
-            if tagParts:length > 2
-            {
-                set chkSec to ParseStringScalar(tagParts[2], chkSec).
-            }
-
-            set chkDel to { return MissionTime >= chkSec.}.
-            set actDel to { 
-                parameter __MEList.
-
-                for eng in __MEList
-                {
-                    if eng:Ignition and not eng:Flameout
-                    {
-                        eng:Shutdown.
-                    }
-                }
-
-                for p in Ship:PartsTaggedPattern("AS\|MECO")
-                {
-                    if p:IsType("Engine")
-                    {
-                        p:Activate.
-                    }
-                }
-
-                for p in Ship:PartsTaggedPattern("DC\|MECO")
-                {
-                    if p:HasModule("ProceduralFairingDecoupler")
-                    {
-                        local m to p:GetModule("ProceduralFairingDecoupler").
-                        DoEvent(m, "jettison fairing").
-                        // {
-                        //     DoAction(m, "jettison fairing", true).
-                        // }
-                    }
-                    else if p:HasModule("ModuleDecouple")
-                    {
-                        local m to p:GetModule("ModuleDecouple").
-                        DoEvent(m, "decouple").
-                        // {
-                        //     DoAction(m, "decouple", true).
-                        // }
-                    }
-                }
-                set g_ActiveEngines to GetActiveEngines().
-
-                return Ship:PartsTaggedPattern("MECO"):Length > 0.
-            }.
-            set actDel to actDel@:Bind(_MEList).
-
-            set MECOArmed to true.
-        }
-
-        return list(MECOArmed, chkDel, actDel).
-    }
-
-
-
+    // DeploySolarPanels
+    //  Does what it says on the tin
     global function DeploySolarPanels
     {
         for m in Ship:ModulesNamed("ModuleROSolar") { DoEvent(m, "extend solar panel").}.

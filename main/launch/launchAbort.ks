@@ -266,7 +266,7 @@ until g_Program < 0
         }
         else
         {
-            OutMsg("* FAIRING JETTISON *":PadRight(g_termW - 15), cr()).
+            OutMsg("* FAIRING JETTISON *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -284,7 +284,7 @@ until g_Program < 0
             else
             {
                 cr().
-                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode = 2
@@ -296,7 +296,7 @@ until g_Program < 0
             }
             else
             {
-                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -309,7 +309,7 @@ until g_Program < 0
         }
         else
         {
-            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_termW - 15), cr()).
+            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -337,7 +337,7 @@ until g_Program < 0
             else
             {
                 cr().
-                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_termW - 15), cr()).
+                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -350,7 +350,7 @@ until g_Program < 0
         }
         else
         {
-            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_termW - 15), cr()).
+            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -361,7 +361,7 @@ until g_Program < 0
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             if Time:Seconds >= settleTS 
             {
                 SetProgram(927).
@@ -377,7 +377,7 @@ until g_Program < 0
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
@@ -390,7 +390,7 @@ until g_Program < 0
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -403,7 +403,7 @@ until g_Program < 0
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }

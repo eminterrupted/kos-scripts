@@ -42,7 +42,7 @@
 
     // Terminal stuff
     global g_TermChar    is "".
-    global g_TermHasChar is false.
+    global g_TermHeightasChar is false.
     global g_TermQueue   is Queue().
 
     // Timestamps

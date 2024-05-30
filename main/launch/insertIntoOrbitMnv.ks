@@ -1,6 +1,8 @@
 @LazyGlobal off.
 ClearScreen.
 
+RunOncePath("0:/lib/deploy.ks").
+
 parameter _params is list().
 
 if Career():CanMakeNodes
@@ -13,47 +15,7 @@ else
 }
 
 local deployParts to Ship:PartsTaggedPattern("OnDeploy").
-RunOnDeploySubroutine(deployParts).
-
-// RunOnDeploySubroutine
-global function RunOnDeploySubroutine
-{
-    parameter _parts is Ship:PartsTaggedPattern("OnDeploy").
-
-    if _parts:Length > 0
-    {
-        local partLex to lexicon().
-        for p in _parts
-        {
-            local tagSplit to p:Tag:Split("|").
-            local partSequence to choose tagSplit[tagSplit:Length - 1] if tagSplit:Length > 1 else 0.
-            if not partLex:HasKey(partSequence)
-            {
-                partLex:Add(partSequence, list(p)).
-            }
-            else
-            {
-                partLex[partSequence]:Add(p).
-            }
-        }
-
-        from { local i to 0.} until i = partLex:Keys:Length step { set i to i + 1.} do
-        {
-            local partsInSequence to partLex:Values[i].
-            for p in partsInSequence
-            {
-                if p:HasModule("Experiment")
-                {
-                    DoExperiment(p, 1).
-                }
-                if p:HasModule("ModuleDeployableAntenna")
-                {
-                    DeployAntenna(p:GetModule("ModuleDeployableAntenna")).
-                }
-            }
-        }
-    }
-}
+RunDeployRoutine(deployParts).
 
 // DoExperiment
 global function DoExperiment

@@ -838,14 +838,14 @@ set g_MissionPlans to ListMissionPlans().
                     set g_TermChar to Terminal:Input:GetChar.
                     g_TermQueue:Push(g_TermChar).
                 }
-                set g_TermHasChar to True.
+                set g_TermHeightasChar to True.
                 Terminal:Input:Clear().
             }
             // else
             // {
-            //     set g_TermHasChar to False.
+            //     set g_TermHeightasChar to False.
             // }
-            return g_TermHasChar.
+            return g_TermHeightasChar.
         }
 
 

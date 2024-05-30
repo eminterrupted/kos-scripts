@@ -59,11 +59,15 @@ from { local i to g_Context.} until i = g_MissionPlan:M:Length step { set i to i
     SetContext(i, true).
     CacheState().
 
-    wait until HomeConnection:IsConnected().
+    wait until HomeConnection:IsConnected.
     runPath(scr, prm).
 }
 
-set Core:BootFileName to "".
+until HomeConnection:IsConnected
+{
+    OutInfo("Waiting on HomeConnection").
+}
+
 
 // TODO ConfirmMissionPlan
 local function ConfirmOrModifyMissionPlan
@@ -82,8 +86,9 @@ local function ConfirmOrModifyMissionPlan
     }
     cr().
     OutStr("[ENTER]    : Confirm", cr()).
+    OutStr("[HOME]     : Modify", cr()).
     OutStr("[BACKSPACE]: Cancel", cr()).
-    OutStr("[DELETE]   : Modify", cr()).
+    cr().
 
     until false
     {
@@ -96,12 +101,12 @@ local function ConfirmOrModifyMissionPlan
                 set g_TermChar to "".
                 return true.
             }
-            else if g_TermChar = char(8)
+            else if g_TermChar = Terminal:Input:Backspace
             {   
                 set g_TermChar to "".
                 return false.
             }
-            else if g_TermChar = Terminal:Input:DeleteRight
+            else if g_TermChar = Terminal:Input:Homecursor
             {
                 set g_TermChar to "".
                 ModifyMissionPlan(_missionPlanId).
@@ -110,7 +115,9 @@ local function ConfirmOrModifyMissionPlan
             else
             {
                 set g_TermChar to "".
-                return false.
+                OutStr("INVALID INPUT", g_Line).
+                wait 0.25.
+                clr(g_Line).
             }
         }
     }

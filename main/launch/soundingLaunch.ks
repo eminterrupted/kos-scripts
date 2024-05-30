@@ -365,7 +365,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "VERTICAL ASCENT":PadRight(g_termW - 15) at (0, cr()).
+            print "VERTICAL ASCENT":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -388,7 +388,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "PITCH PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            print "PITCH PROGRAM":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
         
@@ -422,7 +422,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "BURNING TO MECO":PadRight(g_termW - 15) at (0, cr()).
+            print "BURNING TO MECO":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
         
@@ -453,7 +453,7 @@ until g_Program >= 36 or g_Abort
         }
         else
         {
-            print "COAST PROGRAM":PadRight(g_termW - 15) at (0, cr()).
+            print "COAST PROGRAM":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
         
@@ -537,8 +537,8 @@ until g_Program >= 36 or g_Abort
             {
                 if g_Spin_Check:Call(btrem)
                 {
-                    OutStr("Passed g_Spin_Check", g_termH - 10).
-                    OutStr("Values: [btrem:{0}]":Format(btrem), g_termH - 9).
+                    OutStr("Passed g_Spin_Check", g_TermHeight - 10).
+                    OutStr("Values: [btrem:{0}]":Format(btrem), g_TermHeight - 9).
                     g_Spin_Action:Call().
                 }
                 else

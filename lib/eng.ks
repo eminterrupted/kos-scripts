@@ -21,10 +21,6 @@
     global g_NextEngines            to list().
     global g_ShipEngines            to lexicon().
 
-    global g_MECO_Armed to false.
-
-    
-
     // #endregion
     
     // *- Local Anonymous Delegates

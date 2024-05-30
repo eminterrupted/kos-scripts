@@ -54,6 +54,7 @@
         local halfDur to 0.
         local burnEta to 0.
         local preSpin to 0.
+        local settleProgress to 0.
         local ullageFlag to false.
         local ullageSafe to false.
         
@@ -300,6 +301,19 @@
                 else
                 {
                     set g_Steer to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    if settleProgress > 3
+                    {
+                        if VAng(Ship:Facing:Vector, _inNode:BurnVector) < 0.25
+                        {
+                            set settleProgress to settleProgress + 1.
+                            wait 1.
+                        }
+                        else
+                        {
+                            set settleProgress to 0.
+                        }
+                        OutInfo("Settle Progress: [{0}] (3 needed)":Format(settleProgress)).
+                    }
                 }
 
                 set g_TermChar to "".
@@ -308,9 +322,8 @@
             
             local dv0 to _inNode:deltav.
             lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
-
+            
             ClearScreen.
-
             OutMsg("Executing burn", cr()).
             
             set g_ActiveEngines to GetActiveEngines().

@@ -56,9 +56,72 @@ SetStageLimit(2).
 
 OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
 
+local CoMActive to false.
+local CoMCanShift to false.
+local CoMOffset to 0.
+local descCoMShifter to false.
+local decCoMShift to { return false.}.
+local incCoMShift to { return false.}.
+local readCoMShift to { return false.}.
+local toggleCoM to { return false.}.
+
+if Ship:RootPart:HasModule("AdjustableCoMShifter")
+{
+    set CoMCanShift to true.
+    local mCoM to Ship:RootPart:GetModule("AdjustableCoMShifter").
+    set toggleCoM    to ToggleCoMDescentMode@:Bind(mCoM).
+    set incCoMShift  to IncreaseCoMShift@:Bind(mCoM).
+    set decCoMShift  to DecreaseCoMShift@:Bind(mCoM).
+    set readCoMShift to ReadCoMShiftValue@:Bind(mCoM).
+}
+
 until g_Program > 199 or g_Abort
 {
     GetTermChar().
+    
+    if g_TermChar:Length > 0
+    {
+        if g_TermChar = "/"
+        {
+            if steerActive
+            {
+                set steerActive to False.
+                unlock steering.
+            }
+            else
+            {
+                set steerActive to True.
+                lock steering to g_Steer.
+            }
+        }
+        else if g_TermChar = "?"
+        {
+            set CoMActive to toggleCoM:Call().
+        }
+        else if not steerActive
+        {
+            if g_TermChar = Terminal:Input:UpCursorOne
+            {
+                incCoMShift:Call().
+            }
+            else if g_TermChar = Terminal:Input:DownCursorOne
+            {
+                decCoMShift:Call().
+            }
+            else if g_TermChar = Terminal:Input:LeftCursorOne
+            {
+                set Ship:Control:Roll to Max(-1, Ship:Control:Roll - 0.05).
+            }
+            else if g_TermChar = Terminal:Input:RightCursorOne
+            {
+                set Ship:Control:Roll to Min(1, Ship:Control:Roll + 0.05).
+            }
+            else if g_TermChar = "0"
+            {
+                set Ship:Control:Roll to 0.
+            }
+        }
+    }
     
     set g_Line to 4.
 
@@ -88,8 +151,17 @@ until g_Program > 199 or g_Abort
         else if g_Runmode = 2
         {
             if HasNode ExecNodeBurn(NextNode).
+            lock steering to g_Steer.
             set settleTS to 0.
-            SetProgram(40).
+            wait 0.01.
+            if HasNode
+            {
+                SetRunmode(1).
+            }
+            else
+            {
+                SetProgram(40).
+            }
         }
         else if g_Runmode = 3
         {
@@ -212,6 +284,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_Runmode = 4
         {
+            lock steering to g_Steer.
             SetProgram(40).
         }
         else if g_Runmode < 0
@@ -243,6 +316,7 @@ until g_Program > 199 or g_Abort
             if Time:Seconds >= settleTS 
             {
                 set settleTS to 0.
+                set steerDel to { return Ship:SrfRetrograde. }.
                 SetProgram(46).
             }
         }
@@ -284,7 +358,7 @@ until g_Program > 199 or g_Abort
     //     }
     //     else
     //     {
-    //         OutMsg("WAIT FOR AP":PadRight(g_termW - 15), cr()).
+    //         OutMsg("WAIT FOR AP":PadRight(g_TermWidth - 15), cr()).
     //         SetRunmode(1).
     //     }
     //     OutInfo("AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)), cr()).
@@ -314,7 +388,7 @@ until g_Program > 199 or g_Abort
     //     }
     //     else
     //     {
-    //         OutMsg("* STAGING *":PadRight(g_termW - 11), cr()).
+    //         OutMsg("* STAGING *":PadRight(g_TermWidth - 11), cr()).
     //         SetRunmode(1).
     //     }
         
@@ -330,7 +404,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_RunMode = 3
         {
-            OutMsg("* CHUTE(S) ARMED *":PadRight(g_termW - 18), cr()).
+            OutMsg("* CHUTE(S) ARMED *":PadRight(g_TermWidth - 18), cr()).
             SetProgram(47).            
         }
         else if g_Runmode < 0
@@ -343,7 +417,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ARMING CHUTE(S) *":PadRight(g_termW - 20), cr()).
+            OutMsg("* ARMING CHUTE(S) *":PadRight(g_TermWidth - 20), cr()).
             SetRunmode(1).
         }
     }
@@ -366,7 +440,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* COLLECTING SCIENCE *":PadRight(g_termW - 20), cr()).
+            OutMsg("* COLLECTING SCIENCE *":PadRight(g_TermWidth - 20), cr()).
             SetRunmode(1).
         }
     }
@@ -410,7 +484,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
+            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_TermWidth - 33), cr()).
             SetRunmode(1).
         }
         OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
@@ -453,7 +527,7 @@ until g_Program > 199 or g_Abort
         else
         {
             set stgTimeGoGo to Time:Seconds + stgTimeGoGo.
-            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
+            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_TermWidth - 33), cr()).
             SetRunmode(1).
         }
         OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
@@ -520,7 +594,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* FAIRING JETTISON *":PadRight(g_termW - 15), cr()).
+            OutMsg("* FAIRING JETTISON *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -538,7 +612,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode = 2
@@ -550,7 +624,7 @@ until g_Program > 199 or g_Abort
             }
             else
             {
-                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -563,7 +637,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_termW - 15), cr()).
+            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -591,7 +665,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_termW - 15), cr()).
+                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -604,7 +678,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_termW - 15), cr()).
+            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -615,7 +689,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             if Time:Seconds >= settleTS 
             {
                 SetProgram(99).
@@ -631,7 +705,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
@@ -644,7 +718,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -657,16 +731,57 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }
     }
     UpdateState(true).
+    set g_TermChar to "".
 
-    if steerActive set g_Steer to steerDel:Call().
+    if steerActive 
+    {
+        cr(g_Line + 2).
+        OutMsg("AUTO STEERING: ACTIVE").
+        set g_Steer to steerDel:Call().
+    }
+    else
+    {
+        cr(g_Line + 2).
+        OutMsg("AUTO STEERING: DISABLED").
+        local rollVal to Ship:Control:Roll.
+        if rollVal < 0
+        {
+            local arrStr to choose "<" if rollVal > 0.26 else choose "<<" if rollVal > 0.51 else choose "<<<" if rollVal > 0.76 else "<<<<".
+            OutInfo("ROLL: {0,4} [{1}] {2,-4}":Format(arrStr, Round(rollVal, 2), " ")).
+        }
+        else if rollVal > 0
+        {
+            local arrStr to choose ">" if rollVal < 0.26 else choose ">>" if rollVal < 0.51 else choose ">>>" if rollVal < 0.76 else ">>>>". 
+            OutInfo("ROLL: {2,4} [{1}] {0,-4}":Format(arrStr, Round(rollVal, 2), " ")).
+        }
+    }
+
+    cr(g_line + 1).
+    if CoMCanShift 
+    {
+        DispCoMSystem(cr(), CoMActive, readCoMShift:Call()).
+    }
+
+    cr(g_line + 2).
+    DispDescentTelemetry().
     
-    OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
 
-    DispDescentTelemetry(9).
+    OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
+}
+
+local function DispCoMSystem
+{
+    parameter _line is g_line,
+              _CoMActive is false,
+              _CoMOffset is 0.
+    
+    print "CoM SHIFT ACTIVE: {0,-9}":Format(_CoMActive) at (0, _line).
+    print "CoM SHIFT       : {0,-9}":Format(Round(_CoMOffset, 3)) at (0, cr(_line)).
+    cr().
 }

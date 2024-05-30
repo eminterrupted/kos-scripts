@@ -13,7 +13,8 @@
     // #region
     local l_Countdown_Base to 5.
     local l_PitchLimit to 30.
-    local l_PitchChangeLimit to 2.5.
+    local l_PitchChangeLimit to 5.
+    local l_PitchUpperMax to 17.5.
 
     local l_PitchMax        to 90.
     local l_PitchMin        to -27.
@@ -29,9 +30,8 @@
     local l_MaxTransferAlt to 3000000.
     local l_MinTransferAlt to 140000.
 
-    local l_PitchUpperMax to 10.
 
-    local l_ApoPID to PidLoop(0.025, 0.015, 0.020, -l_PitchChangeLimit, l_PitchChangeLimit).
+    local l_ApoPID to PidLoop(0.01, 0.005, 0.0125, -l_PitchChangeLimit, l_PitchChangeLimit).
     local l_ApoPIDSet to false.
 
     // #endregion
@@ -41,6 +41,7 @@
     global g_AzData to list().
     global g_DRTurnStartAlt to Ship:Bounds:Size:Z * 1.625.
     global g_PitchMinSpeed to 35.
+    global g_PitchLimit to l_PitchLimit.
     // #endregion
 // #endregion
 
@@ -65,7 +66,7 @@
     global function DispLaunchTelemetry
     {
         parameter _data is list(),
-                _line is 10,
+                _line is g_line,
                 _widthConstraint is Terminal:Width - 2.
 
         set g_line to _line.
@@ -94,7 +95,6 @@
 
         local adjAltErr     to 0.
         local adjPitLim     to 0.
-        // local adjApoTgt            to _curApo * ().
         local curAlt        to Ship:Altitude.
         local curAltErr     to curAlt / l_PitchProgram_EndAlt.
         local curAltPres    to Body:Atm:AltitudePressure(curAlt).
@@ -114,24 +114,23 @@
         local srfProPit to pitch_for(Ship, Ship:SrfPrograde).
         local srfProPitAdj to srfProPit.
 
-        local pidPitchDeflect    to 0.
         local effPitAng     to curFacePit.
 
         // local tgtAltPitAng          to 0.
 
         // local selectedPit to choose srfProPitAdj if srfProPitAdj > obtProPit else obtProPit.
 
-        if _curApo < (tgtTransAlt * 0.8)
+        if _curApo < (tgtTransAlt * 0.9875)
         {
             if curAlt < l_SrfProToObtPro_StartAlt
             {
-                OutInfo("PitchMode: 0", cr()).
+                OutInfo("PitchMode: 0", g_line).
                 set selProPit to srfProPit.
                 set curEffErr to curAltErr.
             }
             else if curAlt < l_SrfProToObtPro_EndAlt
             {
-                OutInfo("PitchMode: 1", cr()).
+                OutInfo("PitchMode: 1", g_line).
                 set selProPit to (obtProPit * curProAltErr) + (srfProPit * (1 - curProAltErr)).
                 if _curApo < tgtTransAlt
                 {
@@ -145,7 +144,7 @@
             }
             else
             {
-                OutInfo("PitchMode: 2", cr()).
+                OutInfo("PitchMode: 2", g_line).
                 set selProPit to obtProPit.
                 set curEffErr to curTransErr.
                 set l_PitchMin to Min(l_PitchMin, Max(-l_PitchLimit, l_PitchUpperMax + (-l_PitchMin * (1 - curEffErr)))).
@@ -154,55 +153,60 @@
             local tgtRawAng     to 90 * (1 - curEffErr).
             local tgtShapedAng  to tgtRawAng * _shaper.
             local tgtPitAngNrm  to Min(l_PitchMax, Max(l_PitchMin, tgtShapedAng)).
-            set   pidPitchDeflect to l_ApoPID:Update(Time:Seconds, _curApo).
-            set   adjPitLim     to Max(1.25, l_PitchLimit * (1 - curAltPres)).
+            set   adjPitLim     to Max(0.125, l_PitchLimit * (1 - curAltPres)).
             set   effPitAng     to Max(selProPit - adjPitLim, Min(tgtPitAngNrm, selProPit + l_PitchUpperMax)).
         }
         else if not l_ApoPIDSet
         {
-            OutInfo("PitchMode: 3", cr()).
+            OutInfo("PitchMode: 3", g_line).
             set selProPit to obtProPit.
-            set l_PitchMax to 22.
-            set l_PitchMin to -33.
+            set l_PitchMax to 17.5.
+            set l_PitchMin to -22.5.
+            set l_ApoPID to PidLoop(0.01, 0.0025, 0.01, l_PitchMin, l_PitchMax).
             set l_ApoPID:Setpoint to Round(_tgtApo).
             set l_ApoPIDSet to True.
         }
         else
         {
-            if g_TermChar = Char(80)
+            if g_TermChar:Length > 0
             {
-                set l_ApoPID:kP to l_ApoPID:kP * 1.1.
-            }
-            else if g_TermChar = Char(112)
-            {
-                set l_ApoPID:kP to l_ApoPID:kP * 0.91.
-            }
-            else if g_TermChar = Char(73)
-            {
-                set l_ApoPID:ki to l_ApoPID:ki * 1.1.
-            }
-            else if g_TermChar = Char(105)
-            {
-                set l_ApoPID:ki to l_ApoPID:ki * 0.91.
-            }
-            else if g_TermChar = Char(68)
-            {
-                set l_ApoPID:kD to l_ApoPID:kD * 1.1.
-            }
-            else if g_TermChar = Char(100)
-            {
-                set l_ApoPID:kD to l_ApoPID:kD * 0.91.
+                if Unchar(g_TermChar) = 112
+                {
+                    set l_ApoPID:kP to l_ApoPID:kP * 0.91.
+                }
+                else if Unchar(g_TermChar) = 80
+                {
+                    set l_ApoPID:kP to l_ApoPID:kP * 1.1.
+                }
+                else if Unchar(g_TermChar) = 105
+                {
+                    set l_ApoPID:kI to l_ApoPID:kI * 0.91.
+                }
+                else if Unchar(g_TermChar) = 73
+                {
+                    set l_ApoPID:kI to l_ApoPID:kI * 1.1.
+                }
+                else if Unchar(g_TermChar) = 100
+                {
+                    set l_ApoPID:kD to l_ApoPID:kD * 0.91.
+                }
+                else if Unchar(g_TermChar) = 68
+                {
+                    set l_ApoPID:kD to l_ApoPID:kD * 1.1.
+                }
             }
 
-            OutInfo("PitchMode: 4", cr()).
+            OutInfo("PitchMode: 4", g_line).
             
-            set   pidPitchDeflect to l_ApoPID:Update(Time:Seconds, _curApo).
+            // set   pidPitchDeflect to l_ApoPID:Update(Time:Seconds, _curApo).
             set   selProPit to obtProPit.
-            set   effPitAng to Min(l_PitchUpperMax, Max(curFacePit + pidPitchDeflect, l_PitchMin)).
+            // set   effPitAng to Min(l_PitchMax, Max(curFacePit + pidPitchDeflect, l_PitchMin)).
+            set effPitAng to l_ApoPID:Update(Time:Seconds, _curApo).
             
             OutInfo("PID Setpoint: {0}":Format(l_ApoPID:Setpoint)).
             OutInfo("PID kP | kI | kD: {0} | {1} | {2}":Format(l_ApoPID:kP, l_ApoPID:kI, l_ApoPid:kD)).
-            OutInfo("PID Value: {0}":Format(Round(pidPitchDeflect, 2))).
+            // OutInfo("PID Value: {0}":Format(Round(effPitAng, 2))).
+            cr(). 
         }
         // else
         // {
@@ -239,7 +243,7 @@
 
         set g_Line to lastLine.
 
-        if g_LogOut log "{0},{1},{2},{3},{4},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}":Format(MissionTime, effPitAng, adjPitLim, curAltPres, tgtPitAngNrm,curAlt, curAltErr, _curApo, curApoErr, curEffErr, curTurnAltErr, selProPit, obtProPit, obtProPitAdj, srfProPit, srfProPitAdj) to g_DataLog.
+        if g_LogOut log "{0},{1},{2},{3},{4},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}":Format(MissionTime, effPitAng, adjPitLim, curAltPres, curAlt, curAltErr, _curApo, curApoErr, curEffErr, curTurnAltErr, selProPit, obtProPit, obtProPitAdj, srfProPit, srfProPitAdj) to g_DataLog.
 
         return effPitAng.
     }
@@ -265,6 +269,20 @@
             ,launchTS      // UT Timestamp of 
             ,ignitionStart
         ).
+    }
+
+    // GetPrelaunchCrewCapacity
+    global function GetPrelaunchCrewCapacity
+    {
+        local crewCap to Ship:CrewCapacity.
+
+        if crewCap > 0
+        {
+            for p in Ship:PartsNamedPattern("^AM.MLP.*")
+            {
+
+            }
+        }
     }
 
     // PrepLaunchPad
@@ -324,6 +342,7 @@
 
             set checkName  to "retraction limit".
             set actionName to "retract crew arm".
+            local eventName to "retract arm".
             for p in crewArms
             {
                 from { local i to 0.} until i = p:AllModules:Length step { set i to i + 1.} do
@@ -333,6 +352,10 @@
                     {
                         modList:Add(m).
                         DoAction(m, actionName).
+                    }
+                    else 
+                    {
+                        DoEvent(m, eventName).
                     }
                 }
             }
@@ -362,4 +385,44 @@
     }
     
 // #endregion
+
+// *- Launch Events
+// #region
+
+    // RetractSwingArms :: [(__armList)<List>] -> <none>
+    // Retracts the provided list of tower arms. Defaults __armList to all arms found.
+    global function RetractSwingArms
+    {
+        parameter __armList is Ship:PartsNamedPattern("SwingArm"),
+                  __swingDir is 1.
+        
+        set __swingDir to Min(1, Max(0, __swingDir)).
+        local swingStr to choose "retract arm right" if __swingDir = 1 else "retract arm left".
+
+        for p in __armList
+        {
+            local modList to p:AllModules.
+            local hitCount to 0.
+            from { local i to 0.} until i = modList:Length or hitCount > 1 step { set i to i + 1.} do
+            {
+                local m to p:GetModuleByIndex(i).
+                if m:Name = "ModuleAnimateGenericExtra"
+                {
+                    if m:HasField("arm length adjust") and hitCount = 2
+                    {
+                        set hitCount to hitCount + 1.
+                        DoAction(m, "toggle").
+                    }
+                    else if m:HasEvent(swingStr)
+                    {
+                        set hitCount to hitCount + 2.
+                        DoEvent(m, swingStr).
+                    }
+                }
+            }
+        }
+    }
+    
+// #endregion
+
 // #endregion

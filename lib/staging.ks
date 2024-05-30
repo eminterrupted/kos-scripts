@@ -40,11 +40,23 @@
 
     global g_RCS_Armed to false.
     global g_RCS_Stage to -2.
+
+    global g_ME_Stage to -2.
+    global g_MECO_Armed to false.
+
+    global g_SE_Stage to -2.
+    global g_SECO_Armed to false.
     // #endregion
     // 
 
     // *- Local Anonymous Delegates
     // #region
+    local l_ECODelegates to Lexicon(
+        "MECO", { parameter _chkVal. return (not g_MECO_Armed).},
+        "MET",  { parameter _chkVal. return MissionTime >= _chkVal.},
+        "PE",   { parameter _chkVal. return Ship:Periapsis >= _chkVal.},
+        "SECO", { parameter _chkVal. return (not g_SECO_Armed).}
+    ).
     // #endregion
 
     // *- Global Anonymous Delegates
@@ -84,7 +96,6 @@
         else
         {
             set g_AS_Check to { 
-                // OutStr("I'm autostage checkin! [{0} / {1}]":Format(Round(Ship:AvailableThrust, 2), _conditionThresh):PadRight(5), cr()). 
                 if Stage:Number > g_StageLimit 
                 {
                     return g_Conditions[_conditionType]:Call(_conditionThresh).
@@ -107,7 +118,7 @@
                         }
                         else
                         {
-                            set g_NextEngines to GetNextEngines("1000").
+                            set g_NextEngines to GetNextEngines("1010").
                             if Ship:ModulesNamed("ModuleRCSFX"):Length > 0 RCS on. 
                         }
                         set g_AS_Running to false.
@@ -333,8 +344,8 @@
 
             if Stage:Number = g_HotStage:STG + 1
             {
-                OutStr("_checkVal:  {0}":Format(__checkVal), g_TermH - 10).
-                OutStr("HS ETA  : T{0}":Format(Round(__curVal - __checkVal, 2)), g_termH - 9).
+                OutStr("_checkVal:  {0}":Format(__checkVal), g_TermHeight - 10).
+                OutStr("HS ETA  : T{0}":Format(Round(__curVal - __checkVal, 2)), g_TermHeight - 9).
                 return __curVal <= __checkVal.
             }
             return false.
@@ -364,7 +375,7 @@
             }
             set g_HS_Active to g_HS_Action:Call().
             
-            local hsEngs to Ship:PartsTagged("HotStage").
+            local hsEngs to Ship:PartsTaggedPattern("HotStage").
             local hsKeepAlive to false.
             from {local i to 0.} until i = hsEngs:Length or hsKeepAlive step { set i to i + 1.} do
             {
@@ -432,7 +443,7 @@
         OutInfo("UPDATING G_SHIPENGINES").
         set g_ShipEngines to GetShipEnginesSpecs().
         
-        set g_NextEngines to GetNextEngines("1000").
+        set g_NextEngines to GetNextEngines("1010").
         set g_Line to curLine.
         return false.
     }
@@ -490,7 +501,144 @@
     
     // #endregion
 
+//  *- Engine Cutoff Routines
+// #region
 
+    // ArmMECO
+    //
+    global function ArmMECO
+    {
+        parameter _MEList is Ship:PartsTaggedPattern("Ascent\|MECO.*").
+
+        local MECOArmed to false.
+        local chkDel to { return true. }.
+        local actDel to { return false. }.
+
+        if _MEList:Length > 0
+        {
+            set g_ME_Stage to _MEList[0]:Stage.
+            local chkSec to 999.
+            local tagParts to _MEList[0]:Tag:Split("|").
+            
+            if tagParts:length > 2
+            {
+                set chkSec to ParseStringScalar(tagParts[2], chkSec).
+            }
+
+            set chkDel to { return MissionTime >= chkSec.}.
+            set actDel to { 
+                parameter __MEList.
+
+                for eng in __MEList
+                {
+                    if eng:Ignition and not eng:Flameout
+                    {
+                        eng:Shutdown.
+                    }
+                }
+
+                for p in Ship:PartsTaggedPattern("AS\|MECO")
+                {
+                    if p:IsType("Engine")
+                    {
+                        p:Activate.
+                    }
+                }
+
+                for p in Ship:PartsTaggedPattern("DC\|MECO")
+                {
+                    if p:HasModule("ProceduralFairingDecoupler")
+                    {
+                        local m to p:GetModule("ProceduralFairingDecoupler").
+                        DoEvent(m, "jettison fairing").
+                    }
+                    else if p:HasModule("ModuleDecouple")
+                    {
+                        local m to p:GetModule("ModuleDecouple").
+                        DoEvent(m, "decouple").
+                    }
+                }
+                set g_ActiveEngines to GetActiveEngines().
+
+                return False.
+            }.
+            set actDel to actDel@:Bind(_MEList).
+
+            set MECOArmed to true.
+        }
+
+        return list(MECOArmed, chkDel, actDel).
+    }
+
+    // ArmSECO
+    //
+    global function ArmSECO
+    {
+        parameter _SEList is Ship:PartsTaggedPattern("Ascent\|SECO.*").
+
+        local SECOArmed to false.
+        local chkVal to -1.
+        local chkType to "".
+        local chkDel to { return true. }.
+        local actDel to { return false. }.
+
+        if _SEList:Length > 0
+        {
+            set g_SE_Stage to _SEList[0]:Stage.
+
+            local tagParts to _SEList[0]:Tag:Split("|").
+            
+            local processNextFlag to false.
+            local stepCount to 0.
+
+            for tPart in tagParts
+            {
+                print tPart.
+                if tPart = "SECO"
+                {
+                    set processNextFlag to True.
+                }
+                else if processNextFlag
+                {
+                    if stepCount = 0
+                    {
+                        set chkType to tPart.
+                        set stepCount to stepCount + 1.
+                    }
+                    else
+                    {
+                        set chkVal to ParseStringScalar(tPart, 0).
+                        set chkDel to l_ECODelegates[chkType].
+                        set chkDel to chkDel@:Bind(chkVal).
+                        break.
+                    }
+                }
+            }
+
+            set actDel to { 
+                parameter __SEList.
+
+                OutStr("Hit SECO Action Delegate", g_TermHeight - 8).
+                Breakpoint().
+                for eng in __SEList
+                {
+                    if eng:Ignition and not eng:Flameout
+                    {
+                        eng:Shutdown.
+                    }
+                }
+                set g_ActiveEngines to GetActiveEngines().
+                return False.
+            }.
+            set actDel to actDel@:Bind(_SEList).
+
+            set SECOArmed to true.
+        }
+
+        return list(SECOArmed, chkDel, actDel).
+    }
+
+// #endregion
 //  *- Staging actions and conditions
     // #region
 
@@ -534,10 +682,10 @@
     {
         if Stage:Ready
         {
-            OutStr("Stage ready", g_termH - 5).
+            OutStr("Stage ready", g_TermHeight - 5).
             if CheckUllage()
             {
-                OutStr("Ullage Check Successful", g_termH - 4).
+                OutStr("Ullage Check Successful", g_TermHeight - 4).
                 stage.
                 wait 0.25.
                 return true.

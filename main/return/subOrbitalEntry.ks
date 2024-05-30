@@ -83,7 +83,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "WAIT FOR AP":PadRight(g_termW - 15) at (0, cr()).
+            print "WAIT FOR AP":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
         print "AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)) at (0, cr()).
@@ -120,7 +120,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "WAIT FOR AP":PadRight(g_termW - 15) at (0, cr()).
+            print "WAIT FOR AP":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
         print "AP ETA: T{0}  ":Format(Round(ETA:Apoapsis, 2)) at (0, cr()).
@@ -151,7 +151,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* STAGING *":PadRight(g_termW - 11) at (0, cr()).
+            print "* STAGING *":PadRight(g_TermWidth - 11) at (0, cr()).
             SetRunmode(1).
         }
         
@@ -167,7 +167,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_RunMode < 3
         {
-            print "* CHUTE(S) ARMED *":PadRight(g_termW - 18) at (0, cr()).
+            print "* CHUTE(S) ARMED *":PadRight(g_TermWidth - 18) at (0, cr()).
             SetProgram(48).            
         }
         else if g_Runmode < 0
@@ -181,7 +181,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* ARMING CHUTE(S) *":PadRight(g_termW - 20) at (0, cr()).
+            print "* ARMING CHUTE(S) *":PadRight(g_TermWidth - 20) at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -321,7 +321,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* FAIRING JETTISON *":PadRight(g_termW - 15) at (0, cr()).
+            print "* FAIRING JETTISON *":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -339,7 +339,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                print "PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_termW - 15) at (0, cr()).
+                print "PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_TermWidth - 15) at (0, cr()).
             }
         }
         else if g_Runmode = 2
@@ -351,7 +351,7 @@ until g_Program > 199 or g_Abort
             }
             else
             {
-                print "DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_termW - 15) at (0, cr()).
+                print "DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_TermWidth - 15) at (0, cr()).
             }
         }
         else if g_Runmode < 0
@@ -365,7 +365,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* CHUTE DEPLOY SEQUENCE *":PadRight(g_termW - 15) at (0, cr()).
+            print "* CHUTE DEPLOY SEQUENCE *":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -382,7 +382,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                print "DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_termW - 15) at (0, cr()).
+                print "DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_TermWidth - 15) at (0, cr()).
             }
         }
         else if g_Runmode < 0
@@ -396,7 +396,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* WAIT FOR TOUCHDOWN *":PadRight(g_termW - 15) at (0, cr()).
+            print "* WAIT FOR TOUCHDOWN *":PadRight(g_TermWidth - 15) at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -407,7 +407,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
+            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_TermWidth - 15) at (0, cr()).
             if Time:Seconds >= ts0 
             {
                 SetProgram(99).
@@ -424,7 +424,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
+            print "* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15) at (0, cr()).
             set ts0 to Time:Seconds + 3.
             SetRunmode(1).
         }
@@ -437,7 +437,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_termW - 15) at (0, cr()).
+            print "* RECOVERY IN {0}s *":Format(Round(ts0 - Time:Seconds, 2)):PadRight(g_TermWidth - 15) at (0, cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -451,7 +451,7 @@ until g_Program > 199 or g_Abort
         else
         {
             ClearScreen.
-            print "* ATTEMPT RECOVERY *":PadRight(g_termW - 15) at (0, cr()).
+            print "* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15) at (0, cr()).
             set ts0 to Time:Seconds + 3.
             SetRunmode(1).
         }

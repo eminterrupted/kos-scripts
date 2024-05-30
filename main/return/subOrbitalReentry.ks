@@ -400,7 +400,7 @@ until g_Program > 199 or g_Abort
         }
         else if g_RunMode = 3
         {
-            OutMsg("* CHUTE(S) ARMED *":PadRight(g_termW - 18), cr()).
+            OutMsg("* CHUTE(S) ARMED *":PadRight(g_TermWidth - 18), cr()).
             SetProgram(47).            
         }
         else if g_Runmode < 0
@@ -413,7 +413,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ARMING CHUTE(S) *":PadRight(g_termW - 20), cr()).
+            OutMsg("* ARMING CHUTE(S) *":PadRight(g_TermWidth - 20), cr()).
             SetRunmode(1).
         }
     }
@@ -436,7 +436,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* COLLECTING SCIENCE *":PadRight(g_termW - 20), cr()).
+            OutMsg("* COLLECTING SCIENCE *":PadRight(g_TermWidth - 20), cr()).
             SetRunmode(1).
         }
     }
@@ -466,7 +466,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
+            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_TermWidth - 33), cr()).
             SetRunmode(1).
         }
     }
@@ -524,7 +524,7 @@ until g_Program > 199 or g_Abort
         else
         {
             set stgTimeGoGo to Time:Seconds + stgTimeGoGo.
-            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_termW - 33), cr()).
+            OutMsg("WAITING FOR ATMOSPHERIC INTERFACE":PadRight(g_TermWidth - 33), cr()).
             SetRunmode(1).
         }
         OutMsg("ETA TO ATMOSPHERIC INTERFACE: {0} ":Format(-1), cr()).
@@ -591,7 +591,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* FAIRING JETTISON *":PadRight(g_termW - 15), cr()).
+            OutMsg("* FAIRING JETTISON *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -609,7 +609,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode = 2
@@ -621,7 +621,7 @@ until g_Program > 199 or g_Abort
             }
             else
             {
-                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_termW - 15), cr()).
+                OutMsg("DEPLOY: {0}":Format(Round(Alt:Radar - 625, 2)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -634,7 +634,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_termW - 15), cr()).
+            OutMsg("* CHUTE DEPLOY SEQUENCE *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -662,7 +662,7 @@ until g_Program > 199 or g_Abort
             else
             {
                 cr().
-                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_termW - 15), cr()).
+                OutInfo("DISTANCE TO GROUND: {0}":Format(Round(Alt:radar, 1)):PadRight(g_TermWidth - 15), cr()).
             }
         }
         else if g_Runmode < 0
@@ -675,7 +675,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_termW - 15), cr()).
+            OutMsg("* WAIT FOR TOUCHDOWN *":PadRight(g_TermWidth - 15), cr()).
             SetRunmode(1).
         }
     }
@@ -686,7 +686,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             if Time:Seconds >= settleTS 
             {
                 SetProgram(99).
@@ -702,7 +702,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to choose Time:Seconds + 3 if Ship:Crew:Length = 0 else 0.25.
             SetRunmode(1).
         }
@@ -715,7 +715,7 @@ until g_Program > 199 or g_Abort
         if g_RunMode > 0
         {
             cr().
-            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_termW - 15), cr()).
+            OutInfo("* RECOVERY IN {0}s *":Format(Round(settleTS - Time:Seconds, 2)):PadRight(g_TermWidth - 15), cr()).
             TryRecoverVessel().
         }
         else if g_Runmode < 0
@@ -728,7 +728,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_termW - 15), cr()).
+            OutMsg("* ATTEMPT RECOVERY *":PadRight(g_TermWidth - 15), cr()).
             set settleTS to Time:Seconds + 3.
             SetRunmode(1).
         }

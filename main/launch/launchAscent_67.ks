@@ -421,23 +421,6 @@ if MECOEngs:Length > 0
     set MECOAction to MECOResult[2].
 }
 
-// Arm SECO
-local SECOAction  to { return false.}.
-local SECOArmed   to false.
-local SECOCheck   to { return true.}.
-local SECOEngs    to Ship:PartsTaggedPattern("Ascent\|SECO.*").
-local SECOResult  to list().
-local SECORunning to false.
-local SECOStage   to Stage:Number.
-if SECOEngs:Length > 0
-{
-    set SECOResult to ArmSECO(SECOEngs).
-    set SECOStage  to SECOEngs[0]:Stage.
-    set SECOArmed  to SECOResult[0].
-    set SECOCheck  to SECOResult[1].
-    set SECOAction to SECOResult[2].
-}
-
 // Arm RCS
 local rcsModules to Ship:ModulesNamed("ModuleRCSFX").
 set g_RCS_Armed to false.
@@ -574,7 +557,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 24
@@ -622,7 +605,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 26
@@ -664,7 +647,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 28
@@ -699,7 +682,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer to choose Ship:Facing:Vector if g_Spin_Active else heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 30
@@ -754,7 +737,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
     else if g_Program = 32
@@ -785,7 +768,7 @@ until g_Program >= 36 or g_Abort
             SetRunmode(1).
         }
         
-        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(-22, ascAngDel:Call())), rollVal).
+        set g_Steer  to heading(l_az_calc(g_AzData), Min(90, Max(g_PitchMin, ascAngDel:Call())), rollVal).
     }
 
 
@@ -937,28 +920,6 @@ until g_Program >= 36 or g_Abort
         else
         {
             OutInfo("MECO: T-{0} ":Format(Round(MECO - MissionTime, 2)), cr()).
-        }
-    }
-
-    if SECOArmed
-    {
-        if Stage:Number <= SECOStage
-        {
-            if SECORunning
-            {
-                set SECOArmed to SECOAction:Call().
-                set SECORunning to false.
-                OutMsg("SECO: Complete", cr()).
-            }
-            else if SECOCheck:Call()
-            {
-                set SECORunning to true.
-                OutMsg("SECO: Running", cr()).
-            }
-            else
-            {
-                OutInfo("SECO: ARMED    ", cr()).
-            }
         }
     }
 

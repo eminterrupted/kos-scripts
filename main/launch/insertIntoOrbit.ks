@@ -88,7 +88,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutInfo("ORBITAL INSERTION: COAST":PadRight(g_termW - 24), g_Line).
+            OutInfo("ORBITAL INSERTION: COAST          ", g_Line).
             SetRunmode(1).
         }
         
@@ -134,7 +134,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutInfo("ORBITAL INSERTION: WAIT":PadRight(g_termW - 24), g_Line).
+            OutInfo("ORBITAL INSERTION: WAIT          ", g_Line).
             SetRunmode(1).
         }
         OutInfo("BURN ETA: T{0}   ":Format(Round(BurnTS - Time:Seconds, 2)), cr()).
@@ -172,7 +172,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutInfo("ORBITAL INSERTION: IGNITION":PadRight(g_termW - 27), g_Line).
+            OutInfo("ORBITAL INSERTION: IGNITION          ", g_Line).
             SetRunmode(1).
         }
     }
@@ -190,13 +190,13 @@ until g_Program > 199 or g_Abort
             if Ship:Periapsis >= tgtPe
             {
                 set g_Throt to 0.
-                OutInfo("PE REACHED / ENGINE CUTOUT":PadRight(g_termW - 26), cr()).
+                OutInfo("PE REACHED / ENGINE CUTOUT          ", cr()).
                 SetProgram(130).
             }
             else if Stage:Number <= g_StageLimit and Ship:AvailableThrust <= 0.01
             {
                 set g_Throt to 0.
-                OutInfo("ENGINE CUTOUT":PadRight(g_termW - 13), cr()).
+                OutInfo("ENGINE CUTOUT          ", cr()).
                 SetProgram(130).
             }
             else
@@ -214,7 +214,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutInfo("ORBITAL INSERTION: BURN":PadRight(g_termW - 23), g_Line).
+            OutInfo("ORBITAL INSERTION: BURN          ", g_Line).
             SetRunmode(1).
         }
     }
@@ -244,7 +244,7 @@ until g_Program > 199 or g_Abort
         }
         else
         {
-            OutInfo("ORBITAL INSERTION: COMPLETE":PadRight(g_termW - 27), g_Line).
+            OutInfo("ORBITAL INSERTION: COMPLETE          ", g_Line).
             SetRunmode(1).
         }
     }
