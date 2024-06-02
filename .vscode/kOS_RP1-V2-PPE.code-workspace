@@ -11,10 +11,13 @@
 		"files.trimFinalNewlines": true,
 		"files.maxMemoryForLargeFilesMB": 8192,
 		"files.participants.timeout": 10000,
-		"editor.fontLigatures": null,
+		"editor.fontLigatures": "'ss02', 'ss19', 'ss20'",
 		"kos-vscode.completionCase": "pascalcase",
 		"kos-vscode.kerbalSpaceProgramPath": "E:/Gaming/KSP/Instances/KSP_RP1_PLC",
-		"kos-vscode.trace.server.verbosity": "off"
+        "kos-vscode.trace.server.verbosity": "off",
+        "editor.codeActionsOnSave": {
+
+        }
 	},
 	"editor.codeActionsOnSave": null,
 	"workbench.editorAssociations": []
