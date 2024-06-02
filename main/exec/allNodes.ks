@@ -7,9 +7,6 @@ parameter _params is list().
 RunOncePath("0:/lib/depLoader").
 RunOncePath("0:/lib/mnv").
 
-// Declare Variables
-local nodeToExec to choose NextNode if HasNode else node(0, 0, 0, 0).
-
 // Parse Params
 if _params:length > 0 
 {
@@ -28,7 +25,12 @@ OutMsg("Executing all nodes in flight plan").
 wait 0.1.
 until not HasNode
 {
-    if nodeToExec:DeltaV < 0.1 and nodeToExec:DeltaV > -0.1
+    local nodeToExec to choose NextNode if HasNode else node(0, 0, 0, 0).
+    if nodeToExec:DeltaV:Mag < 0.1 and nodeToExec:DeltaV:Mag > -0.1
+    {
+        OutMsg("Burn too small, try RCS").
+    }
+    else
     {
         ExecNodeBurn(nodeToExec).
     }

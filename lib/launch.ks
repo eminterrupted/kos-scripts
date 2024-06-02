@@ -30,8 +30,10 @@
     local l_MaxTransferAlt to 3000000.
     local l_MinTransferAlt to 140000.
 
-
-    local l_ApoPID to PidLoop(0.01, 0.005, 0.0125, -l_PitchChangeLimit, l_PitchChangeLimit).
+    local l_PIDp to 0.00325.
+    local l_PIDi to 0.0005.
+    local l_PIDd to 0.002.
+    local l_ApoPID to PidLoop(l_PIDp, l_PIDi, l_PIDd, -l_PitchChangeLimit, l_PitchChangeLimit).
     local l_ApoPIDSet to false.
 
     // #endregion
@@ -162,7 +164,7 @@
             set selProPit to obtProPit.
             set l_PitchMax to 17.5.
             set l_PitchMin to -22.5.
-            set l_ApoPID to PidLoop(0.01, 0.0025, 0.01, l_PitchMin, l_PitchMax).
+            set l_ApoPID to PidLoop(l_PIDp, l_PIDi, l_PIDd, l_PitchMin, l_PitchMax).
             set l_ApoPID:Setpoint to Round(_tgtApo).
             set l_ApoPIDSet to True.
         }

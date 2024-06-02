@@ -230,7 +230,7 @@ until g_Program >= 20 or g_Abort
         print "LAUNCH COUNTDOWN: T{0}  ":Format(Round(Time:Seconds - launchTS[1], 2)) at (0, 5).
         if g_RunMode = 0
         {
-            print "* LIFTOFF *":PadRight(29) at (0, 6).
+            print "* LIFTOFF *          " at (0, 6).
             SetRunmode(1).
         }
         else if g_Runmode = 1
@@ -330,7 +330,7 @@ until g_Program = 42 or g_Abort
         }
         else
         {
-            print "VERTICAL ASCENT":PadRight(g_TermWidth - 15) at (0, cr()).
+            print "VERTICAL ASCENT          " at (0, cr()).
             SetRunmode(1).
         }
     }
@@ -353,7 +353,7 @@ until g_Program = 42 or g_Abort
         }
         else
         {
-            print "PITCH PROGRAM":PadRight(g_TermWidth - 15) at (0, cr()).
+            print "PITCH PROGRAM          " at (0, cr()).
             SetRunmode(1).
         }
         
@@ -386,7 +386,7 @@ until g_Program = 42 or g_Abort
         }
         else
         {
-            print "BURNING TO MECO":PadRight(g_TermWidth - 15) at (0, cr()).
+            print "BURNING TO MECO          " at (0, cr()).
             SetRunmode(1).
         }
         
@@ -416,7 +416,7 @@ until g_Program = 42 or g_Abort
         }
         else
         {
-            print "COAST PROGRAM":PadRight(g_TermWidth - 15) at (0, cr()).
+            print "COAST PROGRAM          " at (0, cr()).
             SetRunmode(1).
         }
         

@@ -3,6 +3,7 @@
 
 // *~ Dependencies ~* //
 // #region
+SetupTerminal().
 // #endregion
 
 
@@ -124,6 +125,18 @@ set g_MissionPlans to ListMissionPlans().
         parameter _p is False.
 
         return _p.
+    }
+
+    // Basic function that moves terminal setup out of the library header and into a proper function
+    global function SetupTerminal
+    {
+        parameter _width is 72,
+                  _height is 45. 
+
+        global g_TermHeight to _height.
+        set Terminal:Height to g_TermHeight.
+        global g_TermWidth  to _width.
+        set Terminal:Width to g_TermWidth.
     }
 
 // #endregion

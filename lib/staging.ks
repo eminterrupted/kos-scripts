@@ -618,8 +618,8 @@
             set actDel to { 
                 parameter __SEList.
 
-                OutStr("Hit SECO Action Delegate", g_TermHeight - 8).
-                Breakpoint().
+                // OutStr("Hit SECO Action Delegate", g_TermHeight - 8).
+                // Breakpoint().
                 for eng in __SEList
                 {
                     if eng:Ignition and not eng:Flameout
