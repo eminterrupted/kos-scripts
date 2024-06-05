@@ -735,11 +735,11 @@
                 local paramList to list(_partList, deployStage).
 
                 local checkDel to { 
-                    parameter _params is list().
+                    parameter __params is list().
                     
-                    local _deployStage to _params[1].
+                    local __deployStage to __params[1].
                     
-                    if Stage:Number <= _deployStage or g_OnDeployActive
+                    if Stage:Number <= __deployStage or g_OnDeployActive
                     {
                         return True.
                     }

@@ -75,123 +75,38 @@ set g_MainProcess to ScriptPath().
 DispMain().
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Mission:MatchesPattern("^((PID)?Orbit|Circularize|SubOrbita|PIDSubOrbital)")
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Mission:MatchesPattern("^((PID)?Orbit|Circularize)") 
 {
-    local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
+    ExecCircBurn().
+}
+else if Stage:Number >= g_StageLimit and g_MissionTag:Mission:MatchesPattern("SubOrbit|PIDSubOrbital")
+{
+    local doApoBurn to False.
 
-    OutMsg("Executing circAtApo").
-    wait 0.25.
-    // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|", "Circularize|").
-    // set Core:Part:Tag to Core:Part:Tag:Replace("Orbit|{0}":Format(), "Circularize|{0}":Format(Round(Ship:Apoapsis)):Replace("km", "")).
-    
-    // local tgtAp to Ship:Apoapsis. // Ship:Body:ATM:Height + 25000.
-    // local tgtPe to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 else tgtAp.
-    
-    if tgtEcc > -1
+    for eng in Ship:Engines
     {
-        // Set tgtAp to current Apoapsis; no sense in basing calculations of ideal vs reality
-        local tgtApTagStr to ParseScalarShortString(tgtAp).
-        set tgtAp to Round(Ship:Apoapsis).
-
-        if tgtEcc < 0
+        if eng:Stage >= g_StageLimit
         {
-            set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
+            if eng:Ignitions > 0
+            {
+                if not eng:Flameout
+                {
+                    set doApoBurn to True.
+                }
+            }
         }
-        else
-        {
-            set tgtPe to tgtAp.
-            set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
-        }
+    }
 
-        local curApTagStr to ParseScalarShortString(tgtAp).
-        local curPeTagStr to ParseScalarShortString(tgtPe).
-        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace("{0}|":Format(tgtEcc:ToString), "{0}|":Format(curPeTagStr)).
-
-        // Adjust make the changes to g_missionTag:Params
-        set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
+    if doApoBurn
+    {
+        ExecCircBurn().
     }
     else
     {
-        // local tgtApTagStr to ParseScalarShortString(tgtAp).
-        // local tgtPeTagStr to choose "-09876" if tgtPe < 0 else ParseScalarShortString(tgtPe).
-        
-        if tgtPe > Ship:Apoapsis
-        {
-            set tgtAp to tgtPe.
-            set tgtPe to Round(Ship:Apoapsis).
-        }
-        else if tgtPe < Ship:Body:Atm:Height
-        {
-            set tgtAp to Round(Ship:Apoapsis).
-            set tgtPe to Ship:Body:Atm:Height + 25000.
-        }
-
-        // local curApTagStr to ParseScalarShortString(tgtAp).
-        // local curPeTagStr to ParseScalarShortString(tgtPe).
-        // set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace(tgtPeTagStr, curPeTagStr).
+        OutMsg("CircAtApo bypassed").
+        OutInfo("Stage: {0} (Lim: {1}) | Pe: {2} (Tgt: {3}) | {4}":Format(Stage:Number, g_StageLimit, Round(Ship:Periapsis), Round(tgtAp), g_MissionTag:Mission)).
+        wait 2.
     }
-    set g_MissionTag to ParseCoreTag(Core:Tag).
-
-    // local tagSplit to Core:Part:Tag:Split("|").
-    // if tagSplit:Length > 2
-    // {
-    //     local tagParam to tagSplit[1]:Split(";").
-    //     if tagParam:Length > 2
-    //     {
-    //         local p2 to ParseStringScalar(tagParam[2]).
-    //         if p2 <= 1
-    //         {
-    //             set tgtEcc to p2.
-    //             if tgtEcc < 0
-    //             {
-    //                 set tgtPe to GetPeFromApEcc(tgtAp, abs(p2), Ship:Body).
-    //             }
-    //             else
-    //             {
-    //                 set tgtPe to Ship:Apoapsis.
-    //                 set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
-    //             }
-    //         }
-    //         else if p2 > Ship:Apoapsis
-    //         {
-    //             set tgtAp to p2.
-    //             set tgtPe to Ship:Apoapsis.
-    //         }
-    //         else
-    //         {
-    //             set tgtAp to Ship:Apoapsis.
-    //             set tgtPe to p2.
-    //         }
-    //     }
-    //     else
-    //     {
-    //         set tgtAp to ParseStringScalar(tagParam[1]).
-    //         set tgtPe to tgtAp.
-    //         if tgtAp <= Ship:Apoapsis
-    //         {
-    //             set Core:Part:Tag to Core:Part:Tag:Replace("{0}":Format(tagParam[1]), Round(Ship:Apoapsis):ToString).
-    //         }
-    //     }
-    // }
-
-    if Career():CanMakeNodes 
-    {
-        runPath("0:/main/launch/circMnvAtApo", list(tgtAp, tgtPe, azObj)).
-    }
-    else
-    {
-        runPath("0:/main/launch/circAtApo", list(tgtAp, tgtPe, azObj)).
-    }
-
-    SendCoreMessage("P63_ORBIT", list(Core:Part:UID)).
-
-    if g_StageLimitSet:Length > 1
-    {
-        OutMsg("[L42] SetNextStageLimit hit").
-        SetNextStageLimit().
-        OutMsg("SetNextStageLimit exit").
-    }
-    OutMsg("circAtApo complete").
 }
 else
 {
@@ -235,17 +150,20 @@ until doneFlag
     }
 }
 OutInfo().
-// TODO: Extend Antenna Function
-
-wait 0.25.
-// Extend any solar panels
-// ExtendSolarPanels().
+// Run on-deploy routine
+if g_LoopDelegates:Events:HasKey("OnDeploy")
+{
+    if g_LoopDelegates:Events:OnDeploy:Check:Call(g_LoopDelegates:Events:OnDeploy:Params)
+    {
+        g_LoopDelegates:Events:OnDeploy:Check:Action:Call(g_LoopDelegates:Events:OnDeploy:Params).
+    }
+}
 set g_OnDeployActive to False.
 
 if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("RealChuteModule"):Length > 0
 {
     OutMsg("Executing reentry").
-    runPath("0:/main/return/reentry").
+    runPath("0:/main/return/reentry", list(125000)).
 }
 
 set core:bootfilename to "".
@@ -254,3 +172,68 @@ if g_StageLimit > 0 SetNextStageLimit(0).
 
 OutInfo().
 OutMsg("Exiting missionExec").
+
+
+// *- Local Functions
+local function ExecCircBurn
+{
+    local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
+    OutMsg("Executing circAtApo").
+    wait 0.25.
+    if tgtEcc > -1
+    {
+        // Set tgtAp to current Apoapsis; no sense in basing calculations of ideal vs reality
+        local tgtApTagStr to ParseScalarShortString(tgtAp).
+        set tgtAp to Round(Ship:Apoapsis).
+
+        if tgtEcc < 0
+        {
+            set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
+        }
+        else
+        {
+            set tgtPe to tgtAp.
+            set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
+        }
+
+        local curApTagStr to ParseScalarShortString(tgtAp).
+        local curPeTagStr to ParseScalarShortString(tgtPe).
+        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace("{0}|":Format(tgtEcc:ToString), "{0}|":Format(curPeTagStr)).
+
+        // Make the changes to g_missionTag:Params
+        set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
+    }
+    else
+    {
+        if tgtPe > Ship:Apoapsis
+        {
+            set tgtAp to tgtPe.
+            set tgtPe to Round(Ship:Apoapsis).
+        }
+        else if tgtPe < Ship:Body:Atm:Height
+        {
+            set tgtAp to Round(Ship:Apoapsis).
+            set tgtPe to Ship:Body:Atm:Height + 25000.
+        }
+    }
+    set g_MissionTag to ParseCoreTag(Core:Tag).
+
+    if Career():CanMakeNodes 
+    {
+        runPath("0:/main/launch/circMnvAtApo", list(tgtAp, tgtPe, azObj)).
+    }
+    else
+    {
+        runPath("0:/main/launch/circAtApo", list(tgtAp, tgtPe, azObj)).
+    }
+
+    SendCoreMessage("P63_ORBIT", list(Core:Part:UID)).
+
+    if g_StageLimitSet:Length > 1
+    {
+        OutMsg("[L42] SetNextStageLimit hit").
+        SetNextStageLimit().
+        OutMsg("SetNextStageLimit exit").
+    }
+    OutMsg("circAtApo complete").
+}

@@ -9,7 +9,7 @@
 
 // *~ Config Settings ~* //
 // #region
-    set Config:IPU to 1625.
+    set Config:IPU to 1325.
 
     global g_DualCore to ship:partsTagged("Core2"):Length > 0.
 // #endregion

@@ -1228,14 +1228,14 @@
         OutInfo("CreateLoopEvent: Creating new event ({0})":Format(_id)).
 
         local newEvent to lexicon(
-            "id",           _id
-            ,"type",        _type
-            ,"delegates",   lexicon(
-                "check",    _check@
-                ,"action",  _action@
+            "ID",           _id
+            ,"Type",        _type
+            ,"Delegates",   lexicon(
+                "Check",    _check@
+                ,"Action",  _action@
             )
-            ,"params",      _params
-            ,"repeat",      false
+            ,"Params",      _params
+            ,"Repeat",      false
         ).
 
         return newEvent.

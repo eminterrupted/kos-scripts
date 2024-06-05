@@ -3,8 +3,8 @@ clearScreen.
 
 parameter params is list().
 
-runOncePath("0:/lib/libLoader").
-runOncePath("0:/lib/sci").
+runOncePath("0:/lib/libLoader.ks").
+runOncePath("0:/lib/sci.ks").
 
 set g_MainProcess to ScriptPath().
 DispMain().
@@ -26,7 +26,7 @@ local retroStage to payloadStage.
 local retroType to 1. // 1 = Mnv, 0 = Manual at Apo
 local spinStab to false.
 local stagingAlt to ship:body:atm:height.
-local ts to time:seconds.
+local ts to Time:Seconds.
 
 set r_Val to 180.
 set s_Val to ship:facing.
@@ -92,12 +92,12 @@ until doneFlag
         OutInfo("retroFire: " + retroFire, 1).
         if g_TermChar = terminal:input:enter
         {
-            //InitWarp(time:seconds + eta:apoapsis, "apoapsis").
+            //InitWarp(Time:Seconds + eta:apoapsis, "apoapsis").
             set mode to "ap".
         }
         else if g_TermChar = Terminal:Input:HomeCursor
         {
-            //InitWarp(time:seconds + eta:periapsis, "periapsis").
+            //InitWarp(Time:Seconds + eta:periapsis, "periapsis").
             local workingAlt to stagingAlt.
             local updateDoneFlag to False.
             set g_TermChar to "".
@@ -175,107 +175,7 @@ OutInfo("", 1).
 OutMsg("Beginning Reentry Procedure").
 wait 1.
 
-// if retroFire and ship:periapsis > reentryTgt
-// {
-//     OutInfo("Target reentry alt: " + round(reentryTgt) + " (" + round(ship:periapsis) + ")", 1).
-//     set s_Val to ship:retrograde.
-//     local settleTime to 5.
-//     local progCounter to 0.
-//     local progTimer to time:seconds + 2.5.
-//     local progMarker to "".
-//     set ts to time:seconds + settleTime.
-//     until time:seconds >= ts
-//     {
-//         if not GetSteeringError(0.050)
-//         {
-//             set ts to time:seconds + settleTime.
-//             set progCounter to progTimer - time:seconds.
-//             if progCounter <= 0 
-//             {
-//                 set progMarker to "".
-//                 set progTimer to time:seconds + 2.5.
-//             }
-//             else if progCounter >= 2 set progMarker to "".
-//             else if progCounter >= 1.5 set progMarker to ".".
-//             else if progCounter >= 1 set progMarker to "..".
-//             else if progCounter >= 0.5 set progMarker to "...".
-//             OutMsg("Retro alignment in progress" + progMarker).
-//             set progCounter to 0.
-//         }
-//         else
-//         {
-//             OutInfo("Settle time remaining: " + round(ts - time:seconds, 2)).
-//         }
-
-//         // DispTelemetry().
-//         wait 0.05.
-//     }
-//     OutInfo().
-//     OutInfo("", 1).
-
-//     // if stage:number > payloadStage
-//     // {
-//     //     OutMsg("[" + stage:number + "] Staging to payloadStage [" + payloadStage + "] for retro fire").
-//     //     until false 
-//     //     {
-//     //         if stage:number = payloadStage break.
-//     //         wait 0.50.
-//     //         if stage:ready stage.
-//     //         wait 0.50.
-//     //     }
-//     // }
-    
-//     if spinStab
-//     {
-//         OutMsg("Initiating spin stabilization").
-//         unlock steering.
-//         set ts to time:seconds + 7.5.
-//         until time:seconds > ts 
-//         {
-//             set ship:control:roll to 0.5.
-//             // DispTelemetry().
-//             wait 0.01.
-//         }
-//         OutMsg("Spin stabilization complete").
-//     }
-
-//     OutMsg("Firing retro rockets to stage " + retroStage).
-//     set t_Val to 1.
-//     until stage:number <= retroStage
-//     {
-//         stage.
-//         wait until stage:ready.
-//     }
-//     wait 0.05.
-//     local perfObj to GetEnginePerformanceData(GetActiveEngines()).
-//     until perfObj:ThrustAvailPres <= 0.1 or ship:periapsis <= reentryTgt
-//     {
-//         if stage = 1 set t_Val to 0.
-//         else if ship:periapsis <= reentryTgt + 10000
-//         {
-//             set t_Val to Max(0, Min(1, (ship:periapsis - reentryTgt) / 10000)).
-//         }
-//         // DispTelemetry().
-//     }
-//     set t_Val to 0.
-//     OutMsg("Retro fire complete").
-//     wait 1.
-//     if spinStab
-//     {
-//         OutMsg("Stabilizing spin").
-//         set ts to time:seconds + 7.5.
-//         until time:seconds > ts
-//         {
-//             set ship:control:roll to -1.
-//             // DispTelemetry().
-//             wait 0.01.
-//             set ship:control:neutralize to true.
-//         }
-//     }
-//     OutInfo("", 1).
-// }
-
-set s_Val to lookDirUp(ship:retrograde:vector, Sun:Position).
+set s_Val to lookDirUp(ship:retrograde:vector, -Body:Position).
 
 OutMsg("Waiting until altitude <= " + startAlt).
 Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from an old keypress
@@ -300,7 +200,7 @@ until ship:altitude <= startAlt
     {
         // set s_Val to Ship:Retrograde. 
         set r_Val to g_rollCheckObj:DEL:UPDATE:Call(g_TermChar).
-        set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
+        set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val).
         Terminal:Input:Clear().
     }
     set g_TermChar to "".

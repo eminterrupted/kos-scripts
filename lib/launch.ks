@@ -120,9 +120,16 @@
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
-                set fShape to 1.3250.
+                set fShape to 1.0125.
                 set minPit to 2.5.
                 set pitLim to 50.
+                set pidVals to list(0.0025, 0.00125, 0.00125, 0.5). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            }
+            else if g_MissionTag:Mission:MatchesPattern("SubOrbital")
+            {
+                set fShape to 1.25.
+                set minPit to 0.25.
+                set pitLim to 12.5.
                 set pidVals to list(0.0025, 0.00125, 0.00125, 0.5). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
@@ -152,12 +159,7 @@
             set _delDependency["l_az_calc"] to _azData.
             set del to { if Ship:Altitude >= g_PresetTurnAlt { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). } else { return Heading(compass_for(Ship, Ship:Facing), 90, 0). }}.
         }
-        else if g_MissionTag:Mission = "SubOrbit"
-        {
-            set _delDependency["l_az_calc"] to _azData.
-            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Flat(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
-        }
-        else if g_MissionTag:Mission:MatchesPattern("^(Suborbital|PIDSubOrbital)") // Suborbital hop :: [0] Inclination and [1]Target Alt
+        else if g_MissionTag:Mission:MatchesPattern("^(SubOrbit|Suborbital|PIDSubOrbital)") // Suborbital hop :: [0] Inclination and [1]Target Alt
         {
             set _delDependency["l_az_calc"] to _azData.
             set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
@@ -755,12 +757,12 @@
         local turn_alt_end      to _ascAngObj:TRN_ALT_END.
         local turn_alt_start    to _ascAngObj:TRN_ALT_START.
                 
-        local breakPid to False.
+        local break_PID to False.
 
         if g_SpinActive 
         {
             if g_Debug OutDebug("g_SpinActive", 1).
-            set output_pitch to current_pitch.
+            set output_pitch to Max(-5, Min(15, current_pitch)).
             // set pitch_limit_max to max(pitch_limit_min, pitch_limit_max * 0.28).
         }
         else if current_alt > turn_alt_start
@@ -820,41 +822,72 @@
                 // * set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
                 set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
             }
-            else if (current_apo >= target_apo_thresh and ETA:Apoapsis <= ETA:Periapsis and not breakPid) or (g_PID_Active and current_alt >= Ship:Body:ATM:Height)
+            else if (current_apo >= target_apo_thresh and ETA:Apoapsis <= ETA:Periapsis and not break_PID) or (g_PID_Active and current_alt >= Ship:Body:ATM:Height)
             {
                 if not g_PID_Active set g_PID_Active to True.
+                local apo_PID to g_PIDS[_ascAngObj:APO_PID].
+
+                if g_TermChar:Length > 0
+                {
+                    if Unchar(g_TermChar) = 112
+                    {
+                        set apo_PID:kP to Round(apo_PID:kP * 0.91, 5).
+                    }
+                    else if Unchar(g_TermChar) = 80
+                    {
+                        set apo_PID:kP to Round(apo_PID:kP * 1.1, 5).
+                    }
+                    else if Unchar(g_TermChar) = 105
+                    {
+                        set apo_PID:kI to Round(apo_PID:kI * 0.91, 5).
+                    }
+                    else if Unchar(g_TermChar) = 73
+                    {
+                        set apo_PID:kI to Round(apo_PID:kI * 1.1, 5).
+                    }
+                    else if Unchar(g_TermChar) = 100
+                    {
+                        set apo_PID:kD to Round(apo_PID:kD * 0.91, 5).
+                    }
+                    else if Unchar(g_TermChar) = 68
+                    {
+                        set apo_PID:kD to Round(apo_PID:kD * 1.1, 5).
+                    }
+                    else if Unchar(g_TermChar) = 85
+                    {
+                        set _ascAngObj:RESET_PIDS to True.
+                    }
+                }
 
                 if g_Debug OutDebug("Prog 616_3", 3).
                 // PID STUFFS
                 set g_PID_Enabled to True.
                 if _ascAngObj:RESET_PIDS
                 {
-                    g_PIDS[_ascAngObj:APO_PID]:Reset().
+                    apo_PID:Reset().
                     set _ascAngObj:UPDATE_SETPOINT to True.
                     set _ascAngObj:RESET_PIDS to False.
                 }
 
                 if _ascAngObj:UPDATE_SETPOINT
                 {
-                    set g_PIDS[_ascAngObj:APO_PID]:Setpoint to target_apo.
+                    set apo_PID:Setpoint to target_apo.
                     set _ascAngObj:UPDATE_SETPOINT to False.
                 }
 
                 local pitGuard to list(2.5, 2.5).
-                // local pitGuard to list(1.25, 1.25).
                 local adjPitGuard to pitGuard[0].
                 if Stage:Number > g_StageLimit
                 {
                     set pitGuard  to list(1.25, 1.5).
-                    // set pitGuard  to list(0.25, 0.5).
                     local twrFactor to choose 1 if g_ActiveEngines_Data:TWR = 0 else g_ActiveEngines_Data:TWR.
                     set adjPitGuard to max(pitGuard[0], min(pitGuard[1], pitGuard[0] + ((twrFactor / Ship:Mass)))).
                 }
 
-                local apo_PID to g_PIDS[_ascAngObj:APO_PID].
                 local pid_pitch to (apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
                 set effective_pitch to max(current_pitch - adjPitGuard, min(pid_pitch, current_pitch + adjPitGuard)).
                 set output_pitch to max(PID_AoA_Min, min(effective_pitch, PID_AoA_Max)).
+                set g_PIDS[_ascAngObj:APO_PID] to apo_PID.
             }
             else
             {

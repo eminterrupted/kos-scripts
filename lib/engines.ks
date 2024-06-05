@@ -389,22 +389,7 @@
             {
                 set engsSpecs:HasGimbal to True.
             }
-            // set engsSpecs:AllowThrottle  to "".
-            // set engsSpecs:Ullage         to eng:Ullage or engsSpecs:Ullage.
-            // set engsSpecs:PressureFed    to eng:PressureFed.
-            set engsSpecs:Ignitions      to choose 99 if eng:Ignitions < 0 else max(engsSpecs:Ignitions, eng:Ignitions).
-            
-            // local cfg to eng:Config.
-            // if engsSpecs:Configs:HasKey(cfg)
-            // {
-            //     engsSpecs:Configs[cfg]:Add(eng:UID).
-            // }
-            // else
-            // {
-            //     engsSpecs:Configs:Add(cfg, list(eng:UID)).
-            // }
-
-            
+            set engsSpecs:Ignitions      to choose 99 if eng:Ignitions < 0 else max(engsSpecs:Ignitions, eng:Ignitions).          
 
             for resName in eng:ConsumedResources:Keys
             {
@@ -457,7 +442,6 @@
 
         if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
         {
-            // set engsSpecs:EstBurnTime to (Round(TotalResMass / AggregateMassLex:MaxMassFlow, 2)).
             local btResList to list().
             for res in AggregateMassLex:Engines:Resources:Values
             {
@@ -470,11 +454,6 @@
             }
             set engsSpecs:EstBurnTime to Round(bt, 2).
         }
-        // set engSpecs["ESTBURNTIME"] to choose (Round(TotalResMass / AggregateMassLex:MaxMassFlow, 2) if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0) else 0, 2).
-
-        // local burnTimeEstimate to max(TotalResMass, 0.0001) / min(max(AggregateMassLex:MAXMASSFLOW, 0.0001), 1000).
-        // set engsSpecs["ESTBURNTIME"] to Round(burnTimeEstimate, 2).
-
         return engsSpecs.
     }
 

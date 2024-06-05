@@ -163,41 +163,27 @@
             {
                 if g_ActiveEngines_Spec:Ignitions = 0
                 {
-                    // OutInfo("Failed Ignitions test [{0}]":Format(g_ActiveEngines_Spec:Ignitions), 1).
                     set useNext to True.
                 }
                 else if g_ActiveEngines_Spec:EstBurnTime <= g_ActiveEngines_Spec:SpoolTime + 0.25 
                 {
-                    // OutInfo("Failed burnTimeTest [{0}|{1}]":Format(Round(g_ActiveEngines_Spec:EstBurnTime, 2), Round(g_ActiveEngines_Spec:SpoolTime + 0.25, 2)), 1).
                     set useNext to True.
                 }
-                // else
-                // {
-                //     OutInfo("Passed checks for active engines", 1).
-                // }
             }
             else
             {
-                // OutInfo("Failed AllowRestart test [{0}]":Format(g_ActiveEngines_Spec:AllowRestart), 1).
                 set useNext to True.
             }
             if useNext 
             {
-                // OutInfo("Using NextEngines").
                 set burnEngs to GetNextEngines(Stage:Number).
                 set burnEngsSpec to GetEnginesSpecs(burnEngs).
             }
             else
             {
-                // OutInfo("Using active engines").
                 set burnEngs to g_ActiveEngines.
                 set burnEngsSpec to g_ActiveEngines_Spec.
             }
-            // Breakpoint().
-            // set f_BurnUllage to burnEngsSpec:Ullage.
-            // OutInfo("Ullage check: {0}":Format(f_BurnUllage), 1).
-            // OutDebug("Engines: {0}":Format(g_ActiveEngines:Join(";")), 1).
-            // Breakpoint().
 
             set burnEta to burnEta - burnEngsSpec:SpoolTime - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
             set g_MECO    to burnEta + fullDur.
@@ -217,10 +203,27 @@
             wait 0.01.
             lock steering to s_Val.
             
-            local burnLeadTime to UpdateTermScalar(15, list(1, 5, 15, 30)).
+            local preSpin to 0.
+            local spinArmed to False.
+            local spinETA to -1.
+            for p in Ship:PartsTaggedPattern("SpinDC")
+            {
+                if p:Stage = Stage:Number - 1
+                {
+                    if fullDur > burnEngsSpec:EstBurnTime
+                    {
+                        local pSplit to p:Tag:Split("|").
+                        set preSpin to choose pSplit[1]:ToNumber(10) if pSplit:Length > 1 else 10.
+                        set spinETA to burnETA - preSpin.
+                    }
+                }
+                set spinArmed to preSpin > 0.
+            }
+
+            local burnLeadTime to Max(preSpin * 1.12, UpdateTermScalar(15, list(1, 5, 15, 30))).
             local warpFlag to False.
 
-            until time:seconds >= burnEta
+            until Time:Seconds >= burnEta
             {
                 if Kuniverse:TimeWarp = 0 set warpFlag to False.
                 if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
@@ -231,7 +234,7 @@
                 if g_TermChar = ""
                 {
                 }
-                else if g_TermChar = Char(87)
+                else if g_TermChar = Char(87) // 'W'
                 {
                     if _inNode:ETA > burnLeadTime 
                     {
@@ -240,15 +243,15 @@
                         OutInfo().
                         OutInfo("", 1).
                         OutInfo("", 2).
-                        WarpTo(burnEta - burnLeadTime).
+                        WarpTo(burnEta - Max(burnLeadTime, preSpin * 1.12)).
                     }
                     else
                     {
-                        OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
+                        OutMsg("Maneuver <= {0}s, skipping warp":Format(Max(preSpin, burnLeadTime))).
                     }
                     set g_TermChar to "".
                 }
-                else if g_TermChar = Char(82)
+                else if g_TermChar = Char(82) // 'R'
                 {
                     OutInfo("Recalculating burn parameters").
                     OutInfo("", 1).
@@ -293,7 +296,7 @@
                 
                 if not warpFlag 
                 {
-                    set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
+                    set burnLeadTime to Max(preSpin * 1.12, UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30))).
                 }
 
                 if burnEngsSpec:Ullage
@@ -309,6 +312,52 @@
                 set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
                 DispBurnNodeData(dv, burnEta - Time:Seconds, burnDur[0]).
                 // OutInfo("Time Remaining: {0}s  ":Format(round(burnEta - Time:Seconds, 2)), 2).
+
+                local settleProgress to 0.
+                
+                // Spin
+                if preSpin > 0 
+                {
+                    set spinETA to burnETA - preSpin.
+                    set preSpin to 0.
+                }
+                if spinArmed
+                {
+                    if Time:Seconds >= spinETA
+                    {
+                        set Ship:Control:Roll to 1.
+                        set s_Val to _inNode:burnvector.
+                    }
+                    else if Time:Seconds >= burnETA - 0.01
+                    {
+                        set Ship:Control:Roll to 0.
+                        set spinArmed to false.
+                    }
+                    else 
+                    {
+                        OutInfo("Spin Armed (T-{0}) ":Format(Round(spinETA - Time:Seconds, 2))).
+                        set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    }
+                }
+                else
+                {
+                    set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    if settleProgress > 3
+                    {
+                        if VAng(Ship:Facing:Vector, _inNode:BurnVector) < 0.25
+                        {
+                            set settleProgress to settleProgress + 1.
+                            wait 1.
+                        }
+                        else
+                        {
+                            set settleProgress to 0.
+                        }
+                        OutInfo("Settle Progress: [{0}] (3 needed)":Format(settleProgress)).
+                    }
+                }
+                
+                set g_TermChar to "".
             }
 
             local dv0 to _inNode:deltav.
@@ -323,7 +372,7 @@
             set g_ActiveEngines to GetActiveEngines().
             set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
             set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-
+            
             local burnTimer         to Time:Seconds + burnDur[0].
             local burnTimeRemaining to burnDur[0].
             set t_Val to 1.
@@ -363,7 +412,7 @@
                 
                 set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
 
-                DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
+                DispBurnNodeData(dv, burnEta - Time:Seconds, burnTimeRemaining).
                 DispBurnPerfData().
 
                 if g_AutoStageArmed
@@ -443,11 +492,11 @@
         // soonest ETA. Else, choose the cheapest node.
         if nearestNode 
         {
-            set burn_utc to time:seconds + ETAtoTA(burnVesObt, node_ta).
-            if burn_utc > time:seconds + ship:orbit:period / 2 
+            set burn_utc to Time:Seconds + ETAtoTA(burnVesObt, node_ta).
+            if burn_utc > Time:Seconds + ship:orbit:period / 2 
             {
                 set node_ta to mod(node_ta + 180, 360).
-                set burn_utc to time:seconds + ETAtoTA(burnVes:obt, node_ta).
+                set burn_utc to Time:Seconds + ETAtoTA(burnVes:obt, node_ta).
             }
         }
         else 
@@ -456,7 +505,7 @@
             {
                 set node_ta to mod(node_ta + 180, 360).
             }
-            set burn_utc to time:seconds + ETAtoTA(burnVesObt, node_ta).
+            set burn_utc to Time:Seconds + ETAtoTA(burnVesObt, node_ta).
         }
 
         // Get the burn unit direction (burnvector direction)
@@ -513,13 +562,13 @@
             m:SetField("RCS", True).
         }
 
-        set g_SteeringDelegate to choose retDel@ if burnDir = "Retrograde" else proDel@.
-        set s_Val to g_SteeringDelegate:Call().
+        set s_ValingDelegate to choose retDel@ if burnDir = "Retrograde" else proDel@.
+        set s_Val to s_ValingDelegate:Call().
         lock steering to s_Val.
 
         until vAng(Ship:Facing:Vector, s_Val:Vector) <= 15
         {
-            set s_Val to g_SteeringDelegate:Call().
+            set s_Val to s_ValingDelegate:Call().
             wait 0.25.
         }
 
@@ -541,7 +590,7 @@
                 print "Ignition sequence success".
                 until Ship:AvailableThrust <= 0.1
                 {
-                    set s_Val to g_SteeringDelegate:Call().
+                    set s_Val to s_ValingDelegate:Call().
                 }
             }
         }

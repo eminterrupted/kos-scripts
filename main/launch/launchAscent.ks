@@ -238,9 +238,9 @@ until Alt:Radar >= towerHeight
         }
     }
     
-    DispStateFlags().
-    DispLaunchTelemetry().
     DispEngineTelemetry().
+    DispLaunchTelemetry().
+    DispStateFlags().
 }
 ClearDispBlock().
 
@@ -292,9 +292,9 @@ until Stage:Number <= g_StageLimit
     }
 
     set s_Val to g_SteeringDelegate:Call().
+    DispEngineTelemetry().
     DispStateFlags().
     DispLaunchTelemetry().
-    DispEngineTelemetry().
     if g_PID_Enabled 
     {
         DispPIDLoopValues(g_PIDS["TurnApo"]).
@@ -324,9 +324,9 @@ until Ship:AvailableThrust <= 0.1 or Ship:Periapsis >= _tgtPe
         ExecGLoopEvents().
     }
 
+    DispEngineTelemetry().
     DispStateFlags().
     DispLaunchTelemetry().
-    DispEngineTelemetry().
     if g_PID_Enabled 
     {
         DispPIDLoopValues(g_PIDS["TurnApo"]).
@@ -353,8 +353,8 @@ until Ship:Altitude >= Body:ATM:Height or Ship:VerticalSpeed < 0
         ExecGLoopEvents().
     }
 
-    DispStateFlags().
     DispLaunchTelemetry().
+    DispStateFlags().
     wait 0.01.
 }
 
