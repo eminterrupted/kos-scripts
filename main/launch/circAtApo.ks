@@ -46,6 +46,10 @@ if params:length > 0
     if params:length > 1 set tgtPe to params[1].
     if params:length > 2 set azData to params[2].
 }
+if tgtAp > Ship:Apoapsis
+{
+    set tgtAp to Ship:Apoapsis.
+}
 
 if azData:Length = 1
 {

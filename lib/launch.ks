@@ -36,8 +36,8 @@
     global g_la_turnAltEnd   to body:Atm:height * 0.90. // 0.925 // Altitude at which the vessel will end a gravity turn
     global g_PresetTurnAlt to 250.
 
-    global g_alt_PID to PidLoop(1.0, 0.05, 0.001, -1, 1).
-    global g_apo_pid  to PidLoop(1.0, 0.05, 0.001, -1, 1).
+    global g_alt_PID to PidLoop(0.05, 0.01, 0.0325, -1, 1).
+    global g_apo_pid  to PidLoop(0.005, 0.0005, 0.00325, -1, 1).
     global g_ascentProfile to lexicon().
     // global g_azData to list().
 
@@ -379,7 +379,7 @@
                   _pitLimMin is Ascent_AoA_Min,
                   _pitLimMax is Ascent_AoA_Max,
                   _initPids is false,
-                  _pidVals is list(0.0025, 0.0015, 0.00125, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                  _pidVals is list(0.025, 0.0005, 0.020, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
@@ -875,11 +875,11 @@
                     set _ascAngObj:UPDATE_SETPOINT to False.
                 }
 
-                local pitGuard to list(2.5, 2.5).
+                local pitGuard to list(5, 5).
                 local adjPitGuard to pitGuard[0].
                 if Stage:Number > g_StageLimit
                 {
-                    set pitGuard  to list(1.25, 1.5).
+                    set pitGuard  to list(2.5, 2.5).
                     local twrFactor to choose 1 if g_ActiveEngines_Data:TWR = 0 else g_ActiveEngines_Data:TWR.
                     set adjPitGuard to max(pitGuard[0], min(pitGuard[1], pitGuard[0] + ((twrFactor / Ship:Mass)))).
                 }
@@ -887,7 +887,7 @@
                 local pid_pitch to (apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
                 set effective_pitch to max(current_pitch - adjPitGuard, min(pid_pitch, current_pitch + adjPitGuard)).
                 set output_pitch to max(PID_AoA_Min, min(effective_pitch, PID_AoA_Max)).
-                set g_PIDS[_ascAngObj:APO_PID] to apo_PID.
+                // set g_PIDS[_ascAngObj:APO_PID] to apo_PID.
             }
             else
             {

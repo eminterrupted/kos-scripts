@@ -2136,7 +2136,7 @@
 
         if g_AngDependency:Keys:Length = 0
         {
-            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.00275, 0.00125, 0.0075, 1)). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
+            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.0275, 0.0075, 0.0125, 1)). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
         }
 
         // Branching
