@@ -109,7 +109,7 @@
 
         return list (pe, ap).
     }
-
+    
     // Eccentricity from apoapsis and periapsis
     global function GetEccFromApPe
     {

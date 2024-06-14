@@ -221,6 +221,7 @@ local function ExecCircBurn
     if Career():CanMakeNodes 
     {
         runPath("0:/main/launch/circMnvAtApo", list(tgtAp, tgtPe, azObj)).
+        // runPath("0:/main/launch/insertOrbitMnv", list(tgtPe, g_StageLimit)).
     }
     else
     {

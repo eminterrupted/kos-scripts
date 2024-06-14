@@ -8,13 +8,22 @@ RunOncePath("0:/lib/libLoader").
 set g_MainProcess to ScriptPath().
 DispMain().
 
-ParseCoreTag(Core:Tag).
-
 local burnAt  to "ap".
 local compVal to "pe".
+local stageLimit to 0.
 local tgtAp   to Ship:Apoapsis.
 local tgtEcc  to 0.0025.
 local tgtPe   to tgtAp.
+
+ParseCoreTag(Core:Tag).
+
+// if _params:Length > 0
+// {
+//     set tgtAp to _params[0].
+//     if _params:Length > 1 set tgtPe to _params[1].
+//     // if _params:Length > 2 set stageLimit to _params[2].
+// }
+
 
 local tgtApTag to Round(tgtAp / 1000):ToString + "Km".
 
@@ -52,6 +61,11 @@ if _params:Length > 0
             }
             set tgtEcc to GetEccFromApPe(tgtAp, tgtPe, Ship:Body).
         }
+
+        if _params:Length > 2 
+        {
+            set g_AzData to _params[2].
+        }
     }
     else
     {
@@ -69,10 +83,10 @@ if _params:Length > 0
     }
 }
 
+set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
 OutMsg("Calculated DV Needed: {0}":Format(Round(dvNeeded[1], 2))).
-// OutInfo("[Params] TgtAp: {0} | burnAt: {1} | compVal: {2}":Format(tgtAP, burnAt, compVal)).
-// Breakpoint().
+
 local nodeTS to Time:Seconds + ETA:Apoapsis.
 if burnAt = "Ap"
 {
@@ -99,7 +113,7 @@ add circNode.
 
 local execFlag to True.
 
-if circNode:DeltaV:Mag < 25 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:Height
+if circNode:DeltaV:Mag < 1 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:Height
 {
     set g_TS to Time:Seconds + 5.
     OutInfo("DV Below skip threshold!").
@@ -115,13 +129,11 @@ if circNode:DeltaV:Mag < 25 and circNode:ETA > 10 and Ship:Periapsis > Body:Atm:
     }
 }
 
-SetupSpinStabilizationEventHandler().
-
 OutInfo().
 
 if execFlag 
 {
-    ExecNodeBurn(circNode).
+    ExecNodeBurn_Next(circNode, stageLimit).
     OutMsg("Maneuver complete").
 }
 else

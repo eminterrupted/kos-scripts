@@ -1,11 +1,19 @@
 @LazyGlobal off.
 ClearScreen.
 
+parameter _params is list().
+
 RunOncePath("0:/lib/libLoader.ks").
 
 set g_MainProcess to ScriptPath().
 DispMain().
 
+local stageLimit to 0.
+
+if _params:Length > 0
+{
+    set stageLimit to ParseStringScalar(_params[0], stageLimit).
+}
 SAS off.
 RCS on.
 
@@ -26,7 +34,8 @@ until doneFlag
     wait 0.01.
 }
 
+set g_StageLimit to stageLimit.
 if HasNode
 {
-    ExecNodeBurn(NextNode).
+    ExecNodeBurn_Next(NextNode, stageLimit).
 }

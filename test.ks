@@ -171,7 +171,7 @@ local function RefreshData
         "***INFO",      "-",
         "NAME",         _eng:Name,
         "TITLE",        _eng:Title,
-        "CID",          _eng:Cid,
+        "UID",          _eng:UID,
         "STAGE",        _eng:Stage,
         "DECOUPLEDIN",  _eng:DecoupledIn,
         // "ROTATION",     _eng:Rotation,

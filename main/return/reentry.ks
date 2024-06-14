@@ -14,7 +14,7 @@ SAS off.
 local presLog to "0:/data/log/Earth_Pressure.csv".
 
 local chuteStatus to "N/A".
-local fairings to ship:PartsTaggedPattern("fairing\|reentry").
+local fairings to ship:PartsTaggedPattern("(reentry|return|descent)\|fairing").
 local jettAlt to 5000.
 
 local gemBDBChute to choose Ship:PartsNamed("ROC-GeminiParachuteBDB")[0] if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0 else Core:Part.
@@ -72,7 +72,7 @@ if retroFire or HasNode
     if retroType = 1 or HasNode
     {
         SetNextStageLimit(retroStage).
-        ExecNodeBurn(NextNode).
+        ExecNodeBurn_Next(NextNode, 2).
     }
 }
 

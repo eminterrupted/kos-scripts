@@ -25,6 +25,7 @@
     global g_NextEngines_Data       to lexicon().
     global g_NextEngines_Spec       to lexicon().
 
+    global g_ShipEngines            to GetShipEnginesByStage().
     global g_ShipEngines_Spec       to lexicon().
     // #endregion
 
@@ -84,6 +85,11 @@
         ,"PUPE"
         ,"NGNC"
     ).
+// #endregion
+
+// Initialization code
+// #region
+// HydrateEngineConfigs().
 // #endregion
 
 
@@ -263,6 +269,24 @@
         // OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
         return nextStg.
     }
+
+    //
+    global function GetShipEnginesByStage
+    {
+        local engLex to lexicon().
+        for eng in Ship:Engines
+        {
+            if engLex:HasKey(eng:Stage)
+            {
+                engLex[eng:Stage]:Add(eng).
+            }
+            else
+            {
+                engLex:Add(eng:Stage, list(eng)).
+            }
+        }
+        return engLex.
+    }
     // #endregion
 
     // *- Engine Specifications
@@ -291,7 +315,8 @@
             "ActiveStage",      _eng:Stage
             ,"AllowRestart",    _eng:AllowRestart
             ,"AllowShutdown",   _eng:AllowShutdown
-            ,"CID",              _eng:CID
+            ,"UID",             _eng:UID
+            ,"DCStg",           _eng:DecoupledIn
             ,"EngConfig",       _eng:Config
             ,"EngName",         _eng:Name
             ,"EngTitle",        _eng:Title
@@ -299,6 +324,7 @@
             ,"FuelStability",   fuelStabilityScalar
             ,"HasGimbal",       _eng:HasGimbal
             ,"Ignitions",       GetField(m, "ignitions remaining")
+            ,"IgnitionStg",     _eng:Stage
             ,"IsSepMotor",      sepMotorCheck
             ,"ISP",             _eng:ISP
             ,"ISPSeaLevel",     _eng:SeaLevelISP
@@ -316,12 +342,13 @@
             ,"ThrustPoss",      _eng:PossibleThrust
             ,"ThrustAvail",     _eng:AvailableThrust
             ,"Ullage",          _eng:Ullage
+            ,"UID",             _eng:UID
         ).
         return engSpecObj.
     }
 
     // GetEnginesSpecs :: (_engList)<List> -> (engsSpecs)<Lexicon>
-    // Engine specs for a list of engines, keyed by the engine unique vessel identifier (CID)
+    // Engine specs for a list of engines, keyed by the engine unique vessel identifier (UID)
     global function GetEnginesSpecs
     {
         parameter _engList.
@@ -335,12 +362,16 @@
         ).
         
         local engsSpecs to lexicon(
-            "SpoolTime",            0
+            "AvgExhVelo",           0
+            ,"AvgISP",              0
+            ,"EstBurnTime",         0
             ,"FuelStabilityAvg",    0
             ,"FuelStabilityMin",    0
-            ,"EstBurnTime",         0
-            ,"StgThrust",           0
             ,"Ignitions",           0
+            ,"SpoolTime",           0
+            ,"StgMass",             0
+            ,"StgShipMass",         0
+            ,"StgThrust",           0
             ,"AllowRestart",        False
             ,"AllowShutdown",       False
             ,"AllowThrottle",       False
@@ -354,107 +385,134 @@
             ,"Engines",             lexicon()
         ).
 
-        from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
+        if _engList:Length = 0
         {
-            local eng to _engList[i].
+            return engsSpecs.
+        }
+        else
+        {
+            local totalThrust to 0.
+            local ispWeighting to 0.
             
-            local engSpecs to GetEngineSpecs(eng).
-            set engsSpecs["SpoolTime"] to max(engsSpecs:SpoolTime, engSpecs:SpoolTime).
-            
-            set engsSpecs["StgThrust"] to engsSpecs["StgThrust"] + engSpecs["ThrustPoss"].
+            from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
+            {
+                local eng to _engList[i].
+                
+                local engSpecs to GetEngineSpecs(eng).
+                set engsSpecs["SpoolTime"] to max(engsSpecs:SpoolTime, engSpecs:SpoolTime).
+                
+                set engsSpecs["StgThrust"] to engsSpecs["StgThrust"] + engSpecs["ThrustPoss"].
 
-            set fuelStabilityMin to min(engSpecs:FuelStability, fuelStabilityMin).
-            set engsSpecs["FuelStabilityMin"] to fuelStabilityMin.
-            
-            set fuelStabilityAvg to ((engsSpecs:FuelStabilityAvg * i) + engSpecs:FuelStability) / (i + 1).
-            set engsSpecs["FuelStabilityAvg"] to fuelStabilityAvg.
+                set fuelStabilityMin to min(engSpecs:FuelStability, fuelStabilityMin).
+                set engsSpecs["FuelStabilityMin"] to fuelStabilityMin.
+                
+                set fuelStabilityAvg to ((engsSpecs:FuelStabilityAvg * i) + engSpecs:FuelStability) / (i + 1).
+                set engsSpecs["FuelStabilityAvg"] to fuelStabilityAvg.
 
-            set AggregateMassLex:MAXMASSFLOW to AggregateMassLex:MAXMASSFLOW + eng:MaxMassFlow.
-            set AggregateMassLex["Engines"] to lexicon(
-                eng:Name, lexicon()
-            ).
-            if eng:AllowRestart
-            {
-                set engsSpecs:AllowRestart to True.
-            }
-            if eng:AllowShutdown
-            {
-                set engsSpecs:AllowShutdown to True.
-            }
-            if eng:Ullage
-            {
-                set engsSpecs:Ullage to True.
-            }
-            if eng:HasGimbal
-            {
-                set engsSpecs:HasGimbal to True.
-            }
-            set engsSpecs:Ignitions      to choose 99 if eng:Ignitions < 0 else max(engsSpecs:Ignitions, eng:Ignitions).          
-
-            for resName in eng:ConsumedResources:Keys
-            {
-                local engResource to eng:ConsumedResources[resName].
-                local resMass to (engResource:Amount * engResource:Density).
-                if eng:GetModule("ModuleEnginesRF"):HasField("Predicted Residuals")
+                set AggregateMassLex:MAXMASSFLOW to AggregateMassLex:MAXMASSFLOW + eng:MaxMassFlow.
+                set AggregateMassLex["Engines"] to lexicon(
+                    eng:Name, lexicon()
+                ).
+                if eng:AllowRestart
                 {
-                    set resMass to resMass * (1 - GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals")).
+                    set engsSpecs:AllowRestart to True.
                 }
-
-                if not AggregateMassLex:Engines:HasKey("Resources")
+                if eng:AllowShutdown
                 {
-                    set TotalResMass to TotalResMass + resMass.
-                    AggregateMassLex:Engines:Add(
-                        "Resources", lexicon(
-                            resName, lexicon(
-                                "Amount",       engResource:Amount
-                                ,"Capacity",    engResource:Capacity
-                                ,"Density",     engResource:Density
-                                ,"Mass",        resMass
-                                ,"MaxMassFlow", engResource:MaxMassFlow
-                                ,"Ratio",       engResource:Ratio
-                            )
-                        )
-                    ).
+                    set engsSpecs:AllowShutdown to True.
                 }
-                else
+                if eng:Ullage
                 {
-                    if AggregateMassLex:Engines:Resources:HasKey(resName)
+                    set engsSpecs:Ullage to True.
+                }
+                if eng:HasGimbal
+                {
+                    set engsSpecs:HasGimbal to True.
+                }
+                set engsSpecs:Ignitions      to choose 99 if eng:Ignitions < 0 else max(engsSpecs:Ignitions, eng:Ignitions).          
+
+                for resName in eng:ConsumedResources:Keys
+                {
+                    local engResource to eng:ConsumedResources[resName].
+                    local resMass to (engResource:Amount * engResource:Density).
+                    if eng:GetModule("ModuleEnginesRF"):HasField("Predicted Residuals")
                     {
-                        set AggregateMassLex:Engines:Resources[resName]:MaxMassFlow to AggregateMassLex:Engines:Resources[resName]:MaxMassFlow + engResource:MaxMassFlow.
+                        set resMass to resMass * (1 - GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals")).
+                    }
+
+                    if not AggregateMassLex:Engines:HasKey("Resources")
+                    {
+                        set TotalResMass to TotalResMass + resMass.
+                            AggregateMassLex:Engines:Add(
+                                "Resources", lexicon(
+                                    resName, lexicon(
+                                        "Amount",       engResource:Amount
+                                        ,"Capacity",    engResource:Capacity
+                                        ,"Density",     engResource:Density
+                                        ,"Mass",        resMass
+                                        ,"MaxMassFlow", engResource:MaxMassFlow
+                                        ,"Ratio",       engResource:Ratio
+                                    )
+                                )
+                            ).
                     }
                     else
                     {
-                        AggregateMassLex:Engines:Resources:Add(
-                            resName, lexicon(
-                                "Amount",       engResource:Amount
-                                ,"Capacity",    engResource:Capacity
-                                ,"Density",     engResource:Density
-                                ,"Mass",        resMass
-                                ,"MaxMassFlow", engResource:MaxMassFlow
-                                ,"Ratio",       engResource:Ratio
-                            )
-                        ).
+                        if AggregateMassLex:Engines:Resources:HasKey(resName)
+                        {
+                            set AggregateMassLex:Engines:Resources[resName]:MaxMassFlow to AggregateMassLex:Engines:Resources[resName]:MaxMassFlow + engResource:MaxMassFlow.
+                        }
+                        else
+                        {
+                            AggregateMassLex:Engines:Resources:Add(
+                                resName, lexicon(
+                                    "Amount",       engResource:Amount
+                                    ,"Capacity",    engResource:Capacity
+                                    ,"Density",     engResource:Density
+                                    ,"Mass",        resMass
+                                    ,"MaxMassFlow", engResource:MaxMassFlow
+                                    ,"Ratio",       engResource:Ratio
+                                )
+                            ).
+                        }
                     }
                 }
-            }
-            engsSpecs:Engines:Add(eng:CID, engSpecs).
-        }
 
-        if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
-        {
-            local btResList to list().
-            for res in AggregateMassLex:Engines:Resources:Values
-            {
-                btResList:Add(res:Mass / res:MaxMassFlow).
+                // ISP
+                set totalThrust to totalThrust + eng:PossibleThrust.
+                set ispWeighting to ispWeighting + (eng:PossibleThrust / eng:ISPAt(Body:ATM:AltitudePressure(Ship:Altitude))).
+
+                engsSpecs:Engines:Add(eng:UID, engSpecs).
             }
-            local bt to 999999999.
-            from { local i to 0.} until i = btResList:Length step { set i to i + 1.} do
+            if totalThrust = 0
             {
-                set bt to Min(bt, btResList[i]).
+                set engsSpecs:AvgISP to 0.00001.
             }
-            set engsSpecs:EstBurnTime to Round(bt, 2).
+            else
+            {
+                // OutDebug("EffectiveISP  : " + allPossibleThrust / allWeightedThrust, crDbg()).
+                set engsSpecs:AvgISP to choose 0 if totalThrust = 0 or ispWeighting = 0 else totalThrust / ispWeighting.
+            }
+            set engsSpecs:AvgExhVelo to Constant:g0 * engsSpecs:AvgISP.
+            set engsSpecs:StgShipMass to GetStageMass(engsSpecs:Engines:Values[0]:IgnitionStg).
+
+            if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
+            {
+                local btResList to list().
+                for res in AggregateMassLex:Engines:Resources:Values
+                {
+                    btResList:Add(res:Mass / res:MaxMassFlow).
+                }
+                local bt to 999999999.
+                from { local i to 0.} until i = btResList:Length step { set i to i + 1.} do
+                {
+                    set bt to Min(bt, btResList[i]).
+                }
+                set engsSpecs:EstBurnTime to Round(bt, 2).
+            }
+
+            return engsSpecs.
         }
-        return engsSpecs.
     }
 
     // GetShipEnginesSpecs :: (_ves)(vessel) -> (engStgObj)(Engines Specs By Stage)
@@ -477,17 +535,19 @@
             set isSepStage      to choose true if isSepStage or engSpecs:IsSepMotor else false.
             if engStgObj:HasKey(eng:Stage)
             {
-                set engStgObj[eng:Stage]["EngSpecs"][eng:CID] to engSpecs.
+                set engStgObj[eng:Stage]["EngSpecs"][eng:UID] to engSpecs.
                 engStgObj[eng:Stage]["EngList"]:Add(eng).
+                engStgObj[eng:Stage]["ENGUID"]:Add(eng:UID).
             }
             else
             {
                 set engStgObj[eng:Stage] to lexicon(
                     "EngSpecs", lexicon(
-                        eng:CID, engSpecs
+                        eng:UID, engSpecs
                     )
                     ,"StgSpec", lexicon()
                     ,"EngList", list(eng)
+                    ,"ENGUID", list(eng:UID)
                 ).
             }
             set engStgObj[eng:Stage]["IsSepStage"] to isSepStage.
@@ -510,6 +570,79 @@
 
     // *- Engine Specification Helpers
     // #region
+
+    // GetPredictedBurnTime -- 
+    global function GetPredictedBurnTime
+    {
+        parameter _engs is g_NextEngines.
+
+        local btRemaining to 999999.
+        local dcStg to -1.
+        local stgResLex to lexicon().
+
+        // Get engine mass flows and residuals
+        for eng in _engs
+        {
+            set dcStg to eng:DecoupledIn.
+            local residuals to 0.00000000001.
+            if eng:HasModule("ModuleEnginesRF")
+            {
+                local m to eng:GetModule("ModuleEnginesRF").
+                set   residuals to 1 - GetField(m, "predicted residuals", 0).
+            }
+
+            for cres in eng:ConsumedResources:Values
+            {
+                if not stgResLex:HasKey(cres:Name)
+                {
+                    stgResLex:Add(cres:Name, lexicon(
+                        "Amount",           0
+                        ,"Density",         cres:Density
+                        ,"MaxMassFlow",     0
+                        ,"Engs",            lexicon()
+                        )
+                    ).
+                }
+                stgResLex[cres:Name]:Engs:Add(eng:UID, list(cres:MaxMassFlow * residuals)).
+                set stgResLex[cres:Name]:MaxMassFlow to stgResLex[cres:Name]:MaxMassFlow + (cres:MaxMassFlow * residuals).
+            }
+        }
+
+        // Based on engine stage, find the resources. This wouldn't be necessary if ConsumedResources would actually work when the engine isn't active :(
+        local resList to list().
+        list Resources in resList.
+        for res in resList
+        {
+            if stgResLex:HasKey(res:Name)
+            {
+                local resAmt to 0.
+                local resCap to 0.
+                
+                for p in res:Parts
+                {
+                    if p:DecoupledIn = dcStg
+                    {
+                        for pRes in p:Resources
+                        {
+                            if pRes:Name = res:Name
+                            {
+                                set resAmt to resAmt + pRes:Amount.
+                                set resCap to resCap + pRes:Capacity.
+                            }
+                        }
+                    }
+                }
+
+                set stgResLex[res:Name]:Amount to resAmt.
+                set stgResLex[res:Name]:Capacity to resCap.
+                
+                set btRemaining to Min((stgResLex[res:Name]:Amount * stgResLex[res:Name]:Density) / stgResLex[res:Name]:MaxMassFlow, btRemaining).
+            }
+        }
+
+        return btRemaining.
+    }
+
     // GetTotalISP :: (<list>Engines) -> <scalar>
     // Returns averaged ISP for a list of engines
     global function GetTotalIsp
@@ -517,37 +650,37 @@
         parameter _engList, 
                   _mode is "vac".
 
-        local relThr to 0.
-        local totThr to 0.
+        local ispWeighting to 0.
+        local totalThrust to 0.
 
         local engIsp to { 
-            parameter eng. 
-            if _mode = "vac" return eng:VISP.
-            if _mode = "sl" return eng:SLISP.
-            if _mode = "cur" return eng:ispAt(body:ATM:AltitudePressure(Ship:Altitude)).
+            parameter __eng,
+                      __mode.
+            if __mode = "vac" return __eng:VISP.
+            if __mode = "sl" return __eng:SLISP.
+            if __mode = "cur" return __eng:ispAt(body:ATM:AltitudePressure(Ship:Altitude)).
         }.
 
         if _engList:Length > 0 
         {
             for eng in _engList
             {
-                set totThr to totThr + eng:PossibleThrust.
-                set relThr to relThr + (eng:PossibleThrust / engIsp(eng)).
+                set totalThrust to totalThrust + eng:PossibleThrust.
+                set ispWeighting to ispWeighting + (eng:PossibleThrust / engIsp(eng, _mode)).
             }
 
-            // clrDisp(30).
-            // print "GetTotalIsp                    " at (2, 30).
-            // print "stg: " + stg.
-            // print "totThr: " + totThr at (2, 31).
-            // print "relThr: " + relThr at (2, 32).
-            //Breakpoint().
-            if totThr = 0
+            // OutDebug("GetTotalIsp  ", crDbg(10)).
+            // OutDebug("Engine Stage : " + _engList[0]:Stage, crDbg()).
+            // OutDebug("totalThrust  : " + totalThrust, crDbg()).
+            // OutDebug("ispWeighting : " + ispWeighting, crDbg()).
+
+            if totalThrust = 0 or ispWeighting = 0
             {
                 return 0.00001.
             }
             else
             {
-                return totThr / relThr.
+                return totalThrust / ispWeighting.
             }
         }
         else
@@ -639,7 +772,7 @@
 
         //:ToNumber(1) / 100.
         local engPerfObj to lexicon(
-            "CID",              _eng:CID
+            "UID",              _eng:UID
             ,"EngName",         _eng:Name
             ,"EngTitle",        _eng:Title
             ,"FailureCause",    failureCause
@@ -713,7 +846,7 @@
                     set aggFailureObj[engLex:Status] to 
                     (
                         lexicon(
-                            eng:CID, list(
+                            eng:UID, list(
                                 eng:Name,
                                 engLex:FailureCause
                             )
@@ -722,11 +855,11 @@
                 }
                 else
                 {
-                    aggFailureObj[engLex:Status]:Add(eng:CID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
+                    aggFailureObj[engLex:Status]:Add(eng:UID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
                 }
             }
                 
-            set aggEngPerfObj["Engines"][eng:CID] to engLex.
+            set aggEngPerfObj["Engines"][eng:UID] to engLex.
 
             if aggEngPerfObj["SepStg"] 
             {
@@ -813,7 +946,7 @@
 
 
 
-
+    // GetEnginesBurnTimeRemaining
     global function GetEnginesBurnTimeRemaining
     {
         parameter _engList.
@@ -873,6 +1006,7 @@
     }
 
 
+    // GetEnginesBurnTimeRemaining_Next
     global function GetEnginesBurnTimeRemaining_Next
     {
         parameter _engList.
@@ -890,45 +1024,77 @@
 
         local doneFlag to false.
 
-        from { local i to 0.} until i >= _engList:Length step { set i to i + 1.} do
+        if _engList:Length = 0
         {
-            set engFuelMass to 0.
-            set engMassFlow to 0.
-
-            set engineBurnTime to 0.
-            local eng to _engList[i].
-            // local engCount to i + 1.
-
-            local m to eng:GetModule("ModuleEnginesRF").
-            set engineResiduals to m:GetField("Predicted Residuals").
-
-            set doneFlag to false.
-            from { local _i to 0.} until _i >= eng:ConsumedResources:Values:Length or doneFlag step { set _i to _i + 1.} do
-            {
-                local engResource to eng:ConsumedResources:Values[_i].
-                // OutInfo("Processing Resource: {0}":Format(engResource:Name)).
-                if engResource:MassFlow > 0 
-                {
-                    set engFuelMass to engFuelMass + (engResource:amount * engResource:density).
-                    
-                    
-                    set allFuelMass to allFuelMass - (allFuelMass * engineResiduals).
-                    set allMassFlow to allMassFlow + engResource:MassFlow.
-                    set maxMassFlow to maxMassFlow + engResource:MaxMassFlow.
-                    set engineBurnTime   to (allFuelMass - (allFuelMass * engineResiduals)) / engResource:MaxMassFlow.
-                    set burnTimeRemaining  to burnTimeRemaining + engineBurnTime.
-                    set doneFlag to true.
-                }
-            }
-            set residualsAverage to (residualsAverage + engineResiduals) / _engList:Length.
+            return burnTimeRemaining.
         }
-        set burnTimeTotal to burnTimeRemaining / _engList:Length.
-        set burnTimeTotal to choose 999999 if burnTimeTotal = 0 else burnTimeTotal.
-        // OutInfo("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeTotal, 2))).
-        return burnTimeTotal.
-    }
+        else
+        {
+            from { local i to 0.} until i >= _engList:Length step { set i to i + 1.} do
+            {
+                set engFuelMass to 0.
+                set engMassFlow to 0.
 
+                set engineBurnTime to 0.
+                local eng to _engList[i].
+                // local engCount to i + 1.
+
+                local m to eng:GetModule("ModuleEnginesRF").
+                set engineResiduals to m:GetField("Predicted Residuals").
+
+                set doneFlag to false.
+                from { local _i to 0.} until _i >= eng:ConsumedResources:Values:Length or doneFlag step { set _i to _i + 1.} do
+                {
+                    local engResource to eng:ConsumedResources:Values[_i].
+                    // OutInfo("Processing Resource: {0}":Format(engResource:Name)).
+                    if engResource:MassFlow > 0 
+                    {
+                        set engFuelMass to engFuelMass + (engResource:amount * engResource:density).
+                        
+                        
+                        set allFuelMass to allFuelMass - (allFuelMass * engineResiduals).
+                        set allMassFlow to allMassFlow + engResource:MassFlow.
+                        set maxMassFlow to maxMassFlow + engResource:MaxMassFlow.
+                        set engineBurnTime   to (allFuelMass - (allFuelMass * engineResiduals)) / engResource:MaxMassFlow.
+                        set burnTimeRemaining  to burnTimeRemaining + engineBurnTime.
+                        set doneFlag to true.
+                    }
+                }
+                set residualsAverage to (residualsAverage + engineResiduals) / _engList:Length.
+            }
+            set burnTimeTotal to choose 0 if burnTimeRemaining = 0 else burnTimeRemaining / _engList:Length.
+            set burnTimeTotal to choose 999999 if burnTimeTotal = 0 else burnTimeTotal.
+            // OutInfo("GetEnginesBurnTimeRemainingExit: {0}s":Format(Round(burnTimeTotal, 2))).
+            return burnTimeTotal.
+        }
+    }
     // #endregion
+
+    // *- Engine Config Hydration
+    // #region
+    
+    // HydrateEngineConfigs
+    // Reads file at 0:/data/ref/eng.cfg if present
+    // If not present, sets a flag that these calculations must be done via fuel burn estimates. 
+    // Parameter to optionally write any new types present in g_EngineConfgs after g_ShipEngines hydration to file
+    local function HydrateEngineConfigs
+    {
+        parameter _cacheConfigs to false.
+
+        local cfgSet to lex().
+
+        if exists(l_EngCfgPath)
+        {
+            local cachedCfgs to Open(l_EngCfgPath):ReadAll:String:Split(char(10)).
+            for cfg in cachedCfgs
+            {
+                local cfgParts to cfg:Split(",").
+                cfgSet:Add(cfgParts[0], list(cfgParts[1]:ToNumber(-1), cfgParts[2]:ToNumber(0))).
+            }
+        }
+        set g_EngineConfigs to cfgSet.
+    }
+    // @endregion
 
     // *- Event Handlers
     // #region
@@ -942,7 +1108,7 @@
 
         for p in MECOEngList 
         { 
-            MECO_EngineID_List:Add(p:CID).
+            MECO_EngineID_List:Add(p:UID).
         }
 
         local MECO_Time to MECOEngList[0]:Tag:Replace("{0}|MECO|":Format(_execStr),""):ToNumber(-1).
@@ -962,7 +1128,7 @@
                 {
                     local eng to g_ActiveEngines[i].
                     
-                    if engIDList:Contains(eng:CID)
+                    if engIDList:Contains(eng:UID)
                     {
                         if eng:Ignition and not eng:flameout
                         {
@@ -971,7 +1137,7 @@
                             // {
                             //     DoAction(eng:Gimbal, "Lock Gimbal", true).
                             // }
-                            engIDList:Remove(engIDList:Find(eng:CID)).
+                            engIDList:Remove(engIDList:Find(eng:UID)).
                         }
                     }
                 }

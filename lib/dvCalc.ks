@@ -278,12 +278,9 @@
         {
             local stgEngs to GetEnginesForStage(key).
             local stgSpecs to GetEnginesSpecs(stgEngs).
-            local exhVel to GetExhVel(stgEngs).
+            local exhVel to stgSpecs:AvgExhVelo. // GetExhVel(stgEngs, "vac").
             local stgThr to stgSpecs:StgThrust.
             local vesMass to GetStageMass(key)["ship"].
-            // print "exhVel: " + exhVel.
-            // print "stgThr: " + stgThr.
-            // print "vesMass: " + vesMass.
 
             local fullDur to (((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Full"][key] / exhVel)))).
             set burnDurObj["Full"] to burnDurObj["Full"] + fullDur.
@@ -388,7 +385,6 @@
         }
 
         set dvStgObj["avail"] to availDv.
-        // print "availDv: " + availDv.
         return dvStgObj.
     }
 
@@ -398,47 +394,30 @@
     {
         parameter stg, mode is "vac".
 
-        //Problem is in calculating fuel mass in StageMass function
-
-
         local dv to 0.
         local exhVel to 0.
-        local stgEngs to GetEnginesForStage(stg).
-        local stgMass to Lexicon("Ship", 0 , "Fuel", 0).
-
-        // OutDebug("[AvailStageDV][{0}] stgEngs:":Format(stg, stgEngs:Join(";")), crDbg(2)).
+        local stgEngs to GetEnginesForStage(stg). 
+        local stgMass to Lexicon("Ship", 0 , "Fuel", 0, "UsableFuel", 0, "Stage", 0).
 
         if stgEngs:Length > 0
         {
             set stgMass to GetStageMass(stg).
-            set exhVel to GetExhVel(stgEngs, mode).
+            set exhVel to GetExhVel(stgEngs, mode). // g_ShipEngines_Spec[stg]:StgSpec:AvgExhVelo. 
             
             if stgMass["Fuel"] > 0
             {
-                // OutDebug("[AvailStageDV]({0}) stgMass[ship]: [{1}]":Format(stg, stgMass["ship"]), crDbg()).
-                // OutDebug("[AvailStageDV]({0}) stgMass[fuel]: [{1}]":Format(stg, stgMass["fuel"]), crDbg()).
-                // OutDebug("[AvailStageDV]({0}) exhVel({1})":Format(stg, exhVel), crDbg()).
-                // Breakpoint().
                 wait 0.05.
-                set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["fuel"])).
-                // OutDebug("[AvailStageDV]({0}) dv: ":Format(Round(dv, 2)), crDbg()).
+                set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["usableFuel"])).
             }
-            // print "AvailStageDV         ".
-            // print "stg : " + stg + "        ".
-            // print "stgMass[Ship]: " + stgMass:Ship + "        ".
-            // print "stgMass[Fuel]: " + stgMass:Fuel + "        ".
-            // print "exhVel: " + exhVel + "        ".
-            // Breakpoint().
-            // print "Stg dV: " + dv.
-            // print "---".
+            set g_Debug to False.
+            if g_Debug 
+            { 
+                OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stg, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
+                OutDebug("- stgMass: Ship[{0}] | usableFuel[{1}]    ":Format(round(stgMass["ship"], 3), Round(stgMass["usableFuel"], 3)), crDbg()).
+                wait 1.
+            }
         }
 
-        if g_Debug 
-        { 
-            // OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stg, Round(dv, 2), Round(exhVel, 2)), 10).
-            // OutDebug("- stgMass: Ship[{0}] | Fuel[{1}]    ":Format(round(stgMass["Ship"], 3), Round(stgMass["Fuel"], 3)), 11).
-            wait 2.5.
-        }
         return dv.
     }
 //#endregion

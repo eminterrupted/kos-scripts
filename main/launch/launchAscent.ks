@@ -56,6 +56,14 @@ wait until Ship:Unpacked.
 local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.50)).
 
 local launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
+
+set   g_BoostersArmed to False.
+local boosterCheckDel  to { return True.}.
+local boosterActionDel to { return False.}.
+local boosterResult to list(false, boosterCheckDel, boosterActionDel).
+
+set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+
 PreLaunchInit().
 
 OutMsg("Waiting for launch command").
@@ -195,11 +203,31 @@ until Alt:Radar >= towerHeight
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-    if g_BoostersArmed { CheckBoosterStageCondition().}
-    
+    if g_BoostersArmed
+    {
+        if boosterCheckDel:Call()
+        {
+            set boosterResult to boosterActionDel:Call().
+            set g_BoostersArmed to boosterResult[0].
+            if g_BoostersArmed
+            {
+                set boosterCheckDel  to boosterResult[1].
+                set boosterActionDel to boosterResult[2].
+            }
+            else
+            {
+                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                clr(cr()).
+            }
+        }
+        else
+        {
+            OutMsg("Booster staging: Armed").
+        }
+    }
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
+        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed
         { 
             if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
             {
@@ -250,11 +278,32 @@ until Stage:Number <= g_StageLimit
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-    if g_BoostersArmed { CheckBoosterStageCondition().}
+    if g_BoostersArmed
+    {
+        if boosterCheckDel:Call()
+        {
+            set boosterResult to boosterActionDel:Call().
+            set g_BoostersArmed to boosterResult[0].
+            if g_BoostersArmed
+            {
+                set boosterCheckDel  to boosterResult[1].
+                set boosterActionDel to boosterResult[2].
+            }
+            else
+            {
+                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                clr(cr()).
+            }
+        }
+        else
+        {
+            OutMsg("Booster staging: Armed").
+        }
+    }
 
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
+        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed
         { 
             if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
             {
@@ -316,7 +365,31 @@ until Ship:AvailableThrust <= 0.1 or Ship:Periapsis >= _tgtPe
     set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-    if g_BoostersArmed { CheckBoosterStageCondition().}
+
+    if g_BoostersArmed
+    {
+        if boosterCheckDel:Call()
+        {
+            set boosterResult to boosterActionDel:Call().
+            set g_BoostersArmed to boosterResult[0].
+            if g_BoostersArmed
+            {
+                set boosterCheckDel  to boosterResult[1].
+                set boosterActionDel to boosterResult[2].
+            }
+            else
+            {
+                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                OutInfo("Arming Hot Stage", 1).
+                set g_HotStagingArmed to ArmHotStaging().
+                clr(cr()).
+            }
+        }
+        else
+        {
+            OutMsg("Booster staging: Armed").
+        }
+    }
 
     if g_LoopDelegates["Events"]:Keys:Length > 0 
     {
@@ -414,9 +487,17 @@ local function PreLaunchInit
 
     set g_FairingsArmed     to ArmFairingJettison("ascent").
     set g_LESArmed          to ArmLESTower().
-    set g_HotStagingArmed   to ArmHotStaging().
-    set g_BoostersArmed     to ArmBoosterStaging_NewShinyNext().
     set g_SpinArmed         to SetupSpinStabilizationEventHandler().
+    
+    if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
+    {
+        set boosterResult to ArmBoosterStaging("Ascent").
+        set g_BoostersArmed to boosterResult[0].
+        set boosterCheckDel  to boosterResult[1].
+        set boosterActionDel to boosterResult[2].
+    }
+   
+    set g_HotStagingArmed   to ArmHotStaging().
 
     local onStageParts to Ship:PartsTaggedPattern("^OnStage").
     if onStageParts:Length > 0

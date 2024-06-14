@@ -22,8 +22,8 @@
 
     local Ascent_AoA_Max            to 38.
     local Ascent_AoA_Min            to 5.
-    local PID_AoA_Max               to 12.5.
-    local PID_AoA_Min               to -12.5.
+    local PID_AoA_Max               to 22.5.
+    local PID_AoA_Min               to -22.5.
     local l_HotStageAOALimitVal     to 0.
 
     local l_pid_loop_control_active to False.
@@ -116,22 +116,33 @@
             local fShape  to 1.225.
             local minPit  to 5.
             local pitLim  to 27.
-            local pidVals to list(0.0075, 0.00125, 0.00325, 5). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            //local pidVals to list(0.25, 0.05, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            local pidVals to list(0.01, 0.005, 0.0125, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
                 set fShape to 1.0125.
                 set minPit to 2.5.
                 set pitLim to 50.
-                set pidVals to list(0.0025, 0.00125, 0.00125, 0.5). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                // set pidVals to list(0.0025, 0.00125, 0.00125, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set pidVals to list(0.0025, 0.00125, 0.00125, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
             else if g_MissionTag:Mission:MatchesPattern("SubOrbital")
             {
                 set fShape to 1.25.
-                set minPit to 0.25.
-                set pitLim to 12.5.
-                set pidVals to list(0.0025, 0.00125, 0.00125, 0.5). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set minPit to 5.
+                set pitLim to 17.5.
+                set pidVals to list(0.125, 0.00125, 0.725, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                // set pidVals to list(0.125, 0.00125, 0.725, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
+            else if Ship:Name:MatchesPattern("^S.OUT")
+            {
+                set fShape to 1.625.
+                set minPit to 2.5.
+                set pitLim to 22.5.
+                // set pidVals to list(0.25, 0.0125, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set pidVals to list(0.25, 0.0125, 0.5, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            }   
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
             set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
         }
@@ -379,7 +390,7 @@
                   _pitLimMin is Ascent_AoA_Min,
                   _pitLimMax is Ascent_AoA_Max,
                   _initPids is false,
-                  _pidVals is list(0.025, 0.0005, 0.020, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                  _pidVals is list(0.01, 0.0025, 0.015, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
@@ -827,6 +838,8 @@
                 if not g_PID_Active set g_PID_Active to True.
                 local apo_PID to g_PIDS[_ascAngObj:APO_PID].
 
+                GetTermChar().
+
                 if g_TermChar:Length > 0
                 {
                     if Unchar(g_TermChar) = 112
@@ -858,6 +871,7 @@
                         set _ascAngObj:RESET_PIDS to True.
                     }
                 }
+                set g_TermChar to "".
 
                 if g_Debug OutDebug("Prog 616_3", 3).
                 // PID STUFFS
@@ -875,16 +889,17 @@
                     set _ascAngObj:UPDATE_SETPOINT to False.
                 }
 
-                local pitGuard to list(5, 5).
-                local adjPitGuard to pitGuard[0].
-                if Stage:Number > g_StageLimit
+                local pitGuard to list(-5, 5).
+                // local pitGuard to list(pitch_limit_min, pitch_limit_max).
+                local adjPitGuard to pitGuard[1].
+                if Stage:Number >= g_StageLimit
                 {
-                    set pitGuard  to list(2.5, 2.5).
-                    local twrFactor to choose 1 if g_ActiveEngines_Data:TWR = 0 else g_ActiveEngines_Data:TWR.
-                    set adjPitGuard to max(pitGuard[0], min(pitGuard[1], pitGuard[0] + ((twrFactor / Ship:Mass)))).
+                    // set pitGuard  to list(2.5, 2.5).
+                    local twrFactor to choose 1 if g_ActiveEngines_Data:TWR = 0 else g_ActiveEngines_Data:TWR / 10.
+                    set adjPitGuard to min(pitGuard[1], max(pitGuard[0], pitGuard[1] + ((twrFactor / Ship:Mass)))).
                 }
 
-                local pid_pitch to (apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
+                local pid_pitch to apo_PID:Update(Time:Seconds, Ship:Apoapsis). //(apo_PID:Update(Time:Seconds, Ship:Apoapsis)) * PID_AoA_Max.
                 set effective_pitch to max(current_pitch - adjPitGuard, min(pid_pitch, current_pitch + adjPitGuard)).
                 set output_pitch to max(PID_AoA_Min, min(effective_pitch, PID_AoA_Max)).
                 // set g_PIDS[_ascAngObj:APO_PID] to apo_PID.
@@ -905,7 +920,7 @@
             if ETA:Apoapsis > ETA:Periapsis
             {
                 if g_Debug OutDebug("Prog Reversi", 4).
-                set output_pitch to max(-10, min(45, output_pitch)).
+                set output_pitch to max(2.5, min(45, -output_pitch)).
             }
         }
 
@@ -1404,41 +1419,45 @@
             ,"Open Upper Clamp"
             ,"Partial Retract Tower Step 1"
             ,"Retract Crew Arm"
+            ,"Retract Arm"
         ).
         for m in Ship:ModulesNamed("ModuleAnimateGenericExtra")
         {
             if m:Part:Name:MatchesPattern("^AM.MLP.*")
             {
-                for lpEvent in lpEventList
+                if not m:Part:Name:MatchesPattern("(Hold|Clamp)")
                 {
-                    if DoEvent(m, lpEvent) = 1
+                    for lpEvent in lpEventList
                     {
-                        wait 0.01.
-                        if m:HasField("Status")
+                        if DoEvent(m, lpEvent) = 1
                         {
-                            wait until m:GetField("Status") = "Locked".
-                        }
-                        else 
-                        {
-                            wait 1.
+                            wait 0.01.
+                            if m:HasField("Status")
+                            {
+                                wait until m:GetField("Status") = "Locked".
+                            }
+                            else 
+                            {
+                                wait 1.
+                            }
                         }
                     }
-                }
-                if m:HasField("Car Height Adjust")
-                {
-                    m:SetField("Car Height Adjust", 0).
-                }
-                if m:Part:Name:MatchesPattern("^AM.MLP.*SwingArm.*") and m:Part:Tag:MatchesPattern("Retract\|(Left|Right)\|OnLoad") <> 0
-                {
-                    local tagSplit to m:Part:Tag:Split("|").
-                    if m:HasEvent("{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
+                    if m:HasField("Car Height Adjust")
                     {
-                        if DoEvent(m, "{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
+                        m:SetField("Car Height Adjust", 0).
+                    }
+                    if m:Part:Name:MatchesPattern("^AM.MLP.*SwingArm.*") and m:Part:Tag:MatchesPattern("Retract\|(Left|Right)+\|OnLoad")
+                    {
+                        local tagSplit to m:Part:Tag:Split("|").
+                        if m:HasEvent("{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
                         {
-                            wait until m:GetField("Status") = "Locked".
+                            if DoEvent(m, "{0} Arm {1}":Format(tagSplit[0], tagSplit[1]))
+                            {
+                                wait until m:GetField("Status") = "Locked".
+                            }
                         }
                     }
-                }
+                }   
             }
         }
     }
@@ -1625,7 +1644,7 @@
         }
 
         local swingArms to list().
-        for p in Ship:PartsNamedPattern("MLP.*Arm.*")
+        for p in Ship:PartsNamedPattern("SwingArm")
         {
             local stopFlag to False.
             from { local i to 0.} until i >= p:AllModules:Length or stopFlag step { set i to i + 1.} do
@@ -1810,6 +1829,30 @@
 
 // *- Part Module Manipulation
 // #region
+
+    // Retract Crew Arm
+    global function RetractCrewArm
+    {
+        parameter _parts is list().
+
+        local crewArms to choose _parts if _parts:Length > 0 else Ship:PartsNamedPattern("AM.MLP.*Crew.*Arm").
+        local stopFlag to false.
+
+        for p in crewArms
+        {
+            from { local i to 0.} until i = _part:modules:length or stopFlag step { set i to i + 1.} do
+            {
+                local m to _part:GetModuleByIndex(i).
+                if m:Name = "ModuleAnimateGenericExtra"
+                {
+                    if DoEvent(m, "retract arm")
+                    {
+                        set stopFlag to True.
+                    }
+                }
+            }
+        }
+    }   
 
     // Retract Swing Arms
     global function RetractSwingArms

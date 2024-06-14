@@ -240,14 +240,18 @@
                     {
                         set warpFlag to True. 
                         OutMsg("Warping to maneuver").
-                        OutInfo().
-                        OutInfo("", 1).
-                        OutInfo("", 2).
-                        WarpTo(burnEta - Max(burnLeadTime, preSpin * 1.12)).
+                        clr(cr()).
+                        if Kuniverse:TimeWarp:Mode = "PHYSICS"
+                        {
+                            set Warp to 0.
+                            wait until KUniverse:TimeWarp:IsSettled.
+                            Set KUniverse:Timewarp:Mode to "RAILS".
+                        }
+                        WarpTo(burnEta - Max(burnLeadTime * 1.1, preSpin * 1.1)).
                     }
                     else
                     {
-                        OutMsg("Maneuver <= {0}s, skipping warp":Format(Max(preSpin, burnLeadTime))).
+                        OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
                     }
                     set g_TermChar to "".
                 }
@@ -448,6 +452,486 @@
             ClearDispBlock().
 
             unlock steering.
+        }
+
+        remove _inNode.
+    }
+
+    // ExecNodeBurn_Next :: _inNode<node> -> <none>
+    // Given a node object, executes it
+    global function ExecNodeBurn_Next
+    {
+        parameter _inNode is node(),
+                  _stageLimit is 0.
+
+        local curEngs to list().
+        local curEngsSpecs to lexicon().
+        local dvRateList to list().
+        local dvRate to 0.
+        local dv to _inNode:deltaV:mag.
+        local lastDv    to 0.
+        local burnDur to list(0, 0).
+        local burnEngs to list().
+        local burnEngsSpec to lexicon().
+        local fullDur to 0.
+        local halfDur to 0.
+        local burnEta to 0.
+        local preSpin to 0.
+        local settleProgress to 0.
+        local ullageFlag to false.
+        local ullageSafe to false.
+        
+        lock dvRemaining to abs(dv).
+
+        local ts0 to 0.
+        local ts1 to Time:Seconds * 1.25.
+
+        if dv <= 0.1 
+        {
+            OutMsg("No burn necessary").
+        }
+        else
+        {
+            set burnDur to CalcBurnDur(dv).
+            set fullDur to burnDur[0].
+            set halfDur to burnDur[3].
+            
+            set burnEta to _inNode:Time - halfDur.
+            
+            set g_ActiveEngines to GetActiveEngines().
+            local g_ActiveSpecs to lex("ALLOWRESTART", true, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
+
+            for eng in g_ActiveEngines
+            {
+                local engSpec to g_ShipEngines_Spec[eng:Stage]:EngSpecs[eng:UID].
+                
+                g_ActiveSpecs:Add(eng:UID, engSpec).
+                if not eng:AllowRestart 
+                {
+                    set g_ActiveSpecs:ALLOWRESTART to False.
+                }
+                else
+                {
+                    set g_ActiveSpecs:IGNITIONS to eng:Ignitions.
+                    set g_ActiveSpecs:RATEDBURNTIME to 0.
+                }
+            }
+            
+            local useNext to False.
+            if g_ActiveSpecs:AllowRestart
+            {
+                if g_ActiveSpecs:Ignitions = 0
+                {
+                    set useNext to True.
+                }
+                else if g_ActiveSpecs:RatedBurnTime <= g_ActiveSpecs:SpoolTime + 0.25 
+                {
+                    set useNext to True.
+                }
+            }
+            else
+            {
+                set useNext to True.
+            }
+            if useNext 
+            {
+                set burnEngs to GetNextEngines().
+                set burnEngsSpec to GetEnginesSpecs(burnEngs).
+            }
+            else
+            {
+                set burnEngs to g_ActiveEngines.
+                set burnEngsSpec to g_ActiveSpecs.
+            }
+
+            
+            set burnEta to burnEta - (burnEngsSpec:spooltime * 1.12). // This allows for spool time + adds a bit of buffer
+
+            if burnEngsSpec:ULLAGE
+            {
+                set ullageFlag to true.
+                set ts0 to burnETA - 8.
+            }
+            local MECO    to burnEta + halfDur.
+
+            local rollUpVector to { return -Body:Position.}.
+            if Ship:CrewCapacity > 0
+            {
+                set rollUpVector to { return Body:Position. }.
+            }
+            else if Ship:ModulesNamed("ModuleROSolar"):Length > 0
+            {
+                set rollUpVector to { return Sun:Position. }.
+            }
+
+            set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+            set t_Val to 0.
+            wait 0.01.
+            lock steering to s_Val.
+            
+            set g_NextEngines to GetNextEngines(Stage:Number - 1).
+            local predictedEngBurnTime to GetPredictedBurnTime(g_NextEngines).
+            
+            for p in Ship:PartsTaggedPattern("SpinDC")
+            {
+                OutInfo("SpinDC Found").
+                local pSplit to p:Tag:Split("|").
+                if p:Stage = Stage:Number - 1 
+                {
+                    if g_ActiveEngines:Length = 0
+                    {
+                        OutInfo("Stage Correct").
+                        set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
+                    }
+                    else
+                    {
+                        if fullDur > predictedEngBurnTime
+                        {
+                            set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
+                        }
+                    }
+                }
+                set g_SpinArmed to preSpin > 0.
+            }
+
+            local burnPreLead to 12.
+            local burnLeadTime to Max(burnPreLead, preSpin + 10).
+            local warpFlag to False.
+
+            local _line to 2.
+            until time:seconds >= burnEta
+            {
+                set g_line to _line - 1.
+
+                if Kuniverse:TimeWarp = 0 
+                {
+                    set warpFlag to False.
+                }
+                
+                if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+                
+                GetTermChar().
+
+                wait 0.01.
+                if g_TermChar = ""
+                {
+                }
+                else if g_TermChar = Char(87) // 'W'
+                {
+                    if _inNode:ETA > burnLeadTime 
+                    {
+                        set warpFlag to True. 
+                        OutMsg("Warping to maneuver").
+                        clr(cr()).
+                        if Kuniverse:TimeWarp:Mode = "PHYSICS"
+                        {
+                            set Warp to 0.
+                            wait until KUniverse:TimeWarp:IsSettled.
+                            Set KUniverse:Timewarp:Mode to "RAILS".
+                        }
+                        WarpTo(burnEta - Max(burnLeadTime * 1.1, preSpin * 1.1)).
+                    }
+                    else
+                    {
+                        OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
+                    }
+                    set g_TermChar to "".
+                }
+                else if g_TermChar = Char(82)
+                {
+                    OutInfo("Recalculating burn parameters").
+                    clr(cr()).
+                    clr(cr()).
+                    wait 0.1.
+                    set burnDur to CalcBurnDur(_inNode:deltaV:mag).
+                    set fullDur to burnDur[0].
+                    set halfDur to burnDur[3].
+
+                    set burnEta to _inNode:time - halfDur. 
+                    set MECO    to burnEta + fullDur.
+                    set g_TermChar to "".
+                }
+                else if g_TermChar = Char(101) // 'e'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+                    OutInfo("Spin Right: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(69) // 'E'
+                {
+                    set Ship:Control:Roll to 1.
+                    OutInfo("Spin Right: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(113) // 'q'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+                    OutInfo("Spin Left: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(81) // 'Q'
+                {
+                    set Ship:Control:Roll to -1.
+                    OutInfo("Spin Left: " + Ship:Control:Roll).
+                }
+                else if g_TermChar = Char(115) // s
+                {
+                    set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+                }
+                else if g_TermChar = Char(83) // S
+                {
+                    set Ship:Control:Roll to 0.
+                }
+                else if g_TermChar = "="
+                {
+                    set burnPreLead to burnPreLead + 5.
+                }
+                else if g_TermChar = "-"
+                {
+                    set burnPreLead to burnPreLead - 5.
+                }
+                else if g_TermChar = "+"
+                {
+                    set burnPreLead to burnPreLead + 5.
+                }
+                else if g_TermChar = "_"
+                {
+                    set burnPreLead to burnPreLead - 5.
+                }
+                
+                if not warpFlag 
+                {
+                    set burnLeadTime to Max(burnPreLead, preSpin + 10).
+                }
+
+                local timeDelta to burnEta - Time:Seconds.
+                OutInfo("Burn Actual ETA: {0} ":Format(TimeSpan(timeDelta):Full)).
+                
+                local leadTime to choose TimeSpan(timeDelta - burnLeadTime):Full if timeDelta > burnLeadTime else "N/A".
+                OutInfo("Burn Lead Time : {0} ":Format(leadTime), 1).
+                OutInfo("Mnv | Eng Time : {0} | {1}":Format(Round(burnDur[0], 2), Round(g_ActiveSpecs:RATEDBURNTIME, 2)), 2).
+
+                if ullageFlag
+                {
+                    if Time:Seconds >= ts0
+                    {
+                        set Ship:Control:Fore to 1.
+                    }
+                }
+
+                if preSpin > 0 
+                {
+                    set ts1 to burnETA - preSpin.
+                    set preSpin to 0.
+                }
+                if g_SpinArmed
+                {
+                    if Time:Seconds >= ts1
+                    {
+                        set Ship:Control:Roll to 1.
+                        set s_Val to _inNode:burnvector.
+                    }
+                    else if Time:Seconds >= burnETA
+                    {
+                        set Ship:Control:Roll to 0.
+                        set g_SpinArmed to false.
+                    }
+                    else 
+                    {
+                        OutInfo("Spin Armed (T-{0}) ":Format(Round(ts1 - Time:Seconds, 2)), 2).
+                        set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    }
+                }
+                else
+                {
+                    set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    if settleProgress > 3
+                    {
+                        if VAng(Ship:Facing:Vector, _inNode:BurnVector) < 0.25
+                        {
+                            set settleProgress to settleProgress + 1.
+                            wait 1.
+                        }
+                        else
+                        {
+                            set settleProgress to 0.
+                        }
+                        OutInfo("Settle Progress: [{0}] (3 needed)":Format(settleProgress), 2).
+                    }
+                }
+
+                set g_TermChar to "".
+            }
+
+            
+            local dv0 to _inNode:deltav.
+            lock maxAcc to max(0.00001, ship:maxThrust) / ship:mass.
+            
+            // ClearScreen.
+            OutMsg("Executing burn").
+            
+            set g_ActiveEngines to GetActiveEngines().
+            set g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
+            for eng in g_ActiveEngines
+            {
+                local engSpec to g_ShipEngines_Spec[eng:Stage]:EngSpecs[eng:UID].
+                if not g_ActiveSpecs:ALLOWRESTART set g_ActiveSpecs:ALLOWRESTART to eng:ALLOWRESTART.
+                set g_ActiveSpecs:IGNITIONS to max(g_ActiveSpecs:IGNITIONS, eng:IGNITIONS).
+                set g_ActiveSpecs:SPOOLTIME to max(g_ActiveSpecs:SPOOLTIME, g_ShipEngines_Spec[eng:Stage]:EngSpecs[eng:UID]:SPOOLTIME).
+                g_ActiveSpecs:Add(eng:UID, engSpec).
+            }
+            set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
+            local burnTimeRemaining to burnDur[0].
+            set t_Val to 1.
+            lock throttle to t_Val.
+            set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
+            set Ship:Control:Fore to 0.
+            set Ship:Control:Roll to 0.
+            
+            local autoStageResult to ArmAutoStagingNext(_stageLimit).
+            if autoStageResult = 1 
+            {
+                set g_AutostageArmed to True.
+            }
+            else
+            {
+                set g_AutostageArmed to False.
+            }
+            OutInfo("AutoStage Armed; {0}":Format(g_AutostageArmed)).
+
+            set g_HotStagingArmed to ArmHotStaging().
+            set g_SpinArmed to SetupSpinStabilizationEventHandler().
+            
+            wait 0.01.
+            set ts0 to Time:Seconds.
+            set lastDV to _inNode:DeltaV.
+            set dvRate to 0.
+            
+            // ClearScreen.
+
+            local breakFlag to false.
+            local softShutdownDV to max(0.05, dvRate * (g_ActiveSpecs:SpoolTime * 0.2)).
+            until vdot(dv0, _inNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
+            {   
+                set g_line to _line - 1.
+                GetTermChar().
+                set g_ActiveEngines to GetActiveEngines().
+                set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
+                set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                if g_ActiveSpecs:Keys:Length > 0
+                {
+                    // set g_ActiveSpecs to g_ActiveSpecs:Values[0].
+                    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
+                    if g_ActiveSpecs:SpoolTime > 0.1
+                    {
+                        set softShutdownDV to dvRate * (g_ActiveSpecs:SpoolTime * 0.1).
+                    }
+                }
+                
+                set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                
+                set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
+
+                DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
+                DispBurnPerfData().
+
+                if g_LoopDelegates:HasKey("Staging")
+                {
+                    if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
+                    { 
+                        if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
+                        {
+                            if g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Check:CALL()
+                            {
+                                g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
+                            }
+                        }
+                    }
+                    else
+                    {
+                        local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+                        OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
+                        if stagingCheckResult = 1
+                        {
+                            OutInfo("Staging", 2).
+                            g_LoopDelegates:Staging["Action"]:Call().
+                        }
+                    }
+                }
+
+                if not HomeConnection:IsConnected()
+                {
+                    if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
+                    {
+                        for m in Ship:ModulesNamed("ModuleDeployableAntenna")
+                        {
+                            DoEvent(m, "extend antenna").
+                        }
+                    }
+                }
+                
+                if Stage:Number <= _stageLimit and g_AutoStageArmed
+                {
+                    OutInfo("AutoStaging disabled", 2).
+                    DisableAutoStaging().
+                }
+
+                if g_TermChar = Char(101) // 'e'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+                    OutInfo("Spin Right: " + Ship:Control:Roll, 2).
+                }
+                else if g_TermChar = Char(69) // 'E'
+                {
+                    set Ship:Control:Roll to 1.
+                    OutInfo("Spin Right: " + Ship:Control:Roll, 2).
+                }
+                else if g_TermChar = Char(113) // 'q'
+                {
+                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+                    OutInfo("Spin Left: " + Ship:Control:Roll, 2).
+                }
+                else if g_TermChar = Char(81) // 'Q'
+                {
+                    set Ship:Control:Roll to -1.
+                    OutInfo("Spin Left: " + Ship:Control:Roll, 2).
+                }
+                else if g_TermChar = Char(115) // s
+                {
+                    set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+                    OutInfo("SpinTorque: {0}":Format(SteeringManager:RollTorqueFactor), 2).
+                }
+                else if g_TermChar = Char(83) // S
+                {
+                    set Ship:Control:Roll to 0.
+                    OutInfo("", 2).
+                }
+
+                OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
+
+                if g_LoopDelegates["Events"]:Keys:Length > 0 
+                {
+                    ExecGLoopEvents().
+                }
+                set g_TermChar to "".
+
+                if Ship:AvailableThrust = 0 and not g_AutoStageArmed
+                {
+                    set breakFlag to true.
+                }
+            }
+            set Ship:Control:Roll to 0.
+            unlock steering.
+
+            set t_Val to 0.
+            set Ship:Control:MainThrottle to 0.
+            set Ship:Control:PilotMainThrottle to 0.
+            unlock throttle.
+            
+            ClearDispBlock().
+            OutMsg("Maneuver Complete!").
+            OutInfo().
+            OutInfo("", 1).
+            OutInfo("", 2).
         }
 
         remove _inNode.

@@ -196,7 +196,7 @@ set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 wait 0.01.
 set Ship:Control:Fore to 0.
 
-set g_SteeringDelegate to choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
+set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun").// choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
 
 local rollFlag to false.
 local doneFlag to false.

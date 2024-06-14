@@ -76,8 +76,172 @@
 
     // #endregion
 
-    // *- #TODO Caching
+
+    // *- File handling functions
     // #region
+
+        // 
+        global function GetFileTimeRT
+        {
+            parameter _realtimeSecs is Kuniverse:Realtime.
+
+            // local _2024TS to 1704067200.
+            local   dateSpan to Timespan(_realtimeSecs - 1704067200).
+
+            return "{0}-{1}_{2}{3}{4}":Format((2024 + dateSpan:Year) - 2000, dateSpan:Day, dateSpan:Hour, dateSpan:Minute, dateSpan:Second).
+        }
+    // #endregion
+
+    // *- State (Program / Runmode / Content) utilities
+// #region
+
+    // CacheState
+    global function CacheState
+    {
+        parameter _state is g_State.
+
+        if g_StateCache:IsType("String") InitStateCache().
+        
+        g_StateCache:Clear.
+        g_StateCache:Write(_state:join(",")).
+
+        return Exists(g_StateCachePath).
+    }
+
+    // InitStateCache
+    global function InitStateCache
+    {
+        parameter _resetState to False.
+
+        local state to list(
+            // "planID", // String plan id
+            // ,0    // Context (current running program module)
+            // ,0    // Program
+            // ,0    // Runmode
+            // ,0    // StageStop
+        ).
+        
+        if exists(g_StateCachePath) and not _resetState
+        {
+            set g_StateCache to Open(g_StateCachePath).
+            local stateCache to g_StateCache:ReadAll:String:Split(",").
+            state:Add(stateCache[0]).
+
+            from { local i to 1.} until i = stateCache:Length step { set i to i + 1.} do
+            {
+                 state:Add(stateCache[i]:ToNumber(0)).
+            }
+        }
+        else
+        {
+            set state to list(g_MissionPlanID, 0, 0, 0, 0).
+            log state:join(",") to g_StateCachePath.
+            set g_StateCache to Open(g_StateCachePath).
+        }
+        
+        set g_State         to state.
+
+        set g_MissionPlanID to g_State[0]. // print g_MissionPlanID.
+        set g_Context       to g_State[1]. // print g_Context.
+        set g_Program       to g_State[2]. // print g_Program.
+        set g_Runmode       to g_State[3]. // print g_RunMode.
+        set g_StageLimit    to g_State[4]. // print g_StageLimit.
+
+        return Exists(g_StateCachePath).
+    }
+
+    // ReadStateCache
+    global function ReadStateCache
+    {
+        if exists(g_StateCachePath)
+        {
+            return Open(g_StateCachePath):ReadAll:String:Split(",").
+        }
+        return list("", -1,-1,-1,0).
+    }
+
+
+    // SetContext
+    global function SetContext
+    {
+        parameter _context is 0,
+                  _update is False.
+
+        set g_Context to _context.
+        if _update UpdateState().
+        return g_Context.
+    }
+
+    // SetContext
+    global function SetMissionPlanId
+    {
+        parameter _planId is "NUL",
+                  _update is False.
+
+        set g_MissionPlanId to _planId.
+        if _update UpdateState().
+        return g_MissionPlanId.
+    }
+
+
+    // SetProgram
+    global function SetProgram
+    {
+        parameter _prog is 0,
+                  _update is False.
+
+        set g_Program to _prog.
+        set g_Runmode to 0.
+        if _update UpdateState().
+        ClearScreen.
+        return g_Program.
+    }
+
+    // SetRunmode
+    global function SetRunmode
+    {
+        parameter _rm is 0,
+                  _update is False.
+
+        set g_Runmode to _rm.
+        if _update UpdateState().
+        return g_Runmode.
+    }
+
+    // SetStageStop
+    global function SetStageLimit
+    {
+        parameter _stgStop is Stage:Number,
+                  _update is False.
+
+        set g_StageLimit to _stgStop.
+        if _update UpdateState().
+        return g_StageLimit.
+    }
+
+
+    // UpdateState
+    global function UpdateState
+    {
+        parameter _cacheEnable to False.
+
+        set g_State to list (
+            g_MissionPlanID,
+            g_Context,
+            g_Program,
+            g_Runmode,
+            g_StageLimit
+        ).
+
+        if _cacheEnable 
+        {
+            CacheState().
+        }
+    }
+
+
+
+// #endregion
 
         global g_CacheDel to lexicon(
             "STG",    { parameter _inObj, _val. local retVal to 0. if not _inObj:HasKey(_val) { set retVal to lexicon(). set _inObj[_val] to retVal. } else { set retVal to _inObj[_val].} return _inObj. } // 0: Root 
@@ -134,9 +298,6 @@
             set curLvl[_nodeList[_nodeList:Length - 1]] to _val.
             return _cache.
         }
-
-
-    // #endregion
 
     // *- Core Messaging System
     // #region
@@ -885,7 +1046,8 @@
         global function GetField
         {
             parameter _m,
-                      _field.
+                      _field,
+                      _fallbackValue is "NUL".
 
             set g_ResultCode to 0.
 
@@ -897,7 +1059,7 @@
             else
             {
                 set g_ResultCode to 2.
-                return "NUL".
+                return _fallbackValue.
             }
         }
 

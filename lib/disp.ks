@@ -109,6 +109,16 @@
         return g_Line.
     }
 
+    // clr
+    // Clears a line
+    global function clr
+    {
+        parameter _line is g_line,
+                  _len is Terminal:Width.
+
+        print "":padright(_len) at (0, _line).
+    }
+
     // crDbg :: (_lineOffset<scalar>) -> [newOffset]<scalar>
     // Sets or increments the debug offset value
     global function crDbg 

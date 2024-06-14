@@ -164,6 +164,10 @@
     global g_SteeringDelegate to { return Ship:Facing.}.
 
     global g_PIDS to lexicon(). // This will hold all PID loops we use across multiple scripts
+
+    // Null Delegates
+    global g_NulCheckDel to { return True.}.
+    global g_NulActionDel to { return False.}.
 // #endregion
 
 
