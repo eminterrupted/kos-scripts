@@ -176,6 +176,7 @@ OutMsg("Beginning Reentry Procedure").
 wait 1.
 
 set s_Val to lookDirUp(ship:retrograde:vector, -Body:Position).
+lock steering to s_Val. 
 
 OutMsg("Waiting until altitude <= " + startAlt).
 Terminal:Input:Clear.   // Clear the terminal input so we don't auto warp from an old keypress

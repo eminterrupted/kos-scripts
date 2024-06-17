@@ -905,6 +905,11 @@
                     set Ship:Control:Roll to 0.
                     OutInfo("", 2).
                 }
+                else if g_TermChar = Terminal:Input:DeleteRight
+                {
+                    set breakFlag to true.
+                    OutInfo("User cancelled node burn", 2).
+                }
 
                 OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
 
