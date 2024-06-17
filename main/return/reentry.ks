@@ -16,6 +16,7 @@ local presLog to "0:/data/log/Earth_Pressure.csv".
 local chuteStatus to "N/A".
 local fairings to ship:PartsTaggedPattern("(reentry|return|descent)\|fairing").
 local jettAlt to 5000.
+local mainChuteDeployAlt to 1375.
 
 local gemBDBChute to choose Ship:PartsNamed("ROC-GeminiParachuteBDB")[0] if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0 else Core:Part.
 local parachutes to ship:modulesnamed("RealChuteModule").
@@ -483,27 +484,48 @@ for f in fairings
 }
 LIGHTS on.
 
-until alt:radar <= 500
+until Alt:Radar <= mainChuteDeployAlt
 {
     LogPressure().
     DispReentryTelemetry().
 }
 
-// Deploy the Mercury capsule landing bag if present
-local aniMods to Ship:ModulesNamed("ModuleAnimateGeneric").
-if aniMods:Length > 0
+if warp > 1 
 {
-    for m in aniMods
-    {
-        if DoEvent(m, "Deploy Landing Bag")
-        {
-            OutMsg("Landing bag deploy").
-            Break.
-        }
-    }
+    set warp to 1.
+}
+if Ship:PartsNamed("ROC-MercuryRCSBDB"):Length > 0
+{
+    DoEvent(Ship:PartsNamed("ROC-MercuryRCSBDB")[0]:GetModule("ModuleDecouple"), "Decouple").
 }
 
-until alt:radar <= 25
+until Alt:Radar <= 500
+{
+    LogPressure().
+    DispReentryTelemetry().
+}
+
+// Deploy the Mercury capsule landing bag if present\
+if Ship:PartsNamed("ROC-MercuryHS"):Length > 0
+{
+    DoEvent(Ship:PartsNamed("ROC-MercuryHS")[0]:GetModule("ModuleAnimateGeneric"), "Deploy Landing Bag").
+}
+
+// for m in Ship:ModulesNamed("ModuleAnimateGeneric")
+// {
+//     if DoEvent(m, "Deploy Landing Bag")
+//     {
+//         OutMsg("Landing bag deploy").
+//         Break.
+//     }
+//     else if DoAction(m, "Deploy Landing Bag", true)
+//     {
+//         OutMsg("Landing bag deploy").
+//         Break.
+//     }
+// }
+
+until Alt:Radar <= 25
 {
     LogPressure().
     DispReentryTelemetry().
@@ -512,7 +534,7 @@ if Kuniverse:Timewarp:Warp > 0
 {
     set Kuniverse:Timewarp:Warp to 0.
 }
-until alt:radar <= 5
+until Alt:Radar <= 5
 {
     LogPressure().
     DispReentryTelemetry().

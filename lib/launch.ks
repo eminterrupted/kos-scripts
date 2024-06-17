@@ -20,6 +20,8 @@
     local ascent_Blend_End          to Body:Atm:Height.
     local ascent_Blend_Window       to ascent_Blend_End - ascent_Blend_Start.
 
+    local l_CrewRollVal             to choose 180 if Ship:Crew:Length > 0 else 0.
+
     local Ascent_AoA_Max            to 38.
     local Ascent_AoA_Min            to 5.
     local PID_AoA_Max               to 22.5.
@@ -117,7 +119,7 @@
             local minPit  to 5.
             local pitLim  to 27.
             //local pidVals to list(0.25, 0.05, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-            local pidVals to list(0.01, 0.005, 0.0125, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            local pidVals to list(0.0125, 0.005, 0.025, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
@@ -173,7 +175,7 @@
         else if g_MissionTag:Mission:MatchesPattern("^(SubOrbit|Suborbital|PIDSubOrbital)") // Suborbital hop :: [0] Inclination and [1]Target Alt
         {
             set _delDependency["l_az_calc"] to _azData.
-            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), l_CrewRollVal). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission:MatchesPattern("^(Orbit|PIDOrbit)$") // Orbital insertion :: [0] Inclination and [1]Target Alt
         {
@@ -182,13 +184,13 @@
             {
                 set _delDependency["TRN_ALT_START"] to Ship:Altitude + 125.
             }
-            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), 0). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
+            set del to { if Ship:Altitude >= _delDependency:TRN_ALT_START { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_PID(_delDependency), l_CrewRollVal). } else { return Heading(g_MissionTag:Params[0], 90, 0 ). }}.
         }
         else if g_MissionTag:Mission = "Circularize"
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, _delDependency:FSHAPE).
             set _delDependency["l_az_calc"] to _azData.
-            set del to { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), 0). }.
+            set del to { return Heading(l_az_calc(_delDependency["l_az_calc"]), GetAscentAng_Next(_delDependency), l_CrewRollVal). }.
         }
         return del@.
     }

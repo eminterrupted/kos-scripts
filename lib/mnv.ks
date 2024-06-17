@@ -188,7 +188,7 @@
             set burnEta to burnEta - burnEngsSpec:SpoolTime - (fullDur * 0.08). // This allows for spool time + adds a bit of buffer
             set g_MECO    to burnEta + fullDur.
 
-            local rollUpVector to { return -Body:Position.}.
+            local rollUpVector to choose { return Body:Position.} if Ship:Crew:Length > 0 else { return -Body:Position.}.
             if Ship:CrewCapacity > 0
             {
                 set rollUpVector to { return Body:Position. }.
