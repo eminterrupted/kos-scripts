@@ -406,6 +406,7 @@
 
         local ascentAngObj to lexicon(
             "APO_TGT",  _tgtAlt
+            ,"APO_TGT_THRESH", _tgtAlt * 0.9625
             ,"FSHAPE", _fShape
             ,"INC_TGT", _tgtInc
             ,"PIT_LIM_MAX", _pitLimMax
@@ -613,7 +614,7 @@
         local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
         local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
         local target_apo        to _ascAngObj:APO_TGT.
-        local target_apo_thresh to target_apo * 0.925.
+        local target_apo_thresh to _ascAngObj:APO_TGT_THRESH.
         local turn_alt_blend    to _ascAngObj:TRN_ALT_BLEND.
         local turn_alt_end      to _ascAngObj:TRN_ALT_END.
         local turn_alt_start    to _ascAngObj:TRN_ALT_START.
@@ -765,7 +766,7 @@
         local pitch_limit_max   to _ascAngObj:PIT_LIM_MAX.
         local pitch_limit_min   to _ascAngObj:PIT_LIM_MIN.
         local target_apo        to _ascAngObj:APO_TGT.
-        local target_apo_thresh to target_apo * 0.925.
+        local target_apo_thresh to _ascAngObj:APO_TGT_THRESH. 
         local turn_alt_blend    to _ascAngObj:TRN_ALT_BLEND.
         local turn_alt_end      to _ascAngObj:TRN_ALT_END.
         local turn_alt_start    to _ascAngObj:TRN_ALT_START.
