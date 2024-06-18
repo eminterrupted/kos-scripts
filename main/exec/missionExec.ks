@@ -131,6 +131,11 @@ until doneFlag
         OutInfo("", 1).
         set doneFlag to True.
     }
+    else if g_LoopDelegates:Events:Keys:Length = 1 and g_LoopDelegates:Events:Keys[0]:MatchesPattern("Spin")
+    {
+        OutInfo("Aborting: {0}":Format(g_LoopDelegates:Events:Keys[0]), 1).
+        set doneFlag to True.
+    }
     else
     {
         OutInfo("Delegate: {0}":Format(g_LoopDelegates:Events:Keys[0]), 1).
