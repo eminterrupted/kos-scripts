@@ -39,7 +39,7 @@
     global g_PresetTurnAlt to 250.
 
     global g_alt_PID to PidLoop(0.05, 0.01, 0.0325, -1, 1).
-    global g_apo_pid  to PidLoop(0.005, 0.0005, 0.00325, -1, 1).
+    global g_apo_pid  to PidLoop(0.005, 0.000125, 0.005, -1, 1).
     global g_ascentProfile to lexicon().
     // global g_azData to list().
 
@@ -119,7 +119,7 @@
             local minPit  to 5.
             local pitLim  to 27.
             //local pidVals to list(0.25, 0.05, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-            local pidVals to list(0.0125, 0.005, 0.025, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            local pidVals to list(0.00075, 0.000125, 0.001, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
@@ -127,14 +127,14 @@
                 set minPit to 2.5.
                 set pitLim to 50.
                 // set pidVals to list(0.0025, 0.00125, 0.00125, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-                set pidVals to list(0.0025, 0.00125, 0.00125, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set pidVals to list(0.0025, 0.000125, 0.00125, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
             else if g_MissionTag:Mission:MatchesPattern("SubOrbital")
             {
                 set fShape to 1.25.
                 set minPit to 5.
                 set pitLim to 17.5.
-                set pidVals to list(0.125, 0.00125, 0.725, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set pidVals to list(0.0075, 0.000125, 0.0075, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
                 // set pidVals to list(0.125, 0.00125, 0.725, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
             else if Ship:Name:MatchesPattern("^S.OUT")
@@ -143,7 +143,7 @@
                 set minPit to 2.5.
                 set pitLim to 22.5.
                 // set pidVals to list(0.25, 0.0125, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-                set pidVals to list(0.25, 0.0125, 0.5, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set pidVals to list(0.0025, 0.000125, 0.00325, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }   
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
             set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
@@ -392,7 +392,7 @@
                   _pitLimMin is Ascent_AoA_Min,
                   _pitLimMax is Ascent_AoA_Max,
                   _initPids is false,
-                  _pidVals is list(0.01, 0.0025, 0.015, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                  _pidVals is list(0.00075, 0.000125, 0.001, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.

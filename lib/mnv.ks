@@ -811,115 +811,122 @@
             local softShutdownDV to max(0.05, dvRate * (g_ActiveSpecs:SpoolTime * 0.2)).
             until vdot(dv0, _inNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
             {   
-                set g_line to _line - 1.
-                GetTermChar().
-                set g_ActiveEngines to GetActiveEngines().
-                set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
-                set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-                if g_ActiveSpecs:Keys:Length > 0
-                {
-                    // set g_ActiveSpecs to g_ActiveSpecs:Values[0].
+                if HasNode
+                {    
+                    set g_line to _line - 1.
+                    GetTermChar().
+                    set g_ActiveEngines to GetActiveEngines().
+                    set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
                     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-
-                    if g_ActiveSpecs:SpoolTime > 0.1
+                    if g_ActiveSpecs:Keys:Length > 0
                     {
-                        set softShutdownDV to dvRate * (g_ActiveSpecs:SpoolTime * 0.1).
-                    }
-                }
-                
-                set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
-                
-                set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
+                        // set g_ActiveSpecs to g_ActiveSpecs:Values[0].
+                        set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-                DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
-                DispBurnPerfData().
-
-                if g_LoopDelegates:HasKey("Staging")
-                {
-                    if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
-                    { 
-                        if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
+                        if g_ActiveSpecs:SpoolTime > 0.1
                         {
-                            if g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Check:CALL()
+                            set softShutdownDV to dvRate * (g_ActiveSpecs:SpoolTime * 0.1).
+                        }
+                    }
+                    
+                    set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                    
+                    set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
+
+                    DispBurnNodeData(dv, burnEta - time:seconds, burnTimeRemaining).
+                    DispBurnPerfData().
+
+                    if g_LoopDelegates:HasKey("Staging")
+                    {
+                        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
+                        { 
+                            if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
                             {
-                                g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
+                                if g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Check:CALL()
+                                {
+                                    g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
+                                }
+                            }
+                        }
+                        else
+                        {
+                            local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
+                            OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
+                            if stagingCheckResult = 1
+                            {
+                                OutInfo("Staging", 2).
+                                g_LoopDelegates:Staging["Action"]:Call().
                             }
                         }
                     }
-                    else
+
+                    if not HomeConnection:IsConnected()
                     {
-                        local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-                        OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
-                        if stagingCheckResult = 1
+                        if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
                         {
-                            OutInfo("Staging", 2).
-                            g_LoopDelegates:Staging["Action"]:Call().
+                            for m in Ship:ModulesNamed("ModuleDeployableAntenna")
+                            {
+                                DoEvent(m, "extend antenna").
+                            }
                         }
                     }
-                }
-
-                if not HomeConnection:IsConnected()
-                {
-                    if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
+                    
+                    if Stage:Number <= _stageLimit and g_AutoStageArmed
                     {
-                        for m in Ship:ModulesNamed("ModuleDeployableAntenna")
-                        {
-                            DoEvent(m, "extend antenna").
-                        }
+                        OutInfo("AutoStaging disabled", 2).
+                        DisableAutoStaging().
+                    }
+
+                    if g_TermChar = Char(101) // 'e'
+                    {
+                        set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+                        OutInfo("Spin Right: " + Ship:Control:Roll, 2).
+                    }
+                    else if g_TermChar = Char(69) // 'E'
+                    {
+                        set Ship:Control:Roll to 1.
+                        OutInfo("Spin Right: " + Ship:Control:Roll, 2).
+                    }
+                    else if g_TermChar = Char(113) // 'q'
+                    {
+                        set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+                        OutInfo("Spin Left: " + Ship:Control:Roll, 2).
+                    }
+                    else if g_TermChar = Char(81) // 'Q'
+                    {
+                        set Ship:Control:Roll to -1.
+                        OutInfo("Spin Left: " + Ship:Control:Roll, 2).
+                    }
+                    else if g_TermChar = Char(115) // s
+                    {
+                        set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+                        OutInfo("SpinTorque: {0}":Format(SteeringManager:RollTorqueFactor), 2).
+                    }
+                    else if g_TermChar = Char(83) // S
+                    {
+                        set Ship:Control:Roll to 0.
+                        OutInfo("", 2).
+                    }
+                    else if g_TermChar = Terminal:Input:DeleteRight
+                    {
+                        set breakFlag to true.
+                        OutInfo("User cancelled node burn", 2).
+                    }
+
+                    OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
+
+                    if g_LoopDelegates["Events"]:Keys:Length > 0 
+                    {
+                        ExecGLoopEvents().
+                    }
+                    set g_TermChar to "".
+
+                    if Ship:AvailableThrust = 0 and not g_AutoStageArmed
+                    {
+                        set breakFlag to true.
                     }
                 }
-                
-                if Stage:Number <= _stageLimit and g_AutoStageArmed
-                {
-                    OutInfo("AutoStaging disabled", 2).
-                    DisableAutoStaging().
-                }
-
-                if g_TermChar = Char(101) // 'e'
-                {
-                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
-                    OutInfo("Spin Right: " + Ship:Control:Roll, 2).
-                }
-                else if g_TermChar = Char(69) // 'E'
-                {
-                    set Ship:Control:Roll to 1.
-                    OutInfo("Spin Right: " + Ship:Control:Roll, 2).
-                }
-                else if g_TermChar = Char(113) // 'q'
-                {
-                    set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
-                    OutInfo("Spin Left: " + Ship:Control:Roll, 2).
-                }
-                else if g_TermChar = Char(81) // 'Q'
-                {
-                    set Ship:Control:Roll to -1.
-                    OutInfo("Spin Left: " + Ship:Control:Roll, 2).
-                }
-                else if g_TermChar = Char(115) // s
-                {
-                    set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
-                    OutInfo("SpinTorque: {0}":Format(SteeringManager:RollTorqueFactor), 2).
-                }
-                else if g_TermChar = Char(83) // S
-                {
-                    set Ship:Control:Roll to 0.
-                    OutInfo("", 2).
-                }
-                else if g_TermChar = Terminal:Input:DeleteRight
-                {
-                    set breakFlag to true.
-                    OutInfo("User cancelled node burn", 2).
-                }
-
-                OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
-
-                if g_LoopDelegates["Events"]:Keys:Length > 0 
-                {
-                    ExecGLoopEvents().
-                }
-                set g_TermChar to "".
-
-                if Ship:AvailableThrust = 0 and not g_AutoStageArmed
+                else
                 {
                     set breakFlag to true.
                 }
