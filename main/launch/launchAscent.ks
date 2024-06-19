@@ -227,7 +227,7 @@ until Alt:Radar >= towerHeight
     }
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed
+        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed and not g_MECOArmed
         { 
             if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
             {
@@ -236,23 +236,6 @@ until Alt:Radar >= towerHeight
                     g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
                 }
             }
-        // if g_HotStagingArmed 
-        // { 
-            // local doneFlag to false.
-            // from { local i to Stage:Number.} until i < 0 or doneFlag step { set i to i - 1.} do
-            // {
-            //     if g_LoopDelegates:Staging:HotStaging:HasKey(i)
-            //     {
-            //         if g_LoopDelegates:Staging:HotStaging[i]:HasKey("Check")
-            //         {
-            //             if g_LoopDelegates:Staging:HotStaging[i]:Check:CALL()
-            //             {
-            //                 g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
-            //                 set doneFlag to true.
-            //             }
-            //         }
-            //     }
-            // }
         }
         else
         {
@@ -303,7 +286,7 @@ until Stage:Number <= g_StageLimit
 
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed
+        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed and not g_MECOArmed
         { 
             if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
             {

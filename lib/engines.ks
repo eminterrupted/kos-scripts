@@ -18,20 +18,22 @@
     // *- Global
     // #region
     global g_ActiveEngines          to list().
-    global g_ActiveEngines_Data     to lexicon().
-    global g_ActiveEngines_Spec     to lexicon().
+    global g_ActiveEngines_Data     to Lexicon().
+    global g_ActiveEngines_Data_Epoch to -1.
+    global g_ActiveEngines_Spec     to Lexicon().
 
     global g_NextEngines            to list().
-    global g_NextEngines_Data       to lexicon().
-    global g_NextEngines_Spec       to lexicon().
+    global g_NextEngines_Data       to Lexicon().
+    global g_NextEngines_Data_Epoch to -1.
+    global g_NextEngines_Spec       to Lexicon().
 
     global g_ShipEngines            to GetShipEnginesByStage().
-    global g_ShipEngines_Spec       to lexicon().
+    global g_ShipEngines_Spec       to Lexicon().
     // #endregion
 
     // *- Object entry registrations
     // This adds engines to the part info global
-    set g_PartInfo["Engines"] to lexicon( 
+    set g_PartInfo["Engines"] to Lexicon( 
         "SepRef", list(
             "ROSmallSpinMotor"              // Spin Motor (Small)
             ,"ROE-1204sepMotor"             // UA1204 Nosecone & Separation Motor
@@ -273,7 +275,7 @@
     //
     global function GetShipEnginesByStage
     {
-        local engLex to lexicon().
+        local engLex to Lexicon().
         for eng in Ship:Engines
         {
             if engLex:HasKey(eng:Stage)
@@ -311,7 +313,7 @@
         local spoolTime to GetField(m, "effective spool-up time").
         if g_ResultCode = 2 { set spoolTime to 0.01. }
 
-        local engSpecObj to lexicon(
+        local engSpecObj to Lexicon(
             "ActiveStage",      _eng:Stage
             ,"AllowRestart",    _eng:AllowRestart
             ,"AllowShutdown",   _eng:AllowShutdown
@@ -356,12 +358,12 @@
         local fuelStabilityAvg  to 0.
         local fuelStabilityMin  to 1.
         local TotalResMass      to 0.
-        local AggregateMassLex to lexicon(
+        local AggregateMassLex to Lexicon(
             "MAXMASSFLOW", 0
-            ,"RESOURCES", lexicon()
+            ,"RESOURCES", Lexicon()
         ).
         
-        local engsSpecs to lexicon(
+        local engsSpecs to Lexicon(
             "AvgExhVelo",           0
             ,"AvgISP",              0
             ,"EstBurnTime",         0
@@ -381,8 +383,8 @@
             ,"PrimaryMode",         False
             ,"Ullage",              False
             ,"Modes",               list()
-            ,"Configs",             lexicon()
-            ,"Engines",             lexicon()
+            ,"Configs",             Lexicon()
+            ,"Engines",             Lexicon()
         ).
 
         if _engList:Length = 0
@@ -410,8 +412,8 @@
                 set engsSpecs["FuelStabilityAvg"] to fuelStabilityAvg.
 
                 set AggregateMassLex:MAXMASSFLOW to AggregateMassLex:MAXMASSFLOW + eng:MaxMassFlow.
-                set AggregateMassLex["Engines"] to lexicon(
-                    eng:Name, lexicon()
+                set AggregateMassLex["Engines"] to Lexicon(
+                    eng:Name, Lexicon()
                 ).
                 if eng:AllowRestart
                 {
@@ -444,8 +446,8 @@
                     {
                         set TotalResMass to TotalResMass + resMass.
                             AggregateMassLex:Engines:Add(
-                                "Resources", lexicon(
-                                    resName, lexicon(
+                                "Resources", Lexicon(
+                                    resName, Lexicon(
                                         "Amount",       engResource:Amount
                                         ,"Capacity",    engResource:Capacity
                                         ,"Density",     engResource:Density
@@ -465,7 +467,7 @@
                         else
                         {
                             AggregateMassLex:Engines:Resources:Add(
-                                resName, lexicon(
+                                resName, Lexicon(
                                     "Amount",       engResource:Amount
                                     ,"Capacity",    engResource:Capacity
                                     ,"Density",     engResource:Density
@@ -523,7 +525,7 @@
     {
         parameter _ves is Ship.
 
-        local engStgObj  to lexicon().
+        local engStgObj  to Lexicon().
         local engList    to _ves:Engines.
         local isSepStage to false.
         local totalBurnTime to 0.
@@ -541,11 +543,11 @@
             }
             else
             {
-                set engStgObj[eng:Stage] to lexicon(
-                    "EngSpecs", lexicon(
+                set engStgObj[eng:Stage] to Lexicon(
+                    "EngSpecs", Lexicon(
                         eng:UID, engSpecs
                     )
-                    ,"StgSpec", lexicon()
+                    ,"StgSpec", Lexicon()
                     ,"EngList", list(eng)
                     ,"ENGUID", list(eng:UID)
                 ).
@@ -578,7 +580,7 @@
 
         local btRemaining to 999999.
         local dcStg to -1.
-        local stgResLex to lexicon().
+        local stgResLex to Lexicon().
 
         // Get engine mass flows and residuals
         for eng in _engs
@@ -595,11 +597,11 @@
             {
                 if not stgResLex:HasKey(cres:Name)
                 {
-                    stgResLex:Add(cres:Name, lexicon(
+                    stgResLex:Add(cres:Name, Lexicon(
                         "Amount",           0
                         ,"Density",         cres:Density
                         ,"MaxMassFlow",     0
-                        ,"Engs",            lexicon()
+                        ,"Engs",            Lexicon()
                         )
                     ).
                 }
@@ -771,7 +773,7 @@
         }
 
         //:ToNumber(1) / 100.
-        local engPerfObj to lexicon(
+        local engPerfObj to Lexicon(
             "UID",              _eng:UID
             ,"EngName",         _eng:Name
             ,"EngTitle",        _eng:Title
@@ -798,11 +800,20 @@
     // Wrapper that will return a lexicon containing all engPerfObjs for engines in the input list
     global function GetEnginesPerformanceData
     {
-        parameter _engList.
+        parameter _engList,
+                  _dataIn is Lexicon("_epoch", 0).
 
-        local aggEngPerfObj to lexicon(
-            "Engines", lexicon()
-            ,"Resources", lexicon()
+        if _dataIn:HasKey("_epoch")
+        {
+            if Round(Time:Seconds, 2) = _dataIn:_epoch
+            {
+                return _dataIn.
+            }
+        }
+        
+        local aggEngPerfObj to Lexicon(
+            "Engines", Lexicon()
+            ,"Resources", Lexicon()
             ,"SepStg", False
         ).
 
@@ -818,15 +829,13 @@
         local thrustPct             to 0.
         local totalFuelMass         to 0.
         local twr                   to 0.
-        local aggFailureObj         to lexicon().
+        local aggFailureObj         to Lexicon().
 
         local burnTimeRemaining     to 999999999.
 
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
         {
             local eng to _engList[i].
-            // if eng:Decoupler <> "None" and eng:Decoupler:Tag:MatchesPattern("booster")
-            // {
             local engLex    to GetEnginePerformanceData(eng).    
 
             local m to engLex:Module.
@@ -845,7 +854,7 @@
                 {
                     set aggFailureObj[engLex:Status] to 
                     (
-                        lexicon(
+                        Lexicon(
                             eng:UID, list(
                                 eng:Name,
                                 engLex:FailureCause
@@ -855,7 +864,7 @@
                 }
                 else
                 {
-                    aggFailureObj[engLex:Status]:Add(eng:UID, lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
+                    aggFailureObj[engLex:Status]:Add(eng:UID, Lexicon("Name", eng:name, "Cause", engLex:FailureCause)).
                 }
             }
                 
@@ -874,22 +883,9 @@
                 if not aggEngPerfObj:Resources:HasKey(res:Name) 
                 {
                     set resMass to res:amount * res:density.
-                    set fuelMass to resMass * (1 - engResiduals).
+                    set fuelMass to resMass - (resMass * engResiduals).
                     set totalFuelMass to totalFuelMass + resMass.
-                    aggEngPerfObj:Resources:Add(res:Name, lexicon("Amount", res:Amount, "Capacity", res:Capacity, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
-                    // if res:MassFlow > 0 
-                    // {
-                    //     set totalMassFlow to totalMassFlow + res:MassFlow.
-                    //     // set burnTimeRemaining to (res:Amount * res:Density) / max(0.0000000001, min(999999, res:MassFlow)).
-                    //     // if g_ActiveEngines:Length > 0
-                    //     // {
-                    //     //     set burnTimeRemaining to max(burnTimeRemaining, 0.0000001) / max(0.001, g_ActiveEngines:Length).
-                    //     // }
-                    // }
-                    // else 
-                    // {
-                    //     set burnTimeRemaining to 999999.//  min(burnTimeRemaining, (res:amount * res:density) / max(res:massFlow, 0.00000000001)).
-                    // }
+                    aggEngPerfObj:Resources:Add(res:Name, Lexicon("Amount", res:Amount, "Capacity", res:Capacity, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
                 }
                 else
                 {
@@ -905,7 +901,7 @@
         set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
         set averageResiduals to choose 0 if averageResiduals <= 0 else averageResiduals / _engList:Length.
-        set totalFuelMass to totalFuelMass * (1 - averageResiduals).
+        set totalFuelMass to totalFuelMass - (totalFuelMass * averageResiduals).
 
         if (totalFuelMass > 0 and aggMassFlow > 0)
         {
@@ -921,8 +917,6 @@
         }
 
         set twr to choose 0 if aggThrust = 0 else aggThrust / Ship:Mass * GetLocalGravity().
-        
-        // set burnTimeRemaining to choose -1 if aggMassFlow <= 0 or totalUsableFuelMass <= 0 else totalUsableFuelMass / aggMassFlow.
 
         set aggEngPerfObj["AverageResiduals"]    to Round(averageResiduals, 5).
         set aggEngPerfObj["BurnTimeRemaining"]   to Round(burnTimeRemaining, 3).
@@ -939,7 +933,7 @@
         set aggEngPerfObj["TotalUsableFuelMass"] to totalFuelMass.
         set aggEngPerfObj["TWR"]                 to twr.
 
-        // set aggEngPerfObj["LastUpdate"] to Round(Time:Seconds, 2).
+        set aggEngPerfObj["_epoch"]              to Round(Time:Seconds, 2).
 
         return aggEngPerfObj.
     }
@@ -958,8 +952,8 @@
         local maxMassFlow       to 0.
         local totalFuelMass     to 0.
         
-        local engBurnTimeLex to lexicon(
-            "Resources", lexicon()
+        local engBurnTimeLex to Lexicon(
+            "Resources", Lexicon()
             ,"EstBurnTime", estBurnTime
         ).
         
@@ -980,7 +974,7 @@
                 {
                     set fuelMass to res:amount * res:density.
                     set totalFuelMass to totalFuelMass + fuelMass.
-                    engBurnTimeLex:Resources:Add(res:Name, lexicon("Object", res, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
+                    engBurnTimeLex:Resources:Add(res:Name, Lexicon("Object", res, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
                 }
             }
             set massFlow to massFlow + eng:MassFlow.
@@ -1102,50 +1096,78 @@
     {
         parameter _execStr to "Ascent".
 
-        local MECOEngList to Ship:PartsTaggedPattern("{0}\|MECO\|\d*":Format(_execStr)).
-        local MECO_EngineID_List to list().
+        local MECO_Engine_List to Ship:PartsTaggedPattern("{0}\|MECO\|\d*(\.\d*)*":Format(_execStr)).
+        local MECO_EngineID_Sets to Lexicon().
+        local MECO_EngineID_List to List().
         local resultFlag to False.
 
-        for p in MECOEngList 
+        local Current_MECO_ID to 999999.
+        
+        for p in MECO_Engine_List 
         { 
-            MECO_EngineID_List:Add(p:UID).
-        }
+            local ecoMET to p:Tag:Split("|")[2]:ToNumber(0).
 
-        local MECO_Time to MECOEngList[0]:Tag:Replace("{0}|MECO|":Format(_execStr),""):ToNumber(-1).
+            if ecoMET > 0 
+            {
+                if MECO_EngineID_Sets:HasKey(ecoMET)
+                {
+                    MECO_EngineID_Sets[ecoMET]:Add(p).
+                }
+                else
+                {
+                    MECO_EngineID_Sets:Add(ecoMET, list(p)).
+                }
+
+                set Current_MECO_ID to Min(Current_MECO_ID, ecoMET).
+            }
+        }
+        
+        local MECO_Time    to Current_MECO_ID.
+
         global MECO_Action_Counter to 0.
-        if MECO_Time >= 0 
+
+        if MECO_Time > 0 
         {
-            local checkDel to { parameter _params is list(). return MissionTime >= _params[1].}.
+            local checkDel to { parameter _params is list(). OutInfo("MECO T-{0}s ":Format(Round(MissionTime - _params[1], 2)), 1). return MissionTime >= _params[1].}.
+
             local actionDel to 
-            { 
+            {
                 parameter _params is list(). 
                 
                 set MECO_Action_Counter to MECO_Action_Counter + 1. 
                 
-                local engIDList to _params[0].
-
-                from { local i to 0.} until i = g_ActiveEngines:Length or engIDList:Length = 0 step { set i to i + 1.} do
+                for eng in Ship:PartsTaggedPattern("Ascent\|MECO\|{0}":Format(_params[1]))
                 {
-                    local eng to g_ActiveEngines[i].
-                    
-                    if engIDList:Contains(eng:UID)
+                    if eng:Ignition and not eng:flameout
                     {
-                        if eng:Ignition and not eng:flameout
+                        eng:shutdown.
+                        if eng:HasGimbal 
                         {
-                            eng:shutdown.
-                            // if eng:HasGimbal 
-                            // {
-                            //     DoAction(eng:Gimbal, "Lock Gimbal", true).
-                            // }
-                            engIDList:Remove(engIDList:Find(eng:UID)).
+                            DoAction(eng:Gimbal, "Lock Gimbal", true).
                         }
+                        set eng:tag to "".
                     }
                 }
+                set g_ActiveEngines to GetActiveEngines().
+                set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+                set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+
                 wait 0.01. 
-                return false.
+
+                if Ship:PartsTaggedPattern("^Ascent\|MECO\|\d*(\.\d*)*"):Length > 0
+                {
+                    UnregisterLoopEvent("MECO").
+                    return SetupMECOEventHandler().
+                }
+                else
+                {
+                    OutInfo("", 1).
+                    set g_MECOArmed to False.
+                    return g_MECOArmed.
+                }
             }.
                 
-            local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, MECO_Time), checkDel@, actionDel@).
+            local MECO_Event to CreateLoopEvent("MECO", "EngineCutoff", list(MECO_EngineID_List, Current_MECO_ID), checkDel@, actionDel@).
             if RegisterLoopEvent(MECO_Event)
             {
                 set resultFlag to True.

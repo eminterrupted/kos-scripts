@@ -1780,7 +1780,7 @@
                 if t_spoolTime > 0.1
                 {
                     set g_ActiveEngines to GetActiveEngines().
-                    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines, g_ActiveEngines_Data).
                     set thrustPerf to max(0.0001, g_ActiveEngines_Data["ThrustPct"]).
 
                     if Time:Seconds > t_liftoff

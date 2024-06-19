@@ -126,7 +126,7 @@
 
                 if epTag:MatchesPattern("^MECO\|\d*")
                 {
-                    if g_Debug OutDebug("[{0}|{1}] epTag MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
+                    // if g_Debug OutDebug("[{0}|{1}] epTag MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
                     wait 0.1.
                     if not g_LoopDelegates:Events:HasKey("MECO")
                     {
