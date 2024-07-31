@@ -1,4 +1,5 @@
 // #include "0:/lib/libLoader.ks"
+// #include "0:/lib/dvCalc.ks"
 @lazyGlobal off.
 
 // *~ Dependencies ~* //
@@ -13,6 +14,7 @@
     // *- Local
     // #region
     local l_boosterMaxIdx to 0.
+    local l_dVMaxStgIdx to 0.
     // #endregion
 
     // *- Global
@@ -168,7 +170,7 @@
 
                     set checkDel  to {
                         // parameter _stageEngs.
-
+                        
                         if Stage:Number - 1 = HotStageID
                         {
                             if MissionTime > 0 
@@ -176,12 +178,14 @@
                                 if g_ActiveEngines:Length > 0
                                 {
                                     local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
-                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
+                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(g_ActiveEngines).
+                                    // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                     set g_TR to stageEngines_BT - SpoolTime.
                                     OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
 
-                                    return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                    return (g_TR < 0) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                    // return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
                                 }
                                 else if t_Val > 0
                                 {
@@ -562,31 +566,33 @@
             from { local i is 0.} until i >= 5 step { set i to i + 1.} do
             {
                 for dc in Ship:PartsTaggedPattern("Ascent\|Booster\|(AS\|)?{0}":Format(i))
-                if dc:Stage >= g_StageLimit
                 {
-                    local tagSpl to dc:Tag:Replace(" ",""):Split("|").
-                    local boosterIdx to tagSpl[tagSpl:Length - 1]:ToNumber().
-                    set l_boosterMaxIdx to Max(l_boosterMaxIdx, boosterIdx).
-                    set minIdx to Min(minIdx, boosterIdx).
+                    if dc:Stage >= g_StageLimit
+                    {
+                        local tagSpl to dc:Tag:Replace(" ",""):Split("|").
+                        local boosterIdx to tagSpl[tagSpl:Length - 1]:ToNumber().
+                        set l_boosterMaxIdx to Max(l_boosterMaxIdx, boosterIdx).
+                        set minIdx to Min(minIdx, boosterIdx).
 
-                    if boosterObj:HasKey(boosterIdx)
-                    {
-                        boosterObj[boosterIdx]:DC:Add(dc).
-                    }
-                    else
-                    {
-                        boosterObj:Add(boosterIdx, lex("DC", list(dc), "ENG", list(), "AS", tagSpl:Contains("AS"))).
-                        if tagSpl:Contains("AS") 
+                        if boosterObj:HasKey(boosterIdx)
                         {
-                            set g_BoosterAirStart to True.
+                            boosterObj[boosterIdx]:DC:Add(dc).
                         }
-                    }
-
-                    for eng in dc:PartsTagged("")
-                    {
-                        if eng:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(eng:Name)
+                        else
                         {
-                            boosterObj[boosterIdx]:ENG:Add(eng).
+                            boosterObj:Add(boosterIdx, lex("DC", list(dc), "ENG", list(), "AS", tagSpl:Contains("AS"))).
+                            if tagSpl:Contains("AS") 
+                            {
+                                set g_BoosterAirStart to True.
+                            }
+                        }
+
+                        for eng in dc:PartsTagged("")
+                        {
+                            if eng:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(eng:Name)
+                            {
+                                boosterObj[boosterIdx]:ENG:Add(eng).
+                            }
                         }
                     }
                 }
@@ -684,6 +690,164 @@
         return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
     }
 
+    // #endregion
+
+    // Delta-V based staging (stage when mnv dv remaining <= <n>)
+    // #region
+
+    // ArmDVStaging
+    //
+    global function ArmDVStaging
+    {
+        parameter _dvPartTag is "dvst(g|age|aging)\|(dv|stg)\|(-)*\d+".
+
+        local dVObj to lex("DC", list(), "ENG", list()).
+        local dVParts to Ship:PartsTaggedPattern(_dvPartTag).
+
+        if dVParts:Length > 0 and HasNode
+        {
+            for checkStgIdx in Range(Stage:Number, g_StageLimit - 1, 1)
+            {
+                for p in dVParts
+                {
+                    if (p:IsType("Decoupler") and p:Stage >= checkStgIdx) or (p:DecoupledIn >= checkStgIdx)
+                    {
+                        local tagSpl to p:Tag:Replace(" ",""):Split("|").
+                        
+                        local dvRemainingAll to 0.
+                        local dvRemainingStg to 0.
+                        local dvStgParam        to tagSpl[tagSpl:Length - 1]:ToNumber(-1).
+                        local dvStgType         to choose 1 if tagSpl[tagSpl:Length - 2] = "stg" else 0.
+                        
+                        if dvStgType = 0
+                        {
+                            if dvStgParam < 0
+                            {
+                                return list(false, g_NulCheckDel@, g_NulActionDel@).
+                            }
+                            set dvRemainingAll to dvStgParam.
+                            set dvStgParam to choose p:Stage if p:IsType("Decoupler") else p:DecoupledIn.
+                        }
+                        else if dvStgType = 1
+                        {
+                            if dvStgParam < 0 
+                            {
+                                set dvStgParam to choose p:Stage if p:IsType("Decoupler") else p:DecoupledIn.
+                            }
+                            else if dvStgParam > Stage:Number 
+                            {
+                                return list(false, g_NulCheckDel@, g_NulActionDel@).
+                            }
+                            set dvRemainingStg to AvailStageDV(dvStgParam).
+                            // set dvRemainingAll to dvRemainingAll + stgDv.
+                            // set dvRemainingStg to choose stgDv if stgDv:STG:HasKey(dvStgParam) else 0.
+                            // print "[ArmDVStaging] dvRemainingAll: [{0}]":Format(dvRemainingAll) at (2, 45).
+                            print "[ArmDVStaging] dvRemainingStg: [{0}]":Format(dvRemainingStg) at (2, 46).
+                        }
+                        // local adjustedMnvDV to NextNode:DeltaV:Mag - dvRemainingStg.
+                        local adjustedMnvDV to dvRemainingStg * 1.00525.
+
+                        if p:IsType("Decoupler")
+                        {
+                            dvObj:DC:Add(p).
+                        }
+                        else if p:IsType("Engine")
+                        {
+                            dvObj:DC:Add(p:Decoupler).
+                        }
+
+                        for p_ in p:Decoupler:PartsNamedPattern("")
+                        {
+                            if p_:IsType("Engine")
+                            {
+                                dvObj:ENG:Add(p).
+                            }
+                        }
+                        set dVObj to lex("TYPE", 1, "PARAM", dvStgParam, "MNVDV", adjustedMnvDV, "DC", dVObj:DC, "ENG", dvObj:ENG).
+                        
+
+                        local actionDel to DVStage@:Bind(dVObj).
+                        local checkDel to CheckDVStagingConditions@:Bind(dVObj):Bind(dvStgParam).
+                        
+                        if not g_LoopDelegates:HasKey("Staging")
+                        {
+                            set g_LoopDelegates["Staging"] to lexicon().
+                        }
+                        else if g_LoopDelegates:Staging:HasKey("DVStaging")
+                        {
+                            g_LoopDelegates:Staging:Remove("DVStaging").
+                        }
+                        g_LoopDelegates:Staging:Add("DVStaging", lexicon("Obj", dvObj, "Check", checkDel, "Action", actionDel)).
+
+                        return true.
+                    }
+                }
+            }
+        }
+        return false.
+    }
+
+    // CheckDVStagingConditions
+    //
+    local function CheckDVStagingConditions
+    {
+        parameter _dvStgObj,
+                  _checkStageIdx.
+
+        if _checkStageIdx = Stage:Number - 1
+        {
+            if not HasNode
+            {
+                if g_LoopDelegates:HasKey("Staging")
+                {
+                    if g_LoopDelegates:Staging:HasKey("DVStaging")
+                    {
+                        g_LoopDelegates:Staging:Remove("DVStaging").
+                    }
+                }
+                return true. // with the event object remove, this will no op if handled properly
+            }
+
+            local activeDVRemaining to NextNode:DeltaV:Mag.
+            local result to _dvStgObj:MNVDV >= activeDVRemaining.
+            
+            print "[DVStaging] MNVDV Thresh: {0} ":Format(_dvStgObj:MNVDV) at (2, 50).
+            print "[DVStaging] mnv node dv : {0} ":Format(Round(activeDVRemaining, 1)) at (2, 51).
+            print "[DVStaging] dV Remaining: {0} ":Format(Round(activeDVRemaining - _dvStgObj:MNVDV, 1)) at (2, 52).
+            return result.
+        }
+    }
+
+    // StageDVs
+    //
+    local function DVStage
+    {
+        parameter _dvObj.
+
+        for eng in _dvObj:ENG
+        { 
+            if eng:AllowShutdown
+            {
+                eng:Shutdown.
+            }
+        } 
+        for dc in _dvObj:DC 
+        { 
+            for p in dc:PartsNamedPattern("sep|spin")
+            {
+                if p:IsType("Engine") p:Activate.
+            }
+            // DoEvent(dc:GetModule("ModuleAnchoredDecoupler"), "Decouple"). // Don't need this because autostaging should take care of things.
+        }
+        
+        local bstCheckDel  to { return True.}.
+        local bstActionDel to { return False.}.
+
+        // OutInfo("UPDATING G_SHIPENGINES").
+        //set g_ShipEngines_Spec to GetShipEnginesSpecs().
+        
+        return list(_dvObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
+    }
     // #endregion
 
 // #endregion

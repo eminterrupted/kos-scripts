@@ -228,7 +228,7 @@ if parachutes:length > 0
             {
                 set chuteStatus to "ARMED(E)".
             }
-            else
+            else if not c:Part:Name:MatchesPattern("Gemini")
             {
                 if DoAction(c, "arm parachute", True) 
                 {
@@ -295,44 +295,47 @@ local lastAng to proAng.
 local angDiff to lastAng - proAng.
 set doneFlag to False.
 set g_TS0 to 0.
-until doneFlag
+if Stage:Number > 1
 {
-    set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
-    set lastAng to proAng.
-    set proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
-    set angDiff to lastAng - proAng.
-    OutMsg("Aligning to retrograde ({0}/0.25)":Format(Round(angDiff, 2))).
-    if Body:ATM:AltitudePressure(Ship:Altitude) > 0.001 
+    until doneFlag
     {
-        set doneFlag to True.
-    }
-    if Ship:ModulesNamed("ModuleRCSFX"):Length = 0
-    {
-        set doneFlag to True.
-    }
-    if proAng < 1 and angDiff < 0.250
-    {
-        if g_TS0 = 0
-        {
-            set g_TS0 to Time:Seconds + 3.25.
-        }
-        else if Time:Seconds > g_TS0 
+        set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
+        set lastAng to proAng.
+        set proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
+        set angDiff to lastAng - proAng.
+        OutMsg("Aligning to retrograde ({0}/0.25)":Format(Round(angDiff, 2))).
+        if Body:ATM:AltitudePressure(Ship:Altitude) > 0.001 
         {
             set doneFlag to True.
         }
-        OutInfo("Settle time for retro staging: [{0}]":Format(Round(g_TS0 - Time:Seconds, 2))).
+        if Ship:ModulesNamed("ModuleRCSFX"):Length = 0
+        {
+            set doneFlag to True.
+        }
+        if proAng < 1 and angDiff < 0.250
+        {
+            if g_TS0 = 0
+            {
+                set g_TS0 to Time:Seconds + 3.25.
+            }
+            else if Time:Seconds > g_TS0 
+            {
+                set doneFlag to True.
+            }
+            OutInfo("Settle time for retro staging: [{0}]":Format(Round(g_TS0 - Time:Seconds, 2))).
+        }
+        else
+        {
+            set g_TS0 to 0.
+            OutInfo().
+        }
+        // if Ship:Altitude <= Body:ATM:Height
+        // {
+        //     LogPressure().
+        // }
     }
-    else
-    {
-        set g_TS0 to 0.
-        OutInfo().
-    }
-    // if Ship:Altitude <= Body:ATM:Height
-    // {
-    //     LogPressure().
-    // }
+    set doneFlag to False.
 }
-set doneFlag to False.
 
 OutMsg("Aligned to retro").
 

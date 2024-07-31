@@ -9,7 +9,7 @@
 
 // *~ Config Settings ~* //
 // #region
-    set Config:IPU to 1325.
+    set Config:IPU to 1536.
 
     global g_DualCore to ship:partsTagged("Core2"):Length > 0.
 // #endregion
@@ -168,6 +168,9 @@
     // Null Delegates
     global g_NulCheckDel to { return True.}.
     global g_NulActionDel to { return False.}.
+
+    // Logging
+    global g_LogOut to False.
 // #endregion
 
 

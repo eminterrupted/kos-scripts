@@ -369,53 +369,96 @@
 // Available dV Calculations
 // #region
 
+    // AvailActiveDV :: (<scalar>) -> <scalar>
+    // Returns the calculated deltaV for the currently active engines
+    global function AvailActiveDV
+    {
+        parameter _mode is "vac".
+
+        local dv to -1.
+
+        if g_ActiveEngines:Length > 0 
+        {
+            local exhVel to 0.
+            local stgMass to Lexicon("Ship", 0 , "Fuel", 0, "UsableFuel", 0, "Stage", 0).
+
+            if g_ActiveEngines:Length > 0
+            {
+                local stgToCheck to { local maxStg to 0. for p in g_ActiveEngines { set maxStg to Max(p:Stage, maxStg).} return maxStg.}.
+                set stgMass to GetStageMass(stgToCheck).
+                set exhVel to GetExhVel(g_ActiveEngines, _mode). // g_ShipEngines_Spec[stg]:StgSpec:AvgExhVelo. 
+                
+                if stgMass["Fuel"] > 0
+                {
+                    wait 0.05.
+                    set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["usableFuel"])).
+                }
+                set g_Debug to false.
+                if g_Debug 
+                { 
+                    OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stgToCheck, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
+                    OutDebug("- stgMass: Ship[{0}] | usableFuel[{1}]    ":Format(round(stgMass["ship"], 3), Round(stgMass["usableFuel"], 3)), crDbg()).
+                    wait 0.1.
+                }
+            }
+        }
+        return dv.
+    }
+
     // AvailDV :: () -> <lexicon>
     // Returns a lex of dv available for vessel and per stage
     global function AvailShipDV
     {
-        parameter mode is "vac".
+        parameter _stgRange is list(Stage:Number, -1),
+                  _mode is "vac".
 
-        local availDv to 0.
-        local dvStgObj to lex().
+        local vesDV to lex("STG", lex()).
+        local stgDV to 0.
+        local allDV to 0.
 
-        from { local stg to stage:number.} until stg < -1 step { set stg to stg - 1.} do 
+        from { local stg to _stgRange[0].} until stg < _stgRange[1] or stg < -1 step { set stg to stg - 1.} do 
         {
-            set dvStgObj to AvailStageDV(stg, mode).
-            set availDv to availDv + dvStgObj[stg].
+            set stgDV to AvailStageDV(stg, _mode).
+            vesDV:STG:Add(stg, stgDV).
+            set allDV to allDV + stgDV.
         }
 
-        set dvStgObj["avail"] to availDv.
-        return dvStgObj.
+        vesDV:Add("ALL", allDV).
+        
+        return vesDV.
     }
 
     // AvailStageDV :: (<scalar>) -> <scalar>
     // Returns the calculated deltaV for a given stage
     global function AvailStageDV
     {
-        parameter stg, mode is "vac".
+        parameter _stg, 
+                  _mode is "vac".
 
         local dv to 0.
         local exhVel to 0.
-        local stgEngs to GetEnginesForStage(stg). 
+        local stgEngs to GetEnginesForStage(_stg). 
         local stgMass to Lexicon("Ship", 0 , "Fuel", 0, "UsableFuel", 0, "Stage", 0).
 
         if stgEngs:Length > 0
         {
-            set stgMass to GetStageMass(stg).
-            set exhVel to GetExhVel(stgEngs, mode). // g_ShipEngines_Spec[stg]:StgSpec:AvgExhVelo. 
+            set stgMass to GetStageMass(_stg).
+            set exhVel to GetExhVel(stgEngs, _mode). // g_ShipEngines_Spec[stg]:StgSpec:AvgExhVelo. 
             
             if stgMass["Fuel"] > 0
             {
                 wait 0.05.
+                print "exhVel: {0} | stgMass:Ship: {1} | stgMass:Fuel: {2}":Format(Round(exhVel, 5), Round(stgMass:Ship, 2), Round(stgMass:UsableFuel, 4)) at (0, 55).
                 set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["usableFuel"])).
             }
-            set g_Debug to False.
-            if g_Debug 
-            { 
-                OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stg, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
-                OutDebug("- stgMass: Ship[{0}] | usableFuel[{1}]    ":Format(round(stgMass["ship"], 3), Round(stgMass["usableFuel"], 3)), crDbg()).
-                wait 1.
-            }
+            // set g_Debug to true.
+            // if g_Debug 
+            // { 
+            //     OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(_stg, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
+            //     OutDebug("- stgMass: Ship[{0}] | usableFuel[{1}]    ":Format(round(stgMass["ship"], 3), Round(stgMass["usableFuel"], 3)), crDbg()).
+            //     wait 1.
+            // }
+            // set g_Debug to false.
         }
 
         return dv.

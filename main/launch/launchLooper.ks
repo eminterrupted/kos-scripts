@@ -3,10 +3,9 @@ clearscreen.
 
 parameter _params is list().
 
-RunOncePath("0:/lib/depLoader.ks").
+RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 RunOncePath("0:/lib/abort.ks").
-RunOncePath("0:/lib/log.ks").
 RunOncePath("0:/kslib/lib_navball.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
@@ -26,9 +25,8 @@ local ts0 to 0.
 if _params:Length > 0
 {
     set tgtInc to ParseStringScalar(_params[0], tgtInc).
-    if _params:length > 1 set ascShaper to ParseStringScalar(_params[1], ascShaper).
-    if _params:length > 2 set tgtAlt0 to ParseStringScalar(_params[2], tgtAlt0).
-    if _params:length > 3 set tgtAlt1 to ParseStringScalar(_params[3], tgtAlt1).
+    if _params:length > 1 set tgtAlt0 to ParseStringScalar(_params[1], tgtAlt0).
+    if _params:length > 2 set tgtAlt1 to ParseStringScalar(_params[2], tgtAlt1).
 }
 
 if tgtAlt1 = -1 
@@ -39,7 +37,6 @@ else if tgtAlt1 = 0
 {
     set tgtAlt1 to Max(Ship:Body:Atm:Height + 10000, tgtAlt0).
 }
-
 
 // Ship systems initialization
 SetProgram(1).

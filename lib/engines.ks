@@ -52,7 +52,9 @@
             ,"CREI_RO_IntSep_200"           // InternalRCS SRB (CREI 200% Resize)
             ,"B9_Engine_T2_SRBS"            // B9 Radial Sep Motor
             ,"B9_Engine_T2_SRBS_CREI_25"    // B9 Radial Sep Motor (CREI 25% Resize)
+            ,"B9_Engine_T2_SRBS_CREI_34"    // B9 Radial Sep Motor (CREI 34% Resize)
             ,"B9_Engine_T2_SRBS_CREI_50"    // B9 Radial Sep Motor (CREI 50% Resize)
+            ,"B9_Engine_T2_SRBS_CREI_67"    // B9 Radial Sep Motor (CREI 67% Resize)
             ,"B9_Engine_T2_SRBS_CREI_150"   // B9 Radial Sep Motor (CREI 150% Resize)
             ,"ROC-MercuryPosigradeBDB"      // RO Mercury Posigrade Kick Motor
             ,"CREI.RO.IntSep.33"            // InternalRCS SRB (CREI 33%  Resize)1
@@ -62,22 +64,26 @@
             ,"CREI.RO.IntSep.200"           // InternalRCS SRB (CREI 200% Resize)
             ,"B9.Engine.T2.SRBS"            // B9 Radial Sep Motor
             ,"B9.Engine.T2.SRBS.CREI.25"    // B9 Radial Sep Motor (CREI 25% Resize)
+            ,"B9.Engine.T2.SRBS.CREI.34"    // B9 Radial Sep Motor (CREI 34% Resize)
             ,"B9.Engine.T2.SRBS.CREI.50"    // B9 Radial Sep Motor (CREI 50% Resize)
+            ,"B9.Engine.T2.SRBS.CREI.67"    // B9 Radial Sep Motor (CREI 67% Resize)
             ,"B9.Engine.T2.SRBS.CREI.150"   // B9 Radial Sep Motor (CREI 150% Resize)
+            ,"ROE-TX280"                    // Saturn Ullage Motor
+            ,"ROE-Agena_Retro_TypeIII"      // Agena Ullage Motor
+            ,"ROE-Agena.Retro.TypeIII"      // Agena Ullage Motor
+
             // ,"B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
             // ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
             // ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
             // ,"B9_Engine_T2A_SRBS_CREI_150"  // B9 Radial Retro Motor (CREI 150% Resize)
         )
         ,"RetroRef", list(
-            "B9_Engine_T2A_SRBS"           // B9 Radial Retro Motor
-            ,"B9_Engine_T2A_SRBS_CREI_25"   // B9 Radial Retro Motor (CREI 25% Resize)
-            ,"B9_Engine_T2A_SRBS_CREI_50"   // B9 Radial Retro Motor (CREI 50% Resize)
-            ,"B9_Engine_T2A_SRBS_CREI_150"  // B9 Radial Retro Motor (CREI 150% Resize)
-            ,"B9.Engine.T2A.SRBS"           // B9 Radial Retro Motor
-            ,"B9.Engine.T2A.SRBS.CREI.25"   // B9 Radial Retro Motor (CREI 25% Resize)
-            ,"B9.Engine.T2A.SRBS.CREI.50"   // B9 Radial Retro Motor (CREI 50% Resize)
-            ,"B9.Engine.T2A.SRBS.CREI.150"  // B9 Radial Retro Motor (CREI 150% Resize)
+             "B9.Engine.T2A.SRBS"           // B9 Radial Retro Motor
+            ,"B9.Engine.T2A.SRBS.CREI.25"    // B9 Radial Sep Motor (CREI 25% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.34"    // B9 Radial Sep Motor (CREI 34% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.50"    // B9 Radial Sep Motor (CREI 50% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.67"    // B9 Radial Sep Motor (CREI 67% Resize)
+            ,"B9.Engine.T2A.SRBS.CREI.150"   // B9 Radial Sep Motor (CREI 150% Resize)
         )
     ).
 
@@ -500,15 +506,18 @@
 
             if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
             {
-                local btResList to list().
+                local btResTimeLeft to list().
                 for res in AggregateMassLex:Engines:Resources:Values
                 {
-                    btResList:Add(res:Mass / res:MaxMassFlow).
+                    if res:Mass > 0 and res:MaxMassFlow > 0
+                    {
+                        btResTimeLeft:Add(res:Mass / res:MaxMassFlow).
+                    }
                 }
                 local bt to 999999999.
-                from { local i to 0.} until i = btResList:Length step { set i to i + 1.} do
+                for bttl in btResTimeLeft
                 {
-                    set bt to Min(bt, btResList[i]).
+                    set bt to Min(bt, bttl).
                 }
                 set engsSpecs:EstBurnTime to Round(bt, 2).
             }
@@ -805,7 +814,7 @@
 
         if _dataIn:HasKey("_epoch")
         {
-            if Round(Time:Seconds, 2) = _dataIn:_epoch
+            if Round(Time:Seconds, 3) = _dataIn:_epoch
             {
                 return _dataIn.
             }
@@ -908,7 +917,10 @@
             local btResList to list().
             for res in aggEngPerfObj:Resources:Values
             {
-                btResList:Add(Max(res:FuelMass, 0.0001) / Max(res:MassFlow, 0.00001)).
+                if res:FuelMass > 0 and res:MassFlow > 0
+                {
+                    btResList:Add(res:FuelMass / res:MassFlow).
+                }
             }
             for _bt in btResList
             {
@@ -933,7 +945,7 @@
         set aggEngPerfObj["TotalUsableFuelMass"] to totalFuelMass.
         set aggEngPerfObj["TWR"]                 to twr.
 
-        set aggEngPerfObj["_epoch"]              to Round(Time:Seconds, 2).
+        set aggEngPerfObj["_epoch"]              to Round(Time:Seconds, 3).
 
         return aggEngPerfObj.
     }
@@ -950,6 +962,7 @@
         local fuelMass          to 0.
         local massFlow          to 0.
         local maxMassFlow       to 0.
+        local maxResiduals      to 0.
         local totalFuelMass     to 0.
         
         local engBurnTimeLex to Lexicon(
@@ -962,6 +975,7 @@
             local m to eng:GetModule("ModuleEnginesRF").
             local engineResiduals to choose m:GetField("Predicted Residuals") if m:HasField("Predicted Residuals") else 0.
             set avgResiduals to avgResiduals + engineResiduals.
+            set maxResiduals to Max(maxResiduals, engineResiduals).
 
             for res in eng:ConsumedResources:Values
             {
@@ -988,6 +1002,7 @@
             local btResList to list().
             for res in engBurnTimeLex:Resources:Values
             {
+                // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
                 btResList:Add((res:FuelMass * avgResiduals) / res:MassFlow).
             }
             for _bt in btResList

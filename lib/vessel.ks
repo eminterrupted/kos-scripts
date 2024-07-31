@@ -775,7 +775,7 @@
 
         global function SetupSpinStabilizationEventHandler
         {
-            parameter _partList is Ship:PartsTaggedPattern("SpinDC\|.*").
+            parameter _partList is Ship:PartsTaggedPattern("SpinDC\|\d*").
 
             local resultFlag to False.
 
@@ -1273,6 +1273,7 @@
                 // OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), crDbg()).
             }
             else if p:DecoupledIn <= stg
+            // else if p:DecoupledIn < stg
             {
                 // OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), crDbg()).
                 set stgShipMass to stgShipMass + p:Mass.

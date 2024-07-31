@@ -343,34 +343,61 @@ DisableAutoStaging().
 
 OutMsg("Final Burn").
 wait 0.05.
-until Ship:AvailableThrust <= 0.1 or Ship:Periapsis >= _tgtPe
+
+local doneFlag to False.
+until doneFlag
 {
+    GetTermChar().
+
+    if g_TermChar:Length > 0
+    {
+        if g_TermChar = Terminal:Input:DeleteRight
+        {
+            OutMsg("** Manual launch burn cutoff engaged **").
+            OutInfo().
+            OutInfo("", 1).
+            OutInfo("", 2).
+            set doneFlag to True.
+        }
+    }
+
     set s_Val to g_SteeringDelegate:Call().
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-    if g_BoostersArmed
+    if Ship:AvailableThrust <= 0.1
     {
-        if boosterCheckDel:Call()
+        set doneFlag to True.
+    }
+    else if Ship:Periapsis >= _tgtPe
+    {
+        set doneFlag to True.
+    }
+    else
+    {    
+        if g_BoostersArmed
         {
-            set boosterResult to boosterActionDel:Call().
-            set g_BoostersArmed to boosterResult[0].
-            if g_BoostersArmed
+            if boosterCheckDel:Call()
             {
-                set boosterCheckDel  to boosterResult[1].
-                set boosterActionDel to boosterResult[2].
+                set boosterResult to boosterActionDel:Call().
+                set g_BoostersArmed to boosterResult[0].
+                if g_BoostersArmed
+                {
+                    set boosterCheckDel  to boosterResult[1].
+                    set boosterActionDel to boosterResult[2].
+                }
+                else
+                {
+                    set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                    OutInfo("Arming Hot Stage", 1).
+                    set g_HotStagingArmed to ArmHotStaging().
+                    clr(cr()).
+                }
             }
             else
             {
-                set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
-                OutInfo("Arming Hot Stage", 1).
-                set g_HotStagingArmed to ArmHotStaging().
-                clr(cr()).
+                OutMsg("Booster staging: Armed").
             }
-        }
-        else
-        {
-            OutMsg("Booster staging: Armed").
         }
     }
 

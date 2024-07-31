@@ -119,7 +119,7 @@
             local minPit  to 5.
             local pitLim  to 27.
             //local pidVals to list(0.25, 0.05, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-            local pidVals to list(0.00075, 0.000125, 0.001, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            local pidVals to list(0.0025, 0.0000125, 0.00325, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
@@ -137,14 +137,14 @@
                 set pidVals to list(0.0075, 0.000125, 0.0075, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
                 // set pidVals to list(0.125, 0.00125, 0.725, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
             }
-            else if Ship:Name:MatchesPattern("^S.OUT")
+            else if Ship:Name:MatchesPattern("^S.OUT.*")
             {
                 set fShape to 1.625.
                 set minPit to 2.5.
                 set pitLim to 22.5.
                 // set pidVals to list(0.25, 0.0125, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
                 set pidVals to list(0.0025, 0.000125, 0.00325, pitLim). // P, I, D, ChangeRate (upper / lower bounds for PID)
-            }   
+            }
             OutInfo("[TgtInc] {0,-3} | [TgtAlt] {1,-7}":Format(Round(_tgtInc, 2), Round(_tgtAlt)), 1).
             set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
         }
@@ -392,7 +392,7 @@
                   _pitLimMin is Ascent_AoA_Min,
                   _pitLimMax is Ascent_AoA_Max,
                   _initPids is false,
-                  _pidVals is list(0.00075, 0.000125, 0.001, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                  _pidVals is list(0.0025, 0.0000125, 0.00325, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
@@ -1656,6 +1656,7 @@
                 if m:HasEvent("retract arm") or m:HasEvent("retract arm left") or m:HasEvent("retract arm right")
                 {
                     swingArms:Add(p).
+                    
                     set stopFlag to True.
                 }
             }
@@ -1871,36 +1872,54 @@
                 local m to _part:GetModuleByIndex(i).
                 if m:Name = "ModuleAnimateGenericExtra"
                 {
-                    if DoEvent(m, "retract arm left")
-                    {
-                        set stopFlag to True.
-                    }
-                    else if DoAction(m, "retract arm left", true)
-                    {
-                        set stopFlag to True.
-                    }
+                    // if m:HasField("arm length adjust")
+                    // {
+                    //     DoAction(m, "toggle", true).
+                    // }
+                    // else
+                    // {
+                        if DoEvent(m, "retract arm")
+                        {
+                            set stopFlag to True.
+                        }
+                        else if DoEvent(m, "retract arm left")
+                        {
+                            set stopFlag to True.
+                        }
+                        else if DoAction(m, "retract arm left", true)
+                        {
+                            set stopFlag to True.
+                        }
+                    // }
                 }
             }
         }
         else
         {
-            from { local i to 0.} until i = _part:modules:length step { set i to i + 1.} do
+            from { local i to 0.} until i = _part:modules:length or stopFlag step { set i to i + 1.} do
             {
                 local m to _part:GetModuleByIndex(i).
                 if m:Name = "ModuleAnimateGenericExtra"
                 {
-                    if DoEvent(m, "retract arm")
-                    {
-                        set stopFlag to True.
-                    }
-                    else if DoEvent(m, "retract arm right")
-                    {
-                        set stopFlag to True.
-                    }
-                    else if DoAction(m, "retract arm right", true)
-                    {
-                        set stopFlag to True.
-                    }
+                    // if m:HasField("arm length adjust")
+                    // {
+                    //     DoAction(m, "toggle", true).
+                    // }
+                    // else 
+                    // {
+                        if DoEvent(m, "retract arm")
+                        {
+                            set stopFlag to True.
+                        }
+                        else if DoEvent(m, "retract arm right")
+                        {
+                            set stopFlag to True.
+                        }
+                        else if DoAction(m, "retract arm right", true)
+                        {
+                            set stopFlag to True.
+                        }
+                    // }
                 }
             }
         }
