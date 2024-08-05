@@ -53,7 +53,7 @@ if _tgtPe < 0
 }
 
 wait until Ship:Unpacked.
-local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.50)).
+local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.1250)).
 
 local launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
 

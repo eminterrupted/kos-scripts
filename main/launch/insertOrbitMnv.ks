@@ -14,7 +14,7 @@ DispMain().
 
 // Declare Variables
 local dvNeeded to list(0, 0, 0).
-local stageLimit to 0.
+local stageLimit to g_StageLimit.
 local tgtAp to Ship:Apoapsis.
 local tgtPe to Ship:Apoapsis.
 

@@ -9,7 +9,7 @@ DispMain().
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
 local tgtInc       to choose g_MissionTag:Params[0] if g_MissionTag:Params:Length > 0 else 0.
-local tgtAp       to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 175000.
+local tgtAp        to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 175000.
 local tgtPe        to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 and g_MissionTag:Params[2] >  1 else -1.
 local tgtEcc       to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 and g_MissionTag:Params[2] <= 1 else -1. 
 local azObj        to choose l_az_calc_init(tgtAp, tgtInc) if g_GuidedAscentMissions:Contains(g_MissionTag:Mission) else list().
@@ -75,7 +75,7 @@ set g_MainProcess to ScriptPath().
 DispMain().
 
 // Circularize if necessary
-if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Mission:MatchesPattern("^((PID)?Orbit|Circularize)") 
+if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Mission:MatchesPattern("^((PID)?Orbit(al)?|Circularize)") 
 {
     ExecCircBurn().
 }

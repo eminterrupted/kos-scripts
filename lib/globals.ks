@@ -23,11 +23,13 @@
     global g_Debug to False.
     global g_Debug_Max to True.
     global g_DbgOffset to 0.
+    global g_ErrorFallback to -1234567890.
     global g_Slowbug to False.
     global g_LastUpdate to 0.
     global g_Program to 0.
     global g_ResultCode to 0.
     global g_RunMode to 0.
+
 
     // Global timestamp / timer placeholders
     global g_TR     to 0.
@@ -54,7 +56,7 @@
     global g_StageCurrent   to Stage:Number.
     global g_StageLast      to Stage:Number.
     global g_StageNext      to Stage:Number - 1.
-    global g_StageLimit     to 3.
+    global g_StageLimit     to 0.
     global g_StageLimitSet  to list().
     global g_StageTracker   to Stage:Number.
     global g_UllageDefault  to 8.
@@ -67,6 +69,7 @@
             "DownRange"
             ,"DownRanger"
             ,"Orbit"
+            ,"Orbital"
             ,"PIDOrbit"
             ,"SubOrbital"
             ,"PIDSubOrbital"
@@ -82,6 +85,7 @@
             "DownRange"
             ,"DownRanger"
             ,"Orbit"
+            ,"Orbital"
             ,"MaxAlt"       // Guided or unguided max altitude
             ,"PIDOrbit"
             ,"PIDSubOrbital"

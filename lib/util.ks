@@ -1000,138 +1000,8 @@
         }
     // #endregion
 
-    // *- Mission Tag Decoder Utilities
+    // *- String Parsing
     // #region
-
-    // ParseCoreTag :: (_tag)<String> -> (parsedTagObject)<Lexicon>
-    // Parses a core tag, including launch params and stop stage
-    // Format: (missionName)<string>|param1;param2;param3;param4|(stageStop)<scalar>
-    global function ParseCoreTag
-    {
-        parameter _tag is core:tag.
-
-        local newStopStage      to 0.
-        local parsedMission     to "".
-        local parsedParams      to list().
-        local parsedStageStop   to 0.
-        local parsedTag         to list(_tag).
-        local prmResult         to "".
-        local prmSplit          to list().
-        local prmSet            to list().
-        local stageExitGate     to "".
-        local tempStageStop     to "".
-        local tempStopSplit     to list().
-
-        local parsedTagObject   to lexicon(
-            "MISSION", _tag:Split("|")[0]
-            ,"PARAMS", list()
-            ,"STGSTOP", 0
-            ,"STAGESTOP", 0
-            ,"STGSTOPSET", list()
-        ).
-
-        if _tag:Contains("|")
-        {
-            set parsedTag       to _tag:Split("|").
-            set tempStageStop to parsedTag[parsedTag:Length - 1].
-            if tempStageStop:Contains(";")
-            {
-                // local stopIdx to 0.
-                set tempStopSplit to tempStageStop:Split(";").
-
-                for stageID in tempStopSplit
-                {
-                    parsedTagObject:StgStopSet:Add(stageID).
-                }
-                set parsedStageStop to parsedTagObject:StgStopSet[0]:ToNumber(-1).
-            }
-            else
-            {
-                set parsedStageStop to tempStageStop:ToNumber(-1).
-            }
-
-            set parsedTagObject["MISSION"] to parsedTag[0].
-
-            if parsedStageStop <> -1
-            {
-                set parsedTagObject["STGSTOP"] to parsedStageStop.
-                set g_StageLimit to parsedStageStop.
-                set g_StageLimitSet to parsedTagObject:StgStopSet.
-            }
-            else
-            {
-                set parsedTagObject["STGSTOP"] to 0.
-                set g_StageLimit to parsedStageStop.
-                set g_StageLimitSet to list(g_StageLimit).
-            }
-
-            if parsedTag:Length > 2 // Params
-            {
-                set prmSplit to parsedTag[1]:Split(";"). 
-                if prmSplit:Length > 0
-                {               
-                    set prmSet to list().
-                    from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
-                    {
-                        local prm to prmSplit[i].
-                        prmSet:Add(ParseStringScalar(prm)).
-                    }
-                }
-            }
-            else
-            {
-            }
-
-            set parsedTagObject["PARAMS"] to prmSet.
-            set g_MissionTag:Params to prmSet.
-        }
-
-        return parsedTagObject.
-    }
-
-    global function SetNextStageLimit
-    {
-        parameter _setStage is -1.
-        
-        local cTag to core:tag.
-        local lastStgLim to g_StageLimit.
-        if _setStage < 0
-        {
-            if g_StageLimitSet:Length > 1
-            {
-                set cTag to cTag:replace("|{0};":Format(g_StageLimit:ToString), "|").
-                local tagSplit to cTag:Split("|").
-                set g_StageLimit to tagSplit[tagSplit:Length - 1]:Split(";")[0]:ToNumber(Stage:Number).
-                set g_MissionTag:STGSTP to g_StageLimit.
-                g_StageLimitSet:Remove(0).
-            }
-            else
-            {
-                set g_StageLimit to 0.
-                set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
-                g_StageLimitSet:Clear().
-                g_StageLimitSet:Add(g_StageLimit).
-                set g_MissionTag:STGSTP to g_StageLimit.
-            }
-        }
-        else
-        {
-            set g_StageLimit to _setStage.
-            set cTag to cTag:Replace(cTag:Substring(cTag:FindLast("|") + 1, cTag:Length - cTag:FindLast("|") - 1), g_StageLimit:ToString).
-            g_StageLimitSet:Clear().
-            g_StageLimitSet:Add(g_StageLimit).
-            set g_MissionTag:STGSTP to g_StageLimit.
-        }
-
-        if g_StageLimit <> lastStgLim
-        {
-            set core:tag to cTag.
-            if g_Debug { OutDebug("g_StageLimit updated to {0}":Format(g_StageLimit)).}
-        }
-        return cTag.
-    }
-
-
     global function ParseStringScalar
     {
         parameter _inputString,
@@ -1139,7 +1009,6 @@
 
         local scalar_result to -1.
         
-
         if _inputString:IsType("Scalar") // if it's already a scalar, well...
         {
             set scalar_result to _inputString.
@@ -1174,7 +1043,7 @@
             }
             else if _inputString:MatchesPattern("(^\d*(\.\d{1,})?$)")
             {
-                OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
+                // OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
                 set scalar_result to _inputString:ToNumber(_fallbackValue).
                 wait 0.01.
             }
@@ -1250,7 +1119,7 @@
     }
     // #endregion
 
-    // Sound
+    // *- Sound
     // #region
 
     // PlaySFX :: <int> -> <none>
