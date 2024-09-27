@@ -3,17 +3,18 @@ ClearScreen.
 
 parameter _params is list().
 
-RunOncePath("0:/lib/libLoader").
+RunOncePath("0:/lib/libLoader", list(0)).
 RunOncePath("0:/lib/gui").
 
 ClearGuis().
+PurgeGUIObj().
 
 // local dataLex to GUI_WidgetDelegates.
 InitTestHeader().
 
 print "Parsing core tag".
 
-ParseCoreTag().
+set g_MissionTag to ParseCoreTag().
 
 global guiHandle to gui(0).
 local guiState to False.
@@ -22,6 +23,10 @@ print "UP   : Show GUI" at (2, 3).
 print "DOWN : Hide GUI" at (2, 4).
 print "RIGHT: Initialize GUI" at (2, 5).
 print "LEFT : Destroy GUI" at (2, 6).
+
+set guiHandle to InitGUI(0).
+set guiHandle:Visible to True.
+set guiState to True.
 
 local doneFlag to false.
 until doneFlag
@@ -33,7 +38,7 @@ until doneFlag
         print "Gui State: {0}":Format(guiState) at (2, 8).
         if guiState 
         {
-            UpdateGUI(guiHandle, "0001").
+            UpdateGUI(guiHandle, "1001").
         }
     }
     else
@@ -41,7 +46,6 @@ until doneFlag
         if g_TermChar = Terminal:Input:RightCursorOne // Initialize / Reinit
         {
             set guiHandle to InitGUI(0).
-            // set dataLex to GUI_WidgetDelegates.
             set guiState to True.
         }
         else if g_TermChar = Terminal:Input:UpCursorOne
@@ -66,13 +70,13 @@ until doneFlag
             ClearGuis().
             guiHandle:Clear().
             g_Gui:Clear().
-
+            set doneFlag to true.
 
             // GUI_WidgetDelegates:Stack_Pages:Clear().
             // GUI_WidgetDelegates:Active_Stack:Clear().
             // GUI_WidgetDelegates:Active_Button:Clear().
             // set dataLex to GUI_WidgetDelegates.
-            InitTestHeader().
+            clearScreen.
         }
         else if g_TermChar = "g"
         {

@@ -673,6 +673,36 @@
         return g_Line.
     }
 
+    // DispPatch :: _orbit<Orbit> -> <none>
+    global function DispPatch
+    {
+        parameter _orbit is Orbit,
+                  _dispBlockIdx is -1.
+
+        if Terminal:Height + Terminal:Width <> g_TermSize
+        {
+            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+        }
+
+        if _dispBlockIdx < 0
+        {
+            set _dispBlockIdx to NextOrAssignedTermBlock("OBT_PATCH").
+        }
+
+        local dispList to list(
+            "OBT PATCH"
+            ,"APOAPSIS      : {0}":Format(Round(_orbit:Apoapsis))
+            ,"PERIAPSIS     : {0}":Format(Round(_orbit:Periapsis))
+            ,"INCLINATION   : {0}":Format(Round(_orbit:Inclination, 2))
+            ,"ECCENTRICTY   : {0}":Format(Round(_orbit:Eccentricity, 5))
+            ,"ARG PERIAPSIS : {0}":Format(Round(_orbit:ArgumentOfPeriapsis, 5))
+            ,"LONG ASC NODE : {0}":Format(Round(_orbit:LAN, 2))
+            ,"PERIOD        : {0}":Format(TimeSpan(_orbit:Period):Full)
+        ).
+
+        DispPrintBlock(_dispBlockIdx, dispList).     
+    }
+
     // DispPIDLoopValues :: _PID<PIDLoop> -> <none>
     global function DispPIDLoopValues
     {
@@ -1004,10 +1034,10 @@
 
         local blockAnchor to list().
 
-        if g_Debug 
-        {
-            if g_Debug { OutDebug("DispPrintBlock|Params: [{0}][{1}][{2}]":Format(_blockIdx, _dispData, _numColumns)).}
-        }
+        // if g_Debug 
+        // {
+        //     if g_Debug { OutDebug("DispPrintBlock|Params: [{0}][{1}][{2}]":Format(_blockIdx, _dispData, _numColumns)).}
+        // }
 
         if _blockIdx:IsType("String")
         {
@@ -1021,11 +1051,11 @@
             set blockAnchor to l_GridSpaceLex[_blockIdx].
         }
 
-        if g_Debug
-        {
-            if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:HasKey({0}): [{1}]":Format(_blockIdx, l_GridSpaceLex:HasKey(_blockIdx)), 1).}
-            if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:Keys: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), 2).}
-        }
+        // if g_Debug
+        // {
+        //     if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:HasKey({0}): [{1}]":Format(_blockIdx, l_GridSpaceLex:HasKey(_blockIdx)), 1).}
+        //     if g_Debug { OutDebug("DispPrintBlock|l_GridSpaceLex:Keys: [{0}]":Format(l_GridSpaceLex:Keys:Join(";")), 2).}
+        // }
             // else
             // {
             //     // if g_Debug OutDebug("[DispPrintBlock] Missing _blockIdx in l_GridSpaceLex [{0}]":Format(_blockIdx)).

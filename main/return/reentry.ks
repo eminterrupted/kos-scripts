@@ -16,7 +16,7 @@ local presLog to "0:/data/log/Earth_Pressure.csv".
 local chuteStatus to "N/A".
 local fairings to ship:PartsTaggedPattern("(reentry|return|descent)\|fairing").
 local jettAlt to 5000.
-local mainChuteDeployAlt to 1375.
+local mainChuteDeployAlt to 2500.
 
 local gemBDBChute to choose Ship:PartsNamed("ROC-GeminiParachuteBDB")[0] if Ship:PartsNamed("ROC-GeminiParachuteBDB"):Length > 0 else Core:Part.
 local parachutes to ship:modulesnamed("RealChuteModule").
@@ -91,7 +91,7 @@ until doneFlag
     if g_TermChar <> ""
     {
         OutInfo("retroFire: " + retroFire, 1).
-        if g_TermChar = terminal:input:enter
+        if g_TermChar = Terminal:Input:Enter
         {
             //InitWarp(Time:Seconds + eta:apoapsis, "apoapsis").
             set mode to "ap".
@@ -237,7 +237,7 @@ if parachutes:length > 0
                 else
                 {
                     set chuteStatus to "ARM_AUTO_ERR".
-                    when Alt:Radar < 20000 then
+                    when Alt:Radar < 10000 then
                     {
                         if not DoEvent(c, "deploy parachute")
                         {
@@ -329,10 +329,6 @@ if Stage:Number > 1
             set g_TS0 to 0.
             OutInfo().
         }
-        // if Ship:Altitude <= Body:ATM:Height
-        // {
-        //     LogPressure().
-        // }
     }
     set doneFlag to False.
 }
@@ -364,17 +360,6 @@ if stage:number > 1
             }
         }
     }
-    OutMsg("Checking thrust condition").
-    // until false
-    // {
-    //     set g_ActiveEngines to GetActiveEngines().
-    //     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-    //     if g_ActiveEngines_Data:Thrust = 0 
-    //     {
-    //         break.
-    //     }
-    //     wait 0.01.
-    // }
 
     OutMsg("Staging").
     until stage:number <= 1 
@@ -454,6 +439,39 @@ until ship:groundspeed <= 1500 and ship:altitude <= 20000
         OutInfo("Control locked").
         lock steering to s_Val.
     }
+    else if g_TermChar:MatchesPattern("(Q|q|W|w|E|e)")
+    {
+        if g_TermChar = char(87) // W (Fast Stop)
+        {
+            set Ship:Control:Roll to 0.
+            set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val). 
+        }
+        else 
+        {
+            if g_TermChar = char(119) // w (Coast Stop)
+            {
+                set Ship:Control:Roll to 0.
+            }
+            else if g_TermChar = char(81) // Q (Fast Roll)
+            {
+                set Ship:Control:Roll to Ship:Control:Roll - 0.1.
+            }
+            else if g_TermChar = char(113) // q (Slow Roll)
+            {
+                set Ship:Control:Roll to Ship:Control:Roll - 0.25.
+            }
+            else if g_TermChar = char(69) // E (Fast Roll)
+            {
+                set Ship:Control:Roll to Ship:Control:Roll + 0.1.
+            }
+            else if g_TermChar = char(101) // e (Slow Roll)
+            {
+                set Ship:Control:Roll to Ship:Control:Roll + 0.25.
+            }
+            OutInfo("Roll: {0} ":Format(Ship:Control:Roll)).
+            set s_Val to -Ship:Velocity:Surface.
+        }
+    }
     else
     {
         Terminal:Input:Clear().
@@ -462,12 +480,11 @@ until ship:groundspeed <= 1500 and ship:altitude <= 20000
     set g_TermChar to "".
     
     // set s_Val to ship:SrfRetrograde.
-    LogPressure().
+    // LogPressure().
     DispReentryTelemetry().
 }
 wait 0.05.
 
-if gemBDBChute:UID <> Core:Part:UID DoEvent(gemBDBChute:GetModule("ModuleDecouple"), "decouple").
 unlock steering.
 OutMsg("Control released | Parachute Status: [{0}]":Format(chuteStatus)).
 
@@ -477,21 +494,34 @@ until ALT:RADAR <= jettAlt
     DispReentryTelemetry().
 }
 
+local fairingMod to "ProceduralFairingDecoupler".
+local dcMod to "ProceduralDecoupler".
 for f in fairings
 {
-    local m to f:GetModule("ProceduralFairingDecoupler").
-    if not DoEvent(m, "jettison fairing")
+    if f:HasModule(fairingMod)
     {
-        DoAction(m, "jettison fairing", true).
+        local m to f:GetModule("ProceduralFairingDecoupler").
+        if not DoEvent(m, "jettison fairing")
+        {
+            DoAction(m, "jettison fairing", true).
+        }
+    }
+    else if f:HasModule(dcMod)
+    {
+        if not DoEvent(m, "Decouple")
+        {
+            DoAction(m, "decouple", true).
+        }
     }
 }
-LIGHTS on.
+Lights on.
 
 until Alt:Radar <= mainChuteDeployAlt
 {
     LogPressure().
     DispReentryTelemetry().
 }
+if gemBDBChute:UID <> Core:Part:UID DoEvent(gemBDBChute:GetModule("ModuleDecouple"), "decouple").
 
 if warp > 1 
 {
@@ -513,20 +543,6 @@ if Ship:PartsNamed("ROC-MercuryHS"):Length > 0
 {
     DoEvent(Ship:PartsNamed("ROC-MercuryHS")[0]:GetModule("ModuleAnimateGeneric"), "Deploy Landing Bag").
 }
-
-// for m in Ship:ModulesNamed("ModuleAnimateGeneric")
-// {
-//     if DoEvent(m, "Deploy Landing Bag")
-//     {
-//         OutMsg("Landing bag deploy").
-//         Break.
-//     }
-//     else if DoAction(m, "Deploy Landing Bag", true)
-//     {
-//         OutMsg("Landing bag deploy").
-//         Break.
-//     }
-// }
 
 until Alt:Radar <= 25
 {
@@ -553,20 +569,3 @@ local function LogPressure
 
     return False.
 }
-//     if _init
-//     {
-//         if Exists(Volume(0)) Log "MissionName,MissionTime,Altitude,Pressure(Atm),Pressure(kPa)" to presLog.
-//     }
-//     else
-//     {
-//         local pres to Ship:Body:ATM:AltitudePressure(Ship:Altitude).
-//         if HomeConnection:IsConnected
-//         {
-//             wait 0.01.
-//             if Exists(Volume(0)) 
-//             {
-//                 Log "{0},{1},{2},{3},{4}":Format(Ship:Name, Round(MissionTime, 3), Round(Ship:Altitude, 2), Round(pres, 8), Round(pres * Constant:atmtokpa, 8)) to presLog.
-//             }
-//         }
-//     }
-// }

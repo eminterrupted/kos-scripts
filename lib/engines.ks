@@ -132,10 +132,7 @@
                 // wait 0.01.
                 if eng:Decoupler <> "None"
                 {
-                    if eng:Decoupler:Tag:MatchesPattern("^Booster.*")
-                    {
-                    }
-                    else
+                    if not eng:Decoupler:Tag:MatchesPattern("^Booster.*")
                     {
                         if eng:Ignition and not eng:flameout
                         {
@@ -313,11 +310,11 @@
         local stabilityStrIdx       to fuelStability:Find("(").
         local fuelStabilityScalar   to choose fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100 if fuelStability:Contains("%") else 0.01.
 
-        local mixRatio to GetField(m, "mixture ratio").
-        if g_resultCode = 2 { set mixRatio to 1. }
+        local mixRatio to GetField(m, "mixture ratio", 1).
+        // if g_resultCode = 2 { set mixRatio to 1. }
 
-        local spoolTime to GetField(m, "effective spool-up time").
-        if g_ResultCode = 2 { set spoolTime to 0.01. }
+        local spoolTime to GetField(m, "effective spool-up time", 0.0000000000001).
+        // if g_ResultCode = 2 { set spoolTime to 0.01. }
 
         local engSpecObj to Lexicon(
             "ActiveStage",      _eng:Stage
@@ -372,7 +369,7 @@
         local engsSpecs to Lexicon(
             "AvgExhVelo",           0
             ,"AvgISP",              0
-            ,"EstBurnTime",         0
+            ,"BurnTimeRemaining",   0
             ,"FuelStabilityAvg",    0
             ,"FuelStabilityMin",    0
             ,"Ignitions",           0
@@ -401,6 +398,7 @@
         {
             local totalThrust to 0.
             local ispWeighting to 0.
+            
             
             from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
             {
@@ -443,32 +441,37 @@
                 {
                     local engResource to eng:ConsumedResources[resName].
                     local resMass to (engResource:Amount * engResource:Density).
+                    local residuals to 0.
                     if eng:GetModule("ModuleEnginesRF"):HasField("Predicted Residuals")
                     {
-                        set resMass to resMass * (1 - GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals")).
+                        // set resMass to resMass * (1 - GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals")).
+                        // set resMass to resMass * (1 - GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals")).
+                        set residuals to resMass * GetField(eng:GetModule("ModuleEnginesRF"), "Predicted Residuals").
                     }
 
                     if not AggregateMassLex:Engines:HasKey("Resources")
                     {
                         set TotalResMass to TotalResMass + resMass.
-                            AggregateMassLex:Engines:Add(
-                                "Resources", Lexicon(
-                                    resName, Lexicon(
-                                        "Amount",       engResource:Amount
-                                        ,"Capacity",    engResource:Capacity
-                                        ,"Density",     engResource:Density
-                                        ,"Mass",        resMass
-                                        ,"MaxMassFlow", engResource:MaxMassFlow
-                                        ,"Ratio",       engResource:Ratio
-                                    )
+                        AggregateMassLex:Engines:Add(
+                            "Resources", Lexicon(
+                                resName, Lexicon(
+                                    "Amount",       engResource:Amount
+                                    ,"Capacity",    engResource:Capacity
+                                    ,"Density",     engResource:Density
+                                    ,"Mass",        resMass
+                                    ,"MaxMassFlow", engResource:MaxMassFlow
+                                    ,"Ratio",       engResource:Ratio
+                                    ,"TotalResiduals", residuals
                                 )
-                            ).
+                            )
+                        ).
                     }
                     else
                     {
                         if AggregateMassLex:Engines:Resources:HasKey(resName)
                         {
                             set AggregateMassLex:Engines:Resources[resName]:MaxMassFlow to AggregateMassLex:Engines:Resources[resName]:MaxMassFlow + engResource:MaxMassFlow.
+                            set AggregateMassLex:Engines:Resources[resName]:TotalResiduals to AggregateMassLex:Engines:Resources[resName]:TotalResiduals + residuals.
                         }
                         else
                         {
@@ -480,6 +483,7 @@
                                     ,"Mass",        resMass
                                     ,"MaxMassFlow", engResource:MaxMassFlow
                                     ,"Ratio",       engResource:Ratio
+                                    ,"TotalResiduals", residuals
                                 )
                             ).
                         }
@@ -507,11 +511,12 @@
             if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
             {
                 local btResTimeLeft to list().
-                for res in AggregateMassLex:Engines:Resources:Values
+                for resName in AggregateMassLex:Engines:Resources:Keys
                 {
+                    local res to AggregateMassLex:Engines:Resources[resName].
                     if res:Mass > 0 and res:MaxMassFlow > 0
                     {
-                        btResTimeLeft:Add(res:Mass / res:MaxMassFlow).
+                        btResTimeLeft:Add((res:Mass - AggregateMassLex:Engines:Resources[resName]:TotalResiduals) / res:MaxMassFlow).
                     }
                 }
                 local bt to 999999999.
@@ -519,7 +524,7 @@
                 {
                     set bt to Min(bt, bttl).
                 }
-                set engsSpecs:EstBurnTime to Round(bt, 2).
+                set engsSpecs:BurnTimeRemaining to Round(bt, 2).
             }
 
             return engsSpecs.
@@ -570,7 +575,7 @@
             if stgEngs:Length > 0
             {
                 set engStgObj[_stgKey]:StgSpec to GetEnginesSpecs(stgEngs).
-                set totalBurnTime to totalBurnTime + engStgObj[_stgKey]:StgSpec:EstBurnTime.
+                set totalBurnTime to totalBurnTime + engStgObj[_stgKey]:StgSpec:BurnTimeRemaining.
             }
         }
         set engStgObj["TotalBurnTime"] to totalBurnTime.
@@ -958,7 +963,7 @@
         parameter _engList.
 
         local avgResiduals      to 0.
-        local estBurnTime       to 999999.
+        local BurnTimeRemaining       to 999999.
         local fuelMass          to 0.
         local massFlow          to 0.
         local maxMassFlow       to 0.
@@ -967,7 +972,7 @@
         
         local engBurnTimeLex to Lexicon(
             "Resources", Lexicon()
-            ,"EstBurnTime", estBurnTime
+            ,"BurnTimeRemaining", BurnTimeRemaining
         ).
         
         for eng in _engList
@@ -1007,11 +1012,11 @@
             }
             for _bt in btResList
             {
-                set estBurnTime to Min(estBurnTime, _bt).
+                set BurnTimeRemaining to Min(BurnTimeRemaining, _bt).
             }
         }
 
-        return Round(estBurnTime, 2).
+        return Round(BurnTimeRemaining, 2).
     }
 
 
@@ -1163,7 +1168,7 @@
                         set eng:tag to "".
                     }
                 }
-                set g_ActiveEngines to GetActiveEngines().
+                set g_ActiveEngines to GetActiveEngines(ship, "NoBooster").
                 set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 

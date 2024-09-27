@@ -6,6 +6,7 @@
 // #include "0:/lib/util.ks"
 // #include "0:/lib/disp.ks"
 // #include "0:/lib/engines.ks"
+// #include "0:/lib/abort.ks"
 // #include "0:/kslib/lib_l_az_calc.ks"
     
 // #endregion
@@ -89,6 +90,7 @@
     // New entries in global objects
     set g_PartInfo["LES"] to list(
         "ROC-MercuryLESBDB"
+        ,"ROC-ApolloLESBDB"
     ).
 
     set g_PartInfo["EventTypeRef"] to lexicon(
@@ -236,14 +238,18 @@
 
                     for p in partList
                     {
-                        set maxSet to Max(maxSet, p:tag:Split("|")[1]:ToNumber(-1)).
+                        local tagSplit to p:Tag:Split("|").
+                        set maxSet to Max(maxSet, tagSplit[tagSplit:Length - 1]:ToNumber(-1)).
                     }
 
                     from { local i to 0.} until i > maxSet step { set i to i + 1.} do
                     {
                         OutInfo("OnDeploy.{0}: Active":Format(i)).
-                        for p in ship:PartsTaggedPattern("OnDeploy\|{0}":Format(i))
+
+                        local waitTime to 0.
+                        for p in ship:PartsTaggedPattern("OnDeploy\|(.*\|)?{0}$":Format(i))
                         {
+                            local tagSplit to p:Tag:Split("|").
                             for pType in g_PartInfo:PartModRef:Keys
                             {
                                 for m in g_PartInfo:PartModRef[pType]
@@ -281,8 +287,21 @@
                                     }
                                 }
                             }
+                            if tagSplit:Length > 2 
+                            {
+                                set waitTime to Max(waitTime, tagSplit[1]:ToNumber(0)).
+                            }
                         }
-                        wait 1.
+                        if waitTime > 0
+                        {
+                            set g_TS to Time:Seconds + waitTime.
+                            until Time:Seconds > g_TS
+                            {
+                                OutInfo("Deployment Completion ETA: {0}s ":Format(Round(g_TS - Time:Seconds, 2)), 1).
+                                wait 0.01.
+                            }
+                            OutInfo("", 1).
+                        }
                     }
                     return False.
                 }.
@@ -1626,7 +1645,7 @@
 
         if g_AngDependency:Keys:Length = 0
         {
-            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.0275, 0.0075, 0.0125, 1)). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
+            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.0275, 0.0075, 0.0125, list(-1, 1))). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
         }
 
         // Branching
@@ -1646,7 +1665,7 @@
             set del to GetAscentSteeringDelegate(g_MissionTag:Params[1], g_MissionTag:Params[0], g_AzData).
             // set del to { return Heading(l_az_calc(g_azData), GetAscentAng_Next(g_AngDependency) * _fShape, 0).}.
         }
-        else if _steerDelID = "Apo:Sun"
+        else if _steerDelID = "Pro:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
             set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Prograde), 0).}.
@@ -1669,6 +1688,72 @@
                 DispPIDLoopValues(g_PIDS[g_AngDependency:APO_PID]).
                 return Heading(l_az_calc(g_azData), pidPit, 0).
             }.
+        }
+        else if _steerDelID:MatchesPattern("^Retro(:\w+)?")
+        {
+            local steerSplit to _steerDelID:Split(":").
+            if steerSplit:Length > 1
+            {
+                if steerSplit[1] = "Up"
+                {
+                    set del to { return LookDirUp(-Ship:Velocity:Orbit, -Body:Position).}.
+                }
+                else if steerSplit[1] = "Down"
+                {
+                    set del to { return LookDirUp(-Ship:Velocity:Orbit, Body:Position).}.
+                }
+                else if steerSplit[1] = "Sun"
+                {
+                    set del to { return LookDirUp(-Ship:Velocity:Orbit, Sun:Position).}.
+                }
+                else if steerSplit[1] = "Tgt" and HasTarget
+                {
+                    set del to { return LookDirUp(-Ship:Velocity:Orbit, Target:Position).}.
+                }
+                else
+                {
+                    set del to { return -Ship:Velocity:Orbit.}.
+                }
+            }
+            else
+            {
+                set del to { return -Ship:Velocity:Orbit.}.
+            }
+        }
+        else if _steerDelID:MatchesPattern("^Body(:\w+)?")
+        {
+            local steerSplit to _steerDelID:Split(":").
+            if steerSplit:Length > 1
+            {
+                if steerSplit[1] = "Pro"
+                {
+                    set del to { return LookDirUp(Body:Position, Ship:Velocity:Orbit).}.
+                }
+                else if steerSplit[1] = "Up"
+                {
+                    set del to { return LookDirUp(Body:Position, -Ship:Prograde:TopVector).}.
+                }
+                else if steerSplit[1] = "Down"
+                {
+                    set del to { return LookDirUp(Body:Position, -Ship:Prograde:TopVector).}.
+                }
+                else if steerSplit[1] = "Sun"
+                {
+                    set del to { return LookDirUp(Body:Position, Sun:Position).}.
+                }
+                else if steerSplit[1] = "Tgt" and HasTarget
+                {
+                    set del to { return LookDirUp(Body:Position, Target:Position).}.
+                }
+                else
+                {
+                    set del to { return Body:Position.}.
+                }
+            }
+            else
+            {
+                set del to { return Body:Position.}.
+            }
         }
         else
         {
@@ -1761,12 +1846,15 @@
         global function ArmLESTower
         {
             local AbortDCModuleList to list().
-            local AbortParts to Ship:PartsTaggedPattern("Abort").
+            local AbortParts to GetAbortSystem().// Ship:PartsTaggedPattern("Abort").
             local LES to "".
 
-            if abortParts:Length > 0
+            if AbortParts:Keys:Length = 0
             {
-                for p in abortParts
+            }
+            else
+            {
+                for p in AbortParts:Values
                 {
                     if p:IsType("Decoupler")
                     {

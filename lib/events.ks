@@ -140,7 +140,7 @@
                         //set g_LoopDelegates:RegisteredEventTypes[_eventData:type] to g_LoopDelegates:RegisteredEventTypes[_eventData:type] + 1.
 
                         local evLastTypeVal to g_LoopDelegates:RegisteredEventTypes[_eventData:Type].
-                        OutDebug("evTypeLast: [{0} ({1})]":Format(evLastTypeVal, evLastTypeVal:TypeName), 12).
+                        // if g_Debug OutDebug("evTypeLast: [{0} ({1})]":Format(evLastTypeVal, evLastTypeVal:TypeName), 12).
                         local evNewTypeVal to evLastTypeVal + 1.
                         g_LoopDelegates:RegisteredEventTypes:Remove(_eventData:type).
                         g_LoopDelegates:RegisteredEventTypes:Add(_eventData:type, evNewTypeVal).

@@ -959,16 +959,25 @@ until g_Program >= 36 or g_Abort
         }
     }
 
-
-    if not HomeConnection:IsConnected()
+    if not HomeConnection:IsConnected() and Time:Seconds > g_TS2
     {
         if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
         {
-            for m in Ship:ModulesNamed("ModuleDeployableAntenna")
+            local commModules to Ship:ModulesNamed("ModuleDeployableAntenna").
+            from { local i to 0. local doneFlag to False.} until doneFlag step { set i to i + 1.} do
             {
-                DoEvent(m, "extend antenna").
+                local m to commModules[i].
+                if DoEvent(m, "extend antenna")
+                {
+                    set doneFlag to true.
+                    set g_TS2 to Time:Seconds + 5.
+                }
             }
         }
+    }
+    else
+    {
+        set g_TS2 to Time:Seconds + 15.
     }
 
     set g_TermChar to "".

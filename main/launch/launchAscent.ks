@@ -53,7 +53,7 @@ if _tgtPe < 0
 }
 
 wait until Ship:Unpacked.
-local towerHeight to (Ship:Bounds:Size:Mag + (Ship:Bounds:Size:Mag * 0.1250)).
+local towerHeight to Ship:Altitude * 1.125.
 
 local launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
 
@@ -192,12 +192,12 @@ OutInfo("g_DecouplerEventArmed: {0}":Format(g_DecouplerEventArmed),1).
 
 OutMsg("Liftoff! ").
 wait 1.
-OutMsg("Vertical Ascent").
 set g_ActiveEngines to GetActiveEngines().
 
 DispMain(ScriptPath()).
 ClearDispBlock().
 
+OutMsg("Vertical Ascent").
 until Alt:Radar >= towerHeight
 {
     set g_ActiveEngines to GetActiveEngines().
@@ -260,13 +260,14 @@ until Stage:Number <= g_StageLimit
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+    set s_Val to g_SteeringDelegate:Call().
 
     if g_BoostersArmed
     {
         if boosterCheckDel:Call()
         {
             set boosterResult to boosterActionDel:Call().
-            set g_BoostersArmed to boosterResult[0].
+            set g_BoostersArmed to choose boosterResult[0] if boosterResult:IsType("List") else False.
             if g_BoostersArmed
             {
                 set boosterCheckDel  to boosterResult[1].
@@ -275,6 +276,7 @@ until Stage:Number <= g_StageLimit
             else
             {
                 set boosterResult to list(false, g_NulCheckDel, g_NulActionDel).
+                set g_BoostersArmed to false.
                 clr(cr()).
             }
         }
@@ -295,18 +297,6 @@ until Stage:Number <= g_StageLimit
                     g_LoopDelegates:Staging:HotStaging[g_NextHotStageID]:Action:CALL().
                 }
             }
-            // local doneFlag to false.
-            // from { local i to Stage:Number - 1.} until i < 0 or doneFlag step { set i to i - 1.} do
-            // {
-            //     if g_LoopDelegates:Staging:HotStaging:HasKey(i)
-            //     {
-            //         if g_LoopDelegates:Staging:HotStaging[i]:Check:CALL()
-            //         {
-            //             g_LoopDelegates:Staging:HotStaging[i]:Action:CALL().
-            //         }
-            //         set doneFlag to true.
-            //     }
-            // }
         }
         else
         {
@@ -323,7 +313,6 @@ until Stage:Number <= g_StageLimit
         ExecGLoopEvents().
     }
 
-    set s_Val to g_SteeringDelegate:Call().
     DispEngineTelemetry().
     DispStateFlags().
     DispLaunchTelemetry().
@@ -379,10 +368,10 @@ until doneFlag
         {
             if boosterCheckDel:Call()
             {
-                set boosterResult to boosterActionDel:Call().
-                set g_BoostersArmed to boosterResult[0].
                 if g_BoostersArmed
                 {
+                    set boosterResult to boosterActionDel:Call().
+                    set g_BoostersArmed to boosterResult[0].
                     set boosterCheckDel  to boosterResult[1].
                     set boosterActionDel to boosterResult[2].
                 }

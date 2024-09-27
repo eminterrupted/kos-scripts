@@ -31,21 +31,30 @@
     // *- Global
     // #region
     global g_Colors to lexicon(
-                "white", RGB(1,1,1)
-            ).
+         "White"    , RGBA(1,1,1,1)
+        ,"Black"    , RGBA(0,0,0,1)
+        ,"Azure"    , RGBA(0.000,0.775,0.800,1.000)
+        ,"LightGray", RGBA(0.725,0.725,0.725,1.000)
+        ,"OldGreen" , RGBA(0.300,1.000,0.425,0.775)
+        ,"Orange"   , RGBA(1.000,0.500,0.325,1.000)
+        ,"Pink"     , RGBA(1.000,0.125,1.000,1.000)
+        ,"Salmon"   , RGBA(0.995,0.625,0.750,1.000)
+        ,"Violet"   , RGBA(0.725,0.150,0.975,0.800)
+        ,"Yeller"   , RGBA(0.125,0.925,0.925,1.000)
+    ).
 
     global g_kKode to list(
-                _ti:UpCursorOne, 
-                _ti:UpCursorOne, 
-                _ti:DownCursorOne,
-                _ti:DownCursorOne,
-                _ti:LeftCursorOne,
-                _ti:RightCursorOne,
-                _ti:LeftCursorOne,
-                _ti:RightCursorOne,
-                "b",
-                "a"
-            ).
+        _ti:UpCursorOne, 
+        _ti:UpCursorOne, 
+        _ti:DownCursorOne,
+        _ti:DownCursorOne,
+        _ti:LeftCursorOne,
+        _ti:RightCursorOne,
+        _ti:LeftCursorOne,
+        _ti:RightCursorOne,
+        "b",
+        "a"
+    ).
     global g_correctKodeInputsProvided to 0.
     global g_correctKodeInputsRequired to g_kKode:Length.
 
@@ -959,7 +968,7 @@
             }
             else
             {
-                set g_ResultCode to 2.
+                set g_ResultCode to -1.
                 return _fallbackValue.
             }
         }

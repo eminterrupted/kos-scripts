@@ -13,7 +13,7 @@
 // #region
     // *- Local
     // #region
-    local l_boosterMaxIdx to 0.
+    local l_boosterMaxIdx to -1.
     local l_dVMaxStgIdx to 0.
     // #endregion
 
@@ -565,7 +565,7 @@
         {
             from { local i is 0.} until i >= 5 step { set i to i + 1.} do
             {
-                for dc in Ship:PartsTaggedPattern("Ascent\|Booster\|(AS\|)?{0}":Format(i))
+                for dc in Ship:PartsTaggedPattern("Ascent\|Booster\|(AS\|)?{0}":Format(i:ToString))
                 {
                     if dc:Stage >= g_StageLimit
                     {
@@ -605,7 +605,7 @@
         }
         else
         {
-            return list(false, { return True.}, { return False.}).
+            return list(false, { return list(False, { return False.}, { return False.}).}, { return list(False, { return False.}, { return False.}).}).
         }
     }
 
@@ -662,7 +662,8 @@
 
         if _boostObj:Keys:Length > 0
         {
-            from { local i to _boostIdx + 1. local doneFlag to false.} until doneFlag or i > l_boosterMaxIdx step { set i to i + 1.} do
+            // local i to l_boosterMaxIdx + 1.
+            from { local i to _boostIdx + 0. local doneFlag to false.} until doneFlag or i > l_boosterMaxIdx step { set i to i + 1.} do
             {
                 if _boostObj:HasKey(i)
                 {
@@ -672,7 +673,7 @@
                     {
                         for eng in _boostObj[i]:ENG
                         {
-                            eng:Activate.
+                            if not eng:Ignition eng:Activate.
                         }
                     }
                     else
@@ -685,6 +686,7 @@
         }
 
         // OutInfo("UPDATING G_SHIPENGINES").
+        set g_ActiveEngines to GetActiveEngines().
         set g_ShipEngines_Spec to GetShipEnginesSpecs().
         
         return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
