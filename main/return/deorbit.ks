@@ -115,7 +115,7 @@ for steerDir in steerLex:Keys
         set timer to g_TS - Time:Seconds.
         if HasTarget
         {
-            OutInfo("Thrust time remaining: {0} | Distance from Ship: {2} ":Format(Round(timer, 2), Round((Target:Position - Ship:Position):Mag, 2)), 1).
+            OutInfo("Thrust time remaining: {0} | Distance from Ship: {1} ":Format(Round(timer, 2), Round((Target:Position - Ship:Position):Mag, 2)), 1).
         }
         else
         {

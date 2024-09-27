@@ -1638,21 +1638,25 @@
         local del to {}.
 
         // Dependencies
-        if g_AzData:Length = 0
+        if Core:Tag:Length > 0
         {
-            set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
-        }
+            if g_AzData:Length = 0 
+            {
+                set g_AzData to l_az_calc_init(g_MissionTag:Params[1], g_MissionTag:Params[0]).
+            }
 
-        if g_AngDependency:Keys:Length = 0
-        {
-            set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.0275, 0.0075, 0.0125, list(-1, 1))). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
+            if g_AngDependency:Keys:Length = 0
+            {
+                set g_AngDependency to InitAscentAng_Next(g_MissionTag:Params[0], g_MissionTag:Params[1], _fShape, 5, 30, True, list(0.0275, 0.0075, 0.0125, list(-1, 1))). // (tgtInc, tgtAp, _fShape, pitLimMin, pitLimMax, InitPid, PidInfo(P, I, D, ChangeRate (upper / lower bounds for PID))).
+            }
         }
 
         // Branching
         if _steerDelID = "Flat:Sun"
         {
             // set del to { return Heading(compass_for(Ship, Ship:Prograde), 0, 0).}.
-            set del to { return Heading(l_az_calc(g_azData), 0, 0).}.
+            local hdg to choose l_az_calc(g_azData) if g_azData:Length > 0 else compass_for(Ship, Ship:Prograde).
+            set del to { return Heading(hdg, 0, 0).}.
         }
         else if _steerDelID = "AzFlat:Sun"
         {
@@ -1668,7 +1672,8 @@
         else if _steerDelID = "Pro:Sun"
         {
             RunOncePath("0:/lib/launch.ks").
-            set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Prograde), 0).}.
+            local hdg to choose l_az_calc(g_azData) if g_azData:Length > 0 else compass_for(Ship, Ship:Prograde).
+            set del to { return Heading(hdg, pitch_for(Ship, Ship:Prograde), 0).}.
         }
         else if _steerDelID = "ApoErr:Sun"
         {
