@@ -138,7 +138,8 @@
 
     // Ship Metadata
     global g_ShipUIDs to list().
-
+    global g_VesselData to lexicon().
+    
     // State Flags
     global g_AutoStageArmed         to False.
     global g_BoostersArmed          to False.

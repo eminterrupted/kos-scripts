@@ -30,10 +30,10 @@
     global function GetEccAnomaly
     {
         parameter _obj,
-                  _timeFromNow is 0.
+                  _secondsFromNow is 0.
 
-        local objEcc to objObt:Eccentricity.
-        local ta to GetTrueAnomaly(_obj, _timeFromNow).
+        local objEcc to _obj:Eccentricity.
+        local ta to GetTrueAnomaly(_obj, _secondsFromNow).
         local cosEccAnomaly to (objEcc + Cos(ta)) / ( 1 + (objEcc * Cos(ta))).
         local eccAnomaly to ArcCos(cosEccAnomaly).
         // local sinEccAnomaly to (Sqrt(1 - objEcc^2) * Sin(ta)) / (1 + (objEcc * Cos(ta))).
@@ -42,22 +42,37 @@
         return eccAnomaly.
     }
 
+    // GetTrueAnomaly :: <orbital>_obj, <int>_secondsFromNow -> <int>True Anomaly
     // https://en.wikipedia.org/wiki/True_anomaly
     global function GetTrueAnomaly
     {
-        parameter _obj,
-                  _timeFromNow is 0.
+        parameter _obj is Ship,
+                  _secondsFromNow is 0.
 
-        local tsTA      to Time:Seconds + _timeFromNow.
-        local veloVecTA to VelocityAt(_obj, tsTA):Orbit.
-        local posVecTA  to PositionAt(_obj, tsTA). 
-        local eccVecTA  to (veloVecTA * (posVecTA * veloVecTA)) / _obj:Body:Mu.
-        local ta        to ArcCos((eccVecTA * posVecTA) / (eccVecTA:Normalized * posVecTA:Normalized)).
-        if (posVecTA * veloVecTA) < 0 
+        if _secondsFromNow = 0
         {
-            set ta to (2 * constant:pi) - ta.
+            if _obj:HasSuffix("Orbit") 
+            {
+                return _obj:Orbit:TrueAnomaly.
+            }
         }
-        return ta.
+        else
+        {
+            local veloVecTA to _obj:Velocity:Orbit.
+            local posVecTA  to _obj:Position. // - _obj:Body:Position.
+
+            local tsTA      to Time:Seconds + _secondsFromNow.
+            set veloVecTA to VelocityAt(_obj, tsTA):Orbit.
+            set posVecTA  to PositionAt(_obj, tsTA). 
+        
+            local eccVecTA  to (veloVecTA * (posVecTA * veloVecTA)) / _obj:Body:Mu.
+            local ta        to ArcCos((eccVecTA * posVecTA) / (eccVecTA:Normalized * posVecTA:Normalized)).
+            if (posVecTA * veloVecTA) < 0 
+            {
+                set ta to (2 * constant:pi) - ta.
+            }
+            return ta.
+        }
     }
 
     // Returns the mean anomaly of the provided object, with optional projection into the future
@@ -65,15 +80,15 @@
     global function GetMeanAnomaly
     {
         parameter _obj,
-                  _timeFromNow is 0.
+                  _secondsFromNow is 0.
 
-        local tsMA to Time:Seconds + _timeFromNow.
-        local objObt to choose _obj:Orbit if _timeFromNow = 0 else OrbitAt(_obj, tsMA).
+        local tsMA to Time:Seconds + _secondsFromNow.
+        local objObt to choose _obj:Orbit if _secondsFromNow = 0 else OrbitAt(_obj, tsMA).
 
         local timeAdded to 0.
-        if _timeFromNow > objObt:ETA:Periapsis
+        if _secondsFromNow > objObt:ETA:Periapsis
         {
-            until timeAdded > _timeFromNow 
+            until timeAdded > _secondsFromNow 
             {
                 set timeAdded to timeAdded + objObt:Period.
             }
@@ -82,6 +97,52 @@
         local meanAngMotion to (2 * Constant:Pi) / objObt:Period.
         local tsPe to (Time:Seconds - (objObt:Period - objObt:ETA:Periapsis)) + timeAdded.
         return meanAngMotion * (tsMA - tsPe). // Mean Anomaly
+    }
+
+    // GetRelativeNodalVector ::
+    // Vector directed from the relative descending node to the ascending node
+    global function GetRelativeNodalVector
+    {
+        parameter _obtBinormal.
+        parameter _tgtBinormal.
+
+        return VCrs(_obtBinormal, _tgtBinormal):normalized.
+    }
+
+    // GetRelativeAscendingNodeVector
+    // Angle to relative ascending node determined from args
+    global function GetRelativeAscendingNodeVector 
+    {
+        parameter _obtBinormal.
+        parameter _tgtBinormal.
+
+        local joinVec is GetRelativeNodalVector(_obtBinormal, _tgtBinormal).
+        local ang is VAng(-body:position:normalized, joinVec).
+        local signVec is VCrs(-body:position, joinVec).
+        local sign is VDot(_obtBinormal, signVec).
+        if sign < 0 
+        {
+            set ang to ang * -1.
+        }
+        return ang.
+    }
+
+    // GetRelativeDescendingNodeVector
+    // Angle to relative descending node determined from args
+    global function GetRelativeDescendingNodeVector 
+    {
+        parameter _obtBinormal.
+        parameter _tgtBinormal.
+
+        local joinVec is -GetRelativeAscendingNodeVector(_obtBinormal, _tgtBinormal).
+        local ang is VAng(-body:position:normalized, joinVec).
+        local signVec is VCrs(-body:position, joinVec).
+        local sign is VDot(_obtBinormal, signVec).
+        if sign < 0 
+        {
+            set ang to ang * -1.
+        }
+        return ang.
     }
     // #endregion
 
@@ -233,17 +294,17 @@
             set my_ancestor to my_ancestor:Body.
         }
         local tgt_pos to PositionAt(_tgtObj, _ts).
-        local binormal is vcrs(-common_ancestor_pos:normalized, vel:normalized):normalized.
+        local binormal is VCrs(-common_ancestor_pos:normalized, vel:normalized):normalized.
 
-        local phase is vang(
+        local phase is VAng(
             -common_ancestor_pos:normalized,
             vxcl(binormal, tgt_pos - common_ancestor_pos):normalized
         ).
-        local signVector is vcrs(
+        local signVector is VCrs(
             -common_ancestor_pos:normalized,
             (tgt_pos - common_ancestor_pos):normalized
         ).
-        local sign is vdot(binormal, signVector).
+        local sign is VDot(binormal, signVector).
         if sign < 0 {
             return 360 - phase.
         }

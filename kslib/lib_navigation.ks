@@ -78,8 +78,8 @@ function kslib_nav_ang_to_body_asc_node {
         set angle to angle - 90.
     }
     else {
-        local signVector is vcrs(-body:position, joinVector).
-        local sign is vdot(kslib_nav_obt_binormal(ves), signVector).
+        local signVector is VCrs(-body:position, joinVector).
+        local sign is VDot(kslib_nav_obt_binormal(ves), signVector).
         if sign < 0 {
             set angle to angle * -1.
         }

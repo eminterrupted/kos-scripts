@@ -12,10 +12,16 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
-    global g_TermHeight to 72.
+    global g_TermHeight to 60.
     global g_TermWidth  to 80.
     global g_TermSize to g_TermHeight + g_TermWidth.
     
+    global g_DbgAnchorLine to 64.
+
+    global g_DbgLine to g_DbgAnchorLine.
+    
+    local g_DbgZone to list(g_DbgAnchorLine - 16, g_DbgAnchorLine, g_TermHeight - 4).
+
     // #endregion
 
     // *- Local
@@ -120,25 +126,29 @@
     }
 
     // crDbg :: (_lineOffset<scalar>) -> [newOffset]<scalar>
-    // Sets or increments the debug offset value
-    global function crDbg 
+    // Sets or increments the debug line offset value
+    global function crDbg
     {
-        parameter _lineOffset is g_DbgOffset.
+        parameter _lineIdx is 0, 
+                  _inIncrement is 1.
 
-        if _lineOffset <> g_DbgOffset
+        // if not (defined g_DbgZone)
+        // {
+        //     global g_DbgZone to list(g_DbgAnchorLine - g_DbgLineOffset, g_DbgAnchorLine, g_TermHeight - 2).
+        // }
+
+        if _inIncrement = 0
         {
-            set g_DbgOffset to Max(-18, Min(_lineOffset, 15)).
-        }
-        else if g_DbgOffset >= 15
-        {
-            set g_DbgOffset to 0.
+            set g_DbgLine to Max(g_DbgZone[0], Min(g_DbgZone[1] + _lineIdx, g_DbgZone[2])).
         }
         else
         {
-            set g_DbgOffset to Max(-15, Min(g_DbgOffset + 1, 15)).
+            local neededLine to g_DbgZone[1] + _lineIdx + _inIncrement.
+            local line to choose neededLine if (neededLine >= g_DbgZone[0] and neededLine <= g_DbgZone[2]) else g_DbgAnchorLine.
+            set g_DbgLine to Max(g_DbgZone[0], Min(line, g_DbgZone[2])).
         }
 
-        return g_DbgOffset.
+        return g_DbgLine.
     }
     // #endregion
 
@@ -272,16 +282,27 @@
                   _color is "White".
                   //_teeHUD is False. TODO: implement TeeHud function
         
-        local anchor to g_TermHeight - 12.
-        local line to anchor.
+        local line to g_DbgAnchorLine.
         
-        if _lineIdx < 0 
+        if _lineIdx < 0
         {
-            set line to anchor + Max(-5, abs(_lineIdx)).
+            set line to Max(g_DbgZone[0], line + _lineIdx).
         }
         else if _lineIdx > 0
         {
-            set line to anchor + Min(g_TermHeight - 2 - _lineIdx, _lineIdx).
+            // set g_DbgLine to g_DbgLine + _lineIdx.
+            set line to Min(g_DbgZone[2], line + _lineIdx).
+            if line >= g_DbgZone[2]
+            {
+                set _lineIdx to 0.
+                set line to g_DbgAnchorLine.
+            }
+            set g_DbgLine to line.
+            
+            // else 
+            // {
+                // set line to g_DbgAnchorLine + _lineIdx.
+            // }
         }
 
         if _str:length > 0
@@ -290,7 +311,7 @@
             // set newStr to newStr:Replace("`","{"):Replace("~","}").
             // set newStr to newStr:Format("*DBG", _str).
             // print newStr:PadRight(Terminal:Width - 2) at (1, line).
-            print "<color={2}>[{0}]</color> {1}     ":Format("*DBG", _str, _color) at (0, line).//:PadRight(Max(0, (Terminal:Width - 1) - (_str:Length + 8))) at (0, line).
+            print "<color={2}>[{0}]</color> {1} ":Format("*DBG", _str, _color) at (0, line).//:PadRight(Max(0, (Terminal:Width - 1) - (_str:Length + 8))) at (0, line).
         }
         else
         {

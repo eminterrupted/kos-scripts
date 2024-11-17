@@ -1,22 +1,13 @@
-_mission/**
-data/lp.json
-data/archive/**
-data/cache/**
-data/launchSelectCache.json
-data/missionCacheParam.json
-data/mp/**
-data/partRepairLog.log
-data/relayPlanner/*
 ksptot/*
-log/**
-main/maneuver/vessel.json
-tmp/*
-# vscode/**
-ves_stage_stats-engStats.json
-ves_stage_stats-stgMass.json
-# _plan/*/*
-# data/*
-data/*.json
+kslib
+
+**/tmp
+**/log
+**/logs
+data/debug/
 data/*.csv
 data/*.xlsx
-data/debug/**
+data/debug/
+data/profile/
+data/test/
+test/data

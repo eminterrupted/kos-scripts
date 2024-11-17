@@ -27,6 +27,8 @@
     global g_NextEngines_Data_Epoch to -1.
     global g_NextEngines_Spec       to Lexicon().
 
+    // global g_RehydrateEngines_Flag  to True.
+
     global g_ShipEngines            to GetShipEnginesByStage().
     global g_ShipEngines_Spec       to Lexicon().
     // #endregion
@@ -69,6 +71,7 @@
             ,"B9.Engine.T2.SRBS.CREI.67"    // B9 Radial Sep Motor (CREI 67% Resize)
             ,"B9.Engine.T2.SRBS.CREI.150"   // B9 Radial Sep Motor (CREI 150% Resize)
             ,"ROE-TX280"                    // Saturn Ullage Motor
+            ,"ROE.TX280"                    // Saturn Ullage Motor
             ,"ROE-Agena_Retro_TypeIII"      // Agena Ullage Motor
             ,"ROE-Agena.Retro.TypeIII"      // Agena Ullage Motor
 
@@ -84,6 +87,14 @@
             ,"B9.Engine.T2A.SRBS.CREI.50"    // B9 Radial Sep Motor (CREI 50% Resize)
             ,"B9.Engine.T2A.SRBS.CREI.67"    // B9 Radial Sep Motor (CREI 67% Resize)
             ,"B9.Engine.T2A.SRBS.CREI.150"   // B9 Radial Sep Motor (CREI 150% Resize)
+        )
+        ,"VernRef", list(
+            "ROE-LR101"          // Atlas Vernier Motor (old)
+            ,"ROE-LR101_2"       // Atlas Vernier Motor
+            ,"ROE-LR101.2"       // Atlas Vernier Motor
+            ,"ROE-LR101Inline"   // Thor / Delta Vernier Motor (old)
+            ,"ROE-LR101Inline_2" // Thor / Delta Vernier Motor
+            ,"ROE-LR101Inline.2" // Thor / Delta Vernier Motor
         )
     ).
 
@@ -176,6 +187,11 @@
             }
         }
         return bestDC.
+    }
+
+    global function GetEnginesByStageLex
+    {
+        
     }
 
     // GetEnginesForStage :: (Stage Number)<scalar> -> (Engines activated by that stage)<List>
@@ -510,19 +526,14 @@
 
             if (TotalResMass > 0 and AggregateMassLex:MaxMassFlow > 0)
             {
-                local btResTimeLeft to list().
+                local bt to 999999999.
                 for resName in AggregateMassLex:Engines:Resources:Keys
                 {
                     local res to AggregateMassLex:Engines:Resources[resName].
                     if res:Mass > 0 and res:MaxMassFlow > 0
                     {
-                        btResTimeLeft:Add((res:Mass - AggregateMassLex:Engines:Resources[resName]:TotalResiduals) / res:MaxMassFlow).
+                        set bt to Min(bt, (res:Mass - AggregateMassLex:Engines:Resources[resName]:TotalResiduals) / res:MaxMassFlow).
                     }
-                }
-                local bt to 999999999.
-                for bttl in btResTimeLeft
-                {
-                    set bt to Min(bt, bttl).
                 }
                 set engsSpecs:BurnTimeRemaining to Round(bt, 2).
             }
@@ -586,6 +597,77 @@
 
     // *- Engine Specification Helpers
     // #region
+
+    // GetPredictedBurnTime2 -- 
+    global function GetPredictedBurnTime2
+    {
+        parameter _engs is g_NextEngines.
+
+        local btRemaining to 999999.
+        local dcStg to -1.
+        local stgResLex to Lexicon().
+
+        // Get engine mass flows and residuals
+        for eng in _engs
+        {
+            set dcStg to eng:DecoupledIn.
+            local residuals to 0.
+            if eng:HasModule("ModuleEnginesRF")
+            {
+                local m to eng:GetModule("ModuleEnginesRF").
+                set   residuals to GetField(m, "predicted residuals", 0).
+            }
+
+            for cres in eng:ConsumedResources:Values
+            {
+                local maxFlow to cres:MaxFuelFlow.
+                
+                if not stgResLex:HasKey(cres:Name)
+                {
+                    stgResLex:Add(cres:Name, Lexicon(
+                        "Amount",           cres:Amount
+                        ,"Density",         cres:Density
+                        ,"MaxFlow",         maxFlow
+                        ,"Engs",            Lexicon(eng:UID, list(maxFlow))
+                        ,"Residuals",       residuals
+                        )
+                    ).
+                }
+                else
+                {
+                    stgResLex[cres:Name]:Engs:Add(eng:UID, list(maxFlow)).
+                    set stgResLex[cres:Name]:MaxFlow   to stgResLex[cres:Name]:MaxFlow + maxFlow.
+                    set stgResLex[cres:Name]:Residuals to stgResLex[cres:Name]:Residuals + residuals.
+                }
+            }
+        }
+
+        // Based on engine stage, find the resources. This wouldn't be necessary if ConsumedResources would actually work when the engine isn't active :(
+        for res in Ship:Resources
+        {
+            if stgResLex:HasKey(res:Name)
+            {
+                local resAmt to 0.
+                
+                for p in res:Parts
+                {
+                    if p:DecoupledIn = dcStg
+                    {
+                        for pRes in p:Resources
+                        {
+                            if pRes:Name = res:Name
+                            {
+                                set resAmt to resAmt + pRes:Amount.
+                            }
+                        }
+                    }
+                }
+                set btRemaining to Min(btRemaining, (resAmt * (1 - stgResLex[res:Name]:Residuals)) / stgResLex[res:Name]:MaxFlow).
+            }
+        }
+
+        return btRemaining.
+    }
 
     // GetPredictedBurnTime -- 
     global function GetPredictedBurnTime
@@ -839,9 +921,9 @@
         local aggMassFlowPct        to 0.
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
-        local averageResiduals      to 0.
         local thrustPct             to 0.
         local totalFuelMass         to 0.
+        local totalResiduals        to 0.
         local twr                   to 0.
         local aggFailureObj         to Lexicon().
 
@@ -854,12 +936,12 @@
 
             local m to engLex:Module.
             local engResiduals to m:GetField("Predicted Residuals").
-            set averageResiduals to averageResiduals + engResiduals.
+            set totalResiduals to totalResiduals + engResiduals.
 
-            set aggThrust           to aggThrust + engLex:Thrust.
-            set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
             set aggMassFlow         to aggMassFlow + eng:MassFlow.
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
+            set aggThrust           to aggThrust + engLex:Thrust.
+            set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
             if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
             if engLex:FailureCause:Length > 0
             {   
@@ -890,16 +972,28 @@
                 else set aggEngPerfObj["SepStg"] to false.
             }
             
+            local totalFuel     to 0.
+            local totalFuelFlow to 0.
             for res in eng:ConsumedResources:Values
             {
                 local fuelMass to 0.
-                local resMass to 0.
+                // local resMass to 0.
                 if not aggEngPerfObj:Resources:HasKey(res:Name) 
                 {
-                    set resMass to res:amount * res:density.
-                    set fuelMass to resMass - (resMass * engResiduals).
-                    set totalFuelMass to totalFuelMass + resMass.
-                    aggEngPerfObj:Resources:Add(res:Name, Lexicon("Amount", res:Amount, "Capacity", res:Capacity, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
+                    // set resMass to res:amount * res:density.
+                    set fuelMass to res:Amount * res:Density. // (resMass * engResiduals).
+                    set totalFuelFlow to totalFuelFlow + res:FuelFlow.
+                    set totalFuel to totalFuel + res:Amount.
+                    set totalFuelMass to totalFuelMass + fuelMass.
+                    aggEngPerfObj:Resources:Add(res:Name, Lexicon(
+                        "Amount", res:Amount,
+                        "Capacity", res:Capacity, 
+                        "FuelFlow", res:FuelFlow,
+                        "FuelMass", fuelMass, 
+                        "MassFlow", res:MassFlow, 
+                        "MaxMassFlow", res:MaxMassFlow
+                        )
+                    ).
                 }
                 else
                 {
@@ -914,8 +1008,8 @@
         set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
         set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
-        set averageResiduals to choose 0 if averageResiduals <= 0 else averageResiduals / _engList:Length.
-        set totalFuelMass to totalFuelMass - (totalFuelMass * averageResiduals).
+        set totalResiduals to choose 0 if totalResiduals <= 0 else totalResiduals.// / _engList:Length.
+        set totalFuelMass to totalFuelMass * (1 - totalResiduals).
 
         if (totalFuelMass > 0 and aggMassFlow > 0)
         {
@@ -935,7 +1029,7 @@
 
         set twr to choose 0 if aggThrust = 0 else aggThrust / Ship:Mass * GetLocalGravity().
 
-        set aggEngPerfObj["AverageResiduals"]    to Round(averageResiduals, 5).
+        set aggEngPerfObj["AverageResiduals"]    to Round(totalResiduals, 5).
         set aggEngPerfObj["BurnTimeRemaining"]   to Round(burnTimeRemaining, 3).
         set aggEngPerfObj["Failures"]            to aggFailureCount.
         set aggEngPerfObj["FailureSet"]          to aggFailureObj.
@@ -962,54 +1056,73 @@
     {
         parameter _engList.
 
-        local avgResiduals      to 0.
+        local AvgResiduals      to 0.
         local BurnTimeRemaining       to 999999.
-        local fuelMass          to 0.
-        local massFlow          to 0.
-        local maxMassFlow       to 0.
-        local maxResiduals      to 0.
-        local totalFuelMass     to 0.
+        // local fuelMass          to 0.
+        local FuelFlow          to 0.
+        local MaxFuelFlow       to 0.
+        local MaxResiduals      to 0.
         
-        local engBurnTimeLex to Lexicon(
+        local EngBurnTimeLex to Lexicon(
             "Resources", Lexicon()
             ,"BurnTimeRemaining", BurnTimeRemaining
         ).
+
+        local res to "". // resource pointer
         
+        local TotalFuelFlow     to 0.
+        local TotalFuelAmount   to 0.
+        local TotalFuelCapacity to 0.
+        // local TotalFuelMass     to 0.
+
         for eng in _engList
         {
             local m to eng:GetModule("ModuleEnginesRF").
             local engineResiduals to choose m:GetField("Predicted Residuals") if m:HasField("Predicted Residuals") else 0.
-            set avgResiduals to avgResiduals + engineResiduals.
-            set maxResiduals to Max(maxResiduals, engineResiduals).
+            set AvgResiduals to AvgResiduals + engineResiduals.
+            set MaxResiduals to Max(MaxResiduals, engineResiduals).
 
-            for res in eng:ConsumedResources:Values
+            // for res in eng:ConsumedResources:Values
+            // {
+            set res to eng:ConsumedResources:Values[0].
+            if EngBurnTimeLex:Resources:Keys:Contains(res:Name)
             {
-                if engBurnTimeLex:Resources:Keys:Contains(res:Name)
-                {
-                    set engBurnTimeLex:Resources[res:Name]:MassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow + res:MassFlow.
-                    set engBurnTimeLex:Resources[res:Name]:MaxMassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow + res:MaxMassFlow.
-                }
-                else
-                {
-                    set fuelMass to res:amount * res:density.
-                    set totalFuelMass to totalFuelMass + fuelMass.
-                    engBurnTimeLex:Resources:Add(res:Name, Lexicon("Object", res, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
-                }
+                set EngBurnTimeLex:Resources[res:Name]:TotalFuelFlow to EngBurnTimeLex:Resources[res:Name]:TotalFuelFlow + res:FuelFlow.
+                set EngBurnTimeLex:Resources[res:Name]:MaxFuelFlow to EngBurnTimeLex:Resources[res:Name]:MaxFuelFlow + res:MaxFuelFlow.
+
+                // set engBurnTimeLex:Resources[res:Name]:MassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow + res:MassFlow.
+                // set engBurnTimeLex:Resources[res:Name]:MaxMassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow + res:MaxMassFlow.
+                // set engBurnTimeLex:Resources[res:Name]:MaxMassFlow to engBurnTimeLex:Resources[res:Name]:MassFlow + res:MaxMassFlow.
             }
-            set massFlow to massFlow + eng:MassFlow.
-            set maxMassFlow to maxMassFlow + eng:MaxMassFlow.
+            else
+            {
+                EngBurnTimeLex:Resources:Add(res:Name, Lexicon("Object", res, "TotalFuelAmount", res:Amount, "TotalFuelFlow", res:FuelFlow, "MaxFuelFlow", res:MaxFuelFlow)).
+
+                // set fuelMass to res:amount * res:density.
+                // set totalFuelMass to totalFuelMass + fuelMass.
+                // engBurnTimeLex:Resources:Add(res:Name, Lexicon("Object", res, "FuelMass", fuelMass, "MassFlow", res:MassFlow, "MaxMassFlow", res:MaxMassFlow)).
+            }
+            
+            // set TotalFuelAmount to EngBurnTimeLex:Resources[res:Name]:TotalFuelAmount.   // TotalFuelAmount + res:Amount.
+            // set TotalFuelCapacity to EngBurnTimeLex:Resources[res:Name]:TotalFuelCapacity. // TotalFuelCapacity + res:Capacity.
+
+            // set FuelFlow to FuelFlow + eng:FuelFlow.
+            // set MaxFuelFlow to MaxFuelFlow + eng:MaxFuelFlow.
+            // set FuelFlow to FuelFlow + eng:MassFlow.
+            // set MaxFuelFlow to MaxFuelFlow + eng:MaxMassFlow.
         }
 
-        set avgResiduals to choose 1 - (avgResiduals / _engList:Length) if avgResiduals <> 0 and _engList:Length > 0 else 1.
+        set AvgResiduals to choose 1 - (AvgResiduals / _engList:Length) if AvgResiduals <> 0 and _engList:Length > 0 else 1.
         
-        if (totalFuelMass > 0 and massFlow > 0)
+        // if (totalFuelMass > 0 and FuelFlow > 0)
+        // if (TotalFuelFlow > 0)
+        if EngBurnTimeLex:Resources:Values[0]:TotalFuelFlow > 0
         {
             local btResList to list().
-            for res in engBurnTimeLex:Resources:Values
-            {
-                // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
-                btResList:Add((res:FuelMass * avgResiduals) / res:MassFlow).
-            }
+            set res to EngBurnTimeLex:Resources:Values[0].
+            // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
+            btResList:Add((res:TotalFuelAmount * AvgResiduals) / res:TotalFuelFlow).
+            
             for _bt in btResList
             {
                 set BurnTimeRemaining to Min(BurnTimeRemaining, _bt).
@@ -1148,7 +1261,13 @@
 
         if MECO_Time > 0 
         {
-            local checkDel to { parameter _params is list(). OutInfo("MECO T-{0}s ":Format(Round(MissionTime - _params[1], 2)), 1). return MissionTime >= _params[1].}.
+            local checkDel to 
+            { 
+                parameter _params is list(). 
+                
+                OutInfo("MECO T-{0}s ":Format(Round(MissionTime - _params[1], 2)), 1). 
+                return MissionTime >= _params[1].
+            }.
 
             local actionDel to 
             {
@@ -1171,7 +1290,7 @@
                 set g_ActiveEngines to GetActiveEngines(ship, "NoBooster").
                 set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-
+                
                 wait 0.01. 
 
                 if Ship:PartsTaggedPattern("^Ascent\|MECO\|\d*(\.\d*)*"):Length > 0

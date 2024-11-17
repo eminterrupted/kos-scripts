@@ -1,6 +1,6 @@
-// A library of functions to calculate navball-based directions:
-
-// This file is distributed under the terms of the MIT license, (c) the KSLib team
+// lib_navball.ks - A library of functions to calculate navball-based directions.
+// Copyright © 2015,2017,2019 KSLib team 
+// Lic. MIT
 
 @lazyglobal off.
 
@@ -107,7 +107,6 @@ function bearing_between {
 
 function type_to_vector {
   parameter ves,thing.
-  
   if thing:istype("vector") {
     return thing:normalized.
   } else if thing:istype("direction") {

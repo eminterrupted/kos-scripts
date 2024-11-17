@@ -23,7 +23,11 @@
     // *- Local Anonymous Delegates
     // #region
     local deployDelegates to lexicon(
-        "w", GetDeployWaitTime@
+        "wt", GetDeployWaitTime@
+        ,"rot", GetIRDeployPosition@
+        ,"r"  , GetIRDeployPosition@
+        ,"tgt", GetIRDeployPosition@
+        ,"t"  , GetIRDeployPosition@
     ).
     // #endregion
 
@@ -76,42 +80,68 @@
     local function DeployServo
     {
         parameter _m,
-                  _partTag is "p+".
+                  _operator is "p+".
 
         local cachedLock to False.
         if _m:HasField("lock")
         {
             set cachedLock to _m:GetField("lock").
-            _m:GetField("lock").
+            _m:SetField("lock", False).
         }
+        wait 0.01.
 
-        if _partTag:StartsWith("sv:") set _partTag to _partTag:Replace("sv:","").
+        if _operator:StartsWith("sv:") set _operator to _operator:Replace("sv:","").
 
-        if _partTag:Contains("p+")
+        if _operator:Contains("p+")
         {
-            return DoAction(_m, "Move To Next Preset", true).
+            return DoAction(_m, "Move To Next Preset", True).
         }
-        else if _partTag:Contains("p-")
+        else if _operator:Contains("p-")
         {
-            return DoAction(_m, "Move To Previous Preset", true).
+            return DoAction(_m, "Move To Previous Preset", True).
         }
-        else if _partTag:Contains("c")
+        else if _operator:Contains("c")
         {
-            return DoAction(_m, "Move Center", true).
+            return DoAction(_m, "Move Center", True).
         }
-        else if _partTag:MatchesPattern("t\d+")
+        else if _operator:MatchesPattern("t(gt)?:\d+")
         {
-            return _m:SetField("Target Position", _partTag:ToNumber(0)).
+            return _m:SetField("Target Position", _operator:ToNumber(0)).
+        }
+        else if _operator:MatchesPattern("r(ot)?:\d*")
+        {
+            return _m:SetField("Set Rotation", _operator:ToNumber(0)).
         }
 
         until _m:GetField("Current Position") = _m:GetField("Target Position")
         {
             OutInfo("Moving Servo [{0}/{1}]   ":Format(Round(_m:GetField("Current Position"), 3), _m:GetField("Target Position"))).
         }
+
+        wait 0.01.
         if _m:HasField("lock")
         {
             _m:GetField("lock", cachedLock).
         }
+    }
+
+    // GetIRDeployPosition :: <tag fragment>_waitTag -> <scalar>position
+    local function GetIRDeployPosition
+    {
+        parameter _actionLex,
+                  _tagValue.
+
+        local waitSeconds to choose _tagValue if _tagValue:IsType("Scalar") else _tagValue:ToNumber(0).
+
+        if _actionLex:HasKey("w")
+        {
+            if waitSeconds > _actionLex:w set _actionLex:w to waitSeconds.
+        }
+        else
+        {
+            _actionLex:Add("w", waitSeconds).
+        }
+        return _actionLex.
     }
 
     // RunOnDeployRoutine :: (input params)<type> -> (output params)<type>
@@ -120,13 +150,20 @@
     {
         parameter _deployTag is "OnDeploy".
 
-        if Ship:PartsTaggedPattern(_deployTag):Length > 0
+        OutInfo("RunDeployRoutine: _deployTag {0}":Format(_deployTag)).
+
+        if Ship:PartsTaggedPattern(_deployTag + ".*"):Length > 0
         {
-            from { local i to 0. local doneFlag to false.} until doneFlag step { set i to i + 1.} do
+            OutInfo("Parts found for tag", 1).
+            wait 1.
+            from { local i to 0. local doneFlag to False.} until doneFlag step { set i to i + 1.} do
             {
-                local partList to Ship:PartsTaggedPattern("{0}(\|.*)*\|{1}":Format(_deployTag, i:ToString)).
+                OutInfo("Processing Tag Number {0}":Format(i), 1).
+                local partList to Ship:PartsTaggedPattern("{0}\|(.*\|)*{1}":Format(_deployTag, i)).
+
                 if partList:Length = 0
                 {
+                    OutInfo("Parts Remaining for {0}: 0":Format(i), 1).
                     set doneFlag to True.
                 }
                 else
@@ -135,12 +172,13 @@
                     
                     for p in partList
                     {
-                        local tagSplit    to p:Tag:Replace("OnDeploy|",""):Split("|").
+                        OutInfo("Processing {0} parts for {1}":Format(partList:Length, i), 1).
+                        local tagSplit to p:Tag:Replace(_deployTag + "|",""):Split("|").
                         if i = tagSplit:Length - 1
                         {
                             tagSplit:Remove(tagSplit:Length - 1).
                         }
-
+                        
                         // if partLex:HasKey(partSequence)
                         // {
                         //     partLex[partSequence]:Parts:Add(p).
@@ -152,21 +190,39 @@
 
                         if tagSplit:Length > 0
                         {
-                            from { local _i to 0. } until _i = tagSplit:Length step { set _i to _i + 1.} do 
+                            for tagLine in tagSplit
                             {
-                                local tagFragment to tagSplit[_i].
-                                if tagFragment:MatchesPattern("\w{1,3}:.+")
+                                local tagFrags to tagLine:Split(";").
+                                from { local _i to 0. } until _i = tagFrags:Length step { set _i to _i + 1.} do 
                                 {
-                                    local subTag to tagFragment:Split(":").
-                                    if deployDelegates:HasKey(subTag[0])
+                                    local tagFragment to tagFrags[_i].
+                                    if tagFragment:MatchesPattern("\w{1,3}:.+")
                                     {
-                                        if actionLex:HasKey(subTag[0])
+                                        local subTag to tagFragment:Split(":").
+                                        if deployDelegates:HasKey(subTag[0])
                                         {
-                                            deployDelegates[subTag[0]]:Call(actionLex, subTag[1]).
+                                            if actionLex:HasKey(subTag[0])
+                                            {
+                                                deployDelegates[subTag[0]]:Call(actionLex, subTag[1]).
+                                            }
+                                            else
+                                            {
+                                                actionLex:Add(subTag[0], deployDelegates[subTag[0]]:Call(subTag[1])).
+                                            }
                                         }
-                                        else
+                                    }
+                                    else
+                                    {
+                                        if deployDelegates:HasKey(tagFragment)
                                         {
-                                            actionLex:Add(subTag[0], deployDelegates[subTag[0]]:Call(subTag[1])).
+                                            if actionLex:HasKey(tagFragment)
+                                            {
+                                                deployDelegates[tagFragment]:Call(actionLex, tagFragment).
+                                            }
+                                            else
+                                            {
+                                                actionLex:Add(tagFragment, deployDelegates[tagFragment]:Call(tagFragment)).
+                                            }
                                         }
                                     }
                                 }
@@ -183,15 +239,20 @@
                         }
                         if p:HasModule("ModuleROSolar")
                         {
-                            DoAction(p:GetModule("ModuleROSolar"), "extend solar panel", true).
+                            DoAction(p:GetModule("ModuleROSolar"), "extend solar panel", True).
                         }
                         if p:HasModule("ModuleIRServo_v3")
                         {
                             local functionTag to "p+".
-                            local functionTagList to p:Tag:Split("|").
+                            // local tagParts to p:Tag:Split("|").
+                            // local functionTagList to tagParts:Split(";").
+                            local functionTagList to tagSplit[0]:Split(";").
                             for frag in functionTagList 
                             {
-                                if frag:MatchesPattern("sv:.*") set functionTag to frag:replace("sv:","").
+                                if frag:MatchesPattern("sv:.*") 
+                                {
+                                    set functionTag to frag:replace("sv:","").
+                                }
                             }
                             DeployServo(p:GetModule("ModuleIRServo_v3"), functionTag).
                         }
@@ -220,7 +281,7 @@
             //         }
             //         if p:HasModule("ModuleROSolar")
             //         {
-            //             DoAction(p:GetModule("ModuleROSolar"), "extend solar panel", true).
+            //             DoAction(p:GetModule("ModuleROSolar"), "extend solar panel", True).
             //         }
             //     }
             //     local waitTime to choose partLex:w if partLex:HasKey("w") else waitSecondsDefault.

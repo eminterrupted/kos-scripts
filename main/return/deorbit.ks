@@ -11,7 +11,8 @@ DispMain(ScriptPath(), False).
 // Declare Variables
 local angCheck to 90.
 local positionRefTgt to Ship.
-local positionRefVessel to "".
+local positionRefVessel to Ship:Name:Replace(" Probe","").
+local trackRefVessel to False.
 local tgtPe to -(Body:Radius / 2).
 
 local steerLex to Lexicon(
@@ -28,26 +29,22 @@ if _params:length > 0
 }
 if positionRefVessel:IsType("String")
 {
-    if positionRefVessel:Length > 0
+    local allTargets to { local tgtList to list(). list Targets in tgtList. return tgtList.}.
+    for t in allTargets:Call()
     {
-        local allTargets to { local tgtList to list(). list Targets in tgtList. return tgtList.}.
-        for t in allTargets:Call()
+        if t:Name = positionRefVessel
         {
-            if t:Name = positionRefVessel
-            {
-                set positionRefTgt to Target(positionRefVessel).
-            }
+            set positionRefTgt to Vessel(positionRefVessel).
+            set trackRefVessel to True.
         }
     }
 }
 else if positionRefVessel:IsType("Vessel")
 {
-    set positionRefTgt to Target(positionRefVessel).
+    set positionRefTgt to positionRefVessel.
+    set trackRefVessel to True.
 }
-if positionRefTgt <> Ship
-{
-    set Target to positionRefTgt.
-}
+
 
 set s_Val to Ship:Facing.
 lock steering to s_Val.
@@ -96,9 +93,9 @@ for steerDir in steerLex:Keys
         }
         local settleMarker to choose "S" if settleFlag else " ".
         set angCheck to VAng(Ship:Facing:Vector, Steering:Vector).
-        if HasTarget
+        if trackRefVessel
         {
-            OutInfo("Alignment angle error: {0}{1} | Distance from Ship: {2} ":Format(Round(angCheck, 3), settleMarker, Round((Target:Position - Ship:Position):Mag, 2)), 1).
+            OutInfo("Alignment angle error: {0}{1} | Distance from Ship: {2} ":Format(Round(angCheck, 3), settleMarker, Round(positionRefTgt:Distance, 2)), 1).
         }
         else
         {
@@ -113,9 +110,9 @@ for steerDir in steerLex:Keys
     until timer < 0
     {
         set timer to g_TS - Time:Seconds.
-        if HasTarget
+        if trackRefVessel
         {
-            OutInfo("Thrust time remaining: {0} | Distance from Ship: {1} ":Format(Round(timer, 2), Round((Target:Position - Ship:Position):Mag, 2)), 1).
+            OutInfo("Thrust time remaining: {0} | Distance from Ship: {1} ":Format(Round(timer, 2), Round(positionRefTgt:Distance, 2)), 1).
         }
         else
         {

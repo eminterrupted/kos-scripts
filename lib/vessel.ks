@@ -1662,6 +1662,10 @@
         {
             set del to { return Heading(l_az_calc(g_azData), 0, 0).}.
         }
+        else if _steerDelID = "AzPro:Sun"
+        {
+            set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Velocity:Orbit:Velocity), 0).}.
+        }
         else if _steerDelID = "AngErr:Sun"
         {
             RunOncePath("0:/lib/launch.ks").

@@ -28,6 +28,9 @@ until g_TermChar = Terminal:Input:Enter or Time:Seconds >= g_TS
 set g_MissionTag to ParseCoreTag(Core:Part:Tag).
 
 local azData    to g_azData.
+
+local curPitchOffset to 1.125.
+
 local tgtAp     to Ship:Apoapsis.
 local tgtPe     to Ship:Apoapsis.
 local tgtInc    to g_MissionTag:Params[0].
@@ -196,7 +199,10 @@ set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 wait 0.01.
 set Ship:Control:Fore to 0.
 
-set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun").// choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
+set g_SteeringDelegate to GetOrbitalSteeringDelegate("AzPro:Sun").// choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
+
+local pitchOffset to -0.125.
+local maxPitchOffset to 44.
 
 local rollFlag to false.
 local doneFlag to false.
@@ -205,6 +211,7 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
+    
     if g_LoopDelegates:HasKey("Staging")
     {
         if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1
@@ -258,6 +265,26 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
             set rollFlag to true.
         }
     }
+    else if g_TermChar = Char(115)
+    {
+        set pitchOffset to Min(32.5, pitchOffset + 1.25).
+    }
+    else if g_TermChar = Char(119)
+    {
+        set pitchOffset to Max(-22.5, pitchOffset - 1.25).
+    }
+    else if g_TermChar = Char(83)
+    {
+        set pitchOffset to Min(32.5, pitchOffset + 5).
+    }
+    else if g_TermChar = Char(87)
+    {
+        set pitchOffset to Max(-22.5, pitchOffset - 5).
+    }
+    else if g_TermChar = Char(79)
+    {
+        set pitchOffset to 0.
+    }
     set g_TermChar to "".
 
     // if (Ship:Periapsis >= tgtPe - 5000 and Ship:Periapsis <= tgtPe + 5000)
@@ -270,7 +297,9 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
         OutInfo("TIME TO MECO: {0} ":Format(Round(mecoTS - Time:Seconds))).
     }
 
-    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else g_SteeringDelegate:Call().
+    // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset,g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
+    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit:Velocity).
+    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset, Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))))).
     
     DispLaunchTelemetry().
     wait 0.01.
@@ -313,9 +342,32 @@ until MECOFlag or doneFlag
             set rollFlag to true.
         }
     }
+    else if g_TermChar = Char(115)
+    {
+        set pitchOffset to Min(32.5, pitchOffset + 1.25).
+    }
+    else if g_TermChar = Char(119)
+    {
+        set pitchOffset to Max(-22.5, pitchOffset - 1.25).
+    }
+    else if g_TermChar = Char(83)
+    {
+        set pitchOffset to Min(32.5, pitchOffset + 5).
+    }
+    else if g_TermChar = Char(87)
+    {
+        set pitchOffset to Max(-22.5, pitchOffset - 5).
+    }
+    else if g_TermChar = Char(79)
+    {
+        set pitchOffset to 0.
+    }
     set g_TermChar to "".
 
-    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else g_SteeringDelegate:Call().
+    // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
+    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit:Velocity).
+    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
+
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_ActiveEngines_Data:HasKey("Thrust") 
     {
@@ -363,7 +415,7 @@ if Ship:AvailableThrust > 0.01
     OutMsg("Waiting for engine burnout").
     until g_ActiveEngines_Data:Thrust <= 0.01
     {
-        set s_Val to g_SteeringDelegate:Call().
+        set s_Val to g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
         set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
         DispLaunchTelemetry().
         wait 0.01.

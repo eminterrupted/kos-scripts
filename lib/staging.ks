@@ -118,13 +118,14 @@
                             set Engine_Obj[p:Stage] to list(p).
                         }
 
-                        if p:Tag:MatchesPattern("\w*\|\d*")
+                        set ExtraLeadTime to choose p:Tag:Split("|")[1]:ToNumber(0) if p:Tag:Split("|"):Length > 1 else choose p:Tag:Split(":")[1]:ToNumber(0) if p:Tag:Split(":"):Length > 1 else 0.
+                        if not HotStageLeadTimes:HasKey(p:Stage)
                         {
-                            set ExtraLeadTime to p:Tag:Split("|")[1]:ToNumber(0).
-                            if not HotStageLeadTimes:HasKey(p:Stage)
-                            {
-                                HotStageLeadTimes:Add(p:Stage, extraLeadTime).
-                            }
+                            HotStageLeadTimes:Add(p:Stage, ExtraLeadTime).
+                        }
+                        else if ExtraLeadTime > 0
+                        {
+                            set HotStageLeadTimes[p:Stage] to Max(HotStageLeadTimes[p:Stage], ExtraLeadTime).
                         }
                     }
                 }
@@ -175,6 +176,10 @@
                         {
                             if MissionTime > 0 
                             {
+                                // if g_RehydrateEngines_Flag
+                                // {
+                                set g_ActiveEngines to GetActiveEngines().
+                                // }
                                 if g_ActiveEngines:Length > 0
                                 {
                                     local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
@@ -589,7 +594,7 @@
 
                         for eng in dc:PartsTagged("")
                         {
-                            if eng:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(eng:Name)
+                            if eng:IsType("Engine") and not g_PartInfo:Engines:SepRef:Contains(eng:Name) and not g_PartInfo:Engines:VernRef:Contains(eng:Name)
                             {
                                 boosterObj[boosterIdx]:ENG:Add(eng).
                             }
@@ -653,7 +658,14 @@
             {
                 if p:IsType("Engine") p:Activate.
             }
-            DoEvent(dc:GetModule("ModuleAnchoredDecoupler"), "Decouple").
+            if dc:HasModule("ModuleAnchoredDecoupler") 
+            {
+                DoEvent(dc:GetModule("ModuleAnchoredDecoupler"), "Decouple").
+            }
+            else if dc:HasModule("ModuleDecouple")
+            {
+                DoEvent(dc:GetModule("ModuleDecouple"), "Decouple").
+            }
         }
         _boostObj:Remove(_boostIdx).
         

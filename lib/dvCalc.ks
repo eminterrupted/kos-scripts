@@ -238,8 +238,11 @@
         local stgObj to BurnStagesUsed(dv).
         local durObj to BurnDurStage(stgObj).
 
-        WriteJson(stgObj, "0:/log/{0}_stgObj.json":Format(Ship:Name:Replace(" ","_"))).
-        WriteJson(durObj, "0:/log/{0}_durObj.json":Format(Ship:Name:Replace(" ","_"))).
+        if g_Debug 
+        {
+            WriteJson(stgObj, "0:/log/{0}_stgObj.json":Format(Ship:Name:Replace(" ","_"))).
+            WriteJson(durObj, "0:/log/{0}_durObj.json":Format(Ship:Name:Replace(" ","_"))).
+        }
         
         local fullDurWithStaging to durObj["Full"].
         local halfDurWithStaging to durObj["Half"].
@@ -258,7 +261,10 @@
         
         local burnDurCalcs to list(durObj["Full"], durObj["FullStaged"], durObj["Half"], durObj["HalfStaged"]).
 
-        WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
+        if g_Debug 
+        {
+            WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
+        }
 
         return burnDurCalcs.
     }
@@ -418,7 +424,7 @@
 
         from { local stg to _stgRange[0].} until stg < _stgRange[1] or stg < -1 step { set stg to stg - 1.} do 
         {
-            set stgDV to AvailStageDV(stg, _mode).
+            set stgDV to AvailStageDVLex(stg, _mode).
             vesDV:STG:Add(stg, stgDV).
             set allDV to allDV + stgDV.
         }
@@ -426,6 +432,47 @@
         vesDV:Add("ALL", allDV).
         
         return vesDV.
+    }
+
+    global function AvailStageDVLex
+    {
+        parameter _stg, 
+                  _mode is "vac".
+
+        local dv to 0.
+        local exhVel to 0.
+        local stgEngs to choose g_ShipEngines[_stg] if g_ShipEngines:HasKey(_stg) else GetEnginesForStage(_stg).
+        local stgMass to Lexicon("Ship", 0 , "Fuel", 0, "UsableFuel", 0, "Stage", 0).
+
+        if stgEngs:Length > 0
+        {
+            set stgMass to GetStageMass(_stg).
+            if g_ShipEngines_Spec:HasKey(_stg)
+            {
+                set exhVel to choose g_ShipEngines_Spec[_stg]:AvgExhVelo if g_ShipEngines_Spec[_stg]:HasKey("AvgExhVelo") else GetExhVel(stgEngs, _mode).
+            }
+            else
+            {
+                set exhVel to GetExhVel(stgEngs, _mode).
+            }
+
+            if stgMass["Fuel"] > 0
+            {
+                wait 0.05.
+                if g_Debug OutDebug("exhVel: {0} | stgMass:Ship: {1} | stgMass:Fuel: {2}":Format(Round(exhVel, 5), Round(stgMass:Ship, 2), Round(stgMass:UsableFuel, 4)), 5).
+                set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["usableFuel"])).
+            }
+            // set g_Debug to true.
+            // if g_Debug 
+            // { 
+            //     OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(_stg, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
+            //     OutDebug("- stgMass: Ship[{0}] | usableFuel[{1}]    ":Format(round(stgMass["ship"], 3), Round(stgMass["usableFuel"], 3)), crDbg()).
+            //     wait 1.
+            // }
+            // set g_Debug to false.
+        }
+
+        return dv.  
     }
 
     // AvailStageDV :: (<scalar>) -> <scalar>

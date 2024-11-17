@@ -168,7 +168,7 @@ set g_OnDeployActive to False.
 if g_ReturnMissionList:Contains(Core:Tag:Split("|")[0]) and Ship:ModulesNamed("RealChuteModule"):Length > 0
 {
     OutMsg("Executing reentry").
-    runPath("0:/main/return/reentry", list(125000)).
+    runPath("0:/main/return/reentry", list(132500)).
 }
 
 set core:bootfilename to "".

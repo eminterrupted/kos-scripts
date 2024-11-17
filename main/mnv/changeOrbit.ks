@@ -51,7 +51,7 @@ if burnAt = "AP"
     set xfrTgt to Ship:Apoapsis. 
     set XfrTS  to Time:Seconds + ETA:Apoapsis.
 }
-else
+else if burnAt = "PE"
 {
     if trackVal = "PE"
     {
@@ -78,6 +78,48 @@ else
     }
     set xfrTgt to Ship:Periapsis.
     set xfrTS  to Time:Seconds + ETA:Periapsis.
+}
+else if Career():CanMakeNodes
+{
+    if burnAt:MatchesPattern("(AN|DN)")
+    {
+        // local angToLAN to kslib_nav_ang_to_body_asc_node().
+        // local vesselTA to GetTrueAnomaly().
+        
+        local nodeType to choose 0 if burnAt[0] = "A" else 1. // 0 = Ascending Node, 1 = Descending Node
+        local lanTA    to choose GetANTrueAnomaly(Ship) if nodeType = 0 else GetDNTrueAnomaly(Ship). // Mod(vesselTA + angToLAN, 360) if nodeType = 0 else Mod(angToLAN + 180, 360).
+        local altAtTA  to GetAltitudeAtTrueAnomaly(Ship:Orbit, lanTA).
+        
+        if burnTgt < 1   
+        {
+            if burnTgt < 0 or trackVal = "PE"
+            {
+                set tgtAp to altAtTA.
+                set tgtPe to Max(Body:ATM:Height, GetPeFromApEcc(altAtTA, Abs(burnTgt))).
+            }
+            else
+            {
+                set tgtPe to altAtTA.
+                set tgtAp to GetApFromPeEcc(altAtTA, burnTgt).
+            }
+        }
+        else
+        {
+            if burnTgt >= altAtTA
+            {
+                set tgtAp to burnTgt.
+                set tgtPe to altAtTA.
+            }
+            else
+            {
+                set tgtAp to altAtTA.
+                set tgtPe to Max(Body:ATM:Height, burnTgt).
+            }
+        }
+        
+        set xfrTgt to altAtTA.
+        set xfrTS  to GetUTimeAtLAN(Ship, 0).
+    }
 }
 
 local burnDV   to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtPe, tgtAp, xfrTgt, trackVal, Ship:Body).

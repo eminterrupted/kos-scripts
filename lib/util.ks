@@ -686,7 +686,7 @@
             parameter _inList is list(),
                       _selectedItemIdx is -1.
 
-            local _line to 42.
+            local _line to 15.
             set g_Line to _line.
             
             print _inList[0] at (2, g_Line).
@@ -701,9 +701,12 @@
             OutMsg("Choose one item by number").
             OutInfo("Press enter to confirm").
             OutInfo(" ** - Selection", 1).
-            local termCharNumber to -1234.
+            local prevSelection to _selectedItemIdx.
             until false
             {
+                OutInfo("Press enter to confirm").
+                OutInfo(" ** - Selection", 1).
+
                 GetTermChar().
                 
                 from { local i to 0.} until i >= _inList:Length step { set i to i + 1.} do
@@ -714,25 +717,40 @@
                 
                 if g_TermChar:Length > 0
                 {
-                    set termCharNumber to g_TermChar:ToNumber(-1234).
-                    if termCharNumber <> -1234
+                    if g_TermChar = Terminal:Input:Enter
                     {
-                        if termCharNumber >= 1 and termCharNumber <= _inList:Length
-                        set _selectedItemIdx to termCharNumber.
-                    }
-                    else if g_TermChar = Terminal:Input:Enter
-                    {
-                        return i.
+                        if _selectedItemIdx >= 0 and _selectedItemIdx <= _inList:Length - 1
+                        {
+                            return _selectedItemIdx.
+                        }
+                        else
+                        {
+                            OutInfo("Invalid Selection! ({0})":Format(g_TermChar)).
+                            OutInfo("", 1).
+                            wait 1.
+                        }
                     }
                     else if g_TermChar = Terminal:Input:Backspace
                     {
-                        return _selectedItemIdx.
+                        OutInfo("Cancel...").
+                        OutInfo("", 1).
+                        wait 1.
+                        return prevSelection.
                     }
-                    else
+                    else 
                     {
-                        OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
-                        wait 0.5.
-                        OutInfo("Press enter to confirm").
+                        local termSelection to g_TermChar:ToNumber(-2).
+
+                        if termSelection >= 0 and termSelection <= _inList:Length
+                        {
+                            set _selectedItemIdx to termSelection.
+                        }
+                        else
+                        {
+                            OutInfo("Out of range! ({0} - {1})":format(1, _inList:Length)).
+                            OutInfo("", 1).
+                            wait 1.
+                        }
                     }
                 }
             }

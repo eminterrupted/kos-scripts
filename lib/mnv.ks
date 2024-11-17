@@ -165,7 +165,8 @@
                 {
                     set useNext to True.
                 }
-                else if g_ActiveEngines_Spec:EstBurnTime <= g_ActiveEngines_Spec:SpoolTime + 0.25 
+                //else if g_ActiveEngines_Spec:EstBurnTime <= g_ActiveEngines_Spec:SpoolTime + 0.25 
+                else if g_ActiveEngines_Spec:BurnTimeRemaining <= g_ActiveEngines_Spec:SpoolTime + 0.25 
                 {
                     set useNext to True.
                 }
@@ -486,6 +487,7 @@
         local ullageFlag to false.
         local warpFlag to False.
         local warpAble to False.
+        local ReacquireBurnVector to True.
         
         lock dvRemaining to abs(dv).
 
@@ -611,7 +613,7 @@
                 set g_NextEngines to GetNextEngines(Stage:Number - 1).
                 set nextBurnEngines to g_NextEngines.
             }
-            local predictedEngBurnTime to GetPredictedBurnTime(nextBurnEngines).
+            local predictedEngBurnTime to GetPredictedBurnTime2(nextBurnEngines).
             
             // Do we need to initiate spin stabilization prior to the burn?
             for p in Ship:PartsTaggedPattern("SpinDC\|\d+")
@@ -916,6 +918,7 @@
                 {    
                     set g_line to _line - 1.
                     GetTermChar().
+                    
                     set g_ActiveEngines to GetActiveEngines().
                     set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
                     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
@@ -932,10 +935,16 @@
                     
                     set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     
-                    set t_Val to max(0.02, min(_inNode:deltaV:mag / maxAcc, 1)).
+                    set t_Val to max(0.01, min(_inNode:deltaV:mag / maxAcc, 1)).
 
                     DispBurnNodeData(dv, burnTS - time:seconds, burnTimeRemaining).
                     DispBurnPerfData().
+
+                    if ReacquireBurnVector
+                    {
+                        set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
+                        set ReacquireBurnVector to False.
+                    }
 
                     if g_LoopDelegates:HasKey("Staging")
                     {
@@ -1034,6 +1043,10 @@
                         set breakFlag to true.
                         OutInfo("User cancelled node burn", 2).
                     }
+                    else if g_TermChar = Terminal:Input:HomeCursor
+                    {
+                        set ReacquireBurnVector to True.
+                    }
 
                     OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
 
@@ -1095,7 +1108,7 @@
         local d_inc to vang(ves_nrm, tgt_nrm).
 
         // True anomaly of ascending node
-        local node_ta to AscNodeTA(burnVesObt, tgtObt).
+        local node_ta to GetAscNodeTA(burnVesObt, tgtObt).
 
         // ** IMPORTANT ** - Below is the "right" code, I am testing picking the soonest vs most efficient
         // Pick whichever node of AN or DN is higher in altitude,
