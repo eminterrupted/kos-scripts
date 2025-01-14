@@ -811,6 +811,7 @@
             ,"LES           : {0,-5}":Format(g_LESArmed)
             ,"RCS           : {0,-5}":Format(g_RCSArmed)
             ,"SpinStab      : {0,-5}":Format(g_SpinArmed)
+            ,"StageDelay    : {0,-5}":Format(g_LoopDelegates:Events:HasKey("STGDLY"))
             ,"UIDUpdater    : {0,-5}":Format(g_UIDUpdaterArmed)
         ).
 

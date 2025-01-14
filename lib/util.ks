@@ -920,6 +920,7 @@
                       _event.
 
             set g_ResultCode to 0.
+
             if _m:HasEvent(_event)
             {
                 _m:DoEvent(_event).
@@ -929,7 +930,6 @@
             {
                 set g_ResultCode to 2.
             }
-
             return g_ResultCode.
         }
 
@@ -1056,23 +1056,25 @@
             else if _inputString:MatchesPattern("(^\d*)[dhmsDHMS]+")
             {
                 set scalar_result to 0.
-                local strSet to list(_inputString).
+                local strSet to list().
                 
                 for key in l_timeTable:Keys
                 {
-                    if strSet[0]:MatchesPattern("(^\d*{0}})":Format(key))
+                    if _inputString:MatchesPattern("(^\d*{0})":Format(key))
                     {
-                        set strSet to _inputString[0]:Split(key).
+                        set strSet to _inputString:Split(key).
                         set scalar_result to scalar_result + strSet[0]:ToNumber * l_timeTable[key].
                         strSet:Remove(0).
                     }
                 }
             }
+            else if _inputString:MatchesPattern("(\d{1,3}\.)?\d*%$")
+            {
+                set scalar_result to _inputString:Replace("%",""):ToNumber(_fallbackValue) / 100.
+            }
             else if _inputString:MatchesPattern("(^\d*(\.\d{1,})?$)")
             {
-                // OutInfo("Parsing [{0}] at 1:1":Format(_inputString)).
                 set scalar_result to _inputString:ToNumber(_fallbackValue).
-                wait 0.01.
             }
             else
             {

@@ -361,15 +361,16 @@ if stage:number > 1
         }
     }
 
-    OutMsg("Staging").
-    until stage:number <= 1 
+    set ts to Time:Seconds.
+    until Stage:Number <= 1 
     {
-        stage.
-        wait 5.
-        if Stage:Number = 2
+        OutMsg("Staging [{0}->{1}]":Format(Stage:Number, Stage:Number - 1)).
+        until ts and Ship:Thrust <= 0.02 and Stage:Ready
         {
-
+            OutInfo("TS: {0}s | THR: {1}kn | RDY: {2} ":Format(Round(Time:Seconds - ts, 2), Round(Ship:Thrust, 2), Stage:Ready)).
         }
+        stage.
+        set ts to Time:Seconds + 5.
     }
     set Ship:Control:Fore to 1.
     wait 5.

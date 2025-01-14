@@ -29,6 +29,7 @@ set g_MissionTag to ParseCoreTag(Core:Part:Tag).
 
 local azData    to g_azData.
 
+local pitchOffset to 0.
 local curPitchOffset to 1.125.
 
 local tgtAp     to Ship:Apoapsis.
@@ -77,12 +78,22 @@ if false
     local burnObj to CalcBurnStageData(dvNeeded).
 }
 
+local warpPadding to 15.
+local spinDCs to Ship:PartsTaggedPattern("SpinDC\|\d*").
+if spinDCs:Length > 0
+{
+    set g_SpinArmed to SetupSpinStabilizationEventHandler().
+    set warpPadding to warpPadding + Ship:PartsTaggedPattern("SpinDC\|\d*")[0]:Tag:Replace("SpinDC|",""):ToNumber(9).
+}
+
+
+
 local burnTS to choose (Time:Seconds + ETA:Apoapsis - burnDur[3]) if ETA:Apoapsis < ETA:Periapsis else Time:Seconds + 10.
 local mecoTS to burnTS + burnDur[1].
-local burnLeadTime to 15.
+local burnLeadTime to warpPadding.
 local warpToTS to burnTS - burnLeadTime.
 
-local tgtCheckDelAP to { return (Ship:Apoapsis >= tgtAp and Ship:Periapsis >= Max(Ship:Body:Atm:Height + 5000, tgtPe * 0.9875)). }.
+local tgtCheckDelAP to { return (Ship:Apoapsis >= tgtAp and Ship:Periapsis >= Max(Ship:Body:Atm:Height + 5000, tgtPe * 0.9925)). }.
 local tgtCheckDelPE to { return Ship:Periapsis >= tgtPe.}.
 local tgtCheckDel to choose tgtCheckDelAP@ if transferBurn else tgtCheckDelPE@.
 
@@ -126,27 +137,100 @@ until Time:Seconds >= burnTS - g_UllageDefault
     // }
     if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
     
-    if g_termChar = ""
-    {
-    }
-    else if g_termChar = Char(87)
-    {
-        if burnETA > burnLeadTime 
-        {
-            set warpFlag to True. 
-            OutMsg("Warping to maneuver").
-            OutInfo().
-            OutInfo("", 1).
-            OutInfo("", 2).
-            WarpTo(warpToTS).
-        }
-        else
-        {
-            OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
-        }
-        set g_termChar to "".
-    }
+    // if g_termChar = ""
+    // {
+    // }
+    // else if g_termChar = Char(87)
+    // {
+    //     if burnETA > burnLeadTime 
+    //     {
+    //         set warpFlag to True. 
+    //         OutMsg("Warping to maneuver").
+    //         OutInfo().
+    //         OutInfo("", 1).
+    //         OutInfo("", 2).
+    //         WarpTo(warpToTS).
+    //     }
+    //     else
+    //     {
+    //         OutMsg("Maneuver <= {0}s, skipping warp":Format(burnLeadTime)).
+    //     }
+    //     set g_termChar to "".
+    // }
     
+    local warpAble to burnETA > 15.
+
+    if g_TermChar = ""
+    {
+    }
+    else
+    {
+        if g_TermChar = Char(87) // 'W'
+        {
+
+            if warpAble
+            {
+                set warpFlag to True. 
+                OutMsg("Warping to maneuver").
+                clr(cr()).
+                if Kuniverse:TimeWarp:Mode = "PHYSICS"
+                {
+                    set Warp to 0.
+                    wait until KUniverse:TimeWarp:IsSettled.
+                    set Kuniverse:Timewarp:Mode to "RAILS".
+                }
+                set warpToTS to burnTS - burnLeadTime - 1.5.
+                WarpTo(warpToTS).
+            }
+            set g_TermChar to "".
+        }
+        else if g_TermChar = Char(101) // 'e'
+        {
+            set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+            OutInfo("Spin Right: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(69) // 'E'
+        {
+            set Ship:Control:Roll to 1.
+            OutInfo("Spin Right: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(113) // 'q'
+        {
+            set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+            OutInfo("Spin Left: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(81) // 'Q'
+        {
+            set Ship:Control:Roll to -1.
+            OutInfo("Spin Left: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(115) // s
+        {
+            set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+        }
+        else if g_TermChar = Char(83) // S
+        {
+            set Ship:Control:Roll to 0.
+        }
+        else if g_TermChar = "="
+        {
+            set burnLeadTime to burnLeadTime + 5.
+        }
+        else if g_TermChar = "-"
+        {
+            set burnLeadTime to burnLeadTime - 5.
+        }
+        else if g_TermChar = "+"
+        {
+            set burnLeadTime to burnLeadTime + 5.
+        }
+        else if g_TermChar = "_"
+        {
+            set burnLeadTime to burnLeadTime - 5.
+        }
+        set g_TermChar to "".
+    }
+
     if not warpFlag 
     {
         set burnLeadTime to UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30)).
@@ -167,6 +251,74 @@ until Time:Seconds >= burnTS
     set s_Val to g_SteeringDelegate:Call().
     OutInfo("Time Remaining: {0}s  ":Format(round(burnTS - Time:Seconds, 2))).
     DispLaunchTelemetry().
+    
+    GetTermChar().
+
+    if g_TermChar = ""
+    {
+    }
+    else
+    {
+        if g_TermChar = Char(82) // 
+        {
+            OutInfo("Recalculating burn parameters").
+            clr(cr()).
+            clr(cr()).
+            wait 0.1.
+            set burnDur to CalcBurnDur(_inNode:deltaV:mag).
+            set fullDur to burnDur[0].
+            set halfDur to burnDur[3].
+
+            set burnTS to _inNode:time - halfDur. 
+            set g_TermChar to "".
+        }
+        else if g_TermChar = Char(101) // 'e'
+        {
+            set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll + 0.25)).
+            OutInfo("Spin Right: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(69) // 'E'
+        {
+            set Ship:Control:Roll to 1.
+            OutInfo("Spin Right: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(113) // 'q'
+        {
+            set Ship:Control:Roll to Min(1, Max(-1, Ship:Control:Roll - 0.25)).
+            OutInfo("Spin Left: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(81) // 'Q'
+        {
+            set Ship:Control:Roll to -1.
+            OutInfo("Spin Left: " + Ship:Control:Roll).
+        }
+        else if g_TermChar = Char(115) // s
+        {
+            set SteeringManager:RollTorqueFactor to choose 0 if SteeringManager:RollTorqueFactor > 0 else 1.
+        }
+        else if g_TermChar = Char(83) // S
+        {
+            set Ship:Control:Roll to 0.
+        }
+        else if g_TermChar = "="
+        {
+            set burnLeadTime to burnLeadTime + 5.
+        }
+        else if g_TermChar = "-"
+        {
+            set burnLeadTime to burnLeadTime - 5.
+        }
+        else if g_TermChar = "+"
+        {
+            set burnLeadTime to burnLeadTime + 5.
+        }
+        else if g_TermChar = "_"
+        {
+            set burnLeadTime to burnLeadTime - 5.
+        }
+        set g_TermChar to "".
+    }
+    // OutInfo("Mnv | Eng Time : {0} | {1}":Format(Round(burnDur[0], 2), Round(g_ActiveSpecs:RATEDBURNTIME, 2)), 2).
     wait 0.01.
 }
 
@@ -193,7 +345,7 @@ if onStageParts:Length > 0
 //     set eventPartCount to ArmAscentEvents(eventParts).
 // }
 
-local autoStageResult to ArmAutoStagingNext(g_StageLimit, 0, 2).
+local autoStageResult to ArmAutoStagingNext(g_StageLimit, 1, 1).
 set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 
 wait 0.01.
@@ -298,8 +450,21 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
     }
 
     // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset,g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
-    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit:Velocity).
-    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset, Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))))).
+    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit).
+    // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset, Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))))).
+    if rollFlag
+    {
+        set s_Val to g_SteeringDelegate:Call():Vector.
+    }
+    else if doneFlag
+    {
+        set s_Val to Ship:Prograde.
+    }
+    else
+    {
+        set pitchOffset to Min(maxPitchOffset, Max(-maxPitchOffset, progradePitch - curPitchOffset)).
+        set s_val to g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
+    }
     
     DispLaunchTelemetry().
     wait 0.01.
@@ -365,8 +530,22 @@ until MECOFlag or doneFlag
     set g_TermChar to "".
 
     // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
-    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit:Velocity).
-    set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
+    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit).
+    if rollFlag
+    {
+        set s_Val to g_SteeringDelegate:Call():Vector.
+    }
+    else if doneFlag
+    {
+        set s_Val to Ship:Prograde.
+    }
+    else
+    {
+        set pitchOffset to progradePitch - curPitchOffset.
+        set s_val to g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
+    }
+    
+    // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
 
     set g_ActiveEngines_Data to GetEnginesPerformanceData(GetActiveEngines()).
     if g_ActiveEngines_Data:HasKey("Thrust") 

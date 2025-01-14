@@ -17,7 +17,11 @@
         "kos-vscode.trace.server.verbosity": "off",
         "editor.codeActionsOnSave": {
 
-        }
+        },
+        "workbench.preferredDarkColorTheme": "Dracula At Night",
+        "workbench.iconTheme": "vscode-icons",
+        "workbench.tree.indent": 10,
+        "diffEditor.maxFileSize": 100
 	},
 	"editor.codeActionsOnSave": null,
 	"workbench.editorAssociations": []

@@ -209,7 +209,8 @@
             local spinETA to -1.
             for p in Ship:PartsTaggedPattern("SpinDC")
             {
-                if p:Stage = Stage:Number - 1
+                OutInfo(fullDur + " | " + burnEngsSpec:BurnTimeRemaining, 2).
+                if p:Stage = Stage:Number - 1 
                 {
                     if fullDur > burnEngsSpec:EstBurnTime
                     {
@@ -385,7 +386,7 @@
             set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
             set Ship:Control:Fore to 0.
             
-            local autoStageResult to ArmAutoStagingNext(g_StageLimit, 0.01, 0).
+            local autoStageResult to ArmAutoStagingNext(g_StageLimit, 1, 1).
             if autoStageResult = 1 
             {
                 set g_AutoStageArmed to True.
@@ -516,7 +517,7 @@
             set g_ActiveEngines to GetActiveEngines().
             set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
 
-            local g_ActiveSpecs to lex("ALLOWRESTART", True, "IGNITIONS", 0, "BURNTIME", 0, "SPOOLTIME", 0, "ULLAGE", False).
+            local g_ActiveSpecs to lex("ALLOWRESTART", True, "IGNITIONS", 0, "BURNTIMEREMAINING", 0, "SPOOLTIME", 0, "ULLAGE", False).
 
             for eng in g_ActiveEngines
             {
@@ -538,7 +539,7 @@
                     // OutDebug("{0}: {1} |":Format(eng:name, eng:AllowRestart), 5).
                 }
             }
-            set g_ActiveSpecs:BurnTime to choose g_ActiveEngines_Spec:BurnTimeRemaining if g_ActiveEngines_Spec:BurnTimeRemaining > 0 else 0.
+            set g_ActiveSpecs:BurnTimeRemaining to choose g_ActiveEngines_Spec:BurnTimeRemaining if g_ActiveEngines_Spec:BurnTimeRemaining > 0 else 0.
             
             local useNext to False.
             if g_ActiveSpecs:AllowRestart
@@ -548,7 +549,7 @@
                     // OutDebug("UseNext Reason: Ignitions = 0").
                     set useNext to True.
                 }
-                else if g_ActiveSpecs:BurnTime <= g_ActiveSpecs:SpoolTime + 0.25 
+                else if g_ActiveSpecs:BurnTimeRemaining <= g_ActiveSpecs:SpoolTime + 0.25 
                 {
                     // OutDebug("UseNext Reason: ratedBurnTime <= SpoolTime + 0.25").
                     set useNext to True.
@@ -620,6 +621,7 @@
             {
                 OutInfo("SpinDC Found").
                 local pSplit to p:Tag:Split("|").
+                OutInfo(fullDur + " | " + burnEngsSpec:BurnTimeRemaining, 2).
                 if p:Stage = Stage:Number - 1 
                 {
                     if g_ActiveEngines:Length = 0
@@ -629,9 +631,10 @@
                     }
                     else
                     {
-                        if fullDur > predictedEngBurnTime
+                        local spinDur to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                        if fullDur - spinDur > predictedEngBurnTime
                         {
-                            set preSpin to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                            set preSpin to spinDur.
                         }
                     }
                 }
@@ -802,7 +805,7 @@
                         }
                         set g_TermChar to "".
                     }
-                    else if g_TermChar = Char(82)
+                    else if g_TermChar = Char(82) // 'R'
                     {
                         OutInfo("Recalculating burn parameters").
                         clr(cr()).
@@ -871,7 +874,7 @@
             OutMsg("Executing burn").
             
             set g_ActiveEngines to GetActiveEngines().
-            set g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "RATEDBURNTIME", 0, "SPOOLTIME", 0).
+            set g_ActiveSpecs to lex("ALLOWRESTART", false, "IGNITIONS", 0, "BURNTIMEREMAINING", 0, "SPOOLTIME", 0).
             for eng in g_ActiveEngines
             {
                 local engSpec to g_ShipEngines_Spec[eng:Stage]:EngSpecs[eng:UID].
@@ -889,15 +892,15 @@
             set Ship:Control:Fore to 0.
             set Ship:Control:Roll to 0.
             
-            local autoStageResult to ArmAutoStagingNext(_stageLimit).
+            local autoStageResult to ArmAutoStagingNext(_stageLimit, 1, 1).
             if autoStageResult = 1 
             {
                 set g_AutostageArmed to True.
+                OutInfo("AutoStage Armed").
             }
             else
             {
                 set g_AutostageArmed to False.
-                OutInfo("AutoStage Armed").
             }
 
             set g_HotStagingArmed to ArmHotStaging().

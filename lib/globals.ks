@@ -71,13 +71,17 @@
             ,"Orbit"
             ,"Orbital"
             ,"PIDOrbit"
-            ,"SubOrbital"
             ,"PIDSubOrbital"
+            ,"SOBR"
+            ,"SOLR"
+            ,"SubOrbital"
         )
         ,"Return", list(
             "DownRange"     // Guided downrange suborbital, no reentry guidance
             ,"DownRanger"   // ^
             ,"MaxAlt"       // Guided or unguided max altitude
+            ,"SOBR"         // SubOrbital with ballistic reentry
+            ,"SOLR"         // SubOrbital with lifting reentry
             ,"SSO"          // Unguided launch, guided reentry
             ,"SubOrbital"   // Fully guided launch and reentry
         )
@@ -89,6 +93,8 @@
             ,"MaxAlt"       // Guided or unguided max altitude
             ,"PIDOrbit"
             ,"PIDSubOrbital"
+            ,"SOBR"
+            ,"SOLR"
             ,"Sounder"
             ,"SSO"          // Unguided launch, guided reentry
             ,"SubOrbital"

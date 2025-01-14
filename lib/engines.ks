@@ -397,6 +397,7 @@
             ,"AllowShutdown",       False
             ,"AllowThrottle",       False
             ,"HasGimbal",           False
+            ,"IsSolid",             False
             ,"Multimode",           False
             ,"PressureFed",         False
             ,"PrimaryMode",         False
@@ -590,7 +591,7 @@
             }
         }
         set engStgObj["TotalBurnTime"] to totalBurnTime.
-
+        
         return engStgObj.
     }
     // #endregion

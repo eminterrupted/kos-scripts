@@ -13,12 +13,46 @@
 // #region
     // *- Local
     // #region
+    // local cachedAutoStageState to false.
+    local l_stgDelayRegex to "(StageDelay|StgDly|SD|Dly)".
+    local shipSysLex to Lexicon(
+        "Staging", Lexicon(
+            "Delay", lexicon(
+                "Type", 0
+                ,"Val", 0
+                ,"Delegates", Lexicon(
+                    "Check", list(
+                         { parameter _params is list(). OutInfo("Stage Hold [T0]: SKIP", 1).return true.} // 0: No-op
+                        ,{ parameter _params is list(). if _params:Length > 0 { local timerem to _params[0] - Time:Seconds.                                             OutInfo("Stage Hold [T1]: {0}       ":Format(TimeSpan(timerem):Full), 1). return timerem > 0.} else { return true.}} // 1: Time:   Check that UT has not exceeded the provided timestamp
+                        ,{ parameter _params is list(). if _params:Length > 0 { local altThresh to _params[0]. local altDist to _params[0] - Ship:Altitude.             OutInfo("Stage Hold [T2]: {0} | {1} ":Format(altThresh, Round(altDist)), 1). return altThresh.} else { return true.}} // 2: Alt:    Wait until vessel reaches this alt
+                        ,{ parameter _params is list(). if _params:Length > 0 { local apoThresh to _params[0] * _params[1]. local altDist to apoThresh - Ship:Altitude. local apoDist to apoThresh - Ship:Apoapsis. OutInfo("Stage Hold [T3]: {0} | {1} ":Format(apoThresh, Round(apoDist)), 1). return Ship:Altitude >= apoThresh.} else { return true.}} // 3: ApoPct: Wait until vessel reaches an altitude >= Apoapsis * this Pct
+                    )
+                    ,"Action", list(
+                         { parameter _params is list(). OutInfo("", 1). return false.} // 0: No-op
+                        ,{ parameter _params is list(). set g_AutoStageArmed to (Stage:Number > _params[0]). for p in _params:Parts { set p:Tag to "". OutInfo("", 1).} set shipSysLex:State to 3. return false.} // 1: Re-enable autostage
+                        ,{ parameter _params is list(). set g_AutoStageArmed to (Stage:Number > _params[0]). for p in _params:Parts { set p:Tag to "". OutInfo("", 1).} set shipSysLex:State to 3. return false.} // 2: Alt:    Wait until vessel reaches this alt
+                        ,{ parameter _params is list(). set g_AutoStageArmed to (Stage:Number > _params[0]). for p in _params:Parts { set p:Tag to "". OutInfo("", 1).} set shipSysLex:State to 3. return false.} // 3: ApoPct: Wait until vessel reaches an altitude >= Apoapsis * this Pct
+                    )
+                )
+                ,"EstDuration", 0
+                ,"Parts", Ship:PartsTaggedPattern(l_stgDelayRegex)
+                ,"State", 0  // 0: Inactive, 1: Armed (In future stage), 2: Pending (In next stage), 3: Active (Currently holding), 4: Released (Delay is up, time to stage)
+                ,"HoldStage", 0
+                ,"RelStage",-1
+            )
+        )
+    ).
+    local stageDelayArmed to shipSysLex:Staging:Delay:Parts:Length > 0.
+    
     local l_boosterMaxIdx to -1.
     local l_dVMaxStgIdx to 0.
     // #endregion
 
     // *- Global
     // #region
+    global g_stageDelayActive to false.
+    global g_stageDelayArmed to false.
+    global g_stageAutoFlagCache to false.
     // #endregion
 // #endregion
 
@@ -59,11 +93,14 @@
             return resultCode.
         }
 
+
+        // ArmAutoStagingNext :: (_stgLimit)<scalar>, (_stgCondition)<scalar>, (_stgAction)<scalar> -> (ResultCode)<scalar>
+        // Arms automatic staging based on current thrust levels. if they fall below 0.1, we stage
         global function ArmAutoStagingNext
         {
             parameter _stgLimit to g_StageLimit,
-                      _stgCondition is 0, // 0: ThrustValue < 0.01
-                      _stgAction is 0. // 1 is experimental ullage check, 0 is regular safestage.
+                      _stgCondition is 1, // 0: ThrustValue < 0.01
+                      _stgAction is 1. // 1 is experimental ullage check, 0 is regular safestage.
 
             local resultCode to 0.
             set g_StageLimit to _stgLimit.
@@ -266,6 +303,7 @@
             parameter _conditionType,
                       _actionType.
 
+
             if g_LoopDelegates:HasKey("Staging")
             {
                 g_LoopDelegates:Staging:Add("Check", GetStagingConditionDelegate(_conditionType)).
@@ -278,6 +316,8 @@
                     ,"Action", GetStagingActionDelegate(_actionType)
                 ).
             }
+            set g_stageDelayArmed to SetupStageDelayHandler().
+
         }
 
         // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
@@ -347,21 +387,23 @@
         // Given a staging check type string, performs that condition check and returns the result
         local function GetStagingConditionDelegate
         {
-            parameter _checkType is 0,
+            parameter _checkType is 1,
                       _checkVal is 0.01.
 
-            // if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
-            // {
+            local condition to { parameter _params is list(). return true.}.
+
+            if _checkType = 0 // Thrust Value: Ship:AvailableThrust < 0.01
+            {
                 // local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
                 // local boundCondition to condition:BIND(Ship, _checkVal).
                 // return boundCondition.
-                local condition to GetShipThrustConditionDelegate(Ship, _checkVal).
-                return condition.
-            // }
-            // else if _checkType = 1
-            // {
-                
-            // }
+                set condition to GetShipThrustConditionDelegate(Ship, _checkVal).
+            }
+            else if _checkType = 1
+            {
+                set condition to GetShipThrustConditionDelegate_Next(Ship, _checkVal).
+            }
+            return condition.
         }
 
         // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> thrustDelegate (Delegate)
@@ -375,7 +417,7 @@
                 
                 //if __ves:AvailableThrust < checkVal and __ves:Status <> "PRELAUNCH" and throttle > 0 
                 // if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number >= g_StageLimit
-                if __ves:AvailableThrust < checkVal and throttle > 0 // and Stage:Number > g_StageLimit
+                if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number > g_StageLimit
                 { 
                     // OutDebug("[{0}] StagingCheckDel TRUE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 8).
                     return 1.
@@ -383,6 +425,95 @@
                 else 
                 {
                     // OutDebug("[{0}] StagingCheckDel FALSE (AT:{1}/{2}|{3}/0|{4}/{5})":Format(Round(MissionTime, 1), Round(__ves:AvailableThrust, 2), checkVal, Round(throttle, 2), Stage:Number, g_StageLimit), 8).
+                    return 0.
+                }
+            }.
+            return conditionDelegate@.
+        }
+
+        // CheckStageThrustCondition :: (_ves)<Vessel>, (_checkVal)Scalar -> thrustDelegate (Delegate)
+        local function GetShipThrustConditionDelegate_Next
+        {
+            parameter _ves,
+                      _checkVal is 0.01.
+
+            local conditionDelegate to { 
+                parameter __ves is _ves, checkVal is _checkVal. 
+                
+                if g_AutoStageArmed
+                {
+                    if __ves:AvailableThrust < checkVal and throttle > 0 and Stage:Number > g_StageLimit
+                    {
+                        if stageDelayArmed
+                        {
+                            local stgDlyLex to shipSysLex:Staging:Delay:Copy().
+                            if Stage:Number = stgDlyLex:HoldStage + 1
+                            {
+                                set stgDlyLex:State to 1.
+                            }
+                            else if Stage:Number <= stgDlyLex:HoldStage
+                            {
+                                set stgDlyLex:State to 2.
+                                set g_stageDelayActive to True. 
+                            }
+                            else if Stage:Number <= stgDlyLex:
+                            return 0.
+                        }
+                        return 1.
+                        
+                        // if stageDelayArmed
+                        // {
+                        //     local stageDelayObj to shipSysLex:Staging:Delay.
+
+                        //     if stageDelayObj:State = 1
+                        //     {
+                        //         if Stage:Number <= stageDelayObj:HoldStage
+                        //         {
+                        //             // ArmStageDelay(stageDelayObj:Parts).
+                        //             set g_stageDelayActive to ActivateStageDelay(stageDelayObj).
+                        //             if g_stageDelayActive 
+                        //             {
+                        //                 set stageDelayObj:State to 2.
+                        //             }
+                        //         }
+                        //     }
+                        //     else if stageDelayObj:State >= 2 or g_stageDelayActive
+                        //     {
+
+                        //         if g_LoopDelegates:Events:HasKey("STGDLY")
+                        //         {
+                        //             if g_LoopDelegates:Events:STGDLY:Delegates:Check:Call(g_LoopDelegates:Events:STGDLY:Params)
+                        //             {
+                        //                 g_LoopDelegates:Events:STGDLY:Delegates:Action:Call(g_LoopDelegates:Events:STGDLY:Params).
+                        //                 set g_stageDelayActive to False.
+                        //                 set stageDelayArmed to False.
+                        //                 return 1.
+                        //             }
+                        //         }
+                        //     }
+                        //     else
+                        //     {
+                        //         return 1.
+                        //     }
+                        // }
+                        // else
+                        // {
+                        // }
+                    }
+                }
+                else
+                {
+                    if g_stageDelayActive
+                    {
+                        if g_LoopDelegates:Events:HasKey("STGDLY")
+                        {
+                            if g_LoopDelegates:Events:STGDLY:Delegates:Check:Call(g_LoopDelegates:Events:STGDLY:Params)
+                            {
+                                g_LoopDelegates:Events:STGDLY:Delegates:Action:Call(g_LoopDelegates:Events:STGDLY:Params).
+                                return 1.
+                            }
+                        }
+                    }
                     return 0.
                 }
             }.
@@ -479,6 +610,11 @@
                 if _engList_Spec:FuelStabilityMin > 0.925
                 {
                     OutInfo("Ullage Check Passed!").
+                    set stageResult to true.
+                }
+                else if _engList_Spec:IsSolid
+                {
+                    OutInfo("Solid Motor").
                     set stageResult to true.
                 }
                 else
@@ -862,6 +998,327 @@
         
         return list(_dvObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
     }
+    // #endregion
+
+    // Stage delay - Wait time before next staging
+    // #region
+    
+
+    // Currently works I think? But I don't like it >:(
+    global function ArmStageDelay
+    {
+        parameter _stageDelayPart.
+        
+        local resultFlag to False.
+
+        local stageDelayAlt to 0.
+        local stageDelayPePct to 0.925.
+
+        local stageDelay to 0.
+        local stageDelayDefaultTime to 15.
+        local stageDelayStr to stageDelayDefaultTime + "s".
+
+        local stageDelayType to 0.  // 0: No/Op:  Improper tag 
+                                    // 1: Time:   Wait this many seconds until next stage action
+                                    // 2: Alt:    Wait until vessel reaches this alt
+                                    // 3: ApoPct: Wait until vessel reaches an altitude >= Apoapsis * this Pct
+
+        local stageDelayTag to _stageDelayPart:Tag:Split("|").    // "<(Ascent|MNV|Descent|Reentry|Landing)>|<(StageDelay|SD|StgDly|Delay|Dly)>|(\d*)<(s|m|%)>"
+
+        local stageDelayPreStage to _stageDelayPart:Stage.
+        local stageDelayTgtStage to stageDelayPreStage - 1.
+        
+        if stageDelayTag:Length > 2
+        {
+            set stageDelayStr to stageDelayTag[2].
+        }
+        
+        if stageDelayStr:EndsWith("s") or stageDelayStr:EndsWith("\d")
+        {
+            set stageDelay to ParseStringScalar(stageDelayStr, stageDelayDefaultTime).
+            set stageDelayType to 1.
+        }
+        else
+        {
+            if stageDelayStr:EndsWith("m")
+            {
+                set stageDelayAlt to ParseStringScalar(stageDelayStr, Min(Ship:Apoapsis, 150000)).
+                set stageDelayType to 2.
+            }
+            else if stageDelayStr:EndsWith("%")
+            {
+                set stageDelayAlt to Ship:Apoapsis * ParseStringScalar(stageDelayStr, stageDelayPePct).
+                set stageDelayType to 3.
+            }
+            
+            if stageDelayType > 1 
+            {
+                local altDiff to stageDelayAlt - Ship:Altitude.
+                local locGrav to GetLocalGravity(Ship:Body, Ship:Altitude + (altDiff / 2)).
+                local vspd to Ship:VerticalSpeed.
+                set stageDelay to (-vspd + Sqrt(vspd^2 + (2 * locGrav * altDiff))) / locGrav.
+            }
+        }
+        
+        if stageDelayType > 0
+        {
+            local stageDelayTS to Round(Time:Seconds + stageDelay, 2).
+            set g_TS3 to stageDelayTS.
+
+            set g_stageDelayActive to False.
+
+            local paramList to list(
+                stageDelayPreStage,
+                stageDelayTgtStage,
+                stageDelayType,
+                stageDelayTS,
+                stageDelayAlt
+            ).
+            
+            // check del
+            local checkDel to { 
+                parameter _params is list(). 
+                
+                if Stage:Number <= _params[1]
+                {
+                    return true.
+                }
+                else if Stage:Number <= _params[0] // if Stage:Number <= _params[0] 
+                {
+                    if g_stageDelayActive
+                    {
+                        if _params[2] = 1
+                        {
+                            local timeLeft to _params[3] - Time:Seconds.
+                            OutInfo("Type [{0}] | Tgt: [{1}] | Rem: [{2}]  ":Format(_params[2], _params[3], TimeSpan(timeLeft):Full), 1).
+                            return timeLeft <= 0.
+                        }
+                        else if _params[2] = 2
+                        {
+                            if _params[4] > 0
+                            {
+                                local altLeft to Round(_params[4] - Ship:Altitude).
+                                OutInfo("Type [{0}] | Tgt: [{1}] | Rem: [{2}]  ":Format(_params[2], _params[4], altLeft), 1).
+                                return altLeft <= 0.
+                            }
+                            else
+                            {
+                                return true.
+                            }
+                        }
+                        else if _params[2] = 3
+                        {
+                            if _params[4] > 0
+                            {
+                                local altLeft to Round(_params[4] - Ship:Altitude).
+                                OutInfo("Type [{0}] | Tgt: [{1}] | Rem: [{2}]  ":Format(_params[2], _params[4], altLeft), 1).
+                                return altLeft <= 0.
+                            }
+                            else
+                            {
+                                return true.
+                            }
+                        }
+                        else
+                        {
+                            return true. // If we are unrecognized, pass through
+                        }
+                    }
+                    else
+                    {
+                        OutInfo("[S{0}] Staging Delay Initiated ":Format(Stage:Number)).
+                        set g_stageAutoFlagCache to g_AutoStageArmed.
+                        set g_AutoStageArmed to False.
+                        set g_stageDelayActive to True.
+                    }
+                }
+                return false.
+            }.
+
+            // action del
+            local actionDel to {
+                parameter _params is list().
+
+                if not g_AutoStageArmed
+                {
+                    if g_stageAutoFlagCache
+                    {
+                        if Stage:Number <= g_StageLimit
+                        {
+                            OutInfo("[S{0}] Stage Delay Cannot Resume, Stage Limit Met [{1}/{2}]":Format(_params[0], Stage:Number, g_StageLimit)).
+                            OutInfo(" ", 2).
+                        }
+                        else
+                        {
+                            set g_AutoStageArmed to g_stageAutoFlagCache.
+                            OutInfo("[S{0}] Staging Delay Exited ":Format(_params[0])).
+                            OutInfo(" ", 2).
+                        }
+                    }
+                }
+                else
+                {
+                    OutInfo().
+                    OutInfo(" ", 2).
+                }
+
+                set g_TS3 to 0.
+                set g_stageDelayActive to false.
+                set g_stageDelayArmed to false.
+
+                return false.
+            }.
+
+            local stageDelayEvent to lexicon().
+            local stageDelayEventID to "STGDLY".
+
+            if not g_LoopDelegates:Events:HasKey(stageDelayEventID)
+            {
+                set stageDelayEvent to CreateLoopEvent(stageDelayEventID, "StageDelayEvent", paramList, checkDel@, actionDel@).
+                set resultFlag to RegisterLoopEvent(stageDelayEvent).   
+            }
+        }
+
+        return resultFlag.
+    }
+
+
+    global function SetupStageDelayHandler
+    {
+        parameter _partList is Ship:PartsTaggedPattern(l_stgDelayRegex).
+
+        local result to false.
+
+        local dlySecsToGo to 0.
+        local dlyState to 0.
+        local dlyType  to 0.
+        local dlyValue to 0.
+        local hldStg  to -1.
+        local rlsStg   to -1.
+
+        local stgDlyTimeDefault  to 11.25.
+        local stgDlyAltDefault   to choose Min(g_MissionTag:Params[1], 150000) if g_MissionTag:HasKey("Params") else 150000.
+        local stgDlyPePctDefault to 0.9125.
+
+        // local pTagVal to list().
+
+        if _partList:Length > 0
+        {
+            for p in _partList
+            {
+                if p:IsType("Decoupler") or p:IsType("Engine")
+                {
+                    set hldStg to Max(p:Stage + 1, hldStg).
+                    set rlsStg  to Max(p:Stage, rlsStg).
+                }
+                else
+                {
+                    set hldStg to Max(p:DecoupledIn + 1, hldStg).
+                    set rlsStg  to Max(p:DecoupledIn, rlsStg).
+                }
+                local pTagVal to p:Tag:Split("|")[2].
+                
+
+                if pTagVal:EndsWith("s") or pTagVal:EndsWith("\d")
+                {
+                    set dlyType to 1.
+                    set dlyValue to ParseStringScalar(pTagVal, stgDlyTimeDefault).
+                    // set dlySecsToGo to dlyValue.
+                }
+                else
+                {
+                    if pTagVal:EndsWith("m")
+                    {
+                        set dlyType to 2.
+                        set dlyValue to ParseStringScalar(pTagVal, stgDlyAltDefault).
+                    }
+                    else if pTagVal:EndsWith("%")
+                    {
+                        set dlyType to 3.
+                        set dlyValue to ParseStringScalar(pTagVal, stgDlyPePctDefault).
+                    }   
+                }
+                set dlyState to 1.
+            }
+
+            if dlyValue > 0
+            {
+                local stgDlyLex to shipSysLex:Staging:Delay:Copy().
+
+                set stgDlyLex:Type to dlyType.
+                set stgDlyLex:Val to dlyValue.
+                
+                set stgDlyLex:HoldStage to hldStg.
+                set stgDlyLex:RelStage to rlsStg.
+                set stgDlyLex:State to dlyState.
+
+                set shipSysLex:Staging:Delay to stgDlyLex.
+                
+                set result to true.
+            }
+        }
+        return result.
+    }
+    
+    // Maybe this will work better
+    global function ActivateStageDelay
+    {
+        parameter _stageDelayLex is Lexicon().
+        
+        local resultFlag to False.
+
+        // We have reached target hold stage and should commence the hold.
+        local stageDelayType to _stageDelayLex:Type.    // 0: No/Op:  Improper tag 
+                                                        // 1: Time:   Wait this many seconds until next stage action
+                                                        // 2: Alt:    Wait until vessel reaches this alt
+                                                        // 3: ApoPct: Wait until vessel reaches an altitude >= Apoapsis * this Pct
+
+        local dlySecsToGo to 0.
+        local dlyVal to _stageDelayLex:Val.
+        local paramSet to list().
+        local stageDelayEvent to lexicon().
+        local stageDelayEventID to "STGDLY":Format(stageDelayType:ToString).
+
+        if stageDelayType > 0
+        {
+            if stageDelayType = 1 // Timestamp
+            {
+                set dlySecsToGo to _stageDelayLex:Val.
+                paramSet:Add(Round(Time:Seconds + Max(dlySecsToGo, 5)), 2).
+            }
+            else 
+            {
+                if stageDelayType = 2 // ApoPct
+                {
+                    paramSet:Add(dlyVal).
+                }
+                else if stageDelayType >= 3 
+                {
+                    paramSet:Add(g_MissionTag:PARAMS[1] * Max(0, Min(1.125, dlyVal))).
+                }
+                paramSet:Add(dlyVal).
+                
+                local altDiff to dlyVal - Ship:Altitude.
+                local locGrav to GetLocalGravity(Ship:Body, Ship:Altitude + (altDiff / 2)).
+                local vspd to Ship:VerticalSpeed.
+                set dlySecsToGo to (vspd + Sqrt(vspd^2 + (2 * locGrav * altDiff))) / locGrav.
+                set g_TS3 to dlySecsToGo + Time:Seconds.
+            }
+
+            set _stageDelayLex:EstDuration to dlySecsToGo.
+
+            local actionDel to _stageDelayLex:Delegates:Action[Min(_stageDelayLex:Delegates:Action:Length - 1, Max(0, stageDelayType))].
+            local checkDel  to _stageDelayLex:Delegates:Check[Min(_stageDelayLex:Delegates:Check:Length - 1, Max(0, stageDelayType))].
+            
+            if not g_LoopDelegates:Events:HasKey(stageDelayEventID)
+            {
+                set stageDelayEvent to CreateLoopEvent(stageDelayEventID, "StageDelayEvent", list(dlyVal), checkDel@, actionDel@).
+                set resultFlag to RegisterLoopEvent(stageDelayEvent).   
+            }
+        }
+        return resultFlag.
+    }
+    
     // #endregion
 
 // #endregion

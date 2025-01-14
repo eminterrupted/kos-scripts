@@ -255,7 +255,7 @@ until g_Program >= 20 or g_Abort
     {
         if g_Runmode = 1
         {
-            RetractSwingArms(Ship:PartsNamedPattern("SwingArm"), 1).
+            RetractSwingArm(Ship:PartsNamedPattern("SwingArm"), 1).
 
             SetRunmode(3).
         }

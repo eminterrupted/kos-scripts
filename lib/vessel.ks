@@ -166,6 +166,15 @@
                                     set dcList to Ship:PartsTaggedPattern("Ascent\|(Decouple|DC)\|MECO").
                                 }
                             }
+                            else if epTagSplit[1] = "SEPCO"
+                            {
+                                // if g_Debug OutDebug("[{0}|{1}] epTag DC_SEPCO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 11).
+                                set eventID to "DC_SEPCO".
+                                if not g_LoopDelegates:Events:HasKey(eventID)
+                                {
+                                    set dcList to Ship:PartsTaggedPattern("Ascent\|(Decouple|DC)\|SEPCO").
+                                }
+                            }
                         }
                         else if epTagSplit[1]:MatchesPattern("\d*")
                         {
@@ -353,6 +362,7 @@
             {
                 // if g_Debug OutDebug("[SetupDecoupleEventHandler] Beginning event registration").
                 set resultCode to 1.
+                local dcStgNum is 0.
 
                 for _dc in _dcList
                 {
@@ -360,6 +370,7 @@
                     {
                         if _dc:Modules:Contains(m) 
                         {
+                            set dcStgNum to Max(dcStgNum, _dc:Stage).
                             dcUIDList:Add(_dc:UID).
                             for child in _dc:PartsTagged("")
                             {
@@ -390,7 +401,47 @@
                 }
                 
                 local checkDel to { return False.}.
-                if eventCheckVal[0] = "MECO"
+                if eventCheckVal[0] = "SEPCO"
+                {
+                    set resultCode to 11.
+                    set checkDel to {
+                        parameter _params is list(). 
+
+                        local doneFlag to false.
+                        if Stage:Number = _params[0]
+                        {
+                            for dc in _params[1]:Keys
+                            {
+                                for sep in _params[1][dc]
+                                {
+                                    if sep:ignition
+                                    {
+                                        set doneFlag to sep:Flameout.
+                                    }
+                                    else
+                                    {
+                                        set doneFlag to false.
+                                    }
+                                }
+                            }
+                        }
+                        return doneFlag.
+                    }.
+
+                    local stgNum to 0.
+                    if dcSepRM:Values:Length > 0
+                    {
+                        for pUID in dcSepRM:Keys
+                        {
+                            for eng in dcSepRM[pUID]
+                            {
+                                set stgNum to Max(stgNum, eng:Stage).
+                            }
+                        }
+                    }
+                    set paramList to list(stgNum, dcSepRM).
+                }
+                else if eventCheckVal[0] = "MECO"
                 {
                     set resultCode to 10.
                     set checkDel to { 
@@ -1218,6 +1269,7 @@
     }
     // #endregion
 
+
     // -- Mass
     // #region
 
@@ -1664,7 +1716,7 @@
         }
         else if _steerDelID = "AzPro:Sun"
         {
-            set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Velocity:Orbit:Velocity), 0).}.
+            set del to { return Heading(l_az_calc(g_azData), pitch_for(Ship, Ship:Velocity:Orbit), 0).}.
         }
         else if _steerDelID = "AngErr:Sun"
         {

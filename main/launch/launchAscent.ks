@@ -43,11 +43,11 @@ if params:length > 0
     if params:length > 3 set _azObj to params[3].
 }
 
-if _tgtAp < 0
+if _tgtAp <= 0
 {
     set _tgtAp to 250000.
 }
-if _tgtPe < 0
+if _tgtPe <= 0
 {
     set _tgtPe to _tgtAp.
 }
@@ -55,7 +55,7 @@ if _tgtPe < 0
 wait until Ship:Unpacked.
 local towerHeight to Ship:Altitude * 1.125.
 
-local launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
+global g_launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
 
 set   g_BoostersArmed to False.
 local boosterCheckDel  to { return True.}.
@@ -64,119 +64,43 @@ local boosterResult to list(false, boosterCheckDel, boosterActionDel).
 
 set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
 
-PreLaunchInit().
+local termCount to GetTerminalCountdown().
+local letsgoTS to WaitForLaunchCommit(termCount).
+local launchObj to PreLaunchInit(_tgtAp, _tgtInc).
 
-OutMsg("Waiting for launch command").
-set g_TS to Time:Seconds.
-local launchStrUpper to "Press [ENTER] to hopefully go to space today".
-local launchStrLower to "...or [INSERT] to change launch params".
-local launchCharsUpper to list(
-    ""
-    ,"*"
-    ,"**"
-    ,"***"
-).
-local launchCharsLower to list(
-    ""
-    ,"*"
-    ,"**"
-    ,"***"
-).
+set g_BoostersArmed to launchObj:BoosterResult[0].
+set boosterCheckDel to launchObj:BoosterResult[1].
+set boosterActionDel to launchObj:BoosterResult[2].
 
-local launchCommit to False.
-local reInitLaunchConfig to False.
-local updateConfig to False.
-until launchCommit
-{
-    local idx to Mod(Round(Time:Seconds - g_TS), launchCharsUpper:Length).
-
-    local tempStrUpper to "{0,3} {1} {0,-3}":Format(launchCharsUpper[idx], launchStrUpper).
-    local tempStrLower to "{0,3} {1} {0,-3}":Format(launchCharsLower[idx], launchStrLower). 
-    
-    print tempStrUpper at (Round((Terminal:Width - tempStrUpper:Length) / 2), Terminal:Height - 5).
-    print tempStrLower at (Round((Terminal:Width - tempStrUpper:Length) / 2), Terminal:Height - 4).
-
-    GetTermChar().
-    if not g_Debug
-    {
-        CheckKerbaliKode().
-    }
-
-    if g_TermChar = Terminal:Input:Enter
-    {
-        set launchCommit to True.
-    }
-    else if g_TermChar = Terminal:Input:DeleteRight
-    {
-        set g_TS to Time:Seconds + 3.
-
-        OutInfo().
-        until Time:Seconds > g_TS
-        {
-            OutMsg("Rebooting in {0,-4}...":Format(Round(g_TS - Time:Seconds, 2))).
-            wait 0.01.
-        }
-        reboot.
-    }
-    // 
-    else if g_TermChar = Terminal:Input:Backspace
-    {
-        set launchParams to ModifyLaunchParameters().
-    }
-    else if g_TermChar = Terminal:Input:HomeCursor or reInitLaunchConfig
-    {
-        OutMsg("Reinitializing launch configuration").
-        print " ":PadRight(Terminal:Width) at (0, Terminal:Height - 5).
-
-        PreLaunchInit().
-        set reInitLaunchConfig to False.
-        wait 0.25.
-        OutInfo().
-        OutMsg("Waiting for launch command").
-    }
-    else if g_TermChar = Terminal:Input:DeleteRight
-    {
-        ResetLaunchPlatform().
-        set g_TS2 to Time:Seconds + 5.
-        set g_TermChar to "".
-        print " ":PadRight(Terminal:Width) at (0, Terminal:Height - 5).
-
-        local doneFlag to False.
-        until doneFlag
-        {
-            GetTermChar().
-            if g_TermChar = Terminal:Input:DeleteRight or g_TermChar = Terminal:Input:EndCursor
-            {
-                set doneFlag to True.
-            }
-            else if g_TS2 - Time:Seconds < 0
-            {
-                set doneFlag to True.
-            }
-            else
-            {
-                OutMsg("[{0,-4}s] Resetting launch pad configuration...":Format(Round(g_TS2 - Time:Seconds, 2))).
-            }
-            OutInfo().
-            set g_TermChar to "".
-        }
-        unset doneFlag.
-        
-        OutMsg("Waiting for launch command").
-    }
-    
-    set g_TermChar to "".
-}
+// set g_HotStagingArmed to launchObj:HotStagingResult[0].
+// set g_OnStageEventArmed to launchObj:OSPResult[0].
 
 ClearScreen.
 DispMain(ScriptPath()).
 
 SendCoreMessage("P03_COUNTDOWN").
 
-lock Throttle to 1.
-OutMsg("GO for launch! Commencing countdown").
-wait 0.05.
-LaunchCountdown().
+OutMsg("GO for launch! Resuming countdown").
+// wait 0.125.
+set t_val to 0.
+lock Throttle to t_val.
+
+// for p in Ship:PartsNamedPattern("AM.MLP.SoyuzLaunchBaseArm(SM|LG)")
+// {
+//     OutInfo("[{0}] Commencing retract on countdown":Format(count:ToString)).
+//     RetractSwingArm(p).
+//     set count to count + 1.
+//     set termCount to Min(10, termCount + count).
+// }
+// for p in Ship:PartsTaggedPattern("RetractOnCountdown")
+// {
+//     OutInfo("[{0}] Commencing retract on countdown":Format(count:ToString)).
+//     RetractSwingArm(p).
+//     set count to count + 1.
+//     set termCount to Min(10, termCount + count).
+// }
+
+LaunchCountdown(termCount).
 OutInfo().
 OutInfo("",1).
 
@@ -191,7 +115,7 @@ OutInfo().
 OutInfo("g_DecouplerEventArmed: {0}":Format(g_DecouplerEventArmed),1).
 
 OutMsg("Liftoff! ").
-wait 1.
+wait 0.25.
 set g_ActiveEngines to GetActiveEngines().
 
 DispMain(ScriptPath()).
@@ -256,7 +180,7 @@ until Alt:Radar >= towerHeight
 ClearDispBlock().
 
 OutMsg("Gravity Turn").
-until Stage:Number <= g_StageLimit
+until Stage:Number <= g_StageLimit or Ship:Apoapsis >= Max(Body:ATM:Height, _tgtAp * 0.75)
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
@@ -354,11 +278,11 @@ until doneFlag
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-    if Ship:AvailableThrust <= 0.1
+    if Ship:AvailableThrust <= 0.1 and Ship:Apoapsis  >= _tgtAp * 0.9925
     {
         set doneFlag to True.
     }
-    else if Ship:Periapsis >= _tgtPe
+    else if Ship:Periapsis >= _tgtPe * 0.9975
     {
         set doneFlag to True.
     }
@@ -399,7 +323,7 @@ until doneFlag
     DispEngineTelemetry().
     DispStateFlags().
     DispLaunchTelemetry().
-    if g_PID_Enabled 
+    if g_PID_Enabled
     {
         DispPIDLoopValues(g_PIDS["TurnApo"]).
     }
@@ -437,92 +361,3 @@ if g_FairingsArmed
 
 OutMsg("Launch script complete, performing exit actions").
 wait 0.25.
-
-
-
-// Launch event setup
-local function PreLaunchInit
-{
-    // If this is a re-init, clear the existing variables
-    set g_Program to 4.
-    
-    if g_TermChar = Terminal:Input:HomeCursor
-    {
-        if g_LoopDelegates:Events:Keys:Length > 0
-        {
-            g_LoopDelegates:Events:Clear.
-            g_LoopDelegates:Program:Clear.
-            if g_LoopDelegates:HasKey("Staging") 
-            {
-                g_LoopDelegates:Remove("Staging").  
-            }
-        }
-
-        set _azObj to list().
-        set g_AzData to list().
-    }
-
-    ConfigureLaunchPlatform().
-    // Set the steering delegate
-    if _azObj:Length = 0 and g_GuidedAscentMissions:Contains(g_MissionTag:Mission)
-    {
-        set _azObj to l_az_calc_init(_tgtAp, _tgtInc).
-        set g_AzData to _azObj.
-    }
-    else
-    {
-        set g_AzData to _azObj.
-    }
-
-    set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAp, _tgtInc, g_AzData).
-
-    if Ship:ModulesNamed("ModuleRCSFX"):Length > 0
-    {
-        local rcsCheckDel to { parameter _params to list(). if _params:length = 0 { set _params to list(0.001, 5).} return Ship:Body:ATM:AltitudePressure(Ship:Altitude) <= _params[0] or g_ActiveEngines_Data:BurnTimeRemaining <= _params[1].}.
-        local rcsActionDel to { parameter _params is list(). RCS on. set g_RCSArmed to False. return False.}.
-        local rcsEventData to CreateLoopEvent("RCSEnable", "RCS", list(0.0025, 3), rcsCheckDel@, rcsActionDel@).
-        set g_RCSArmed to RegisterLoopEvent(rcsEventData).
-    }
-
-    set g_FairingsArmed     to ArmFairingJettison("ascent").
-    set g_LESArmed          to ArmLESTower().
-    set g_SpinArmed         to SetupSpinStabilizationEventHandler().
-    
-    if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
-    {
-        set boosterResult to ArmBoosterStaging("Ascent").
-        set g_BoostersArmed to boosterResult[0].
-        set boosterCheckDel  to boosterResult[1].
-        set boosterActionDel to boosterResult[2].
-    }
-   
-    set g_HotStagingArmed   to ArmHotStaging().
-
-    local onStageParts to Ship:PartsTaggedPattern("^OnStage").
-    if onStageParts:Length > 0
-    {
-        set g_OnStageEventArmed to SetupOnStageEventHandler(onStageParts).
-    }
-
-    local autoStageResult to ArmAutoStagingNext().
-    set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
-
-    // Check if we have any special MECO engines to handle
-    local ascentEventParts to Ship:PartsTaggedPattern("^Ascent\|.*").
-    local ascentEventCount to 0.
-    if ascentEventParts:Length > 0 
-    {
-        set ascentEventCount to ArmAscentEvents(ascentEventParts).
-    }
-
-    if g_Debug
-    {
-        OutInfo("ArmFairingJettison() result: {0}":Format(g_FairingsArmed)).
-        OutInfo("ArmLESTower() result: {0}":Format(g_LESArmed)).
-        OutInfo("ArmAscentEvents() ascentEventCount: [{0}]":Format(ascentEventCount)).
-        OutInfo("Registered Events: {0}":Format(g_LoopDelegates:Events:Keys:Join(";"))).
-    }
-
-    DispStateFlags().
-    DispLaunchConfigData().
-}
