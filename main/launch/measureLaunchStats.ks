@@ -7,7 +7,7 @@ RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).

@@ -5,7 +5,7 @@ parameter _params is list().
 
 RunOncePath("0:/lib/libLoader").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 local burnAt  to "ap".

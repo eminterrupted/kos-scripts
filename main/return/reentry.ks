@@ -6,7 +6,7 @@ parameter params is list().
 runOncePath("0:/lib/libLoader.ks").
 runOncePath("0:/lib/sci.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 SAS off.

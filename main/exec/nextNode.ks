@@ -5,7 +5,7 @@ parameter _params is list().
 
 RunOncePath("0:/lib/libLoader.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 local stageLimit to 0.

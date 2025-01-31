@@ -463,8 +463,8 @@
                     OutInfo("", 1).
                     set g_TermHeight to g_TermHeight + 16.
                     set g_TermWidth to g_TermWidth + 34.
-                    DispMain(g_MainProcess).
-                    set g_Debug to not g_Debug. //toggle debug on or off
+                    DispMain(g_MainProc).
+                    set g_Debug to True. //toggle debug on or off
                 }
                 return.
             }

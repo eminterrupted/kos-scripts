@@ -126,9 +126,9 @@
                 local epTag to eventPart:Tag:Replace("Ascent|","").
                 local epTagSplit to epTag:Split("|").
 
-                if epTag:MatchesPattern("^MECO\|\d*")
+                if epTag:MatchesPattern("^MECO\|\d*") // Actions to be taken when engines with tag "Ascent|MECO|<something>" are present
                 {
-                    // if g_Debug OutDebug("[{0}|{1}] epTag MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
+                    // if g_Debug OutDebug("[{0}|{1}] epTag MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), CrDbg()).
                     wait 0.1.
                     if not g_LoopDelegates:Events:HasKey("MECO")
                     {
@@ -137,7 +137,7 @@
                     }
                 }
 
-                if epTagSplit[0]:MatchesPattern("(Decouple|DC)")
+                if epTagSplit[0]:MatchesPattern("(Decouple|DC)") // Decouple actions
                 {
                     wait 0.1.
                     set eventID to "DC".
@@ -150,25 +150,25 @@
                             local epConditionSplit to epTagSplit[1]:Split(";").
                             if epConditionSplit:length > 1
                             {
-                                if epConditionSplit[0] = "BOOSTER"
+                                if epConditionSplit[0] = "BOOSTER" // Decouple when a booster is decoupled
                                 {
-                                    if g_Debug OutDebug("[{0}|{1}] epTag DC_Booster Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 10).
+                                    if g_Debug OutDebug("[{0}|{1}] epTag DC_Booster Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), CrDbg()).
                                     set eventID to ("DC_BOOSTER_{0}"):Format(epConditionSplit[1]).
                                     set dcList to Ship:PartsTaggedPattern("Booster\|{0}":Format(epConditionSplit[1])).
                                 }
                             }
-                            else if epTagSplit[1] = "MECO"
+                            else if epTagSplit[1] = "MECO" // Decouple when engines tagged with MECO burn out
                             {
-                                if g_Debug OutDebug("[{0}|{1}] epTag DC_MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 11).
+                                if g_Debug OutDebug("[{0}|{1}] epTag DC_MECO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), CrDbg()).
                                 set eventID to "DC_MECO".
                                 if not g_LoopDelegates:Events:HasKey(eventID)
                                 {
                                     set dcList to Ship:PartsTaggedPattern("Ascent\|(Decouple|DC)\|MECO").
                                 }
                             }
-                            else if epTagSplit[1] = "SEPCO"
+                            else if epTagSplit[1] = "SEPCO" // Decouple when sep motors burn out
                             {
-                                // if g_Debug OutDebug("[{0}|{1}] epTag DC_SEPCO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), 11).
+                                // if g_Debug OutDebug("[{0}|{1}] epTag DC_SEPCO Match: {2}":Format(eventPart:Name, eventPart:UID, epTag), CrDbg()).
                                 set eventID to "DC_SEPCO".
                                 if not g_LoopDelegates:Events:HasKey(eventID)
                                 {
@@ -176,7 +176,7 @@
                                 }
                             }
                         }
-                        else if epTagSplit[1]:MatchesPattern("\d*")
+                        else if epTagSplit[1]:MatchesPattern("\d*") // Decouple after a certain time delay from the beginning of the burn
                         {
                             local dcMET to ParseStringScalar(epTag:Replace("Decouple|",""):ToNumber(-1)).
                             set eventID to "DC_{0}":Format(dcMET).
@@ -500,7 +500,7 @@
                         }
                         
                         set checkFlag to pendingStaging:Length = _params[2]:Length.
-                        // if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), 7).
+                        // if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), CrDbg()).
 
                         // OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
                         return checkFlag.
@@ -632,7 +632,7 @@
                 }
             }
             
-            // if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), 1).
+            // if g_Debug OutDebug("[SetupDecoupleEventHandler] resultCode: [{0}]":Format(resultCode), CrDbg()).
             if resultCode > 0 // = 0 means we no-op'd
             {
                 if resultCodeLex:NOOP:Contains(resultCode)
@@ -647,12 +647,12 @@
                     // }
                     // else if resultCode = 9
                     // {
-                    //     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID)).    
+                    //     // if g_Debug OutDebug("[SetupDecoupleEventHandler] Event Handler already exists for [{0}], skipping":Format(dcEventID), crDbg()).    
                     // }
                 }
                 else if resultCodeLex:ERROR:Contains(resultCode)
                 {
-                    if g_Debug { OutDebug("[SetupDecoupleEventHandler] Registration failed [ResultCode: {0}]":format(resultCode), 0, "Red").}
+                    if g_Debug { OutDebug("[SetupDecoupleEventHandler] Registration failed [ResultCode: {0}]":format(resultCode), crDbg(), "Red").}
                 }
                 else
                 {
@@ -974,7 +974,7 @@
                     {
                         if g_SpinActive
                         {
-                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
+                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), CrDbg()).
                             OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
                             if Time:Seconds >= g_TS0
                             {
@@ -986,7 +986,7 @@
                         else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
                         {
                             local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
-                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
+                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), CrDbg()).
                             OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
                             if timeRem <= 0
                             {
@@ -1159,7 +1159,7 @@
                     {
                         if g_SpinActive
                         {
-                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), 6).
+                            // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), CrDbg()).
                             OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
                             if Time:Seconds >= g_TS0
                             {
@@ -1171,7 +1171,7 @@
                         else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
                         {
                             local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
-                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), 6).
+                            // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), CrDbg()).
                             OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
                             if timeRem <= 0
                             {
@@ -1278,6 +1278,8 @@
     global function GetStageMass
     {
         parameter stg.
+
+        if g_Debug OutDebug("GetStageMass for stage: [{0}]":Format(stg)).
 
         local stgMass to 0.
 
@@ -1742,7 +1744,7 @@
         }
         else if _steerDelID = "PIDApoErr:Sun"
         {
-            if g_Debug OutDebug("Transitioning to PIDApoErr:Sun guidance", -2).
+            if g_Debug OutDebug("Transitioning to PIDApoErr:Sun guidance", crDbg()).
             // set g_AngDependency:RESET_PIDS to True.
             set del to { 
                 local pidPit to GetAscentAng_PID(g_AngDependency).
@@ -1948,7 +1950,7 @@
                 local checkDel to {
                     parameter _params is list().
 
-                    if Abort or Ship:Altitude >= 100000 or Ship:Velocity:Surface:Mag > 2025
+                    if Abort or Ship:Altitude >= 100000 or Ship:Velocity:Surface:Mag > 2325
                     {
                         return true.
                     }

@@ -6,5 +6,5 @@ parameter params to list().
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/aero.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().

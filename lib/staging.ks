@@ -112,7 +112,10 @@
             else
             {
                 InitStagingDelegate(_stgCondition, _stgAction).
-                set resultCode to 1.
+                if g_LoopDelegates:HasKey("Staging") 
+                {
+                    set resultCode to 1.
+                }
             }
             return resultCode.
         }
@@ -120,6 +123,7 @@
         global function DisableAutoStaging
         {
             g_LoopDelegates:Remove("Staging").
+            return g_LoopDelegates:HasKey("Staging").
         }
 
         // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
@@ -167,7 +171,7 @@
                     }
                 }
 
-                // if g_Debug OutDebug("Engine_Obj Keys: {0}":Format(Engine_Obj:Keys:Join(";")), -6).
+                // if g_Debug OutDebug("Engine_Obj Keys: {0}":Format(Engine_Obj:Keys:Join(";")), CrDbg()-6).
                 // wait 1.
 
                 for HotStageID in Engine_Obj:KEYS
@@ -231,12 +235,12 @@
                                 }
                                 else if t_Val > 0
                                 {
-                                    if g_Debug { OutDebug("Fuel Exhausted, hot staging").}
+                                    if g_Debug { OutDebug("Fuel Exhausted, hot staging", CrDbg()).}
                                     return True.
                                 }
                                 else
                                 {
-                                    if g_Debug { OutDebug("Right stage, but fell through HotStaging checkdel").}
+                                    if g_Debug { OutDebug("Right stage, but fell through HotStaging checkdel", CrDbg()).}
                                 }
                             }
                         }
@@ -303,10 +307,18 @@
             parameter _conditionType,
                       _actionType.
 
-
             if g_LoopDelegates:HasKey("Staging")
             {
+                if g_LoopDelegates:Staging:HasKey("Check") 
+                {
+                    g_LoopDelegates:Staging:Remove("Check").
+                } 
                 g_LoopDelegates:Staging:Add("Check", GetStagingConditionDelegate(_conditionType)).
+
+                if g_LoopDelegates:Staging:HasKey("Action") 
+                {
+                    g_LoopDelegates:Staging:Remove("Action").
+                } 
                 g_LoopDelegates:Staging:Add("Action", GetStagingActionDelegate(_actionType)).
             }
             else
@@ -355,14 +367,18 @@
             else if _actionType = 1
             {
                 local stageAction to {
+                    if g_Debug OutDebug("FUCKING PIECE OF SHIT.", crDbg()).
                     if g_NextEngines_Spec:Keys:Length = 0
                     {
-                        set g_NextEngines to GetNextEngines().
+                        if g_Debug OutDebug("WORK GOD DAMNIT.", crDbg()).
+                        set g_NextEngines to GetNextEngines(Stage:Number, "Main").
                         if g_NextEngines:Length > 0
                         {
+                            if g_Debug OutDebug("I FUCKING HATE MYSELF AND THIS FUCKING WORLD.", crDbg()).
                             set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
                         }
                     }
+                    if g_Debug OutDebug("FUCK YOU", crDbg()).
 
                     until SafeStageWithUllage(g_NextEngines, g_NextEngines_Spec)
                     {
@@ -460,45 +476,6 @@
                             return 0.
                         }
                         return 1.
-                        
-                        // if stageDelayArmed
-                        // {
-                        //     local stageDelayObj to shipSysLex:Staging:Delay.
-
-                        //     if stageDelayObj:State = 1
-                        //     {
-                        //         if Stage:Number <= stageDelayObj:HoldStage
-                        //         {
-                        //             // ArmStageDelay(stageDelayObj:Parts).
-                        //             set g_stageDelayActive to ActivateStageDelay(stageDelayObj).
-                        //             if g_stageDelayActive 
-                        //             {
-                        //                 set stageDelayObj:State to 2.
-                        //             }
-                        //         }
-                        //     }
-                        //     else if stageDelayObj:State >= 2 or g_stageDelayActive
-                        //     {
-
-                        //         if g_LoopDelegates:Events:HasKey("STGDLY")
-                        //         {
-                        //             if g_LoopDelegates:Events:STGDLY:Delegates:Check:Call(g_LoopDelegates:Events:STGDLY:Params)
-                        //             {
-                        //                 g_LoopDelegates:Events:STGDLY:Delegates:Action:Call(g_LoopDelegates:Events:STGDLY:Params).
-                        //                 set g_stageDelayActive to False.
-                        //                 set stageDelayArmed to False.
-                        //                 return 1.
-                        //             }
-                        //         }
-                        //     }
-                        //     else
-                        //     {
-                        //         return 1.
-                        //     }
-                        // }
-                        // else
-                        // {
-                        // }
                     }
                 }
                 else
@@ -536,6 +513,61 @@
             wait 0.01.
         }
 
+        // Checks for ullage before staging
+        local function SafeStageWithUllage
+        {
+            parameter _engList,
+                      _engList_Spec is lexicon().
+
+            // set g_NextEngines     to GetNextEngines().
+            // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+
+            if g_Debug OutDebug("[{0}] Running SafeStageWithUllage":Format(Round(MissionTime, 1)), crDbg()).
+            local stageResult to False.
+            
+            if _engList_Spec:Keys:Length = 0
+            {
+                set _engList_Spec to GetEnginesSpecs(_engList).
+            }
+                        
+            if _engList_Spec:HasKey("FuelStabilityMin")
+            {
+                if g_Debug OutDebug("[{0}] FuelStabilityMin Key Found ({1})":Format(Round(MissionTime, 1), _engList_Spec:FuelStabilityMin), crDbg()).
+                if _engList_Spec:FuelStabilityMin > 0.925
+                {
+                    OutInfo("Ullage Check Passed!").
+                    set stageResult to true.
+                }
+                else if _engList_Spec:IsSolid
+                {
+                    OutInfo("Solid Motor").
+                    set stageResult to true.
+                }
+                else
+                {
+                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(_engList_Spec:FuelStabilityMin * 100, 2))).
+                }
+            }
+            else
+            {
+                if g_Debug OutDebug("[{0}] FuelStabilityMin Key Missing":Format(Round(MissionTime, 1)), crDbg()).
+                set stageResult to true.
+            }
+
+            if stageResult
+            {
+                if g_Debug OutDebug("[{0}] Staging triggered":Format(Round(MissionTime, 1)), crDbg()).
+                local rcsResult to RCS. // Stores current RCS state
+                set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
+                wait until Stage:Ready.
+                Stage.
+                wait 0.01.
+                set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
+            }
+            OutInfo().
+
+            return stageResult.
+        }
 
         // Simpler version of SafeStageWithUllage using new GetEngineFuelStability function
         local function SafeStageWithUllage2
@@ -585,62 +617,6 @@
             }
             OutInfo().
             return StageResult.
-        }
-
-        // Checks for ullage before staging
-        local function SafeStageWithUllage
-        {
-            parameter _engList,
-                      _engList_Spec is lexicon().
-
-            // set g_NextEngines     to GetNextEngines().
-            // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
-
-            // OutDebug("[{0}] Running SafeStageWithUllage":Format(Round(MissionTime, 1)), 3).
-            local stageResult to False.
-            
-            if _engList_Spec:Keys:Length = 0
-            {
-                set _engList_Spec to GetEnginesSpecs(_engList).
-            }
-                        
-            if _engList_Spec:HasKey("FuelStabilityMin")
-            {
-                // OutDebug("[{0}] FuelStabilityMin Key Found":Format(Round(MissionTime, 1)), 4).
-                if _engList_Spec:FuelStabilityMin > 0.925
-                {
-                    OutInfo("Ullage Check Passed!").
-                    set stageResult to true.
-                }
-                else if _engList_Spec:IsSolid
-                {
-                    OutInfo("Solid Motor").
-                    set stageResult to true.
-                }
-                else
-                {
-                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(_engList_Spec:FuelStabilityMin * 100, 2))).
-                }
-            }
-            else
-            {
-                // OutDebug("[{0}] FuelStabilityMin Key Missing":Format(Round(MissionTime, 1)), 4).
-                set stageResult to true.
-            }
-
-            if stageResult
-            {
-                // OutDebug("[{0}] Staging triggered":Format(Round(MissionTime, 1)), 5).
-                local rcsResult to RCS. // Stores current RCS state
-                set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
-                wait until Stage:Ready.
-                Stage.
-                wait 0.01.
-                set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
-            }
-            OutInfo().
-
-            return stageResult.
         }
 
 
@@ -831,6 +807,7 @@
                     set doneFlag to true.
                 }
             }
+            OutInfo().
         }
 
         // OutInfo("UPDATING G_SHIPENGINES").
@@ -846,7 +823,7 @@
     // #region
 
     // ArmDVStaging
-    //
+    // Stages when a threshold of dv remaining in a manuever is met. Threshold comes from the part tag.
     global function ArmDVStaging
     {
         parameter _dvPartTag is "dvst(g|age|aging)\|(dv|stg)\|(-)*\d+".
@@ -895,7 +872,7 @@
                             print "[ArmDVStaging] dvRemainingStg: [{0}]":Format(dvRemainingStg) at (2, 46).
                         }
                         // local adjustedMnvDV to NextNode:DeltaV:Mag - dvRemainingStg.
-                        local adjustedMnvDV to dvRemainingStg * 1.00525.
+                        local adjustedMnvDV to dvRemainingStg * 1.00325.
 
                         if p:IsType("Decoupler")
                         {
@@ -1197,9 +1174,15 @@
         local rlsStg   to -1.
 
         local stgDlyTimeDefault  to 11.25.
-        local stgDlyAltDefault   to choose Min(g_MissionTag:Params[1], 150000) if g_MissionTag:HasKey("Params") else 150000.
+        local stgDlyAltDefault   to choose Min(g_MissionTag:Params[1], 150000) if g_MissionTag:Params:Length > 0 else 150000.// 150000.
         local stgDlyPePctDefault to 0.9125.
 
+        // stgDlyAltDefault check
+        // if g_MissionTag:PARAMS:Length > 0
+        // {
+        //     set stgDlyAltDefault to Min(g_MissionTag:PARAMS[1], stgDlyAltDefault).
+        // }
+        
         // local pTagVal to list().
 
         if _partList:Length > 0

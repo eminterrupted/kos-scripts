@@ -937,6 +937,7 @@
                     }
                     
                     set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                    // set burnTimeRemaining to GetEnginesBurnTimeRemaining(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     
                     set t_Val to max(0.01, min(_inNode:deltaV:mag / maxAcc, 1)).
 

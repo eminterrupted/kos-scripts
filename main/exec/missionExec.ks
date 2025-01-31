@@ -4,7 +4,7 @@ ClearScreen.
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/kslib/lib_l_az_calc.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 set g_MissionTag to ParseCoreTag(core:Part:Tag).
@@ -61,6 +61,25 @@ if Ship:Status = "PRELAUNCH"
     wait 1.
     runPath(scr, list(g_LaunchParams:TGTINC, g_LaunchParams:TGTAP, g_LaunchParams:TGTPE, g_LaunchParams:AZ)).
 
+    local curStgLimit to g_StageLimit.
+
+    // Checking whether to stage ahead
+    if Stage:Number > g_StageLimit
+    {
+        local nextStgLimit to choose g_StageLimit if g_StageLimitSet:Length <= 1 else g_StageLimitSet[1].
+        local nextUsableEngines to list().
+        set nextUsableEngines to GetNextUsableEngines(g_StageLimit, nextStgLimit).
+        if nextUsableEngines:Length > 0
+        {
+            until Stage:Number <= g_StageLimit
+            {
+                wait until Stage:Ready.
+                stage.
+                wait 0.01.
+            }
+        }
+    }
+    // Check if we need to increment the stage limiter
     if g_StageLimitSet:Length > 1
     {
         OutMsg("[L24] SetNextStageLimit hit").
@@ -71,7 +90,7 @@ OutMsg("Exited launchAscent").
 wait 1.
 
 ClearScreen.
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 // Circularize if necessary

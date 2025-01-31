@@ -9,7 +9,7 @@ RunOncePath("0:/lib/launch").
 RunOncePath("0:/lib/mnv").
 RunOncePath("0:/kslib/lib_l_az_calc").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 // Declare Variables

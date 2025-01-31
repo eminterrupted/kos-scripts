@@ -643,7 +643,7 @@
     // Prints the main terminal header, and returns the next available line for printing
     global function DispMain
     {
-        parameter _currentProcess   is g_MainProcess,
+        parameter _currentProcess   is g_MainProc,
                   _initTerm         is True,
                   _termWidth        is g_TermWidth,
                   _termHeight       is g_TermHeight,
@@ -813,6 +813,7 @@
             ,"SpinStab      : {0,-5}":Format(g_SpinArmed)
             ,"StageDelay    : {0,-5}":Format(g_LoopDelegates:Events:HasKey("STGDLY"))
             ,"UIDUpdater    : {0,-5}":Format(g_UIDUpdaterArmed)
+            ,"DebugOutput   : {0,-5}":Format(g_Debug)
         ).
 
         DispPrintBlock(_dispBlockIdx, dispList).

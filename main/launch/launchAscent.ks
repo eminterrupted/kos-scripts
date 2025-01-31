@@ -6,7 +6,7 @@ parameter params to list().
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 
-set g_MainProcess to ScriptPath().
+set g_MainProc to ScriptPath().
 DispMain().
 
 local engineCounter      to 0.
@@ -104,6 +104,10 @@ LaunchCountdown(termCount).
 OutInfo().
 OutInfo("",1).
 
+local asr to ArmAutoStagingNext(g_StageLimit, 1, 2).
+set launchObj["autoStageResult"] to asr.
+set g_AutoStageArmed to asr = 1.
+
 set g_ActiveEngines to GetActiveEngines().
 set g_NextEngines   to GetNextEngines().
 
@@ -146,7 +150,7 @@ until Alt:Radar >= towerHeight
         }
         else
         {
-            OutMsg("Booster staging: Armed").
+            OutInfo("Booster staging: Armed").
         }
     }
     if g_LoopDelegates:HasKey("Staging")
@@ -179,8 +183,10 @@ until Alt:Radar >= towerHeight
 }
 ClearDispBlock().
 
+local nextFlag to False.
+
 OutMsg("Gravity Turn").
-until Stage:Number <= g_StageLimit or Ship:Apoapsis >= Max(Body:ATM:Height, _tgtAp * 0.75)
+until Stage:Number <= g_StageLimit// or Ship:Apoapsis >= Max(Body:ATM:Height, _tgtAp * 0.75)
 {
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
@@ -206,13 +212,14 @@ until Stage:Number <= g_StageLimit or Ship:Apoapsis >= Max(Body:ATM:Height, _tgt
         }
         else
         {
-            OutMsg("Booster staging: Armed").
+            OutInfo("Booster staging: Armed").
         }
     }
 
     if g_LoopDelegates:HasKey("Staging")
     {
-        if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed and not g_MECOArmed
+        // if g_HotStagingArmed and g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed and not g_MECOArmed
+        if g_NextHotStageID = Stage:Number - 1 and not g_BoostersArmed and not g_MECOArmed
         { 
             if g_LoopDelegates:Staging:HotStaging:HasKey(g_NextHotStageID)
             {
@@ -225,8 +232,10 @@ until Stage:Number <= g_StageLimit or Ship:Apoapsis >= Max(Body:ATM:Height, _tgt
         else
         {
             set stagingCheckResult to g_LoopDelegates:Staging["Check"]:Call().
+            OutInfo("Checking staging delegate [{0}]":Format(stagingCheckResult), 2).
             if stagingCheckResult = 1
             {
+                if g_Debug OutDebug("Checking staging delegate [{0}]":Format(stagingCheckResult), 1).
                 g_LoopDelegates:Staging["Action"]:Call().
             }
         }
@@ -251,14 +260,17 @@ until Stage:Number <= g_StageLimit or Ship:Apoapsis >= Max(Body:ATM:Height, _tgt
 }
 ClearDispBlock().
 
-OutInfo("Disabling Autostaging").
-DisableAutoStaging().
+// if Stage:Number <= g_StageLimit
+// {
+//     OutInfo("Disabling Autostaging").
+//     set g_AutoStageArmed to DisableAutoStaging().
+// }
 
 OutMsg("Final Burn").
 wait 0.05.
 
-local doneFlag to False.
-until doneFlag
+set nextFlag to False.
+until nextFlag
 {
     GetTermChar().
 
@@ -270,7 +282,7 @@ until doneFlag
             OutInfo().
             OutInfo("", 1).
             OutInfo("", 2).
-            set doneFlag to True.
+            set nextFlag to True.
         }
     }
 
@@ -278,13 +290,35 @@ until doneFlag
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
-    if Ship:AvailableThrust <= 0.1 and Ship:Apoapsis  >= _tgtAp * 0.9925
+    if Stage:Number <= g_StageLimit
     {
-        set doneFlag to True.
+        OutInfo("Disabling Autostaging").
+        set g_AutoStageArmed to DisableAutoStaging().
     }
-    else if Ship:Periapsis >= _tgtPe * 0.9975
+
+    if Ship:AvailableThrust <= 0.1
     {
-        set doneFlag to True.
+        if g_Debug OutDebug("Ship:AvailableThrust thresh met").
+        if Ship:Apoapsis >= _tgtAp * 1.025
+        {
+            if g_Debug OutDebug("nextFlag set (Apo[{0}] >= _tgtAp[{1}]) thresh met":Format(Round(Ship:Apoapsis, Round(_tgtAp * 1.025)))).
+            set nextFlag to True.
+        }
+        else if not g_AutoStageArmed
+        {
+            if g_Debug OutDebug("nextFlag set (Autostage disabled)").
+            set nextFlag to True.
+        }
+        else
+        {
+            if g_Debug OutDebug("nextFlag not set (Below apo thresh and Autostage enabled)").
+            set nextFlag to True.
+        }
+    }
+    else if Ship:Periapsis >= _tgtPe * 0.999
+    {
+        if g_Debug OutDebug("nextFlag set (Pe{0}] >= _tgtPe[{1}]) thresh met":Format(Round(Ship:Periapsis, Round(_tgtPe * 0.999)))).
+        set nextFlag to True.
     }
     else
     {    
@@ -309,7 +343,7 @@ until doneFlag
             }
             else
             {
-                OutMsg("Booster staging: Armed").
+                OutInfo("Booster staging: Armed").
             }
         }
     }
@@ -336,6 +370,10 @@ ClearDispBlock().
 
 set t_Val to 0.
 unlock throttle.
+
+OutInfo("Disabling Autostaging").
+set g_AutoStageArmed to DisableAutoStaging().
+
 OutMsg("Coasting out of atmosphere").
 
 // Coast out of atmosphere

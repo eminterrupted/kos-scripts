@@ -126,6 +126,8 @@
         parameter _ves is ship,
                   _engType is "all".
 
+        if g_Debug OutDebug("GetActiveEngines for vessel (_engType[{0}])":Format(_engType)).
+
         local engList to list().
 
         for eng in _ves:engines
@@ -204,6 +206,8 @@
                                       // 0: ==
                                       // 1: >=
 
+        if g_Debug OutDebug("GetEnginesForStage (_stg[{0}]|_type[{1}])":Format(_stg, _type), CrDbg()).
+
         local engList to list().
         local checkDel to _EQ_@.
 
@@ -251,13 +255,16 @@
     // Returns the next set of engines, starting with the provided stage number (by default current stage - 1), and iterating towards 0 until it finds them (or doesn't)
     global function GetNextEngines
     {
-        parameter _startAtStg is Stage:Number.
+        parameter _startAtStg is Stage:Number,
+                  _engTypes is "All".
+
+        if g_Debug OutDebug("GetNextEngines starting at stage [{0}]":Format(_startAtStg)).
 
         local engList to list().
 
         from { local i to _startAtStg - 1.} until i <= 0 step { set i to i - 1.} do
         {
-            set engList  to GetEnginesForStage(i).
+            set engList  to GetEnginesForStage(i, _engTypes).
             if engList:Length > 0 
             {
                 return engList.
@@ -273,7 +280,7 @@
 
         local nextStg is 0.
 
-        // OutDebug("[GetNextEngineStage][{0}] _engTypes: [{1}]":Format(_startStg, _engTypes), crDbg()).
+        if g_Debug OutDebug("GetNextEngineStage (_startStg[{0}]|_engTypes[{1}])":Format(_startStg, _engTypes), crDbg()).
         for eng in Ship:Engines
         {
             if eng:Stage < _startStg
@@ -282,13 +289,64 @@
                 {
                     if not g_PartInfo:Engines:SepRef:Contains(eng:name) or eng:Tag:Length > 0
                     {
-                        if eng:Ignitions > 0 set nextStg to Max(nextStg, eng:Stage).
+                        if eng:Ignitions <> 0 set nextStg to Max(nextStg, eng:Stage).
                     }
                 }
             }
         }
         // OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
         return nextStg.
+    }
+
+    global function GetNextUsableEngines
+    {
+        parameter _startStg is Stage:Number,
+                  _stopStg is 0,
+                  _engTypes is "NoSep".
+
+        if g_Debug OutDebug("GetNextUsableEngines (_startStg[{0}]|_engTypes[{1}])":Format(_startStg, _engTypes), crDbg()).
+
+        local maxStg is _startStg.
+        local engLex to lexicon().
+
+        for eng in Ship:Engines
+        {
+            if not g_PartInfo:Engines:SepRef:Contains(eng:name) or eng:Tag:Length > 0
+            {
+                if eng:Stage >= _stopStg
+                {
+                    if eng:Ignitions <> 0
+                    {
+                        set maxStg to Max(maxStg, eng:Stage).
+                        if engLex:HasKey(eng:Stage) 
+                        {
+                            engLex[eng:Stage]:Add(eng).
+                        }
+                        else
+                        {
+                            engLex:Add(eng:Stage, list(eng)).
+                        }
+                    }
+                }
+            }
+        }
+
+        local nextStg to maxStg.
+        from { local doneFlag to false. } until doneFlag or nextStg < _stopStg step { set nextStg to nextStg - 1.} do 
+        {
+            if engLex:HasKey(nextStg)
+            {
+                local engs to engLex[nextStg].
+                local btRemaining to GetEnginesBurnTimeRemaining(engs).
+                if btRemaining > 0
+                {
+                    return engs.
+                }
+            }
+        }
+        
+        // OutDebug("[GetNextEngineStage][{0}] nextStg: [{1}]":Format(_startStg, nextStg), crDbg()).
+        return list().
     }
 
     //
@@ -319,11 +377,16 @@
     {
         parameter _eng.
 
+        if g_Debug OutDebug("GetEngineSpecs for [{0}:{1}:{2}]":Format(_eng:Stage, _eng:Name, _eng:UID), crDbg()).
+
         local m to _eng:GetModule("ModuleEnginesRF").
         local sepMotorCheck to (g_PartInfo:Engines:SepRef:Contains(_eng:Name) and _eng:Tag:Length = 0).
         
-        local fuelStability         to GetField(m, "propellant"). // GetField(m, "propellant").
-        local stabilityStrIdx       to fuelStability:Find("(").
+        local fuelStability to "Very Stable (100.0 %)".
+        if m:HasField("propellant") {
+            set fuelStability to GetField(m, "propellant", fuelStability).
+        }
+        local stabilityStrIdx to fuelStability:Find("(").
         local fuelStabilityScalar   to choose fuelStability:SubString(stabilityStrIdx + 1, fuelStability:Find("%") - stabilityStrIdx - 2):ToNumber(0.01) / 100 if fuelStability:Contains("%") else 0.01.
 
         local mixRatio to GetField(m, "mixture ratio", 1).
@@ -374,6 +437,8 @@
     {
         parameter _engList.
 
+        if g_Debug OutDebug("GetEnginesSpecs for [{0}] engines":Format(_engList:Length)).
+
         local fuelStabilityAvg  to 0.
         local fuelStabilityMin  to 1.
         local TotalResMass      to 0.
@@ -420,7 +485,6 @@
             from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
             {
                 local eng to _engList[i].
-                
                 local engSpecs to GetEngineSpecs(eng).
                 set engsSpecs["SpoolTime"] to max(engsSpecs:SpoolTime, engSpecs:SpoolTime).
                 
@@ -472,13 +536,13 @@
                         AggregateMassLex:Engines:Add(
                             "Resources", Lexicon(
                                 resName, Lexicon(
-                                    "Amount",       engResource:Amount
-                                    ,"Capacity",    engResource:Capacity
-                                    ,"Density",     engResource:Density
-                                    ,"Mass",        resMass
-                                    ,"MaxMassFlow", engResource:MaxMassFlow
-                                    ,"Ratio",       engResource:Ratio
-                                    ,"TotalResiduals", residuals
+                                    "Amount",           engResource:Amount
+                                    ,"Capacity",        engResource:Capacity
+                                    ,"Density",         engResource:Density
+                                    ,"Mass",            resMass
+                                    ,"MaxMassFlow",     engResource:MaxMassFlow
+                                    ,"Ratio",           engResource:Ratio
+                                    ,"TotalResiduals",  residuals
                                 )
                             )
                         ).
@@ -519,7 +583,7 @@
             }
             else
             {
-                // OutDebug("EffectiveISP  : " + allPossibleThrust / allWeightedThrust, crDbg()).
+                // if g_Debug OutDebug("EffectiveISP  : " + allPossibleThrust / allWeightedThrust, crDbg()).
                 set engsSpecs:AvgISP to choose 0 if totalThrust = 0 or ispWeighting = 0 else totalThrust / ispWeighting.
             }
             set engsSpecs:AvgExhVelo to Constant:g0 * engsSpecs:AvgISP.
@@ -1057,11 +1121,13 @@
     {
         parameter _engList.
 
+        if g_Debug OutDebug("GetEnginesBurnTimeRemaining for [{0}] engines":Format(_engList:Length)).
+
         local AvgResiduals      to 0.
         local BurnTimeRemaining       to 999999.
         // local fuelMass          to 0.
-        local FuelFlow          to 0.
-        local MaxFuelFlow       to 0.
+        // local FuelFlow          to 0.
+        // local MaxFuelFlow       to 0.
         local MaxResiduals      to 0.
         
         local EngBurnTimeLex to Lexicon(
@@ -1071,9 +1137,9 @@
 
         local res to "". // resource pointer
         
-        local TotalFuelFlow     to 0.
-        local TotalFuelAmount   to 0.
-        local TotalFuelCapacity to 0.
+        // local TotalFuelFlow     to 0.
+        // local TotalFuelAmount   to 0.
+        // local TotalFuelCapacity to 0.
         // local TotalFuelMass     to 0.
 
         for eng in _engList

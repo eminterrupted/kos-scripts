@@ -399,7 +399,7 @@
                     wait 0.05.
                     set dv to exhVel * ln(stgMass["ship"] / (stgMass["ship"] - stgMass["usableFuel"])).
                 }
-                set g_Debug to false.
+                
                 if g_Debug 
                 { 
                     OutDebug("Stage {0}: dV[{1}]   | exhVel[{2}]  ":Format(stgToCheck, Round(dv, 2), Round(exhVel, 2)), crDbg(5)).
