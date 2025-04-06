@@ -223,7 +223,7 @@ until Alt:Radar >= towerHeight
         }
         else
         {
-            MsgInfoString("INFO","Checking staging delegate", 2).
+            // MsgInfoString("INFO","Checking staging delegate", 2).
             set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
             if stagingCheckResult = 1
             {

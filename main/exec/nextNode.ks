@@ -8,27 +8,32 @@ RunOncePath("0:/lib/libLoader.ks").
 set g_MainProc to ScriptPath().
 DispMain().
 
+set g_MissionTag to ParseCoreTag(Core:Tag).
+
 local stageLimit to 0.
+local execOnDeploy to false.
 
 if _params:Length > 0
 {
     set stageLimit to ParseStringScalar(_params[0], stageLimit).
+    if _params:length > 1 set execOnDeploy to _params[1].
 }
 SAS off.
 RCS on.
 
 SetupOnDeployHandler(Ship:PartsTaggedPattern("OnDeploy")).
 
-local doneFlag to False.
-until doneFlag
+until not execOnDeploy
 {
-    set doneFlag to True.
-    from { local i to Stage:Number.} until i < 0 step { set i to i - 1.} do
+    from { local i to Stage:Number.} until i < stageLimit step { set i to i - 1.} do
     {
         if g_LoopDelegates:Events:Keys:Contains("OnDeploy_{0}":Format(i))
         {
             ExecGLoopEvents().
-            set doneFlag to False.
+        }
+        else
+        {
+            set execOnDeploy to false.
         }
     }
     wait 0.01.

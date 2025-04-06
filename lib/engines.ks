@@ -145,7 +145,7 @@
                 // wait 0.01.
                 if eng:Decoupler <> "None"
                 {
-                    if not eng:Decoupler:Tag:MatchesPattern("^Booster.*")
+                    if not eng:Decoupler:Tag:MatchesPattern(".*booster\|.*")
                     {
                         if eng:Ignition and not eng:flameout
                         {
@@ -156,14 +156,14 @@
             }
             else if _engType = "NoSRB"
             {
-                if eng:Ignition and not eng:flameout and not g_PropInfo:Solids:Contains(eng:ConsumedResources:Keys[0])
+                if eng:Ignition and not eng:flameout and not g_PropInfo:Solids:Contains(eng:ConsumedResources:Keys[0]) and not (eng:Decoupler:Tag:MatchesPattern("booster"))
                 {
                     engList:add(eng).
                 }
             }
             else if _engType = "NoSep"
             {
-                if eng:Ignition and not eng:flameout and not g_PartInfo:Engines:SepRef[eng:Name]
+                if eng:Ignition and not eng:flameout and not g_PartInfo:Engines:SepRef:Contains(eng:Name)
                 {
                     engList:add(eng).
                 }
@@ -262,7 +262,7 @@
 
         local engList to list().
 
-        from { local i to _startAtStg - 1.} until i <= 0 step { set i to i - 1.} do
+        from { local i to _startAtStg - 1.} until i < 0 step { set i to i - 1.} do
         {
             set engList  to GetEnginesForStage(i, _engTypes).
             if engList:Length > 0 
@@ -986,6 +986,7 @@
         local aggMassFlowPct        to 0.
         local aggThrust             to 0.
         local aggThrustAvailPres    to 0.
+        local ignStatus             to false.
         local thrustPct             to 0.
         local totalFuelMass         to 0.
         local totalResiduals        to 0.
@@ -994,6 +995,8 @@
 
         local burnTimeRemaining     to 999999999.
 
+        local sepCheckFlag to true.
+        
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
         {
             local eng to _engList[i].
@@ -1007,7 +1010,7 @@
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
             set aggThrust           to aggThrust + engLex:Thrust.
             set aggThrustAvailPres  to aggThrustAvailPres + engLex:ThrustAvailPres.
-            if (engLex:Ignition and not engLex:Flameout) set aggEngPerfObj["Ignition"] to True.
+            if (engLex:Ignition and not engLex:Flameout) set ignStatus to True.// set aggEngPerfObj["Ignition"] to True.
             if engLex:FailureCause:Length > 0
             {   
                 set aggFailureCount to aggFailureCount + 1.
@@ -1031,11 +1034,20 @@
                 
             set aggEngPerfObj["Engines"][eng:UID] to engLex.
 
-            if aggEngPerfObj["SepStg"] 
-            {
-                if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name) set aggEngPerfObj["SepStg"] to true.
-                else set aggEngPerfObj["SepStg"] to false.
-            }
+            if sepCheckFlag
+            {   
+                if g_PartInfo["Engines"]:SEPREF:Contains(eng:Name)
+                {
+                    if eng:tag:length >= 0
+                    {
+                        set sepCheckFlag to false.
+                    }
+                }
+                else 
+                {
+                    set sepCheckFlag to false.
+                }
+            }         
             
             local totalFuel     to 0.
             local totalFuelFlow to 0.
@@ -1068,6 +1080,8 @@
             }
         }
 
+        set aggEngPerfObj["SepStg"] to sepCheckFlag.
+
         set aggISPAt        to choose aggThrustAvailPres / aggMassFlowMax if aggThrustAvailPres > 0 and aggMassFlowMax > 0     else 0.
         set aggISP          to choose aggThrust / aggMassFlow             if aggThrust > 0          and aggMassFlow > 0        else 0.
         set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
@@ -1098,6 +1112,7 @@
         set aggEngPerfObj["BurnTimeRemaining"]   to Round(burnTimeRemaining, 3).
         set aggEngPerfObj["Failures"]            to aggFailureCount.
         set aggEngPerfObj["FailureSet"]          to aggFailureObj.
+        set aggEngPerfObj["Ignition"]            to ignStatus.
         set aggEngPerfObj["ISP"]                 to aggISP.
         set aggEngPerfObj["ISPAt"]               to aggISPAt.
         set aggEngPerfObj["MassFlow"]            to aggMassFlow.
@@ -1129,6 +1144,7 @@
         // local FuelFlow          to 0.
         // local MaxFuelFlow       to 0.
         local MaxResiduals      to 0.
+        local NormalizedResiduals to 0.
         
         local EngBurnTimeLex to Lexicon(
             "Resources", Lexicon()
@@ -1146,9 +1162,10 @@
         {
             local m to eng:GetModule("ModuleEnginesRF").
             local engineResiduals to choose m:GetField("Predicted Residuals") if m:HasField("Predicted Residuals") else 0.
+            
             set AvgResiduals to AvgResiduals + engineResiduals.
             set MaxResiduals to Max(MaxResiduals, engineResiduals).
-
+            
             // for res in eng:ConsumedResources:Values
             // {
             set res to eng:ConsumedResources:Values[0].
@@ -1177,7 +1194,11 @@
             // set MaxFuelFlow to MaxFuelFlow + eng:MaxFuelFlow.
             // set FuelFlow to FuelFlow + eng:MassFlow.
             // set MaxFuelFlow to MaxFuelFlow + eng:MaxMassFlow.
+
+            set NormalizedResiduals to ((engineResiduals * eng:MaxMassFlow) + NormalizedResiduals).
         }
+        // set NormalizedResiduals to NormalizedResiduals / _engList:Length.
+        set NormalizedResiduals to choose 1 - (NormalizedResiduals / _engList:Length) if NormalizedResiduals <> 0 and _engList:Length > 0 else 1.
 
         set AvgResiduals to choose 1 - (AvgResiduals / _engList:Length) if AvgResiduals <> 0 and _engList:Length > 0 else 1.
         
@@ -1188,7 +1209,8 @@
             local btResList to list().
             set res to EngBurnTimeLex:Resources:Values[0].
             // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
-            btResList:Add((res:TotalFuelAmount * AvgResiduals) / res:TotalFuelFlow).
+            // btResList:Add((res:TotalFuelAmount * AvgResiduals) / res:TotalFuelFlow).
+            btResList:Add((res:TotalFuelAmount * NormalizedResiduals) / res:TotalFuelFlow).
             
             for _bt in btResList
             {

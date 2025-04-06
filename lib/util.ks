@@ -1184,16 +1184,31 @@
             set g_TS to Time:Seconds + waitTimer.
             local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
             set g_TermChar to "".
-            OutInfo("Press any key to abort").
+            OutInfo("Press Enter to recover immediately, Backspace to abort").
             local abortFlag to false.
-            until Time:Seconds > g_TS or abortFlag
+            local doneFlag to false.
+            until Time:Seconds > g_TS or doneFlag
             {
                 OutMsg(waitStr:Format(Round(g_TS - Time:Seconds, 2))).
                 GetTermChar().
                 if g_TermChar <> ""
                 {
-                    set abortFlag to true.
                     OutInfo().
+                    if g_TermChar = Terminal:Input:Enter
+                    {
+                        set abortFlag to false.
+                        set doneFlag to true.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        set abortFlag to true.
+                        set doneFlag to true.
+                    }
+                    else
+                    {
+                        OutInfo("Press Enter to recover immediately, Backspace to abort").
+                    }
+                    set g_TermChar to "".
                 }
                 wait 0.01.
             }

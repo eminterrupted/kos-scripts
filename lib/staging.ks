@@ -74,7 +74,7 @@
 
             local resultCode to 0.
             set g_StageLimit to _stgLimit.
-            if Stage:Number <= g_StageLimit 
+            if Stage:Number <= g_StageLimit
             {
                 set resultCode to 2.
             }
@@ -219,28 +219,36 @@
                             {
                                 // if g_RehydrateEngines_Flag
                                 // {
-                                set g_ActiveEngines to GetActiveEngines().
+                                // set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
+                                local engs to GetActiveEngines(Ship, "NoBooster").
                                 // }
-                                if g_ActiveEngines:Length > 0
+                                // if g_ActiveEngines:Length > 0
+                                if engs:Length > 0
                                 {
+                                    OutInfo("HotStaging Armed").
+
                                     local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
-                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(g_ActiveEngines).
+                                    // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
+                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                     set g_TR to stageEngines_BT - SpoolTime.
-                                    OutInfo("HotStaging Armed: (ET: T-{0,6}s) ":Format(Round(g_TR, 2), 1)).
-
-                                    return (g_TR < 0) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                                    // OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{0,6}s) ":Format(g_ActiveEngines:Length, Round(g_TR, 2), 1)).
+                                    OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Length, Round(g_TR, 2), 1), 1).
+                                    
+                                    return (g_TR <= 0) or Ship:Thrust <= 0.1. //(g_ActiveEngines_Data:Thrust <= 0.1).
                                     // return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
                                 }
                                 else if t_Val > 0
                                 {
                                     if g_Debug { OutDebug("Fuel Exhausted, hot staging", CrDbg()).}
+                                    OutInfo("", 1).
                                     return True.
                                 }
                                 else
                                 {
                                     if g_Debug { OutDebug("Right stage, but fell through HotStaging checkdel", CrDbg()).}
+                                    OutInfo("", 1).
                                 }
                             }
                         }
@@ -270,6 +278,7 @@
                         Stage.
                         wait 0.5.
                         OutInfo().
+                        OutInfo("", 1).
                         g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
                         if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
                         {
@@ -332,6 +341,28 @@
 
         }
 
+        // InitStagingDelegate :: 
+        // Adds the proper staging check and action delegates to the g_LoopDelegates object
+        global function InitStagingDelegate_Next
+        {
+            parameter _conditionType,
+                      _actionType.
+
+            if g_LoopDelegates:HasKey("Staging") // If it's already there, clear it out so we can update
+            {
+                g_LoopDelegates:Staging:Clear.
+            }
+            else
+            {
+                g_LoopDelegates:Add("Staging", lexicon()).
+            }
+
+            g_LoopDelegates:Staging:Add("Check", GetStagingConditionDelegate(_conditionType)).
+            g_LoopDelegates:Staging:Add("Action", GetStagingActionDelegate(_actionType)).
+
+            set g_stageDelayArmed to SetupStageDelayHandler().
+        }
+
         // StagingCheck :: (_program)<Scalar>, (_runmode)<Scalar>, (_checkType)<Scalar> -> (shouldStage)<Bool>
         global function StagingCheck
         {
@@ -367,18 +398,18 @@
             else if _actionType = 1
             {
                 local stageAction to {
-                    if g_Debug OutDebug("FUCKING PIECE OF SHIT.", crDbg()).
+                    // if g_Debug OutDebug("FUCKING PIECE OF SHIT.", crDbg()).
                     if g_NextEngines_Spec:Keys:Length = 0
                     {
-                        if g_Debug OutDebug("WORK GOD DAMNIT.", crDbg()).
+                        // if g_Debug OutDebug("WORK GOD DAMNIT.", crDbg()).
                         set g_NextEngines to GetNextEngines(Stage:Number, "Main").
                         if g_NextEngines:Length > 0
                         {
-                            if g_Debug OutDebug("I FUCKING HATE MYSELF AND THIS FUCKING WORLD.", crDbg()).
+                            // if g_Debug OutDebug("I FUCKING HATE MYSELF AND THIS FUCKING WORLD.", crDbg()).
                             set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
                         }
                     }
-                    if g_Debug OutDebug("FUCK YOU", crDbg()).
+                    // if g_Debug OutDebug("FUCK YOU", crDbg()).
 
                     until SafeStageWithUllage(g_NextEngines, g_NextEngines_Spec)
                     {
@@ -606,6 +637,7 @@
 
             if StageResult
             {
+                OutInfo("*** STAGING ***"). 
                 local RCSResult to RCS. // Stores current RCS state
                 set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
                 // lock throttle to 0.
@@ -747,7 +779,7 @@
                 set aggThrust to aggThrust + eng:Thrust.
             }
         }
-        OutInfo("[{0}/{1}]: {2} ":Format(flameoutCount, _boostObj[_boostIdx]:ENG:Length, Round(aggThrust, 2))).
+        OutInfo("[{0}/{1}]: {2} ":Format(flameoutCount, _boostObj[_boostIdx]:ENG:Length, Round(aggThrust, 2)), 1).
         return flameoutCount = _boostObj[_boostIdx]:ENG:Length.
     }
 
@@ -811,7 +843,7 @@
         }
 
         // OutInfo("UPDATING G_SHIPENGINES").
-        set g_ActiveEngines to GetActiveEngines().
+        set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
         set g_ShipEngines_Spec to GetShipEnginesSpecs().
         
         return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
@@ -1174,7 +1206,11 @@
         local rlsStg   to -1.
 
         local stgDlyTimeDefault  to 11.25.
-        local stgDlyAltDefault   to choose Min(g_MissionTag:Params[1], 150000) if g_MissionTag:Params:Length > 0 else 150000.// 150000.
+        local stgDlyAltDefault   to 150000.
+        if g_MissionTag:HasKey("Params")
+        {
+            set stgDlyAltDefault to choose Min(g_MissionTag:Params[1], 150000) if g_MissionTag:Params:Length > 0 else 150000.// 150000.
+        }
         local stgDlyPePctDefault to 0.9125.
 
         // stgDlyAltDefault check

@@ -74,15 +74,30 @@ function kslib_nav_ang_to_body_asc_node {
 
     local joinVector is kslib_nav_obt_lan(ves).
     local angle is vang((ves:position - ves:Body:position):normalized, joinVector).
-    if ves:status = "LANDED" {
+    local sign to 0.
+    local whateva to false.
+
+    if ves:IsType("Vessel")
+    {
+        if ves:status = "LANDED" 
+        {
+            set whateva to true.
+        }
+    }
+
+    if whateva
+    {
         set angle to angle - 90.
     }
-    else {
+    else
+    {
         local signVector is VCrs(-body:position, joinVector).
-        local sign is VDot(kslib_nav_obt_binormal(ves), signVector).
-        if sign < 0 {
-            set angle to angle * -1.
-        }
+        set sign to VDot(kslib_nav_obt_binormal(ves), signVector).
+    }
+
+    if sign < 0 
+    {
+        set angle to angle * -1.
     }
     return angle.
 }

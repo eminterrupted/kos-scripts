@@ -27,6 +27,7 @@ local retroStage to payloadStage.
 local retroType to 1. // 1 = Mnv, 0 = Manual at Apo
 local spinStab to false.
 local stagingAlt to ship:body:atm:height.
+local stopStage to 1.
 local ts to Time:Seconds.
 
 set r_Val to 180.
@@ -72,7 +73,7 @@ if retroFire or HasNode
     OutMsg("Retro burn initiated").
     if retroType = 1 or HasNode
     {
-        SetNextStageLimit(retroStage).
+        SetNextStageLimit(Max(stopStage + 1, retroStage)).
         ExecNodeBurn_Next(NextNode, 2).
     }
 }
@@ -176,7 +177,7 @@ OutInfo("", 1).
 OutMsg("Beginning Reentry Procedure").
 wait 1.
 
-set s_Val to lookDirUp(ship:retrograde:vector, -Body:Position).
+set s_Val to lookDirUp(ship:srfretrograde:vector, -Body:Position).
 lock steering to s_Val. 
 
 OutMsg("Waiting until altitude <= " + startAlt).
@@ -295,11 +296,11 @@ local lastAng to proAng.
 local angDiff to lastAng - proAng.
 set doneFlag to False.
 set g_TS0 to 0.
-if Stage:Number > 1
+if Stage:Number > stopStage
 {
     until doneFlag
     {
-        set s_Val to LookDirUp(-Ship:Velocity:Orbit, -Body:Position) + r(0, 0, r_Val).
+        set s_Val to LookDirUp(-Ship:Velocity:Surface, -Body:Position) + r(0, 0, r_Val).
         set lastAng to proAng.
         set proAng to vAng(Ship:Facing:ForeVector, s_Val:Vector).
         set angDiff to lastAng - proAng.
@@ -489,6 +490,18 @@ wait 0.05.
 unlock steering.
 OutMsg("Control released | Parachute Status: [{0}]":Format(chuteStatus)).
 
+until ALT:RADAR <= jettAlt + 500
+{
+    LogPressure().
+    DispReentryTelemetry().
+}
+
+local oldWarp to Warp.
+if Warp > 0
+{
+    set Warp to 0.
+}
+
 until ALT:RADAR <= jettAlt
 {
     LogPressure().
@@ -517,6 +530,17 @@ for f in fairings
 }
 Lights on.
 
+until ALT:RADAR <= jettAlt - 500
+{
+    LogPressure().
+    DispReentryTelemetry().
+}
+
+if oldWarp > 0
+{
+    set Warp to oldWarp.
+}
+
 until Alt:Radar <= mainChuteDeployAlt
 {
     LogPressure().
@@ -528,9 +552,14 @@ if warp > 1
 {
     set warp to 1.
 }
-if Ship:PartsNamed("ROC-MercuryRCSBDB"):Length > 0
+local mercRCSParts to Ship:PartsNamedPattern("ROC-MercuryRCS(2)?BDB").
+if mercRCSParts:Length > 0
 {
-    DoEvent(Ship:PartsNamed("ROC-MercuryRCSBDB")[0]:GetModule("ModuleDecouple"), "Decouple").
+    local m to mercRCSParts[0]:GetModule("ModuleDecouple").
+    if DoEvent(m, "Jettison Nose Unit") = 2
+    {
+        DoEvent(m, "Decouple").
+    }
 }
 
 until Alt:Radar <= 500
@@ -560,7 +589,7 @@ until Alt:Radar <= 5
     DispReentryTelemetry().
 }
 OutMsg("Preparing for recovery").
-wait 1.
+wait 0.25.
 
 TryRecoverVessel(Ship, 30).
 

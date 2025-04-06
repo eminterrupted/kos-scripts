@@ -12,8 +12,8 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
-    global g_TermHeight to 60.
-    global g_TermWidth  to 80.
+    global g_TermHeight to 64.
+    global g_TermWidth  to 96.
     global g_TermSize to g_TermHeight + g_TermWidth.
     
     global g_DbgAnchorLine to 64.
@@ -1049,7 +1049,8 @@
 
     // DispPrintBlock :: (_blockIdx)<scalar>, (_dispData)[String<list>], [_numColumns<Scalar>] -> <none>
     // Does what's on the tin
-    local function DispPrintBlock
+    // local function DispPrintBlock
+    global function DispPrintBlock
     {
         parameter _blockIdx,
                   _dispData,
@@ -1130,8 +1131,9 @@
             }
             else
             {
-                print "{0}{1,-16}":Format(bulletStr, _dispData[i]) at (g_Col, cr()).
-                print str:ToUpper at (g_Col, cr()).
+                // print "{0}{1,-16}":Format(bulletStr, _dispData[i]) at (g_Col, cr()).
+                print str:ToUpper at (g_Col, g_Line).
+                cr().
                 for colFoo in Range(0, str:Length, 1)
                 {
                     print "-" at (g_Col + colFoo, g_Line).

@@ -15,7 +15,7 @@ local tgtAp   to Ship:Apoapsis.
 local tgtEcc  to 0.0025.
 local tgtPe   to tgtAp.
 
-ParseCoreTag(Core:Tag).
+set g_MissionTag to ParseCoreTag(Core:Tag).
 
 // if _params:Length > 0
 // {

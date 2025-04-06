@@ -351,9 +351,9 @@ set g_AutoStageArmed  to choose True if autoStageResult = 1 else False.
 wait 0.01.
 set Ship:Control:Fore to 0.
 
-set g_SteeringDelegate to GetOrbitalSteeringDelegate("AzPro:Sun").// choose GetOrbitalSteeringDelegate("Flat:Sun") if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun").
+set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun").// if transferBurn else GetOrbitalSteeringDelegate("PIDApoErr:Sun"). // GetOrbitalSteeringDelegate("AzPro:Sun").
 
-local pitchOffset to -0.125.
+local pitchOffset to 0.
 local maxPitchOffset to 44.
 
 local rollFlag to false.

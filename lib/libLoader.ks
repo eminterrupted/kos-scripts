@@ -5,7 +5,7 @@
 // Parameters can choose individual libs to load
 parameter _params is list().
 
-local filterLevel to 0. // 0 = all libraries, up to 3 being minial libraries
+local filterLevel to 0. // 0 = all libraries, up to 3 being minimal libraries
 
 if _params:Length > 0
 {
@@ -33,6 +33,7 @@ if filterLevel < 1
     RunOncePath("0:/lib/engines.ks").
     RunOncePath("0:/lib/abort.ks").
     RunOncePath("0:/lib/vessel.ks").
+    RunOncePath("0:/lib/sci.ks").
     RunOncePath("0:/lib/staging.ks").
     RunOncePath("0:/lib/mnv.ks").
     RunOncePath("0:/lib/dvCalc.ks").

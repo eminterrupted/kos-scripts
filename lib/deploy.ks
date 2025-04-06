@@ -28,6 +28,7 @@
         ,"r"  , GetIRDeployPosition@
         ,"tgt", GetIRDeployPosition@
         ,"t"  , GetIRDeployPosition@
+        // ,"p"  , 0@
     ).
     // #endregion
 
@@ -65,7 +66,10 @@
                 local m to commModules[i].
                 if m:Part:Tag:MatchesPattern(_tagBranch) and not m:Part:Tag:MatchesPattern(_excludeBranch)
                 {
-                    DoEvent(m, "extend antenna").
+                    if DoEvent(m, "extend antenna") > 1
+                    {
+                        DoEvent(m, "extend reflector").
+                    }.
                 }
             }
             return True.
@@ -80,48 +84,79 @@
     local function DeployServo
     {
         parameter _m,
-                  _operator is "p+".
+                  _operator is "p".
+
+        local curPos to GetField(_m, "current position", 0).
+
+        OutDebug("Servo Position: {0}":Format(curPos), -4).
+
+        if _operator = "p"
+        {
+            if curPos <= 45
+            {
+                set _operator to "p:+".
+            }
+            else
+            {
+                set _operator to "p:-".
+            }
+        }
+
+        OutDebug("Servo Operator: {0}":Format(_operator), -3).
+        wait 0.01.
 
         local cachedLock to False.
         if _m:HasField("lock")
         {
             set cachedLock to _m:GetField("lock").
+            OutDebug("Lock status (cached): {0}":Format(cachedLock), -2).
             _m:SetField("lock", False).
+            wait 0.01.
         }
-        wait 0.01.
 
         if _operator:StartsWith("sv:") set _operator to _operator:Replace("sv:","").
 
-        if _operator:Contains("p+")
+        if _operator:MatchesPattern("p:\+")
         {
+            OutDebug("Moving to Next Preset", -1).
             return DoAction(_m, "Move To Next Preset", True).
         }
-        else if _operator:Contains("p-")
+        else if _operator:MatchesPattern("p:\-")
         {
+            OutDebug("Moving to Previous Preset", -1).
             return DoAction(_m, "Move To Previous Preset", True).
         }
-        else if _operator:Contains("c")
+        else if _operator:MatchesPattern("c|ctr")
         {
+            OutDebug("Moving to Center", -1).
             return DoAction(_m, "Move Center", True).
         }
         else if _operator:MatchesPattern("t(gt)?:\d+")
         {
+            local _opVal to choose _operator:Split(":")[1]:ToNumber(0) if _operator:Split(":"):Length > 1 else _operator:Split(":")[0]:ToNumber(0).
+            OutDebug("Move to Target Position: {0} (Op: {1})":Format(_opVal, _operator), -1).
             return _m:SetField("Target Position", _operator:ToNumber(0)).
         }
         else if _operator:MatchesPattern("r(ot)?:\d*")
         {
+            local _opVal to choose _operator:Split(":")[1]:ToNumber(0) if _operator:Split(":"):Length > 1 else _operator:Split(":")[0]:ToNumber(0).
+            OutDebug("Set Rotation: {0} (Op: {1})":Format(_opVal, _operator), -1).
             return _m:SetField("Set Rotation", _operator:ToNumber(0)).
         }
+        wait 0.01.
 
         until _m:GetField("Current Position") = _m:GetField("Target Position")
         {
-            OutInfo("Moving Servo [{0}/{1}]   ":Format(Round(_m:GetField("Current Position"), 3), _m:GetField("Target Position"))).
+            OutDebug("Moving Servo [{0}/{1}]   ":Format(Round(_m:GetField("Current Position"), 3), _m:GetField("Target Position")), 0).
         }
 
         wait 0.01.
-        if _m:HasField("lock")
+        if cachedLock
         {
-            _m:GetField("lock", cachedLock).
+            if _m:HasField("lock")
+            {
+                _m:GetField("lock", cachedLock).
+            }
         }
     }
 
@@ -155,7 +190,7 @@
         if Ship:PartsTaggedPattern(_deployTag + ".*"):Length > 0
         {
             OutInfo("Parts found for tag", 1).
-            wait 1.
+            wait 0.1.
             from { local i to 0. local doneFlag to False.} until doneFlag step { set i to i + 1.} do
             {
                 OutInfo("Processing Tag Number {0}":Format(i), 1).
@@ -168,13 +203,13 @@
                 }
                 else
                 {
-                    local actionLex to lexicon("wt", 0.5).
+                    local actionLex to lexicon("wt", 1).
                     
                     for p in partList
                     {
                         OutInfo("Processing {0} parts for {1}":Format(partList:Length, i), 1).
                         local tagSplit to p:Tag:Replace(_deployTag + "|",""):Split("|").
-                        if i = tagSplit:Length - 1
+                        if i = tagSplit[tagSplit:Length - 1]:ToNumber(0)
                         {
                             tagSplit:Remove(tagSplit:Length - 1).
                         }
@@ -243,11 +278,11 @@
                         }
                         if p:HasModule("ModuleIRServo_v3")
                         {
-                            local functionTag to "p+".
+                            local functionTag to "p".
                             // local tagParts to p:Tag:Split("|").
                             // local functionTagList to tagParts:Split(";").
                             local functionTagList to tagSplit[0]:Split(";").
-                            for frag in functionTagList 
+                            for frag in functionTagList
                             {
                                 if frag:MatchesPattern("sv:.*") 
                                 {

@@ -327,4 +327,31 @@
         return (Constant:g * _body:Mass) / (_body:radius + _alt)^2.
     }
     // #endregion
+
+    // Time predictions (ETA)
+    // #region
+
+    // GetTimeToAscendingNode :: _tgt<Orbitable>, [_ves<Orbitable>] -> _eta<scalar>
+    // Returns the time in seconds until the intersecting ascending node between the ship and the target
+    global function GetTimeToAscendingNode
+    {
+        parameter _tgt,
+                  _ves is Ship.
+
+        local timeSincePe to _tgt:Orbit:Period - _tgt:Orbit:ETA:Periapsis.
+        local ascNodeTA to GetANTrueAnomaly(_tgt).
+        local taDiffDegrees to Abs(ascNodeTA - _tgt:Orbit:TrueAnomaly).
+        
+        local timePeToTA to GetTimePEtoTA(_tgt:Orbit, taDiffDegrees).
+
+        local etaToTA to timePeToTA - timeSincePe.
+
+        if _tgt:Orbit:TrueAnomaly >= ascNodeTA 
+        {
+            set etaToTA to etaToTA + _tgt:Orbit:Period.
+        }
+        return etaToTA.
+    }
+
+    // #endregion
 // #endregion

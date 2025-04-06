@@ -259,9 +259,9 @@
                         for p in ship:PartsTaggedPattern("OnDeploy\|(.*\|)?{0}$":Format(i))
                         {
                             local tagSplit to p:Tag:Split("|").
-                            for pType in g_PartInfo:PartModRef:Keys
+                            for pType in g_PartInfo:ModRef:Keys
                             {
-                                for m in g_PartInfo:PartModRef[pType]
+                                for m in g_PartInfo:ModRef[pType]
                                 {
                                     if p:HasModule(m)
                                     {
@@ -500,7 +500,7 @@
                         }
                         
                         set checkFlag to pendingStaging:Length = _params[2]:Length.
-                        // if g_Debug OutDebug("[{0:8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), CrDbg()).
+                        // if g_Debug OutDebug("[{0,8}] Booster checkDel result: [{1}]|[{2}]":Format(Round(MissionTime, 3), pendingStaging:Length, _params[2]:Length), CrDbg()).
 
                         // OutInfo("Checking DecoupleDelegate BOOSTER[{0}/{1}]":Format(pendingStaging:Length, _params[1]:Length)).
                         return checkFlag.
@@ -845,7 +845,7 @@
 
         global function SetupSpinStabilizationEventHandler
         {
-            parameter _partList is Ship:PartsTaggedPattern("SpinDC\|\d*").
+            parameter _partList is Ship:PartsTaggedPattern("SpinDC(\|\d)*").
 
             local resultFlag to False.
 
@@ -873,7 +873,7 @@
         local resultFlag to False.
 
         local spinForce to 1.
-        local spinPreload to 15.
+        local spinPreload to 12.
         local spinType to 0. // 0: Auto, prefers control surfaces in atmosphere and RCS in vacuum
                               // 1: Control Surfaces
                               // 2: RCS
@@ -985,6 +985,7 @@
                         }
                         else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
                         {
+                            // OutDebug("BTR: " + g_ActiveEngines_Data:BurnTimeRemaining, 2).
                             local timeRem to Round(g_ActiveEngines_Data:BurnTimeRemaining - spinPreload, 2).
                             // if g_Debug OutDebug("Spin Stabilization Armed  [ETA: {0}]":Format(timeRem), CrDbg()).
                             OutInfo("Spin Stabilization Armed  [ETA: {0}]    ":Format(timeRem), 1).
@@ -1745,7 +1746,7 @@
         else if _steerDelID = "PIDApoErr:Sun"
         {
             if g_Debug OutDebug("Transitioning to PIDApoErr:Sun guidance", crDbg()).
-            // set g_AngDependency:RESET_PIDS to True.
+            // set g_AngDependency:APO_PID_RESET to True.
             set del to { 
                 local pidPit to GetAscentAng_PID(g_AngDependency).
                 DispPIDLoopValues(g_PIDS[g_AngDependency:APO_PID]).
@@ -1888,12 +1889,25 @@
         {
             parameter _fairings is list().
 
+            local pfmod to "ProceduralFairingDecoupler".
+
             if _fairings:Length > 0
             {
                 for f in _fairings
                 {
-                    if f:IsType("Part") { set f to f:GETMODULE("ProceduralFairingDecoupler"). }
-                    DoEvent(f, "jettison fairing").
+                    if f:IsType("Part") 
+                    {
+                        if f:HasModule(pfmod) 
+                        {
+                            set f to f:GETMODULE(pfmod). 
+                            DoEvent(f, "jettison fairing").
+                        }
+                        else if f:HasModule("ModuleDecouple")
+                        {
+                            set f to f:GetModule("ModuleDecouple").
+                            DoEvent(f, "decouple").
+                        }
+                    }
                 }
             }
         }

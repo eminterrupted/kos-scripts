@@ -425,7 +425,7 @@
                 {
                     if g_LoopDelegates:HasKey("Staging")
                     {
-                        OutInfo("Checking staging delegate", 2).
+                        // OutInfo("Checking staging delegate", 2).
                         local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
                         if stagingCheckResult = 1
                         {
@@ -663,42 +663,6 @@
 
                 GetTermChar().
 
-                if warp = 0 
-                {
-                    set warpFlag to False.
-                }
-
-                if not warpFlag 
-                {
-                    set warpAble to Time:Seconds < burnLeadTS - 15.
-                    if warpAble 
-                    {
-                        OutMsg("Press Shift+W to warp to warpZone [maneuver - {0}s]":Format(Round(burnLeadTime + warpLeadSecs, 2))).
-                    }
-                    else
-                    {
-                        OutMsg("Warp Disallowed").
-                    }
-                }
-                else
-                {
-                    if warpTS > burnLeadTS
-                    {
-                        OutInfo("warpTS > burnLeadTS, cancelling").
-                        set warp to 0.
-                        wait until KUniverse:TimeWarp:IsSettled.
-                        set warpFlag to false.
-                        if Time:Seconds < warpTS - 30
-                        {
-                            set warpTS to burnLeadTS - warpLeadSecs.
-                            OutInfo("Reinitiating warp based on new burnLeadTS").
-                            set warpFlag to true.
-                            WarpTo(warpTS).
-                        }
-                    }
-                    set warpAble to Time:Seconds < burnLeadTS - 15.
-                }
-
                 // Recalculate burn ullage time based on current fuel stability
                 if ullageFlag
                 {
@@ -734,6 +698,7 @@
                         }
                     }
                 }
+                OutInfo("Burn ETA: Lead: {0}s | Ignition: {1} ":Format(burnLeadTime, TimeSpan(burnTS - Time:Seconds):Full)).
 
                 if g_SpinArmed
                 {
@@ -773,14 +738,50 @@
                     }
                 }
 
-                set burnLeadTime to Max(burnUllageTime, preSpin + 6).
-                set burnLeadTS to burnTS - burnLeadTime.
-
-                OutInfo("Burn ETA: Lead: {0}s | Ignition: {1} ":Format(burnLeadTime, TimeSpan(burnTS - Time:Seconds):Full)).
                 local burnFlags to list().
                 if ullageFlag burnFlags:Add("UL").
                 if g_SpinArmed burnFlags:Add("SP").
                 OutInfo("Burn Flags: [{0}] ":Format(burnFlags:Join("|")), 1).
+
+                if warp = 0 
+                {
+                    set warpFlag to False.
+                }
+
+                if not warpFlag 
+                {
+                    set warpAble to Time:Seconds < burnLeadTS - 15.
+                    if warpAble 
+                    {
+                        OutMsg("Press Shift+W to warp to warpZone [maneuver - {0}s]":Format(Round(burnLeadTime + warpLeadSecs, 2))).
+                    }
+                    else
+                    {
+                        OutMsg("Warp Disallowed").
+                    }
+                }
+                else
+                {
+                    if warpTS > burnLeadTS
+                    {
+                        OutInfo("warpTS > burnLeadTS, cancelling").
+                        set warp to 0.
+                        wait until KUniverse:TimeWarp:IsSettled.
+                        set warpFlag to false.
+                        if Time:Seconds < warpTS - 30
+                        {
+
+                            set burnLeadTime   to 12 + Max(burnUllageTime, preSpin).
+                            set burnLeadTS     to burnTS - burnLeadTime.
+                            set warpTS to burnLeadTS - warpLeadSecs.
+                            OutInfo("Reinitiating warp based on new burnLeadTS").
+                            set warpFlag to true.
+                            WarpTo(warpTS).
+                        }
+                    }
+                    set warpAble to Time:Seconds < burnLeadTS - 15.
+                }
+
 
                 if g_TermChar = ""
                 {
@@ -892,11 +893,11 @@
             set Ship:Control:Fore to 0.
             set Ship:Control:Roll to 0.
             
-            local autoStageResult to ArmAutoStagingNext(_stageLimit, 1, 1).
+            local autoStageResult to ArmAutoStagingNext(_stageLimit, 1, 2).
             if autoStageResult = 1 
             {
                 set g_AutostageArmed to True.
-                OutInfo("AutoStage Armed").
+                OutInfo("AutoStage Armed", 1).
             }
             else
             {
@@ -946,8 +947,10 @@
 
                     if ReacquireBurnVector
                     {
-                        set s_Val to lookDirUp(_inNode:burnVector, rollUpVector:Call()).
+                        set s_Val to lookDirUp(NextNode:burnVector, rollUpVector:Call()).
+                        OutInfo("BurnVector Acquired", 2).
                         set ReacquireBurnVector to False.
+                        OutInfo("", 2).
                     }
 
                     if g_LoopDelegates:HasKey("Staging")
@@ -977,11 +980,11 @@
                         else
                         {
                             local stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-                            OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
+                            // OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
                             if stagingCheckResult = 1
                             {
                                 OutInfo("Staging", 2).
-                                g_LoopDelegates:Staging["Action"]:Call().
+                                g_LoopDelegates:Staging:Action:Call().
                             }
                         }
                     }
@@ -991,7 +994,7 @@
                         if Ship:ModulesNamed("ModuleDeployableAntenna"):Length > 0
                         {
                             local commModules to Ship:ModulesNamed("ModuleDeployableAntenna").
-                            from { local i to commModules - 1. local doneFlag to False.} until doneFlag step { set i to i - 1.} do
+                            from { local i to commModules:Length - 1. local doneFlag to False.} until doneFlag step { set i to i - 1.} do
                             {
                                 if DoEvent(commModules[i], "extend antenna")
                                 {
@@ -1008,8 +1011,8 @@
                     
                     if Stage:Number <= _stageLimit and g_AutoStageArmed
                     {
-                        OutInfo("AutoStaging disabled", 2).
                         DisableAutoStaging().
+                        OutInfo("AutoStaging disabled", 2).
                     }
 
                     if g_TermChar = Char(101) // 'e'
@@ -1050,9 +1053,10 @@
                     else if g_TermChar = Terminal:Input:HomeCursor
                     {
                         set ReacquireBurnVector to True.
+                        OutInfo("Reacquiring BurnVector", 2).
                     }
 
-                    OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 2))).
+                    OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 1))).
 
                     if g_LoopDelegates["Events"]:Keys:Length > 0 
                     {

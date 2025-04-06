@@ -102,8 +102,10 @@ runOncePath("0:/lib/util.ks").
     // Format: (missionName)<string>|param1;param2;param3;param4|(stageStop)<scalar>
     global function ParseCoreTag
     {
-        parameter _tag is core:tag.
+        parameter _tag is core:tag,
+                  _updatePartTag is false.
 
+        local dirtyTag          to false.
         local newStopStage      to 0.
         local parsedMission     to "".
         local parsedParams      to list().
@@ -113,6 +115,7 @@ runOncePath("0:/lib/util.ks").
         local prmSplit          to list().
         local prmSet            to list().
         local stageExitGate     to "".
+        local stageID           to 0.
         local tempStageStop     to "".
         local tempStopSplit     to list().
 
@@ -133,11 +136,22 @@ runOncePath("0:/lib/util.ks").
                 // local stopIdx to 0.
                 set tempStopSplit to tempStageStop:Split(";").
 
-                for stageID in tempStopSplit
+                if tempStopSplit:Length > 0
+                {
+                    for stageIDStr in tempStopSplit
+                    {
+                        set stageID to stageIDStr:ToNumber(-1).
+                        if stageID >= 0
+                        {
+                            parsedTagObject:StgStopSet:Add(stageID).
+                        }
+                    }
+                }
+                else
                 {
                     parsedTagObject:StgStopSet:Add(stageID).
                 }
-                set parsedStageStop to parsedTagObject:StgStopSet[0]:ToNumber(-1).
+                set parsedStageStop to parsedTagObject:StgStopSet[0].
             }
             else
             {
@@ -168,7 +182,72 @@ runOncePath("0:/lib/util.ks").
                     from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
                     {
                         local prm to prmSplit[i].
-                        prmSet:Add(ParseStringScalar(prm)).
+
+                        if i = 0
+                        {
+                            if prm:ToNumber(9999) = 9999
+                            {
+                                if prm = "TGT"
+                                {
+                                    OutMsg("Mission tag inclination set to TARGET mode").
+                                    
+                                    local doneFlag to false.
+                                    until doneFlag
+                                    {
+                                        if HasTarget
+                                        {
+                                            OutInfo("Target selected: {0} ":Format(Target:Name)).
+                                            OutInfo("Inclination Val: {0} ":Format(Round(Target:Orbit:Inclination, 3)), 1).
+                                            OutInfo("* Enter to confirm *|* Backspace to cancel *", 2).
+                                            
+                                            Terminal:Input:Clear.
+                                            set g_TermChar to "".
+                                            until g_TermChar <> ""
+                                            {
+                                                GetTermChar().
+                                                if CheckTermChar(Terminal:Input:Enter) 
+                                                {
+                                                    OutInfo("* Confirmed! *", 2).
+                                                    
+                                                    set prm to Round(Target:Orbit:Inclination, 3).
+                                                    prmSet:Add(prm).
+
+                                                    set dirtyTag to true.
+                                                    set doneFlag to true.
+                                                    wait 0.1.
+                                                }
+                                                else if CheckTermChar(Terminal:Input:Backspace)
+                                                {
+                                                    OutInfo("* Cancelling *", 2).
+                                                    wait 0.1.
+                                                    Unset Target.
+                                                }
+                                            }
+                                            set g_TermChar to "".
+                                        }
+                                        else
+                                        {
+                                            OutInfo("Target selected: N/A ").
+                                            OutInfo("Inclination Val: N/A ", 1).
+                                            OutInfo("* Select a target to continue *", 2).
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // #TODO PromptForTermInput function
+                                }
+                            }
+                            else
+                            {
+                                prmSet:Add(ParseStringScalar(prm)).
+                            }
+                        }
+                        else
+                        {
+                            prmSet:Add(ParseStringScalar(prm)).
+                        }
+
                     }
                 }
             }
@@ -178,6 +257,11 @@ runOncePath("0:/lib/util.ks").
 
             set parsedTagObject["PARAMS"] to prmSet.
             set g_MissionTag:Params to prmSet.
+        }
+
+        if _updatePartTag and dirtyTag
+        {
+            set Core:Tag to "{0}|{1}|{2}":Format(parsedTagObject:MISSION, parsedTagObject:PARAMS:Join(";"), parsedTagObject:STGSTOPSET:Join(";")).
         }
 
         return parsedTagObject.

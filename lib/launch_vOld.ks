@@ -345,7 +345,7 @@
             local pidResult to InitAscentAnglePIDs(_pidVals, _tgtAlt).
 
             ascentAngObj:Add("APO_PID", pidResult["APO_PID"]).
-            ascentAngObj:Add("APO_SETPOINT", pidResult["APO_SETPOINT"]).
+            ascentAngObj:Add("APO_PID_SETPOINT", pidResult["APO_PID_SETPOINT"]).
             ascentAngObj:Add("PID_LIM_MAX", PID_AoA_Max).
             ascentAngObj:Add("PID_LIM_MIN", PID_AoA_Min).
             ascentAngObj:Add("RESET_PIDS", pidResult["RESET_PIDS"]).
@@ -398,7 +398,7 @@
 
         return Lexicon(
             "APO_PID", pid_Apo_ID,
-            "APO_SETPOINT", _tgtAlt,
+            "APO_PID_SETPOINT", _tgtAlt,
             "RESET_PIDS", True,
             "UPDATE_SETPOINT", True
         ).
@@ -1547,9 +1547,9 @@
                         set _ascAngObj:PIT_LIM_MAX to 0.8.
 
                         // set _ascAngObj:PIT_LIM_MAX to current_pitch. //Min(current_pitch, (pitch_limit_set * 0.775)).
-                        // set _ascAngObj:PID_LIM_MAX to _ascAngObj:PIT_LIM_MAX.
-                        // set _ascAngObj:PID_LIM_MIN to Max(-3.25, Min(PID_AoA_Min, -_ascAngObj:PIT_LIM_MAX)).
-                        // set _ascAngObj:PID_LIM_MIN to PID_AoA_Min * Min(1, Max(0.125, (1 - trans_alt_err))).
+                        // set _ascAngObj:APO_PID_LIM_MAX to _ascAngObj:PIT_LIM_MAX.
+                        // set _ascAngObj:APO_PID_LIM_MIN to Max(-3.25, Min(PID_AoA_Min, -_ascAngObj:PIT_LIM_MAX)).
+                        // set _ascAngObj:APO_PID_LIM_MIN to PID_AoA_Min * Min(1, Max(0.125, (1 - trans_alt_err))).
 
 
                         set l_rnmd to 5.
@@ -1591,14 +1591,14 @@
                         // set _ascAngObj:PIT_LIM_MAX to Max(current_pitch, Ascent_AoA_Max * fShape).
                         // set _ascAngObj:PIT_LIM_MAX to Min(current_pitch, pitch_limit_set * 0.775). // Min(current_pitch, pitch_limit_set * 0.725).// Abs(pitch_limit_max - (15 * fShape)).
 
-                        set _ascAngObj:PID_LIM_MAX to _ascAngObj:PIT_MAX.
-                        set _ascAngObj:PID_LIM_MIN to PID_AoA_Min * fShape.
+                        set _ascAngObj:APO_PID_LIM_MAX to _ascAngObj:PIT_MAX.
+                        set _ascAngObj:APO_PID_LIM_MIN to PID_AoA_Min * fShape.
 
                         local blend_headroom to Min(37500, Max(12500, Abs(62500 - current_alt))).
 
                         set _ascAngObj:PID_BLEND_START to current_alt.
                         set _ascAngObj:PID_BLEND_WIDTH to Round(blend_headroom).
-                        // set _ascAngObj:PID_LIM_MIN to PID_AoA_Min * Min(1, Max(0.125, (1 - trans_alt_err))).
+                        // set _ascAngObj:APO_PID_LIM_MIN to PID_AoA_Min * Min(1, Max(0.125, (1 - trans_alt_err))).
                         
                         set l_prog to 27.
                         set l_rnmd to 21.
@@ -1643,13 +1643,13 @@
                         set _ascAngObj:ALT_TRANS   to current_alt.
                         set _ascAngObj:PIT_MAX     to Max(PID_Ang_Max, current_pitch).
                         set _ascAngObj:PIT_LIM_MAX to pitch_limit_set * 0.85.
-                        // set _ascAngObj:PID_LIM_MAX to _ascAngObj:PIT_LIM_MAX.
+                        // set _ascAngObj:APO_PID_LIM_MAX to _ascAngObj:PIT_LIM_MAX.
                         
-                        set _ascAngObj:PID_LIM_MAX to Max(current_pitch, PID_Ang_Max).
-                        set _ascAngObj:PID_LIM_MIN to PID_Ang_Min * fShape.
+                        set _ascAngObj:APO_PID_LIM_MAX to Max(current_pitch, PID_Ang_Max).
+                        set _ascAngObj:APO_PID_LIM_MIN to PID_Ang_Min * fShape.
                         
-                        set g_PIDS[_ascAngObj:APO_PID]:MaxOutput to _ascAngObj:PID_LIM_MAX.
-                        set g_PIDS[_ascAngObj:APO_PID]:MinOutput to _ascAngObj:PID_LIM_MIN.
+                        set g_PIDS[_ascAngObj:APO_PID]:MaxOutput to _ascAngObj:APO_PID_LIM_MAX.
+                        set g_PIDS[_ascAngObj:APO_PID]:MinOutput to _ascAngObj:APO_PID_LIM_MIN.
 
                         local blend_headroom to Min(2000, Max(7500, _ascAngObj:ALT_TGT - current_alt)).
 
@@ -1716,8 +1716,8 @@
                     // set _ascAngObj:PIT_LIM_MAX to Max(current_pitch, 22.5 * fShape).
                     // set _ascAngObj:PIT_MAX to current_pitch.
 
-                    // set _ascAngObj:PID_LIM_MAX to Max(current_alt, PID_AoA_Max * fShape).
-                    // set _ascAngObj:PID_LIM_MIN to PID_AoA_Min * (1 - apo_err).
+                    // set _ascAngObj:APO_PID_LIM_MAX to Max(current_alt, PID_AoA_Max * fShape).
+                    // set _ascAngObj:APO_PID_LIM_MIN to PID_AoA_Min * (1 - apo_err).
 
                     set l_rnmd to 24.
                 }
@@ -1738,11 +1738,11 @@
                         set _ascAngObj:PIT_LIM_MIN to 1.25.
                         set _ascAngObj:PIT_MAX to current_pitch.
 
-                        set _ascAngObj:PID_LIM_MAX to current_pitch.
-                        set _ascAngObj:PID_LIM_MIN to PID_AoA_Min.
+                        set _ascAngObj:APO_PID_LIM_MAX to current_pitch.
+                        set _ascAngObj:APO_PID_LIM_MIN to PID_AoA_Min.
 
-                        set apo_PID:MinOutput to _ascAngObj:PID_LIM_MIN.
-                        set apo_PID:MaxOutput to _ascAngObj:PID_LIM_MAX.
+                        set apo_PID:MinOutput to _ascAngObj:APO_PID_LIM_MIN.
+                        set apo_PID:MaxOutput to _ascAngObj:APO_PID_LIM_MAX.
                         
                         set l_rnmd to 25.
                     }
@@ -2293,7 +2293,7 @@
             if _ascAngObj:UPDATE_SETPOINT
             {
                 set PID_Alt:Setpoint to _ascAngObj:ALT_SETPOINT.
-                set PID_Apo:Setpoint to _ascAngObj:APO_SETPOINT.
+                set PID_Apo:Setpoint to _ascAngObj:APO_PID_SETPOINT.
                 // if g_Debug OutDebug("UPDATE_SETPOINT triggered at ({0})":Format(Round(MissionTime, 2))).
             }
             set _ascAngObj:UPDATE_SETPOINT to false.
@@ -2500,7 +2500,7 @@
                     }
                 }
             }
-            else if (p:name:MatchesPattern("AtlasUmb") and p:HasModule("ModuleAnimateGenericExtra")) and p:Tag:MatchesPattern("Retract\|.*OnLoad")
+            else if p:HasModule("ModuleAnimateGenericExtra") and p:Tag:MatchesPattern("(Retract\|.*OnLoad)")
             {
                 from { local _i to 0. local doneFlag to False.} until _i >= p:Modules:Length or doneFlag step { set _i to _i + 1.} do
                 {

@@ -7,7 +7,7 @@ RunOncePath("0:/kslib/lib_l_az_calc.ks").
 set g_MainProc to ScriptPath().
 DispMain().
 
-set g_MissionTag to ParseCoreTag(core:Part:Tag).
+set g_MissionTag to ParseCoreTag(core:Part:Tag, true).
 local tgtInc       to choose g_MissionTag:Params[0] if g_MissionTag:Params:Length > 0 else 0.
 local tgtAp        to choose g_MissionTag:Params[1] if g_MissionTag:Params:Length > 1 else 175000.
 local tgtPe        to choose g_MissionTag:Params[2] if g_MissionTag:Params:Length > 2 and g_MissionTag:Params[2] >  1 else -1.
@@ -28,8 +28,9 @@ if Ship:Status = "PRELAUNCH"
         set g_TS to Time:Seconds + 5.
         until Time:Seconds > g_TS or doneFlag
         {
-            OutMsg("Wait for rendezvous launch window for {0}? (ENTER / Backspace)":Format(Target:Name)).
+            OutMsg("Wait for rendezvous launch window for {0}?":Format(Target:Name)).
             OutInfo("(Skipping in {0}s)":Format(Round(g_TS - Time:Seconds, 2))).
+            OutInfo("* ENTER - Continue | BACKSPACE - Quit)", 1).
             GetTermChar().
             if g_TermChar <> ""
             {

@@ -53,7 +53,10 @@ if _tgtPe <= 0
 }
 
 wait until Ship:Unpacked.
-local towerHeight to Ship:Altitude * 1.125.
+wait until KUniverse:Timewarp:IsSettled.
+
+local towerHeight to Min(g_PresetTurnAlt, Max(100, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
+                                                                                         // taken from the bounding box of the ship on the launch pad
 
 global g_launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).
 
@@ -108,8 +111,7 @@ local asr to ArmAutoStagingNext(g_StageLimit, 1, 2).
 set launchObj["autoStageResult"] to asr.
 set g_AutoStageArmed to asr = 1.
 
-set g_ActiveEngines to GetActiveEngines().
-set g_NextEngines   to GetNextEngines().
+
 
 set s_Val to Ship:Facing.
 lock steering to s_Val.
@@ -117,18 +119,21 @@ lock steering to s_Val.
 OutMsg().
 OutInfo().
 OutInfo("g_DecouplerEventArmed: {0}":Format(g_DecouplerEventArmed),1).
-
 OutMsg("Liftoff! ").
-wait 0.25.
-set g_ActiveEngines to GetActiveEngines().
+wait 0.125.
 
+set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
+set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+set g_NextEngines   to GetNextEngines().
+
+set g_SpinArmed to SetupSpinStabilizationEventHandler().
 DispMain(ScriptPath()).
 ClearDispBlock().
 
 OutMsg("Vertical Ascent").
 until Alt:Radar >= towerHeight
 {
-    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
     if g_BoostersArmed
@@ -168,7 +173,7 @@ until Alt:Radar >= towerHeight
         else
         {
             set stagingCheckResult to g_LoopDelegates:Staging:Check:Call().
-            OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
+            // OutInfo("Checking staging delegate {0}":Format(stagingCheckResult), 2).
             if stagingCheckResult = 1
             {
                 OutInfo("Staging", 2).
@@ -188,7 +193,7 @@ local nextFlag to False.
 OutMsg("Gravity Turn").
 until Stage:Number <= g_StageLimit// or Ship:Apoapsis >= Max(Body:ATM:Height, _tgtAp * 0.75)
 {
-    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
     set s_Val to g_SteeringDelegate:Call().
 
@@ -232,7 +237,7 @@ until Stage:Number <= g_StageLimit// or Ship:Apoapsis >= Max(Body:ATM:Height, _t
         else
         {
             set stagingCheckResult to g_LoopDelegates:Staging["Check"]:Call().
-            OutInfo("Checking staging delegate [{0}]":Format(stagingCheckResult), 2).
+            // OutInfo("Checking staging delegate [{0}]":Format(stagingCheckResult), 2).
             if stagingCheckResult = 1
             {
                 if g_Debug OutDebug("Checking staging delegate [{0}]":Format(stagingCheckResult), 1).
@@ -287,7 +292,7 @@ until nextFlag
     }
 
     set s_Val to g_SteeringDelegate:Call().
-    set g_ActiveEngines to GetActiveEngines().
+    set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
     set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
     if Stage:Number <= g_StageLimit

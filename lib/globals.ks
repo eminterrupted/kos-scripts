@@ -19,6 +19,7 @@
 // #region
     // Program flow control
     global g_MainProc to ScriptPath().
+    global g_Context to 0.
     global g_Counter to 0.
     global g_Debug to False.
     global g_Debug_Max to True.
@@ -253,7 +254,7 @@ global g_ModEvents to lexicon(
 
 // Dictionary of miscellaneous part info and mappings
 global g_PartInfo       to lexicon(
-    "PartModRef", lexicon(
+    "ModRef", lexicon(
         "Antenna",     list("ModuleDeployableAntenna", "ModuleRealAntenna")
         ,"Decoupler",  list("ModuleAnchoredDecoupler", "ModuleDecouple", "ProceduralFairingDecoupler")
         ,"Solar",      list("ModuleROSolar")
