@@ -12,6 +12,15 @@
 
     // #endregion
 
+    // *- Reference Objects
+    local __engRef to lexicon(
+        "sep", lexicon(
+            "names", list(
+                "ROSmallSpinMotor"
+            )
+        )
+    ).
+
     // *- Delegates
     // #region
 
@@ -186,7 +195,8 @@
     // Optional params will target other vessels and/or scope to only engines above a certain stage
     global function GetActiveEngines
     {
-        parameter _ves is Ship.
+        parameter _ves is Ship,
+                  _filter is "".
 
         local activeEngs to list().
         
@@ -196,7 +206,17 @@
             {
                 if not eng:Flameout
                 {
-                    activeEngs:Add(eng).
+                    if _filter = "nosep"
+                    {
+                        if not __engRef:sep:names:Contains(eng:Name) or eng:Tag:Length > 0
+                        {
+                            activeEngs:Add(eng).
+                        }
+                    }
+                    else
+                    {
+                        activeEngs:Add(eng).
+                    }
                 }
             }
         }

@@ -146,9 +146,9 @@
         {
             set  _event to PruneModuleString(_event).
         }
-        if _m:HasAction(_event)
+        if _m:HasEvent(_event)
         {
-            _m:DoAction(_event).
+            _m:DoEvent(_event).
             set errlvl to 1.
         }
         else

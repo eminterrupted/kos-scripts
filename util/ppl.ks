@@ -1,6 +1,8 @@
 @lazyGlobal off.
 clearScreen.
 
+runOncePath("0:/lib/disp").
+
 parameter inObj,
           tip is "".
 

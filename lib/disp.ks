@@ -15,7 +15,11 @@
     local __trLine to __trStartLine.
     local __trHeight to 64.
     local __trWidth  to 80.
+    local __trMsgWidth  to __trWidth - 13.
     local __trVer to "0.0.1 (pre-alpha tech demo)".
+
+    local __trMsgLine to __trStartLine.
+    local __trInfoLine to __trMsgLine + 2.
 
     // #endregion
 
@@ -94,6 +98,9 @@
         ).
         DispBoxOutline(1, panelStrings).
 
+        set __trMsgLine  to __trLine + 2.
+        set __trInfoLine to __trLine + 4.
+
         set panelStrings to list(
             "[ MSG] ",
             " ",
@@ -110,15 +117,63 @@
 
         // Determine how many panels are available
     }
-    
-    // #endregion
 
-    // :: Local
-    // #region
+
+    // *- Output Section (MSG and INFO)
+
+    // OutMsg
+    //
+    global function OutMsg
+    {
+        parameter _str is "",
+                  _pos is 0.
+
+        local msgLine to  __trMsgLine + Min(1, _pos).
+
+        if _str:length = 0
+        {
+            print ("{0,-" + __trMsgWidth + "}"):Format(" ") at (12, msgLine).
+        }
+        else
+        {
+            print ("{0,-" + __trMsgWidth + "}"):Format(_str) at (12, msgLine).
+        }
+    }
+
+    // OutMsg
+    //
+    global function OutInfo
+    {
+        parameter _str is "",
+                  _pos is 0.
+
+        local infoLine to  __trInfoLine + Min(2, _pos).
+        if _str:length = 0
+        {
+            print ("{0,-" + __trMsgWidth + "}"):Format(" ") at (12, infoLine).
+        }
+        else
+        {
+            print ("{0,-" + __trMsgWidth + "}"):Format(_str) at (12, infoLine).
+        }
+    }
+
     
+    // Breakpoint 
+    // It's a breakpoint
+    global function Breakpoint
+    {
+        parameter _str is " *** Press any key to continue *** ".
+
+        Terminal:Input:Clear.
+        print ("{0,-" + (__trMsgWidth):ToString + "}"):Format(_str:ToUpper) at (0, Terminal:Height - 3).
+        wait until Terminal:Input:HasChar().
+        return true.
+    }
+
     // cr :: (_trLine)<int> -> (_trLine)<int>
     // Increments __trLine. Pass an int to override __trLine to a new value
-    local function cr
+    global function cr
     {
         parameter _trLine is __trLine.
 
@@ -135,7 +190,7 @@
     }
 
     // getSp :: 
-    local function getSp
+    global function getSp
     {
         parameter _charSets to list(),
                  _availWidth to Terminal:Width.
