@@ -1,0 +1,21 @@
+{
+    "items": [
+        {
+            "value": "doo",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "this",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Then",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "That",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}
