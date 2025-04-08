@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/disp").
+runOncePath("0:/lib/term").
 
 parameter inObj,
           tip is "".

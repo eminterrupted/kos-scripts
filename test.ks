@@ -6,7 +6,7 @@ parameter _params is list().
 // Dependencies
 runOncePath("0:/lib/deploader").
 runOncePath("0:/lib/module").
-runOncePath("0:/lib/disp").
+runOncePath("0:/lib/term").
 
 // Declare Variables
 local _init to false.
@@ -23,5 +23,5 @@ if _params:length > 0
 
 if _init 
 {
-    InitTerm(true, _resetSize, _showTerm).
+    init_term(true, _resetSize, _showTerm).
 }

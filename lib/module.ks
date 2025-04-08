@@ -106,9 +106,9 @@
     // :: Global
     // #region
 
-    // DoAction :: (_m<Module>, _action<String>, [_set<Boolean>]) -> _errorLevel<uint>
+    // do_action :: (_m<Module>, _action<String>, [_set<Boolean>]) -> _errorLevel<uint>
     // Performs the action provided if it is present. Prunes the string if it detects it is not pruned already [starts with '(']
-    global function DoAction
+    global function do_action
     {
         parameter _m,
                   _action,
@@ -118,7 +118,7 @@
 
         if _action:MatchesPattern("^\((set|cal)")
         {
-            set  _action to PruneModuleString(_action).
+            set  _action to prune_module_item_string(_action).
         }
         if _m:HasAction(_action)
         {
@@ -133,9 +133,9 @@
         return errlvl.
     }
 
-    // DoEvent :: (_m<Module>, _event<String>) -> _errorLevel<uint>
+    // do_event :: (_m<Module>, _event<String>) -> _errorLevel<uint>
     // Performs the event provided if it is present. Prunes the string if it detects it is not pruned already [ i.e., starts with '(set' or '(cal' ]
-    global function DoEvent
+    global function do_event
     {
         parameter _m,
                   _event.
@@ -144,7 +144,7 @@
 
         if _event:MatchesPattern("^\((set|cal)")
         {
-            set  _event to PruneModuleString(_event).
+            set  _event to prune_module_item_string(_event).
         }
         if _m:HasEvent(_event)
         {
@@ -158,9 +158,9 @@
         return errlvl.
     }
 
-    // GetField :: (_m<Module>, _field<String>, [_defVal<Any>]) -> _returnValue<Any>
+    // get_field :: (_m<Module>, _field<String>, [_defVal<Any>]) -> _returnValue<Any>
     // Retrieves the field provided if it is present. Prunes the string if it detects it is not pruned already [ i.e., starts with '(set' or '(cal' ]
-    global function GetField
+    global function get_field
     {
         parameter _m,
                   _field,
@@ -168,7 +168,7 @@
 
         if _field:MatchesPattern("^\((set|cal)")
         {
-            set  _field to PruneModuleString(_field).
+            set  _field to prune_module_item_string(_field).
         }
         if _m:HasField(_field)
         {
@@ -180,9 +180,9 @@
         }
     }
     
-    // SetField :: (_m<Module>, _field<String>, [_defVal<Any>]) -> _returnValue<Any>
+    // set_field :: (_m<Module>, _field<String>, [_defVal<Any>]) -> _returnValue<Any>
     // Retrieves the field provided if it is present. Prunes the string if it detects it is not pruned already [ i.e., starts with '(set' or '(cal' ]
-    global function SetField
+    global function set_field
     {
         parameter _m,
                   _field,
@@ -193,7 +193,7 @@
 
         if _field:MatchesPattern("^\((set)")
         {
-            set fieldObj to ParseModuleString(_field).
+            set fieldObj to parse_module_string(_field).
         }
         else
         {
@@ -234,7 +234,7 @@
 
     // ParseModuleString :: (_inStr)<string> -> (_outStrObj)<lexicon>
     // Takes a module item (Action, Event, Field) and returns a list featuring the three components: (ItemContext, ItemName, ItemType)
-    local function ParseModuleString
+    local function parse_module_string
     {
         parameter _inStr.
 
@@ -249,7 +249,7 @@
 
     // PruneModuleString :: (_inStr)<string> -> (_outStr)<string>
     // Removes the prefix and suffix from a given module string so that it can be properly accessed
-    local function PruneModuleString
+    local function prune_module_item_string
     {
         parameter _inStr.
 

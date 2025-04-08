@@ -11,15 +11,17 @@
 // #region
     // *- Common Values
     // #region
-    local __trStartLine to 1.
-    local __trLine to __trStartLine.
-    local __trHeight to 64.
-    local __trWidth  to 80.
-    local __trMsgWidth  to __trWidth - 13.
-    local __trVer to "0.0.1 (pre-alpha tech demo)".
+    local __trmStartLine to 1.
+    local __trmLine to __trmStartLine.
+    local __trmHeight to 64.
+    local __trmWidth  to 80.
+    local __trmMsgWidth  to __trmWidth - 13.
+    local __trmDebugLine to __trmHeight - 9.
 
-    local __trMsgLine to __trStartLine.
-    local __trInfoLine to __trMsgLine + 2.
+    local __trmVer to "0.0.1 (pre-alpha tech demo)".
+
+    local __trmMsgLine to __trmStartLine.
+    local __trmInfoLine to __trmMsgLine + 2.
 
     // #endregion
 
@@ -54,12 +56,9 @@
     // *- Main Display Initialization
     // #region
 
-    // :: Global
-    // #region
-    
-    // InitTerm :: (input params)<type> -> (output params)<type>
+    // init_term :: (input params)<type> -> (output params)<type>
     // Initializes the terminal display
-    global function InitTerm
+    global function init_term
     {
         parameter _resetTerm to true,
                   _resetTermSize to false,
@@ -73,15 +72,15 @@
         // Set the terminal to the default size
         if _resetTermSize
         {
-            set Terminal:Height to __trHeight.
-            set Terminal:Width to __trWidth.
+            set Terminal:Height to __trmHeight.
+            set Terminal:Width to __trmWidth.
         }
         // Open the terminal on boot
         if _showTerm
         {
-            DoEvent(Core, "Open Terminal").
+            do_event(Core, "Open Terminal").
         }
-        set __trLine to __trStartLine.
+        set __trmLine to __trmStartLine.
 
         // Print the Process box 
         // top
@@ -90,26 +89,29 @@
         local panelStrings to list(
             "*~~*** SPACE MISSION EXECUTIVE ***~~*",
             " ",
-            "Version        : {0,-28}":Format(__trVer),
+            "Version        : {0,-28}":Format(__trmVer),
             "Registered to  : Kerbin United Space Agency",
             " ",
             "Current Mission: {0}":Format(Ship:Name),
             " "
         ).
-        DispBoxOutline(1, panelStrings).
+        disp_box(1, panelStrings).
 
-        set __trMsgLine  to __trLine + 2.
-        set __trInfoLine to __trLine + 4.
+        set __trmMsgLine  to __trmLine + 3.
+        set __trmInfoLine to __trmLine + 6.
 
         set panelStrings to list(
+            " ",
             "[ MSG] ",
+            " ",
             " ",
             "[INFO] ",
             " ",
             " ",
+            " ",
             " "
         ).
-        DispBoxOutline(1, panelStrings).
+        disp_box(1, panelStrings).
         
         // Print the Message & Info Panel
         
@@ -117,80 +119,112 @@
 
         // Determine how many panels are available
     }
+    // #endregion
 
+    // *- Input helpers
+    // #region
+
+    // get_term_char
+    // returns the next char in the terminal input queue if present, else ""
+    global function get_term_char
+    {
+        local tchar to "".
+        if terminal:Input:HasChar
+        {
+            set tchar to terminal:Input:GetChar.
+        }
+        return tChar.
+    }
+    // #endregion
 
     // *- Output Section (MSG and INFO)
+    // #region
 
-    // OutMsg
+    // out_debug
     //
-    global function OutMsg
+    global function out_debug
+    {
+        parameter _str,
+                  _lineOffset is 0.
+
+        local line to  __trmDebugLine + _lineOffset.
+        print ("[DGB]: {0,-" + (__trmWidth - 9) + "}"):Format(_str) at (0, line).
+        return line.
+    }
+
+    // out_msg
+    //
+    global function out_info
     {
         parameter _str is "",
                   _pos is 0.
 
-        local msgLine to  __trMsgLine + Min(1, _pos).
-
+        local infoLine to  __trmInfoLine + Min(2, _pos).
         if _str:length = 0
         {
-            print ("{0,-" + __trMsgWidth + "}"):Format(" ") at (12, msgLine).
+            print ("{0,-" + __trmMsgWidth + "}"):Format(" ") at (12, infoLine).
         }
         else
         {
-            print ("{0,-" + __trMsgWidth + "}"):Format(_str) at (12, msgLine).
+            print ("{0,-" + __trmMsgWidth + "}"):Format(_str) at (12, infoLine).
         }
     }
 
-    // OutMsg
+    // out_msg
     //
-    global function OutInfo
+    global function out_msg
     {
         parameter _str is "",
                   _pos is 0.
 
-        local infoLine to  __trInfoLine + Min(2, _pos).
+        local msgLine to  __trmMsgLine + Min(1, _pos).
+
         if _str:length = 0
         {
-            print ("{0,-" + __trMsgWidth + "}"):Format(" ") at (12, infoLine).
+            print ("{0,-" + __trmMsgWidth + "}"):Format(" ") at (12, msgLine).
         }
         else
         {
-            print ("{0,-" + __trMsgWidth + "}"):Format(_str) at (12, infoLine).
+            print ("{0,-" + __trmMsgWidth + "}"):Format(_str) at (12, msgLine).
         }
     }
+    // #endregion
 
-    
-    // Breakpoint 
+    // *- Utilities
+    // #region
+
+    // breakpoint 
     // It's a breakpoint
-    global function Breakpoint
+    global function breakpoint
     {
         parameter _str is " *** Press any key to continue *** ".
 
         Terminal:Input:Clear.
-        print ("{0,-" + (__trMsgWidth):ToString + "}"):Format(_str:ToUpper) at (0, Terminal:Height - 3).
+        print ("{0,-" + (__trmMsgWidth):ToString + "}"):Format(_str:ToUpper) at (0, Terminal:Height - 3).
         wait until Terminal:Input:HasChar().
         return true.
     }
 
     // cr :: (_trLine)<int> -> (_trLine)<int>
-    // Increments __trLine. Pass an int to override __trLine to a new value
+    // Increments __trmLine. Pass an int to override __trmLine to a new value
     global function cr
     {
-        parameter _trLine is __trLine.
+        parameter _trLine is __trmLine.
 
-        if _trLine <> __trLine
+        if _trLine <> __trmLine
         {
-            set __trLine to _trLine.
+            set __trmLine to _trLine.
         } 
         else
         {
-            set __trLine to __trLine + 1.
+            set __trmLine to __trmLine + 1.
             // #TODO Need to implement vertical safety here
         }
-        return __trLine.
+        return __trmLine.
     }
 
     // getSp :: 
-    global function getSp
+    global function get_spacing
     {
         parameter _charSets to list(),
                  _availWidth to Terminal:Width.
@@ -220,12 +254,12 @@
         
     }
     // #endregion
-    // #endregion
 
-    // *- DispHelpers
+    // *- DispHandlers
+    // #region
 
     // DispBoxOutline
-    local function DispBoxOutline
+    local function disp_box
     {
         parameter _numCols is 1,
                   _strDat is list().
@@ -257,5 +291,6 @@
         local div to __hDiv:Call("-", maxWidth + 2).
         print str:Replace("2","1"):Format("|", div, "|") at (0, cr()).
     }
+    // #endregion
 
 // #endregion

@@ -10,6 +10,8 @@
     // *- Common Values
     // #region
 
+    global tVal to 0.
+
     // #endregion
 
     // *- Reference Objects
@@ -39,21 +41,18 @@
     // *- Engine Enumeration
     // #region
 
-    // :: Global
-    // #region
-    
-    // GetVesselEngines :: ([_ves<Vessel>]) -> (_ves:Engines)<List[Engines]>
+    // get_vessel_engines :: ([_ves<Vessel>]) -> (_ves:Engines)<List[Engines]>
     // Returns all engines for a vessel, default is the core's ship.
-    global function GetVesselEngines
+    global function get_vessel_engines
     {
         parameter _ves is Core:Part:Ship.
 
         return _ves:Engines.
     }
 
-    // MapVesselEngines :: (input params)<type> -> (output params)<type>
+    // map_vessel_engines :: (input params)<type> -> (output params)<type>
     // Maps engines by activations stage. Alternate mode will map by detachment stage
-    global function MapVesselEngines
+    global function map_vessel_engines
     {
         parameter _ves is Core:Part:Ship,
                   _mapByDetachStage is false.
@@ -85,9 +84,9 @@
         return _ves:Engines.
     }
 
-    // UpdateEngineMap :: ([_inputEngMap<lex>]) -> _outputMap<lex>
+    // update_engine_map :: ([_inputEngMap<lex>]) -> _outputMap<lex>
     // Hydrates a givens engine map
-    global function UpdateEngineMap
+    global function update_engine_map
     {
         parameter _inEngMap is lexicon(),
                   _engList is Ship:Engines.
@@ -118,15 +117,15 @@
         }
         else
         {
-            return MapVesselEngines().
+            return map_vessel_engines().
         }
 
         return _inEngMap.
     }
 
-    // GetBurnStageEngines :: ([_stgLim<int>]) -> (stgEngs<List[Engines]>)
+    // get_burn_stage_engines:: ([_stgLim<int>]) -> (stgEngs<List[Engines]>)
     // Returns all engines for a given ignition stage
-    global function GetBurnStageEngines 
+    global function get_burn_stage_engines
     {
         parameter _ves is Ship,
                   _stg is Stage:Number,
@@ -157,9 +156,9 @@
         return stgEngs.
     }
 
-    // GetDCStageEngines :: ([_stgLim<int>]) -> (stgEngs<List[Engines]>)
+    // get_dc_stage_engines :: ([_stgLim<int>]) -> (stgEngs<List[Engines]>)
     // Returns all engines for a given ignition stage
-    global function GetDCStageEngines 
+    global function get_dc_stage_engines 
     {
         parameter _ves is Ship,
                   _stg is Stage:Number,
@@ -190,10 +189,10 @@
         return stgEngs.
     }
 
-    // GetActiveEngines :: ([_ves<Vessel>], [_stgLim<int>]) -> (activeEngs<List[Engines]>)
+    // get_active_engines :: ([_ves<Vessel>], [_stgLim<int>]) -> (activeEngs<List[Engines]>)
     // Returns the engines on the vessel that are currently firing and not flamed out. 
     // Optional params will target other vessels and/or scope to only engines above a certain stage
-    global function GetActiveEngines
+    global function get_active_engines
     {
         parameter _ves is Ship,
                   _filter is "".
@@ -224,14 +223,28 @@
     }
     // #endregion
 
-    // :: Local
+    // *- Engine Ignition
     // #region
-    
-    // FunctionName :: (input params)<type> -> (output params)<type>
-    // Description
-    
-    // #endregion
-    
-    // #endregion
 
+    // staged_engine_ignition
+    // Ignites the engines to a given stage
+    global function staged_engine_ignition
+    {
+        parameter _stgTo is Stage:Number - 1.
+
+        set tVal to 1.
+        lock throttle to tVal.
+        
+        until Stage:Number <= _stgTo
+        {
+            out_info("Engine ignition: [{0} -> {1}]":Format(Stage:Number, _stgTo)).
+            wait until stage:ready.
+            stage.
+            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
+            out_info("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
+        }
+
+        return Stage:Number = _stgTo.
+    }
+    // #endregion
 // #endregion

@@ -1,12 +1,35 @@
 // #TODO:Parse the plan
 
-// #TODO: Execute the plan
+runOncePath("0:/kslib/lib_loader").
+runOncePath("0:/lib/plan").
+runOncePath("0:/lib/control").
 
-if core:tag:MatchesPattern("(Sounder|Sounding)")
+local hdgpit to compass_and_pitch_for().
+local launchAng to hdgpit[1].
+local launchHdg to hdgpit[0].
+local stgLim to 0.
+
+// Get the plan
+local mp to parse_core_plan(core).
+
+if mp:Param:Length > 0
 {
-    runPath("0:/main/launch/sounderLaunch.ks").
+    set launchHdg to mp:Param[0].
+    if mp:Param:Length >1 set launchAng to mp:Param[1].
+}
+
+if mp:StgLim:Length > 0
+{
+    set stgLim to mp:StgLim.
+}
+
+// Execute the plan
+
+if mp:Cat:MatchesPattern("(Sounder|Sounding)")
+{
+    runPath("0:/main/launch/sounderLaunch.ks", list(launchHdg, launchAng, stgLim)).
 } 
-else if core:tag:MatchesPattern("(DownRange(r)?|DR)")
+else if mp:Cat:MatchesPattern("(DownRange(r)?|DR|SubDR)")
 {
-    runPath("0:/main/launch/downrangerLaunch.ks").
+    runPath("0:/main/launch/downrangerLaunch.ks", list(launchHdg, launchAng, stgLim)).
 }

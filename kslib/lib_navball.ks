@@ -81,13 +81,13 @@ function compass_and_pitch_for {
   local trig_y is vdot(east, pointing).
   local trig_z is vdot(ves:up:vector, pointing).
 
-  local compass is arctan2(trig_y, trig_x).
-  if compass < 0 {
-    set compass to 360 + compass.
+  local vHdg is arctan2(trig_y, trig_x).
+  if vHdg < 0 {
+    set vHdg to 360 + vHdg.
   }
-  local pitch is arctan2(trig_z, sqrt(trig_x^2 + trig_y^2)).
+  local vPit is arctan2(trig_z, sqrt(trig_x^2 + trig_y^2)).
 
-  return list(compass,pitch).
+  return list(vHdg,vPit).
 }
 
 function bearing_between {

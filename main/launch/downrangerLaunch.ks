@@ -4,257 +4,121 @@ ClearScreen.
 parameter _params is list().
 
 // Dependencies
-runOncePath("0:/lib/deploader").
+runOncePath("0:/kslib/lib_loader").
 runOncePath("0:/kslib/lib_l_az_calc").
+
+runOncePath("0:/lib/control").
 runOncePath("0:/lib/module").
-runOncePath("0:/lib/disp").
+runOncePath("0:/lib/term").
 runOncePath("0:/lib/engine").
+runOncePath("0:/lib/vlc").
 
 // Setup terminal display
-InitTerm(true, true, true).
+init_term(true, true, true).
 
 // Declare Variables
-local curVAng  to 90.
-local lastVAng to 90.
+local compit to compass_and_pitch_for(Ship, Ship:Facing).
+local launchAng to compit[1].
+local launchHdg to compit[0].
+local launchTS to 5.
+local stageLimit to 0.
+local transAltSpd to 32.5.
+local transAltWindow  to 2781.
 
-local curDirComponents to compass_and_pitch_for(Ship, Ship:Facing).
-local launchHdg to curDirComponents[0].
-local launchAng to curDirComponents[1].
-
-local modeSwVSpd to 32.5.
-local prgdSwAlt  to 1250.
+local transEndPitch is 79.25.
 
 // Parse Params
 if _params:length > 0 
 {
-  set launchHdg to _params[0].
-  if _params:Length > 1 set launchAng  to _params[1].
-  if _params:Length > 2 set prgdSwAlt  to _params[2].
-  if _params:Length > 3 set modeSwVSpd to _params[3].
+  set stageLimit to _params[0].
+  if _params:Length > 1 set launchHdg  to _params[1].
+  if _params:Length > 2 set launchAng  to _params[2].
+  if _params:Length > 3 set transAltWindow  to _params[3].
+  if _params:Length > 4 set transAltSpd to _params[4].
 }
 
 // Setup initial control environment
-// Delegate to converge on Orbital Prograde by following SrfPrograde until VAng is less than 1 degree
-local steerDelPhases to list(
-    { return Heading(launchHdg, curDirComponents[1]).},
-    { return Heading(launchHdg, launchAng).},
-    { set lastVAng to curVAng. set curVAng to Abs(pitch_for(Ship, Ship:SrfPrograde) - pitch_for(Ship, Ship:Prograde)). if curVAng <= 1 { return Ship:Prograde.} else if curVAng <= lastVAng { return Ship:SrfPrograde.} else { return Ship:Prograde.}}
-).
+out_msg("Initial Control Setup").
+local steerDel to { return Ship:Facing.}.
+set sVal to steerDel:Call().
+set tVal to 0.
+set rVal to 0.
 
-local steerDel to steerDelPhases[0].
+// Setup countdown
+out_msg("Setting up countdown").
 
-local sVal to steerDel:Call().
-local tVal to 0.
-
-// #TODO: Setup countdown
-
-// init_countdown :: ([_cdObj<lexicon>])
-global function init_countdown
-{
-    parameter _cdObj is lex("cdTime", 5).
-
-    // Get the pad stage.
-    
-
-    // -- Get spool time for engines in launch stage
-    local stgEngs to GetBurnStageEngines(Ship, padStage + 1, true).
-    local maxSpool to 0.
-    from { local i to stgEngs:Length - 1.} until i < 0 step { set i to i - 1.} do
-    {
-        local eng to stgEngs[i].
-        local m to eng:GetModule("ModuleEnginesRF").
-        local fldStr to "effective spool-up time".
-
-        if not m:HasField(fldStr)
-        {
-            stgEngs:Remove(i).
-        }
-        else
-        {
-            set maxSpool to max(maxSpool, m:GetField(fldStr)).
-        }
-    }
-
-    return lex().
-}
+local cdSeqObj to init_countdown().
+local padStage to cdSeqObj:PadStage.
 
 // Confirm launch go
-OutMsg("Press any key to launch").
-Breakpoint(" ").
+out_msg("Confirming countdown go").
+out_debug("stageLimit: {0}":Format(stageLimit)).
+// Hold
+terminal_countdown_hold(cdSeqObj).
 
-// #TODO: Execute countdown
-local spoolTS  to Time:Seconds + cdTimer.
-local launchTS to spoolTS + Round(maxSpool).
+// Execute countdown
+set cdSeqObj to cdSeqObj:SetLaunchTS:Call(cdSeqObj, Time:Seconds).
+set launchTS to cdSeqObj:LaunchTS.
 
-local ignSeqStart to false.
-
+// Transition to internal guidance
 lock steering to sVal.
+lock throttle to tVal.
 
-OutMsg("Launch Countdown").
-until Time:Seconds > launchTS
+// Term count reached, evaluate the launch thrust state to ensure we have enough for liftoff
+local termCountComplete to exec_term_countdown(cdSeqObj).
+
+// Term count reached, evaluate the launch thrust state to ensure we have enough for liftoff
+if termCountComplete
 {
-    if ignSeqStart
+    local goFlag to false.
+    until goFlag 
     {
-        OutMsg("Launch Countdown: T-{0}":Format(Round(launchTS - Time:Seconds, 2))).
-        local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-        OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-    }
-    else
-    {
-        if Time:Seconds >= spoolTS
-        {
-            OutInfo("Ignition sequence start").
-            set tVal to 1.
-            lock throttle to tVal.
-            set ignSeqStart to MainEnginesIgnition(padStage).
-            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-            OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-        }
-        else
-        {
-            OutInfo("Ignition sequence armed").
-            OutMsg("Launch Countdown: T-{0}":Format(Round(launchTS - Time:Seconds, 2))).
-        }
+        out_msg("Mission Clock   : T {0}":Format(Round(Time:Seconds - launchTS, 2)), 1).
+        set goFlag to eval_launch_commit_thrust().
+        wait 0.01.
     }
 }
-
-local goFlag to false.
-until goFlag
+else
 {
-    set goFlag to LaunchCommitEval(launchTS).
-    wait 0.01.
+    set tVal to 0.
+    out_msg("ERR: Idk how we ended up here. Weird").
+    out_msg(" ", 1).
+    out_info(" ").
+    out_info(" ", 1).
+    wait 9.
+    print 1 / 0.
 }
 
-LaunchCommit(padStage).
+// Release clamps and go
+launch_commit_go(padStage).
 
-until Alt:Radar >= __vlcTowerHeight
-{
+local altThresh to 0.
 
-}
+// Hold steady until we clear the tower
+set altThresh to launch_clear_tower().
 
-until Ship:Altitude >= prgdSwAlt and Ship:VerticalSpeed >= modeSpeed 
-{
-    OutMsg("Mission Clock   : T {0}":Format(Round(MissionTime, 2))).
-    if Stage:Number > 0
-    {
-        local activeEngines to GetActiveEngines(Ship, "nosep").
+// Initial pitch over
+set steerDel to { parameter _pit. return Heading(launchHdg, _pit, rVal).}.
 
-        if Ship:AvailableThrust < 0.01 
-        {
-            wait until Stage:Ready.
-            stage.
-        }
-        OutInfo("Powered Ascent").
-        local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-        OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-    }
-    else
-    {
-        if Ship:AvailableThrust < 0.01 
-        {
-            OutInfo("Powered Ascent").
-            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-            OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-        }
-        else
-        {
-            OutInfo("Passive Coast").
-            OutInfo("",1).
-        }
-    }
-}
+local curPitch to pitch_for(Ship, Ship:Facing).
+set transEndPitch to Round(min(curPitch, max(transEndPitch, pitch_for(Ship, Ship:srfPrograde) - 15)), 2).
+set altThresh to launch_pitch_program(transEndPitch, transAltWindow, altThresh, curPitch, 0.625, steerDel@).
+//set altThresh to launch_pitch_program(transEndPitch, transAltWindow, altThresh, steerDel@).
 
-set curVAng to VAng(Ship:SrfPrograde:Vector, Ship:Prograde:Vector).
+// Lock to SrfPrograde for gravity turn until we reach 50km or 1750m/s
+set altThresh to launch_gravity_turn(steerDel, "srf", 12.5, 50000, 1750).
 
-local doneFlag to false.
-until doneFlag
-{
-    set sVal to steerDel:Call().
-    OutMsg("Mission Clock   : T {0}":Format(Round(MissionTime, 2)), 1).
-    if Stage:Number > 0
-    {
-        local activeEngines to GetActiveEngines(Ship, "nosep").
+// Transition pitch to orbit prograde
+set curPitch to pitch_for(Ship, Ship:Facing).
+local obtProPit to pitch_for(Ship, Ship:Prograde).
+set altThresh to launch_pitch_program(obtProPit, 2000 * Round(curPitch - obtProPit), altThresh, curPitch, 0.425, steerDel@).
+rcs on.
 
-        if Ship:AvailableThrust < 0.01 
-        {
-            wait until Stage:Ready.
-            stage.
-        }
-        OutInfo("Powered Ascent").
-        local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-        OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-    }
-    else
-    {
-        OutInfo("Passive Coast").
-        OutInfo("",1).
-    }
-}
+// Lock to ObtPrograde for gravity turn, max pitch to +3.25 degrees
+set altThresh to launch_gravity_turn(steerDel, "obt", 3.25).
 
-
-// Local functions
-
-// Stages the clamps
-global function LaunchCommit
-{
-    parameter _padStg is getPadStage:Call().
-
-    until Stage:Number = _padStg
-    {
-        until stage:Ready
-        {
-            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-            OutMsg("Launch Commit").
-            OutInfo("Releasing clamps").
-            OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-        }
-        stage.
-    }
-    OutMsg("Liftoff").
-
-    return true.
-}
-
-// #TODO: Ignite engines
-local function MainEnginesIgnition
-{
-    parameter _padStg is getPadStage:Call().
-
-    local ignComplete to false.
-
-    from { local i to Stage:Number.} until i = _padStg + 1 step { set i to i - 1.} do
-    {
-        wait until stage:ready.
-        stage.
-    }
-    set ignComplete to true.
-    
-    return ignComplete.
-}
-
-// #TODO: Evaluate launch conditions
-local function LaunchCommitEval
-{
-    parameter _launchTS.
-
-    local launchCommitGo to false.
-    local minThrPct to 0.9825.
-
-    if Time:Seconds > _launchTS
-    {
-        set launchCommitGo to choose (ship:thrust / ship:AvailableThrust) > minThrPct if ship:Thrust > 0 else false.
-    }
-    OutMsg("Mission Clock   : T {0}":Format(Round(Time:Seconds - launchTS, 2)), 1).
-    local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust, 4) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-    OutInfo("Thrust: {0} [{1,5}%/{2,5}%]":Format(Round(Ship:Thrust, 2), thrPct, Round(minThrPct * 100, 2))).
-    OutInfo("Launch Commit: {0} ":Format(launchCommitGo), 1).
-
-    return launchCommitGo.
-}
-
-// #TODO: Liftoff
-
-
-// #TODO: Vertical Ascent
-
-// #TODO: Coast
+out_msg("downrangerLaunch complete").
+out_msg("", 1).
+out_info("").
+out_info("", 1).
+out_info("", 2).

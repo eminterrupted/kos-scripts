@@ -4,196 +4,129 @@ ClearScreen.
 parameter _params is list().
 
 // Dependencies
-runOncePath("0:/lib/deploader").
+runOncePath("0:/kslib/lib_loader").
 runOncePath("0:/kslib/lib_l_az_calc").
+runOncePath("0:/lib/control").
 runOncePath("0:/lib/module").
-runOncePath("0:/lib/disp").
+runOncePath("0:/lib/term").
 runOncePath("0:/lib/engine").
+runOncePath("0:/lib/vlc").
 
-InitTerm(true, true, true).
+// Setup terminal display
+init_term(true, true, true).
 
 // Declare Variables
-local dirComponents to compass_and_pitch_for(Ship, Ship:Facing:ForeVector).
-local launchAng to dirComponents[1].
-local launchHdg to dirComponents[0].
+local compit to compass_and_pitch_for(Ship, Ship:Facing:ForeVector).
 
-// Parse Params
+local launchAng to compit[1].
+local launchHdg to compit[0].
+local stageLimit to g_StgLim.
+
+// Parse Cmd Params
 if _params:length > 0 
 {
   set launchHdg to _params[0].
   if _params:Length > 1 set launchAng to _params[1].
+  if _params:Length > 2 set stageLimit to _params[2].
 }
-
-// Setup terminal display
-
 
 // Setup initial control environment
-local sVal to Ship:Facing.
-local tVal to 0.
+out_msg("Initial Control Setup").
+local steerDel to { parameter _tgtHdg is launchHdg, _tgtRoll is rVal, _tgtPit is launchAng. return Heading(_tgtHdg, _tgtPit, _tgtRoll). }.
+set steerDel to steerDel@:Bind(launchHdg, rVal).
+set sVal to Ship:Facing.
+set tVal to 0.
 
-// #TODO: Setup countdown
-local cdTimer to 5.
+// Setup countdown
+out_msg("Setting up countdown").
 
-local getPadStage to { local minStage to Stage:Number. for p in Ship:PartsNamedPattern("AM.MLP.*") { set minStage to min(minStage, p:Stage). } return minStage.}.
-local padStage to getPadStage:Call().
-
-
-// -- Get spool time for engines in launch stage
-local stgEngs to GetBurnStageEngines(Ship, padStage + 1, true).
-local maxSpool to 0.
-from { local i to stgEngs:Length - 1.} until i < 0 step { set i to i - 1.} do
-{
-    local eng to stgEngs[i].
-    local m to eng:GetModule("ModuleEnginesRF").
-    local fldStr to "effective spool-up time".
-
-    if not m:HasField(fldStr)
-    {
-        stgEngs:Remove(i).
-    }
-    else
-    {
-        set maxSpool to max(maxSpool, m:GetField(fldStr)).
-    }
-}
+local cdSeqObj to init_countdown().
+local padStage to cdSeqObj:PadStage.
 
 // Confirm launch go
-OutMsg("Press any key to launch").
-Breakpoint(" ").
+out_msg("Confirming countdown go").
 
-// #TODO: Execute countdown
-local spoolTS  to Time:Seconds + cdTimer.
-local launchTS to spoolTS + Round(maxSpool).
+// Hold
+terminal_countdown_hold(cdSeqObj).
 
-local ignSeqStart to false.
+// Execute countdown
+set cdSeqObj to cdSeqObj:SetLaunchTS:Call(cdSeqObj, Time:Seconds).
+local launchTS to cdSeqObj:LaunchTS.
 
+// Transition to internal guidance
 lock steering to sVal.
+lock throttle to tVal.
 
-OutMsg("Launch Countdown").
-until Time:Seconds > launchTS
+// Term count reached, evaluate the launch thrust state to ensure we have enough for liftoff
+local termCountComplete to exec_term_countdown(cdSeqObj).
+
+// Term count reached, evaluate the launch thrust state to ensure we have enough for liftoff
+if termCountComplete
 {
-    if ignSeqStart
+    local goFlag to false.
+    until goFlag 
     {
-        OutMsg("Launch Countdown: T-{0}":Format(Round(launchTS - Time:Seconds, 2)), 1).
-        local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-        OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-    }
-    else
-    {
-        if Time:Seconds >= spoolTS
-        {
-            OutInfo("Ignition sequence start").
-            set tVal to 1.
-            lock throttle to tVal.
-            set ignSeqStart to MainEnginesIgnition(padStage).
-            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-            OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-        }
-        else
-        {
-            OutInfo("Ignition sequence armed").
-            OutMsg("Launch Countdown: T-{0}":Format(Round(launchTS - Time:Seconds, 2)), 1).
-        }
+        out_msg("Mission Clock   : T {0}":Format(Round(Time:Seconds - launchTS, 2)), 1).
+        set goFlag to eval_launch_commit_thrust().
+        wait 0.01.
     }
 }
-
-local goFlag to false.
-until goFlag
+else
 {
-    set goFlag to LaunchCommitEval(launchTS).
-    wait 0.01.
+    set tVal to 0.
+    out_msg("ERR: Idk how we ended up here. Weird").
+    out_msg(" ", 1).
+    out_info(" ").
+    out_info(" ", 1).
+    wait 9.
+    print 1 / 0.
 }
 
-LaunchCommit(padStage).
+// Release clamps and go
+launch_commit_go(padStage).
+
+local altThresh to 0.
+
+// Hold steady until we clear the tower
+set altThresh to launch_clear_tower().
+// Initial pitch over
+local curPitch to pitch_for(Ship, Ship:Facing).
+
+set altThresh to launch_pitch_program(launchAng, 1250, altThresh, curPitch, 0.625, steerDel@).
+
+set sVal to Ship:Facing.
 
 local doneFlag to false.
+local tchar to "".
 until doneFlag
-{
-    OutMsg("Mission Clock   : T {0}":Format(Round(MissionTime, 2)), 1).
-    if Stage:Number > 0
+{   
+    set tchar to get_term_char().
+    set doneFlag to tchar = terminal:Input:Enter.
+    set tchar to "".
+    
+    out_msg("Mission Clock   : T {0}":Format(Round(MissionTime, 2)), 1).
+    if Stage:Number > g_StgLim
     {
-        local activeEngines to GetActiveEngines(Ship, "nosep").
+        // local activeEngines to get_active_engines(Ship, "nosep").
 
         if Ship:AvailableThrust < 0.01 
         {
             wait until Stage:Ready.
             stage.
         }
-        OutInfo("Powered Ascent").
+        out_msg("Powered Ascent").
         local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-        OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
+        out_info("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
+        out_info("", 2).
     }
     else
     {
-        OutInfo("Passive Coast").
-        OutInfo("",1).
+        out_msg("Passive Coast").
+        out_info("", 1).
+        out_info("", 2).
     }
+    out_info("Alt: {0} | VSpd: {1}":Format(Round(Ship:Altitude), Round(Ship:VerticalSpeed, 1))).
 }
 
-
-// Local functions
-
-// Stages the clamps
-global function LaunchCommit
-{
-    parameter _padStg is getPadStage:Call().
-
-    until Stage:Number = _padStg
-    {
-        until stage:Ready
-        {
-            local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-            OutMsg("Launch Commit").
-            OutInfo("Releasing clamps").
-            OutInfo("Thrust: {0} [{1,5}%]":Format(Round(Ship:Thrust, 2), thrPct:tostring), 1).
-        }
-        stage.
-    }
-    OutMsg("Liftoff").
-
-    return true.
-}
-
-// #TODO: Ignite engines
-local function MainEnginesIgnition
-{
-    parameter _padStg is getPadStage:Call().
-
-    local ignComplete to false.
-
-    from { local i to Stage:Number.} until i = _padStg + 1 step { set i to i - 1.} do
-    {
-        wait until stage:ready.
-        stage.
-    }
-    set ignComplete to true.
-    
-    return ignComplete.
-}
-
-// #TODO: Evaluate launch conditions
-local function LaunchCommitEval
-{
-    parameter _launchTS.
-
-    local launchCommitGo to false.
-    local minThrPct to 0.9825.
-
-    if Time:Seconds > _launchTS
-    {
-        set launchCommitGo to choose (ship:thrust / ship:AvailableThrust) > minThrPct if ship:Thrust > 0 else false.
-    }
-    OutMsg("Mission Clock   : T {0}":Format(Round(Time:Seconds - launchTS, 2)), 1).
-    local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust, 4) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
-    OutInfo("Thrust: {0} [{1,5}%/{2,5}%]":Format(Round(Ship:Thrust, 2), thrPct, Round(minThrPct * 100, 2))).
-    OutInfo("Launch Commit: {0} ":Format(launchCommitGo), 1).
-
-    return launchCommitGo.
-}
-
-// #TODO: Liftoff
-
-
-// #TODO: Vertical Ascent
-
-// #TODO: Coast
+clearScreen.
+print "donezo".
