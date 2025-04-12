@@ -4,12 +4,12 @@ ClearScreen.
 parameter _params is list().
 
 // Dependencies
-runOncePath("0:/_kslib/lib_loader.ks").
-runOncePath("0:/_lib/type_loader.ks").
-runOncePath("0:/_lib/util.ks").
-runOncePath("0:/_lib/control.ks").
-runOncePath("0:/_lib/module.ks").
-runOncePath("0:/_lib/term.ks").
+runOncePath("0:/lib/kslib/lib_loader.ks").
+runOncePath("0:/lib/type_loader.ks").
+runOncePath("0:/lib/util.ks").
+runOncePath("0:/lib/control.ks").
+runOncePath("0:/lib/module.ks").
+runOncePath("0:/lib/term.ks").
 
 // Declare Variables
 local _boxType to "Base".

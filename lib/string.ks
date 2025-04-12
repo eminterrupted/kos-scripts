@@ -3,8 +3,8 @@
 // *~ Dependencies ~* //
 // #region
 
-RunOncePath("0:/_type/base_types.ks").
-RunOncePath("0:/_type/string_types.ks").
+RunOncePath("0:/type/basetypes.ks").
+RunOncePath("0:/type/stringtypes.ks").
 
 // #endregion
 

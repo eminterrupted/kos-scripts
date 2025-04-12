@@ -1,9 +1,9 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/_kslib/lib_loader").
-runOncePath("0:/_lib/plan").
-runOncePath("0:/_lib/control").
+runOncePath("0:/lib/kslib/lib_loader").
+runOncePath("0:/lib/plan").
+runOncePath("0:/lib/control").
 
 local hdgPit to compass_and_pitch_for(Ship, Ship:Facing).
 local launchAng to hdgPit[1].

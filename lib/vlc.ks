@@ -4,9 +4,9 @@
 
 // *~ Dependencies ~* //
 // #region
-// #include "0:/_lib/term.ks"
-// #include "0:/_lib/engine.ks"
-// #include "0:/_lib/control.ks"
+// #include "0:/lib/term.ks"
+// #include "0:/lib/engine.ks"
+// #include "0:/lib/control.ks"
 // #endregion
 
 // *~ Variables ~* //

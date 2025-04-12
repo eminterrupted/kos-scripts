@@ -3,9 +3,10 @@
 // *~ Dependencies ~* //
 // #region
 
-// #include "0:/_lib/module.ks"
-RunOncePath("0:/_type/base_types.ks").
-RunOncePath("0:/_type/term_types.ks").
+// #include "0:/lib/module.ks"
+RunOncePath("0:/type/basetypes.ks").
+RunOncePath("0:/type/stringtypes.ks").
+RunOncePath("0:/type/termtypes.ks").
 
 // #endregion
 
@@ -262,6 +263,82 @@ RunOncePath("0:/_type/term_types.ks").
 
     // *- DispHandlers
     // #region
+
+    
+    // Methods
+
+    // #region
+    local hdgStyle to lexicon(
+        "bdr", list("Double", list("0F", "F0", "0F", "F0")),
+        "cor", list("Double", list("CC", "C3", "3C", "33")),
+        "div", list("Double", list("3F", "CF", "FC", "F3", "FF")),
+        "spc", list()
+    ).
+
+    local hdgBox to lex(
+        "pos", list(0, 0),
+        "size", list(__termWidth - 3, 16),
+        "style", hdgStyle
+    ).
+
+
+    local function BuildBoxStyle
+    {
+        parameter _styleDat.
+
+        local builtStyle to lexicon().
+        
+        from { local _i to 0.} until _i = _styleDat:Keys:Length step { set _i to _i + 1.} do
+        {
+            local key to _styleDat:Keys[_i].
+            local dat to _styleDat:Values[_i].
+
+            if dat:Length = 0
+            {
+            }
+            else
+            {
+                local keyStyle to dat[0].
+                local selectedStyle to Styles:Line.
+                local selectedCharSet to CharCodes:Chars:Line.
+
+                if keyStyle:Contains("/")
+                {
+                    for _leaf in keyStyle:Split("/")
+                    {
+                        // set selectedStyle to choose selectedStyle[_leaf] if selectedStyle:HasKey(_leaf) else selectedStyle.
+                        set selectedCharSet to choose selectedCharSet[_leaf] if selectedCharSet:HasKey(_leaf) else selectedCharSet.
+                    }
+                }
+                else
+                {
+                    set selectedCharSet to choose selectedCharSet[keyStyle] if selectedCharSet:HasKey(_leaf) else selectedCharSet.
+                }
+                set selectedCharSet to selectedCharSet:Hex.
+
+                set builtStyle[key] to list().
+                for hex in dat[1]
+                {
+                    local code to HexToCharCode(hex).
+                }
+
+                
+
+
+                if not builtStyle:HasKey(key)
+                {
+                    set builtStyle[key] to list().
+                }
+            }
+        }
+    }
+
+
+
+
+    CharCodes.Methods.Add("HexToCharCode").
+    // #endregion
+
 
     // update_frame_buffer ::
     // Takes term data (example, a box template from __shapes) and

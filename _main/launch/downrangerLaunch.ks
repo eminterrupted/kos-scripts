@@ -4,15 +4,15 @@ ClearScreen.
 parameter _params is list().
 
 // Dependencies
-runOncePath("0:/_kslib/lib_loader").
-runOncePath("0:/_kslib/lib_l_az_calc").
+runOncePath("0:/lib/kslib/lib_loader").
+runOncePath("0:/lib/kslib/lib_l_az_calc").
 
-runOncePath("0:/_lib/control").
-runOncePath("0:/_lib/module").
-runOncePath("0:/_lib/util").
-runOncePath("0:/_lib/term").
-runOncePath("0:/_lib/engine").
-runOncePath("0:/_lib/vlc").
+runOncePath("0:/lib/control").
+runOncePath("0:/lib/module").
+runOncePath("0:/lib/util").
+runOncePath("0:/lib/term").
+runOncePath("0:/lib/engine").
+runOncePath("0:/lib/vlc").
 
 // Setup terminal display
 init_term(true, true, true).

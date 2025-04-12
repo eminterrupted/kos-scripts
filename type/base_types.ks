@@ -2,33 +2,17 @@
 
 //  Establishes the base types in common use across multiple libraries and scripts
 
+
+// Method Templates
+// #region
+
+// #endregion
+
+
 // Types
 // #region
 
-    // Typename
-
-// #endregion
-
-// Methods
-// #region
-
-    // local methodDel to {}. 
-    // Type.Add(methodDel@).
-
-// #endregion
-
-
-
-    // String types
-    global StringUnitConversion to lexicon(
-            "m", 1,
-            "Km", 100000,
-            "cm", 0.1,
-            "Mm", 1000000,
-            "mmm", 0.01,
-            "Gm", 1000000000
-        ).
-
+    // BitMaskRef
     // Masks are stored as lists containing (<hex>, <dec>)
     global BitMaskRef to lex(
         "Byte", lex(
@@ -86,9 +70,4 @@
             15, list("1111", "F")
         )
     ).
-// #endregion
-
-// Methods
-// #region
-
 // #endregion
