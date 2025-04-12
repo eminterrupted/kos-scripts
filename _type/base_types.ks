@@ -5,6 +5,20 @@
 // Types
 // #region
 
+    // Typename
+
+// #endregion
+
+// Methods
+// #region
+
+    // local methodDel to {}. 
+    // Type.Add(methodDel@).
+
+// #endregion
+
+
+
     // String types
     global StringUnitConversion to lexicon(
             "m", 1,

@@ -4,8 +4,8 @@
 // #region
 
 // #include "0:/_lib/module.ks"
-RunOncePath("0:/_lib/base_types.ks").
-RunOncePath("0:/_lib/term_types.ks").
+RunOncePath("0:/_type/base_types.ks").
+RunOncePath("0:/_type/term_types.ks").
 
 // #endregion
 
