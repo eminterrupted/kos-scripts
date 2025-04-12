@@ -3,42 +3,41 @@
 // *~ Dependencies ~* //
 // #region
 
-// #include "0:/lib/module.ks"
+// #include "0:/_lib/module.ks"
+RunOncePath("0:/_lib/base_types.ks").
+RunOncePath("0:/_lib/term_types.ks").
 
 // #endregion
 
 // *~ Variables ~* //
 // #region
-    // *- Common Values
+    // *- Common Local Variables
     // #region
-    local __trmStartLine to 1.
-    local __trmLine to __trmStartLine.
-    local __trmHeight to 64.
-    local __trmWidth  to 80.
-    local __trmMsgWidth  to __trmWidth - 13.
-    local __trmDebugLine to __trmHeight - 9.
-
-    local __trmVer to "0.0.1 (pre-alpha tech demo)".
-
-    local __trmMsgLine to __trmStartLine.
-    local __trmInfoLine to __trmMsgLine + 2.
-
+    local __termStartLine to 0.
+    local __termLine to __termStartLine.
+    local __termHeight to 64.
+    local __termWidth  to 80.
+    local __termMsgWidth  to __termWidth - 13.
+    local __termDebugLine to __termHeight - 9.
+    local __termVer to "0.0.1 (pre-alpha tech demo)".
+    local __termMsgLine to __termStartLine.
+    local __termInfoLine to __termMsgLine + 2.
     // #endregion
 
     // *- Delegates
     // #region
 
     // Print the Process box
-    local __hDiv to { 
-        parameter _divStyle is "-", 
-                  _divWidth is Terminal:Width. 
-                    
-        local _str to "". 
-        for i in range(0, _divWidth, 1) 
-        { 
+    local __hDiv to {
+        parameter _divStyle is "-",
+                  _divWidth is Terminal:Width.
+
+        local _str to "".
+        for i in range(0, _divWidth, 1)
+        {
             set _str to _str + _divStyle.
-        } 
-        return _str. 
+        }
+        return _str.
     }.
 
     // #endregion
@@ -72,33 +71,36 @@
         // Set the terminal to the default size
         if _resetTermSize
         {
-            set Terminal:Height to __trmHeight.
-            set Terminal:Width to __trmWidth.
+            set Terminal:Height to __termHeight.
+            set Terminal:Width to __termWidth.
         }
         // Open the terminal on boot
         if _showTerm
         {
             do_event(Core, "Open Terminal").
         }
-        set __trmLine to __trmStartLine.
+        set __termLine to __termStartLine.
 
-        // Print the Process box 
+        // Print the Process box
+        // disp_box_multicol().
+        draw_box_data().
+
         // top
         print __hDiv:Call("=") at (0, cr()).
 
         local panelStrings to list(
             "*~~*** SPACE MISSION EXECUTIVE ***~~*",
             " ",
-            "Version        : {0,-28}":Format(__trmVer),
+            "Version        : {0,-28}":Format(__termVer),
             "Registered to  : Kerbin United Space Agency",
             " ",
             "Current Mission: {0}":Format(Ship:Name),
             " "
         ).
-        disp_box(1, panelStrings).
+        disp_box_multicol(1, panelStrings).
 
-        set __trmMsgLine  to __trmLine + 3.
-        set __trmInfoLine to __trmLine + 6.
+        set __termMsgLine  to __termLine + 3.
+        set __termInfoLine to __termLine + 6.
 
         set panelStrings to list(
             " ",
@@ -111,13 +113,16 @@
             " ",
             " "
         ).
-        disp_box(1, panelStrings).
-        
+        disp_box_multicol(1, panelStrings).
+
         // Print the Message & Info Panel
-        
+
         // Print the Status & Warning Panel
 
         // Determine how many panels are available
+
+        // return current term positions
+
     }
     // #endregion
 
@@ -147,8 +152,8 @@
         parameter _str,
                   _lineOffset is 0.
 
-        local line to  __trmDebugLine + _lineOffset.
-        print ("[DGB]: {0,-" + (__trmWidth - 9) + "}"):Format(_str) at (0, line).
+        local line to  __termDebugLine + _lineOffset.
+        print ("[DGB]: {0,-" + (__termWidth - 9) + "}"):Format(_str) at (0, line).
         return line.
     }
 
@@ -159,14 +164,14 @@
         parameter _str is "",
                   _pos is 0.
 
-        local infoLine to  __trmInfoLine + Min(2, _pos).
+        local infoLine to  __termInfoLine + Min(2, _pos).
         if _str:length = 0
         {
-            print ("{0,-" + __trmMsgWidth + "}"):Format(" ") at (12, infoLine).
+            print ("{0,-" + __termMsgWidth + "}"):Format(" ") at (12, infoLine).
         }
         else
         {
-            print ("{0,-" + __trmMsgWidth + "}"):Format(_str) at (12, infoLine).
+            print ("{0,-" + __termMsgWidth + "}"):Format(_str) at (12, infoLine).
         }
     }
 
@@ -177,15 +182,15 @@
         parameter _str is "",
                   _pos is 0.
 
-        local msgLine to  __trmMsgLine + Min(1, _pos).
+        local msgLine to  __termMsgLine + Min(1, _pos).
 
         if _str:length = 0
         {
-            print ("{0,-" + __trmMsgWidth + "}"):Format(" ") at (12, msgLine).
+            print ("{0,-" + __termMsgWidth + "}"):Format(" ") at (12, msgLine).
         }
         else
         {
-            print ("{0,-" + __trmMsgWidth + "}"):Format(_str) at (12, msgLine).
+            print ("{0,-" + __termMsgWidth + "}"):Format(_str) at (12, msgLine).
         }
     }
     // #endregion
@@ -193,37 +198,37 @@
     // *- Utilities
     // #region
 
-    // breakpoint 
+    // breakpoint
     // It's a breakpoint
     global function breakpoint
     {
         parameter _str is " *** Press any key to continue *** ".
 
         Terminal:Input:Clear.
-        print ("{0,-" + (__trmMsgWidth):ToString + "}"):Format(_str:ToUpper) at (0, Terminal:Height - 3).
+        print ("{0,-" + (__termMsgWidth):ToString + "}"):Format(_str:ToUpper) at (0, Terminal:Height - 3).
         wait until Terminal:Input:HasChar().
         return true.
     }
 
     // cr :: (_trLine)<int> -> (_trLine)<int>
-    // Increments __trmLine. Pass an int to override __trmLine to a new value
+    // Increments __termLine. Pass an int to override __termLine to a new value
     global function cr
     {
-        parameter _trLine is __trmLine.
+        parameter _trLine is __termLine.
 
-        if _trLine <> __trmLine
+        if _trLine <> __termLine
         {
-            set __trmLine to _trLine.
-        } 
+            set __termLine to _trLine.
+        }
         else
         {
-            set __trmLine to __trmLine + 1.
+            set __termLine to __termLine + 1.
             // #TODO Need to implement vertical safety here
         }
-        return __trmLine.
+        return __termLine.
     }
 
-    // getSp :: 
+    // getSp ::
     global function get_spacing
     {
         parameter _charSets to list(),
@@ -249,17 +254,70 @@
 
         local remainingWidth to _availWidth - totCharCount.
         local panelWidth to Floor(remainingWidth / numCharSets).
-        
+
         return panelWidth.
-        
+
     }
     // #endregion
 
     // *- DispHandlers
     // #region
 
-    // DispBoxOutline
-    local function disp_box
+    // update_frame_buffer ::
+    // Takes term data (example, a box template from __shapes) and
+    local function update_frame_buffer
+    {
+
+    }
+
+    // draw_box_data
+    global function draw_box_data
+    {
+        parameter _boxData is Shapes:Box:Base:Closed,
+                  _style is "Normal".
+
+        if _style:IsType("String")
+        {
+            set _style to Styles[_style].
+        }
+
+        local xPos0 to _boxData:Pos[0].
+        local yPos0 to _boxData:Pos[1].
+        local xPos1 to _boxData:Pos[2].
+        local yPos1 to _boxData:Pos[3].
+
+        local outSpace to list(xPos1 - xPos0, yPos1 - yPos0).
+
+        local padding to _style:pad + 1.
+        local inSpace  to list(outSpace[0] - padding - _boxData:Cols:Length, outSpace[1] - padding - _boxData:Rows:Length).
+
+        local divDel to { parameter _ch, _len. local str to "". from { local _i to 0.} until _i = _len step { set _i to _i + 1.} do { set str to str + _ch. } return str. }.
+        local innerTopDiv to divDel:Call(_style:bdr[0], outSpace[0] - 2).
+        local innerBotDiv to divDel:Call(_style:bdr[2], outSpace[0] - 2).
+        local innerMidDiv to divDel:Call(_style:bdr[0], outSpace[0] - 2).
+        local innerMidStr to divDel:Call(" ", inSpace[0]).
+
+        local topDiv to _style:cor[0] + innerTopDiv + _style:cor[1].
+        local botDiv to _style:cor[2] + innerBotDiv + _style:cor[3].
+
+        local midDiv to  _style:div[2] + innerMidDiv + _style:div[3].
+        local midLine to _style:bdr[1] + innerMidStr + _style:bdr[3].
+        local midNull to _style:bdr[1] + innerMidStr + _style:bdr[3].
+
+        print topDiv at (xPos0, yPos0).
+        from { local __line to yPos0 + 1. } until __line = yPos1 step { set __line to __line + 1.} do
+        {
+            print midLine at (xPos0, __line).
+        }
+        print botDiv at (xPos0, yPos1).
+
+        // this returns the inner bounds for the box we just created
+        return list(xPos0 + padding, yPos0 + padding, xPos1 - (padding + 1), xPos1 - (padding + 1)).
+    }
+
+
+    // disp_box_multicol
+    local function disp_box_multicol
     {
         parameter _numCols is 1,
                   _strDat is list().

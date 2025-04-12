@@ -9,11 +9,11 @@
 // #region
     // *- Common Values
     // #region
-    global rVal to 0.
-    global sVal to Ship:Facing.
-    global tVal to 0.
+    global RVal to 0.
+    global SVal to Ship:Facing.
+    global TVal to 0.
 
-    global g_StgLim to 0.
+    global StageStop to 0.
     // #endregion
 
     // *- Delegates

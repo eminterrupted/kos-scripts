@@ -1,4 +1,4 @@
-print "boot: {0}":Format(scriptPath()).
+print "boot: {0}":Format(ScriptPath()).
 print "POST: ok".
-wait until ship:unpacked and homeConnection:IsConnected().
-runPath("0:/main/mce/mc2").
+wait until Ship:Unpacked and HomeConnection:IsConnected().
+runPath("0:/_main/mce/mc2").

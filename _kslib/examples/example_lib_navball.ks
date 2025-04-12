@@ -1,7 +1,7 @@
 // Testing the lib_navball functions.
 // This file is distributed under the terms of the MIT license, (c) the KSLib team
 
-runpath("0:/kslib/lib_navball").
+runpath("0:/_kslib/lib_navball").
 
 clearscreen.
 

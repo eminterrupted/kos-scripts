@@ -1,7 +1,7 @@
 @lazyGlobal off.
 clearScreen.
 
-runOncePath("0:/lib/term").
+runOncePath("0:/_lib/term").
 
 parameter inObj,
           tip is "".
@@ -9,7 +9,7 @@ parameter inObj,
 local g_Line to 0.
 local g_col to 0.
 
-if inObj:TypeName = "List_value`1" or inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
+if inObj:TypeName = "List_value`1" or inObj:TypeName = "LisTValue`1" or inObj:TypeName = "List"
 {
     if inObj[0]:typename = "string"
     {

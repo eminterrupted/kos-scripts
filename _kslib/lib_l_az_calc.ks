@@ -5,7 +5,7 @@
 //~~Created by space-is-hard~~
 //~~Updated by TDW89~~
 //~~Auto north/south switch by undercoveryankee~~
-// #include "0:/lib/depLoader.ks"
+// #include "0:/_lib/depLoader.ks"
 //To use: RUN LAZcalc.ks. SET data TO l_az_calc_init([desired circular orbit altitude in meters],[desired orbital inclination; negative if launching from descending node, positive otherwise]). Then loop SET myAzimuth TO LAZcalc(data).
 
 @lazyGlobal off.

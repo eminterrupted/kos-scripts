@@ -4,45 +4,56 @@ ClearScreen.
 parameter _params is list().
 
 // Dependencies
-runOncePath("0:/kslib/lib_loader").
-runOncePath("0:/kslib/lib_l_az_calc").
+runOncePath("0:/_kslib/lib_loader").
+runOncePath("0:/_kslib/lib_l_az_calc").
 
-runOncePath("0:/lib/control").
-runOncePath("0:/lib/module").
-runOncePath("0:/lib/term").
-runOncePath("0:/lib/engine").
-runOncePath("0:/lib/vlc").
+runOncePath("0:/_lib/control").
+runOncePath("0:/_lib/module").
+runOncePath("0:/_lib/util").
+runOncePath("0:/_lib/term").
+runOncePath("0:/_lib/engine").
+runOncePath("0:/_lib/vlc").
 
 // Setup terminal display
 init_term(true, true, true).
 
 // Declare Variables
-local compit to compass_and_pitch_for(Ship, Ship:Facing).
-local launchAng to compit[1].
-local launchHdg to compit[0].
-local launchTS to 5.
-local stageLimit to 0.
-local transAltSpd to 32.5.
-local transAltWindow  to 2781.
-
-local transEndPitch is 79.25.
+local compit         to compass_and_pitch_for(Ship, Ship:Facing).
+local launchAng      to compit[1].
+local launchHdg      to compit[0].
+local launchTS       to 5.
+local stageLimit     to 0.
+local transAltWindow to 2781.
+local transEndPitch  to 77.725.
 
 // Parse Params
 if _params:length > 0 
 {
-  set stageLimit to _params[0].
-  if _params:Length > 1 set launchHdg  to _params[1].
-  if _params:Length > 2 set launchAng  to _params[2].
-  if _params:Length > 3 set transAltWindow  to _params[3].
-  if _params:Length > 4 set transAltSpd to _params[4].
+    //set stageLimit to expand_string_scalar(_params[0]).
+    if _params[0]:IsType("List")
+    {
+        set stageLimit to _params[0][0].
+    }
+    else if _params[0]:IsType("String")
+    {
+        set stageLimit to expand_string_scalar(_params[0]).
+    }
+    else
+    {
+        set stageLimit to _params[0].
+    }
+    if _params:Length > 1 set launchHdg to expand_string_scalar(_params[1], launchHdg).
+    if _params:Length > 2 set launchAng to expand_string_scalar(_params[2], launchAng).
+    if _params:Length > 3 set transAltWindow to expand_string_scalar(_params[3], transAltWindow).
 }
 
 // Setup initial control environment
 out_msg("Initial Control Setup").
 local steerDel to { return Ship:Facing.}.
-set sVal to steerDel:Call().
-set tVal to 0.
+set SVal to steerDel:Call().
+set TVal to 0.
 set rVal to 0.
+set steerDel to { parameter _pit. return Heading(launchHdg, _pit, rVal).}.
 
 // Setup countdown
 out_msg("Setting up countdown").
@@ -52,7 +63,7 @@ local padStage to cdSeqObj:PadStage.
 
 // Confirm launch go
 out_msg("Confirming countdown go").
-out_debug("stageLimit: {0}":Format(stageLimit)).
+
 // Hold
 terminal_countdown_hold(cdSeqObj).
 
@@ -61,8 +72,8 @@ set cdSeqObj to cdSeqObj:SetLaunchTS:Call(cdSeqObj, Time:Seconds).
 set launchTS to cdSeqObj:LaunchTS.
 
 // Transition to internal guidance
-lock steering to sVal.
-lock throttle to tVal.
+lock steering to SVal.
+lock throttle to TVal.
 
 // Term count reached, evaluate the launch thrust state to ensure we have enough for liftoff
 local termCountComplete to exec_term_countdown(cdSeqObj).
@@ -80,7 +91,7 @@ if termCountComplete
 }
 else
 {
-    set tVal to 0.
+    set TVal to 0.
     out_msg("ERR: Idk how we ended up here. Weird").
     out_msg(" ", 1).
     out_info(" ").
@@ -98,24 +109,26 @@ local altThresh to 0.
 set altThresh to launch_clear_tower().
 
 // Initial pitch over
-set steerDel to { parameter _pit. return Heading(launchHdg, _pit, rVal).}.
 
 local curPitch to pitch_for(Ship, Ship:Facing).
 set transEndPitch to Round(min(curPitch, max(transEndPitch, pitch_for(Ship, Ship:srfPrograde) - 15)), 2).
-set altThresh to launch_pitch_program(transEndPitch, transAltWindow, altThresh, curPitch, 0.625, steerDel@).
+local pitDeltaMax to 0.625.
+
+set altThresh to launch_pitch_program(stageLimit, steerDel@, transEndPitch, transAltWindow, pitDeltaMax, altThresh, curPitch).
 //set altThresh to launch_pitch_program(transEndPitch, transAltWindow, altThresh, steerDel@).
 
 // Lock to SrfPrograde for gravity turn until we reach 50km or 1750m/s
-set altThresh to launch_gravity_turn(steerDel, "srf", 12.5, 50000, 1750).
+set altThresh to launch_gravity_turn(stageLimit, steerDel@, "srf", 12.5, 50000, 1750).
 
 // Transition pitch to orbit prograde
 set curPitch to pitch_for(Ship, Ship:Facing).
 local obtProPit to pitch_for(Ship, Ship:Prograde).
-set altThresh to launch_pitch_program(obtProPit, 2000 * Round(curPitch - obtProPit), altThresh, curPitch, 0.425, steerDel@).
+set pitDeltaMax to 0.75.
 rcs on.
+set altThresh to launch_pitch_program(stageLimit, steerDel@, obtProPit, 2000 * Round(curPitch - obtProPit), pitDeltaMax, altThresh, curPitch).
 
 // Lock to ObtPrograde for gravity turn, max pitch to +3.25 degrees
-set altThresh to launch_gravity_turn(steerDel, "obt", 3.25).
+set altThresh to launch_gravity_turn(stageLimit, steerDel@, "obt", 3.25).
 
 out_msg("downrangerLaunch complete").
 out_msg("", 1).

@@ -1,2 +1,2 @@
 wait until ship:unpacked and homeConnection:IsConnected().
-runPath("0:/main/mce/mce").
+runPath("0:/_main/mce/mce").

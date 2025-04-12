@@ -26,14 +26,14 @@
 	],
 	"description": "New Global Function Template"
 	},
-    "[AEA/AquaNova25] New Library Template": {
+    "AEA/AquaNova25 Library Template": {
     "prefix": "NewLib",
     "body": [
         "@LazyGlobal off.",
         "",
         "// *~ Dependencies ~* //",
         "// #region",
-        "",
+        "RunOncePath(\"0:/lib/type_loader.ks\").",
         "// #endregion",
         "",
         "// *~ Variables ~* //",
@@ -61,27 +61,14 @@
         "    // *- Function Group",
         "    // #region",
         "",
-        "    // :: Global",
-        "    // #region",
-        "    ",
-        "    // FunctionName :: (input params)<type> -> (output params)<type>",
+        "    // FunctionName :: (_inputParam)<type> -> (outputValue)<type>",
         "    // Description",
-        "    ",
-        "    // #endregion",
-        "",
-        "    // :: Local",
-        "    // #region",
-        "    ",
-        "    // FunctionName :: (input params)<type> -> (output params)<type>",
-        "    // Description",
-        "    ",
-        "    // #endregion",
         "    ",
         "    // #endregion",
         "",
         "// #endregion"
     ],
-    "description": "[AEA/AquaNova25] New Library Template"
+    "description": "AEA/AquaNova25 Library Template"
     },
 	"NewLibrary": {
 		"prefix": "NewLib__Old",

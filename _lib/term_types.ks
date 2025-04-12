@@ -1,0 +1,647 @@
+@LazyGlobal off.
+
+// Contains types used by the term lib and builds a "class"
+// Methods are added to each class after definition
+
+// Types
+// #region
+global CharCodes to lexicon(
+    "Methods", lex(),
+    // #region
+    "Chars", lex(
+        // Mask: Hex encoded bytes
+        // [vTopDiv:Show|vTopDiv:Bold][vBotDiv:Show|vBotDiv:Bold] [hLeftDiv:Show|hLeftDiv:Bold][hRightDiv:Show|hRightDiv:Bold]
+        // #region
+        "Types", lex(
+            "Border", lex(
+                "Normal", lex(
+                    // horizontal line
+                    // #region
+                    "Hex", lex(
+                        "0F", 9473, // ━ | 0000 1111
+                        "0E", 9598, // ╾ | 0000 1110
+                        "0C", 9592, // ╸ | 0000 1100
+                        "0B", 9596, // ╼ | 0000 1011
+                        "0A", 9472, // ─ | 0000 1010
+                        "08", 9588, // ╴ | 0000 1000
+                        "03", 9594, // ╺ | 0000 0011
+                        "02", 9590  // ╶ | 0000 0010
+                    ),
+                    "Mask", lex(),
+                    // #endregion
+
+                    // vertical line
+                    // #region
+                    "Hex", lex(
+                        "F0", 9475, // ┃ | 1111 0000
+                        "E0", 9599, // ╿ | 1110 0000
+                        "C0", 9593, // ╹ | 1100 0000
+                        "B0", 9597, // ╽ | 1011 0000
+                        "A0", 9474, // │ | 1010 0000
+                        "80", 9593, // ╵ | 1000 0000
+                        "30", 9595, // ╻ | 0011 0000
+                        "20", 9591  // ╷ | 0010 0000
+                    ),
+                    "Mask", lex(),
+                    // #endregion
+
+                    // 4-Way Intersections
+                    // #region
+                    "Hex", lex(
+                        "FF", 9547, // ╋ | 1111 1111
+                        "FE", 9534, // ╉ | 1111 1110
+                        "FB", 9546, // ╊ | 1111 1011
+                        "FA", 9538, // ╂ | 1111 1010
+                        "EF", 9545, // ╇ | 1110 1111
+                        "EE", 9539, // ╃ | 1110 1110
+                        "EB", 9540, // ╄ | 1110 1011
+                        "EA", 9536, // ╀ | 1110 1010
+
+                        "BF", 9544, // ╈ | 1011 1111
+                        "BE", 9541, // ╅ | 1011 1110
+                        "BB", 9542, // ╆ | 1011 1011
+                        "AF", 9535, // ┿ | 1010 1111
+                        "AE", 9533, // ┽ | 1010 1110
+                        "AB", 9534, // ┾ | 1010 1011
+                        "AA", 9532  // ┼ | 1010 1010
+                    ),
+                    "Mask", lex(),
+                    // #endregion
+
+                    // 3-Way Vertical Intersections
+                    // #region
+                    "Hex", lex(
+                        "CF", 9531, // ┻ | 1100 1111
+                        "CE", 9529, // ┹ | 1100 1110
+                        "CB", 9530, // ┺ | 1100 1011
+                        "CA", 9528, // ┸ | 1100 1010
+
+                        "8F", 9512, // ┷ | 1000 1111
+                        "8E", 9525, // ┵ | 1000 1110
+                        "8B", 9526, // ┶ | 1000 1011
+                        "8A", 9524, // ┴ | 1000 1010
+
+                        "3F", 9523, // ┳ | 0011 1111
+                        "3E", 9521, // ┱ | 0011 1110
+                        "3B", 9522, // ┲ | 0011 1011
+                        "3A", 9520, // ┰ | 0011 1010
+
+                        "2F", 9519, // ┯ | 0010 1111
+                        "2E", 9517, // ┭ | 0010 1110
+                        "2B", 9518, // ┮ | 0010 1011
+                        "2A", 9516  // ┬ | 0010 1010
+                    ),
+                    "Mask", lex(),
+                    // #endregion
+
+                    // 3-Way Horizontal Intersections
+                    // #region
+                    "Hex", lex(
+                        "FC", 9515, // ┫ | 1111 1100
+                        "F8", 9512, // ┨ | 1111 1000
+                        "F3", 9512, // ┣ | 1111 0011
+                        "F2", 9504, // ┠ | 1111 0010
+
+                        "EC", 9513, // ┩ | 1110 1100
+                        "E8", 9510, // ┦ | 1110 1000
+                        "E3", 9505, // ┡ | 1110 0011
+                        "E2", 9502, // ┞ | 1110 0010
+
+                        "BC", 9514, // ┪ | 1011 1100
+                        "B8", 9511, // ┧ | 1011 1000
+                        "B3", 9506, // ┢ | 1011 0011
+                        "B2", 9503, // ┟ | 1011 0010
+
+                        "AC", 9509, // ┥ | 1010 1100
+                        "A8", 9508, // ┤ | 1010 1000
+                        "A3", 9501, // ┝ | 1010 0011
+                        "A2", 9500  // ├ | 1010 0010
+                    ),
+                    "Mask", lex(),
+                    // #endregion
+
+                    // Corners
+                    // #region
+                    "Hex", lex(
+                        "CC", 9499, // ┛ | 1100 1100
+                        "C3", 9495, // ┗ | 1100 0011
+                        "3C", 9491, // ┓ | 0011 1100
+                        "33", 9487, // ┏ | 0011 0011
+
+                        "C8", 9498, // ┚ | 1100 1000
+                        "C2", 9494, // ┖ | 1100 0010
+                        "38", 9490, // ┒ | 0011 1000
+                        "32", 9486, // ┎ | 0011 0010
+
+                        "8C", 9497, // ┙ | 1000 1100
+                        "83", 9493, // ┕ | 1000 0011
+                        "2C", 9489, // ┑ | 0010 1100
+                        "23", 9485, // ┍ | 0010 0011
+
+                        "88", 9496, // ┘ | 1000 1000
+                        "82", 9492, // └ | 1000 0010
+                        "28", 9488, // ┐ | 0010 1000
+                        "22", 9484  // ┌ | 0010 0010
+                    ),
+                    "Mask", lex()
+                    // #endregion
+                ),
+                "Round", lex(
+                    // Rounded corners
+                    // #region
+                    "Hex", lex(
+                        "88", 9583, // ╯ | 1000 1000
+                        "82", 9584, // ╰ | 1000 0010
+                        "28", 9583, // ╮ | 0010 1000
+                        "22", 9584  // ╭ | 0010 0010
+                    ),
+                    "Mask", lex()
+                    // #endregion
+                ),
+                "Angle", lex(
+                    // Angle
+                    // #region
+                    "Hex", lex(
+                        "AA", 9587, // ╳ | 1010 1010
+                        "A2", 9586, // ╲ | 1010 0010
+                        "2A", 9585  // ╱ | 0010 1010
+                    ),
+                    "Mask", lex()
+                    // #endregion
+                ),
+                "Double", lex(
+                    // Double
+                    // #region
+                    "Hex", lex(
+                        "0F", 9552, // ═ | 0000 1111
+                        "F0", 9553, // ║ | 1111 0000
+
+                        "CC", 9565, // ╝ | 1100 1100
+                        "C3", 9562, // ╚ | 1100 0011
+                        "3C", 9559, // ╗ | 0011 1100
+                        "33", 9556, // ╔ | 0011 0011
+
+                        "F3", 9568, // ╠ | 1111 0011
+                        "FC", 9571, // ╣ | 1111 1100
+                        "3F", 9574, // ╦ | 0011 1111
+                        "CF", 9577, // ╩ | 1100 1111
+
+                        "C8", 9564, // ╜ | 1100 1000
+                        "C2", 9561, // ╙ | 1100 0010
+                        "38", 9558, // ╖ | 0011 1000
+                        "32", 9555, // ╓ | 0011 0010
+
+                        "8C", 9563, // ╛ | 1000 1100
+                        "83", 9560, // ╘ | 1000 0011
+                        "2C", 9557, // ╕ | 0010 1100
+                        "23", 9554, // ╒ | 0010 0011
+
+                        "A3", 9566, // ╞ | 1010 0011
+                        "AC", 9569, // ╡ | 1010 1100
+                        "2F", 9572, // ╤ | 0010 1111
+                        "8F", 9575, // ╧ | 1000 1111
+
+                        "F2", 9567, // ╟ | 1111 0010
+                        "F8", 9570, // ╢ | 1111 1000
+                        "3A", 9573, // ╥ | 0011 1010
+                        "CA", 9576, // ╨ | 1100 1010
+
+                        "AF", 9578, // ╪ | 1010 1111
+                        "FA", 9579, // ╫ | 1111 1010
+                        "FF", 9580  // ╬ | 1111 1111
+                    ),
+                    "Mask", lex()
+                    // #endregion
+                )
+            ),
+            "Glyph", lex(
+            // #region
+                "Rect", lex(
+                // #region
+                    "Part", lex(
+                    // #region
+                        "Vert", lex(
+                            "Hex", lex(
+                                "F0", 9600, // ▀ | 1111 0000 
+                                "80", 9620, // ▔ | 1000 0000 
+                                "02", 9601, // ▁ | 0000 0010 
+                                "03", 9602, // ▂ | 0000 0011 
+                                "07", 9603, // ▃ | 0000 0111 
+                                "0F", 9604, // ▄ | 0000 1111 
+                                "1F", 9605, // ▅ | 0001 1111 
+                                "3F", 9606, // ▆ | 0011 1111 
+                                "7F", 9607, // ▇ | 0111 1111 
+                                "FF", 9608  // █ | 1111 1111
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Horz", lex(
+                            "Hex", lex(
+                                "FF", 9608, // █ | 1111 1111 
+                                "FE", 9609, // ▉ | 1111 1110 
+                                "FC", 9610, // ▊ | 1111 1100 
+                                "F8", 9611, // ▋ | 1111 1000 
+                                "F0", 9612, // ▌ | 1111 0000 
+                                "E0", 9613, // ▍ | 1110 0000 
+                                "C0", 9614, // ▎ | 1100 0000 
+                                "80", 9615, // ▏ | 1000 0000 
+                                "03", 9616, // ▐ | 0000 0011 
+                                "02", 9621  // ▕ | 0000 0010
+                            ),
+                            "Mask", lex()
+                        ),
+                        "BMap", lex(
+                            "Hex", lex(
+                                "0C", 9622, // ▖ | 0000 1100 
+                                "03", 9623, // ▗ | 0000 0011 
+                                "C0", 9624, // ▘ | 1100 0000 
+                                "CF", 9625, // ▙ | 1100 1111 
+                                "C3", 9626, // ▚ | 1100 0011 
+                                "FC", 9627, // ▛ | 1111 1100 
+                                "F3", 9628, // ▜ | 1111 0011 
+                                "30", 9629, // ▝ | 0011 0000 
+                                "3C", 9630, // ▞ | 0011 1100 
+                                "3F", 9631  // ▟ | 0011 1111
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Circ", lex(
+                            "Hex", lex(
+                                "CB", 9690, // ◚ | 1100 1011 
+                                "3B", 9691  // ◛ | 0011 1011
+                            ),
+                            "Mask", lex()
+                        )
+                    ),
+                    // #endregion
+                    "Full", lex(
+                    // #region
+                        "Sqr1", lex(
+                            "Hex", lex(
+                                "0F", 9632, // ■ | 0000 1111 
+                                "00", 9633, // □ | 0000 0000 
+                                "09", 9635, // ▣ | 0000 1001 
+                                "10", 9634, // ▢ | 0001 0000 
+                                "29", 9636, // ▤ | 0010 1001 
+                                "2A", 9637, // ▥ | 0010 1010 
+                                "2B", 9638, // ▦ | 0010 1011 
+                                "2E", 9639, // ▧ | 0010 1110 
+                                "29", 9640, // ▨ | 0010 1001 
+                                "2F", 9641  // ▩ | 0010 1111 
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Rect", lex(
+                            "Hex", lex(
+                                "8F", 9644, // ▬ | 1000 1111 
+                                "80", 9645, // ▭ | 1000 0000 
+                                "CF", 9646, // ▮ | 1100 1111 
+                                "C0", 9647, // ▯ | 1100 0000 
+                                "AF", 9648, // ▰ | 1010 1111 
+                                "A0", 9649  // ▱ | 1010 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Sqr0", lex(
+                            "Hex", lex(
+                                "1F", 9642, // ▪ | 0001 1111 
+                                "10", 9643  // ▫ | 0001 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        "QtrD", lex(
+                            "Hex", lex(
+                                "48", 9712, // ◰ | 0100 1000 
+                                "44", 9713, // ◱ | 0100 0100 
+                                "42", 9714, // ◲ | 0100 0010 
+                                "41", 9715, // ◳ | 0100 0001 
+                                "5C", 9703, // ◧ | 0101 1100 
+                                "53", 9704, // ◨ | 0101 0011 
+                                "5C", 9705, // ◩ | 0101 1100 
+                                "53", 9706, // ◪ | 0101 0011 
+                                "59", 9707  // ◫ | 0101 1001 
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Circ", lex(
+                            "Hex", lex(
+                                "EC", 9688, // ◘ | 1110 1100 
+                                "DB", 9689  // ◙ | 1101 1011 
+                            ),
+                            "Mask", lex()
+                        )
+                    )
+                    // #endregion
+                ),
+                // #endregion
+                "Diam", lex(
+                // #region
+                    "Full", lex(
+                        "Rect", lex(
+                            "Hex", lex(
+                                "F0", 9674  // ◊ | 1111 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Sqr0", lex(
+                            "Hex", lex(
+                                "E0", 9671, // ◇ | 1110 0000 
+                                "E9", 9670, // ◆ | 1110 1001 
+                                "EA", 9672  // ◈ | 1110 1010 
+                            ),
+                            "Mask", lex()
+                        )
+                    )
+                ),
+                // #endregion
+                "Tri", lex(
+                // #region
+                    // Mask def: [(11:Top(Direction)00(DirVariation)] [(0:Fill)(000:FillVariation)]
+                    "Part", lex(),
+                    "Full", lex(
+                    // #region
+                        "Up", lex(
+                        // #region
+                            "Hex", lex(
+                                "CF", 9650, // ▲ | 1100 1111 
+                                "C0", 9651, // △ | 1100 0000 
+                                "CA", 9708, // ◬ | 1100 1010 
+                                "CE", 9709, // ◭ | 1100 1110 
+                                "CD", 9710, // ◮ | 1100 1101 
+                                "DF", 9652, // ▴ | 1101 1111 
+                                "D0", 9653  // ▵ | 1101 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "Down", lex(
+                        // #region
+                            "Hex", lex(
+                                "09", 9660, // ▼ | 0000 1001 
+                                "00", 9661, // ▽ | 0000 0000 
+                                "19", 9662, // ▾ | 0001 1001 
+                                "10", 9663  // ▿ | 0001 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "Right", lex(
+                        // #region    
+                            "Hex", lex(
+                                "49", 9654, // ▶ | 0100 1001 
+                                "40", 9655, // ▷ | 0100 0000 
+                                "59", 9656, // ▸ | 0101 1001 
+                                "50", 9657, // ▹ | 0101 0000 
+                                "69", 9658, // ► | 0110 1001 
+                                "60", 9659  // ▻ | 0110 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "Left", lex(
+                        // #region
+                            "Hex", lex(
+                                "89", 9664, // ◀ | 1000 1001 
+                                "80", 9665, // ◁ | 1000 0000 
+                                "99", 9666, // ◂ | 1001 1001 
+                                "90", 9667, // ◃ | 1001 0000 
+                                "A9", 9668, // ◄ | 1010 1001 
+                                "A0", 9669  // ◅ | 1010 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "RAngle", lex(
+                        // #region
+                            "Hex", lex(
+                                "62", 9720, // ◸ | 0110 0010 
+                                "E2", 9721, // ◹ | 1110 0010 
+                                "A2", 9722, // ◺ | 1010 0010 
+                                "22", 9727  // ◿ | 0010 0010 
+                            ),
+                            "Mask", lex()
+                        )
+                        // #endregion
+                    )
+                    // #endregion
+                ),
+                // #endregion
+
+                // Mask [0]
+                "Circ", lex(
+                // #region
+                    "Part", lex(
+                        "Half", lex(
+                            "9C", 9686, // ◖ | 1001 1100 
+                            "93", 9687  // ◗ | 1001 0011 
+                        )
+                    ),
+                    "Full", lex(
+                        "Circ", lex(
+                        // #region
+                            "Hex", lex(
+                                "C0", 9711, // ◯ | 1100 0000 
+                                "80", 9675, // ○ | 1000 0000 
+                                "A0", 9676  // ◌ | 1010 0000 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "Conc", lex(
+                        // #region
+                            "Hex", lex(
+                                "D4", 9678, // ◎ | 1101 0100 
+                                "8D", 9673  // ◉ | 1000 1101 
+                            ),
+                            "Mask", lex()
+                        ),
+                        // #endregion
+                        "Pie", lex(
+                        // #region
+                            "Hex", lex(
+                                "E8", 9716, // ◴ | 1110 1000 
+                                "E4", 9717, // ◵ | 1110 0100 
+                                "E2", 9718, // ◶ | 1110 0010 
+                                "E1", 9719, // ◷ | 1110 0001 
+                                "84", 9684, // ◔ | 1000 0100 
+                                "83", 9681, // ◑ | 1000 0011 
+                                "8C", 9680, // ◐ | 1000 1100 
+                                "86", 9682, // ◒ | 1000 0110 
+                                "89", 9683, // ◓ | 1000 1001 
+                                "87", 9685, // ◕ | 1000 0111 
+                                "8F", 9679  // ● | 1000 1111
+                            ),
+                            "Mask", lex()
+                        ),
+                        "Lined", lex(
+                            "Hex", lex(
+                                "8A", 9677 // ◍ | 1000 1010 
+                            ),
+                            "Mask", lex()
+                        )
+                    )                    
+                ),
+                // #endregion
+
+                "Grad", lex(
+                // #region
+                    "Rect", lex(
+                        "PFill", lex(
+                            "Hex", lex(
+                                "88", 9617, // ░ | 1000 1000 
+                                "AA", 9618, // ▒ | 1010 1010 
+                                "FF", 9619  // ▓ | 1111 1111 
+                            ),
+                            "Mask", lex()
+                        )
+                    )
+                )
+                // #endregion
+            )
+        // #endregion
+        )
+    )
+    // #endregion
+).
+
+// Contains Style objects with pointers to characters needed for that style
+global Styles to lexicon(
+    "Border", lex(
+        "Bold", lex(
+            "bdr", lex("Normal", list("0F", "F0", "0F", "F0")),
+            "cor", lex("Normal", list("CC", "C3", "3C", "33")),
+            "div", lex("Normal", list("3F", "CF", "FC", "F3", "FF")),
+            "spc", lex()
+        ),
+        "Double", lex(
+            "bdr", lex("Double", list("0F", "F0", "0F", "F0")),
+            "cor", lex("Double", list("CC", "C3", "3C", "33")),
+            "div", lex("Double", list("3F", "CF", "FC", "F3", "FF")),
+            "spc", lex()
+        ),
+        "Normal", lex(
+            "bdr", lex("Normal", list("50", "A0", "50", "A0")),
+            "cor", lex("Normal", list("88", "82", "28", "22")),
+            "div", lex("Normal", list("2A", "8A", "A8", "A2", "AA")),
+            "spc", lex("Normal", list("A2", "2A", "AA"))
+        ),
+        "Round", lex(
+            "bdr", lex("Normal", list("50", "A0", "50", "A0")),
+            "cor", lex("Round",  list("88", "82", "28", "22")),
+            "div", lex("Normal", list("2A", "8A", "A8", "A2", "AA")),
+            "spc", lex("Normal", list("A2", "2A", "AA"))
+        )
+    ),
+    "Glyph", lex(
+        "Rect", lex(
+            "Part", lex(
+                "ver", list("F0", "80", "02", "03", "31", "0F", "1F", "3F", "7F", "FF"),
+                "hor", list("FF", "FE", "FC", "F8", "F0", "E0", "C0", "80", "03", "02"),
+                "bmp", list("0C", "03", "C0", "CF", "C3", "FC", "F3", "30", "3C", "3F")
+            ),
+            "Full", lex(
+                "nrm", list("0F", "00", "41", "80", "29", "2A", "2B", "2E", "29", "2F"),
+                "hlf", list("8F", "80", "CF", "C0", "AF", "A0"),
+                "qtr", list("1F", "80"),
+                "qsq", list("48", "44", "42", "41", "5C", "53", "5C", "53", "59"),
+                "crc", list("EC", "DB", "CB", "3B")
+            )
+        ),
+        "Diam", lex(
+            "Full", lex(
+                "dmd", list("E9", "E0", "EA", "F0")
+            )
+        ),
+        "Tri",  lex(
+            "Normal", lex(
+                "up",  list("CF", "C0", "CA", "CE", "CD", "DF", "D0"),
+                "dwn", list("41", "00", "19", "80"),
+                "lft", list("89", "80", "99", "90", "A9", "A0"),
+                "rgt", list("49", "40", "59", "50", "69", "60"),
+                "spc", list("62", "E2", "A2", "22")
+            )
+        ),
+        "Circ", lex(
+            "Normal", lex(
+                "crc", list("C0", "80", "A0"),
+                "dtf", list("D4", "8D"),
+                "pio", list("E8", "E4", "E2", "E1"),
+                "pif", list("84", "83", "8C", "86", "89", "87", "8F"),
+                "spc", list("8A")
+            ),
+            "Part", lex(
+                "hlf", list("9C", "93")
+            )
+        ),
+        "Grad", lex(
+            "Rect", lex(
+                "box", list("88", "AA", "FF")
+            )
+        )
+    )
+).
+
+// Contains dims and styles pointers needed to build basic shapes
+global Shapes to lexicon(
+    "Box", lex(
+        "Base", lex(
+            "Closed", lex(
+                // "Pos", list(0, 0, Terminal:Width - 2, Terminal:Height - 4),  // Position: x0, y0, x1, y1 (the locations of the 4 corners)
+                "Style", "Normal",  // Name of style to get from __styles
+                "Rows", list(),     // Rows: list(rowDat)
+                "Cols", list()     // Cols: list(colDat)
+            ),
+            "Open", lex(
+                // "Pos", list(0, 0, Terminal:Width - 2, Terminal:Height - 4),  // Position: x0, y0, x1, y1 (the locations of the 4 corners)
+                "Style", "Normal",  // Name of style to get from __styles
+                "Rows", list(list()),     // Rows: list(rowDat)
+                "Cols", list(list())     // Cols: list(colDat)
+            )
+        ),
+        "Header", lex(
+            // "Pos", list(0, 1, Terminal:Width - 2, 12),
+            "Style", "Double",
+            "Rows", list(),
+            "Cols", list()
+        )
+    )
+).
+// #endregion
+
+// Methods
+
+// #region
+// Chars/Types/Border/Normal
+local function BitToHex {
+    parameter _byteMask.
+
+
+    local hexVal to "".
+    local trimmedMask to _byteMask:Replace(" ","").
+    if trimmedMask:Length = 4
+    {
+        
+    }
+    else if trimmedMask:Length = 8
+    {
+
+    }
+    else if trimmedMask:Length = 16
+    {
+
+    }
+    return hexVal.
+}
+
+local function BitToDec {}
+
+local function HexToDec {}
+
+
+local delHexChar  to { parameter _chCode, _chPath. return char(CharCodes).}.
+local delCodeChar to { parameter _chCode. return char(_chCode).}.
+local delBitChar  to { parameter _chCode. return char(_chCode).}.
+
+
+CharCodes.Methods.Add("HexToCharCode").
+// #endregion

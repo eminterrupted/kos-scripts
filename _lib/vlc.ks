@@ -4,9 +4,9 @@
 
 // *~ Dependencies ~* //
 // #region
-// #include "0:/lib/term.ks"
-// #include "0:/lib/engine.ks"
-// #include "0:/lib/control.ks"
+// #include "0:/_lib/term.ks"
+// #include "0:/_lib/engine.ks"
+// #include "0:/_lib/control.ks"
 // #endregion
 
 // *~ Variables ~* //
@@ -49,7 +49,7 @@
         until Ship:Altitude >= _clrAlt and Ship:VerticalSpeed > _clrSpd
         {
             out_msg("Mission Clock   : T {0}":Format(Round(MissionTime, 2)), 1).
-            if Stage:Number > g_StgLim
+            if Stage:Number > StageStop
             {
                 // local activeEngines to get_active_engines(Ship, "nosep").
                 if Ship:AvailableThrust < 0.01 
@@ -77,7 +77,6 @@
                 }
             }
         }
-
         return Ship:Altitude.
     }
 
@@ -85,12 +84,13 @@
     //
     global function launch_pitch_program
     {
-        parameter _tgtPitAng,
+        parameter _stgLim,
+                  _steerDel is "",
+                  _tgtPitAng is 0,
                   _transAltWindow is 2500,
                   _transStartAlt is Ship:Altitude,
-                  _transStartPitch is pitch_for(ship, Ship:Facing),
-                  _maxPitDeviation is 4.25,
-                  _steerDel is { parameter _pit. return Heading(compass_for(Ship, Ship:Facing), _pit, 0). }.
+                  _transStartPitch is pitch_for(Ship, Ship:Facing),
+                  _maxPitDeviation is 4.25.
 
         local curAlt to 0.
         local nrmAlt to 0.
@@ -99,6 +99,12 @@
         local outPit to 0.
         local tgtPit to 0.
         
+        if _steerDel:IsType("String")
+        {
+            set _steerDel to { parameter _pit. return Heading(compass_for(Ship, Ship:Facing), _pit, 0).}.
+            out_debug("_steerDel Type: {0}":Format(_steerDel:TypeName)).
+        }
+
         local transEndAlt to _transStartAlt + _transAltWindow.
 
         local curPit     to _transStartPitch.
@@ -119,11 +125,10 @@
             
             out_info("Pitch program: [Actual:{0,5}] [Cur:{1,5}] [Tgt: {2,5}] [{3,5}%]":Format(curPit, outPit, Round(_tgtPitAng, 2), Round(pitErr * 100, 2))).
 
-            set sVal to _steerDel:Call(tgtPit).
+            set SVal to _steerDel:Call(tgtPit).
 
-            if Stage:Number > g_StgLim
+            if Stage:Number > _stgLim
             {
-                // local activeEngines to get_active_engines(Ship, "nosep").
                 if Ship:AvailableThrust < 0.01 
                 {
                     wait until Stage:Ready.
@@ -148,13 +153,13 @@
                 }
             }
         }
-
         return Ship:Altitude.
     }
 
     global function launch_gravity_turn
     {
-        parameter _steerDel is { parameter _pit is pitch_for(ship, ship:srfPrograde). return Heading(compass_for(Ship, Ship:Facing), _pit, 0).},
+        parameter _stgLim,
+                  _steerDel is { parameter _pit is pitch_for(ship, Ship:SrfPrograde). return Heading(compass_for(Ship, Ship:Facing), _pit, 0).},
                   _proToUse is "auto", // "srf|surface", "obt|orbit"
                   _minPit is 1.25,
                   _endAlt is 0,
@@ -164,7 +169,7 @@
         local obtProPit to 0.
         local outPit    to 0.
         local srfProPit to 0.
-        local pitDelta to 0.0125.
+        local pitDelta  to 0.01325.
 
         local doneArmed to _endAlt > 0.
         local doneFlag  to false.
@@ -182,7 +187,6 @@
             local srfProDelta to Abs(curPit - srfProPit).
             local obtProDelta to Abs(curPit - obtProPit).
 
-            //if abs(curPit - srfProPit) < abs(curPit - obtProPit)
             if _proToUse:MatchesPattern("(obt|orbit)")
             {
                 set outPit to max(_minPit, min(curPit, max(obtProPit, curPit - pitDelta))).
@@ -202,9 +206,9 @@
                     set outPit to max(_minPit, min(curPit, max(obtProPit, curPit - pitDelta))).
                 }
             }
-            set sVal to _steerDel:Call(outPit).
+            set SVal to _steerDel:Call(outPit).
 
-            if Stage:Number > g_StgLim
+            if Stage:Number > _stgLim
             {
                 // local activeEngines to get_active_engines(Ship, "nosep").
                 if Ship:AvailableThrust < 0.01 
@@ -233,7 +237,7 @@
                     out_info("",1).
                 }
             }
-            out_info("Alt: {0,-8} | SrfSpd: {1,-8} | ObtSpd: {2,-8}":Format(Round(Ship:Altitude), Round(Ship:Velocity:Surface:Mag, 2), Round(ship:Velocity:Orbit:Mag, 2)), 2).
+            out_info("Alt: {0,-8} | SrfSpd: {1,-8} | ObtSpd: {2,-8}":Format(Round(Ship:Altitude), Round(Ship:Velocity:Surface:Mag, 2), Round(Ship:Velocity:Orbit:Mag, 2)), 2).
 
             if doneArmed
             {
@@ -365,7 +369,7 @@
             out_info("Ignition sequence start").
 
             // out_debug("termcountlex:keys: {0}":Format(_cdSeqObj:TermCountLex:Keys:Join(";"))).
-            set tVal to 1.
+            set TVal to 1.
             set ignSeqStart to staged_engine_ignition(_cdSeqObj:TermCountLex[seqTime]:Stg).
             
             local thrPct to choose (Round(Ship:Thrust / Ship:AvailableThrust) * 100) if Ship:Thrust > 0 and Ship:AvailableThrust > 0 else 0.
@@ -428,7 +432,7 @@
     {
         parameter _minThrPct is 0.9875.
 
-        local thrErr to choose round(ship:thrust / ship:AvailableThrust, 4) if ship:Thrust > 0 else 0.
+        local thrErr to choose round(Ship:thrust / Ship:AvailableThrust, 4) if Ship:Thrust > 0 else 0.
         local launchCommitGo to thrErr >=_minThrPct.
         
         out_info("Launch Commit: {0} ":Format(launchCommitGo)).
@@ -448,7 +452,7 @@
         until Stage:Number = _padStg
         {
             out_info("Launch Commit: {0} ":Format(true)).
-            until stage:Ready
+            until Stage:Ready
             {
                 local launchDiff to choose Round(missionTime, 2) if _launchTS = 0 else Round(Time:Seconds - _launchTS, 2).
                 
@@ -474,10 +478,10 @@
     // Returns the stage number of the launch pad/clamps
     global function get_pad_stage
     {
-        parameter _startStg is stage:Number.
+        parameter _startStg is Stage:Number.
 
         local padStage to _startStg.
-        for m in ship:ModulesNamed("LaunchClamp")
+        for m in Ship:ModulesNamed("LaunchClamp")
         { 
             set padStage to min(padStage, m:Part:Stage).
         }

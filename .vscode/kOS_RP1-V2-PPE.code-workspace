@@ -12,7 +12,7 @@
 		"files.maxMemoryForLargeFilesMB": 8192,
 		"files.participants.timeout": 10000,
 		"editor.fontLigatures": "'ss02', 'ss19', 'ss20'",
-		"kos-vscode.completionCase": "camelcase",
+		"kos-vscode.completionCase": "pascalcase",
 		"kos-vscode.kerbalSpaceProgramPath": "E:/Gaming/KSP/Instances/KSP_RP1_V2",
         "kos-vscode.trace.server.verbosity": "off",
         "editor.codeActionsOnSave": {

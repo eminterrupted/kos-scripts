@@ -10,7 +10,7 @@
     // *- Common Values
     // #region
 
-    global tVal to 0.
+    global TVal to 0.
 
     // #endregion
 
@@ -232,8 +232,8 @@
     {
         parameter _stgTo is Stage:Number - 1.
 
-        set tVal to 1.
-        lock throttle to tVal.
+        set TVal to 1.
+        lock throttle to TVal.
         
         until Stage:Number <= _stgTo
         {

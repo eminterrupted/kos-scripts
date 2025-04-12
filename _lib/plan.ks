@@ -9,7 +9,7 @@
 // #region
     // *- Common Values
     // #region
-    global __coreTagRef to lexicon(
+    global CoreTagRef to lexicon(
         "regex", lex(
             "cat", lex(
                 "drgr",    "(downrange(r)?|dr)",
@@ -65,9 +65,13 @@
             {
                 set ptL2 to list().
                 local spltSet to ptL1[1]:Split(";").
-                for str in spltSet
+                if spltSet[0] = "cur"
                 {
-                    local convertedStr to str:ToNumber(-998).
+                    ptL2:add(Round(compass_for(Ship, Ship:Facing), 1)).
+                }
+                else
+                {
+                    local convertedStr to spltSet[0]:ToNumber(-998).
                     if convertedStr = -998
                     {
                         ptL2:Add(str).
@@ -76,6 +80,19 @@
                     {
                         ptL2:Add(convertedStr).
                     }
+                }
+                from { local _i to 0.} until _i = spltSet:Length step { set _i to _i + 1.} do
+                {
+                    local _str to spltSet[_i].
+                    if _i = 0
+                    {
+                        if _str = "cur"
+                        {
+                            set _str to Round(compass_for(Ship, Ship:Facing), 2).
+                        }
+                    }
+                    local convertedStr to choose _str:ToNumber(-999) if _str:HasSuffix("ToNumber") else _str.
+                    ptL2:Add(convertedStr).
                 }
                 set ptL0["Param"] to ptL2:Copy.
             }
