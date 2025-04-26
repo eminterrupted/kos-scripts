@@ -21,7 +21,6 @@
 // *** Library Setup Code *** //
 // This should rarely be used! //
 // #region
-RunOncePath("0:/type/inittypes.ks").
 
 // #endregion
 

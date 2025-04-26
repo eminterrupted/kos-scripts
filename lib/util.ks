@@ -2,7 +2,10 @@
 
 // *~ Dependencies ~* //
 // #region
-RunOncePath("0:/type/basetypes.ks").
+
+// #include "0:/env/types/_base.ks"
+// #include "0:/env/types/_string.ks"
+// #include "0:/env/types/_term.ks"
 
 // #endregion
 
@@ -63,7 +66,7 @@ RunOncePath("0:/type/basetypes.ks").
         parameter _hexStr,
                   _charPath.
 
-        
+        local selPage to CharCodes.
 
         if selectedCharSet:HasKey(_hexStr)
         {

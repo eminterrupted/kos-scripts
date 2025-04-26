@@ -1,12 +1,12 @@
-@LazyGlobal off.
+@lazyGlobal off.
 
 // *~ Dependencies ~* //
 // #region
 
 // #include "0:/lib/module.ks"
-RunOncePath("0:/type/basetypes.ks").
-RunOncePath("0:/type/stringtypes.ks").
-RunOncePath("0:/type/termtypes.ks").
+// #include "0:/env/types/base_types.ks"
+// #include "0:/env/types/string_types.ks"
+runOncePath("0:/env/types/term_types.ks").
 
 // #endregion
 
@@ -281,8 +281,38 @@ RunOncePath("0:/type/termtypes.ks").
         "style", hdgStyle
     ).
 
+    local uxDesignFiles to list().
 
-    local function BuildBoxStyle
+
+    // Loads string data from one or more design csv files into a frame buffer object, and returns that object
+    local function build_frame_ux {
+
+        parameter _inputFileList is list().
+
+        local frameBuffer to lexicon().
+        
+        local idx to 0.
+
+        for _file in _inputFileList {
+            if Exists(_file) {
+                local fileCon to Open(_file):ReadAll.
+                from { local _i to 0.} until _i = fileCon:Length step { set _i to _i + 1. set idx to idx + 1.} do {
+
+                }
+            }
+        }
+
+        return frameBuffer.
+    }
+
+
+    local function build_header
+    {
+        
+    }
+
+
+    local function build_style
     {
         parameter _styleDat.
 
@@ -300,7 +330,7 @@ RunOncePath("0:/type/termtypes.ks").
             {
                 local keyStyle to dat[0].
                 local selectedStyle to Styles:Line.
-                local selectedCharSet to CharCodes:Chars:Line.
+                local selectedCharSet to HexChar:Chars:Line.
 
                 if keyStyle:Contains("/")
                 {
@@ -336,7 +366,7 @@ RunOncePath("0:/type/termtypes.ks").
 
 
 
-    CharCodes.Methods.Add("HexToCharCode").
+    // CharCodes.Methods.Add("HexToCharCode").
     // #endregion
 
 

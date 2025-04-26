@@ -3,8 +3,8 @@
 // *~ Dependencies ~* //
 // #region
 
-RunOncePath("0:/type/basetypes.ks").
-RunOncePath("0:/type/stringtypes.ks").
+RunOncePath("0:/env/types/_init.ks").
+// #include "0:/env/types/string_types.ks"
 
 // #endregion
 
@@ -30,11 +30,25 @@ RunOncePath("0:/type/stringtypes.ks").
 // *~ Functions ~* //
 // #region
 
-    // *- Function Group
+    // *- String generation
     // #region
 
-    // FunctionName :: (input params)<type> -> (output params)<type>
-    // Description
+    // str_gen :: _inputString<String>, [_repeatCount<int>] -> outStr<String>
+    // Provided an input string, will return a string contain that repeated a specific number of times
+    global function str_gen {
+
+        parameter _inputString,
+                  _repeatCount is 1.
+
+        local outStr to "".
+        from { local i to 0.} until i = _repeatCount step { set i to i + 1.} do {
+
+            set outStr to outStr + _inputString.
+
+        }
+        return outStr.
+
+    }
     
     // #endregion
 
