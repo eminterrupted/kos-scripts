@@ -25,7 +25,10 @@ if _params:length > 0 {
 }
 
 for _file in _inputFiles {
+    
     if Exists(_file) {
+        
+        // Is it a dfg or csv file?
         
         local inFile to Open(_inputFile).
         local inContent to inFile:ReadAll().

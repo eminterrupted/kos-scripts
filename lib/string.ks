@@ -30,6 +30,18 @@ RunOncePath("0:/env/types/_init.ks").
 // *~ Functions ~* //
 // #region
 
+    // *- String parsing
+    // #region
+
+    // parse_string_scalar
+    global function parse_string_scalar {
+
+        
+
+    }
+
+    // #endregion
+
     // *- String generation
     // #region
 

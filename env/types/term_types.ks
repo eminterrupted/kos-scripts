@@ -249,3 +249,113 @@ global UniFonts to lexicon(
     "0000", 65374  // ～
 ).
 // #endregion
+
+// Trying out a buffer object to hold messages pushed during the loop for later rendering
+global MsgCon is lexicon(
+    "TotalSlots", 3,
+    "SlotsUsed", 0,
+    "SlotsRem", 3,
+    "LastUpdate", Time:Seconds,
+    "0", lex(
+        "Pri", 0,
+        "ts", Time:Seconds,
+        "exp", Time:Seconds + 5,
+        "_", ""
+    ),
+    "1", lex(
+        "Pri", 0,
+        "ts", Time:Seconds,
+        "exp", Time:Seconds + 5,
+        "_", ""
+    ),
+    "2", lex(
+        "Pri", 0,
+        "ts", Time:Seconds,
+        "exp", Time:Seconds + 5,
+        "_", ""
+    ),
+    "BakedStr", lex(
+        "Pre", list(
+            "[INF]", // 0: Informational: Non-critical information or updates 
+            "[MSG]", // 1: Message: Important information or updates
+            "[WRN]", // 2: Warning: Non-fatal error, will continue or recover without intervention. Associated with a Master Warning alarm (__errlvl == 2). 
+            "[CTN]", // 3: Caution: Non-fatal error, will continue or recover but may drop non-critical functions. Associated with a Master Caution alarm (__errlvl == 3)
+            "[ERR]", // 4: Error: Non-fatal error but terminal - program cannot proceed and will exit. Associated with a Master Error Alarm (__errlvl == 4)
+            "[EXC]"  // 5: Exception: Fatal error, and program will not be able to gracefully exit. Associated with a Master Exception alarm (__errlvl < 0)
+        )
+    )
+).
+
+
+// #include "0:/env/global/_init.ks"
+// Contains mapped term field delegates used to refresh UI
+global FieldDelegates to lexicon(
+    "Head", lex(
+        "Ver",  { parameter _pad. return ("{0," + _pad + "}"):Format(__ver). },
+        "User", { parameter _pad. return ("{0," + _pad + "}"):Format(__user). }
+    ),
+    "Info", lex(
+        "State", lex(
+            "Prog", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Program). },
+            "Rnmd", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Runmode). }
+        ),
+        "Ship", lex(
+            "Name", { parameter _pad. return ("{0," + _pad + "}"):Format(Ship:Name). }
+        ),
+        "Msg", lex(
+            "Con", lex(
+                "0", { parameter _pad. if MsgCon["0"]:_:Length > 0 { return ("{0," + _pad + "}"):Format(MsgCon:BakedStr:Pre[MsgCon["0"]:Pri] + " " + MsgCon["0"]:_). } else { return ("{0," + _pad + "}"):Format(" ").} },
+                "1", { parameter _pad. if MsgCon["1"]:_:Length > 0 { return ("{0," + _pad + "}"):Format(MsgCon:BakedStr:Pre[MsgCon["1"]:Pri] + " " + MsgCon["1"]:_). } else { return ("{0," + _pad + "}"):Format(" ").} },
+                "2", { parameter _pad. if MsgCon["2"]:_:Length > 0 { return ("{0," + _pad + "}"):Format(MsgCon:BakedStr:Pre[MsgCon["2"]:Pri] + " " + MsgCon["2"]:_). } else { return ("{0," + _pad + "}"):Format(" ").} }
+            )
+        )
+    ),
+    "Core", lex(
+        "Panel", lex(
+            "Asc", lex(
+                "Tel", lex(
+                    "Title", { parameter _pad. return ("{0," + _pad + "}"):Format("ASCENT TELEMETRY"). }
+                ),
+                "Alt", lex(
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("ALTITUDE"). },
+                    "Asl", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Altitude)).},
+                    "Agl", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Altitude - Ship:Geoposition:TerrainHeight)).},
+                    "Rad", { parameter _pad. return ("{0," + _pad + "}"):Format(Round((Ship:Position - Body:Position):Mag)).}
+                ),
+                "Velo", lex(
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("VELOCITY"). },
+                    "Srf", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Velocity:Surface:Mag, 1)).},
+                    "Obt", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Velocity:Orbit:Mag, 1)).  },
+                    "GS",  { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Groundspeed, 1)).         },
+                    "VS",  { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Verticalspeed, 1)).       }
+                ),
+                "Apo", lex(
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("APOAPSIS"). },
+                    "Cur", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Apoapsis, 1)). },
+                    "Eta", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(ETA:Apoapsis, 2)). }
+                ),
+                "Per", lex(
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("PERIAPSIS"). },
+                    "Cur", {parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Periapsis, 1)). },
+                    "Eta", {parameter _pad. return ("{0," + _pad + "}"):Format(Round(ETA:Periapsis, 2)). }
+                ),
+                "Inc", lex(
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("INCLINATION"). },
+                    "Cur", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Orbit:Inclination, 2)). },
+                    "Lan", { parameter _pad. return ("{0," + _pad + "}"):Format(Round(Ship:Orbit:LongitudeOfAscendingNode, 2)). }
+                ),
+                "Prm", lex(
+                    "Title", { parameter _pad. return ("{0," + _pad + "}"):Format("PARAMETERS"). },
+                    "Label", { parameter _pad. return ("{0," + _pad + "}"):Format("TARGETS"). },
+                    "TgtInc", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Mission:CurScope:Param:Inc). },
+                    "TgtAlt", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Mission:CurScope:Param:Alt). },
+                    "TgtApo", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Mission:CurScope:Param:Apo). },
+                    "StgLim", { parameter _pad. return ("{0," + _pad + "}"):Format(g_Mission:CurScope:StgLim). }
+                )
+            )
+        )
+    ),
+    "Foot", lex(
+
+    )
+).
