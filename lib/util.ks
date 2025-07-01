@@ -7,6 +7,9 @@
 // #include "0:/env/types/string_types.ks"
 // #include "0:/env/types/term_types.ks"
 
+RunOncePath("0:/env/types/_init.ks").
+RunOncePath("0:/env/types/term_types.ks").
+
 // #endregion
 
 // *~ Variables ~* //
@@ -294,13 +297,111 @@
     // #endregion
 
     
+    // Addon Wrappers
     // #region
-    
-    // FunctionName :: (input params)<type> -> (output params)<type>
-    // Description
-    
+
+    // Career
+    // #region
+    // TryRecoverVessel :: [_ves<Ship>], [_recoveryWindow<Scalar>] -> <None>
+    global function try_vessel_recovery
+    {
+        parameter _ves is Ship,
+                  _recoveryDelay is 2,
+                  _recoveryWindow is 20.
+
+        if Addons:Available("Career")
+        {
+            local waitTimer to _recoveryDelay.
+            set g_TS to Time:Seconds + waitTimer.
+            local waitStr to "Waiting until {0,-5}s to begin recovery attempts".
+            local g_TermChar to "".
+            out_info("Press Enter to recover immediately, Backspace to abort").
+            local abortFlag to false.
+            local doneFlag to false.
+            until Time:Seconds > g_TS or doneFlag
+            {
+                out_msg(waitStr:Format(Round(g_TS - Time:Seconds, 2))).
+                set g_TermChar to get_term_char().
+
+                if g_TermChar <> ""
+                {
+                    out_info().
+                    if g_TermChar = Terminal:Input:Enter
+                    {
+                        set abortFlag to false.
+                        set doneFlag to true.
+                    }
+                    else if g_TermChar = Terminal:Input:Backspace
+                    {
+                        set abortFlag to true.
+                        set doneFlag to true.
+                    }
+                    else
+                    {
+                        out_info("Press Enter to recover immediately, Backspace to abort").
+                    }
+                    set g_TermChar to "".
+                }
+                wait 0.01.
+            }
+
+            if abortFlag 
+            {
+                out_msg("Aborting recovery attempts!").
+                wait 0.25.
+            }
+            else
+            {
+                local getRecoveryState to { parameter __ves is Ship. if Addons:Career:IsRecoverable(__ves) { return list(True, "++REC").} else { return list(False, "UNREC").}}.
+                local recoveryStr to "Attempting recovery (Status: {0})".
+                set g_TS to Time:Seconds + _recoveryWindow.
+                local abortStr to "Press any key to abort ({0,-5}s)".
+                until Time:Seconds >= g_TS or abortFlag
+                {
+                    local recoveryState to getRecoveryState:Call(_ves).
+                    if recoveryState[0]
+                    {
+                        Addons:Career:RecoverVessel(_ves).
+                        out_msg("Recovery in progress (Status: {0})":Format(recoveryState[1])).
+                        out_info().
+                        wait 0.01.
+                        break.
+                    }
+                    else
+                    {
+                        out_msg(recoveryStr:Format(recoveryState[1])).
+                        out_info(abortStr:Format(g_TS - Time:Seconds, 2)).
+
+                        set g_TermChar to get_term_char().
+                        if g_TermChar <> ""
+                        {
+                            set abortFlag to true.
+                        }
+                        wait 0.01.
+                    }
+                }
+                
+                if abortFlag
+                {
+                    out_msg("Recovery aborted!").
+                    out_info().
+                }
+                else
+                {
+                    out_msg("Recovery failed. :(").
+                }
+                out_info().
+            }
+        }
+        else
+        {
+            out_msg("No recovery firmware found!").
+            out_info().
+            wait 0.25.
+        }
+    }
+
     // #endregion
-    
     // #endregion
 
 // #endregion

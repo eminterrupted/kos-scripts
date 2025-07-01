@@ -1,0 +1,425 @@
+{
+    "items": [
+        {
+            "value": "Cascadia Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cascadia Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Arial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cooper Black",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Comic Sans MS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Algerian",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Bodoni MT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NO DEFAULT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Arial Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Arial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Arial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Consolas",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Unispace Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SpaceMono Nerd Font Mono Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SpaceMono Nerd Font Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SimSun-ExtG",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SimSun-ExtB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SimSun",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "OCR A Extended",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NSimSun",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x8-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x8",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x16-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x16",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x14-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 9x14",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 8x16-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 8x16",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 8x14-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM VGA 8x14",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM BIOS-2y",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM BIOS-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MxPlus IBM BIOS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mx437 IBM BIOS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mx437 HP 100LX 8x8-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Mx437 HP 100LX 6x8-2x",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MingLiU_MSCS-ExtB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MingLiU_HKSCS-ExtB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MingLiU-ExtB",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MartianMono NFM Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MartianMono NFM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MartianMono NF Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MartianMono NF",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MS Gothic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Lucida Sans Typewriter Bold Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Lucida Sans Typewriter Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Lucida Sans Typewriter Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Lucida Sans Typewriter",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Lucida Console",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DepartureMono Nerd Font Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Courier New Bold Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Courier New Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Courier New Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Courier New",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Consolas Bold Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Consolas Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Consolas Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Consolas",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CaskaydiaMono NFM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cascadia Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cascadia Code",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BlexMono Nerd Font Mono Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BlexMono Nerd Font Mono",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BlexMono Nerd Font Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BlexMono Nerd Font",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Arial",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HEADINGFONT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibrii",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibri",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibrib",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibriz",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "kalibri",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibrii",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibriz",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibri",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibril",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibrili",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "calibrib",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "dotty",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (italic)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (italic)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LiberationSans-Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "InconsolataGo-Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "InconsolataGo-Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "InconsolataGo-Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "InconsolataGo-Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "repet___",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "repet___",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "LiberationSans-Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (mono)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (mono italic)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (mono)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "digital-7 (mono italic)",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Cheltenham_Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AbrilFatface-Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Bold Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Bold",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Bold Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Regular",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "Aero Matics Italic",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}

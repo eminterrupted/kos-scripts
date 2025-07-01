@@ -18,7 +18,7 @@ LOCAL page3 IS AddTab(tabwidget,"Three").
 page3:ADDLABEL("This is page 3").
 page3:ADDLABEL("Put even stuff here!").
 
-ChooseTab(tabwidget,1).
+ChooseTab(tabwidget,0).
 
 LOCAL close IS my_gui:ADDBUTTON("Close").
 SetupTabTrigger(tabwidget).

@@ -8,6 +8,7 @@ runOncePath("0:/lib/kslib/lib_loader").
 runOncePath("0:/lib/kslib/lib_l_az_calc").
 
 runOncePath("0:/lib/control").
+runOncePath("0:/lib/string").
 runOncePath("0:/lib/module").
 runOncePath("0:/lib/util").
 runOncePath("0:/lib/term").
@@ -15,7 +16,7 @@ runOncePath("0:/lib/engine").
 runOncePath("0:/lib/vlc").
 
 // Setup terminal display
-init_term(true, true, true).
+// init_term(true, true, true).
 
 // Declare Variables
 local compit         to compass_and_pitch_for(Ship, Ship:Facing).
@@ -29,22 +30,22 @@ local transEndPitch  to 77.725.
 // Parse Params
 if _params:length > 0 
 {
-    //set stageLimit to expand_string_scalar(_params[0]).
+    //set stageLimit to parse_string_scalar(_params[0]).
     if _params[0]:IsType("List")
     {
         set stageLimit to _params[0][0].
     }
     else if _params[0]:IsType("String")
     {
-        set stageLimit to expand_string_scalar(_params[0]).
+        set stageLimit to parse_string_scalar(_params[0]).
     }
     else
     {
         set stageLimit to _params[0].
     }
-    if _params:Length > 1 set launchHdg to expand_string_scalar(_params[1], launchHdg).
-    if _params:Length > 2 set launchAng to expand_string_scalar(_params[2], launchAng).
-    if _params:Length > 3 set transAltWindow to expand_string_scalar(_params[3], transAltWindow).
+    if _params:Length > 1 set launchHdg to parse_string_scalar(_params[1], launchHdg).
+    if _params:Length > 2 set launchAng to parse_string_scalar(_params[2], launchAng).
+    if _params:Length > 3 set transAltWindow to parse_string_scalar(_params[3], transAltWindow).
 }
 
 // Setup initial control environment
