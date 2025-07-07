@@ -14,7 +14,7 @@ SAS off.
 local presLog to "0:/data/log/Earth_Pressure.csv".
 
 local chuteStatus to "N/A".
-local fairings to ship:PartsTaggedPattern("(reentry|return|descent)\|fairing").
+local fairings to ship:PartsTaggedPattern("^(ARE|reentry|return|descent)\|(FRNG|fairing)").
 local jettAlt to 5000.
 local mainChuteDeployAlt to 2500.
 

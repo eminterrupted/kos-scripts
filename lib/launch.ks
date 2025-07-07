@@ -15,7 +15,7 @@
     local lc_MinAoA                 to -45.
     // local proSrfObtBlendStartAlt    to 62500.
 
-    local proSrfObtBlendStartAlt    to 42500.
+    local proSrfObtBlendStartAlt    to 47500.
     
 
     local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
@@ -502,11 +502,11 @@
         // local turn_alt_end        to 175000. // choose 100000 if Body:Atm:Height < 100000 else Body:Atm:Height. //   _tgtAlt <= 200000 else min(325000, max(80000, Round(_tgtAlt / 2.5))).// 72500 
         
         // local turn_alt_blend      to 500. 
-        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(27500, _tgtAlt / 10)).
-        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + 12500, _tgtAlt / 6)).
+        local turn_alt_blend    to Max(proSrfObtBlendStartAlt, _tgtAlt / 8).
+        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + 17500, _tgtAlt / 6)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
         local turn_alt_blend_window_set to choose list(turn_alt_blend * 0.425, turn_alt_blend * 0.675, turn_alt_blend) if g_MissionTag:Mission:MatchesPattern("DownRange") else list(turn_alt_blend * 0.5, turn_alt_blend * 0.75, turn_alt_blend * 1).
-        local turn_apo_tgt        to Round(Max(_tgtAlt * 0.825, turn_alt_blend * 1.125)).
+        local turn_apo_tgt        to Round(Max(_tgtAlt * 0.8325, turn_alt_blend * 1.1125)).
 
         local ascentAngObj to lexicon(
             "ALT_TGT", ascent_Prog_Roll_Alt
@@ -1389,23 +1389,16 @@
             set altitude_error      to current_alt / turn_alt_end.
             set apo_error           to current_apo / target_apo.
 
-            if current_alt < 1750 and Ship:VerticalSpeed > 0
+            // if current_alt < 2000 and Ship:VerticalSpeed > 0
+            if current_alt < 12460 and Ship:VerticalSpeed > 0
             {
                 OutInfo("Part B", 2).
-                local blend_alt_error   to (current_alt - turn_alt_start) / (turn_alt_blend - turn_alt_start).
-                local alt_error_blended to altitude_error * (1 - blend_alt_error).
-                local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
-                local apo_error_blended to apo_error * blend_apo_error.
-                local comb_err          to alt_error_blended + apo_error_blended.
-                set effective_error     to comb_err.
-                set error_pitch         to 90 * (1 - comb_err).
-                set error_limit         to pitch_limit_min + (pitch_limit_max * comb_err).
-                // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.05625)). // * 1.125)).// 1.015625)).
-                set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.05625)).
+                set error_pitch         to 90 * (1 - altitude_error).
+                set error_limit         to pitch_limit_min + pitch_limit_max.
+                set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.005625)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
-                // * set output_pitch        to max(45, min(effective_pitch * fShape, 90)).
-                set output_pitch        to max(45, min(effective_pitch, 90)).
+                set output_pitch        to max(0, min(effective_pitch, 90)).
             }
             else if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
             {
@@ -1417,13 +1410,12 @@
                 local comb_err          to alt_error_blended + apo_error_blended.
 
                 set effective_error     to comb_err.
-                // set error_pitch         to 90 * (1 - effective_error).
                 set error_pitch         to 90 * (1 - effective_error).
                 set error_limit         to pitch_limit_min + (pitch_limit_max * effective_error).
                 // set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
                 // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.275)). // 1.25)). // 1.03125)).
                 set effective_limit     to min(pitch_limit_max * 1.075, max(pitch_limit_min, error_limit * fShape)).// max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.275)). // *** Good
-                // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.125)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.0125)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)).
                 set output_pitch        to min(90, max(0, effective_pitch)).
@@ -1456,7 +1448,7 @@
                 set error_limit         to pitch_limit_min + (pitch_limit_max * apo_error).
                 // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_min + (pitch_limit_max / apo_error * 1.375) / apo_error)). // 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
                 // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_min + (pitch_limit_max / apo_error * 1.375) / apo_error)). *** Good  // 1.325) / apo_error)). // 1.125) / apo_error))). // ((pitch_limit * 1.25) / min(1.00000001, apo_error))).
-                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_min + (pitch_limit_max / apo_error * 1.1125) / apo_error)). 
+                set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_min + (pitch_limit_max / apo_error * 1.01125) / apo_error)). 
                 set effective_pitch     to max(prograde_orbit_pitch - effective_limit, min(error_pitch, prograde_orbit_pitch + effective_limit)).
                 // * set output_pitch        to max(-effective_limit, min(effective_pitch * fShape, 90)).
                 set output_pitch        to max(-effective_limit, min(effective_pitch, 90)).
@@ -4276,7 +4268,7 @@
         set g_LESArmed          to ArmLESTower().
         set g_SpinArmed         to SetupSpinStabilizationEventHandler().
         
-        if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
+        if Ship:PartsTaggedPattern("((Ascent\|Booster)|(ASC\|BSTR))\|"):Length > 0
         {
             set launchObj["boosterResult"] to ArmBoosterStaging("Ascent").
         }

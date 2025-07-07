@@ -359,7 +359,7 @@ local boosterArmed to false.
 local boosterCheckDel  to { return true.}.
 local boosterActionDel to { return false.}.
 local boosterResult to list(false, boosterCheckDel, boosterActionDel).
-if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
+if Ship:PartsTaggedPattern("((Ascent\|Booster)|(ASC\|BSTR))\|"):Length > 0
 {
     set boosterResult to ArmBoosterStaging("Ascent").
     set boosterArmed to boosterResult[0].

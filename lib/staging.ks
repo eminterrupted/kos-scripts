@@ -707,14 +707,14 @@
 
         local boosterObj to lex().
         local minIdx to 9.
-        local regStr to _boosterTag + "\|Booster\|(AS\|)?\d".
+        local regStr to _boosterTag + "\|(Booster|BSTR)\|(AS\|)?\d".
         local boosterDecouplers to Ship:PartsTaggedPattern(regStr).
 
         if boosterDecouplers:Length > 0
         {
             from { local i is 0.} until i >= 5 step { set i to i + 1.} do
             {
-                for dc in Ship:PartsTaggedPattern("Ascent\|Booster\|(AS\|)?{0}":Format(i:ToString))
+                for dc in Ship:PartsTaggedPattern("((Ascent\|Booster)|(ASC\|BSTR))\|(AS\|)?{0}":Format(i:ToString))
                 {
                     if dc:Stage >= g_StageLimit
                     {

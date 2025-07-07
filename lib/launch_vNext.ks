@@ -2902,7 +2902,7 @@
         set g_FairingsArmed     to ArmFairingJettison("ascent").
         set g_LESArmed          to ArmLESTower().
         
-        if Ship:PartsTaggedPattern("Ascent\|Booster\|"):Length > 0
+        if Ship:PartsTaggedPattern("((Ascent\|Booster)|(ASC\|BSTR))\|"):Length > 0
         {
             set launchObj["boosterResult"] to ArmBoosterStaging("Ascent").
         }

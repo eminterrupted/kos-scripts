@@ -168,10 +168,10 @@
         parameter _dvToBurn,
                   _startAtStg.
 
-        local BurnStageDataObj to lexicon(
-            "STG", lexicon()
-            ,"NEXT", lexicon()
-        ).
+        // local BurnStageDataObj to lexicon(
+        //     "STG", lexicon()
+        //     ,"NEXT", lexicon()
+        // ).
 
     //
         // Determine how much dv is available in each stage
@@ -179,14 +179,14 @@
         local dvHalf to dv / 2.
         local dvFullObj to lex().
         local dvHalfObj to lex().
-        local firstPassFlag to True.
-        local stageMatchType to 1.
+        // local firstPassFlag to True.
+        // local stageMatchType to 1.
 
         from { local stg to _startAtStg.} until dv <= 0 or stg = -1 step { set stg to stg - 1.} do {
             local breakFlag to false.
             
-            local stgEngs to GetEnginesForStage(stg, "All", stageMatchType).
-            local stgMass to GetStageMass2(stg).
+            // local stgEngs to GetEnginesForStage(stg, "All", stageMatchType).
+            // local stgMass to GetStageMass2(stg).
 
             local dvStg to AvailStageDV(stg).
             
@@ -220,9 +220,7 @@
             if breakFlag break.
         }
 
-        local foo to lex("Full", dvFullObj, "Half", dvHalfObj).
-
-        return BurnStageDataObj.
+        return lex("Full", dvFullObj, "Half", dvHalfObj).
     }
 
 
