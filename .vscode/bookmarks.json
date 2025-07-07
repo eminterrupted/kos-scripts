@@ -1,0 +1,259 @@
+{
+	"files": [
+		{
+			"path": "lib/old_lib/staging.ks",
+			"bookmarks": [
+				{
+					"line": 113,
+					"column": 24,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "lib/old_lib/launch_vOld.ks",
+			"bookmarks": [
+				{
+					"line": 147,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 289,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 1360,
+					"column": 8,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "lib/old_lib/launch.ks",
+			"bookmarks": [
+				{
+					"line": 159,
+					"column": 36,
+					"label": ""
+				},
+				{
+					"line": 484,
+					"column": 27,
+					"label": ""
+				},
+				{
+					"line": 582,
+					"column": 27,
+					"label": ""
+				},
+				{
+					"line": 788,
+					"column": 28,
+					"label": ""
+				},
+				{
+					"line": 1343,
+					"column": 37,
+					"label": ""
+				},
+				{
+					"line": 1616,
+					"column": 41,
+					"label": ""
+				},
+				{
+					"line": 1964,
+					"column": 42,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "data/ref/unicodeCharacters.txt",
+			"bookmarks": [
+				{
+					"line": 8287,
+					"column": 3,
+					"label": ""
+				},
+				{
+					"line": 8512,
+					"column": 3,
+					"label": ""
+				},
+				{
+					"line": 9148,
+					"column": 13,
+					"label": ""
+				},
+				{
+					"line": 9476,
+					"column": 4,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "data/ref/unicodeCharCodes_1952y206d.csv",
+			"bookmarks": [
+				{
+					"line": 5487,
+					"column": 6,
+					"label": ""
+				},
+				{
+					"line": 8194,
+					"column": 2,
+					"label": ""
+				},
+				{
+					"line": 9141,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 10134,
+					"column": 2,
+					"label": ""
+				},
+				{
+					"line": 10497,
+					"column": 7,
+					"label": ""
+				},
+				{
+					"line": 13174,
+					"column": 2,
+					"label": ""
+				},
+				{
+					"line": 13225,
+					"column": 1,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "data/ref/unicodeCharCodesExt_1952y206d.csv",
+			"bookmarks": [
+				{
+					"line": 48701,
+					"column": 7,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "data/ref/uniChars_0-131072_WithDescript.csv",
+			"bookmarks": [
+				{
+					"line": 8193,
+					"column": 1,
+					"label": ""
+				},
+				{
+					"line": 9633,
+					"column": 1,
+					"label": ""
+				},
+				{
+					"line": 65314,
+					"column": 4,
+					"label": ""
+				},
+				{
+					"line": 65718,
+					"column": 3,
+					"label": ""
+				},
+				{
+					"line": 66305,
+					"column": 7,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "env/types/base_types.ks",
+			"bookmarks": [
+				{
+					"line": 143,
+					"column": 18,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "env/types/string_types.ks",
+			"bookmarks": [
+				{
+					"line": 1104,
+					"column": 16,
+					"label": ""
+				},
+				{
+					"line": 1161,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "data/ref/uniChars_0-65535_WithDescript.csv",
+			"bookmarks": [
+				{
+					"line": 9792,
+					"column": 2,
+					"label": ""
+				},
+				{
+					"line": 9890,
+					"column": 2,
+					"label": ""
+				},
+				{
+					"line": 57858,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 57863,
+					"column": 21,
+					"label": ""
+				},
+				{
+					"line": 57864,
+					"column": 32,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "lib/launch.ks",
+			"bookmarks": [
+				{
+					"line": 484,
+					"column": 14,
+					"label": ""
+				},
+				{
+					"line": 1372,
+					"column": 59,
+					"label": ""
+				},
+				{
+					"line": 4747,
+					"column": 23,
+					"label": ""
+				},
+				{
+					"line": 4761,
+					"column": 31,
+					"label": ""
+				}
+			]
+		}
+	]
+}
