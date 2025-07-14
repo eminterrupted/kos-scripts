@@ -15,11 +15,11 @@
     local lc_MinAoA                 to -45.
     // local proSrfObtBlendStartAlt    to 62500.
 
-    local proSrfObtBlendStartAlt    to 47500.
-    
+    local partCAlt to 9268. // 12500
+    local proSrfObtBlendStartAlt    to 42500.
 
     local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
-    local ascent_Next_Alt_Width  to 12500.
+    local ascent_Next_Alt_Width  to 17500.
 
     local ascent_Prog_Roll_Alt   to Ship:Altitude + ascent_Next_Alt_Diff.
     local ascent_Prog_Roll_Pitch to 1.125.
@@ -502,7 +502,7 @@
         // local turn_alt_end        to 175000. // choose 100000 if Body:Atm:Height < 100000 else Body:Atm:Height. //   _tgtAlt <= 200000 else min(325000, max(80000, Round(_tgtAlt / 2.5))).// 72500 
         
         // local turn_alt_blend      to 500. 
-        local turn_alt_blend    to Max(proSrfObtBlendStartAlt, _tgtAlt / 8).
+        local turn_alt_blend    to Max(proSrfObtBlendStartAlt, _tgtAlt / 9).
         local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + 17500, _tgtAlt / 6)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
         local turn_alt_blend_window_set to choose list(turn_alt_blend * 0.425, turn_alt_blend * 0.675, turn_alt_blend) if g_MissionTag:Mission:MatchesPattern("DownRange") else list(turn_alt_blend * 0.5, turn_alt_blend * 0.75, turn_alt_blend * 1).
@@ -1390,12 +1390,13 @@
             set apo_error           to current_apo / target_apo.
 
             // if current_alt < 2000 and Ship:VerticalSpeed > 0
-            if current_alt < 12460 and Ship:VerticalSpeed > 0
+            if current_alt < partCAlt and Ship:VerticalSpeed > 0
             {
                 OutInfo("Part B", 2).
                 set error_pitch         to 90 * (1 - altitude_error).
                 set error_limit         to pitch_limit_min + pitch_limit_max.
-                set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.005625)).
+                // set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.005625)).
+                set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max)).
                 set prograde_pitch      to (prograde_surface_pitch * (1 - effective_error)) + (prograde_orbit_pitch * effective_error). 
                 set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)). 
                 set output_pitch        to max(0, min(effective_pitch, 90)).

@@ -30,11 +30,16 @@ if Ship:Status = "PRELAUNCH"
         {
             OutMsg("Wait for rendezvous launch window for {0}?":Format(Target:Name)).
             OutInfo("(Skipping in {0}s)":Format(Round(g_TS - Time:Seconds, 2))).
-            OutInfo("* ENTER - Continue | BACKSPACE - Quit)", 1).
+            OutInfo("* HOME - Wait | ENTER - Skip | BACKSPACE - Quit)", 1).
             GetTermChar().
             if g_TermChar <> ""
             {
                 if g_TermChar = Terminal:Input:Enter
+                {
+                    OutMsg().
+                    set doneFlag to True.
+                }
+                else if g_TermChar = Terminal:Input:HomeCursor
                 {
                     RunPath("0:/main/launch/holdForLaunchWindow.ks").
                     set doneFlag to True.
@@ -42,7 +47,7 @@ if Ship:Status = "PRELAUNCH"
                 else if g_TermChar = Terminal:Input:Backspace
                 {
                     OutMsg().
-                    set doneFlag to True.
+                    print 1 / 0.
                 }
                 else if g_TermChar = "i"
                 {

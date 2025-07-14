@@ -884,7 +884,7 @@
                             {
                                 return list(false, g_NulCheckDel@, g_NulActionDel@).
                             }
-                            set dvRemainingAll to dvStgParam.
+                            set dvRemainingStg to dvStgParam.
                             set dvStgParam to choose p:Stage if p:IsType("Decoupler") else p:DecoupledIn.
                         }
                         else if dvStgType = 1
@@ -985,9 +985,12 @@
 
         for eng in _dvObj:ENG
         { 
-            if eng:AllowShutdown
+            if eng:HasSuffix("AllowShutdown") 
             {
-                eng:Shutdown.
+                if eng:AllowShutdown
+                {
+                    eng:Shutdown.
+                }
             }
         } 
         for dc in _dvObj:DC 
