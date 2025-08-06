@@ -64,6 +64,7 @@ until g_Program < 0
                 eng:Activate.
             }
             SetProgram(902).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -80,6 +81,29 @@ until g_Program < 0
         }
     }
 
+    // else if g_Program = 901
+    // {
+    //     if g_RunMode = 1
+    //     {
+    //         if Ship:Thrust <= 0.1
+    //         {
+    //             SetProgram(902).
+    //         }
+    //         else
+    //         {
+    //             OutInfo("LES THRUST: {0} ":Format(Round(Ship:Thrust, 1))).
+    //         }
+    //     }
+    //     else if g_RunMode = 0
+    //     {
+    //         OutMsg("ESCAPE SEQUENCE INITIATED").
+    //     }
+    //     else
+    //     {
+
+    //     }
+    // }
+
     else if g_Program = 902
     {
         if g_Runmode = 1
@@ -92,6 +116,7 @@ until g_Program < 0
                 }
             }
             SetProgram(905).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -114,11 +139,12 @@ until g_Program < 0
         {
             local curDir to Ship:Facing.
             set steerDel to { return curDir + r(0, accumSteerDeflect, 0).}.
-            SetProgram(2).
+            SetRunmode(2).
         }
         else if g_Runmode = 2
         {
             SetProgram(910).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -142,6 +168,7 @@ until g_Program < 0
         {
             set g_TS0 to Time:Seconds + 5.
             SetProgram(913).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -163,18 +190,27 @@ until g_Program < 0
         set accumSteerDeflect to accumSteerDeflect + steerDeflect.
         if g_Runmode = 1
         {
+            local btRem is 0.
             if Ship:AvailableThrust > 0 and Time:Seconds > g_TS0 
             {
                 set g_TS0 to Time:Seconds + 3.
+                // SetProgram(915).
+                // SetRunmode(0).
+            }
+            else if Time:Seconds > g_TS0
+            {
                 SetProgram(915).
             }
             else
             {
                 set g_ActiveEngines to GetActiveEngines().
-                local btRem to GetEnginesBurnTimeRemaining(g_ActiveEngines).
-                local progETA to Max(g_TS0, btRem).
-                OutInfo("ETA: {0}":Format(Round(progETA, 2))).
+                if g_ActiveEngines:Length > 0
+                {
+                    set btRem to GetEnginesBurnTimeRemaining(g_ActiveEngines).
+                }
             }
+            local progETA to Max(g_TS0 - Time:Seconds, btRem).
+            OutInfo("ETA: {0}":Format(Round(progETA, 2))).
         }
         else if g_Runmode < 0
         {
@@ -196,9 +232,10 @@ until g_Program < 0
         set accumSteerDeflect to accumSteerDeflect + steerDeflect.
         if g_Runmode = 1
         {
-            if Ship:VerticalSpeed < 0 and Time:Seconds > g_TS0
+            if Ship:VerticalSpeed < 250 and Time:Seconds > g_TS0
             {
                 SetProgram(917).
+                SetRunmode(0).
             }
         }
         else if g_Runmode < 0
@@ -226,6 +263,7 @@ until g_Program < 0
                 if m:IsType("PartModule") DoEvent(m, "Decouple").
             }
             SetProgram(919).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -255,7 +293,8 @@ until g_Program < 0
                 }
             }
             lights on.
-            SetProgram(921).            
+            SetProgram(920).
+            SetRunmode(0).
         }
         else if g_Runmode < 0
         {
@@ -272,28 +311,54 @@ until g_Program < 0
         }
     }
 
+    else if g_Program = 920
+    {
+        if g_Runmode = 1
+        {
+            if Ship:VerticalSpeed < 0
+            {
+                SetProgram(921).
+                SetRunmode(0).
+            }
+        }
+        else if g_Runmode < 0
+        {
+            // if g_ErrorCodeRef:CODES[g_ErrorCode]:Type = "FATAL"
+            // {
+            //     set g_Abort     to True.
+            //     set g_AbortCode to g_Program.
+            // }
+        }
+        else
+        {
+            OutMsg("WAIT: VERTSPD").
+            SetRunmode(1).
+        }
+    }
+
     // Step through the predeploy altitudes
     else if g_Program = 921
     {
         if g_RunMode = 1
         {
-            if Alt:Radar <= 1250
+            ArmOnReentryEvents(list("Mercury", "Parachute")).
+            SetRunmode(2).
+        }
+        else if g_RunMode = 2
+        {
+            if Alt:Radar <= 2000
             {
-                if warp > 1 set warp to 1.
-                SetRunmode(2).
-            }
-            else
-            {
-                cr().
-                OutMsg("PREDEPLOY: {0}":Format(Round(Alt:Radar - 1250, 2)):PadRight(g_TermWidth - 15), cr()).
+                if warp > 3 set warp to 3.
+                SetRunmode(3).
             }
         }
-        else if g_Runmode = 2
+        else if g_Runmode = 3
         {
-            if Alt:Radar <= 25
+            if Alt:Radar <= 100
             {
-                if warp > 0 set warp to 0.
+                if warp > 1 set warp to 1.
                 SetProgram(923).
+                SetRunmode(0).
             }
             else
             {
@@ -313,6 +378,7 @@ until g_Program < 0
             OutMsg("* CHUTE DEPLOY SEQUENCE *").
             SetRunmode(1).
         }
+        ExecGLoopEvents().
     }
 
     // Wait until touchdown
@@ -320,20 +386,15 @@ until g_Program < 0
     {
         if g_RunMode = 1
         {
-            for m in Ship:ModulesNamed("ModuleAnimateGeneric")
-            {
-                if DoAction(m, "toggle landing bag") = 1
-                {
-                    OutInfo("LANDING BAG DEPLOY", cr()).
-                }
-            }
+            set warp to 0.
             SetRunmode(2).
         }
         else if g_RunMode = 2
         {
             if Alt:Radar <= 1
             {
-                SetProgram(925).            
+                SetProgram(925).
+                SetRunmode(0).
             }
             else
             {
@@ -354,6 +415,7 @@ until g_Program < 0
             OutMsg("* WAIT FOR TOUCHDOWN *").
             SetRunmode(1).
         }
+        ExecGLoopEvents().
     }
 
     // Wait until touchdown
@@ -366,6 +428,7 @@ until g_Program < 0
             if Time:Seconds >= settleTS 
             {
                 SetProgram(927).
+                SetRunmode(0).
             }
         }
         else if g_Runmode < 0
@@ -411,6 +474,6 @@ until g_Program < 0
     }
     set s_Val to steerDel:Call().
     
-    OutStr("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
+    OutDebug("P{0,-3}:R{1,3}:SL{2,3}  ":Format(g_Program, g_Runmode, g_StageLimit):PadRight(8), 0).
     
 }

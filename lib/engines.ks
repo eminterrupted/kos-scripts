@@ -1204,18 +1204,25 @@
         
         // if (totalFuelMass > 0 and FuelFlow > 0)
         // if (TotalFuelFlow > 0)
-        if EngBurnTimeLex:Resources:Values[0]:TotalFuelFlow > 0
+        if EngBurnTimeLex:Resources:Length > 0
         {
-            local btResList to list().
-            set res to EngBurnTimeLex:Resources:Values[0].
-            // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
-            // btResList:Add((res:TotalFuelAmount * AvgResiduals) / res:TotalFuelFlow).
-            btResList:Add((res:TotalFuelAmount * NormalizedResiduals) / res:TotalFuelFlow).
-            
-            for _bt in btResList
+            if EngBurnTimeLex:Resources:Values[0]:TotalFuelFlow > 0
             {
-                set BurnTimeRemaining to Min(BurnTimeRemaining, _bt).
+                local btResList to list().
+                set res to EngBurnTimeLex:Resources:Values[0].
+                // btResList:Add((res:FuelMass * maxResiduals) / res:MassFlow).
+                // btResList:Add((res:TotalFuelAmount * AvgResiduals) / res:TotalFuelFlow).
+                btResList:Add((res:TotalFuelAmount * NormalizedResiduals) / res:TotalFuelFlow).
+                
+                for _bt in btResList
+                {
+                    set BurnTimeRemaining to Min(BurnTimeRemaining, _bt).
+                }
             }
+        }
+        else
+        {
+            return 0.
         }
 
         return Round(BurnTimeRemaining, 2).

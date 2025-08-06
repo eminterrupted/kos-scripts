@@ -679,6 +679,8 @@
         {
             parameter _options is list().
 
+            RunOncePath("0:/lib/reentry").
+
             local armState to lexicon( // #TODO Finish individual arm state delegates!
                 "Fairing", lex( // Arms any tagged fairings for separation after atmospheric reentry
                     "Armed", False
@@ -694,11 +696,11 @@
                 )
                 ,"Mercury", lex( // Arms the Mercury landing bag
                     "Armed", False
-                    ,"Del", {} // ArmMercuryPartJettison@
+                    ,"Del", SetupMercuryReentryHandler@
                 )
                 ,"Parachute", lex( // Arms any parachutes present
                     "Armed", False
-                    ,"Del",  {} // ArmParachutes@
+                    ,"Del",  ArmParachutes@
                 )
                 ,"SciCollect", lex( // Attempts to collect science
                     "Armed", False
@@ -708,12 +710,12 @@
 
             for opt in _options
             {
-                if      opt = "Gemini"          set armState:Gemini         to True.
-                else if opt = "JettisonDrogue"  set armState:JettisonDrogue to True.
-                else if opt = "Fairing"         set armState:Fairing        to True.
-                else if opt = "Mercury"         set armState:Mercury        to True. 
-                else if opt = "Parachute"       set armState:Parachute      to True.
-                else if opt = "CollectSci"      set armState:SciCollect     to True.
+                if      opt = "Gemini"          set armState:Gemini:Armed         to True.
+                else if opt = "JettisonDrogue"  set armState:JettisonDrogue:Armed to True.
+                else if opt = "Fairing"         set armState:Fairing:Armed        to True.
+                else if opt = "Mercury"         set armState:Mercury:Armed        to True. 
+                else if opt = "Parachute"       set armState:Parachute:Armed      to True.
+                else if opt = "CollectSci"      set armState:SciCollect:Armed     to True.
             }
 
             from { local i to 0.} until i = armState:Keys:Length step { set i to i + 1.} do
@@ -856,6 +858,69 @@
 
             return resultFlag.
         }
+    // #endregion
+
+    // Parachutes
+    // #region
+
+    global function ArmParachutes
+    {
+        parameter _chuteList is Ship:ModulesNamed("RealChuteModule").
+
+        OutMsg("Arming Parachute(s)").
+
+        if _chuteList:length > 0 
+        {
+            if _chuteList[0]:name = "RealChuteModule" 
+            {
+                // set chuteStatus to "CHUTE_FOUND".
+                for c in _chuteList 
+                {
+                    if DoEvent(c, "arm parachute")
+                    {
+                        // set chuteStatus to "ARMED(E)".
+                    }
+                    else if not c:Part:Name:MatchesPattern("Gemini")
+                    {
+                        if DoAction(c, "arm parachute", True) 
+                        {
+                            // set chuteStatus to "ARMED(A)".
+                        }
+                        else
+                        {
+                            // set chuteStatus to "ARM_AUTO_ERR".
+                            when Alt:Radar < 10000 then
+                            {
+                                if not DoEvent(c, "deploy parachute")
+                                {
+                                    DoAction(c, "deploy parachute", True).
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if _chuteList[0]:name = "ModuleParachute"
+            {
+                when _chuteList[0]:getField("safe to deploy?") = "Safe" then 
+                {
+                    for c in _chuteList
+                    {
+                        if not DoEvent(c, "deploy chute")
+                        {
+                            DoAction(c, "deploy chute", True).
+                        }
+                    }
+                }
+            }
+            return true.
+        }
+        else
+        {
+            return false.
+        }
+    }
+
     // #endregion
 
     // Spin-stabilization
@@ -1977,30 +2042,38 @@
                 local actionDel to {
                     parameter _params is list().
 
-                    _params[0]:Activate.
-                    wait 0.01.
 
                     if Abort
                     {
-                        // TODO: Send range safety event to listener core
-                        if g_DualCore
-                        {
-                            // Send the signal with time delay param here I guess
-                        }
+                        RunPath("0:/main/launch/launchAbort.ks").
+                        // // TODO: Send range safety event to listener core
+                        // if g_DualCore
+                        // {
+                        //     // Send the signal with time delay param here I guess
+                        // }
 
-                        for m in _params[1]
-                        {
-                            if not DoEvent(m, "Decouple")
-                            {
-                                DoAction(m, "Decouple", true).
-                            }
-                        }
+                        // for m in _params[1]
+                        // {
+                        //     if m:Part:UID = LES:UID 
+                        //     {
+                        //         OutInfo("ESCAPE ROUTINE").
+                        //         wait until m:Part:Thrust <= 0.1.    
+                        //     }
+
+                        //     if not DoEvent(m, "Decouple")
+                        //     {
+                        //         DoAction(m, "Decouple", true).
+                        //     }
+                        // }
                         OutMsg("*** ABORT ***", 2).
                         Breakpoint().
                         ThrowException().
                     }
                     else
                     {
+                        _params[0]:Activate.
+                        wait 0.01.
+
                         local m to _params[0]:GetModule("ModuleDecouple").
                         if not DoEvent(m, "Decouple")
                         {

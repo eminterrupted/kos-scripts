@@ -15,18 +15,18 @@
     local lc_MinAoA                 to -45.
     // local proSrfObtBlendStartAlt    to 62500.
 
-    local partCAlt to 9268. // 12500
-    local proSrfObtBlendStartAlt    to 42500.
+    local partCAlt to 7268. // 12500
+    local proSrfObtBlendStartAlt    to 40000. // 47500. // 42500.
 
     local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
-    local ascent_Next_Alt_Width  to 17500.
+    local ascent_Next_Alt_Width  to 32500. // 22500. // 17500.
 
     local ascent_Prog_Roll_Alt   to Ship:Altitude + ascent_Next_Alt_Diff.
     local ascent_Prog_Roll_Pitch to 1.125.
 
     local ascent_Next_Pitch_VSpd to 28.75.
     local ascent_Prog_Pitch_Alt_Start to 427.
-    local ascent_Prog_Pitch_Alt_End   to 100000. // Body:Atm:Height.
+    local ascent_Prog_Pitch_Alt_End   to 120000. // 112001. // 100000. // Body:Atm:Height.
 
 
     
@@ -66,7 +66,7 @@
     global g_la_turnAltStart    to Min(g_PresetTurnAlt, Max(125, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
                                                                              // taken from the bounding box of the ship on the launch pad
                                                                              // and is 2x the height of the vessel/launch pad tower
-    global g_la_turnAltEnd   to body:Atm:height * 0.64. // 70000// 0.925 // Altitude at which the vessel will end a gravity turn
+    global g_la_turnAltEnd   to body:Atm:height * 0.64. // 0.64 = 89600m // 70000// 0.925 // Altitude at which the vessel will end a gravity turn
 
     global g_alt_PID to PidLoop(0.05, 0.01, 0.0325, PID_AoA_Min, PID_AoA_Max).
     global g_apo_pid  to PidLoop(0.005, 0.000125, 0.005, PID_AoA_Min, PID_AoA_Max).
@@ -502,8 +502,8 @@
         // local turn_alt_end        to 175000. // choose 100000 if Body:Atm:Height < 100000 else Body:Atm:Height. //   _tgtAlt <= 200000 else min(325000, max(80000, Round(_tgtAlt / 2.5))).// 72500 
         
         // local turn_alt_blend      to 500. 
-        local turn_alt_blend    to Max(proSrfObtBlendStartAlt, _tgtAlt / 9).
-        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + 17500, _tgtAlt / 6)).
+        local turn_alt_blend    to 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + 25000, _tgtAlt / 4)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
         local turn_alt_blend_window_set to choose list(turn_alt_blend * 0.425, turn_alt_blend * 0.675, turn_alt_blend) if g_MissionTag:Mission:MatchesPattern("DownRange") else list(turn_alt_blend * 0.5, turn_alt_blend * 0.75, turn_alt_blend * 1).
         local turn_apo_tgt        to Round(Max(_tgtAlt * 0.8325, turn_alt_blend * 1.1125)).
@@ -1360,7 +1360,8 @@
         local error_pitch       to 0.
         local output_pitch      to current_pitch.
 
-        local current_ap_alt    to ((Ship:Altitude * 1.15) + (Ship:Apoapsis * 1.25)) / 2.5.
+        local current_ap_alt    to ((Ship:Altitude * 1.3) + (Ship:Apoapsis * 1.2)) / 2.5.
+        // local current_ap_alt    to ((Ship:Altitude * 1.15) + (Ship:Apoapsis * 1.25)) / 2.5.
         
         local prograde_pitch            to 90.
         local prograde_surface_pitch    to 90 - VAng(Ship:Up:Vector, Ship:SrfPrograde:Vector).

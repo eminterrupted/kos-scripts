@@ -81,7 +81,7 @@
 
         for dc in Ship:Decouplers
         {
-            if dc:Name:MatchesPattern("(LES|Launch.*Escape)")
+            if dc:Name:MatchesPattern(".*(LES|Launch.*Escape).*")
             {
                 LES:DC1:Add(dc).
             }

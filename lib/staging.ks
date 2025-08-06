@@ -555,7 +555,76 @@
 
             if g_Debug OutDebug("[{0}] Running SafeStageWithUllage":Format(Round(MissionTime, 1)), crDbg()).
             local stageResult to False.
-            
+
+            if _engList_Spec:Keys:Length = 0
+            {
+                set _engList_Spec to GetEnginesSpecs(_engList).
+            }
+                        
+            if _engList_Spec:HasKey("FuelStabilityMin")
+            {
+                if g_Debug OutDebug("[{0}] FuelStabilityMin Key Found ({1})":Format(Round(MissionTime, 1), _engList_Spec:FuelStabilityMin), crDbg()).
+                if _engList_Spec:FuelStabilityMin > 0.925
+                {
+                    OutInfo("Ullage Check Passed!").
+                    set stageResult to true.
+                }
+                else if _engList_Spec:IsSolid
+                {
+                    OutInfo("Solid Motor").
+                    set stageResult to true.
+                }
+                else
+                {
+                    OutInfo("Ullage Check (Fuel Stability Rating: {0})":Format(round(_engList_Spec:FuelStabilityMin * 100, 2))).
+                }
+            }
+            else
+            {
+                if g_Debug OutDebug("[{0}] FuelStabilityMin Key Missing":Format(Round(MissionTime, 1)), crDbg()).
+                set stageResult to true.
+            }
+
+            if stageResult
+            {
+                if g_Debug OutDebug("[{0}] Staging triggered":Format(Round(MissionTime, 1)), crDbg()).
+                local rcsResult to RCS. // Stores current RCS state
+                set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
+                wait until Stage:Ready.
+                Stage.
+                wait 0.01.
+                set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
+            }
+            OutInfo().
+
+            return stageResult.
+        }
+
+        // Checks for ullage before staging, with RCS boom extension support
+        local function SafeStageWithUllageNext
+        {
+            parameter _engList,
+                      _engList_Spec is lexicon().
+
+            // set g_NextEngines     to GetNextEngines().
+            // set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+
+            if g_Debug OutDebug("[{0}] Running SafeStageWithUllage":Format(Round(MissionTime, 1)), crDbg()).
+            local stageResult to False.
+
+            local RCSBooms to Ship:PartsNamedPattern("RCSBoonExt.*").
+            if RCSBooms:Length > 0 
+            {
+                for rcsBoom in RCSBooms
+                {
+                    if rcsBoom:Stage = Stage:Number - 1
+                    {
+                        DoEvent(rcsBoom:GetModule("ModuleAnimateGeneric"), "Extend Boom").
+                    }
+                }
+                wait 0.25.
+            }
+
             if _engList_Spec:Keys:Length = 0
             {
                 set _engList_Spec to GetEnginesSpecs(_engList).
