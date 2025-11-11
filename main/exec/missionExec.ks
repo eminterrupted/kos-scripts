@@ -15,6 +15,7 @@ local tgtEcc       to choose g_MissionTag:Params[2] if g_MissionTag:Params:Lengt
 local azObj        to choose l_az_calc_init(tgtAp, tgtInc) if g_GuidedAscentMissions:Contains(g_MissionTag:Mission) else list().
 
 SetupOnDeployHandler(Ship:PartsTaggedPattern("OnDeploy\|\d")).
+
 local scr to "0:/main/launch/launchAscent.ks".
 
 if Ship:Status = "PRELAUNCH"
@@ -61,7 +62,6 @@ if Ship:Status = "PRELAUNCH"
             }
         }
     }
-
 
     OutMsg("Executing path: {0}":Format(scr)).
     wait 1.

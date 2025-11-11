@@ -688,7 +688,7 @@
                 )
                 ,"Gemini", lex( // Gemini has controls for CoM offsets
                     "Armed", False
-                    ,"Del", {} // ArmGeminiCoMOffset@
+                    ,"Del", SetupGeminiReentryHandler@ // ArmGeminiCoMOffset@
                 )
                 ,"JettisonDrogue", lex( // Arms a tagged drogue parachute to be jettisoned at a given altitude
                     "Armed", False

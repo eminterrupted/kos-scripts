@@ -496,7 +496,7 @@
         local burnLeadTS     to 0.
         local burnTS         to 0.
         local spinTS         to Time:Seconds + 999999.
-        local ullageLeadSecs to 15.
+        local ullageLeadSecs to 18.
         local ullageTS       to 0.
         local warpLeadSecs   to 3.
         local warpTS         to 0.
@@ -578,7 +578,7 @@
             if burnEngsSpec:ULLAGE
             {
                 set ullageFlag to true.
-                set burnUllageTime to Max(3, ullageLeadSecs * (1 - burnEngs[0]:FuelStability)).
+                set burnUllageTime to Max(6, ullageLeadSecs * (1 - burnEngs[0]:FuelStability)).
                 set ullageTS to burnTS - burnUllageTime.
             }
             
@@ -745,6 +745,7 @@
 
                 if warp = 0 
                 {
+                    wait until KUniverse:TimeWarp:IsSettled.
                     set warpFlag to False.
                 }
 
@@ -765,10 +766,10 @@
                     if warpTS > burnLeadTS
                     {
                         OutInfo("warpTS > burnLeadTS, cancelling").
-                        set warp to 0.
+                        set KUniverse:TimeWarp:Rate to 0.
                         wait until KUniverse:TimeWarp:IsSettled.
                         set warpFlag to false.
-                        if Time:Seconds < warpTS - 30
+                        if Time:Seconds < warpTS
                         {
 
                             set burnLeadTime   to 12 + Max(burnUllageTime, preSpin).
@@ -914,9 +915,11 @@
             
             // ClearScreen.
 
+            local burnNode to _inNode.
+
             local breakFlag to false.
             local softShutdownDV to max(0.05, dvRate * (g_ActiveSpecs:SpoolTime * 0.2)).
-            until vdot(dv0, _inNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
+            until vdot(dv0, burnNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
             {   
                 if HasNode
                 {    
@@ -940,14 +943,15 @@
                     set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     // set burnTimeRemaining to GetEnginesBurnTimeRemaining(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     
-                    set t_Val to max(0.01, min(_inNode:deltaV:mag / maxAcc, 1)).
+                    set t_Val to max(0.01, min(burnNode:deltaV:mag / maxAcc, 1)).
 
                     DispBurnNodeData(dv, burnTS - time:seconds, burnTimeRemaining).
                     DispBurnPerfData().
 
                     if ReacquireBurnVector
                     {
-                        set s_Val to lookDirUp(NextNode:burnVector, rollUpVector:Call()).
+                        set burnNode to nextNode.
+                        set s_Val to lookDirUp(burnNode:burnVector, rollUpVector:Call()).
                         OutInfo("BurnVector Acquired", 2).
                         set ReacquireBurnVector to False.
                         OutInfo("", 2).
@@ -1058,6 +1062,12 @@
 
                     OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 1))).
 
+                    if Stage:Number <= g_StageLimit
+                    {
+                        OutInfo("AutoStaging disabled", 2).
+                        DisableAutoStaging().
+                    }
+                    
                     if g_LoopDelegates["Events"]:Keys:Length > 0 
                     {
                         ExecGLoopEvents().

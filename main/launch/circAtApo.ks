@@ -94,6 +94,8 @@ local burnDur  to CalcBurnDur(dvNeeded).
     set g_ActiveEngines to GetActiveEngines().
     set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
 
+    set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun").
+
     local g_ActiveSpecs to lex("ALLOWRESTART", True, "IGNITIONS", 0, "BURNTIMEREMAINING", 0, "SPOOLTIME", 0, "ULLAGE", False).
 
     for eng in g_ActiveEngines
@@ -296,16 +298,19 @@ local burnDur  to CalcBurnDur(dvNeeded).
                 set Ship:Control:Roll to 0.
                 OutInfo("Spin Stopped                       ", 2).
                 set g_SpinArmed to false.
+                set s_Val to g_SteeringDelegate:Call():Vector.
             }
             else 
             {
                 OutInfo("Spin Armed (T-{0}) ":Format(Round(spinTS - Time:Seconds, 2)), 2).
-                set s_Val to lookDirUp(Ship:Orbit:Velocity:Orbit, rollUpVector:Call()).
+                // set s_Val to lookDirUp(Ship:Orbit:Velocity:Orbit, rollUpVector:Call()).
+                set s_Val to g_SteeringDelegate:Call():Vector.
             }
         }
         else
         {
-            set s_Val to lookDirUp(Ship:Orbit:Velocity:Orbit, rollUpVector:Call()).
+            // set s_Val to lookDirUp(Ship:Orbit:Velocity:Orbit, rollUpVector:Call()).
+            set s_Val to g_SteeringDelegate:Call():Vector.
             if settleProgress > 3
             {
                 if VAng(Ship:Facing:Vector, Ship:Orbit:Velocity:Orbit) < 0.25
@@ -328,6 +333,7 @@ local burnDur  to CalcBurnDur(dvNeeded).
 
         if warp = 0 
         {
+            wait until KUniverse:TimeWarp:IsSettled.
             set warpFlag to False.
         }
 
@@ -348,12 +354,11 @@ local burnDur  to CalcBurnDur(dvNeeded).
             if warpTS > burnLeadTS
             {
                 OutInfo("warpTS > burnLeadTS, cancelling").
-                set warp to 0.
+                set KUniverse:TimeWarp:Rate to 0.
                 wait until KUniverse:TimeWarp:IsSettled.
                 set warpFlag to false.
-                if Time:Seconds < warpTS - 30
+                if Time:Seconds < warpTS
                 {
-
                     set burnLeadTime   to 12 + Max(burnUllageTime, preSpin).
                     set burnLeadTS     to burnTS - burnLeadTime.
                     set warpTS to burnLeadTS - warpLeadSecs.
@@ -867,22 +872,24 @@ until Stage:Number <= g_StageLimit or doneFlag// or Time:Seconds >= mecoTS or ap
     //     OutInfo("TIME TO MECO: {0} ":Format(Round(mecoTS - Time:Seconds))).
     // }
 
+    set s_Val to g_SteeringDelegate:Call():Vector.
+
     // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset,g_SteeringDelegate:Call() + r(0, pitchOffset, 0))).
-    local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit).
     // set s_Val to choose g_SteeringDelegate:Call():Vector if rollFlag else choose Ship:Prograde if doneFlag else Min(maxPitchOffset, Max(-maxPitchOffset, Min((progradePitch + curPitchOffset), Max((progradePitch - curPitchOffset), g_SteeringDelegate:Call() + r(0, pitchOffset, 0))))).
-    if rollFlag
-    {
-        set s_Val to g_SteeringDelegate:Call():Vector.
-    }
-    else if doneFlag
-    {
-        set s_Val to Ship:Prograde.
-    }
-    else
-    {
-        set pitchOffset to Min(maxPitchOffset, Max(-maxPitchOffset, progradePitch - curPitchOffset)).
-        set s_val to g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
-    }
+    // if rollFlag
+    // {
+    //     set s_Val to g_SteeringDelegate:Call():Vector.
+    // }
+    // else if doneFlag
+    // {
+    //     set s_Val to g_SteeringDelegate:Call():Vector. // set s_Val to Ship:Prograde.
+    // }
+    // else
+    // {
+    //     local progradePitch is pitch_for(Ship, Ship:Velocity:Orbit).
+    //     // set pitchOffset to Min(maxPitchOffset, Max(-maxPitchOffset, progradePitch - curPitchOffset)).
+    //     set s_val to g_SteeringDelegate:Call() + r(0, pitchOffset, 0).
+    // }
     
     DispLaunchTelemetry().
     wait 0.01.

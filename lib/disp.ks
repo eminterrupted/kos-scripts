@@ -1,6 +1,8 @@
 // #include "0:/lib/libLoader.ks"
 @lazyGlobal off.
 
+parameter _termPop is True.
+
 // *~ Dependencies ~* //
 // #region
 // #endregion
@@ -12,6 +14,8 @@
     // #region
     global g_GridAssignments to lexicon().
     global g_MsgInfoLoopActive to False.
+
+    global g_TermPop    to _termPop.
     global g_TermHeight to 64.
     global g_TermWidth  to 96.
     global g_TermSize to g_TermHeight + g_TermWidth.
@@ -332,7 +336,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), g_TermPop, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -353,7 +357,7 @@
 
             if Terminal:Height + Terminal:Width <> g_TermSize
             {
-                DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+                DispMain(ScriptPath(), g_TermPop, Terminal:Width, Terminal:Height).
             }
 
             if _dispBlockIdx < 0
@@ -407,7 +411,7 @@
 
             if Terminal:Height + Terminal:Width <> g_TermSize
             {
-                DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+                DispMain(ScriptPath(), g_TermPop, Terminal:Width, Terminal:Height).
             }
             
             if _dispBlockIdx < 0
@@ -521,7 +525,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), g_TermPop, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -583,7 +587,7 @@
 
         if Terminal:Height + Terminal:Width <> g_TermSize
         {
-            DispMain(ScriptPath(), True, Terminal:Width, Terminal:Height).
+            DispMain(ScriptPath(), g_TermPop, Terminal:Width, Terminal:Height).
         }
 
         if _dispBlockIdx < 0
@@ -644,7 +648,7 @@
     global function DispMain
     {
         parameter _currentProcess   is g_MainProc,
-                  _initTerm         is True,
+                  _initTerm         is g_TermPop,
                   _termWidth        is g_TermWidth,
                   _termHeight       is g_TermHeight,
                   _numDataColumns   is 2.

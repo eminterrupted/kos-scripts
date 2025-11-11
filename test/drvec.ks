@@ -18,8 +18,8 @@ local enableVecDraws to True.
 local vecColor to { return RGBA(Max(0.025, RANDOM()), Max(0.025, RANDOM()), Max(0.025, RANDOM()), 1). }.
 local vecIterationString to vecIteration:ToString.
 local vecName to "CREI SVV-{0}":Format(9000 + vecIterationString).
-local vecScale to 1.0.
-local vecWidth to vecScale * 0.25.
+local vecScale to 5.
+local vecWidth to vecScale * 0.125.
 
 if HasTarget 
 { 

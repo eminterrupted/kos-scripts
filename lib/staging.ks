@@ -309,6 +309,229 @@
             }
         }
 
+        // ArmHotStaging :: _stage<Int> -> staging_obj<Lexicon>
+        // Writes events to g_LoopDelegates to fire hot staging if applicable for a given stage (next by default)
+        global function ArmHotStaging_vNext
+        {
+            local ActionDel to {}.
+            local CheckDel to {}.
+            local Engine_Obj to lexicon().
+            local ExtraLeadTime to 0.
+            local HotStage_List to Ship:PartsTaggedPattern("(HotStg|HotStage|HS)").
+            local HotStageLeadTimes to lexicon().
+            local maxLeadStage to 0.
+            local NewStageLeadTimes to lexicon().
+            // local nextMaxLeadStage to 0.
+            local stageEngsBT to 0.
+
+            if HotStage_List:Length > 0
+            {
+                if not g_LoopDelegates:HasKey("Staging")
+                {
+                    set g_LoopDelegates["Staging"] to lexicon().
+                }
+                
+                if g_LoopDelegates:Staging:HasKey("HotStaging")
+                {
+                    g_LoopDelegates:Staging:Remove("HotStaging").
+                }
+                
+                for p in HotStage_List
+                {
+                    if p:IsType("Engine")
+                    {
+                        if Engine_Obj:HasKey(p:Stage)
+                        {
+                            Engine_Obj[p:Stage]:Add(p).
+                        }
+                        else
+                        {
+                            set Engine_Obj[p:Stage] to list(p).
+                        }
+
+                        set ExtraLeadTime to choose p:Tag:Split("|")[1]:ToNumber(0) if p:Tag:Split("|"):Length > 1 else choose p:Tag:Split(":")[1]:ToNumber(0) if p:Tag:Split(":"):Length > 1 else 0.
+                        if not HotStageLeadTimes:HasKey(p:Stage)
+                        {
+                            HotStageLeadTimes:Add(p:Stage, ExtraLeadTime).
+                        }
+                        else if ExtraLeadTime > 0
+                        {
+                            set HotStageLeadTimes[p:Stage] to Max(HotStageLeadTimes[p:Stage], ExtraLeadTime).
+                        }
+                        set maxLeadStage to max(p:Stage, maxLeadStage).
+                    }
+                }
+                
+                set HotStageLeadTimes to GetHotStagingLeadTimes(HotStageLeadTimes, Engine_Obj).
+
+                set checkDel  to {
+                    // parameter _stageEngs.
+                    
+                    if Stage:Number - 1 = maxLeadStage
+                    {
+                        if MissionTime > 0 
+                        {
+                            // if g_RehydrateEngines_Flag
+                            // {
+                            // set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
+                            local engs to GetActiveEngines(Ship, "NoBooster").
+                            // }
+                            // if g_ActiveEngines:Length > 0
+                            if engs:Length > 0
+                            {
+                                OutInfo("HotStaging Armed").
+
+                                local SpoolTime to (g_LoopDelegates:Staging:HotStaging[maxLeadStage]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
+                                // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
+                                set stageEngsBT to GetEnginesBurnTimeRemaining(engs).
+                                // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
+                                // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
+                                set g_TR to stageEngsBT - SpoolTime.
+                                // OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{0,6}s) ":Format(g_ActiveEngines:Length, Round(g_TR, 2), 1)).
+                                OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Length, Round(g_TR, 2), 1), 1).
+                                
+                                return (g_TR <= 0) or Ship:Thrust <= 0.1. //(g_ActiveEngines_Data:Thrust <= 0.1).
+                                // return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
+                            }
+                            else if t_Val > 0
+                            {
+                                if g_Debug { OutDebug("Fuel Exhausted, hot staging", CrDbg()).}
+                                OutInfo("", 1).
+                                return True.
+                            }
+                            else
+                            {
+                                if g_Debug { OutDebug("Right stage, but fell through HotStaging checkdel", CrDbg()).}
+                                OutInfo("", 1).
+                            }
+                        }
+                    }
+                    return False.
+                }.
+
+                set actionDel to { 
+                    OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(maxLeadStage, "Ignition")).
+                    for eng in g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Engines
+                    {
+                        if not eng:Ignition { eng:Activate.}
+                    }
+
+                    OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(maxLeadStage, "SpoolUp")).
+                    // set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                    local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Engines).
+                    until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
+                    {
+                        set s_Val                to g_SteeringDelegate:CALL().
+                        set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
+                        set NextEngines_Data     to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Engines).
+                        OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2))).
+                        wait 0.01.
+                    }
+                    OutInfo("Staging").
+                    wait until Stage:Ready.
+                    Stage.
+                    wait 0.5.
+                    OutInfo().
+                    OutInfo("", 1).
+                    g_LoopDelegates:Staging:HotStaging:REMOVE(maxLeadStage).
+                    if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
+                    {
+                        g_LoopDelegates:Staging:Remove("HotStaging").
+                        set g_HotStagingArmed to  False.
+                        set g_NextmaxLeadStage to -2.
+                    }
+                    else
+                    {
+                        ArmHotStaging().
+                    }
+                }.
+
+                g_LoopDelegates:Staging:Add("HotStaging", HotStageLeadTimes[maxLeadStage]).
+                // Add the delegates to the previously set up object
+                // if not g_LoopDelegates:Staging:HasKey("HotStaging")
+                // {
+                //     ArmHotStaging().
+                // }
+                g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Add("Check", checkDel@).
+                g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Add("Action", actionDel@).
+
+                // Update g_NextHotStageID 
+                set g_NextHotStageID to Max(maxLeadStage, g_NextHotStageID).
+                g_HotStageIDList:Add(maxLeadStage).
+                
+                return True.
+            }
+            else
+            {
+                return False.
+            }
+        }
+
+
+                // if g_Debug OutDebug("Engine_Obj Keys: {0}":Format(Engine_Obj:Keys:Join(";")), CrDbg()-6).
+                // wait 1.
+
+
+        global function GetHotStagingLeadTimes
+        {
+            parameter _hotStageLeadObj is lexicon(),
+                      _engineObj is lexicon().
+
+            local ExtraLeadTime to 0.
+            local NewStageLeadObj to lexicon().
+            
+            if g_LoopDelegates:Staging:HasKey("HotStaging")
+            {
+                if _hotStageLeadObj:Keys:Length > 0
+                {
+                    for HotStageID in _hotStageLeadObj:Keys
+                    {
+                        OutInfo("Arming Hot Staging for ID: {0}":Format(HotStageID)).
+                        
+                        // Set up the g_LoopDelegates object
+
+                        if not NewStageLeadObj:HasKey(HotStageID)
+                        {
+                            NewStageLeadObj:Add(HotStageID, lexicon(
+                                "Engines", _engineObj[HotStageID]
+                                ,"EngSpecs", GetEnginesSpecs(_engineObj[HotStageID])
+                                )
+                            ).
+                            local stageEngines to list().
+                            // local stageEnginesBT to 999999.
+
+                            // This must protect us against considering boosters and timed-MECO engines in hot staging calculations
+                            local hitFlag to False.
+                            from { local i to HotStageID + 1.} until hitFlag step { set i to i + 1.} do
+                            {
+                                if g_ShipEngines_Spec:HasKey(i)
+                                {
+                                    for eng in g_ShipEngines_Spec[i]:EngList
+                                    {
+                                        if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:Contains("booster")
+                                        {
+                                            stageEngines:Add(eng).
+                                        }
+                                    }
+
+                                    if stageEngines:Length > 0 
+                                    {
+                                        set g_LoopDelegates:Staging:HotStaging to NewStageLeadObj[HotStageID].
+                                        set hitFlag to True.
+                                    }
+                                }
+                            }
+                            set ExtraLeadTime to Max(ExtraLeadTime, NewStageLeadObj[HotStageID]:EngSpecs:SpoolTime).
+
+                            return NewStageLeadObj.
+                        }
+                    }
+                }
+            }
+
+            return NewStageLeadObj.
+        }
+
         // InitStagingDelegate :: 
         // Adds the proper staging check and action delegates to the g_LoopDelegates object
         global function InitStagingDelegate

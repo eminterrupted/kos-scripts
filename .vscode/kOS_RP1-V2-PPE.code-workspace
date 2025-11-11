@@ -12,7 +12,7 @@
 		"files.maxMemoryForLargeFilesMB": 8192,
 		"files.participants.timeout": 10000,
 		"editor.fontLigatures": "'ss02', 'ss19', 'ss20'",
-		"kos-vscode.completionCase": "pascalcase",
+		"kos-vscode.completionCase": "camelcase",
 		"kos-vscode.kerbalSpaceProgramPath": "E:/Gaming/KSP/Instances/KSP_RP1_PLC",
         "kos-vscode.trace.server.verbosity": "off",
         "editor.codeActionsOnSave": {
@@ -21,7 +21,8 @@
         "workbench.preferredDarkColorTheme": "Dracula At Night",
         "workbench.iconTheme": "vscode-icons",
         "workbench.tree.indent": 10,
-        "diffEditor.maxFileSize": 100
+		"diffEditor.maxFileSize": 100,
+		"terminal.integrated.fontSize": 16
 	},
 	"editor.codeActionsOnSave": null,
 	"workbench.editorAssociations": []

@@ -49,6 +49,7 @@
             ,"SnubOtron"                    // Separation Motor (Small)
             ,"CREI_RO_IntSep_33"            // InternalRCS SRB (CREI 33%  Resize)
             ,"CREI_RO_IntSep_50"            // InternalRCS SRB (CREI 50%  Resize)
+            ,"CREI_RO_IntSep_75"            // InternalRCS SRB (CREI 50%  Resize)
             ,"CREI_RO_IntSep_100"           // InternalRCS SRB (CREI 100% Resize)
             ,"CREI_RO_IntSep_166"           // InternalRCS SRB (CREI 166% Resize)
             ,"CREI_RO_IntSep_200"           // InternalRCS SRB (CREI 200% Resize)
@@ -62,6 +63,7 @@
             ,"CREI.RO.IntSep.33"            // InternalRCS SRB (CREI 33%  Resize)1
             ,"CREI.RO.IntSep.50"            // InternalRCS SRB (CREI 50%  Resize)
             ,"CREI.RO.IntSep.100"           // InternalRCS SRB (CREI 100% Resize)
+            ,"CREI.RO.IntSep.75"           // InternalRCS SRB (CREI 100% Resize)
             ,"CREI.RO.IntSep.166"           // InternalRCS SRB (CREI 166% Resize)
             ,"CREI.RO.IntSep.200"           // InternalRCS SRB (CREI 200% Resize)
             ,"B9.Engine.T2.SRBS"            // B9 Radial Sep Motor

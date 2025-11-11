@@ -274,7 +274,7 @@ if Ship:PartsNamedPattern("SampleReturnCapsule"):Length > 0
 local sciTransferResult to TransferSciData(Core:Part).
 if sciTransferResult
 {
-    wait 0.25.
+    wait 0.325.
 }
 else
 {
@@ -370,11 +370,12 @@ if stage:number > 1
         {
             OutInfo("TS: {0}s | THR: {1}kn | RDY: {2} ":Format(Round(Time:Seconds - ts, 2), Round(Ship:Thrust, 2), Stage:Ready)).
         }
+        wait 0.325.
         stage.
         set ts to Time:Seconds + 5.
     }
     set Ship:Control:Fore to 1.
-    wait 5.
+    wait 6.
     set Ship:Control:Fore to 0.
 }
 
@@ -424,6 +425,11 @@ until ship:altitude <= body:atm:height
 }
 
 OutMsg("Reentry Interface").
+
+// TODO: Module[AdjustableCoMShifter] 
+// -- Fields: com offset limit
+// -- Events: turn descent mode on / off
+// -- Actions: toggle descent mode
 
 until ship:groundspeed <= 1500 and ship:altitude <= 20000
 {
