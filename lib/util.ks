@@ -3,6 +3,7 @@
 
 // *~ Dependencies ~* //
 // #region
+global g_StateCache is "".
 // #endregion
 
 
