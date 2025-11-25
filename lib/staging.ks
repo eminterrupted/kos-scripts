@@ -227,14 +227,15 @@
                                 {
                                     OutInfo("HotStaging Armed").
 
-                                    local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
+                                    local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.25) + ExtraLeadTime. 
+                                    // local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
-                                    set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
+                                    set stageEngines_BT to GetEnginesBurnTimeRemaining_Next(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                     set g_TR to stageEngines_BT - SpoolTime.
                                     // OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{0,6}s) ":Format(g_ActiveEngines:Length, Round(g_TR, 2), 1)).
-                                    OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Length, Round(g_TR, 2), 1), 1).
+                                    OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Length, Round(g_TR, 2), 1), 2).
                                     
                                     return (g_TR <= 0) or Ship:Thrust <= 0.1. //(g_ActiveEngines_Data:Thrust <= 0.1).
                                     // return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).

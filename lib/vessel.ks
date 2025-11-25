@@ -936,6 +936,7 @@
         local ctrlUIDs    to list().
         
         local resultFlag to False.
+        local refStg to 0.
 
         local spinForce to 1.
         local spinPreload to 12.
@@ -1021,6 +1022,8 @@
             
             set g_SpinActive to False.
             set g_TS0Ref to spinPreload.
+            set g_TS1 to -1.
+            local g_TS1Flag to false.
 
             // check del
             local checkDel to {
@@ -1040,13 +1043,28 @@
                         if g_SpinActive
                         {
                             // if g_Debug OutDebug("Spin Stabilization Active [REM: {0}]":Format(Round(g_TS0 - Time:Seconds, 2)), CrDbg()).
-                            OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
-                            if Time:Seconds >= g_TS0
+                            if Time:Seconds < g_TS0
+                            {
+                                OutInfo("Spin Stabilization Active [REM: {0}] ":Format(Round(g_TS0 - Time:Seconds, 2)), 1).
+                                set g_TS1Flag to true.
+                            }
+                            else if Time:Seconds < g_TS1
+                            {
+                                OutInfo("Spin Stabilization Cooldown [REM: {0}] ":Format(Round(g_TS1 - Time:Seconds, 2)), 1).
+                                
+                            }
+                            else if g_TS1Flag
+                            {
+                                set g_TS1 to Time:Seconds + 3.
+                                set g_TS1Flag to false.
+                            }
+                            else
                             {
                                 set doActionFlag to True.
                                 set g_TS0 to -1.
                                 set g_TS0Ref to 0.
-                            }
+                                set g_TS1 to -1.
+                            } 
                         }
                         else if g_ActiveEngines_Data:HasKey("BurnTimeRemaining") 
                         {
@@ -1080,12 +1098,15 @@
 
                 if g_SpinActive
                 {
-                    OutInfo("Spin Stabilization Disarmed   ", 1).
-                    set Ship:Control:Roll to 0.
-                    set g_SteeringDelegate to l_SpinSteerDelHolder.
-                    unset l_SpinSteerDelHolder.
-                    set g_SpinActive to False.
-                    set g_SpinArmed to False.
+                    if Time:Seconds >= g_TS1 
+                    {
+                        set Ship:Control:Roll to 0.
+                        set g_SteeringDelegate to l_SpinSteerDelHolder.
+                        unset l_SpinSteerDelHolder.
+                        set g_SpinActive to False.
+                        set g_SpinArmed to False.
+                        OutInfo("Spin Stabilization Disarmed   ", 1).
+                    }
                 }
                 else
                 {
@@ -2029,7 +2050,7 @@
                 local checkDel to {
                     parameter _params is list().
 
-                    if Abort or Ship:Altitude >= 100000 or Ship:Velocity:Surface:Mag > 2325
+                    if Abort or (Ship:Altitude >= 96000 and Ship:Velocity:Surface:Mag > 2250)
                     {
                         return true.
                     }

@@ -533,14 +533,23 @@ parameter _termPop is True.
             set _dispBlockIdx to NextOrAssignedTermBlock("ENGINE_TELEMETRY").
         }
 
-        if Time:Seconds > g_LastUpdate
-        { 
-            set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines). 
-            set g_LastUpdate to Time:Seconds.
+        // local timeRemaining to choose TimeSpan(_statLex:BurnTimeRemaining) if _statLex:HasKey("BurnTimeRemaining") else TimeSpan(0).
+        local timeRemaining to _statLex:BurnTimeRemaining.
+
+        local trStr to "".
+        if timeRemaining > 60
+        {
+            local mins to Floor(timeRemaining / 60).
+            local secs to Round(timeRemaining - (mins * 60), 2).
+            set trStr to "{0}m {1}s   ":Format(mins, secs).
+        }
+        else
+        {
+            set trStr to Round(timeRemaining, 2).
         }
 
-        local timeRemaining to choose TimeSpan(_statLex:BurnTimeRemaining) if _statLex:HasKey("BurnTimeRemaining") else TimeSpan(0).
-        local trStr to choose "{0}m {1}":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 1)) if Floor(timeRemaining:Minutes) > 0 else "{0}":Format(Round(Mod(timeRemaining:Seconds, 60), 1)).
+
+        // local trStr to choose "{0}m {1}":Format(Floor(timeRemaining:Minutes), Round(Mod(timeRemaining:Seconds, 60), 2)) if Floor(timeRemaining:Minutes) > 0 else "{0}":Format(Round(Mod(timeRemaining:Seconds, 60), 2)).
         // local dispList to list(
         //     "ENGINE TELEMETRY"
         //     ,"THRUST    : {0}  ":Format(Round(_statLex:Thrust, 2))

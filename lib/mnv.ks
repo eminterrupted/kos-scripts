@@ -222,7 +222,7 @@
                 set spinArmed to preSpin > 0.
             }
 
-            local burnLeadTime to Max(preSpin * 1.12, UpdateTermScalar(15, list(1, 5, 15, 30))).
+            local burnLeadTime to Max(preSpin * 1.125, UpdateTermScalar(15, list(1, 5, 15, 30))).
             local warpFlag to False.
 
             until Time:Seconds >= burnEta
@@ -249,7 +249,7 @@
                             wait until KUniverse:TimeWarp:IsSettled.
                             set KUniverse:Timewarp:Mode to "RAILS".
                         }
-                        WarpTo(burnEta - Max(burnLeadTime * 1.1, preSpin * 1.1)).
+                        WarpTo(burnEta - burnLeadTime * 1.125).
                     }
                     else
                     {
@@ -302,7 +302,7 @@
                 
                 if not warpFlag 
                 {
-                    set burnLeadTime to Max(preSpin * 1.12, UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30))).
+                    set burnLeadTime to Max(preSpin * 1.125, UpdateTermScalar(burnLeadTime, list(1, 5, 15, 30))).
                 }
 
                 if burnEngsSpec:Ullage
@@ -572,7 +572,7 @@
                 set burnEngsSpec to g_ActiveSpecs.
             }
             // Initiate the burn with enough time for engine spoolup to occur.
-            set burnTS to burnTS - (burnEngsSpec:spooltime * 1.12). // This allows for spool time + adds a bit of buffer
+            set burnTS to burnTS - (burnEngsSpec:spooltime * 1.06). // This allows for spool time + adds a bit of buffer
 
             // If ullage is needed, calcualate that TS here
             if burnEngsSpec:ULLAGE
@@ -601,6 +601,8 @@
             // Determine which engines will be used to start the burn
             local ignitionsRemaining to 0.
             local nextBurnEngines to list().
+            local predictedEngBurnTime to 0.
+
             if g_ActiveEngines:Length > 0
             {
                 set nextBurnEngines to g_ActiveEngines.
@@ -608,26 +610,50 @@
                 {
                     set ignitionsRemaining to max(ignitionsRemaining, eng:Ignitions).
                 }
-            }
-            if ignitionsRemaining
+
+                if ignitionsRemaining = 0
+                {
+                    set g_NextEngines to GetNextEngines(Stage:Number).
+                    set nextBurnEngines to g_NextEngines.
+                }
+            } 
+            else 
             {
-                set g_NextEngines to GetNextEngines(Stage:Number - 1).
+                set g_NextEngines to GetNextEngines(Stage:Number).
                 set nextBurnEngines to g_NextEngines.
             }
-            local predictedEngBurnTime to GetPredictedBurnTime2(nextBurnEngines).
+            set predictedEngBurnTime to GetPredictedBurnTime2(nextBurnEngines).
+            OutDebug("PredictedEngBurnTime: {0}":Format(predictedEngBurnTime)).
             
             // Do we need to initiate spin stabilization prior to the burn?
             for p in Ship:PartsTaggedPattern("SpinDC\|\d+")
             {
                 OutInfo("SpinDC Found").
                 local pSplit to p:Tag:Split("|").
-                OutInfo(fullDur + " | " + burnEngsSpec:BurnTimeRemaining, 2).
+                OutDebug(fullDur + " | " + burnEngsSpec:BurnTimeRemaining, 2).
                 if p:Stage = Stage:Number - 1 
                 {
+                    // if g_ActiveEngines:Length = 0 or ignitionsRemaining = 0
+                    // {
+                    //     OutInfo("Stage Correct").
+                    //     set preSpin to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                    // }
+                    // else
+                    // {
+                    //     local spinDur to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                    //     if fullDur - spinDur > predictedEngBurnTime
+                    //     {
+                    //         set preSpin to fullDur - spinDur.
+                    //     }
+                    // }
                     if g_ActiveEngines:Length = 0
                     {
                         OutInfo("Stage Correct").
-                        set preSpin to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                        if ignitionsRemaining = 0 
+                        {
+                            OutInfo("Setting preSpin").
+                            set preSpin to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                        }
                     }
                     else
                     {
@@ -714,9 +740,14 @@
                         OutInfo("Spin Stopped                       ", 2).
                         set g_SpinArmed to false.
                     }
-                    else 
+                    else if preSpin > 0
                     {
-                        OutInfo("Spin Armed (T-{0}) ":Format(Round(spinTS - Time:Seconds, 2)), 2).
+                        OutInfo("Spin Armed [{0}] (T-{1}) ":Format(Round(preSpin, 2), Round(spinTS - Time:Seconds, 2)), 2).
+                        set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
+                    }
+                    else
+                    {
+                        OutInfo("", 2).
                         set s_Val to lookDirUp(_inNode:burnvector, rollUpVector:Call()).
                     }
                 }

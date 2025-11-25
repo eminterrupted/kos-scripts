@@ -28,8 +28,9 @@
     local ascent_Prog_Pitch_Alt_Start to 292. // 327. // 427.
     local ascent_Prog_Pitch_Alt_End   to 112500. // 120000. // 112001. // 100000. // Body:Atm:Height.
 
+    local arcAzDataPath to "0:/data/scratch/azData.json".
+    local locAzDataPath to "1:/data/azData.json".
 
-    
     local l_CrewRollVal             to choose 180 if Ship:Crew:Length > 0 else 0.
 
     local phase2Factor              to 0.475.// 0.69230769230775. // 0.725.
@@ -200,11 +201,13 @@
         if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            local fShape  to 1.075.
+            local fShape  to 1.092.
             local minPit  to 0.
-            local pitLim  to 33.
+            local pitLim  to 40.
+            // local fShape  to 1.075.
+            // local pitLim  to 33.
             //local pidVals to list(0.25, 0.05, 0.5, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-            local pidVals to list(0.0075, 0.001, 0.0125, list(-pitLim, pitLim)). // P, I, D, ChangeRate (upper / lower bounds for PID)
+            local pidVals to list(0.0075, 0.001, 0.0125, list((-pitLim * 0.5), pitLim)). // P, I, D, ChangeRate (upper / lower bounds for PID)
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
@@ -503,7 +506,8 @@
         // local turn_alt_end        to 175000. // choose 100000 if Body:Atm:Height < 100000 else Body:Atm:Height. //   _tgtAlt <= 200000 else min(325000, max(80000, Round(_tgtAlt / 2.5))).// 72500 
         
         // local turn_alt_blend      to 500. 
-        local turn_alt_blend    to proSrfObtBlendStartAlt * 0.925. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        local turn_alt_blend    to proSrfObtBlendStartAlt. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        // local turn_alt_blend    to proSrfObtBlendStartAlt * 0.925. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 4)).
         local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 3.25)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
@@ -4426,6 +4430,8 @@
         {
             set g_AzData to _azObj.
         }
+        WriteJson(g_azData, arcAzDataPath).
+        CopyPath(arcAzDataPath, locAzDataPath).
 
         set g_SteeringDelegate to GetAscentSteeringDelegate(_tgtAp, _tgtInc, g_AzData).
 
