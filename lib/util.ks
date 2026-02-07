@@ -506,14 +506,13 @@ global g_StateCache is "".
             { 
                 set g_TermChar to Terminal:Input:GetChar.
                 g_TermQueue:Push(g_TermChar).
-                set g_TermHasChar to True.
                 Terminal:Input:Clear().
             }
             // else
             // {
             //     set g_TermHasChar to False.
             // }
-            return g_TermHasChar.
+            return g_TermChar.
         }
 
 

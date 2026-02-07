@@ -181,73 +181,18 @@ runOncePath("0:/lib/util.ks").
                     set prmSet to list().
                     from { local i to 0.} until i >= prmSplit:Length step { set i to i + 1.} do
                     {
-                        local prm to prmSplit[i].
+                        local tagPrm to prmSplit[i].
 
                         if i = 0
                         {
-                            if prm:ToNumber(9999) = 9999
-                            {
-                                if prm = "TGT"
-                                {
-                                    OutMsg("Mission tag inclination set to TARGET mode").
-                                    
-                                    local doneFlag to false.
-                                    until doneFlag
-                                    {
-                                        if HasTarget
-                                        {
-                                            OutInfo("Target selected: {0} ":Format(Target:Name)).
-                                            OutInfo("Inclination Val: {0} ":Format(Round(Target:Orbit:Inclination, 3)), 1).
-                                            OutInfo("* Enter to confirm *|* Backspace to cancel *", 2).
-                                            
-                                            Terminal:Input:Clear.
-                                            set g_TermChar to "".
-                                            until g_TermChar <> ""
-                                            {
-                                                GetTermChar().
-                                                if CheckTermChar(Terminal:Input:Enter) 
-                                                {
-                                                    OutInfo("* Confirmed! *", 2).
-                                                    
-                                                    set prm to Round(Target:Orbit:Inclination, 3).
-                                                    prmSet:Add(prm).
-
-                                                    set dirtyTag to true.
-                                                    set doneFlag to true.
-                                                    wait 0.1.
-                                                }
-                                                else if CheckTermChar(Terminal:Input:Backspace)
-                                                {
-                                                    OutInfo("* Cancelling *", 2).
-                                                    wait 0.1.
-                                                    Unset Target.
-                                                }
-                                            }
-                                            set g_TermChar to "".
-                                        }
-                                        else
-                                        {
-                                            OutInfo("Target selected: N/A ").
-                                            OutInfo("Inclination Val: N/A ", 1).
-                                            OutInfo("* Select a target to continue *", 2).
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // #TODO PromptForTermInput function
-                                }
-                            }
-                            else
-                            {
-                                prmSet:Add(ParseStringScalar(prm)).
-                            }
+                            prmSet:Add(ParseInclinationTagParameter(tagPrm)).
+                            set dirtyTag to true.
                         }
                         else
                         {
-                            prmSet:Add(ParseStringScalar(prm)).
+                            prmSet:Add(ParseStringScalar(tagPrm)).
+                            set dirtyTag to true.
                         }
-
                     }
                 }
             }
@@ -270,6 +215,32 @@ runOncePath("0:/lib/util.ks").
 
     // *- Parameter parsing
     // #region
+
+    // ParseInclinationTagParameter
+    local function ParseInclinationTagParameter
+    {
+        parameter _incTag.
+
+        local parsedInc to 0.
+
+        if _incTag:MatchesPattern("TGT(:\w*)*")
+        {
+            set parsedInc to SetInclinationTagFromTarget(_incTag).
+        }
+        else if _incTag:ToNumber(808) = 808
+        {
+            // #TODO: Add invalid launch param catch
+            // set parsedInc to SetInclinationTagFromTerm(_incTag).
+            
+            // Temporary - launch at min inclination
+            set parsedInc to Round(Ship:Orbit:Inclination, 3).
+        }
+        else
+        {
+            set parsedInc to ParseStringScalar(_incTag).
+        }
+        return parsedInc. 
+    }
 
     // ParsePlanTag :: (_inTagObject<lexicon>) -> _formattedParameters
     // Takes the result of ParseCoreTag and translates the tagged parameters into usable values using g_PlanParamMap as the guide
@@ -385,5 +356,242 @@ runOncePath("0:/lib/util.ks").
         }
         return parsedVal.
     }
+
+
+    // #endregion
+
+    // Parameter setters
+    // #region 
+
+    // SetInclinationTagFromTarget :: _incTag<string> 0> _parsedVal<Scalar>
+    // Takes the core tag inclination parameter string and returns a validated and converted value
+    local function SetInclinationTagFromTarget
+    {
+        parameter _incTagStr. 
+
+        OutMsg("Mission tag inclination set to TARGET mode").
+
+        // Build a list of all possible targets orbiting this body
+        local tgtList to list().
+        for tgt in BuildList("targets")
+        {
+            if tgt:Body:Name = Ship:Body:Name
+            {
+                tgtList:Add(tgt).
+            }
+        }
+        for child in Body:OrbitingChildren
+        {
+            tgtList:Add(child).
+        }
+
+        // Determine if there is a target provided by the tag
+        if _incTagStr:MatchesPattern("tgt:\w+")
+        {
+            local tgtTagStr to _incTagStr:Replace("tgt:","").
+            if tgtTagStr = "Luna" set tgtTagStr to "Moon". // Because the game uses both Moon and Luna but not kOS, so I refer to it as luna sometimes
+            for tgt in tgtList
+            {
+                 // NOTE: This short circuits on the first match. If multiple ships have the same name, (i.e., multiple debris from a launch), the first will 
+                 // be set as the target. While vessels have internal guids to prevent naming collision issues, these are not exposed to kOS. If you need to 
+                 // target a vessel that may not have a unique name (especially debris), give it a unique name in flight / from the tracking station.
+                if tgt:Name = tgtTagStr
+                {
+                    set Target to tgt.
+                    break.
+                }
+            }
+        }
+
+        // Initialize loop variables
+        local tgtName to "N/A".
+        local tgtInc to 0.
+        local tgtPtr to Ship.
+        local doneFlag to false.
+        local incConfirmFlag to false.
+        local tgtConfirmFlag to false.
+        
+        // Loop until we have a valid target and inclination parameter
+        until doneFlag
+        {
+
+            // Clear waiting terminal keypresses to avoid accidental commands
+            Terminal:Input:Clear.
+            set g_TermChar to "".
+            // Target confirmation
+            until tgtConfirmFlag 
+            {
+                // Do we have a target? If so, set the name.
+                if HasTarget 
+                {
+                    set tgtPtr to Target.
+                    set tgtName to Target:Name.
+                }
+                else
+                {
+                    set tgtPtr to Ship.
+                    set tgtName to "N/A".
+                }
+                OutInfo("Selected target: " + tgtName).
+                OutInfo("ENTER: Confirm | DELETE: Clear | BACKSPACE: Skip", 1).
+
+                // Check any waiting input against enabled commands
+                if GetTermChar() <> ""
+                {
+                    if CheckTermChar(Terminal:Input:Enter)
+                    {
+                        if HasTarget
+                        {
+                            set tgtInc to Round(tgtPtr:Orbit:Inclination,3).            
+                            set tgtConfirmFlag to true.
+                            OutInfo("*** Target Confirmed *** ", 2).
+                            wait 0.125.
+                        }
+                        else
+                        {
+                            OutInfo("[ERR]: No target selected! ", 2).
+                            wait 0.25.
+                        }
+                    }
+                    else if CheckTermChar(Terminal:Input:DeleteRight)
+                    {
+                        Unset Target.
+                        set tgtName to "N/A".
+                        set tgtPtr to Ship.
+                        OutInfo("* Target cleared *", 2).
+                        wait 0.125.
+                    }
+                    else if CheckTermChar(Terminal:Input:Backspace)
+                    {
+                        set tgtName to "N/A".
+                        set tgtPtr to Ship.
+                        set tgtConfirmFlag to true.
+                        set incConfirmFlag to true.
+                        set tgtInc to Round(Ship:Orbit:Inclination, 3).
+                        OutInfo("* Skipping target selection * ", 2).
+                        wait 0.25.
+                    }
+                    set g_TermChar to "".
+                }
+            }
+            
+            Terminal:Input:Clear.
+            set g_TermChar to "".
+            until incConfirmFlag
+            {
+                OutInfo("Selected inclination: " + tgtInc).
+                OutInfo("ENTER: Confirm | UP: Asc | DOWN: Desc | BACKSPACE: Skip", 1).
+
+                if GetTermChar() <> ""
+                {
+                    if CheckTermChar(Terminal:Input:Enter)
+                    {
+                        set incConfirmFlag to true.
+                        OutInfo("*** Inclination Confirmed *** ", 2).
+                        wait 0.125.
+                    }
+                    else if CheckTermChar(Terminal:Input:UpCursorOne)
+                    {
+                        set tgtInc to Abs(tgtInc).
+                        OutInfo("* Target inclination set to ascending node *", 2).
+                        wait 0.125.
+                    }
+                    else if CheckTermChar(Terminal:Input:DownCursorOne)
+                    {
+                        set tgtInc to tgtInc * -1.
+                        OutInfo("* Target inclination set to descending node *", 2).
+                        wait 0.125.
+                    }
+                    else if CheckTermChar(Terminal:Input:Backspace)
+                    {
+                        set tgtName to "N/A".
+                        set tgtPtr to Ship.
+                        set tgtConfirmFlag to true.
+                        set incConfirmFlag to true.
+                        set tgtInc to Round(Ship:Orbit:Inclination, 3).
+                        OutInfo("* Skipping target selection * ", 2).
+                        wait 0.25.
+                    }
+                    set g_TermChar to "".
+                }
+            }
+            
+            return tgtInc.
+        }
+    }   
+
+    local function foo
+    {
+
+        local tgtIncConfirm to false.
+        local tgtSelectConfirm to false. 
+
+        local tgtInc to 0.
+        until tgtIncConfirm
+        {
+            if HasTarget
+            {
+                set tgtInc to Target:Orbit:Inclination.
+                OutInfo("Target: {0} | Inclination: {1} ":Format(Target:Name, Round(tgtInc, 3))).
+                OutInfo("*** Use panel controls to adjust inclination ***", 1).
+                OutInfo("ENTER: Confirm | BACKSPACE: Clear | END: Skip ", 2).
+                
+                Terminal:Input:Clear.
+                set g_TermChar to "".
+                until g_TermChar <> ""
+                {
+                    GetTermChar().
+                    if CheckTermChar(Terminal:Input:Enter) 
+                    {
+                        OutInfo("* Target Confirmed! *", 2).
+                        
+                        set _incTag to Round(tgtInc, 3).
+                        prmSet:Add(_incTag).
+
+                        set dirtyTag to true.
+                        set tgtSelectConfirm to true.
+                        wait 0.5.
+                    }
+                    else if CheckTermChar(Terminal:Input:Backspace)
+                    {
+                        OutInfo("* Clearing Target *", 2).
+                        wait 0.5.
+                        Unset Target.
+                    }
+                }
+                set g_TermChar to "".
+            }
+            else
+            {
+                OutInfo("Target selected: (Select a target) ").
+                OutInfo("Inclination Val: {0}} ":Format(Round(tgtInc, 3)), 1).
+                OutInfo("END: Skip ", 2).
+
+                if g_TermChar <> ""
+                {
+                    GetTermChar().
+                    if CheckTermChar(Terminal:Input:EndCursor)
+                    {
+                        OutInfo("Target selected: NONE      ").
+                        OutInfo(" *** Skipping Target Selection *** ", 2).
+
+                        set _incTag to Round(tgtInc, 3).
+                        prmSet:Add(_incTag).
+
+                        set dirtyTag to true.
+
+                        wait 0.5.
+                    }
+                }
+            }
+
+            if g_TermChar <> ""
+            {
+
+            }
+        }
+    }
+
+
     // #endregion
 // #endregion

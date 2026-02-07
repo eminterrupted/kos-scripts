@@ -137,7 +137,6 @@
     // Terminal Input
     global g_TermChar to "".
     global g_TermGrid to lexicon().
-    global g_TermHasChar to False.
     global g_TermCharRead to False.
 
     // Engines
