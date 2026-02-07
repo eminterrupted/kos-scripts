@@ -19,7 +19,7 @@
 
         },
         "workbench.preferredDarkColorTheme": "Dracula At Night",
-        "workbench.iconTheme": "vscode-icons",
+        "workbench.iconTheme": "a-file-icon-vscode",
         "workbench.tree.indent": 10,
 		"diffEditor.maxFileSize": 100,
 		"terminal.integrated.fontSize": 16

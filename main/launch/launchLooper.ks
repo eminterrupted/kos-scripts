@@ -6,8 +6,8 @@ parameter _params is list().
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
 RunOncePath("0:/lib/abort.ks").
-RunOncePath("0:/kslib/lib_navball.ks").
-RunOncePath("0:/kslib/lib_l_az_calc.ks").
+RunOncePath("0:/lib/kslib/lib_navball.ks").
+RunOncePath("0:/lib/kslib/lib_l_az_calc.ks").
 
 // Local vars
 local ascShaper to 1.

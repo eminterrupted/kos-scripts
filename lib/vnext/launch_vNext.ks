@@ -4,8 +4,8 @@
 // Required libraries not loaded by libLoader by default go here
 // #region
     // #include "0:/lib/libLoader.ks"
-    // runOncePath("0:/kslib/lib_l_az_calc.ks").
-    // runOncePath("0:/kslib/lib_navball.ks").
+    // runOncePath("0:/lib/kslib/lib_l_az_calc.ks").
+    // runOncePath("0:/lib/kslib/lib_navball.ks").
 // #endregion
 
 

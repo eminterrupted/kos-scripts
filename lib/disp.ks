@@ -591,7 +591,6 @@ parameter _termPop is True.
     global function DispLaunchConfigData
     {
         parameter _configData is lexicon(),
-                  _selectionIdx is -1,
                   _dispBlockIdx is -1.
 
         if Terminal:Height + Terminal:Width <> g_TermSize

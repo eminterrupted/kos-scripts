@@ -26,8 +26,8 @@ if filterLevel < 2
 }
 if filterLevel < 1 
 {
-    RunOncePath("0:/kslib/lib_navball.ks").
-    RunOncePath("0:/kslib/lib_navigation.ks").
+    RunOncePath("0:/lib/kslib/lib_navball.ks").
+    RunOncePath("0:/lib/kslib/lib_navigation.ks").
     RunOncePath("0:/lib/nav.ks").
     RunOncePath("0:/lib/orbit.ks").
     RunOncePath("0:/lib/engines.ks").

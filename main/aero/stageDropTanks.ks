@@ -66,6 +66,7 @@ else
         "ID", lexicon(
             0, lexicon(
                 "UIDSET", list()
+                ,"DCPARTS", list()
                 ,"DCMODULES", list()
                 ,"TESTPARTS", list()
                 ,"TESTRES", list()
@@ -82,6 +83,7 @@ else
         {
             dtSet:ID:Add(dtTagIdx, lexicon(
                 "UIDSET", list()
+                ,"DCPARTS", list()
                 ,"DCMODULES", list()
                 ,"TESTPARTS", list()
                 ,"TESTRES", list()
@@ -98,47 +100,50 @@ else
                     {
                         local m to dtPart:GetModule(moduleName).
                         dtSet:ID[dtTagIdx]:DCMODULES:Add(m).
+                        dtSet:ID[dtTagIdx]:DCPARTS:Add(dtPart).
+                        dtSet:ID[dtTagIdx]:UIDSET:Add(dtPart:UID).
+                        set doneFlag to true.
                     }
                 }
             }
-            
-            // Find the reference part if we don't already have one for this stage
-            local testResourceFound to false.
-            
-            if dtPart:Resources:Length > 0
+        }
+
+        // Find the reference part if we don't already have one for this stage
+        local testResourceFound to false.
+        
+        if dtPart:Resources:Length > 0
+        {
+            for dtRes in dtPart:Resources
             {
-                for dtRes in dtPart:Resources
+                if engResList:Contains(dtRes:Name)
                 {
-                    if engResList:Contains(dtRes:Name)
-                    {
-                        dtSet:ID[dtTagIdx]:TESTRES:Add(dtRes).
-                        dtSet:ID[dtTagIdx]:TESTPARTS:Add(dtPart).
-                        set testResourceFound to true.
-                    }
+                    dtSet:ID[dtTagIdx]:TESTRES:Add(dtRes).
+                    dtSet:ID[dtTagIdx]:TESTPARTS:Add(dtPart).
+                    set testResourceFound to true.
                 }
             }
+        }
 
-            if testResourceFound
+        if testResourceFound
+        {
+            // TODO: What happens when resources have been located in the directly-tagged part vs needing to look for resources in the downstream part tree
+        }
+        else
+        {
+            local dtChildren to dtPart:Children.
+
+            from { local i to 0. local doneFlag to false.} until i = dtChildren:Length or doneFlag step { set i to i + 1.} do
             {
-
-            }
-            else
-            {
-                local dtChildren to dtPart:Children.
-
-                from { local i to 0. local doneFlag to false.} until i = dtChildren:Length or doneFlag step { set i to i + 1.} do
+                local child to dtChildren[i].
+                if child:Resources:Length > 0
                 {
-                    local child to dtChildren[i].
-                    if child:Resources:Length > 0
+                    for chRes in child:Resources
                     {
-                        for chRes in child:Resources
+                        if engResList:Contains(chRes:Name)
                         {
-                            if engResList:Contains(chRes:Name)
-                            {
-                                dtSet:ID[dtTagIdx]:TESTRES:Add(chRes).
-                                dtSet:ID[dtTagIdx]:TESTPARTS:Add(child).
-                                set doneFlag to true.
-                            }
+                            dtSet:ID[dtTagIdx]:TESTRES:Add(chRes).
+                            dtSet:ID[dtTagIdx]:TESTPARTS:Add(child).
+                            set doneFlag to true.
                         }
                     }
                 }
@@ -177,22 +182,63 @@ else
     { // parameter _stg to Stage:Number. local LastStage to _stg. wait until Stage:Ready. Stage. wait 0.01. return Stage:Number <> LastStage. }.
         parameter _setId to 0.
 
-        local mSet to dtSet:ID[_setId]:DCMODULES.
-        if mSet:Length > 0
+        local dtResult to 0.
+        
+        local pSet to Ship:PartsTaggedPattern("droptank\|\d*"). 
+
+        if pSet:Length > 0
         {
+
             OutMsg().
             OutInfo().
             OutMsg("Dropping tanks for set: {0}":Format(_setId)).
-
-            for m in mSet
+            for p0 in pSet 
             {
-                for p in m:Part:PartsNamedPattern("sep|spin")
+                if p0:IsType("Decoupler") 
                 {
-                    if p:IsType("Engine") p:Activate.
+                    // look for sep engines to fire
+                    for m1 in p0:ModulesNamed("ModuleEnginesFX")
+                    {
+                        if m1:Part:IsType("Engine") 
+                        {
+                            local eng to m1:Part.
+                            if not eng:Ignition or eng:Flameout
+                            {
+                                if eng:Ignitions > 0
+                                {
+                                    eng:Activate.
+                                }
+                            }
+                        }
+                    }
+
+                    // Fire the decoupler event
+                    for dcTypeName in g_ModEvents:Decoupler:Keys
+                    {
+                        if p0:HasModule(dcTypeName)
+                        {
+                            set dtResult to dtResult + DoEvent(p0:GetModule(dcTypeName), g_modEvents:Decoupler[dcTypeName]:Decouple).
+                        }
+                    }
                 }
-                DoEvent(m, g_ModEvents:Decoupler[m:Name]:Decouple).
             }
         }
+
+        return dtResult.
+
+        // local mSet to list().// dtSet:ID[_setId]:DCMODULES.
+        // if mSet:Length > 0
+        // {
+
+        //     for m in mSet
+        //     {
+        //         for p in m:Part:PartsNamedPattern("sep|spin")
+        //         {
+        //             if p:IsType("Engine") p:Activate.
+        //         }
+        //         DoEvent(m, g_ModEvents:Decoupler[m:Name]:Decouple).
+        //     }
+        // }
     }.
 
     local actDel to actionDelegate@.

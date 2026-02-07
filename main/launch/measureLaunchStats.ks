@@ -5,7 +5,7 @@ parameter params is list().
 
 RunOncePath("0:/lib/libLoader.ks").
 RunOncePath("0:/lib/launch.ks").
-RunOncePath("0:/kslib/lib_l_az_calc.ks").
+RunOncePath("0:/lib/kslib/lib_l_az_calc.ks").
 
 set g_MainProc to ScriptPath().
 DispMain().

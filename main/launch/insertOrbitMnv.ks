@@ -7,7 +7,7 @@ parameter _params is list().
 RunOncePath("0:/lib/libLoader").
 RunOncePath("0:/lib/launch").
 RunOncePath("0:/lib/mnv").
-RunOncePath("0:/kslib/lib_l_az_calc").
+RunOncePath("0:/lib/kslib/lib_l_az_calc").
 
 set g_MainProc to ScriptPath().
 DispMain().

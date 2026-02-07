@@ -7,7 +7,7 @@
 // #include "0:/lib/disp.ks"
 // #include "0:/lib/engines.ks"
 // #include "0:/lib/abort.ks"
-// #include "0:/kslib/lib_l_az_calc.ks"
+// #include "0:/lib/kslib/lib_l_az_calc.ks"
     
 // #endregion
 
@@ -206,6 +206,10 @@
 
                         OutInfo("***Arming DecouplerEvent Result: [{0}]":Format(dcEventRegistrationResult)).
                     }
+                }
+                else if epTagSplit[0]:MatchesPattern("(Control|CTRL)") // Control authority actions (RCS / aero surfaces)
+                {
+                    
                 }
             }
 

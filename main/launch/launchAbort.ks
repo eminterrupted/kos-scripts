@@ -206,7 +206,7 @@ until g_Program < 0
                 set g_ActiveEngines to GetActiveEngines().
                 if g_ActiveEngines:Length > 0
                 {
-                    set btRem to GetEnginesBurnTimeRemaining(g_ActiveEngines).
+                    set btRem to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines).
                 }
             }
             local progETA to Max(g_TS0 - Time:Seconds, btRem).

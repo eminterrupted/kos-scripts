@@ -228,7 +228,17 @@
             until Time:Seconds >= burnEta
             {
                 if warp = 0 set warpFlag to False.
-                if not warpFlag OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+                if not warpFlag 
+                {
+                    OutMsg("Press Shift+W to warp to [maneuver - {0}s]":Format(burnLeadTime)).
+                }
+                else
+                {
+                    if Time:Seconds > burnETA - burnLeadTime
+                    {
+                        set warp to 0.
+                    }
+                }
                 
                 GetTermChar().
 
@@ -249,7 +259,7 @@
                             wait until KUniverse:TimeWarp:IsSettled.
                             set KUniverse:Timewarp:Mode to "RAILS".
                         }
-                        WarpTo(burnEta - burnLeadTime * 1.125).
+                        WarpTo(burnEta - Min(15, burnLeadTime * 1.25)).
                     }
                     else
                     {
@@ -605,16 +615,17 @@
 
             if g_ActiveEngines:Length > 0
             {
+                local engIgnsMax to { parameter _engs. local igns to 0. for eng in _engs { set igns to max(igns, eng:ignitions).} return igns. }.
                 set nextBurnEngines to g_ActiveEngines.
-                for eng in nextBurnEngines
-                {
-                    set ignitionsRemaining to max(ignitionsRemaining, eng:Ignitions).
-                }
 
-                if ignitionsRemaining = 0
+                from { local _stg to Stage:Number. } until ignitionsRemaining > 0 or _stg < 0 step { set _stg to _stg - 1. } do
                 {
-                    set g_NextEngines to GetNextEngines(Stage:Number).
-                    set nextBurnEngines to g_NextEngines.
+                    set ignitionsRemaining to engIgnsMax:Call(nextBurnEngines).
+                    if ignitionsRemaining = 0 
+                    {
+                        set g_NextEngines to GetNextEngines(_stg).
+                        set nextBurnEngines to g_NextEngines.
+                    }
                 }
             } 
             else 
@@ -626,12 +637,19 @@
             OutDebug("PredictedEngBurnTime: {0}":Format(predictedEngBurnTime)).
             
             // Do we need to initiate spin stabilization prior to the burn?
+            // if useNext
+            // {
+
+            // }
+            
+            
             for p in Ship:PartsTaggedPattern("SpinDC\|\d+")
             {
                 OutInfo("SpinDC Found").
                 local pSplit to p:Tag:Split("|").
                 OutDebug(fullDur + " | " + burnEngsSpec:BurnTimeRemaining, 2).
-                if p:Stage = Stage:Number - 1 
+
+                if p:Stage = Stage:Number - 1
                 {
                     // if g_ActiveEngines:Length = 0 or ignitionsRemaining = 0
                     // {
@@ -652,13 +670,13 @@
                         if ignitionsRemaining = 0 
                         {
                             OutInfo("Setting preSpin").
-                            set preSpin to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
+                            set preSpin to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
                         }
                     }
                     else
                     {
-                        local spinDur to choose pSplit[1]:ToNumber(18) if pSplit:Length > 1 else 12.
-                        if fullDur - spinDur > predictedEngBurnTime
+                        local spinDur to choose pSplit[1]:ToNumber(12) if pSplit:Length > 1 else 12.
+                        if fullDur - spinDur >= predictedEngBurnTime
                         {
                             set preSpin to spinDur.
                         }
@@ -778,6 +796,18 @@
                 {
                     wait until KUniverse:TimeWarp:IsSettled.
                     set warpFlag to False.
+                }
+                else if warp >= 1 and Time:Seconds > burnLeadTS - 15
+                {
+                    set warp to 0.
+                }
+                else if warp >= 2 and Time:Seconds > burnLeadTS - 45
+                {
+                    set warp to 1.
+                }
+                else if warp >= 3 and Time:Seconds > burnLeadTS - 120
+                {
+                    set warp to 2.
                 }
 
                 if not warpFlag 
@@ -971,8 +1001,10 @@
                         }
                     }
                     
-                    set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                    // set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     // set burnTimeRemaining to GetEnginesBurnTimeRemaining(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                    // set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                    set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
                     
                     set t_Val to max(0.01, min(burnNode:deltaV:mag / maxAcc, 1)).
 

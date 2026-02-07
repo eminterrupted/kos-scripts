@@ -1,23 +1,23 @@
 {
     "items": [
         {
-            "value": 25.976703643798828,
+            "value": 84,
+            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
+        },
+        {
+            "value": 25.988996505737305,
             "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
         },
         {
-            "value": 25.976703643798828,
+            "value": 464.58143030460343,
             "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
         },
         {
-            "value": 464.58065599669811,
+            "value": 7658.4676072344082,
             "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
         },
         {
-            "value": 7715.4482366772363,
-            "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
-        },
-        {
-            "value": "Ascending",
+            "value": "Descending",
             "$type": "kOS.Safe.Encapsulation.StringValue"
         },
         {

@@ -24,6 +24,12 @@ global g_StateCache is "".
         ,"ms", 0.001
     ).
 
+    local l_typeMap to lexicon(
+        "Single", "Scalar"
+        ,"Double", "Scalar"
+        ,"Float", "Scalar"
+    ).
+
     local l_logInit to False.
     local l_LogPathMask to "0:/log/mission/log_{0}.txt".
     local l_Log to l_LogPathMask:Format(Ship:Name:Replace(" ", "_")).
@@ -1167,6 +1173,31 @@ global g_StateCache is "".
         }
     }
     // #endregion
+
+
+    // *- Type Checking
+    // #region
+
+    // SafeTypeCheck :: (_inVal)<type>, _checkType<string> -> (result)<bool>
+    // Provided a value and a type to check against, returns whether the value is 
+    // that type. This wraps IsType with the ability to look for specific types of
+    // scalar types like Single, Double, etc, as provided by module fields.
+    global function SafeTypeCheck
+    {
+        parameter _inVal,
+                  _checkType.
+
+        if l_typeMap:Keys:Contains(_checkType)
+        {
+            return _inVal:IsType(l_typeMap[_checkType]).
+        }
+        else
+        {
+            return _inVal:IsType(_checkType).
+        }
+    }
+    // #endregion
+
 
     // Addon Wrappers
     // #region

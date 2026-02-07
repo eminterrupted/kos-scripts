@@ -195,7 +195,7 @@
                         {
                             for eng in g_ShipEngines_Spec[i]:EngList
                             {
-                                if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:Contains("booster")
+                                if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:MatchesPattern("booster|MECO")
                                 {
                                     stageEngines:Add(eng).
                                 }
@@ -220,17 +220,28 @@
                                 // if g_RehydrateEngines_Flag
                                 // {
                                 // set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
-                                local engs to GetActiveEngines(Ship, "NoBooster").
+                                local rawEngs to GetActiveEngines(Ship, "LastOfStage").
+                                local engs to list().
+                                for eng in rawEngs 
+                                {
+                                    if not eng:name:matchesPattern("LR101|vernier")
+                                    {
+                                        engs:add(eng).
+                                    }
+                                }
+                                
                                 // }
                                 // if g_ActiveEngines:Length > 0
                                 if engs:Length > 0
                                 {
                                     OutInfo("HotStaging Armed").
 
-                                    local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.25) + ExtraLeadTime. 
+                                    local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
+                                    local stageEngines_Data to GetEnginesPerformanceData(engs).
+                                    set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:Length. // * (1 - stageEngines_Data:AverageResiduals).
                                     // local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
-                                    set stageEngines_BT to GetEnginesBurnTimeRemaining_Next(engs).
+                                    // set stageEngines_BT to GetEnginesBurnTimeRemaining_Next(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                     set g_TR to stageEngines_BT - SpoolTime.
@@ -280,6 +291,7 @@
                         wait 0.5.
                         OutInfo().
                         OutInfo("", 1).
+                        OutInfo("", 2).
                         g_LoopDelegates:Staging:HotStaging:REMOVE(HotStageID).
                         if g_LoopDelegates:Staging:HotStaging:KEYS:Length = 0
                         {
@@ -384,7 +396,7 @@
 
                                 local SpoolTime to (g_LoopDelegates:Staging:HotStaging[maxLeadStage]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
                                 // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
-                                set stageEngsBT to GetEnginesBurnTimeRemaining(engs).
+                                set stageEngsBT to GetEnginesBurnTimeRemaining_Next(engs).
                                 // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                 // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                 set g_TR to stageEngsBT - SpoolTime.
@@ -932,11 +944,15 @@
             {
                 OutInfo("*** STAGING ***"). 
                 local RCSResult to RCS. // Stores current RCS state
+                // for m in Stage:NextDecoupler:ModulesNamed("ModuleRCSFX")
+                // {
+                //     m:SetField("RCS", false).
+                // }
                 set RCS to False. // Disables RCS just before staging in case the stage we drop had RCS ullage. We don't need that slamming back into us as we're building up thrust
                 // lock throttle to 0.
                 wait until Stage:Ready.
                 Stage.
-                wait 0.01.
+                wait 0.02.
                 // lock throttle to t_Val.
                 set RCS to rcsResult. // Restores the RCS state to whatever it was before staging.
             }
@@ -1207,14 +1223,17 @@
                         {
                             dvObj:DC:Add(p:Decoupler).
                         }
-
-                        for p_ in p:Decoupler:PartsNamedPattern("")
+                        if p:Decoupler <> "NONE"
                         {
-                            if p_:IsType("Engine")
+                            for p_ in p:Decoupler:PartsNamedPattern("")
                             {
-                                dvObj:ENG:Add(p).
+                                if p_:IsType("Engine")
+                                {
+                                    dvObj:ENG:Add(p).
+                                }
                             }
                         }
+
                         set dVObj to lex("TYPE", 1, "PARAM", dvStgParam, "MNVDV", adjustedMnvDV, "DC", dVObj:DC, "ENG", dvObj:ENG).
                         
 

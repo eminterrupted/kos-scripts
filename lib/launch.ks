@@ -3,8 +3,8 @@
 
 // *~ Dependencies ~* //
 // #region
-    RunOncePath("0:/kslib/lib_l_az_calc.ks").
-    RunOncePath("0:/kslib/lib_navball.ks").
+    RunOncePath("0:/lib/kslib/lib_l_az_calc.ks").
+    RunOncePath("0:/lib/kslib/lib_navball.ks").
 // #endregion
 
 
@@ -15,8 +15,8 @@
     local lc_MinAoA                 to -45.
     // local proSrfObtBlendStartAlt    to 62500.
 
-    local partCAlt to 4250. // 6248. // 7268. // 12500
-    local proSrfObtBlendStartAlt    to 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
+    local partCAlt to 4776. // 4250. // 6248. // 7268. // 12500
+    local proSrfObtBlendStartAlt    to 62500. // 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
 
     local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
     local ascent_Next_Alt_Width  to 37500. // 32500. // 22500. // 17500.
@@ -31,7 +31,10 @@
     local arcAzDataPath to "0:/data/scratch/azData.json".
     local locAzDataPath to "1:/data/azData.json".
 
-    local l_CrewRollVal             to choose 180 if Ship:Crew:Length > 0 else 0.
+    local crewCapDelegate to { parameter _v. local eCrewCap to _v:CrewCapacity. for p in _v:PartsTaggedPattern("PadCrewCap\|\d+") { set eCrewCap to eCrewCap - p:Tag:Split("|")[1]:ToNumber(0).} return eCrewCap.}.
+    local effCrewCap to crewCapDelegate:Call(Ship).
+    OutInfo("Effective Crew Capacity: {0} ":Format(effCrewCap)).
+    local l_CrewRollVal             to choose 180 if effCrewCap > 0 else 0.
 
     local phase2Factor              to 0.475.// 0.69230769230775. // 0.725.
 
@@ -201,7 +204,7 @@
         if g_AngDependency:Keys:Length = 0// and g_azData:Length > 0
         {
             // set _delDependency to InitAscentAng_Next(_tgtAlt, 0.9875, 7.5, 30).
-            local fShape  to 1.092.
+            local fShape  to 1.125. // 1.092.
             local minPit  to 0.
             local pitLim  to 40.
             // local fShape  to 1.075.
@@ -226,7 +229,7 @@
             {
                 set fShape to 0.96.
                 set minPit to 1.25.
-                set pitLim to 22.5.
+                set pitLim to 18.
                 set pidVals to list(0.01, 0.00125, 0.01125, list(-pitLim, pitLim)). // P, I, D, ChangeRate (upper / lower bounds for PID)
                 // set pidVals to list(0.125, 0.00125, 0.725, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
                 set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
@@ -506,7 +509,8 @@
         // local turn_alt_end        to 175000. // choose 100000 if Body:Atm:Height < 100000 else Body:Atm:Height. //   _tgtAlt <= 200000 else min(325000, max(80000, Round(_tgtAlt / 2.5))).// 72500 
         
         // local turn_alt_blend      to 500. 
-        local turn_alt_blend    to proSrfObtBlendStartAlt. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        // local turn_alt_blend    to proSrfObtBlendStartAlt.
+        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(37500, _tgtAlt / 4)). // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_blend    to proSrfObtBlendStartAlt * 0.925. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 4)).
         local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 3.25)).
@@ -1436,6 +1440,10 @@
             }
             else if current_alt < turn_alt_blend and Ship:VerticalSpeed > 0
             {
+                if not _ascAngObj:HasKey("PartCPitchLimit")
+                {
+                    set _ascAngObj["PartCPitchLimit"] to current_pitch.
+                }
                 // OutInfo("pitch_limit_min|max: [{0}|{1}]":Format(Round(pitch_limit_min, 5), Round(pitch_limit_max, 5)), 2).
                 // local alt_error_blended to altitude_error * (1 - altitude_error).
 
@@ -1488,6 +1496,10 @@
             }
             else if current_ap_alt < turn_alt_end and Ship:VerticalSpeed > 0
             {
+                if not _ascAngObj:HasKey("PartDPitchLimit")
+                {
+                    set _ascAngObj["PartDPitchLimit"] to current_pitch.
+                }
                 local alt_err_norm to altitude_error * (1 - (0.50 * altitude_error)).
                 
                 local blend_apo_error   to (current_apo - turn_alt_end) / (target_apo - turn_alt_end).
@@ -1539,7 +1551,11 @@
                 DispAscentAngleStats(ascentAngData).
             }
             else if current_ap_alt < target_apo_turn and Ship:VerticalSpeed > 0
-            {               
+            {
+                if not _ascAngObj:HasKey("PartEPitchLimit")
+                {
+                    set _ascAngObj["PartEPitchLimit"] to current_pitch.
+                }
                 // local apo_turn_norm to min(1, max(0, apo_turn_error)). //  altitude_error * (1 - (0.50 * altitude_error)).
                 
                 // local blend_apo_error   to (current_apo - turn_alt_end) / (target_apo - turn_alt_end).
@@ -4371,11 +4387,17 @@
 
             print " ":PadRight(Terminal:Width - 1) at (0, Terminal:Height - 5).
 
-            return g_LaunchData.
+            return g_LaunchParams.
         }
         else if modifyCommit
         {
-            
+            local confirmChangesFlag to false.
+            local cancelChangesFlag  to false.
+
+            // // #TODO ModifyCommit section
+            // until confirmChangesFlag or cancelChangesFlag
+            // {
+            // }
         }
     }
 // #endregion
@@ -4481,7 +4503,7 @@
         }
 
         DispStateFlags().
-        DispLaunchConfigData().
+        DispLaunchConfigData(launchObj).
 
         return launchObj.
     }
@@ -4753,11 +4775,11 @@
                 }
                 reboot.
             }
-            // 
-            else if g_TermChar = Terminal:Input:Backspace
-            {
-                set g_launchParams to ModifyLaunchParameters().
-            }
+            // TODO: Modify Launch Params
+            // else if g_TermChar = Terminal:Input:Backspace
+            // {
+            //     set g_launchParams to ModifyLaunchParameters().
+            // }
             // else if g_TermChar = Terminal:Input:HomeCursor or reInitLaunchConfig
             // {
             //     OutMsg("Reinitializing launch configuration").

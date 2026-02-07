@@ -2,7 +2,7 @@
 ClearScreen.
 
 RunOncePath("0:/lib/libLoader.ks").
-RunOncePath("0:/kslib/lib_l_az_calc.ks").
+RunOncePath("0:/lib/kslib/lib_l_az_calc.ks").
 
 set g_MainProc to ScriptPath().
 DispMain().
@@ -210,40 +210,45 @@ local function ExecCircBurn
     local burnTime to -1. // This will result in a leadtime of half of all burntime in the currently available stages (i.e., not limited by g_StageLimit)
     OutMsg("Executing circAtApo").
     wait 0.25.
-    if tgtEcc > -1
+    
+    set g_MissionTag to ParseCoreTag(Core:Tag).
+    if g_MissionTag:Params:Length > 2 
     {
-        // Set tgtAp to current Apoapsis; no sense in basing calculations of ideal vs reality
-        local tgtApTagStr to ParseScalarShortString(tgtAp).
-        set tgtAp to Round(Ship:Apoapsis).
-
-        if tgtEcc < 0
+        if g_MissionTag:Params[2] > -1 and g_MissionTag:Params[2] < 1
         {
-            set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
+            // Set tgtAp to current Apoapsis; no sense in basing calculations of ideal vs reality
+            local tgtApTagStr to ParseScalarShortString(tgtAp).
+            set tgtAp to Round(Ship:Apoapsis).
+
+            if tgtEcc < 0
+            {
+                set tgtPe to GetPeFromApEcc(tgtAp, abs(tgtEcc), Ship:Body).
+            }
+            else
+            {
+                set tgtPe to tgtAp.
+                set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
+            }
+
+            local curApTagStr to ParseScalarShortString(tgtAp).
+            local curPeTagStr to ParseScalarShortString(tgtPe).
+            set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace("{0}|":Format(tgtEcc:ToString), "{0}|":Format(curPeTagStr)).
+
+            // Make the changes to g_missionTag:Params
+            set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
         }
         else
         {
-            set tgtPe to tgtAp.
-            set tgtAp to GetApFromPeEcc(Ship:Apoapsis, tgtEcc, Ship:Body).
-        }
-
-        local curApTagStr to ParseScalarShortString(tgtAp).
-        local curPeTagStr to ParseScalarShortString(tgtPe).
-        set Core:Tag to Core:Tag:Replace(tgtApTagStr, curApTagStr):Replace("{0}|":Format(tgtEcc:ToString), "{0}|":Format(curPeTagStr)).
-
-        // Make the changes to g_missionTag:Params
-        set g_MissionTag:Params to list(g_MissionTag:Params[0], tgtAp, tgtPe).
-    }
-    else
-    {
-        if tgtPe > Ship:Apoapsis
-        {
-            set tgtAp to tgtPe.
-            set tgtPe to Round(Ship:Apoapsis).
-        }
-        else if tgtPe < Ship:Body:Atm:Height
-        {
-            set tgtAp to Round(Ship:Apoapsis).
-            set tgtPe to Ship:Body:Atm:Height + 25000.
+            if tgtPe > Ship:Apoapsis
+            {
+                set tgtAp to tgtPe.
+                set tgtPe to Round(Ship:Apoapsis).
+            }
+            else if tgtPe < Ship:Body:Atm:Height
+            {
+                set tgtAp to Round(Ship:Apoapsis).
+                set tgtPe to Ship:Body:Atm:Height + 25000.
+            }
         }
     }
     set g_MissionTag to ParseCoreTag(Core:Tag).
