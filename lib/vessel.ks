@@ -2054,7 +2054,7 @@
                 local checkDel to {
                     parameter _params is list().
 
-                    if Abort or (Ship:Altitude >= 96000 and Ship:Velocity:Surface:Mag > 2250)
+                    if Abort or (Ship:Altitude >= 85000 and Ship:Velocity:Surface:Mag > 1750) or Ship:Altitude > 112000
                     {
                         return true.
                     }

@@ -1178,7 +1178,8 @@
             {
                 for p in dVParts
                 {
-                    if (p:IsType("Decoupler") and p:Stage >= checkStgIdx) or (p:DecoupledIn >= checkStgIdx)
+                    // if (p:IsType("Decoupler") and p:Stage >= checkStgIdx) or (p:DecoupledIn >= checkStgIdx)
+                    if p:Stage >= checkStgIdx or p:DecoupledIn >= checkStgIdx
                     {
                         local tagSpl to p:Tag:Replace(" ",""):Split("|").
                         
@@ -1198,7 +1199,7 @@
                         }
                         else if dvStgType = 1
                         {
-                            if dvStgParam < 0 
+                            if dvStgParam < 0
                             {
                                 set dvStgParam to choose p:Stage if p:IsType("Decoupler") else p:DecoupledIn.
                             }

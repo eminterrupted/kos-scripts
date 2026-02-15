@@ -45,7 +45,7 @@ else if positionRefVessel:IsType("Vessel")
     set trackRefVessel to True.
 }
 
-
+rcs on.
 set s_Val to Ship:Facing.
 lock steering to s_Val.
 
