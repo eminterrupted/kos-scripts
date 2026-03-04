@@ -1,6 +1,5 @@
 ksptot/*
 kslib
-
 **/tmp
 **/log
 **/logs
@@ -11,4 +10,7 @@ data/debug/
 data/profile/
 data/test/
 test/data
+data/scratch
+data/scratch/
 data/scratch/*
+data/scratch/*.json
