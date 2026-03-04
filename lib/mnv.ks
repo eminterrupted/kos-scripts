@@ -1123,8 +1123,6 @@
                         OutInfo("Reacquiring BurnVector", 2).
                     }
 
-                    OutInfo("BurnTime Remaining: {0} ":Format(Round(burnTimeRemaining, 1))).
-
                     if Stage:Number <= g_StageLimit
                     {
                         OutInfo("AutoStaging disabled", 2).

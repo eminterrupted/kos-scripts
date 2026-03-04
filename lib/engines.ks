@@ -1031,7 +1031,8 @@
         local usableMassFlow        to 0.
         local usableFuelMass        to 0.
         local twr                   to 0.
-        local aggFailureObj         to Lexicon().
+        local aggFailureObj         to lexicon().
+        local residualsObject       to lexicon().
 
         local burnTimeRemaining     to 999999999.
 
@@ -1043,9 +1044,18 @@
             local engLex    to GetEnginePerformanceData(eng).    
 
             local m to engLex:Module.
-            local engResiduals to m:GetField("Predicted Residuals").
-            set totalResiduals to totalResiduals + engResiduals.
-            set normResiduals to normResiduals + (engResiduals * eng:MaxMassFlow).
+            local engResidual      to m:GetField("Predicted Residuals").
+            local normedResidual   to engResidual * eng:MaxMassFlow.
+            set totalResiduals to totalResiduals + engResidual.
+            set normResiduals to normResiduals + normedResidual.
+            if eng:MassFlow > 0 
+            {
+                set residualsObject[eng:uid] to lex(
+                "Data", list(engResidual, normedResidual, eng:MaxMassFlow)
+                ).
+            }
+
+            // set normResiduals to normResiduals + (engResiduals * eng:MaxMassFlow).
 
             set aggMassFlow         to aggMassFlow + eng:MassFlow.
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
@@ -1131,15 +1141,27 @@
         set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
         set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
-        set normResiduals to choose (normResiduals / aggMassFlowMax) / _engList:Length if _engList:Length > 0 else 0.
+        // set normResiduals to choose (normResiduals / aggMassFlowMax) / _engList:Length if _engList:Length > 0 else 0.
         set totalResiduals to choose 0 if totalResiduals <= 0 else totalResiduals.// / _engList:Length.
         
-        set usableFuelMass to usableFuelMass * (1 - normResiduals).
+        local newNormedResidual to 0.
+        
+        for uid in residualsObject:Keys
+        {
+            local engPct to residualsObject[uid]:Data[2] / aggMassFlowMax.
+            set residualsObject[uid]["Pct"] to engPct.
+            set residualsObject[uid]["Nrm"] to residualsObject[uid]:Data[0] * engPct.
+            set newNormedResidual to newNormedResidual + residualsObject[uid]["Nrm"].
+        }
+        set newNormedResidual to choose newNormedResidual / residualsObject:Keys:Length if residualsObject:Keys:Length > 0 else 0.
+
+        set usableFuelMass to usableFuelMass * (1 - newNormedResidual).
+        // set usableFuelMass to usableFuelMass * (1 - normResiduals).
         // set usableFuelMass to usableFuelMass * (1 - totalResiduals).
         
         if usableFuelMass > 0 and usableMassFlow > 0
         {
-            set burnTimeRemaining to usableFuelMass / usableMassFlow.
+            set burnTimeRemaining to (usableFuelMass / usableMassFlow).
         }
 
         // if (totalFuelMass > 0 and aggMassFlow > 0)
