@@ -42,5 +42,5 @@ until not execOnDeploy
 set g_StageLimit to stageLimit.
 if HasNode
 {
-        ExecNodeBurn_Next(NextNode, stageLimit).
+        ExecNodeBurn_NextNext(NextNode, stageLimit).
 }

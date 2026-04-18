@@ -472,6 +472,8 @@ global g_StateCache is "".
                     set g_TermWidth to g_TermWidth + 34.
                     DispMain(g_MainProc).
                     set g_Debug to True. //toggle debug on or off
+                    if not Config:Stat set Config:Stat to True.
+                    set g_ProfileResult to True.
                 }
                 return.
             }

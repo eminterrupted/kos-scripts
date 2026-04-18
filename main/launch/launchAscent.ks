@@ -65,7 +65,7 @@ local boosterCheckDel  to { return True.}.
 local boosterActionDel to { return False.}.
 local boosterResult to list(false, boosterCheckDel, boosterActionDel).
 
-set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+set g_ShipEngines_Specs to GetShipEnginesSpecs(Ship).
 
 local termCount to GetTerminalCountdown().
 local letsgoTS to WaitForLaunchCommit(termCount).

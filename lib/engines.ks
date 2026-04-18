@@ -20,17 +20,17 @@
     global g_ActiveEngines          to list().
     global g_ActiveEngines_Data     to Lexicon().
     global g_ActiveEngines_Data_Epoch to -1.
-    global g_ActiveEngines_Spec     to Lexicon().
+    global g_ActiveEngines_Specs     to Lexicon().
 
     global g_NextEngines            to list().
     global g_NextEngines_Data       to Lexicon().
     global g_NextEngines_Data_Epoch to -1.
-    global g_NextEngines_Spec       to Lexicon().
+    global g_NextEngines_Specs       to Lexicon().
 
     // global g_RehydrateEngines_Flag  to True.
 
     global g_ShipEngines            to GetShipEnginesByStage().
-    global g_ShipEngines_Spec       to Lexicon().
+    global g_ShipEngines_Specs       to Lexicon().
     // #endregion
 
     // *- Object entry registrations
@@ -496,8 +496,6 @@
             ,"StgThrust",           0
             ,"AllowRestart",        False
             ,"AllowShutdown",       False
-            ,"AllowThrottle",       False
-            ,"HasGimbal",           False
             ,"IsSolid",             False
             ,"Multimode",           False
             ,"PressureFed",         False
@@ -506,6 +504,7 @@
             ,"Modes",               list()
             ,"Configs",             Lexicon()
             ,"Engines",             Lexicon()
+            ,"ThrottleEnabled",     list() // List of engine UIDs that have throttle capabilities; default is no throttle ability (throttle is locked to 100%)
         ).
 
         if _engList:Length = 0
@@ -532,6 +531,11 @@
                 set fuelStabilityAvg to ((engsSpecs:FuelStabilityAvg * i) + engSpecs:FuelStability) / (i + 1).
                 set engsSpecs["FuelStabilityAvg"] to fuelStabilityAvg.
 
+                if engSpecs["ThrottleMin"] < 1 
+                {
+                    engsSpecs["ThrottleEnabled"]:Add(eng:UID).
+                }
+                
                 set AggregateMassLex:MAXMASSFLOW to AggregateMassLex:MAXMASSFLOW + eng:MaxMassFlow.
                 set AggregateMassLex["Engines"] to Lexicon(
                     eng:Name, Lexicon()
@@ -699,6 +703,8 @@
 
     // *- Engine Specification Helpers
     // #region
+
+    // Compare Engine Specs
 
     // GetPredictedBurnTime2 -- 
     global function GetPredictedBurnTime2
@@ -1499,7 +1505,7 @@
                     }
                 }
                 set g_ActiveEngines to GetActiveEngines(ship, "NoBooster").
-                set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+                set g_ActiveEngines_Specs to GetEnginesSpecs(g_ActiveEngines).
                 set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                 
                 wait 0.01. 

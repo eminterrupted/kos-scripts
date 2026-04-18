@@ -10,6 +10,7 @@
 // *~ Config Settings ~* //
 // #region
     set Config:IPU to 1536.
+    set Config:Stat to True.
 
     global g_DualCore to ship:partsTagged("Core2"):Length > 0.
 // #endregion
@@ -23,6 +24,7 @@
     global g_Counter to 0.
     global g_Debug to False.
     global g_Debug_Max to True.
+    // global g_ProfileOutput to False.
     global g_DbgOffset to 0.
     global g_ErrorFallback to -1234567890.
     global g_Slowbug to False.
@@ -31,8 +33,7 @@
     global g_ResultCode to 0.
     global g_RunMode to 0.
 
-
-    // Global timestamp / timer placeholders
+    // Timestamp / timer placeholders
     global g_TR     to 0.
     global g_TS     to 0.
     global g_TS0    to 0.
@@ -44,6 +45,9 @@
     global g_TS3    to 0.
     global g_TS3Ref to 0.
     global g_TSi    to 0.
+
+    // Time constants
+    global g_EpochRT  to 62135596800.
 
     // Program state for saving to archive
     global g_ProgramState to lexicon(
@@ -143,6 +147,7 @@
     global g_BoosterObj      to lexicon().
 
     // Ship Metadata
+    global g_ShipFileName to Ship:Name:Replace(" ", "_"):Replace(".","-"):Replace("*","-").
     global g_ShipUIDs to list().
     global g_VesselData to lexicon().
     
@@ -158,6 +163,7 @@
     global g_MECOArmed              to False.
     global g_OnDeployActive         to False.
     global g_OnStageEventArmed      to False.
+    global g_ProfileResult          to True. // False.
     global g_PreStagingInit         to False.
     global g_RCSArmed               to False.
     global g_SpinActive             to False.

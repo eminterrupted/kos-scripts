@@ -46,7 +46,7 @@ local padStage to Stage:Number.
 
 // Hydrate the engine object
 SetProgram(2).
-set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+set g_ShipEngines_Specs to GetShipEnginesSpecs(Ship).
 
 // Find the launch clamp stage if any are found
 SetProgram(3).

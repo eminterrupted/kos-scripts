@@ -273,3 +273,8 @@ local function ExecCircBurn
     }
     OutMsg("circAtApo complete").
 }
+
+if g_ProfileResult
+{
+    log profileResult() to "0:/test/data/profile/{0}-{1}_profile.csv":Format(Round(KUniverse:RealTime), g_ShipFileName).
+}

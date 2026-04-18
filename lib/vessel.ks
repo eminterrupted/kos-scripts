@@ -930,6 +930,7 @@
     // Spin-stabilization
     // #region
     
+    // TODO: Update SpinDC checks to disable if not expected during current burn, but enable if engine failure would necessitate it
     global function ArmSpinStabilizationDC
     {
         parameter _spinDC.
@@ -1389,7 +1390,7 @@
         local nextEngStg to stg - 1.
         from { local i to nextEngStg.} until i <= 0 step { set i to i - 1.} do
         {
-            if g_ShipEngines_Spec:HasKey(i) 
+            if g_ShipEngines_Specs:HasKey(i) 
             {
                 set nextEngStg to i.
                 break.

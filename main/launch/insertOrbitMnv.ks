@@ -53,7 +53,7 @@ add circNode.
 
 set g_StageLimit to stageLimit.
 
-set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+set g_ShipEngines_Specs to GetShipEnginesSpecs(Ship).
 set g_NextEngines to GetNextEngines().
 
 ExecNodeBurn_Next(circNode, stageLimit).

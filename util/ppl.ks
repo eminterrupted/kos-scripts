@@ -1,26 +1,65 @@
 @lazyGlobal off.
 clearScreen.
 
-parameter inObj,
-          tip is "".
+parameter _inObj,
+          _tip        is "",
+          _teeOutput  is false,
+          _outputPath is "".
 
 runOncePath("0:/lib/libLoader").
 
-if inObj:TypeName = "List_value`1" or inObj:TypeName = "ListValue`1" or inObj:TypeName = "List"
+local sanitizedOutputPath to "".
+
+if _teeOutput
 {
-    if inObj[0]:typename = "string"
+    if _outputPath:MatchesPattern("^0:/data/ref/ppl/.*\..*")
     {
-        if inObj[0]:startsWith("<tip>") 
+        set sanitizedOutputPath to _outputPath.
+    }
+    else if _outputPath:MatchesPattern("^0:/data/ref/ppl/\w+$")
+    {
+        set sanitizedOutputPath to _outputPath + ".txt".
+    }
+    else if _outputPath:MatchesPattern("^\./.*\..*")
+    {
+        set sanitizedOutputPath to _outputPath:Replace("./", "0:/data/ref/ppl/").
+    }
+    else if _outputPath <> ""
+    {
+        local lastLeafPos to _outputPath:FindLast("/") + 1.
+        local _outputFile to _outputPath:Substring(lastLeafPos, _outputPath:Length - lastLeafPos).
+        set sanitizedOutputPath to "0:/data/ref/ppl/" + _outputFile.
+    } 
+    else
+    {
+        local realTimeSpan to TimeSpan(KUniverse:RealTime).
+        set sanitizedOutputPath to "0:/data/ref/ppl/ppl_{0}_{1}-{2}.txt":Format(_tip:Replace(" ","_"):Replace(":","_"), realTimeSpan:Year + 1970, realTimeSpan:Day).
+    }
+}
+
+if _inObj:TypeName = "List_value`1" or _inObj:TypeName = "ListValue`1" or _inObj:TypeName = "List"
+{
+    if _teeOutput
+    {
+        WriteJson(_inObj, "{0}.json":Format(sanitizedOutputPath:Substring(0, sanitizedOutputPath:FindLast(".")))).
+    }
+    if _inObj[0]:typename = "string"
+    {
+        if _inObj[0]:startsWith("<tip>") 
         {
-            set tip to inObj[0]:replace("<tip>","").
+            set _tip to _inObj[0]:replace("<tip>","").
         }
     }
-    DispList(inObj, tip).
+    DispList(_inObj, _tip, sanitizedOutputPath).
 } 
-else if inObj:TypeName = "Lexicon" 
+else if _inObj:TypeName = "Lexicon" 
 {
-    if inObj:hasKey("<tip>") set tip to inObj["<tip>"].
-    DispLex(inObj, tip).
+    if _teeOutput
+    {
+        WriteJson(_inObj, "{0}.json":Format(sanitizedOutputPath:Substring(0, sanitizedOutputPath:FindLast(".")))).
+    }
+    if _inObj:hasKey("<tip>") set _tip to _inObj["<tip>"].
+    DispLex(_inObj, _tip, sanitizedOutputPath).
 }
 
 
@@ -31,7 +70,8 @@ else if inObj:TypeName = "Lexicon"
 local function DispList
 {
     parameter _passedObj,
-              _passedTip is "PRETTY PRINT LIST".
+              _passedTip is "PRETTY PRINT LIST",
+              _teeOutputPath is "".
 
     local stCol to 0.
     local stLine to 12.
@@ -45,25 +85,45 @@ local function DispList
     set g_col to stCol.
     set g_line to stLine.
 
+    local tee to _teeOutputPath:Length > 0.
+
     if _passedObj:isType("List")
     {
         from { local n is 0.} until n = _passedObj:Length step { set n to n + 1.} do 
         {
             if g_line = stLine 
             {
-                    print _passedTip at (g_col, g_line).
-                    print titleDiv:call() at (g_col, cr()).
+                print _passedTip at (g_col, g_line).
+                print titleDiv:call() at (g_col, cr()).
+
+                if tee
+                {
+                    log _passedTip to _teeOutputPath.
+                    log titleDiv:call() to _teeOutputPath.
+                }
             }
 
             if g_line < lineLim
             {
-                print "[{0,3}] [{1,-30}]  ":format(n, _passedObj[n]) at (g_col, cr()).
+                local str to "[{0,3}] [{1,-30}]  ":format(n, _passedObj[n]).
+                print str at (g_col, cr()).
+                
+                if tee
+                {
+                    log str to _teeOutputPath.
+                }
             } 
             else if g_col < colLim
             {
                 set g_col to g_col + colSize.
                 set g_line to stLine + 2.
-                print "[{0,3}] [{1,-30}]  ":format(n, _passedObj[n]) at (g_col, cr()).
+                local str to "[{0,3}] [{1,-30}]  ":format(n, _passedObj[n]).
+                print str at (g_col, cr()).
+                
+                if tee
+                {
+                    log str to _teeOutputPath.
+                }
             } 
             else 
             {
@@ -81,7 +141,8 @@ local function DispList
 global function DispLex 
 {
     parameter _passedObj, 
-              _passedTip is "PRETTY PRINT LEXICON".
+              _passedTip is "PRETTY PRINT LEXICON",
+              _teeOutputPath is "".
 
     local stCol to 0.
     local stLine to 2.
@@ -92,6 +153,8 @@ global function DispLex
     local colLim to colSize * (numCols - 1).
     local maxKeyLen to 3.
     local maxValLen to 30.
+
+    local tee to _teeOutputPath:Length > 0.
 
     if _passedTip = ""
     {
@@ -118,9 +181,22 @@ global function DispLex
                 print _passedTip at (g_col, g_line).
                 print titleDiv:call() at (g_col, cr()).
                 cr().
+
+                if tee
+                {
+                    log _passedTip to _teeOutputPath.
+                    log titleDiv:call() to _teeOutputPath.
+                }
         }
-        print "[{0,10}] [{1,-25}]":format(key, _passedObj[key]) at (g_col, g_line).
         
+        local str to "[{0,10}] [{1,-25}]":format(key, _passedObj[key]).
+        print str at (g_col, g_line).
+        
+        if tee
+        {
+            log str to _teeOutputPath.
+        }
+
         if g_line < lineLim
         {
             set g_line to cr().

@@ -267,6 +267,53 @@
         return burnDurCalcs.
     }
 
+    // GetBurnDurations :: (<scalar>) -> <list>scalar [Full, Half]
+    // Returns the time to burn a given dV, including the halfway burn dur for burn start timing
+    // Also returns values with staging time included
+    global function GetBurnDurations
+    {
+        parameter dv.
+
+        local burnStages to BurnStagesUsed(dv).
+        local stageBurnDurations to GetStageBurnDurations(burnStages).
+
+        // if g_Debug 
+        // {
+        //     WriteJson(burnStages, "0:/log/{0}_stgObj.json":Format(Ship:Name:Replace(" ","_"))).
+        //     WriteJson(stageBurnDurations, "0:/log/{0}_durObj.json":Format(Ship:Name:Replace(" ","_"))).
+        // }
+        
+        local fullDurWithStaging to stageBurnDurations["Full"].
+        local halfDurWithStaging to stageBurnDurations["Half"].
+
+        if burnStages["Full"]:keys:length > 1 
+        {
+            local stageWaitTime to 0.625.
+            from { local stg to stage:number - 1.} until stg = 0 step { set stg to stg - 1.} do
+            {
+                if burnStages["Full"]:hasKey(stg) set fullDurWithStaging to fullDurWithStaging + stageWaitTime.
+                if burnStages["Half"]:hasKey(stg) set halfDurWithStaging to halfDurWithStaging + stageWaitTime.
+            }
+        }
+        set stageBurnDurations["FullStaged"] to fullDurWithStaging.
+        set stageBurnDurations["HalfStaged"] to halfDurWithStaging.
+        
+        local burnDurCalcs to list(
+             stageBurnDurations["Full"]
+            ,stageBurnDurations["FullStaged"]
+            ,stageBurnDurations["Half"]
+            ,stageBurnDurations["HalfStaged"]
+            ,stageBurnDurations["Stage"]
+        ).
+
+        // if g_Debug 
+        // {
+        //     WriteJson(burnDurCalcs, "0:/log/{0}_burnDurCalcs.json":Format(Ship:Name:Replace(" ","_"))).
+        // }
+
+        return burnDurCalcs.
+    }
+
     // BurnDurStage :: (<lexicon>) -> <lexicon>
     // Returns the time in secs to burn the dv defined by the result of BurnStagesUsed
     global function BurnDurStage
@@ -299,6 +346,39 @@
         return burnDurObj.
     }
 
+    // GetStageBurnDurations :: (<lexicon>) -> <lexicon>
+    // Returns the time in secs to burn the dv defined by the result of BurnStagesUsed
+    global function GetStageBurnDurations
+    {
+        parameter dvStgObj.
+
+        local burnDurObj to lex(
+            "Full", 0,
+            "Half", 0,
+            "Stage", lex()
+        ).
+
+        for key in dvStgObj:Full:keys
+        {
+            local stgEngs to GetEnginesForStage(key).
+            local stgSpecs to GetEnginesSpecs(stgEngs).
+            local exhVel to stgSpecs:AvgExhVelo. // GetExhVel(stgEngs, "vac").
+            local stgThr to stgSpecs:StgThrust.
+            local vesMass to GetStageMass(key)["ship"].
+
+            local fullDur to Round((((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Full"][key] / exhVel)))), 3).
+            set burnDurObj["Full"] to burnDurObj["Full"] + fullDur.
+            burnDurObj["Stage"]:Add(key, fullDur).
+            
+            if dvStgObj["Half"]:hasKey(key)
+            {
+                local halfDur to Round((((vesMass * 1000) * exhVel) / (stgThr * 1000)) * (1 - (constant:e ^ (-1 * (dvStgObj["Half"][key] / exhVel)))), 3).
+                set burnDurObj["Half"] to burnDurObj["Half"] + halfDur.
+            }
+        }
+        return burnDurObj.
+    }
+
 
     // BurnStagesUsed :: (<scalar>) -> <lexicon>
     // Given a target burn dV, returns a nested lex of stages->dV to be used for full and half-duration burn calcs
@@ -310,6 +390,7 @@
         local dvHalf to dv / 2.
         local dvFullObj to lex().
         local dvHalfObj to lex().
+        local stgList to list().
 
         from { local stg to stage:number.} until dv <= 0 or stg = -1 step { set stg to stg - 1.} do {
             local breakFlag to false.
@@ -317,6 +398,7 @@
             
             if dvStg > 0 
             {
+                stgList:Add(stg).
                 // Full
                 if dv > dvStg
                 {
@@ -345,7 +427,7 @@
             if breakFlag break.
         }
 
-        return lex("Full", dvFullObj, "Half", dvHalfObj).
+        return lex("Full", dvFullObj, "Half", dvHalfObj, "Stage", stgList).
     }
 //#endregion
 
@@ -445,9 +527,9 @@
         if stgEngs:Length > 0
         {
             set stgMass to GetStageMass(_stg).
-            if g_ShipEngines_Spec:HasKey(_stg)
+            if g_ShipEngines_Specs:HasKey(_stg)
             {
-                set exhVel to choose g_ShipEngines_Spec[_stg]:AvgExhVelo if g_ShipEngines_Spec[_stg]:HasKey("AvgExhVelo") else GetExhVel(stgEngs, _mode).
+                set exhVel to choose g_ShipEngines_Specs[_stg]:AvgExhVelo if g_ShipEngines_Specs[_stg]:HasKey("AvgExhVelo") else GetExhVel(stgEngs, _mode).
             }
             else
             {

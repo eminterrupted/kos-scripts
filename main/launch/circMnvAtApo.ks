@@ -83,7 +83,7 @@ if _params:Length > 0
     }
 }
 
-set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+set g_ShipEngines_Specs to GetShipEnginesSpecs(Ship).
 local dvNeeded to CalcDvBE(Ship:Periapsis, Ship:Apoapsis, tgtAp, tgtPe, Ship:Apoapsis, compVal).
 OutMsg("Calculated DV Needed: {0}":Format(Round(dvNeeded[1], 2))).
 

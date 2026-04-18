@@ -16,10 +16,10 @@
     // local proSrfObtBlendStartAlt    to 62500.
 
     local partCAlt to 4776. // 4250. // 6248. // 7268. // 12500
-    local proSrfObtBlendStartAlt    to 62500. // 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
+    local proSrfObtBlendStartAlt    to 67500. // 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
 
     local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
-    local ascent_Next_Alt_Width  to 37500. // 32500. // 22500. // 17500.
+    local ascent_Next_Alt_Width  to 32500. // 32500. // 22500. // 17500.
 
     local ascent_Prog_Roll_Alt   to Ship:Altitude + ascent_Next_Alt_Diff.
     local ascent_Prog_Roll_Pitch to 1.725.
@@ -510,10 +510,10 @@
         
         // local turn_alt_blend      to 500. 
         // local turn_alt_blend    to proSrfObtBlendStartAlt.
-        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(37500, _tgtAlt / 4)). // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(42500, Round(_tgtAlt / 3.75))).// Max(37500, _tgtAlt / 4)). // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_blend    to proSrfObtBlendStartAlt * 0.925. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 4)).
-        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 3.25)).
+        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 2.5)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
         local turn_alt_blend_window_set to choose list(turn_alt_blend * 0.425, turn_alt_blend * 0.675, turn_alt_blend) if g_MissionTag:Mission:MatchesPattern("DownRange") else list(turn_alt_blend * 0.5, turn_alt_blend * 0.75, turn_alt_blend * 1).
         local turn_apo_tgt        to Round(Max(_tgtAlt * 0.925, turn_alt_blend * 1.125)).

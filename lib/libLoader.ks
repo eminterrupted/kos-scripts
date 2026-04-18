@@ -42,12 +42,12 @@ if filterLevel < 1
 // Initiate any global objects here
 if filterLevel < 1 
 {
-    set g_ShipEngines_Spec to GetShipEnginesSpecs(Ship).
+    set g_ShipEngines_Specs to GetShipEnginesSpecs(Ship).
 }
 else
 {
-    set g_ShipEngines_Spec to Lexicon("DISABLED", "DISABLED").
+    set g_ShipEngines_Specs to Lexicon("DISABLED", "DISABLED").
 }
 set g_UIDUpdaterArmed to SetupUpdateUIDEventHandler(True).
 
-if g_Debug WriteJson(g_ShipEngines_Spec, "0:/data/debug/{0}_g_ShipEngines_Spec.json":Format(Ship:Name:Replace(" ","_"))).
+if g_Debug WriteJson(g_ShipEngines_Specs, "0:/data/debug/{0}_g_ShipEngines_Spec.json":Format(Ship:Name:Replace(" ","_"))).

@@ -1,0 +1,385 @@
+{
+    "items": [
+        {
+            "value": "ACTIVATE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ALLMODULES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ALLOWRESTART",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ALLOWSHUTDOWN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ALLTAGGEDPARTS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AUTOSWITCH",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AVAILABLETHRUST",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "AVAILABLETHRUSTAT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "BOUNDS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CHILDREN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CID",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "COM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CONFIG",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CONSUMEDRESOURCES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "CONTROLFROM",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DECOUPLEDIN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DECOUPLER",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "DRYMASS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FACING",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FLAMEOUT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FUELCROSSFEED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FUELFLOW",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "FUELSTABILITY",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GETMODULE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GETMODULEBYINDEX",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "GIMBAL",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HASGIMBAL",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HASMODULE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HASPARENT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HASPHYSICS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "HASSUFFIX",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "IGNITION",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "IGNITIONS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "INHERITANCE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ISP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ISPAT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ISSERIALIZABLE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ISTYPE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MASS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MASSFLOW",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXFUELFLOW",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXMASSFLOW",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXPOSSIBLETHRUST",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXPOSSIBLETHRUSTAT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXTHRUST",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MAXTHRUSTAT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MINTHROTTLE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MODE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MODES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MODULES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MODULESNAMED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "MULTIMODE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "NAME",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARENT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSDUBBED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSDUBBEDPATTERN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSNAMED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSNAMEDPATTERN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSTAGGED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSTAGGEDPATTERN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSTITLED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PARTSTITLEDPATTERN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "POSITION",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "POSSIBLETHRUST",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "POSSIBLETHRUSTAT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PRESSUREFED",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "PRIMARYMODE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "REMOVESYMMETRY",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "RESOURCES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ROTATION",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEALEVELISP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEPARATEDIN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SEPARATOR",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SHIP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SHUTDOWN",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SLISP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "STAGE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SUFFIXNAMES",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SYMMETRYCOUNT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SYMMETRYPARTNER",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "SYMMETRYTYPE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TAG",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TARGETABLE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "THROTTLELOCK",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "THRUST",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "THRUSTLIMIT",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TITLE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TOGGLEMODE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TOSTRING",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "TYPENAME",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "UID",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "ULLAGE",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "VACUUMISP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "VISP",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        },
+        {
+            "value": "WETMASS",
+            "$type": "kOS.Safe.Encapsulation.StringValue"
+        }
+    ],
+    "$type": "kOS.Safe.Encapsulation.ListValue"
+}

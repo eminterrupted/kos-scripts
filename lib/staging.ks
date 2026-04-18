@@ -191,11 +191,11 @@
                     local hitFlag to False.
                     from { local i to HotStageID + 1.} until hitFlag step { set i to i + 1.} do
                     {
-                        if g_ShipEngines_Spec:HasKey(i)
+                        if g_ShipEngines_Specs:HasKey(i)
                         {
-                            for eng in g_ShipEngines_Spec[i]:EngList
+                            for eng in g_ShipEngines_Specs[i]:EngList
                             {
-                                if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:MatchesPattern("booster|MECO")
+                                if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:MatchesPattern("booster|MECO") and not g_PartInfo:Engines:VernRef:Contains(eng:Name)
                                 {
                                     stageEngines:Add(eng).
                                 }
@@ -217,28 +217,60 @@
                         {
                             if MissionTime > 0 
                             {
-                                // if g_RehydrateEngines_Flag
-                                // {
-                                // set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
                                 local rawEngs to GetActiveEngines(Ship, "LastOfStage").
-                                local engs to list().
-                                for eng in rawEngs 
-                                {
-                                    if not eng:name:matchesPattern("LR101|vernier")
-                                    {
-                                        engs:add(eng).
-                                    }
-                                }
                                 
-                                // }
-                                // if g_ActiveEngines:Length > 0
-                                if engs:Length > 0
+                                if rawEngs:Length > 0
                                 {
-                                    OutInfo("HotStaging Armed").
+                                    local engs to lexicon(
+                                        "Primary", lex(
+                                            "Fuel", ""
+                                            ,"Parts", list()
+                                        ),
+                                        "Secondary", lex(
+                                            "Fuel", ""
+                                            ,"Parts", list()
+                                        ),
+                                        "Parts", list()
+                                    ).
+                                    
+                                    local engResourceCheck to lexicon().
 
-                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.5) + ExtraLeadTime). 
-                                    local stageEngines_Data to GetEnginesPerformanceData(engs).
-                                    set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:length. // * (1 - stageEngines_Data:AverageResiduals).
+                                    for eng in rawEngs
+                                    {
+                                        if g_PartInfo:Engines:VernRef:Contains(eng:name)
+                                        {
+                                            set engs:Secondary:Fuel to eng:ConsumedResources:Keys[0].
+                                            engs:Secondary:Parts:Add(eng).
+                                        }
+                                        else
+                                        {
+                                            set engs:Primary:Fuel to eng:ConsumedResources:Keys[0].
+                                            engs:Primary:Parts:Add(eng).
+                                            engs:Parts:Add(eng).
+                                        }
+                                    }
+
+                                    if engs:Secondary:Fuel:Length > 0
+                                    {
+                                        if engs:Secondary:Fuel = engs:Primary:Fuel
+                                        {
+                                            for eng in engs:Secondary:Parts
+                                            {
+                                                engs:Parts:Add(eng).
+                                            }
+                                        }
+                                        else if engs:Primary:Fuel:Length = 0
+                                        {
+                                            for eng in engs:Secondary:Parts
+                                            {
+                                                engs:Parts:Add(eng).
+                                            }
+                                        }
+                                    }
+                                    
+                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.1375) + ExtraLeadTime). 
+                                    local stageEngines_Data to GetEnginesPerformanceData(engs:Parts).
+                                    set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:Parts:length. // * (1 - stageEngines_Data:AverageResiduals).
                                     // local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining_Next(engs).
@@ -246,8 +278,9 @@
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
                                     set g_TR to stageEngines_BT - SpoolTime.
                                     // OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{0,6}s) ":Format(g_ActiveEngines:Length, Round(g_TR, 2), 1)).
+                                    OutInfo("HotStaging Armed").
                                     OutDebug("Calculated Spool Time : {0}s ":Format(SpoolTime)).
-                                    OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Length, Round(g_TR, 2), 1), 2).
+                                    OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{1,6}s) ":Format(engs:Parts:Length, Round(g_TR, 2), 1), 2).
                                     
                                     return (g_TR <= 0) or Ship:Thrust <= 0.1. //(g_ActiveEngines_Data:Thrust <= 0.1).
                                     // return (stageEngines_BT <= SpoolTime) or (g_ActiveEngines_Data:Thrust <= 0.1).
@@ -356,7 +389,10 @@
                     {
                         if Engine_Obj:HasKey(p:Stage)
                         {
-                            Engine_Obj[p:Stage]:Add(p).
+                            // if not p:Name:MatchesPattern("LR101|Vernier")
+                            // {
+                                Engine_Obj[p:Stage]:Add(p).
+                            // }
                         }
                         else
                         {
@@ -395,7 +431,7 @@
                             {
                                 OutInfo("HotStaging Armed").
 
-                                local SpoolTime to (g_LoopDelegates:Staging:HotStaging[maxLeadStage]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
+                                local SpoolTime to (g_LoopDelegates:Staging:HotStaging[maxLeadStage]:EngSpecs:SpoolTime * 1.075) + ExtraLeadTime. 
                                 // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
                                 set stageEngsBT to GetEnginesBurnTimeRemaining_Next(engs).
                                 // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
@@ -433,12 +469,14 @@
                     OutInfo("[{0}] Hot Staging Engines ({1})   ":Format(maxLeadStage, "SpoolUp")).
                     // set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                     local NextEngines_Data to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Engines).
-                    until NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
+                    until NextEngines_Data:MassFlowPct >= 0.75 and NextEngines_Data:Thrust >= g_ActiveEngines_Data:Thrust
                     {
                         set s_Val                to g_SteeringDelegate:CALL().
                         set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
                         set NextEngines_Data     to GetEnginesPerformanceData(g_LoopDelegates:Staging:HotStaging[maxLeadStage]:Engines).
-                        OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2))).
+                        OutInfo("HotStaging Ignition Status (MassFlowPct): [{0,6}%]  ":Format(Round(g_ActiveEngines_Data:MassFlowPct, 4))).
+                        OutInfo("HotStaging Thrust Diff: Active [{0}] Staged [{1}]  ":Format(Round(g_ActiveEngines_Data:Thrust, 2), Round(NextEngines_Data:Thrust, 2)), 1).
+                        OutDebug("HotStaging Ignition Status (MassFlowPct): [{0,6}%]  ":Format(Round(g_ActiveEngines_Data:MassFlowPct, 4))).
                         wait 0.01.
                     }
                     OutInfo("Staging").
@@ -518,9 +556,9 @@
                             local hitFlag to False.
                             from { local i to HotStageID + 1.} until hitFlag step { set i to i + 1.} do
                             {
-                                if g_ShipEngines_Spec:HasKey(i)
+                                if g_ShipEngines_Specs:HasKey(i)
                                 {
-                                    for eng in g_ShipEngines_Spec[i]:EngList
+                                    for eng in g_ShipEngines_Specs[i]:EngList
                                     {
                                         if eng:DecoupledIn >= HotStageID and not eng:Decoupler:Tag:Contains("booster")
                                         {
@@ -636,19 +674,19 @@
             {
                 local stageAction to {
                     // if g_Debug OutDebug("FUCKING PIECE OF SHIT.", crDbg()).
-                    if g_NextEngines_Spec:Keys:Length = 0
+                    if g_NextEngines_Specs:Keys:Length = 0
                     {
                         // if g_Debug OutDebug("WORK GOD DAMNIT.", crDbg()).
                         set g_NextEngines to GetNextEngines(Stage:Number, "Main").
                         if g_NextEngines:Length > 0
                         {
                             // if g_Debug OutDebug("I FUCKING HATE MYSELF AND THIS FUCKING WORLD.", crDbg()).
-                            set g_NextEngines_Spec to GetEnginesSpecs(g_NextEngines).
+                            set g_NextEngines_Specs to GetEnginesSpecs(g_NextEngines).
                         }
                     }
                     // if g_Debug OutDebug("FUCK YOU", crDbg()).
 
-                    until SafeStageWithUllage(g_NextEngines, g_NextEngines_Spec)
+                    until SafeStageWithUllage(g_NextEngines, g_NextEngines_Specs)
                     {
                         DispLaunchTelemetry().
                         wait 0.01.
@@ -916,8 +954,8 @@
             
             if g_NextEngines:Length > 0 
             {
-                set g_NextEngines_Spec  to GetEnginesSpecs(g_NextEngines).
-                if g_NextEngines_Spec:Ullage
+                set g_NextEngines_Specs  to GetEnginesSpecs(g_NextEngines).
+                if g_NextEngines_Specs:Ullage
                 {
                     // if g_NextEngines[0]:Stage < Stage:Number
                     // {
@@ -1089,7 +1127,7 @@
                 set aggThrust to aggThrust + eng:Thrust.
             }
         }
-        OutInfo("[{0}/{1}]: {2} ":Format(flameoutCount, _boostObj[_boostIdx]:ENG:Length, Round(aggThrust, 2)), 1).
+        OutInfo("[{0}/{1}]: {2} ":Format(flameoutCount, _boostObj[_boostIdx]:ENG:Length, Round(aggThrust, 2)), 2).
         return flameoutCount = _boostObj[_boostIdx]:ENG:Length.
     }
 
@@ -1154,7 +1192,7 @@
 
         // OutInfo("UPDATING G_SHIPENGINES").
         set g_ActiveEngines to GetActiveEngines(Ship, "NoBooster").
-        set g_ShipEngines_Spec to GetShipEnginesSpecs().
+        set g_ShipEngines_Specs to GetShipEnginesSpecs().
         
         return list(_boostObj:Keys:Length > 0, bstCheckDel@, bstActionDel@).
     }

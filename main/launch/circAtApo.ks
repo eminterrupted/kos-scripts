@@ -92,7 +92,7 @@ local burnDur  to CalcBurnDur(dvNeeded).
     set burnTS to (Time:Seconds + ETA:Apoapsis) - halfDur.
     
     set g_ActiveEngines to GetActiveEngines().
-    set g_ActiveEngines_Spec to GetEnginesSpecs(g_ActiveEngines).
+    set g_ActiveEngines_Specs to GetEnginesSpecs(g_ActiveEngines).
 
     set g_SteeringDelegate to GetOrbitalSteeringDelegate("Flat:Sun").
 
@@ -100,7 +100,7 @@ local burnDur  to CalcBurnDur(dvNeeded).
 
     for eng in g_ActiveEngines
     {
-        local engSpec to g_ShipEngines_Spec[eng:Stage]:EngSpecs[eng:UID].
+        local engSpec to g_ShipEngines_Specs[eng:Stage]:EngSpecs[eng:UID].
         g_ActiveSpecs:Add(eng:UID, engSpec).
 
         if eng:AllowRestart
@@ -118,7 +118,7 @@ local burnDur  to CalcBurnDur(dvNeeded).
             // OutDebug("{0}: {1} |":Format(eng:name, eng:AllowRestart), 5).
         }
     }
-    set g_ActiveSpecs:BurnTimeRemaining to choose g_ActiveEngines_Spec:BurnTimeRemaining if g_ActiveEngines_Spec:BurnTimeRemaining > 0 else 0.
+    set g_ActiveSpecs:BurnTimeRemaining to choose g_ActiveEngines_Specs:BurnTimeRemaining if g_ActiveEngines_Specs:BurnTimeRemaining > 0 else 0.
     
     local useNext to False.
     if g_ActiveSpecs:AllowRestart
