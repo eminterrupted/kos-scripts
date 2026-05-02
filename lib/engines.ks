@@ -949,10 +949,11 @@
     // Returns current performance data for an engine.
     global function GetEnginePerformanceData
     {
-        parameter _eng.
+        parameter _eng,
+                  _altPres is -1. // Pass pre-computed value to avoid redundant atmosphere lookups when called in a loop
 
         local m                     to _eng:GetModule("ModuleEnginesRF").
-        local altPres               to Body:ATM:AltitudePressure(Ship:Altitude).
+        local altPres               to choose Body:ATM:AltitudePressure(Ship:Altitude) if _altPres < 0 else _altPres.
         local availThrustPres       to _eng:AvailableThrustAt(altPres).
         local sepMotorCheck         to (g_PartInfo:Engines:SepRef:Contains(_eng:Name) and _eng:Tag:Length = 0).
         // local thrustPct             to max(_eng:MaxThrust, .00001) / max(availThrustPres, 0.1).
@@ -1043,11 +1044,14 @@
         local burnTimeRemaining     to 999999999.
 
         local sepCheckFlag to true.
+
+        // Compute once — same for all engines on the same ship at the same altitude
+        local l_altPres to Body:ATM:AltitudePressure(Ship:Altitude).
         
         from { local i to 0.} until i = _engList:Length step { set i to i + 1.} do
         {
             local eng to _engList[i].
-            local engLex    to GetEnginePerformanceData(eng).    
+            local engLex    to GetEnginePerformanceData(eng, l_altPres).    
 
             local m to engLex:Module.
             local engResidual      to m:GetField("Predicted Residuals").
@@ -1060,8 +1064,6 @@
                 "Data", list(engResidual, normedResidual, eng:MaxMassFlow)
                 ).
             }
-
-            // set normResiduals to normResiduals + (engResiduals * eng:MaxMassFlow).
 
             set aggMassFlow         to aggMassFlow + eng:MassFlow.
             set aggMassFlowMax      to aggMassFlowMax + eng:MaxMassFlow.
@@ -1114,8 +1116,6 @@
                 // local resMass to 0.
                 if not aggEngPerfObj:Resources:HasKey(res:Name) 
                 {
-                    // local resMass to res:amount * res:density.
-                    // set fuelMass to resMass * engResiduals.
                     set fuelMass to res:Amount * res:Density. 
                     set totalFuelFlow to totalFuelFlow + res:FuelFlow.
                     set totalFuel to totalFuel + res:Amount.
@@ -1147,7 +1147,6 @@
         set aggMassFlowPct  to choose 0 if aggMassFlow = 0 or aggMassFlowMax = 0 else aggMassFlow / aggMassFlowMax.
         set thrustPct       to choose aggThrust / aggThrustAvailPres      if aggThrust > 0          and aggThrustAvailPres > 0 else 0.
 
-        // set normResiduals to choose (normResiduals / aggMassFlowMax) / _engList:Length if _engList:Length > 0 else 0.
         set totalResiduals to choose 0 if totalResiduals <= 0 else totalResiduals.// / _engList:Length.
         
         local newNormedResidual to 0.
@@ -1159,27 +1158,14 @@
             set residualsObject[uid]["Nrm"] to residualsObject[uid]:Data[0] * engPct.
             set newNormedResidual to newNormedResidual + residualsObject[uid]["Nrm"].
         }
-        set newNormedResidual to choose newNormedResidual / residualsObject:Keys:Length if residualsObject:Keys:Length > 0 else 0.
+        set newNormedResidual to choose newNormedResidual / residualsObject:Length if residualsObject:Length > 0 else 0.
 
         set usableFuelMass to usableFuelMass * (1 - newNormedResidual).
-        // set usableFuelMass to usableFuelMass * (1 - normResiduals).
-        // set usableFuelMass to usableFuelMass * (1 - totalResiduals).
         
         if usableFuelMass > 0 and usableMassFlow > 0
         {
             set burnTimeRemaining to (usableFuelMass / usableMassFlow).
         }
-
-        // if (totalFuelMass > 0 and aggMassFlow > 0)
-        // {
-        //     for res in aggEngPerfObj:Resources:Values
-        //     {
-        //         if res:FuelMass > 0 and res:MassFlow > 0
-        //         {
-        //             set burnTimeRemaining to Min(burnTimeRemaining, usableFuelMass / res:MassFlow).
-        //         }
-        //     }
-        // }
 
         set twr to choose 0 if aggThrust = 0 else aggThrust / Ship:Mass * GetLocalGravity().
 

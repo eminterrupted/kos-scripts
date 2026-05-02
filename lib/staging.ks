@@ -268,7 +268,7 @@
                                         }
                                     }
                                     
-                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.1375) + ExtraLeadTime). 
+                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.0125) + ExtraLeadTime). 
                                     local stageEngines_Data to GetEnginesPerformanceData(engs:Parts).
                                     set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:Parts:length. // * (1 - stageEngines_Data:AverageResiduals).
                                     // local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 

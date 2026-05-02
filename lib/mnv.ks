@@ -979,6 +979,9 @@
             local burnNode to _inNode.
 
             local breakFlag to false.
+            local l_engUpdateTS to 0.       // Rate-limit engine data refresh to every 0.25s or on stage change
+            local l_burnDurUpdateTS to 0.   // Rate-limit CalcBurnDur to every 0.5s (it calls GetStageMass per stage)
+            local l_burnLastStage to Stage:Number.
             local softShutdownDV to max(0.05, dvRate * (g_ActiveSpecs:SpoolTime * 0.2)).
             until vdot(dv0, burnNode:DeltaV) <= softShutdownDV or breakFlag// 0.0025
             {   
@@ -987,24 +990,30 @@
                     set g_line to _line - 1.
                     GetTermChar().
                     
-                    set g_ActiveEngines to GetActiveEngines().
-                    set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
-                    set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
-                    if g_ActiveSpecs:Keys:Length > 0
+                    // Refresh engine data on stage change or every 0.25s (not every tick)
+                    if Stage:Number <> l_burnLastStage or Time:Seconds >= l_engUpdateTS
                     {
-                        // set g_ActiveSpecs to g_ActiveSpecs:Values[0].
+                        set g_ActiveEngines to GetActiveEngines().
+                        set g_ActiveSpecs to GetEnginesSpecs(g_ActiveEngines).
                         set g_ActiveEngines_Data to GetEnginesPerformanceData(g_ActiveEngines).
 
                         if g_ActiveSpecs:SpoolTime > 0.1
                         {
                             set softShutdownDV to dvRate * (g_ActiveSpecs:SpoolTime * 0.1).
                         }
+                        set l_burnLastStage to Stage:Number.
+                        set l_engUpdateTS to Time:Seconds + 0.25.
                     }
-                    
-                    // set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
-                    // set burnTimeRemaining to GetEnginesBurnTimeRemaining(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
-                    // set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
-                    set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
+
+                    // Recalculate burn duration every 0.5s (CalcBurnDur calls GetStageMass per stage)
+                    if Time:Seconds >= l_burnDurUpdateTS
+                    {
+                        // set burnTimeRemaining to GetEnginesBurnTimeRemaining_Next(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                        // set burnTimeRemaining to GetEnginesBurnTimeRemaining(g_ActiveEngines). //CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                        // set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                        set burnTimeRemaining to CalcBurnDur(NextNode:DeltaV:Mag)[0].
+                        set l_burnDurUpdateTS to Time:Seconds + 0.5.
+                    }
                     
                     set t_Val to max(0.01, min(burnNode:deltaV:mag / maxAcc, 1)).
 
@@ -1129,7 +1138,7 @@
                         DisableAutoStaging().
                     }
                     
-                    if g_LoopDelegates["Events"]:Keys:Length > 0 
+                    if g_LoopDelegates["Events"]:Length > 0 
                     {
                         ExecGLoopEvents().
                     }

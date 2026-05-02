@@ -1399,7 +1399,7 @@
         
 
         local engResUsed to lexicon(
-            "RSRC", list()
+            "RSRC", lexicon()
             ,"RSDL", list()
             ,"FLOW", list()
         ).
@@ -1414,7 +1414,9 @@
 
             for k in eng:ConsumedResources:Keys 
             {
-                if not engResUsed:RSRC:Contains(k) engResUsed:RSRC:Add(k:replace(" ", "")).
+                local normalizedKey to k:replace(" ", "").
+                if not engResUsed:RSRC:HasKey(normalizedKey) 
+                    engResUsed:RSRC:Add(normalizedKey, True).
             }
         }
         
@@ -1430,35 +1432,38 @@
 
         for p in Ship:parts
         {
-            // OutDebug("[GetStageMass][{0}] Processing part: [{1}]":Format(stg, p), crDbg()).
-            if p:typeName = "Decoupler" 
+            // Only process parts in current stage (skip non-decoupler parts beyond this stage)
+            if p:typeName = "Decoupler" OR p:DecoupledIn <= stg
             {
-                if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
-                if p:Stage = stg set stgMass to stgMass + p:Mass.
-                // OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), crDbg()).
-            }
-            else if p:DecoupledIn <= stg
-            // else if p:DecoupledIn < stg
-            {
-                // OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), crDbg()).
-                set stgShipMass to stgShipMass + p:Mass.
-                if p:DecoupledIn >= nextDCStg // p:Stg <= stg and p:DecoupledIn >= nextDCStg and p:Stage <= stg // >= nextDCStg and p:DecoupledIn <= stg
+                // OutDebug("[GetStageMass][{0}] Processing part: [{1}]":Format(stg, p), crDbg()).
+                if p:typeName = "Decoupler" 
                 {
-                    set stgMass to stgMass + p:Mass.
+                    if p:Stage <= stg set stgShipMass to stgShipMass + p:Mass.
+                    if p:Stage = stg set stgMass to stgMass + p:Mass.
+                    // OutDebug("[GetStageMass][{0}] Part is decoupler":Format(stg), crDbg()).
                 }
-            }
-
-            if p:DecoupledIn <= stg and p:DecoupledIn >= nextDCStg and p:Resources:Length > 0 
-            {
-                for res in p:Resources
+                else if p:DecoupledIn <= stg
+                // else if p:DecoupledIn < stg
                 {
-                    if engResUsed:RSRC:Contains(res:Name) 
+                    // OutDebug("[GetStageMass][{0}] Part <= stg":Format(stg), crDbg()).
+                    set stgShipMass to stgShipMass + p:Mass.
+                    if p:DecoupledIn >= nextDCStg // p:Stg <= stg and p:DecoupledIn >= nextDCStg and p:Stage <= stg // >= nextDCStg and p:DecoupledIn <= stg
                     {
-                        // print "Calculating: " + res:Name.
-                        set stgFuelMass to stgFuelMass + (res:amount * res:density).
+                        set stgMass to stgMass + p:Mass.
                     }
                 }
-                set stgFuelUsableMass to stgFuelMass * (1 - stgResidual).
+
+                if p:DecoupledIn <= stg and p:DecoupledIn >= nextDCStg and p:Resources:Length > 0 
+                {
+                    for res in p:Resources
+                    {
+                        if engResUsed:RSRC:HasKey(res:Name:replace(" ", "")) 
+                        {
+                            set stgFuelMass to stgFuelMass + (res:amount * res:density).
+                        }
+                    }
+                    set stgFuelUsableMass to stgFuelMass * (1 - stgResidual).
+                }
             }
         }
 

@@ -1,15 +1,15 @@
 {
     "items": [
         {
-            "value": 32,
+            "value": 45,
             "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
         },
         {
-            "value": 25.996614456176758,
+            "value": 25.952880859375,
             "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
         },
         {
-            "value": 464.58143030460343,
+            "value": 464.58137852224075,
             "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
         },
         {
