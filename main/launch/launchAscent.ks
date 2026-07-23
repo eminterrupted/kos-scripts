@@ -55,7 +55,8 @@ if _tgtPe <= 0
 wait until Ship:Unpacked.
 wait until KUniverse:Timewarp:IsSettled.
 
-local towerHeight to Min(g_PresetTurnAlt, Max(100, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
+local towerHeight to g_la_turnAltStart. // Altitude at which the vessel will begin the kickover 
+// local towerHeight to Min(g_PresetTurnAlt, Max(100, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
                                                                                          // taken from the bounding box of the ship on the launch pad
 
 global g_launchParams to list(g_MissionTag:STGSTOPSET, g_MissionTag:PARAMS, g_MissionTag:STGSTOPSET).

@@ -15,18 +15,18 @@
     local lc_MinAoA                 to -45.
     // local proSrfObtBlendStartAlt    to 62500.
 
-    local partCAlt to 4776. // 4250. // 6248. // 7268. // 12500
-    local proSrfObtBlendStartAlt    to 67500. // 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
+    local partCAlt to 4200. // 4776. // 6248. // 7268. // 12500
+    local proSrfObtBlendStartAlt    to 42500. // 75000. // 42500. // 30000. // 37500. // 40000. // 47500. // 42500.
 
-    local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2).
-    local ascent_Next_Alt_Width  to 32500. // 32500. // 22500. // 17500.
+    local ascent_Next_Alt_Diff   to (Ship:Bounds:Size:Z * 2.5) + 125.
+    local ascent_Next_Alt_Width  to 25000. // 32500. // 22500. // 17500.
 
     local ascent_Prog_Roll_Alt   to Ship:Altitude + ascent_Next_Alt_Diff.
-    local ascent_Prog_Roll_Pitch to 1.725.
+    local ascent_Prog_Roll_Pitch to 0.725.
 
-    local ascent_Next_Pitch_VSpd to 23.75. //28.75.
-    local ascent_Prog_Pitch_Alt_Start to 292. // 327. // 427.
-    local ascent_Prog_Pitch_Alt_End   to 112500. // 120000. // 112001. // 100000. // Body:Atm:Height.
+    local ascent_Next_Pitch_VSpd to 26.75. //28.75.
+    local ascent_Prog_Pitch_Alt_Start to ascent_Prog_Roll_Alt + ascent_Next_Alt_Diff * 2. // 292. // 327. // 427.
+    local ascent_Prog_Pitch_Alt_End   to 120000. // 112001. // 100000. // Body:Atm:Height.
 
     local arcAzDataPath to "0:/data/scratch/azData.json".
     local locAzDataPath to "1:/data/azData.json".
@@ -66,8 +66,8 @@
 
     // *- Global
     global g_LaunchParams       to lexicon().
-    global g_PresetTurnAlt      to 200.
-    global g_la_turnAltStart    to Min(g_PresetTurnAlt, Max(125, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
+    global g_PresetTurnAlt      to 300.
+    global g_la_turnAltStart    to Min(g_PresetTurnAlt, Max(100, Ship:Altitude + Ship:Bounds:Size:Z)). // Altitude at which the vessel will begin a gravity turn
                                                                              // taken from the bounding box of the ship on the launch pad
                                                                              // and is 2x the height of the vessel/launch pad tower
     global g_la_turnAltEnd   to body:Atm:height. //  * 0.72. // 0.64 = 89600m // 70000// 0.925 // Altitude at which the vessel will end a gravity turn
@@ -110,12 +110,15 @@
             ,"Elevator 2 down"
             ,"Lower Gantry Arms"
             ,"Retract Gantry Arms"
+            ,"Raise Tower"
+            ,"Lower Tower"
         ),
         "Actions", list(
             "Arms", list(
-                "Toggle Arm Left"
+                "Toggle"
+                ,"Toggle Arm Left"
                 ,"Toggle Arm Right"
-                ,"Toggle"
+                ,"Toggle Tower"
             )
         ),
         "Fields", list(
@@ -214,16 +217,17 @@
 
             if g_MissionTag:Mission:MatchesPattern("DownRange")
             {
-                set fShape to 1.
+                set fShape to 1.125.
                 // set minPit to 1.725.
                 // set pitLim to 12.5.
                 // set pitBase to "Pro".
                 // set fShape to 1.0125.
                 set minPit to 0.125.
-                set pitLim to 17.25.
+                // set pitLim to 17.25.
+                set pitLim to 7.25. // 4.25
                 // set pidVals to list(0.0025, 0.00125, 0.00125, 1). // P, I, D, ChangeRate (upper / lower bounds for PID)
-                set pidVals to list(0.0375, 0.001, 0.0725, list(-pitLim, pitLim)). // P, I, D, ChangeRate (upper / lower bounds for PID)
-                set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, True, pidVals).
+                // set pidVals to list(0.0375, 0.001, 0.0725, list(-pitLim, pitLim)). // P, I, D, ChangeRate (upper / lower bounds for PID)
+                set _delDependency to InitAscentAng_Next(_tgtInc, _tgtAlt, fShape, minPit, pitLim, False).
             }
             else if g_MissionTag:Mission:MatchesPattern("SubOrbital")
             {
@@ -498,7 +502,7 @@
                   _pitLimMax is Ascent_AoA_Max,
                   _initPids is false,
                   _pidVals is list(0.0025, 0.0000125, 0.00325, list(-1,1)),
-                  _tgtApoETA is 42. // P, I, D, ChangeRate (upper / lower bounds for PID)
+                  _tgtApoETA is 42. 
 
         // set g_apo_PID           to PidLoop(1.0, 0.05, 0.001, -45, 90).
         // set g_apo_PID:Setpoint  to _tgtAlt.
@@ -510,10 +514,11 @@
         
         // local turn_alt_blend      to 500. 
         // local turn_alt_blend    to proSrfObtBlendStartAlt.
-        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(42500, Round(_tgtAlt / 3.75))).// Max(37500, _tgtAlt / 4)). // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
+        local turn_alt_blend    to Min(proSrfObtBlendStartAlt, Max(42500, Round(_tgtAlt / 4))).// Max(37500, _tgtAlt / 4)). // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_blend    to proSrfObtBlendStartAlt * 0.925. // 37500. //Max(proSrfObtBlendStartAlt, _tgtAlt / 6).
         // local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 4)).
-        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 2.5)).
+        // local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 2.5)).
+        local turn_alt_end      to Min(g_la_turnAltEnd, Max(proSrfObtBlendStartAlt + ascent_Next_Alt_Width, _tgtAlt / 3)).
         // local turn_alt_blend to proSrfObtBlendStartAlt.
         local turn_alt_blend_window_set to choose list(turn_alt_blend * 0.425, turn_alt_blend * 0.675, turn_alt_blend) if g_MissionTag:Mission:MatchesPattern("DownRange") else list(turn_alt_blend * 0.5, turn_alt_blend * 0.75, turn_alt_blend * 1).
         local turn_apo_tgt        to Round(Max(_tgtAlt * 0.925, turn_alt_blend * 1.125)).
@@ -541,7 +546,7 @@
             ,"PIT_LIM_SET", _pitLimMax
             ,"PIT_MAX", 90
             ,"PIT_UPPER_BOUND",90
-            ,"PRO_BLEND_WIDTH", 32500
+            ,"PRO_BLEND_WIDTH", 30000
             ,"PRO_BLEND_END", 0
             ,"PRO_BLEND_START", 0
             ,"TRANS_ALT_ACTUAL", 0
@@ -556,7 +561,7 @@
             ,"TRN_ALT_BLEND", turn_alt_blend
             ,"TRN_ALT_BLEND_WINDOW", turn_alt_blend_window_set
             ,"TRN_APO_TGT", turn_apo_tgt
-            ,"TRN_DEG_KIK", ascent_Prog_Roll_Pitch
+            ,"TRN_DEG_KIK", 90 - ascent_Prog_Roll_Pitch
             ,"TRN_SPD_START_KIK", ascent_Next_Pitch_VSpd
             ,"TWR_SMPL", false
             ,"TWR_CUR", 0.000001
@@ -1387,7 +1392,9 @@
         local turn_alt_blend    to _ascAngObj:TRN_ALT_BLEND.
         local turn_alt_end      to _ascAngObj:TRN_ALT_END.
         local turn_alt_start    to _ascAngObj:TRN_ALT_START_TRK.
-
+        local turn_alt_kick     to _ascAngObj:TRN_ALT_START_KIK.
+        local turn_deg_kick     to _ascAngObj:TRN_DEG_KIK.
+        
         // if g_StagingSoon
         // {
 
@@ -1409,13 +1416,13 @@
             {
                 local alt_err_nrm       to altitude_error * (1 - (0.5 * altitude_error)).
                 set error_pitch         to 90 * (1 - alt_err_nrm).
-                set error_limit         to 0.125 + (pitch_limit_max * altitude_error).
+                set error_limit         to pitch_limit_max * altitude_error.
                 // set effective_limit     to max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max * 1.005625)).
                 set effective_limit     to min(pitch_limit_max, max(error_limit, pitch_limit_min)). // min(pitch_limit_max, max(pitch_limit_min, error_limit)). //  max(pitch_limit_min, min(error_limit  * fShape, pitch_limit_max)).
                 set prograde_pitch      to prograde_surface_pitch. // (prograde_surface_pitch * min(1, (1.0125 - altitude_error))) + (prograde_orbit_pitch * altitude_error). 
                 set effective_pitch     to min(prograde_pitch + effective_limit, max(error_pitch, prograde_pitch - effective_limit)). 
 
-                set output_pitch        to min(90, max(effective_pitch, 0)).
+                set output_pitch        to min(turn_deg_kick, max(effective_pitch, 0)).
 
                 // OutInfo("pitch_limit_min|max: [{0}|{1}] | error_limit: [{2}]":Format(Round(pitch_limit_min, 5), Round(pitch_limit_max, 5), Round(error_limit, 5)), 2).
                 // OutInfo("Part B | Error: Apo:[{0}]|Alt:[{1}] ":Format(Round(apo_error, 3), Round(altitude_error, 3)), 2).
@@ -1445,28 +1452,32 @@
                     set _ascAngObj["PartCPitchLimit"] to current_pitch.
                 }
                 // OutInfo("pitch_limit_min|max: [{0}|{1}]":Format(Round(pitch_limit_min, 5), Round(pitch_limit_max, 5)), 2).
-                // local alt_error_blended to altitude_error * (1 - altitude_error).
+                local alt_error_blended to altitude_error * (1 - altitude_error).
 
+                // local alt_err_norm      to altitude_error * (1 - (0.5 * altitude_error)).
                 local alt_err_norm      to altitude_error * (1 - (0.625 * altitude_error)).
+                // local alt_err_norm      to altitude_error * (1 - (0.75 * altitude_error)).
 
                 local blend_apo_error   to (current_apo - turn_alt_blend) / (target_apo - turn_alt_blend).
 
                 local apo_error_blended to apo_error * blend_apo_error.
-                // local comb_err          to alt_error_blended + apo_error_blended.
+                // local comb_err          to min(1, alt_error_blended + apo_error_blended).
                 local comb_err          to min(1, alt_err_norm + apo_error_blended).
 
                 set error_pitch         to 90 * (1 - comb_err).
-                set error_limit         to 1.250 + (pitch_limit_max * comb_err).
+                set error_limit         to pitch_limit_max * comb_err.
+                // set error_limit         to 1.250 + (pitch_limit_max * comb_err).
                 // set error_limit         to pitch_limit_min + (pitch_limit_max * altitude_error).
                 
                 // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.275)). // 1.25)). // 1.03125)).
                 set effective_limit     to min(pitch_limit_max, max(error_limit, pitch_limit_min)). // min(pitch_limit_max, max(pitch_limit_min, error_limit * fShape)).// max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.275)). // *** Good
                 
                 // set prograde_pitch      to min(90, max((prograde_surface_pitch * (1 - altitude_error)) + (prograde_orbit_pitch * altitude_error), -15)). 
-                local prograde_error    to min(1, max(0, (current_alt - _ascAngObj["PartCAltStart"]) / ascent_Next_Alt_Width )).
-                set prograde_pitch      to (prograde_surface_pitch * (1 - prograde_error)) + (prograde_orbit_pitch * prograde_error).
+                // local prograde_error    to min(1, max(0, (current_alt - _ascAngObj["PartCAltStart"]) / ascent_Next_Alt_Width )).
+                // set prograde_pitch      to (prograde_surface_pitch * (1 - prograde_error)) + (prograde_orbit_pitch * prograde_error).
+                set prograde_pitch      to (prograde_surface_pitch * (1 - comb_err)) + (prograde_orbit_pitch * comb_err).
 
-                set effective_pitch     to max(prograde_pitch - effective_limit, min(error_pitch, prograde_pitch + effective_limit)).
+                set effective_pitch     to min(prograde_pitch + effective_limit, max(error_pitch, prograde_pitch - effective_limit)).
 
                 set output_pitch        to min(_ascAngObj["PartCPitchLimit"], max(0, effective_pitch)).
                 // OutInfo("Part C | Error: Apo:[{0}]|Alt:[{1}]|Blend:[{2}]|Comb:[{3}] ":Format(Round(apo_error, 3), Round(altitude_error, 3), Round(blend_apo_error, 3), Round(comb_err, 3)), 2).
@@ -1476,9 +1487,10 @@
                     ,"Part         : C    "
                     ,"Tgt [Alt|Apo]: {0} | {1}  ":Format(Round(turn_alt_blend), Round(target_apo))
                     ,"Prograde Pitch : " + Round(prograde_pitch, 5) + "  "
-                    // ,"Error Pitch    : " + Round(error_pitch, 5) + "  "
+                    ,"Error Pitch    : " + Round(error_pitch, 5) + "  "
                     // ,"Effective Pitch: " + Round(effective_pitch, 5) + "  "
                     ,"Output Pitch   : " + Round(output_pitch, 5) + "  "
+                    ,"Current Pitch  : " + Round(current_pitch, 5) + "  "
                     ,""
                     ,"Error (Combine): " + Round(comb_err, 5) + "  "
                     ,"Error Limit    : " + Round(error_limit, 2) + "  "
@@ -1512,7 +1524,8 @@
                 set error_pitch         to 90 * (1 - comb_err).
 
                 // set error_limit         to 1.25 + (pitch_limit_max * comb_err).
-                set error_limit         to 2.5 + pitch_limit_max * min(1, max(0, comb_err)).
+                // set error_limit         to 2.5 + pitch_limit_max * min(1, max(0, comb_err)).
+                set error_limit         to pitch_limit_max * min(1, max(0, comb_err)).
                 // * set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max * 1.325)). // 1.275)). // 1.0625)).
                 // set effective_limit     to max(pitch_limit_min, min(error_limit * fShape, pitch_limit_max * 1.325)). *** Good
                 set effective_limit     to max(pitch_limit_min, min(error_limit, pitch_limit_max)).
@@ -1537,6 +1550,8 @@
                     // ,"Error Pitch    : " + Round(error_pitch, 5) + "  "
                     // ,"Effective Pitch: " + Round(effective_pitch, 5) + "  "
                     ,"Output Pitch   : " + Round(output_pitch, 5) + "  "
+                    ,"Current Pitch  : " + Round(current_pitch, 5) + "  "
+
                     ,""
                     ,"Error (Combine): " + Round(comb_err, 5) + "  "
                     ,"Error Limit    : " + Round(error_limit, 2) + "  "
@@ -1591,6 +1606,7 @@
                     // ,"Error Pitch    : " + Round(error_pitch, 5) + "  "
                     // ,"Effective Pitch: " + Round(effective_pitch, 5) + "  "
                     ,"Output Pitch   : " + Round(output_pitch, 5) + "  "
+                    ,"Current Pitch  : " + Round(current_pitch, 5) + "  "
                     ,""
                     ,"Error (Combine): " + Round(comb_err, 5) + "  "
                     ,"Error Limit    : " + Round(error_limit, 2) + "  "
@@ -1631,6 +1647,7 @@
                     // ,"Error Pitch    : " + Round(error_pitch, 5) + "  "
                     // ,"Effective Pitch: " + Round(effective_pitch, 5) + "  "
                     ,"Output Pitch   : " + Round(output_pitch, 5) + "  "
+                    ,"Current Pitch  : " + Round(current_pitch, 5) + "  "
                     ,""
                     ,"Error (Apo    ): " + Round(apo_error, 5) + "  "
                     ,"Error Limit    : " + Round(error_limit, 2) + "  "
@@ -1649,6 +1666,11 @@
             {
                 set output_pitch to max(PID_Ang_Min, min(22.5, output_pitch)).
             }
+        }
+        else if current_alt > turn_alt_kick
+        {
+            set output_pitch to turn_deg_kick.
+            OutInfo("Kick over").
         }
         else
         {
@@ -4091,7 +4113,7 @@
         {
             local p to MLPList[i].
             
-            if not (p:Name:MatchesPattern("(Hold|Clamp|TSM|SwingArm|AtlasUmb|Atlas2Umb)") and p:HasModule("ModuleAnimateGenericExtra"))
+            if not (p:Name:MatchesPattern("(Hold|Clamp|TSM|SwingArm|AtlasUmb|Atlas2Umb|LaunchStandCrewElevatorGemini)") and p:HasModule("ModuleAnimateGenericExtra"))
             {
                 from { local _i to 0. local doneFlag to False.} until _i >= p:Modules:Length or doneFlag step { set _i to _i + 1.} do
                 {
@@ -4171,7 +4193,66 @@
                     }
                 }
             }
-            
+            else if p:Name:MatchesPattern("LaunchStandCrewElevatorGemini")
+            {
+                local modulesList to list().
+                local elevET to 0.
+                local towerET to 0.
+
+                local elevatorClear to true. 
+                
+                from { local _i to 0. } until _i = p:Modules:Length step { set _i to _i + 1.} do
+                {
+                    local m to p:GetModuleByIndex(_i).
+                    if m:HasEvent("elevator car down") 
+                    {
+                        modulesList:Insert(0, m).
+                        set elevatorClear to false.
+                    }
+                    else if m:HasEvent("lower tower")
+                    {
+                        modulesList:Add(m).
+                    }
+                }
+
+                local eventStrArr to list("Elevator car down", "Lower tower").
+                for m in modulesList
+                {
+                    if m:HasEvent(eventStrArr[0])
+                    {
+                        OutInfo("Part: {0} | Event: {1}":Format(p:Name, eventStrArr[0]), 1).
+                        set g_TS9 to Time:Seconds. 
+                        if DoEvent(m, eventStrArr[0]) = 1
+                        {
+                            local elevatorStatus to m:GetField("Status").
+                            until elevatorStatus:MatchesPattern("(Clamped|Locked)") or Time:Seconds - g_TS9 > 20
+                            {
+                                OutInfo("Time: {0,-4}s | Status: {1} ":Format(Round(Time:Seconds - g_TS9, 1), elevatorStatus), 2).
+                            }
+                            set elevET to Time:Seconds - g_TS9.
+                            set elevatorClear to true.
+                            OutInfo("Time: {0,-4}s | Status: {1} ":Format(Round(elevET, 1), elevatorStatus), 2).
+                            wait 0.25.
+                        }
+                    }
+                    else if m:HasEvent(eventStrArr[1]) and elevatorClear
+                    {
+                        OutInfo("Part: {0} | Event: {1}":Format(p:Name, eventStrArr[1]), 1).
+                        set g_TS9 to Time:Seconds. 
+                        if DoEvent(m, eventStrArr[1]) = 1
+                        {
+                            local towerStatus to m:GetField("Status").
+                            until towerStatus <> "Moving..." or Time:Seconds - g_TS9 > 35
+                            {
+                                OutInfo("Time: {0,-4}s | Status: {1} ":Format(Round(Time:Seconds - g_TS9, 1), towerStatus), 2).
+                            }
+                            set elevET to Time:Seconds - g_TS9.
+                            OutInfo("Time: {0,-4}s | Status: {1} ":Format(Round(elevET, 1), towerStatus), 2).
+                            wait 0.25.
+                        }
+                    }
+                }
+            }
         }
 
         from { local i to 0.} until i <= moduleLex:Keys:Length step { set i to i + 1.} do

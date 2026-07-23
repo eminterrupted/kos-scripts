@@ -1,29 +1,6 @@
 {
     "items": [
-        {
-            "value": 45,
-            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
-        },
-        {
-            "value": 25.952880859375,
-            "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
-        },
-        {
-            "value": 464.58137852224075,
-            "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
-        },
-        {
-            "value": 7715.4424754469537,
-            "$type": "kOS.Safe.Encapsulation.ScalarDoubleValue"
-        },
-        {
-            "value": "Ascending",
-            "$type": "kOS.Safe.Encapsulation.StringValue"
-        },
-        {
-            "value": 10,
-            "$type": "kOS.Safe.Encapsulation.ScalarIntValue"
-        }
+        
     ],
     "$type": "kOS.Safe.Encapsulation.ListValue"
 }

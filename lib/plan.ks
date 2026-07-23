@@ -118,7 +118,8 @@ runOncePath("0:/lib/util.ks").
         local stageID           to 0.
         local tempStageStop     to "".
         local tempStopSplit     to list().
-
+        local timeToAscentInclination to 0.
+        
         local parsedTagObject   to lexicon(
             "MISSION", _tag:Split("|")[0]
             ,"PARAMS", list()
@@ -156,6 +157,7 @@ runOncePath("0:/lib/util.ks").
             else
             {
                 set parsedStageStop to tempStageStop:ToNumber(-1).
+                parsedTagObject:StgStopSet:Add(parsedStageStop).
             }
 
             set parsedTagObject["MISSION"] to parsedTag[0].
@@ -185,12 +187,14 @@ runOncePath("0:/lib/util.ks").
 
                         if i = 0
                         {
-                            prmSet:Add(ParseInclinationTagParameter(tagPrm)).
+                            local tgtIncObj to ParseInclinationTagParameter(tagPrm).
+                            prmSet:Add(tgtIncObj).
                             set dirtyTag to true.
                         }
                         else
                         {
                             prmSet:Add(ParseStringScalar(tagPrm)).
+                            set timeToAscentInclination to 0.
                             set dirtyTag to true.
                         }
                     }
@@ -477,10 +481,11 @@ runOncePath("0:/lib/util.ks").
             
             Terminal:Input:Clear.
             set g_TermChar to "".
+            local ogInc to tgtInc.
             until incConfirmFlag
             {
-                OutInfo("Selected inclination: " + tgtInc).
-                OutInfo("ENTER: Confirm | UP: Asc | DOWN: Desc | BACKSPACE: Skip", 1).
+                OutInfo("Inclination [Original | Current]: {0} | {1} ":Format(ogInc, tgtInc)).
+                OutInfo("ENTER: Confirm | BACKSPACE: Reset | UP/DOWN: Asc/Desc | LEFT/RIGHT: +/-1", 1).
 
                 if GetTermChar() <> ""
                 {
@@ -502,15 +507,15 @@ runOncePath("0:/lib/util.ks").
                         OutInfo("* Target inclination set to descending node *", 2).
                         wait 0.125.
                     }
-                    else if CheckTermChar(Terminal:Input:Backspace)
+                    else if CheckTermChar(Terminal:Input:LeftCursorOne)
                     {
-                        set tgtName to "N/A".
-                        set tgtPtr to Ship.
-                        set tgtConfirmFlag to true.
-                        set incConfirmFlag to true.
-                        set tgtInc to Round(Ship:Orbit:Inclination, 3).
-                        OutInfo("* Skipping target selection * ", 2).
-                        wait 0.25.
+                        set tgtInc to Round(tgtInc - 1, 2).
+                        wait 0.125.
+                    }
+                    else if CheckTermChar(Terminal:Input:RightCursorOne)
+                    {
+                        set tgtInc to Round(tgtInc + 1, 2).
+                        wait 0.125.
                     }
                     set g_TermChar to "".
                 }

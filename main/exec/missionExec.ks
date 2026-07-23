@@ -23,45 +23,14 @@ if Ship:Status = "PRELAUNCH"
     RunOncePath("0:/lib/launch.ks").
     set g_LaunchParams to GetLaunchParameters().
 
-    if HasTarget
-    {
-        local doneFlag to false.
-        set g_TS to Time:Seconds + 5.
-        until Time:Seconds > g_TS or doneFlag
-        {
-            OutMsg("Wait for rendezvous launch window for {0}?":Format(Target:Name)).
-            OutInfo("(Skipping in {0}s)":Format(Round(g_TS - Time:Seconds, 2))).
-            OutInfo("* HOME - Wait | ENTER - Skip | BACKSPACE - Quit)", 1).
-            GetTermChar().
-            if g_TermChar <> ""
-            {
-                if g_TermChar = Terminal:Input:Enter
-                {
-                    OutMsg().
-                    set doneFlag to True.
-                }
-                else if g_TermChar = Terminal:Input:HomeCursor
-                {
-                    RunPath("0:/main/launch/holdForLaunchWindow.ks").
-                    set doneFlag to True.
-                }
-                else if g_TermChar = Terminal:Input:Backspace
-                {
-                    OutMsg().
-                    print 1 / 0.
-                }
-                else if g_TermChar = "i"
-                {
-                    RunPath("0:/main/launch/measureLaunchStats", list(tgtInc, tgtAp, tgtPe, tgtEcc)).
-                }
-                else
-                {
-                    set g_TS to Time:Seconds + 5.
-                }
-                set g_TermChar to "".
-            }
-        }
-    }
+    local launchWindowTS to Time:Seconds + 15.
+
+    // if HasTarget
+    // {
+    //     local timeToLAN to GetTimeToAscendingNode(target).
+    //     set launchWindowTS to Round(Time:Seconds + timeToLAN).
+    //     RunPath("0:/main/launch/holdForLaunchWindow.ks", list(target, target:Orbit:Inclination, launchWindowTS, timeToLAN)).
+    // }
 
     OutMsg("Executing path: {0}":Format(scr)).
     wait 1.
@@ -104,7 +73,7 @@ if Stage:Number >= g_StageLimit and Ship:Periapsis < tgtPe and g_MissionTag:Miss
 {
     ExecCircBurn().
 }
-else if Stage:Number >= g_StageLimit and g_MissionTag:Mission:MatchesPattern("SubOrbit|PIDSubOrbital")
+else if Stage:Number >= g_StageLimit and g_MissionTag:Mission:MatchesPattern("SubOrbit.*|PIDSubOrbital")
 {
     local doApoBurn to False.
 

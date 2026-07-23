@@ -1155,13 +1155,13 @@
         {
             local engPct to residualsObject[uid]:Data[2] / aggMassFlowMax.
             set residualsObject[uid]["Pct"] to engPct.
-            set residualsObject[uid]["Nrm"] to residualsObject[uid]:Data[0] * engPct.
+            set residualsObject[uid]["Nrm"] to residualsObject[uid]:Data[0] * (1 - engPct).
             set newNormedResidual to newNormedResidual + residualsObject[uid]["Nrm"].
         }
         set newNormedResidual to choose newNormedResidual / residualsObject:Length if residualsObject:Length > 0 else 0.
 
         set usableFuelMass to usableFuelMass * (1 - newNormedResidual).
-        
+        set usableMassFlow to aggMassFlow.
         if usableFuelMass > 0 and usableMassFlow > 0
         {
             set burnTimeRemaining to (usableFuelMass / usableMassFlow).

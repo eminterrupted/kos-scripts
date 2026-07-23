@@ -1,76 +1,6 @@
 {
 	"files": [
 		{
-			"path": "lib/old_lib/staging.ks",
-			"bookmarks": [
-				{
-					"line": 113,
-					"column": 24,
-					"label": ""
-				}
-			]
-		},
-		{
-			"path": "lib/old_lib/launch_vOld.ks",
-			"bookmarks": [
-				{
-					"line": 147,
-					"column": 0,
-					"label": ""
-				},
-				{
-					"line": 289,
-					"column": 0,
-					"label": ""
-				},
-				{
-					"line": 1360,
-					"column": 8,
-					"label": ""
-				}
-			]
-		},
-		{
-			"path": "lib/old_lib/launch.ks",
-			"bookmarks": [
-				{
-					"line": 159,
-					"column": 36,
-					"label": ""
-				},
-				{
-					"line": 484,
-					"column": 27,
-					"label": ""
-				},
-				{
-					"line": 582,
-					"column": 27,
-					"label": ""
-				},
-				{
-					"line": 788,
-					"column": 28,
-					"label": ""
-				},
-				{
-					"line": 1343,
-					"column": 37,
-					"label": ""
-				},
-				{
-					"line": 1616,
-					"column": 41,
-					"label": ""
-				},
-				{
-					"line": 1964,
-					"column": 42,
-					"label": ""
-				}
-			]
-		},
-		{
 			"path": "data/ref/unicodeCharacters.txt",
 			"bookmarks": [
 				{
@@ -234,22 +164,22 @@
 			"path": "lib/launch.ks",
 			"bookmarks": [
 				{
-					"line": 484,
-					"column": 14,
+					"line": 495,
+					"column": 0,
 					"label": ""
 				},
 				{
-					"line": 1372,
+					"line": 1377,
 					"column": 59,
 					"label": ""
 				},
 				{
-					"line": 4747,
+					"line": 4827,
 					"column": 23,
 					"label": ""
 				},
 				{
-					"line": 4761,
+					"line": 4841,
 					"column": 31,
 					"label": ""
 				}

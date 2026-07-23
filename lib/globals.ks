@@ -44,7 +44,12 @@
     global g_TS2Ref to 0.
     global g_TS3    to 0.
     global g_TS3Ref to 0.
+    global g_TS9    to 0.
+    global g_TS9Ref to 0.
     global g_TSi    to 0.
+
+    // Regex Constants
+    global g_DateTimeRegex to "^(\d*y)*\s*(\d*d)*\s*(\d*h)*\s*(\d*m)*\s*((\d*\.*\d)(s)*)?$".
 
     // Time constants
     global g_EpochRT  to 62135596800.

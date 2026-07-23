@@ -630,61 +630,116 @@ global g_StateCache is "".
                       _validation is list(),
                       _allowFreeEntry is True.
         
-            local strVal to _string.
+            local strVal to choose _string:ToString if _string:HasSuffix("ToString") else _string.
 
-            OutInfo("Updating string. Current value:  [{0,-21}]":format(_string)).
+            OutInfo("Updating string. Current value:  [{0}]":format(strVal)).
             local __doneFlag to False.
+            local termVal to "".
+
             set g_TermChar to "".
             Terminal:Input:Clear.
+
+            set g_TS to Time:Seconds + 30.
             
             until __doneFlag
             {
-                OutInfo("                     New value:  [{0,-21}]":format(strVal), 1).
+                OutInfo("                     New value:  [{0}]":format(strVal), 1).
                 GetTermChar().
-                if g_TermChar:Length > 0
+                
+                if Time:Seconds > g_TS
                 {
-                    if g_TermChar = Terminal:Input:Backspace 
+                    set __doneFlag to true.
+                }
+                else
+                {
+                    if g_TermChar:Length > 0
                     {
-                        set strVal to strVal:Substring(0,strVal:Length).
-                    }
-                    else if g_TermChar = Terminal:Input:Enter
-                    {
-                        if _validation:Length > 0
+                        if g_TermChar = Terminal:Input:Backspace 
                         {
-                            if _validation:Contains(strVal)
+                            set strVal to choose _string:ToString if _string:HasSuffix("ToString") else _string.
+                            set termVal to "".
+                        }
+                        else if g_TermChar = Terminal:Input:DeleteRight
+                        {
+                            set termVal to choose termVal if termVal:Length = 0 else strVal:Substring(0,Max(strVal:Length)).
+                            set strVal to termVal.
+                        }
+                        else if g_TermChar = Terminal:Input:Enter
+                        {
+                            if _validation:IsType("List")
                             {
-                                OutInfo("String Updated!                           ").
-                                OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
-                                set __doneFlag to True.
+                                if _validation:Length > 0
+                                {
+                                    if _validation:Contains(strVal)
+                                    {
+                                        OutInfo("String Updated!                           ").
+                                        OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                        wait 0.5.
+                                        return strVal.
+                                    }
+                                    else
+                                    {
+                                        OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
+                                        OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                                        set strVal to choose _string:ToString if _string:HasSuffix("ToString") else _string.
+                                        set termVal to "".
+                                    }
+                                }
+                                else
+                                {
+                                    OutInfo("String Updated!                           ").
+                                    OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                    wait 0.5.
+                                    return strVal.
+                                }
+                            }
+                            else if _validation:IsType("String")
+                            {
+                                if strVal:MatchesPattern(_validation)
+                                {
+                                    OutInfo("String Updated!                           ").
+                                    OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                    wait 0.5.
+                                    return strVal.
+                                }
+                                else
+                                {
+                                    OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
+                                    OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                                    wait 0.5.
+                                }
                             }
                             else
                             {
-                                OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
-                                OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                                if strVal = _validation
+                                {
+                                    OutInfo("String Updated!                           ").
+                                    OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
+                                    wait 0.5.
+                                    return strVal.
+                                }
+                                else
+                                {
+                                    OutInfo("                     New value: *[{0,-21}]":format(strVal), 1).
+                                    OutInfo(" ERROR: Value [{0}] not an allowed value":format(strVal), 2).
+                                    wait 0.5.
+                                }
                             }
                         }
                         else
                         {
-                            OutInfo("String Updated!                           ").
-                            OutInfo("                     Set value:  [{0,-21}]":format(strVal), 1).
-                            set __doneFlag to True.
+                            set termVal to termVal + g_TermChar.
+                            set strVal to termVal.
+                            set g_TS to Time:Seconds + 15.
                         }
+                        set g_TermChar to "".
+                        Terminal:Input:Clear.
                     }
-                    else if _allowFreeEntry
-                    {
-                        set strVal to strVal + g_TermChar.
-                    }
-                    else
-                    {
-
-                    }
-
-                    set g_TermChar to "".
-                    Terminal:Input:Clear.
                 }
+                OutDebug(" Skipping in T-{0} ":Format(Round(g_TS - Time:Seconds, 1))).
                 wait 0.01.
             }
-
+       
             return strVal.
         }
 
@@ -1115,6 +1170,91 @@ global g_StateCache is "".
             return "{0}Gm":Format(Round(_inScalar / 1000000000, 2)).
         }
         else return _inScalar:ToString.
+    }
+
+    // ParseStringTime
+    global function ParseStringTime
+    {
+        parameter _inputString,
+                  _fallbackValue is 0.
+
+        local scalar_result to -1.
+        local stringChunk to _inputString.
+        
+        if _inputString:IsType("Scalar") // if it's already a scalar, well...
+        {
+            set scalar_result to _inputString.
+        }
+        else if _inputString:MatchesPattern(g_DateTimeRegex)
+        {
+            set scalar_result to 0.
+            
+            until stringChunk:Length = 0
+            {
+                if stringChunk:MatchesPattern("^.*y.*$")
+                {
+                    local stringSplit to stringChunk:Split("y").
+                    if stringSplit:Length > 1
+                    {
+                        local years to stringSplit[0]:ToScalar(0).
+                        set scalar_result to scalar_result + (31536000 * years).
+                        set stringChunk to stringSplit[1].
+                    }
+                }
+                else if stringChunk:MatchesPattern("^.*d.*$")
+                {
+                    local stringSplit to stringChunk:Split("d").
+                    if stringSplit:Length > 1
+                    {
+                        local days to stringSplit[0]:ToScalar(0).
+                        set scalar_result to scalar_result + (86400 * days).
+                        set stringChunk to stringSplit[1].
+                    }
+                }
+                else if stringChunk:MatchesPattern("^.*h.*$")
+                {
+                    local stringSplit to stringChunk:Split("h").
+                    if stringSplit:Length > 1
+                    {
+                        local hours to stringSplit[0]:ToScalar(0).
+                        set scalar_result to scalar_result + (3600 * hours).
+                        set stringChunk to stringSplit[1].
+                    }
+                }
+                else if stringChunk:MatchesPattern("^.*m.*$")
+                {
+                    local stringSplit to stringChunk:Split("m").
+                    if stringSplit:Length > 1
+                    {
+                        local minutes to stringSplit[0]:ToScalar(0).
+                        set scalar_result to scalar_result + (60 * minutes).
+                        set stringChunk to stringSplit[1].
+                    }
+                }
+                else if stringChunk:MatchesPattern("^.*s.*$")
+                {
+                    local stringSplit to stringChunk:Split("s").
+                    if stringSplit:Length > 1
+                    {
+                        local seconds to stringSplit[0]:ToScalar(0).
+                        set scalar_result to scalar_result + seconds.
+                        set stringChunk to stringSplit[1].
+                    }
+                }
+                else if stringChunk:MatchesPattern("^\d*(\.\d*)*$")
+                {
+                        local seconds to stringChunk:ToScalar(0).
+                        set scalar_result to scalar_result + seconds.
+                        set stringChunk to "".
+                }
+            }       
+        }
+        else
+        {
+            set scalar_result to _inputString:ToNumber(_fallbackValue).
+        }
+
+        return scalar_result.
     }
 
 

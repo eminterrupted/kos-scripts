@@ -79,13 +79,13 @@
             CreateLoopEvent("NoseconeJett", "DC", list(m), checkDel@, actionDel@).
         }
 
-        // // Deploy the Mercury capsule landing bag if present\
-        // if Ship:PartsNamed("ROC-MercuryHS"):Length > 0
+        // Jettison the equipment section on retrorocket fire
+        // if Ship:PartsNamed("ROC-GeminiEquipmentSectionBDB"):Length > 0
         // {
-        //     local m to Ship:PartsNamedPattern("ROC-MercuryHS")[0]:GetModule("ModuleAnimateGeneric").
-        //     local checkDel to { parameter _params is list(). return Alt:Radar <= 500.}.
-        //     local actionDel to { parameter _params is list(). if _params:length > 0 { if DoEvent(m, "Deploy Landing Bag") = 2 { DoEvent(m, "Deploy Landing Bag"). } return false.} else return false.}.
-        //     CreateLoopEvent("LandingBagDeploy", "LDGBAG", list(m), checkDel@, actionDel@).
+        //     local m to Ship:PartsNamedPattern("ROC-GeminiEquipmentSectionBDB")[0]:GetModule("ModuleDecouple").
+        //     local checkDel to { parameter _params is list(). if _params:length > 0 { if stage:number <= _params[0]:Part:Stage { for p in ship:PartsNamed("ROC-GeminiRetroMECBDB") { if p:ignition { return true.}}}} return false. }.
+        //     local actionDel to { parameter _params is list(). if _params:length > 0 { if DoEvent(_params[0], "Jettison") = 2 { DoAction(_params[0], "Jettison", True). } return false.} else return false.}.
+        //     CreateLoopEvent("GeminiESJett", "GESJET", list(m), checkDel@, actionDel@).
         // }
     }
 

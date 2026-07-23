@@ -268,15 +268,17 @@
                                         }
                                     }
                                     
-                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.0125) + ExtraLeadTime). 
+                                    local SpoolTime to max(0.025, (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime) + ExtraLeadTime). 
                                     local stageEngines_Data to GetEnginesPerformanceData(engs:Parts).
-                                    set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:Parts:length. // * (1 - stageEngines_Data:AverageResiduals).
+                                    set stageEngines_BT to stageEngines_Data:BurnTimeRemaining * (1 - stageEngines_Data:AverageResiduals).
+                                    // set stageEngines_BT to stageEngines_Data:BurnTimeRemaining / engs:Parts:length. // * (1 - stageEngines_Data:AverageResiduals).
+                                    // set stageEngines_BT to stageEngines_Data:BurnTimeRemaining. // * (1 - stageEngines_Data:AverageResiduals).
                                     // local SpoolTime to (g_LoopDelegates:Staging:HotStaging[HotStageID]:EngSpecs:SpoolTime * 1.325) + ExtraLeadTime. 
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining_Next(engs).
                                     // set stageEngines_BT to GetEnginesBurnTimeRemaining(GetActiveEngines(Ship, "NoBooster")).
                                     // set stageEngines_BT to g_ActiveEngines_Data:BurnTimeRemaining.
-                                    set g_TR to stageEngines_BT - SpoolTime.
+                                    set g_TR to stageEngines_BT - (SpoolTime * 1.125).
                                     // OutInfo("Active Engines: {0} | Time to Staging: (ET: T-{0,6}s) ":Format(g_ActiveEngines:Length, Round(g_TR, 2), 1)).
                                     OutInfo("HotStaging Armed").
                                     OutDebug("Calculated Spool Time : {0}s ":Format(SpoolTime)).
@@ -1235,6 +1237,7 @@
                             }
                             set dvRemainingStg to dvStgParam.
                             set dvStgParam to choose p:Stage if p:IsType("Decoupler") else p:DecoupledIn.
+                            // set dvStgParam to choose p:Stage if p:IsType("Decoupler") else choose p:stage - 1 if p:IsType("Engine") else p:DecoupledIn.
                         }
                         else if dvStgType = 1
                         {

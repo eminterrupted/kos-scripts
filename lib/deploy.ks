@@ -281,12 +281,15 @@
                             local functionTag to "p".
                             // local tagParts to p:Tag:Split("|").
                             // local functionTagList to tagParts:Split(";").
-                            local functionTagList to tagSplit[0]:Split(";").
-                            for frag in functionTagList
+                            if p:Tag:Contains(";")
                             {
-                                if frag:MatchesPattern("sv:.*") 
+                                local functionTagList to choose tagSplit[0]:Split(";") if tagSplit:Length > 0 else p:Tag:Split(";").
+                                for frag in functionTagList
                                 {
-                                    set functionTag to frag:replace("sv:","").
+                                    if frag:MatchesPattern("sv:.*") 
+                                    {
+                                        set functionTag to frag:replace("sv:","").
+                                    }
                                 }
                             }
                             DeployServo(p:GetModule("ModuleIRServo_v3"), functionTag).

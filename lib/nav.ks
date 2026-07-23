@@ -335,8 +335,7 @@
     // Returns the time in seconds until the intersecting ascending node between the ship and the target
     global function GetTimeToAscendingNode
     {
-        parameter _tgt,
-                  _ves is Ship.
+        parameter _tgt.
 
         local timeSincePe to _tgt:Orbit:Period - _tgt:Orbit:ETA:Periapsis.
         local ascNodeTA to GetANTrueAnomaly(_tgt).
